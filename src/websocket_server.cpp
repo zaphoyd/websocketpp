@@ -35,18 +35,24 @@ using websocketpp::server;
 
 server::server(boost::asio::io_service& io_service, 
 			   const tcp::endpoint& endpoint,
-			   const std::string& host,
 			   connection_handler_ptr defc)
-	: m_host(host),
-	  m_io_service(io_service), 
+	: m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
 	  m_def_con_handler(defc) {
 	this->start_accept();
 }
 
+void server::add_host(std::string host) {
+	m_hosts.insert(host);
+}
+
+void server::remove_host(std::string host) {
+	m_hosts.erase(host);
+}
+
 void server::start_accept() {
-	session_ptr new_ws(new session(m_io_service,m_host,m_def_con_handler));
-				
+	session_ptr new_ws(new session(m_io_service,m_def_con_handler));
+	
 	m_acceptor.async_accept(
 		new_ws->socket(),
 		boost::bind(
@@ -62,6 +68,12 @@ void server::handle_accept(session_ptr session,
 	const boost::system::error_code& error) {
 	
 	if (!error) {
+		// set up session
+		std::set<std::string>::iterator it;
+		for (it = m_hosts.begin(); it != m_hosts.end(); it++) {
+			session->add_host(*it);
+		}
+		
 		session->start();
 	} else {
 		std::cout << "Error" << std::endl;

@@ -66,8 +66,9 @@ Avaliable flags:
 - CXX=*: uses * as the c++ compiler instead of system default
 
 Build tested on
-- Mac OS X 10.7 with apple gcc 4.2, macports gcc 4.6, apple llvm/clang
-
+- Mac OS X 10.7 with apple gcc 4.2, macports gcc 4.6, apple llvm/clang, boost 1.47
+- Fedora 15, gcc 4.6, boost 1.46
+- Ubunutu server, gcc,  boost 1.42
 
 
 

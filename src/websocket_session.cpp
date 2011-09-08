@@ -39,6 +39,13 @@
 
 using websocketpp::session;
 
+session::session (boost::asio::io_service& io_service,
+				  connection_handler_ptr defc)
+	: m_socket(io_service),
+	  m_status(CONNECTING),
+	  m_http_error_code(0),
+	  m_local_interface(defc) {}
+
 tcp::socket& session::socket() {
 	return m_socket;
 }
@@ -68,6 +75,13 @@ void session::set_handler(connection_handler_ptr new_con) {
 	m_local_interface->connect(shared_from_this());
 }
 
+void session::add_host(std::string host) {
+	m_hosts.insert(host);
+}
+
+void session::remove_host(std::string host) {
+	m_hosts.erase(host);
+}
 
 std::string session::get_header(const std::string& key) const {
 	std::map<std::string,std::string>::const_iterator h = m_headers.find(key);
@@ -255,9 +269,10 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 	
 	// TODO: use exceptions or a helper function or something better here
 	
-	// verify the presence of required headers
-	if (get_header("Host") != m_host) {
-		std::cerr << "Invalid or missing Host header. " << get_header("Host") << "!=" << m_host << std::endl;
+	// verify the presence of required headers	
+	if (m_hosts.find(get_header("Host")) == m_hosts.end()) {
+		std::cerr << "Invalid or missing Host header: " 
+				  << get_header("Host") << std::endl;
 		this->set_http_error(400);
 	}
 	if (!boost::iequals(get_header("Upgrade"),"websocket")) {

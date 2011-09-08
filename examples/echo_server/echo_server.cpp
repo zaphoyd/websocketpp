@@ -29,8 +29,10 @@ int main(int argc, char* argv[]) {
 		tcp::endpoint endpoint(tcp::v6(), port);
 		
 		websocketpp::server_ptr server(
-			new websocketpp::server(io_service,endpoint,host,echo_handler)
+			new websocketpp::server(io_service,endpoint,echo_handler)
 		);
+		
+		server->add_host(host);
 		
 		std::cout << "Starting echo server on " << host << std::endl;
 		

@@ -28,13 +28,6 @@
 #ifndef WEBSOCKET_SESSION_HPP
 #define WEBSOCKET_SESSION_HPP
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <algorithm>
-
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -42,6 +35,14 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include <arpa/inet.h>
+
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <sstream>
+#include <vector>
 
 namespace websocketpp {
 	class session;
@@ -69,16 +70,11 @@ public:
 	
 	typedef enum ws_status status_code;
 		
-	session (boost::asio::io_service& io_service,
-			 const std::string& host,
-			 connection_handler_ptr defc)
-		: m_host(host),
-		  m_socket(io_service),
-		  m_status(CONNECTING),
-		  m_http_error_code(0),
-		  m_local_interface(defc) {}
+	session (boost::asio::io_service& io_service, connection_handler_ptr defc);
 	
 	tcp::socket& socket();
+	
+	/*** SERVER INTERFACE ***/
 	
 	// This function is called to begin the session loop. This method and all
 	// that come after it are called as a result of an async event completing.
@@ -94,7 +90,14 @@ public:
 	void set_handler(connection_handler_ptr new_con);
 	
 	
-	// Public handshake interface
+	/*** HANDSHAKE INTERFACE ***/
+	
+	// Add or remove a host string (host:port) to the list of acceptable 
+	// hosts to accept websocket connections from. Additions/deletions here 
+	// only affect only this connection. This list is initially populated based
+	// on values stored in the server.
+	void add_host(std::string host);
+	void remove_host(std::string host);
 	
 	// By default a failed handshake validation will return an HTTP 400 Bad
 	// Request error. If your application wants to reject the connection for 
@@ -120,7 +123,7 @@ public:
 
 	//void add_extension();
 	
-	// Public session interface
+	/*** SESSION INTERFACE ***/
 	
 	// send basic frame types
 	void send(const std::string &msg); // text
@@ -196,6 +199,7 @@ private:
 	
 	std::string lookup_http_error_string(int code);
 private:
+	std::set<std::string> m_hosts;
 	std::string m_host;
 	tcp::socket m_socket;
 	status_code m_status;

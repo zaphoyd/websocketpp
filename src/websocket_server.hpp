@@ -33,6 +33,8 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <set>
+
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
@@ -41,9 +43,14 @@ class server {
 	public:
 		server(boost::asio::io_service& io_service, 
 			   const tcp::endpoint& endpoint,
-			   const std::string& host,
 			   connection_handler_ptr defc);
 		
+		// Add or remove a host string (host:port) to the list of acceptable 
+		// hosts to accept websocket connections from. Additions/deletions here 
+		// only affect new connections.
+		void add_host(std::string host);
+		void remove_host(std::string host);
+	private:
 		// creates a new session object and connects the next websocket
 		// connection to it.
 		void start_accept();
@@ -54,8 +61,7 @@ class server {
 			const boost::system::error_code& error);
 	
 	private:
-		
-		std::string 				m_host;
+		std::set<std::string>		m_hosts;
 		boost::asio::io_service&	m_io_service;
 		tcp::acceptor				m_acceptor;
 		connection_handler_ptr		m_def_con_handler;
