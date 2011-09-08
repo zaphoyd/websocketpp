@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the WebSocket++ Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
+
 #include "websocket_session.hpp"
 
 #include "websocket_frame.hpp"
@@ -12,8 +39,12 @@
 
 using websocketpp::session;
 
+tcp::socket& session::socket() {
+	return m_socket;
+}
+
 void session::start() {
-	//std::cout << "[Connection " << this << "] WebSocket Connection request from " << m_socket.remote_endpoint() << std::endl;
+	std::cout << "[Connection " << this << "] WebSocket Connection request from " << m_socket.remote_endpoint() << std::endl;
 	
 	// async read to handle_read_handshake
 	boost::asio::async_read_until(
@@ -46,6 +77,10 @@ std::string session::get_header(const std::string& key) const {
 	} else {
 		return h->second;
 	}
+}
+
+void session::add_header(const std::string &key,const std::string &value) {
+	throw "unimplimented";
 }
 
 std::string session::get_request() const {
@@ -222,7 +257,7 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 	
 	// verify the presence of required headers
 	if (get_header("Host") != m_host) {
-		std::cerr << "Invalid or missing Host header." << std::endl;
+		std::cerr << "Invalid or missing Host header. " << get_header("Host") << "!=" << m_host << std::endl;
 		this->set_http_error(400);
 	}
 	if (!boost::iequals(get_header("Upgrade"),"websocket")) {

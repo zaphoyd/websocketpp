@@ -74,10 +74,17 @@ Build tested on
 Outstanding issues
 - Acknowledgement details
 - Add license information to each file
-- Add license.txt file
 - Subprotocol negotiation interface
 - check draft 13 issues
-- make website
+- session.cpp - add_header. Decide what should happen with multiple calls to 
+   add header with the same key
+- multiple headers of the same value
+- Better exception model
+- closing handshake reason/ error codes?
+
+To check
+- double check bugs in autobahn (sending wrong localhost:9000 header) not 
+- checking masking in the 9.x tests
 
 Unimplimented features
 - SSL

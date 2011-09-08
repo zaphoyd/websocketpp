@@ -15,7 +15,7 @@ function connect() {
 	if ("WebSocket" in window) {
 		ws = new WebSocket(url);
 	} else if ("MozWebSocket" in window) {
-		ws = new WebSocket(url);
+		ws = new MozWebSocket(url);
 	} else {
 		document.getElementById("messages").innerHTML += "This Browser does not support WebSockets<br />";
 		return;
