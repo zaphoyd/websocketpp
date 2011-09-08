@@ -1,0 +1,11 @@
+// TODO: impliment stuff from here: 
+// http://stackoverflow.com/questions/809902/64-bit-ntohl-in-c
+
+boost unit test suite?
+
+figure out exception handling setup
+
+
+nagle?
+
+extensions

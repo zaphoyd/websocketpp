@@ -1,0 +1,13 @@
+.DS_Store
+
+#vim stuff
+*~
+*.swp
+
+*.o
+*.so
+*.a
+*.dylib
+
+objs_shared/
+objs_static/
