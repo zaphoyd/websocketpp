@@ -70,18 +70,21 @@ Build tested on
 - Fedora 15, gcc 4.6, boost 1.46
 - Ubunutu server, gcc,  boost 1.42
 
-
-
 Outstanding issues
 - Acknowledgement details
 - Add license information to each file
 - Subprotocol negotiation interface
-- check draft 13 issues
+- check draft 14 issues
 - session.cpp - add_header. Decide what should happen with multiple calls to 
    add header with the same key
 - multiple headers of the same value
 - Better exception model
 - closing handshake reason/ error codes?
+- tests for opening/closing handshake
+- tests for utf8
+- utf8 streaming validation
+- more easily configurable frame size limit
+- Better system of handling server wide defaults (like hosts, frame limits, etc)
 
 To check
 - double check bugs in autobahn (sending wrong localhost:9000 header) not 
