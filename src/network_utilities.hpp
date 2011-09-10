@@ -29,6 +29,7 @@
 #define NETWORK_UTILITIES_HPP
 
 #include <stdint.h>
+#include <string>
 
 // http://www.viva64.com/en/k/0018/
 // TODO: impliment stuff from here: 
@@ -40,5 +41,9 @@
 
 uint64_t htonll(uint64_t src);
 uint64_t ntohll(uint64_t src);
+
+std::string lookup_http_error_string(int code);
+std::string lookup_ws_close_status_string(uint16_t code);
+
 
 #endif // NETWORK_UTILITIES_HPP

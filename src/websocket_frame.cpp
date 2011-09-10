@@ -26,6 +26,7 @@
  */
 
 #include "websocket_frame.hpp"
+#include "websocket_server.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -160,6 +161,31 @@ size_t frame::get_payload_size() const {
 	return m_payload.size();
 }
 
+uint16_t frame::get_close_status() const {
+	if (get_payload_size() >= 2) {
+		char val[2];
+		
+		val[0] = m_payload[0];
+		val[1] = m_payload[1];
+		
+		uint16_t code = ntohs(*(
+			reinterpret_cast<uint16_t*>(&val[0])
+		));
+		
+		return code;
+	} else {
+		return 1005; // defined in spec as "no status recieved"
+	}
+}
+
+std::string frame::get_close_msg() const {
+	if (get_payload_size() > 2) {
+		return std::string(m_payload.begin()+2,m_payload.end());
+	} else {
+		return std::string();
+	}
+}
+
 std::vector<unsigned char> &frame::get_payload() {
 	return m_payload;
 }
@@ -207,6 +233,28 @@ void frame::set_payload_helper(size_t s) {
 	}
 	
 	m_payload.resize(s);
+}
+
+void frame::set_status(uint16_t status,const std::string message) {
+	// check for valid statuses
+	if (status < 1000 || status > 4999) {
+		throw server_error("Status codes must be in the range 1000-4999");
+	}
+	
+	if (status == 1005 || status == 1006) {
+		throw server_error("Status codes 1005 and 1006 are reserved for internal use and cannot be written to a frame.");
+	}
+	
+	m_payload.resize(2+message.size());
+	
+	char val[2];
+	
+	*reinterpret_cast<uint16_t*>(&val[0]) = htons(status);
+	
+	m_payload[0] = val[0];
+	m_payload[1] = val[1];
+	
+	std::copy(message.begin(),message.end(),m_payload.begin()+2);
 }
 
 void frame::print_frame() const {

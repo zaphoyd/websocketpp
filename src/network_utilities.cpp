@@ -51,3 +51,85 @@ uint64_t htonll(uint64_t src) {
 uint64_t ntohll(uint64_t src) { 
 	return htonll(src);
 }
+
+std::string lookup_http_error_string(int code) {
+	switch (code) {
+		case 400:
+			return "Bad Request";
+		case 401:
+			return "Unauthorized";
+		case 403:
+			return "Forbidden";
+		case 404:
+			return "Not Found";
+		case 405:
+			return "Method Not Allowed";
+		case 406:
+			return "Not Acceptable";
+		case 407:
+			return "Proxy Authentication Required";
+		case 408:
+			return "Request Timeout";
+		case 409:
+			return "Conflict";
+		case 410:
+			return "Gone";
+		case 411:
+			return "Length Required";
+		case 412:
+			return "Precondition Failed";
+		case 413:
+			return "Request Entity Too Large";
+		case 414:
+			return "Request-URI Too Long";
+		case 415:
+			return "Unsupported Media Type";
+		case 416:
+			return "Requested Range Not Satisfiable";
+		case 417:
+			return "Expectation Failed";
+		case 500:
+			return "Internal Server Error";
+		case 501:
+			return "Not Implimented";
+		case 502:
+			return "Bad Gateway";
+		case 503:
+			return "Service Unavailable";
+		case 504:
+			return "Gateway Timeout";
+		case 505:
+			return "HTTP Version Not Supported";
+		default:
+			return "Unknown";
+	}
+}
+
+std::string lookup_ws_close_status_string(uint16_t code) {
+	switch (code) {
+		case 1000: 
+			return "Normal closure";
+		case 1001: 
+			return "Going away";
+		case 1002: 
+			return "Protocol error";
+		case 1003: 
+			return "Unacceptable data";
+		case 1004: 
+			return "Reserved";
+		case 1005: 
+			return "No status received";
+		case 1006: 
+			return "Abnormal closure";
+		case 1007: 
+			return "Invalid message data";
+		case 1008: 
+			return "Policy Violation";
+		case 1009: 
+			return "Message too large";
+		case 1010: 
+			return "Missing required extensions";
+		default:
+			return "Unknown";
+	}
+}

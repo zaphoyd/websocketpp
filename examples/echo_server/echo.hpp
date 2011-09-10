@@ -47,7 +47,7 @@ public:
 	// an echo server is stateless. The handler has no need to keep track of connected
 	// clients.
 	void connect(websocketpp::session_ptr client) {}
-	void disconnect(websocketpp::session_ptr client,const std::string &reason) {}
+	void disconnect(websocketpp::session_ptr client,uint16_t status,const std::string &reason) {}
 	
 	// both text and binary messages are echoed back to the sending client.
 	void message(websocketpp::session_ptr client,const std::string &msg);

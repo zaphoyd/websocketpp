@@ -66,7 +66,7 @@ public:
 	}
 		
 	// someone disconnected from the lobby, remove them
-	void disconnect(websocketpp::session_ptr client,const std::string &reason) {
+	void disconnect(websocketpp::session_ptr client,uint16_t status,const std::string &reason) {
 		std::set<session_ptr>::iterator it = m_connections.find(client);
 		
 		if (it == m_connections.end()) {

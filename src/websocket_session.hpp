@@ -126,7 +126,7 @@ public:
 	void ping(const std::string &msg);
 	void pong(const std::string &msg);
 	
-	void disconnect(const std::string &reason);
+	void disconnect(uint16_t status,const std::string &reason);
 private:	
 	// handle_read_handshake reads the HTTP headers of the initial websocket
 	// handshake, parses out the request and headers, and does error checking
@@ -191,8 +191,6 @@ private:
 	
 	// prints a diagnostic message and disconnects the local interface
 	void handle_error(std::string msg,const boost::system::error_code& error);
-	
-	std::string lookup_http_error_string(int code);
 private:
 	// Immutable state about the current connection from the handshake
 	std::string 						m_request;

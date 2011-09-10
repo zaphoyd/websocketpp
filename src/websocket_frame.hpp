@@ -106,11 +106,16 @@ public:
 	uint8_t get_basic_size() const;
 	size_t get_payload_size() const;
 	
+	uint16_t get_close_status() const;
+	std::string get_close_msg() const;
+		
 	std::vector<unsigned char> &get_payload();
 	
 	void set_payload(const std::vector<unsigned char> source);
 	void set_payload(const std::string source);
 	void set_payload_helper(size_t s);
+	
+	void set_status(uint16_t status,const std::string message = "");
 	
 	bool is_control() const;
 	

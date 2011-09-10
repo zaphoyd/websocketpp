@@ -72,7 +72,7 @@ void session::start() {
 
 void session::set_handler(connection_handler_ptr new_con) {
 	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),"Setting new connection handler");
+		m_local_interface->disconnect(shared_from_this(),4000,"Setting new connection handler");
 	}
 	m_local_interface = new_con;
 	m_local_interface->connect(shared_from_this());
@@ -104,59 +104,6 @@ std::string session::get_origin() const {
 	}
 }
 
-std::string session::lookup_http_error_string(int code) {
-	switch (code) {
-		case 400:
-			return "Bad Request";
-		case 401:
-			return "Unauthorized";
-		case 403:
-			return "Forbidden";
-		case 404:
-			return "Not Found";
-		case 405:
-			return "Method Not Allowed";
-		case 406:
-			return "Not Acceptable";
-		case 407:
-			return "Proxy Authentication Required";
-		case 408:
-			return "Request Timeout";
-		case 409:
-			return "Conflict";
-		case 410:
-			return "Gone";
-		case 411:
-			return "Length Required";
-		case 412:
-			return "Precondition Failed";
-		case 413:
-			return "Request Entity Too Large";
-		case 414:
-			return "Request-URI Too Long";
-		case 415:
-			return "Unsupported Media Type";
-		case 416:
-			return "Requested Range Not Satisfiable";
-		case 417:
-			return "Expectation Failed";
-		case 500:
-			return "Internal Server Error";
-		case 501:
-			return "Not Implimented";
-		case 502:
-			return "Bad Gateway";
-		case 503:
-			return "Service Unavailable";
-		case 504:
-			return "Gateway Timeout";
-		case 505:
-			return "HTTP Version Not Supported";
-		default:
-			return "Unknown";
-	}
-}
-
 void session::send(const std::string &msg) {
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::TEXT_FRAME);
@@ -175,15 +122,15 @@ void session::send(const std::vector<unsigned char> &data) {
 }
 
 // send close frame
-void session::disconnect(const std::string &reason) {
+void session::disconnect(uint16_t status,const std::string &message) {
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
-	m_write_frame.set_payload(reason);
+	m_write_frame.set_status(status,message);
 	
 	write_frame();
 	
 	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),reason);
+		m_local_interface->disconnect(shared_from_this(),status,message);
 	}
 }
 
@@ -611,25 +558,26 @@ void session::process_continuation() {
 
 void session::process_close() {
 	if (m_status == OPEN) {
-		// send response and set to closed
-		std::string msg(m_read_frame.get_payload().begin(),
-						m_read_frame.get_payload().end());
+		uint16_t status = m_read_frame.get_close_status();
+		std::string message = m_read_frame.get_close_msg();
 		
-		std::cout << "Got connection close message, acking and closing the connection. Reason was: " << msg << std::endl;
+		std::stringstream msg;
+		msg << "[Connection " << this << "] Got connection close message. Close status:" << status << " (" << lookup_ws_close_status_string(status) << "), close message: " << message;
+		m_server->access_log(msg.str());
 		
 		m_status = CLOSED;
 		
 		// send acknowledgement
 		m_write_frame.set_fin(true);
 		m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
-		m_write_frame.set_payload("");
+		//m_write_frame.set_status(status); // ack shouldn't have a payload
 	
 		write_frame();
 		
 		// let our local interface know that the remote client has 
 		// disconnected
 		if (m_local_interface) {
-			m_local_interface->disconnect(shared_from_this(),msg);
+			m_local_interface->disconnect(shared_from_this(),status,message);
 		}
 	} else if (m_status == CLOSING) {
 		// this is an ack of my close message
@@ -639,9 +587,9 @@ void session::process_close() {
 		
 		// let our local interface know that the remote client has 
 		// disconnected and the reason (if any)
-		if (m_local_interface) {
+		/*if (m_local_interface) {
 			m_local_interface->disconnect(shared_from_this(),"");
-		}
+		}*/
 	} else {
 		// ignore
 	}
@@ -721,12 +669,12 @@ void session::handle_error(std::string msg,
 						   const boost::system::error_code& error) {
 	std::stringstream e;
 	
-	e << msg << " (" << error << ")";
+	e << "[Connection " << this << "] " << msg << " (" << error << ")";
 	
-	std::cerr << e.str() << std::endl;
-	
+	m_server->error_log(e.str());
+		
 	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),e.str());
+		m_local_interface->disconnect(shared_from_this(),1006,e.str());
 	}
 	
 	m_error = true;

@@ -69,7 +69,7 @@ public:
 	//     calls the disconnect method of session
 	// - The connection handler assigned to this client was set to another 
 	//     handler
-	virtual void disconnect(session_ptr client,const std::string &reason) = 0;
+	virtual void disconnect(session_ptr client,uint16_t status,const std::string &reason) = 0;
 	
 	// this will be called when a text message is recieved. Text will be 
 	// encoded as UTF-8.
