@@ -44,7 +44,6 @@ session::session (boost::asio::io_service& io_service,
 				  connection_handler_ptr defc)
 	: m_socket(io_service),
 	  m_status(CONNECTING),
-	  m_http_error_code(0),
 	  m_local_interface(defc) {}
 
 tcp::socket& session::socket() {
@@ -115,11 +114,6 @@ std::string session::get_origin() const {
 	} else {
 		return get_header("Origin");
 	}
-}
-
-void session::set_http_error(int code, std::string msg) {
-	m_http_error_code = code;
-	m_http_error_string = (msg != "" ? msg : lookup_http_error_string(code));
 }
 
 std::string session::lookup_http_error_string(int code) {
@@ -352,7 +346,7 @@ void session::write_handshake() {
 	
 	if (!sha.Result(message_digest)) {
 		std::cerr << "Error computing sha1 hash, killing connection." << std::endl;
-		
+		write_http_error(500,"");
 		return;
 	}
 	
@@ -371,9 +365,7 @@ void session::write_handshake() {
 	server_handshake += "Sec-WebSocket-Accept: "+server_key+"\r\n\r\n";
 	
 	// TODO: handler requested headers
-	
-	//std::cout << server_handshake << std::endl;
-	
+		
 	// start async write to handle_write_handshake
 	boost::asio::async_write(
 		m_socket,

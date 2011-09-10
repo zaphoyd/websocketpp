@@ -40,9 +40,8 @@ void chat_handler::validate(websocketpp::session_ptr client) {
 	}
 	
 	// Require specific origin example
-	if (client->get_header("Sec-WebSocket-Origin") != "http://zaphoyd.com") {
-		err << "Request from unrecognized origin: " 
-			<< client->get_header("Sec-WebSocket-Origin");
+	if (client->get_origin() != "http://zaphoyd.com") {
+		err << "Request from unrecognized origin: " << client->get_origin();
 		throw(handshake_error(err.str(),403));
 	}
 }

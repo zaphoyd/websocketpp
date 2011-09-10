@@ -224,8 +224,6 @@ private:
 	boost::asio::streambuf m_buf;
 	
 	// unorganized
-	int						m_http_error_code;
-	std::string				m_http_error_string;
 	std::string m_handshake;
 	frame m_read_frame;
 	frame m_write_frame;
