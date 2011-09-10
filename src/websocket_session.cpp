@@ -83,6 +83,13 @@ void session::remove_host(std::string host) {
 	m_hosts.erase(host);
 }
 
+void session::set_max_message_size(uint64_t val) {
+	if (val > frame::PAYLOAD_64BIT_LIMIT) {
+		throw "illegal maximum message size";
+	}
+	m_max_message_size = val;
+}
+
 std::string session::get_header(const std::string& key) const {
 	std::map<std::string,std::string>::const_iterator h = m_headers.find(key);
 	
@@ -289,10 +296,15 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 		this->set_http_error(400);
 	}
 	
-	if (get_header("Sec-WebSocket-Version") != "8" && 
-		get_header("Sec-WebSocket-Version") != "7") {
-		std::cerr << "Invalid or missing Sec-Websocket-Version header." << std::endl;
+	if (get_header("Sec-WebSocket-Version") == "" ) {
+		std::cerr << "Missing Sec-Websocket-Version header." << std::endl;
 		this->set_http_error(400);
+	} else {
+		m_version = strtoul(get_header("Sec-WebSocket-Version").c_str(),NULL,10);
+		
+		if (m_version != 7 && m_version != 8 && m_version != 13) {
+			this->set_http_error(400);
+		}
 	}
 	
 	if (m_http_error_code != 0) {

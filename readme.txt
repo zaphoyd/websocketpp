@@ -72,7 +72,6 @@ Build tested on
 
 Outstanding issues
 - Acknowledgement details
-- Add license information to each file
 - Subprotocol negotiation interface
 - check draft 14 issues
 - session.cpp - add_header. Decide what should happen with multiple calls to 

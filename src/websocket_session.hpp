@@ -99,6 +99,10 @@ public:
 	void add_host(std::string host);
 	void remove_host(std::string host);
 	
+	// Sets the maximum allowed message size. Higher values will require larger
+	//  memory buffers. Maximum value is 2^63, default value is ??
+	void set_max_message_size(uint64_t);
+	
 	// By default a failed handshake validation will return an HTTP 400 Bad
 	// Request error. If your application wants to reject the connection for 
 	// another reason it can be set here. Example: 404 if the resource request
@@ -199,28 +203,37 @@ private:
 	
 	std::string lookup_http_error_string(int code);
 private:
-	std::set<std::string> m_hosts;
-	std::string m_host;
-	tcp::socket m_socket;
-	status_code m_status;
-	int			m_http_error_code;
-	std::string m_http_error_string;
+	// Connection specific constants (defaults to values from server, can be 
+	//   changed on a per connection basis if needed.)
+	std::set<std::string>	m_hosts;
+	uint64_t				m_max_message_size;
 	
+	// Immutable state about the current connection from the handshake
+	std::string 						m_request;
+	std::map<std::string,std::string>	m_headers;
+	unsigned int						m_version;
+	std::string							m_subprotocol;
+	
+	// Mutable connection state;
+	status_code				m_status;
+	
+	// Connection Resources
+	tcp::socket 			m_socket;
+	connection_handler_ptr	m_local_interface;
+	
+	// Buffers
 	boost::asio::streambuf m_buf;
+	
+	// unorganized
+	int						m_http_error_code;
+	std::string				m_http_error_string;
 	std::string m_handshake;
-	
-	std::string m_request;
-	std::map<std::string,std::string> m_headers;
-	
 	frame m_read_frame;
 	frame m_write_frame;
 	std::vector<unsigned char> m_current_message;
-	
 	bool m_error;
 	bool m_fragmented;
 	frame::opcode m_current_opcode;
-	
-	connection_handler_ptr m_local_interface;
 };
 
 }
