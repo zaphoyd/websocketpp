@@ -28,46 +28,79 @@
 #ifndef WEBSOCKET_SERVER_HPP
 #define WEBSOCKET_SERVER_HPP
 
-#include "websocket_session.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <set>
 
+namespace websocketpp {
+	class server;
+	typedef boost::shared_ptr<server> server_ptr;
+}
+
+#include "websocketpp.hpp"
+#include "websocket_session.hpp"
+#include "websocket_connection_handler.hpp"
+
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
 
-class server {
+class server_error : public std::exception {
+public:	
+	server_error(const std::string& msg)
+		: m_msg(msg) {}
+	~server_error() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+private:
+	std::string m_msg;
+};
+
+class server : public boost::enable_shared_from_this<server> {
 	public:
 		server(boost::asio::io_service& io_service, 
 			   const tcp::endpoint& endpoint,
 			   connection_handler_ptr defc);
 		
+		// creates a new session object and connects the next websocket
+		// connection to it.
+		void start_accept();
+			
 		// Add or remove a host string (host:port) to the list of acceptable 
 		// hosts to accept websocket connections from. Additions/deletions here 
 		// only affect new connections.
 		void add_host(std::string host);
 		void remove_host(std::string host);
+		
+		void set_max_message_size(uint64_t val);
+		
+		// Check if this server will respond to this host.
+		bool validate_host(std::string host);
+		
+		// Check if message size is within server's acceptable parameters
+		bool validate_message_size(uint64_t val);
+		
+		// write to the server's logs
+		void error_log(std::string msg);
+		void access_log(std::string msg);
 	private:
-		// creates a new session object and connects the next websocket
-		// connection to it.
-		void start_accept();
+		
 		
 		// if no errors starts the session's read loop and returns to the
 		// start_accept phase.
 		void handle_accept(session_ptr session,
 			const boost::system::error_code& error);
-	
+		
 	private:
 		std::set<std::string>		m_hosts;
+		uint64_t					m_max_message_size;
 		boost::asio::io_service&	m_io_service;
 		tcp::acceptor				m_acceptor;
 		connection_handler_ptr		m_def_con_handler;
 };
-
-typedef boost::shared_ptr<server> server_ptr;
 
 }
 

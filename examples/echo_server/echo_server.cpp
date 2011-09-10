@@ -59,10 +59,19 @@ int main(int argc, char* argv[]) {
 			new websocketpp::server(io_service,endpoint,echo_handler)
 		);
 		
+		// setup server settings
 		server->add_host(host);
+		
+		// bump up max message size to maximum since we may be using the echo 
+		// server to test performance and protocol extremes.
+		server->set_max_message_size(websocketpp::frame::PAYLOAD_64BIT_LIMIT); 
+		
+		// start the server
+		server->start_accept();
 		
 		std::cout << "Starting echo server on " << host << std::endl;
 		
+		// start asio
 		io_service.run();
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;

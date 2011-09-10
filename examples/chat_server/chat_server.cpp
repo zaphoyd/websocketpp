@@ -39,7 +39,9 @@ int main(int argc, char* argv[]) {
 	short port = 5000;
 	
 	if (argc == 3) {
+		// TODO: input validation?
 		port = atoi(argv[2]);
+
 		
 		std::stringstream temp;
 		temp << argv[1] << ":" << port;
@@ -56,6 +58,17 @@ int main(int argc, char* argv[]) {
 		websocketpp::server_ptr server(
 			new websocketpp::server(io_service,endpoint,host,chat_handler)
 		);
+		
+		// setup server settings
+		server->add_host(host);
+		
+		// Chat server should only be receiving small text messages, reduce max
+		// message size limit slightly to save memory, improve performance, and 
+		// guard against DoS attacks.
+		server->set_max_message_size(0xFFFF); // 64KiB
+		
+		// start the server
+		server->start_accept();
 		
 		std::cout << "Starting chat server on " << host << std::endl;
 		

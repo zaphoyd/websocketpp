@@ -52,6 +52,7 @@ namespace websocketpp {
 	class handshake_error;
 }
 
+#include "websocket_server.hpp"
 #include "websocket_frame.hpp"
 #include "websocket_connection_handler.hpp"
 
@@ -75,7 +76,9 @@ public:
 	
 	friend class handshake_error;
 	
-	session (boost::asio::io_service& io_service, connection_handler_ptr defc);
+	session (server_ptr s,
+			 boost::asio::io_service& io_service,
+			 connection_handler_ptr defc);
 	
 	tcp::socket& socket();
 	
@@ -96,17 +99,6 @@ public:
 	
 	
 	/*** HANDSHAKE INTERFACE ***/
-	
-	// Add or remove a host string (host:port) to the list of acceptable 
-	// hosts to accept websocket connections from. Additions/deletions here 
-	// only affect only this connection. This list is initially populated based
-	// on values stored in the server.
-	void add_host(std::string host);
-	void remove_host(std::string host);
-	
-	// Sets the maximum allowed message size. Higher values will require larger
-	//  memory buffers. Maximum value is 2^63, default value is ??
-	void set_max_message_size(uint64_t);
 	
 	// gets the value of a header or the empty string if not present.
 	std::string get_header(const std::string &key) const;
@@ -202,11 +194,6 @@ private:
 	
 	std::string lookup_http_error_string(int code);
 private:
-	// Connection specific constants (defaults to values from server, can be 
-	//   changed on a per connection basis if needed.)
-	std::set<std::string>	m_hosts;
-	uint64_t				m_max_message_size;
-	
 	// Immutable state about the current connection from the handshake
 	std::string 						m_request;
 	std::map<std::string,std::string>	m_headers;
@@ -217,6 +204,7 @@ private:
 	status_code				m_status;
 	
 	// Connection Resources
+	server_ptr				m_server;
 	tcp::socket 			m_socket;
 	connection_handler_ptr	m_local_interface;
 	

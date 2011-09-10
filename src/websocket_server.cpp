@@ -36,11 +36,10 @@ using websocketpp::server;
 server::server(boost::asio::io_service& io_service, 
 			   const tcp::endpoint& endpoint,
 			   connection_handler_ptr defc)
-	: m_io_service(io_service), 
+	: m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
+	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
-	  m_def_con_handler(defc) {
-	this->start_accept();
-}
+	  m_def_con_handler(defc) {}
 
 void server::add_host(std::string host) {
 	m_hosts.insert(host);
@@ -50,8 +49,47 @@ void server::remove_host(std::string host) {
 	m_hosts.erase(host);
 }
 
+
+void server::set_max_message_size(uint64_t val) {
+	if (val > frame::PAYLOAD_64BIT_LIMIT) {
+		std::stringstream err;
+		err << "Invalid maximum message size: " << val;
+		
+		// TODO: Figure out what the ideal error behavior for this method.
+		// Options:
+		//   Throw exception
+		//   Log error and set value to maximum allowed
+		//   Log error and leave value at whatever it was before
+		throw server_error(err.str());
+	}
+	m_max_message_size = val;
+}
+
+bool server::validate_host(std::string host) {
+	if (m_hosts.find(host) == m_hosts.end()) {
+		return false;
+	}
+	return true;
+}
+
+bool server::validate_message_size(uint64_t val) {
+	if (val > m_max_message_size) {
+		return false;
+	}
+	return true;
+}
+
+void server::error_log(std::string msg) {
+	std::cerr << "[Error Log] " << msg << std::endl;
+}
+void server::access_log(std::string msg) {
+	std::cout << "[Access Log] " << msg << std::endl;
+}
+
 void server::start_accept() {
-	session_ptr new_ws(new session(m_io_service,m_def_con_handler));
+	session_ptr new_ws(new session(shared_from_this(),
+								   m_io_service,
+								   m_def_con_handler));
 	
 	m_acceptor.async_accept(
 		new_ws->socket(),
@@ -68,15 +106,13 @@ void server::handle_accept(session_ptr session,
 	const boost::system::error_code& error) {
 	
 	if (!error) {
-		// set up session
-		std::set<std::string>::iterator it;
-		for (it = m_hosts.begin(); it != m_hosts.end(); it++) {
-			session->add_host(*it);
-		}
-		
 		session->start();
 	} else {
-		std::cout << "Error" << std::endl;
+		std::stringstream err;
+		err << "Error accepting socket connection: " << error;
+		
+		error_log(err.str());
+		throw server_error(err.str());
 	}
 	
 	this->start_accept();

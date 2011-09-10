@@ -40,10 +40,11 @@
 
 using websocketpp::session;
 
-session::session (boost::asio::io_service& io_service,
+session::session (server_ptr s,boost::asio::io_service& io_service,
 				  connection_handler_ptr defc)
-	: m_socket(io_service),
-	  m_status(CONNECTING),
+	: m_status(CONNECTING),
+	  m_server(s),
+	  m_socket(io_service),
 	  m_local_interface(defc) {}
 
 tcp::socket& session::socket() {
@@ -51,7 +52,9 @@ tcp::socket& session::socket() {
 }
 
 void session::start() {
-	std::cout << "[Connection " << this << "] WebSocket Connection request from " << m_socket.remote_endpoint() << std::endl;
+	std::stringstream msg;
+	msg << "[Connection " << this << "] WebSocket Connection request from " << m_socket.remote_endpoint();
+	m_server->access_log(msg.str());
 	
 	// async read to handle_read_handshake
 	boost::asio::async_read_until(
@@ -73,21 +76,6 @@ void session::set_handler(connection_handler_ptr new_con) {
 	}
 	m_local_interface = new_con;
 	m_local_interface->connect(shared_from_this());
-}
-
-void session::add_host(std::string host) {
-	m_hosts.insert(host);
-}
-
-void session::remove_host(std::string host) {
-	m_hosts.erase(host);
-}
-
-void session::set_max_message_size(uint64_t val) {
-	if (val > frame::PAYLOAD_64BIT_LIMIT) {
-		throw "illegal maximum message size";
-	}
-	m_max_message_size = val;
 }
 
 std::string session::get_header(const std::string& key) const {
@@ -280,7 +268,7 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 		h = get_header("Host");
 		if (h == "") {
 			throw(handshake_error("Required Host header is missing",400));
-		} else if (m_hosts.find(h) == m_hosts.end()) {
+		} else if (!m_server->validate_host(h)) {
 			err << "Host " << h << " is not one of this server's names.";
 			throw(handshake_error(err.str(),400));
 		}
@@ -325,7 +313,10 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 		}
 		
 	} catch (const handshake_error& e) {
-		std::cerr << "Caught handshake exception: " << e.what() << std::endl;
+		std::stringstream err;
+		err << "Caught handshake exception: " << e.what();
+		
+		m_server->error_log(err.str());
 		e.write(shared_from_this());
 		return;
 	}
@@ -345,7 +336,7 @@ void session::write_handshake() {
 	sha << server_key.c_str();
 	
 	if (!sha.Result(message_digest)) {
-		std::cerr << "Error computing sha1 hash, killing connection." << std::endl;
+		m_server->error_log("Error computing handshake sha1 hash.");
 		write_http_error(500,"");
 		return;
 	}
@@ -384,7 +375,11 @@ void session::handle_write_handshake(const boost::system::error_code& error) {
 		return;
 	}
 	
-	std::cout << "WebSocket Version " << m_version << " connection opened." << std::endl;
+	std::stringstream msg;
+	msg << "[Connection " << this << "] WebSocket Version " 
+		<< m_version << " connection opened.";
+	
+	m_server->access_log(msg.str());
 	
 	m_status = OPEN;
 	
@@ -417,6 +412,12 @@ void session::write_http_error(int code,const std::string &msg) {
 			boost::asio::placeholders::error
 		)
 	);
+	
+	std::stringstream err;
+	err << "Handshake ended with HTTP error: " << code << " " 
+		<< (msg != "" ? msg : lookup_http_error_string(code)); 
+	
+	m_server->error_log(err.str());
 }
 
 void session::handle_write_http_error(const boost::system::error_code& error) {

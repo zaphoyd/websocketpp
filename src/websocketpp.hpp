@@ -30,6 +30,11 @@
 #ifndef WEBSOCKETPP_HPP
 #define WEBSOCKETPP_HPP
 
+// Defaults
+namespace websocketpp {
+	const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
+}
+
 #include "websocket_server.hpp"
 
 #endif // WEBSOCKETPP_HPP
