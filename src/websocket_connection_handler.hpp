@@ -44,18 +44,17 @@ namespace websocketpp {
 
 class connection_handler {
 public:
-	// validate will be called after a websocket handshake has been received and 
+	// validate will be called after a websocket handshake has been received and
 	// before it is accepted. It provides a handler the ability to refuse a 
 	// connection based on application specific logic (ex: restrict domains or
-	// negotiate subprotocols)
+	// negotiate subprotocols). To reject the connection throw a handshake_error
 	//
-	// resource is the resource requested by the connection
-	// headers is a map containing the HTTP headers included in the client 
-	//   handshake as key/value strings
-	//
-	// if validate returns true the connection is allowed, otherwise the 
-	//   connection is closed.
-	virtual bool validate(session_ptr client) = 0;
+	// handshake_error parameters:
+	//  log_message - error message to send to server log
+	//  http_error_code - numeric HTTP error code to return to the client
+	//  http_error_msg - (optional) string HTTP error code to return to the
+	//    client (useful for returning non-standard error codes)
+	virtual void validate(session_ptr client) = 0;
 	
 	// this will be called once the connected websocket is avaliable for 
 	// writing messages. client may be a new websocket session or an existing

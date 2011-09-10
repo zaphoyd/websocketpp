@@ -30,20 +30,21 @@
 using websocketchat::chat_handler;
 
 
-bool chat_handler::validate(websocketpp::session_ptr client) {
+void chat_handler::validate(websocketpp::session_ptr client) {
+	std::stringstream err;
+	
 	// We only know about the chat resource
 	if (client->get_request() != "/chat") {
-		client->set_http_error(404);
-		return false;
+		err << "Request for unknown resource " << client->get_request();
+		throw(handshake_error(err.str(),404));
 	}
 	
 	// Require specific origin example
 	if (client->get_header("Sec-WebSocket-Origin") != "http://zaphoyd.com") {
-		client->set_http_error(403);
-		return false;
+		err << "Request from unrecognized origin: " 
+			<< client->get_header("Sec-WebSocket-Origin");
+		throw(handshake_error(err.str(),403));
 	}
-	
-	return true;
 }
 
 

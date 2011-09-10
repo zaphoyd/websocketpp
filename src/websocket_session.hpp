@@ -37,16 +37,19 @@
 #include <arpa/inet.h>
 
 #include <algorithm>
+#include <exception>
 #include <iostream>
 #include <map>
 #include <set>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace websocketpp {
 	class session;
 	typedef boost::shared_ptr<session> session_ptr;
+	
+	class handshake_error;
 }
 
 #include "websocket_frame.hpp"
@@ -69,7 +72,9 @@ public:
 	};
 	
 	typedef enum ws_status status_code;
-		
+	
+	friend class handshake_error;
+	
 	session (boost::asio::io_service& io_service, connection_handler_ptr defc);
 	
 	tcp::socket& socket();
@@ -103,19 +108,13 @@ public:
 	//  memory buffers. Maximum value is 2^63, default value is ??
 	void set_max_message_size(uint64_t);
 	
-	// By default a failed handshake validation will return an HTTP 400 Bad
-	// Request error. If your application wants to reject the connection for 
-	// another reason it can be set here. Example: 404 if the resource request
-	// is not recognized or 403 forbidden if the origin does not match. If only
-	// a code is supplied a msg will be generated automatically.
-	void set_http_error(int code,std::string msg = "");
-	
 	// gets the value of a header or the empty string if not present.
 	std::string get_header(const std::string &key) const;
 	// adds an arbitrary header to the server handshake HTTP response.
 	void add_header(const std::string &key,const std::string &value);
 	
 	std::string get_request() const;
+	std::string get_origin() const;
 	
 	// sets the subprotocol being used. This will result in the appropriate 
 	// Sec-WebSocket-Protocol header being sent back to the client. The value
@@ -153,7 +152,7 @@ private:
 	void handle_write_handshake(const boost::system::error_code& error);
 	
 	// construct and write an HTTP error in the case the handshake goes poorly
-	void write_http_error();
+	void write_http_error(int http_code,const std::string &http_err_str);
 	void handle_write_http_error(const boost::system::error_code& error);
 	
 	// start async read for a websocket frame (2 bytes) to handle_frame_header
@@ -234,6 +233,30 @@ private:
 	bool m_error;
 	bool m_fragmented;
 	frame::opcode m_current_opcode;
+};
+
+// Exception classes
+
+class handshake_error : public std::exception {
+public:	
+	handshake_error(const std::string& msg,
+					int http_error,
+					const std::string& http_msg = "")
+		: m_msg(msg),m_http_error_code(http_error),m_http_error_msg(http_msg) {}
+	~handshake_error() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	void write(session_ptr s) const {
+		s->write_http_error(m_http_error_code,m_http_error_msg);
+	}
+	
+private:
+	std::string m_msg;
+	int			m_http_error_code;
+	std::string m_http_error_msg;
 };
 
 }

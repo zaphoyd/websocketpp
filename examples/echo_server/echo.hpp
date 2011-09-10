@@ -42,7 +42,7 @@ public:
 	virtual ~echo_handler() {}
 	
 	// The echo server allows all domains is protocol free.
-	bool validate(websocketpp::session_ptr client);
+	void validate(websocketpp::session_ptr client);
 	
 	// an echo server is stateless. The handler has no need to keep track of connected
 	// clients.

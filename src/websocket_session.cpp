@@ -33,9 +33,10 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <string>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 using websocketpp::session;
 
@@ -106,6 +107,14 @@ void session::add_header(const std::string &key,const std::string &value) {
 
 std::string session::get_request() const {
 	return m_request;
+}
+
+std::string session::get_origin() const {
+	if (m_version < 13) {
+		return get_header("Sec-WebSocket-Origin");
+	} else {
+		return get_header("Origin");
+	}
 }
 
 void session::set_http_error(int code, std::string msg) {
@@ -250,78 +259,80 @@ void session::handle_read_handshake(const boost::system::error_code& e,
 		}
 	}
 	
-	// error checking
-	
-	// check the method
-	if (m_request.substr(0,4) != "GET ") {
-		// invalid method
-		std::cout << "Websocket handshake has invalid method: " << m_request.substr(0,4) << ", killing connection." << std::endl;
-		// TODO: exception
-		this->set_http_error(400);
-		this->write_http_error();
-		return;
-	}
-	
-	// check the HTTP version
-	// TODO: allow versions greater than 1.1
-	end = m_request.find(" HTTP/1.1",4);
-	if (end == std::string::npos) {
-		std::cout << "Websocket handshake has invalid HTTP version, killing connection." << std::endl;
-		this->set_http_error(400); // or error 505 HTTP Version Not Supported
-		this->write_http_error();
-		return;
-	}
+	// handshake error checking
+	try {
+		std::stringstream err;
+		std::string h;
 		
-	m_request = m_request.substr(4,end-4);
-	
-	// TODO: use exceptions or a helper function or something better here
-	
-	// verify the presence of required headers	
-	if (m_hosts.find(get_header("Host")) == m_hosts.end()) {
-		std::cerr << "Invalid or missing Host header: " 
-				  << get_header("Host") << std::endl;
-		this->set_http_error(400);
-	}
-	if (!boost::iequals(get_header("Upgrade"),"websocket")) {
-		std::cerr << "Invalid or missing Upgrade header." << std::endl;
-		this->set_http_error(400);
-	}
-	if (get_header("Connection").find("Upgrade") == std::string::npos) {
-		// TODO: case insensitive?
-		std::cerr << "Invalid or missing Connection header." << std::endl;
-		this->set_http_error(400);
-	}
-	if (get_header("Sec-WebSocket-Key") == "") {
-		std::cerr << "Invalid or missing Sec-Websocket-Key header." << std::endl;
-		this->set_http_error(400);
-	}
-	
-	if (get_header("Sec-WebSocket-Version") == "" ) {
-		std::cerr << "Missing Sec-Websocket-Version header." << std::endl;
-		this->set_http_error(400);
-	} else {
-		m_version = strtoul(get_header("Sec-WebSocket-Version").c_str(),NULL,10);
-		
-		if (m_version != 7 && m_version != 8 && m_version != 13) {
-			this->set_http_error(400);
+		// check the method
+		if (m_request.substr(0,4) != "GET ") {
+			err << "Websocket handshake has invalid method: "
+				<< m_request.substr(0,4);
+			
+			throw(handshake_error(err.str(),400));
 		}
-	}
-	
-	if (m_http_error_code != 0) {
-		this->write_http_error();
-		return;
-	}
-	
-	// optional headers (delegated to the local interface)
-	if (m_local_interface && !m_local_interface->validate(shared_from_this())) {
-		std::cerr << "Local interface rejected the connection." << std::endl;		
-		if (m_http_error_code == 0) {
-			this->set_http_error(400);
-		}
-	}
 		
-	if (m_http_error_code != 0) {
-		this->write_http_error();
+		// check the HTTP version
+		// TODO: allow versions greater than 1.1
+		end = m_request.find(" HTTP/1.1",4);
+		if (end == std::string::npos) {
+			err << "Websocket handshake has invalid HTTP version";
+			throw(handshake_error(err.str(),400));
+		}
+		
+		m_request = m_request.substr(4,end-4);
+		
+		// verify the presence of required headers
+		h = get_header("Host");
+		if (h == "") {
+			throw(handshake_error("Required Host header is missing",400));
+		} else if (m_hosts.find(h) == m_hosts.end()) {
+			err << "Host " << h << " is not one of this server's names.";
+			throw(handshake_error(err.str(),400));
+		}
+		
+		h = get_header("Upgrade");
+		if (h == "") {
+			throw(handshake_error("Required Upgrade header is missing",400));
+		} else if (!boost::iequals(h,"websocket")) {
+			err << "Upgrade header was " << h << " instead of \"websocket\"";
+			throw(handshake_error(err.str(),400));
+		}
+		
+		h = get_header("Connection");
+		if (h == "") {
+			throw(handshake_error("Required Connection header is missing",400));
+		} else if (!boost::ifind_first(h,"upgrade")) {
+			err << "Connection header, \"" << h 
+				<< "\", does not contain required token \"upgrade\"";
+			throw(handshake_error(err.str(),400));
+		}
+		
+		if (get_header("Sec-WebSocket-Key") == "") {
+			throw(handshake_error("Required Sec-WebSocket-Key header is missing",400));
+		}
+		
+		h = get_header("Sec-WebSocket-Version");
+		if (h == "") {
+			throw(handshake_error("Required Sec-WebSocket-Version header is missing",400));
+		} else {
+			m_version = atoi(h.c_str());
+			
+			if (m_version != 7 && m_version != 8 && m_version != 13) {
+				err << "This server doesn't support WebSocket protocol version "
+					<< m_version;
+				throw(handshake_error(err.str(),400));
+			}
+		}
+		
+		// optional headers (delegated to the local interface)
+		if (m_local_interface) {
+			m_local_interface->validate(shared_from_this());
+		}
+		
+	} catch (const handshake_error& e) {
+		std::cerr << "Caught handshake exception: " << e.what() << std::endl;
+		e.write(shared_from_this());
 		return;
 	}
 	
@@ -381,7 +392,7 @@ void session::handle_write_handshake(const boost::system::error_code& error) {
 		return;
 	}
 	
-	//std::cout << "WebSocket Version 8 connection opened." << std::endl;
+	std::cout << "WebSocket Version " << m_version << " connection opened." << std::endl;
 	
 	m_status = OPEN;
 	
@@ -393,11 +404,12 @@ void session::handle_write_handshake(const boost::system::error_code& error) {
 	this->read_frame();
 }
 
-void session::write_http_error() {
+void session::write_http_error(int code,const std::string &msg) {
 	std::stringstream server_handshake;
-	
-	server_handshake << "HTTP/1.1 " << m_http_error_code << " " 
-					 << m_http_error_string << "\r\n";
+		
+	server_handshake << "HTTP/1.1 " << code << " " 
+					 << (msg != "" ? msg : lookup_http_error_string(code)) 
+					 << "\r\n";
 	
 	// additional headers?
 	

@@ -53,7 +53,7 @@ public:
 	chat_handler() {}
 	virtual ~chat_handler() {}
 	
-	bool validate(websocketpp::session_ptr client); 
+	void validate(websocketpp::session_ptr client); 
 	
 	// add new connection to the lobby
 	void connect(session_ptr client) {
