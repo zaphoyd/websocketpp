@@ -557,12 +557,14 @@ void session::process_continuation() {
 }
 
 void session::process_close() {
+	std::stringstream msg;
+	
 	if (m_status == OPEN) {
+		// This is the case where the client initiated the close.
 		uint16_t status = m_read_frame.get_close_status();
 		std::string message = m_read_frame.get_close_msg();
 		
-		std::stringstream msg;
-		msg << "[Connection " << this << "] Got connection close message. Close status:" << status << " (" << lookup_ws_close_status_string(status) << "), close message: " << message;
+		msg << "[Connection " << this << "] Received connection close request from client. Close status:" << status << " (" << lookup_ws_close_status_string(status) << "), close message: " << message;
 		m_server->access_log(msg.str());
 		
 		m_status = CLOSED;
@@ -570,7 +572,6 @@ void session::process_close() {
 		// send acknowledgement
 		m_write_frame.set_fin(true);
 		m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
-		//m_write_frame.set_status(status); // ack shouldn't have a payload
 	
 		write_frame();
 		
@@ -580,18 +581,11 @@ void session::process_close() {
 			m_local_interface->disconnect(shared_from_this(),status,message);
 		}
 	} else if (m_status == CLOSING) {
-		// this is an ack of my close message
-		// close cleanly
-		std::cout << "Got ack for my close message, closing the connection" << std::endl;
-		m_status = CLOSED;
+		// this is an ack of our close message
 		
-		// let our local interface know that the remote client has 
-		// disconnected and the reason (if any)
-		/*if (m_local_interface) {
-			m_local_interface->disconnect(shared_from_this(),"");
-		}*/
-	} else {
-		// ignore
+		// close cleanly
+		msg << "[Connection " << this << "] Received client closing acknowledgement. Connection has been cleanly closed.";
+		m_status = CLOSED;
 	}
 }
 
@@ -621,7 +615,10 @@ void session::deliver_message() {
 		
 		m_local_interface->message(shared_from_this(),msg);
 	} else {
-		// fail
+		// Not sure if this should be a fatal error or not
+		std::stringstream err;
+		err << "Attempted to deliver a message of unsupported opcode " << m_current_opcode;
+		m_server->error_log(err.str());
 	}
 	
 }

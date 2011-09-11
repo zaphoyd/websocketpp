@@ -309,11 +309,11 @@ void frame::process_extended_header() {
 		mask_index += 8;
 	} else {
 		// shouldn't be here
-		throw "invalid get_basic_size in process_extended_header";
+		throw server_error("invalid get_basic_size in process_extended_header");
 	}
 	
 	if (payload_size < s) {
-		throw "payload size error";
+		throw server_error("payload size error");
 	}
 	
 	if (get_masked() == 0) {
@@ -328,7 +328,7 @@ void frame::process_extended_header() {
 	}
 	
 	if (payload_size > max_payload_size) {
-		throw "got frame with payload greater than maximum frame buffer size.";
+		throw server_error("got frame with payload greater than maximum frame buffer size.");
 	}
 	m_payload.resize(payload_size);
 }
