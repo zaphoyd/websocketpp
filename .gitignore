@@ -11,3 +11,6 @@
 
 objs_shared/
 objs_static/
+
+examples/chat_server/chat_server
+examples/echo_server/echo_server

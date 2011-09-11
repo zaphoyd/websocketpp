@@ -35,8 +35,8 @@
 using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[]) {
-	std::string host = "localhost:5000";
-	short port = 5000;
+	std::string host = "localhost:9000";
+	short port = 9000;
 	
 	if (argc == 3) {
 		// TODO: input validation?
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 		tcp::endpoint endpoint(tcp::v6(), port);
 		
 		websocketpp::server_ptr server(
-			new websocketpp::server(io_service,endpoint,host,chat_handler)
+			new websocketpp::server(io_service,endpoint,chat_handler)
 		);
 		
 		// setup server settings
