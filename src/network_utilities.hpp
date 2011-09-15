@@ -45,5 +45,4 @@ uint64_t ntohll(uint64_t src);
 std::string lookup_http_error_string(int code);
 std::string lookup_ws_close_status_string(uint16_t code);
 
-
 #endif // NETWORK_UTILITIES_HPP

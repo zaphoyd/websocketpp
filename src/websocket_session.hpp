@@ -65,6 +65,8 @@ namespace websocketpp {
 
 class session : public boost::enable_shared_from_this<session> {
 public:
+	friend class handshake_error;
+
 	enum ws_status {
 		CONNECTING,
 		OPEN,
@@ -74,7 +76,16 @@ public:
 	
 	typedef enum ws_status status_code;
 	
-	friend class handshake_error;
+	static const uint16_t CLOSE_STATUS_NORMAL = 1000;
+	static const uint16_t CLOSE_STATUS_GOING_AWAY = 1001;
+	static const uint16_t CLOSE_STATUS_PROTOCOL_ERROR = 1002;
+	static const uint16_t CLOSE_STATUS_UNSUPPORTED_DATA = 1003;
+	static const uint16_t CLOSE_STATUS_NO_STATUS = 1005;
+	static const uint16_t CLOSE_STATUS_ABNORMAL_CLOSE = 1006;
+	static const uint16_t CLOSE_STATUS_INVALID_PAYLOAD = 1007;
+	static const uint16_t CLOSE_STATUS_POLICY_VIOLATION = 1008;
+	static const uint16_t CLOSE_STATUS_MESSAGE_TOO_BIG = 1009;
+	static const uint16_t CLOSE_STATUS_EXTENSION_REQUIRE = 1010;
 	
 	session (server_ptr s,
 			 boost::asio::io_service& io_service,
@@ -209,6 +220,10 @@ private:
 	// Buffers
 	boost::asio::streambuf m_buf;
 	
+	// utf8 validation state
+	uint32_t m_utf8_state;
+	uint32_t m_utf8_codepoint;
+
 	// unorganized
 	std::string m_handshake;
 	frame m_read_frame;

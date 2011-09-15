@@ -28,6 +28,7 @@
 #include "websocket_session.hpp"
 
 #include "websocket_frame.hpp"
+#include "utf8_validator/utf8_validator.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -45,7 +46,9 @@ session::session (server_ptr s,boost::asio::io_service& io_service,
 	: m_status(CONNECTING),
 	  m_server(s),
 	  m_socket(io_service),
-	  m_local_interface(defc) {}
+	  m_local_interface(defc),
+	  m_utf8_state(utf8_validator::UTF8_ACCEPT),
+	  m_utf8_codepoint(0) {}
 
 tcp::socket& session::socket() {
 	return m_socket;
@@ -105,6 +108,10 @@ std::string session::get_origin() const {
 }
 
 void session::send(const std::string &msg) {
+	if (m_status != OPEN) {
+		// error?
+		return;
+	}
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::TEXT_FRAME);
 	m_write_frame.set_payload(msg);
@@ -114,6 +121,10 @@ void session::send(const std::string &msg) {
 
 // send binary frame
 void session::send(const std::vector<unsigned char> &data) {
+	if (m_status != OPEN) {
+		// error?
+		return;
+	}
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::BINARY_FRAME);
 	m_write_frame.set_payload(data);
@@ -125,10 +136,17 @@ void session::send(const std::vector<unsigned char> &data) {
 void session::disconnect(uint16_t status,const std::string &message) {
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
-	m_write_frame.set_status(status,message);
 	
+	if (status == 1005 || status == 1006) {
+		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
+	} else {
+		m_write_frame.set_status(status,message);
+	}
+
 	write_frame();
-	
+
+	m_status = CLOSING;
+
 	if (m_local_interface) {
 		m_local_interface->disconnect(shared_from_this(),status,message);
 	}
@@ -487,7 +505,7 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 	}
 	
 	// check if there was an error processing this frame and fail the connection
-	if (m_error) {
+	if (m_error || m_status == CLOSED) {
 		return;
 	}
 	
@@ -518,7 +536,11 @@ void session::process_pong() {
 }
 
 void session::process_text() {
-	// text is binary.
+	if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
+		disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
+		return;
+	}
+
 	process_binary();
 }
 
@@ -547,6 +569,13 @@ void session::process_continuation() {
 			return;
 	}
 	
+	if (m_current_opcode == frame::TEXT_FRAME) {
+		if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
+			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
+			return;
+		}
+	}
+
 	extract_payload();
 	
 	// check if we are done
@@ -564,22 +593,15 @@ void session::process_close() {
 		uint16_t status = m_read_frame.get_close_status();
 		std::string message = m_read_frame.get_close_msg();
 		
-		msg << "[Connection " << this << "] Received connection close request from client. Close status:" << status << " (" << lookup_ws_close_status_string(status) << "), close message: " << message;
+		msg << "[Connection " << this 
+		    << "] Received connection close request from client. Close status:" 
+			<< status << " (" << lookup_ws_close_status_string(status) 
+			<< "), close message: " << message;
 		m_server->access_log(msg.str());
 		
 		m_status = CLOSED;
 		
-		// send acknowledgement
-		m_write_frame.set_fin(true);
-		m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
-	
-		write_frame();
-		
-		// let our local interface know that the remote client has 
-		// disconnected
-		if (m_local_interface) {
-			m_local_interface->disconnect(shared_from_this(),status,message);
-		}
+		disconnect(status,message);
 	} else if (m_status == CLOSING) {
 		// this is an ack of our close message
 		
@@ -604,6 +626,12 @@ void session::deliver_message() {
 	} else if (m_current_opcode == frame::TEXT_FRAME) {
 		std::string msg;
 		
+		// make sure the finished frame is valid utf8
+		if (m_utf8_state != utf8_validator::UTF8_ACCEPT) {
+			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");
+			return;
+		}
+
 		if (m_fragmented) {
 			msg.append(m_current_message.begin(),m_current_message.end());
 		} else {
@@ -660,6 +688,9 @@ void session::reset_message() {
 	m_error = false;
 	m_fragmented = false;
 	m_current_message.clear();
+
+	m_utf8_state = utf8_validator::UTF8_ACCEPT;
+	m_utf8_codepoint = 0;
 }
 
 void session::handle_error(std::string msg,
