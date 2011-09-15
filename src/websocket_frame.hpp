@@ -127,6 +127,7 @@ public:
 	void process_payload();
 	void process_payload2(); // experiment with more efficient masking code.
 	
+	bool validate_utf8(uint32_t* state,uint32_t* codep) const;
 	bool validate_basic_header() const;
 	
 	void generate_masking_key();

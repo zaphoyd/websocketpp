@@ -26,7 +26,9 @@
  */
 
 #include "websocket_frame.hpp"
+
 #include "websocket_server.hpp"
+#include "utf8_validator/utf8_validator.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -250,7 +252,9 @@ void frame::set_status(uint16_t status,const std::string message) {
 	char val[2];
 	
 	*reinterpret_cast<uint16_t*>(&val[0]) = htons(status);
-	
+
+	m_header[1] = message.size()+2;
+
 	m_payload[0] = val[0];
 	m_payload[1] = val[1];
 	
@@ -334,7 +338,6 @@ void frame::process_extended_header() {
 }
 
 void frame::process_payload() {
-	// unmask payload one byte at a time
 	for (uint64_t i = 0; i < m_payload.size(); i++) {
 		m_payload[i] = (m_payload[i] ^ m_masking_key[i%4]);
 	}
@@ -365,6 +368,20 @@ void frame::process_payload2() {
 	for (i = s; i < m_payload.size(); i++) {
 		m_payload[i] = (m_payload[i] ^ m_masking_key[i%4]);
 	}
+}
+
+bool frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
+	for (size_t i = 0; i < m_payload.size(); i++) {
+		using utf8_validator::decode;
+		
+		//std::cout << "decoding: " << std::hex << m_payload[i] << std::endl;
+		if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
+		//	std::cout << "bad byte" << std::endl;
+			return false;
+		}
+	}
+
+	return true;
 }
 
 bool frame::validate_basic_header() const {
