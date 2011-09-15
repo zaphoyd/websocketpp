@@ -134,22 +134,28 @@ void session::send(const std::vector<unsigned char> &data) {
 
 // send close frame
 void session::disconnect(uint16_t status,const std::string &message) {
+	if (m_status != OPEN) {
+		m_server->error_log("got a disconnect call from invalid state");
+		return;
+	}
+
+	m_status = CLOSING;
+	
+	m_close_code = status;
+	m_close_message = message;
+
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
 	
-	if (status == 1005 || status == 1006) {
+	if (status == CLOSE_STATUS_NO_STATUS) {
 		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
+	} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
+		// unknown internal error, don't set a status? use protocol error?
 	} else {
 		m_write_frame.set_status(status,message);
 	}
 
 	write_frame();
-
-	m_status = CLOSING;
-
-	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),status,message);
-	}
 }
 
 void session::ping(const std::string &msg) {
@@ -410,9 +416,9 @@ void session::read_frame() {
 void session::handle_frame_header(const boost::system::error_code& error) {
 	if (error) {
 		handle_error("Error reading basic frame header",error);
-		return;
+		return;	
 	}
-	
+
 	uint16_t extended_header_bytes = m_read_frame.process_basic_header();
 
 	if (!m_read_frame.validate_basic_header()) {
@@ -505,10 +511,22 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 	}
 	
 	// check if there was an error processing this frame and fail the connection
-	if (m_error || m_status == CLOSED) {
+	if (m_error) {
+		m_server->error_log("Connection has been closed uncleanly");
 		return;
 	}
 	
+	if (m_status == CLOSED) {
+		m_server->access_log("Connection has been closed cleanly.");
+
+		if (m_local_interface) {
+			m_local_interface->disconnect(shared_from_this(),
+			                              m_close_code,
+										  m_close_message);
+		}
+		return;
+	}
+
 	this->read_frame();
 }
 
@@ -599,14 +617,14 @@ void session::process_close() {
 			<< "), close message: " << message;
 		m_server->access_log(msg.str());
 		
-		m_status = CLOSED;
-		
 		disconnect(status,message);
+
+		m_status = CLOSED;
 	} else if (m_status == CLOSING) {
 		// this is an ack of our close message
 		
 		// close cleanly
-		msg << "[Connection " << this << "] Received client closing acknowledgement. Connection has been cleanly closed.";
+		msg << "[Connection " << this << "] Received client closing acknowledgement.";
 		m_status = CLOSED;
 	}
 }

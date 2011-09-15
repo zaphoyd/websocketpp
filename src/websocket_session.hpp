@@ -204,6 +204,7 @@ private:
 	void handle_error(std::string msg,const boost::system::error_code& error);
 private:
 	// Immutable state about the current connection from the handshake
+	std::string							m_handshake;
 	std::string 						m_request;
 	std::map<std::string,std::string>	m_headers;
 	unsigned int						m_version;
@@ -211,7 +212,9 @@ private:
 	
 	// Mutable connection state;
 	status_code				m_status;
-	
+	uint16_t				m_close_code;
+	std::string				m_close_message;
+
 	// Connection Resources
 	server_ptr				m_server;
 	tcp::socket 			m_socket;
@@ -220,18 +223,19 @@ private:
 	// Buffers
 	boost::asio::streambuf m_buf;
 	
-	// utf8 validation state
-	uint32_t m_utf8_state;
-	uint32_t m_utf8_codepoint;
+	// current message state
+	uint32_t					m_utf8_state;
+	uint32_t					m_utf8_codepoint;
+	std::vector<unsigned char>	m_current_message;
+	bool 						m_fragmented;
+	frame::opcode 				m_current_opcode;
+	
+	// current frame state
+	frame m_read_frame;
 
 	// unorganized
-	std::string m_handshake;
-	frame m_read_frame;
 	frame m_write_frame;
-	std::vector<unsigned char> m_current_message;
 	bool m_error;
-	bool m_fragmented;
-	frame::opcode m_current_opcode;
 };
 
 // Exception classes
