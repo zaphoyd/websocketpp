@@ -35,19 +35,20 @@
 using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[]) {
-	std::string host = "localhost:5000";
+	std::string host = "localhost";
 	short port = 5000;
+	std::string full_host;
 	
 	if (argc == 3) {
 		// TODO: input validation?
+		host = argv[1];
 		port = atoi(argv[2]);
-
-		
-		std::stringstream temp;
-		temp << argv[1] << ":" << port;
-		
-		host = temp.str();
 	}
+	
+	std::stringstream temp;
+	
+	temp << argv[1] << ":" << port;
+	full_host = temp.str();
 	
 	websocketecho::echo_handler_ptr echo_handler(new websocketecho::echo_handler());
 	
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]) {
 		
 		// setup server settings
 		server->add_host(host);
+		server->add_host(full_host);
 		
 		// bump up max message size to maximum since we may be using the echo 
 		// server to test performance and protocol extremes.
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
 		// start the server
 		server->start_accept();
 		
-		std::cout << "Starting echo server on " << host << std::endl;
+		std::cout << "Starting echo server on " << full_host << std::endl;
 		
 		// start asio
 		io_service.run();
