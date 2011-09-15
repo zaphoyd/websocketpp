@@ -72,11 +72,12 @@ void chat_handler::disconnect(session_ptr client,uint16_t status,const std::stri
 	
 	std::cout << "client " << client << " left the lobby." << std::endl;
 	
+	const std::string alias = it->second;
 	m_connections.erase(it);
 
 	// send user list and signoff message to all clients
 	send_to_all(serialize_state());
-	send_to_all(encode_message("server",m_connections[client]+" has left the chat."));
+	send_to_all(encode_message("server",alias+" has left the chat."));
 }
 
 void chat_handler::message(session_ptr client,const std::string &msg) {
