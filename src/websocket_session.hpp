@@ -200,6 +200,11 @@ private:
 	// reset session for a new message
 	void reset_message();
 	
+	// prints connection state to the server access log with given http response
+	// code
+	void access_log_close();
+	void access_log_open(int code);
+
 	// prints a diagnostic message and disconnects the local interface
 	void handle_error(std::string msg,const boost::system::error_code& error);
 private:
@@ -214,6 +219,15 @@ private:
 	status_code				m_status;
 	uint16_t				m_close_code;
 	std::string				m_close_message;
+
+	// Close state
+	uint16_t	m_local_close_code;
+	std::string	m_local_close_msg;
+	uint16_t	m_remote_close_code;
+	std::string	m_remote_close_msg;
+	bool		m_was_clean;
+	bool		m_closed_by_me;
+	bool		m_dropped_by_me;
 
 	// Connection Resources
 	server_ptr				m_server;

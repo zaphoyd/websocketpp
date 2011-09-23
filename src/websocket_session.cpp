@@ -34,6 +34,7 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -44,9 +45,16 @@ using websocketpp::session;
 session::session (server_ptr s,boost::asio::io_service& io_service,
 				  connection_handler_ptr defc)
 	: m_status(CONNECTING),
+	  m_local_close_code(CLOSE_STATUS_NO_STATUS),
+	  m_remote_close_code(CLOSE_STATUS_NO_STATUS),
+	  m_was_clean(false),
+	  m_closed_by_me(false),
+	  m_dropped_by_me(false),
 	  m_server(s),
 	  m_socket(io_service),
 	  m_local_interface(defc),
+	  
+	  
 	  m_utf8_state(utf8_validator::UTF8_ACCEPT),
 	  m_utf8_codepoint(0) {}
 
@@ -55,10 +63,6 @@ tcp::socket& session::socket() {
 }
 
 void session::start() {
-	std::stringstream msg;
-	msg << "[Connection " << this << "] WebSocket Connection request from " << m_socket.remote_endpoint();
-	m_server->access_log(msg.str());
-	
 	// async read to handle_read_handshake
 	boost::asio::async_read_until(
 		m_socket,
@@ -143,6 +147,9 @@ void session::disconnect(uint16_t status,const std::string &message) {
 	
 	m_close_code = status;
 	m_close_message = message;
+	
+	m_local_close_code = status;
+	m_local_close_msg = message;
 
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
@@ -324,8 +331,9 @@ void session::write_handshake() {
 	server_handshake += "HTTP/1.1 101 Switching Protocols\r\n";
 	server_handshake += "Upgrade: websocket\r\n";
 	server_handshake += "Connection: Upgrade\r\n";
-	server_handshake += "Sec-WebSocket-Accept: "+server_key+"\r\n\r\n";
-	
+	server_handshake += "Sec-WebSocket-Accept: "+server_key+"\r\n";
+	server_handshake += "Server: WebSocket++/2011-09-22\r\n\r\n";
+
 	// TODO: handler requested headers
 		
 	// start async write to handle_write_handshake
@@ -346,11 +354,7 @@ void session::handle_write_handshake(const boost::system::error_code& error) {
 		return;
 	}
 	
-	std::stringstream msg;
-	msg << "[Connection " << this << "] WebSocket Version " 
-		<< m_version << " connection opened.";
-	
-	m_server->access_log(msg.str());
+	access_log_open(101);
 	
 	m_status = OPEN;
 	
@@ -367,7 +371,8 @@ void session::write_http_error(int code,const std::string &msg) {
 		
 	server_handshake << "HTTP/1.1 " << code << " " 
 					 << (msg != "" ? msg : lookup_http_error_string(code)) 
-					 << "\r\n";
+					 << "\r\n"
+					 << "Server: WebSocket++/2011-09-22\r\n";
 	
 	// additional headers?
 	
@@ -384,6 +389,8 @@ void session::write_http_error(int code,const std::string &msg) {
 		)
 	);
 	
+	access_log_open(code);
+
 	std::stringstream err;
 	err << "Handshake ended with HTTP error: " << code << " " 
 		<< (msg != "" ? msg : lookup_http_error_string(code)); 
@@ -423,6 +430,7 @@ void session::handle_frame_header(const boost::system::error_code& error) {
 
 	if (!m_read_frame.validate_basic_header()) {
 		handle_error("Basic header validation failed",boost::system::error_code());
+		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
 		return;
 	}
 
@@ -485,31 +493,42 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 	
 	m_read_frame.process_payload();
 	
-	switch (m_read_frame.get_opcode()) {
-		case frame::CONTINUATION_FRAME:
-			process_continuation();
-			break;
-		case frame::TEXT_FRAME:
-			process_text();
-			break;
-		case frame::BINARY_FRAME:
-			process_binary();
-			break;
-		case frame::CONNECTION_CLOSE:
+
+	if (m_status == OPEN) {
+		switch (m_read_frame.get_opcode()) {
+			case frame::CONTINUATION_FRAME:
+				process_continuation();
+				break;
+			case frame::TEXT_FRAME:
+				process_text();
+				break;
+			case frame::BINARY_FRAME:
+				process_binary();
+				break;
+			case frame::CONNECTION_CLOSE:
+				process_close();
+				break;
+			case frame::PING:
+				process_ping();
+				break;
+			case frame::PONG:
+				process_pong();
+				break;
+			default:
+				disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"Invalid Opcode");
+				break;
+		}
+	} else if (m_status == CLOSING) {
+		if (m_read_frame.get_opcode() == frame::CONNECTION_CLOSE) {
 			process_close();
-			break;
-		case frame::PING:
-			process_ping();
-			break;
-		case frame::PONG:
-			process_pong();
-			break;
-		default:
-			// TODO: unknown frame type
-			// ignore or close?
-			break;
+		} else {
+			// Ignore all other frames in closing state
+		}
+	} else {
+		// Recieved message before or after connection was opened/closed
+		return;
 	}
-	
+
 	// check if there was an error processing this frame and fail the connection
 	if (m_error) {
 		m_server->error_log("Connection has been closed uncleanly");
@@ -517,7 +536,7 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 	}
 	
 	if (m_status == CLOSED) {
-		m_server->access_log("Connection has been closed cleanly.");
+		access_log_close();
 
 		if (m_local_interface) {
 			m_local_interface->disconnect(shared_from_this(),
@@ -539,7 +558,7 @@ void session::handle_write_frame (const boost::system::error_code& error) {
 }
 
 void session::process_ping() {
-	std::cout << "Got ping" << std::endl;
+	m_server->access_log("Ping");
 	
 	// send pong
 	m_write_frame.set_fin(true);
@@ -550,7 +569,7 @@ void session::process_ping() {
 }
 
 void session::process_pong() {
-	std::cout << "Got pong" << std::endl;
+	m_server->access_log("Pong");
 }
 
 void session::process_text() {
@@ -566,6 +585,7 @@ void session::process_binary() {
 	if (m_fragmented) {
 		handle_error("Got a new message before the previous was finished.",
 			boost::system::error_code());
+			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
 			return;
 	}
 	
@@ -584,6 +604,7 @@ void session::process_continuation() {
 	if (!m_fragmented) {
 		handle_error("Got a continuation frame without an outstanding message.",
 			boost::system::error_code());
+			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
 			return;
 	}
 	
@@ -604,29 +625,26 @@ void session::process_continuation() {
 }
 
 void session::process_close() {
-	std::stringstream msg;
+	uint16_t status = m_read_frame.get_close_status();
+	std::string message = m_read_frame.get_close_msg();
 	
-	if (m_status == OPEN) {
-		// This is the case where the client initiated the close.
-		uint16_t status = m_read_frame.get_close_status();
-		std::string message = m_read_frame.get_close_msg();
-		
-		msg << "[Connection " << this 
-		    << "] Received connection close request from client. Close status:" 
-			<< status << " (" << lookup_ws_close_status_string(status) 
-			<< "), close message: " << message;
-		m_server->access_log(msg.str());
-		
-		disconnect(status,message);
+	m_remote_close_code = status;
+	m_remote_close_msg = message;
 
-		m_status = CLOSED;
+
+	if (m_status == OPEN) {
+		// This is the case where the remote initiated the close.
+		m_closed_by_me = false;
+		disconnect(status,message);
 	} else if (m_status == CLOSING) {
 		// this is an ack of our close message
-		
-		// close cleanly
-		msg << "[Connection " << this << "] Received client closing acknowledgement.";
-		m_status = CLOSED;
+		m_closed_by_me = true;
+	} else {
+		throw "fixme";
 	}
+
+	m_was_clean = true;
+	m_status = CLOSED;
 }
 
 void session::deliver_message() {
@@ -709,6 +727,31 @@ void session::reset_message() {
 
 	m_utf8_state = utf8_validator::UTF8_ACCEPT;
 	m_utf8_codepoint = 0;
+}
+
+void session::access_log_close() {
+	std::stringstream msg;
+
+	msg << "[Connection " << this << "] "
+		<< (m_was_clean ? "Clean " : "Unclean ")
+		<< "close local:[" << m_local_close_code
+		<< (m_local_close_msg == "" ? "" : ","+m_local_close_msg) 
+		<< "] remote:[" << m_remote_close_code 
+		<< (m_remote_close_msg == "" ? "" : ","+m_remote_close_msg) << "]";
+	
+	m_server->access_log(msg.str());
+}
+
+void session::access_log_open(int code) {
+	std::stringstream msg;
+	
+	msg << "[Connection " << this << "] "
+	    << m_socket.remote_endpoint()
+	    << " v" << m_version << " "
+	    << (get_header("User-Agent") == "" ? "NULL" : get_header("User-Agent")) 
+	    << " " << m_request << " " << code;
+	
+	m_server->access_log(msg.str());
 }
 
 void session::handle_error(std::string msg,
