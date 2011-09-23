@@ -28,6 +28,7 @@
 #include "websocket_server.hpp"
 
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <iostream>
 
@@ -80,10 +81,16 @@ bool server::validate_message_size(uint64_t val) {
 }
 
 void server::error_log(std::string msg) {
-	std::cerr << "[Error Log] " << msg << std::endl;
+	std::cerr << "[Error Log] "
+	          << boost::posix_time::to_iso_extended_string(
+			         boost::posix_time::second_clock::local_time())
+              << " " << msg << std::endl;
 }
 void server::access_log(std::string msg) {
-	std::cout << "[Access Log] " << msg << std::endl;
+	std::cout << "[Access Log] " 
+	          << boost::posix_time::to_iso_extended_string(
+			         boost::posix_time::second_clock::local_time())
+              << " " << msg << std::endl;
 }
 
 void server::start_accept() {
