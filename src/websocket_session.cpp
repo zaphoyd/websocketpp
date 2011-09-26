@@ -25,6 +25,7 @@
  * 
  */
 
+#include "websocketpp.hpp"
 #include "websocket_session.hpp"
 
 #include "websocket_frame.hpp"
@@ -42,7 +43,7 @@
 
 using websocketpp::session;
 
-session::session (server_ptr s,boost::asio::io_service& io_service,
+session::session (boost::asio::io_service& io_service,
 				  connection_handler_ptr defc)
 	: m_status(CONNECTING),
 	  m_local_close_code(CLOSE_STATUS_NO_STATUS),
@@ -50,8 +51,8 @@ session::session (server_ptr s,boost::asio::io_service& io_service,
 	  m_was_clean(false),
 	  m_closed_by_me(false),
 	  m_dropped_by_me(false),
-	  m_server(s),
 	  m_socket(io_service),
+	  m_io_service(io_service),
 	  m_local_interface(defc),
 	  
 	  
@@ -62,58 +63,65 @@ tcp::socket& session::socket() {
 	return m_socket;
 }
 
-void session::start() {
-	// async read to handle_read_handshake
-	boost::asio::async_read_until(
-		m_socket,
-		m_buf,
-			"\r\n\r\n",
-		boost::bind(
-			&session::handle_read_handshake,
-			shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred
-		)
-	);
+boost::asio::io_service& session::io_service() {
+	return m_io_service;
 }
 
 void session::set_handler(connection_handler_ptr new_con) {
 	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),4000,"Setting new connection handler");
+		// TODO: this should be another method and not reusing onclose
+		//m_local_interface->disconnect(shared_from_this(),4000,"Setting new connection handler");
 	}
 	m_local_interface = new_con;
-	m_local_interface->connect(shared_from_this());
+	m_local_interface->on_open(shared_from_this());
 }
 
-std::string session::get_header(const std::string& key) const {
-	std::map<std::string,std::string>::const_iterator h = m_headers.find(key);
+const std::string& session::get_subprotocol() const {
+	if (m_status == CONNECTING) {
+		log("Subprotocol is not avaliable before the handshake has completed.",LOG_WARN);
+		throw server_error("Subprotocol is not avaliable before the handshake has completed.");
+	}
+	return m_server_subprotocol;
+}
+
+const std::string& session::get_resource() const {
+	return m_resource;
+}
+
+const std::string& session::get_origin() const {
+	return m_client_origin;
+}
+
+std::string session::get_client_header(const std::string& key) const {
+	return get_header(key,m_client_headers);
+}
+
+std::string session::get_server_header(const std::string& key) const {
+	return get_header(key,m_server_headers);
+}
+
+std::string session::get_header(const std::string& key,
+                                const header_list& list) const {
+	header_list::const_iterator h = list.find(key);
 	
-	if (h == m_headers.end()) {
-		return std::string();
+	if (h == list.end()) {
+		return "";
 	} else {
 		return h->second;
 	}
 }
 
-void session::add_header(const std::string &key,const std::string &value) {
-	throw "unimplimented";
+const std::vector<std::string>& session::get_extensions() const {
+	return m_server_extensions;
 }
 
-std::string session::get_request() const {
-	return m_request;
-}
-
-std::string session::get_origin() const {
-	if (m_version < 13) {
-		return get_header("Sec-WebSocket-Origin");
-	} else {
-		return get_header("Origin");
-	}
+unsigned int session::get_version() const {
+	return m_version;
 }
 
 void session::send(const std::string &msg) {
 	if (m_status != OPEN) {
-		// error?
+		log("Tried to send a message from a session that wasn't open",LOG_WARN);
 		return;
 	}
 	m_write_frame.set_fin(true);
@@ -123,10 +131,9 @@ void session::send(const std::string &msg) {
 	write_frame();
 }
 
-// send binary frame
 void session::send(const std::vector<unsigned char> &data) {
 	if (m_status != OPEN) {
-		// error?
+		log("Tried to send a message from a session that wasn't open",LOG_WARN);
 		return;
 	}
 	m_write_frame.set_fin(true);
@@ -136,10 +143,15 @@ void session::send(const std::vector<unsigned char> &data) {
 	write_frame();
 }
 
-// send close frame
+void session::close(uint16_t status,const std::string& msg) {
+	disconnect(status,msg);
+	// TODO: close behavior
+}
+
+// TODO: clean this up, needs to be broken out into more specific methods
 void session::disconnect(uint16_t status,const std::string &message) {
 	if (m_status != OPEN) {
-		m_server->error_log("got a disconnect call from invalid state");
+		log("Tried to disconnect a session that wasn't open",LOG_WARN);
 		return;
 	}
 
@@ -158,6 +170,7 @@ void session::disconnect(uint16_t status,const std::string &message) {
 		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
 	} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
 		// unknown internal error, don't set a status? use protocol error?
+		log("Tried to disconnect with status ABNORMAL_CLOSE",LOG_DEBUG);
 	} else {
 		m_write_frame.set_status(status,message);
 	}
@@ -166,6 +179,10 @@ void session::disconnect(uint16_t status,const std::string &message) {
 }
 
 void session::ping(const std::string &msg) {
+	if (m_status != OPEN) {
+		log("Tried to send a ping from a session that wasn't open",LOG_WARN);
+		return;
+	}
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::PING);
 	m_write_frame.set_payload(msg);
@@ -174,235 +191,15 @@ void session::ping(const std::string &msg) {
 }
 
 void session::pong(const std::string &msg) {
+	if (m_status != OPEN) {
+		log("Tried to send a pong from a session that wasn't open",LOG_WARN);
+		return;
+	}
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::PONG);
 	m_write_frame.set_payload(msg);
 	
 	write_frame();
-}
-
-void session::handle_read_handshake(const boost::system::error_code& e,
-	std::size_t bytes_transferred) {
-	// read handshake and set local state (or pass to write_handshake)
-	std::ostringstream line;
-	line << &m_buf;
-	m_handshake += line.str();
-	
-	//std::cout << "=== Raw Message ===" << std::endl;
-	//std::cout << m_handshake << std::endl;
-	//std::cout << "=== Raw Message end ===" << std::endl;
-	
-	std::vector<std::string> tokens;
-	std::string::size_type start = 0;
-	std::string::size_type end;
-	
-	// Get request and parse headers
-	end = m_handshake.find("\r\n",start);
-	
-	while(end != std::string::npos) {
-		tokens.push_back(m_handshake.substr(start, end - start));
-		
-		start = end + 2;
-		
-		end = m_handshake.find("\r\n",start);
-	}
-	
-	for (size_t i = 0; i < tokens.size(); i++) {
-		if (i == 0) {
-			m_request = tokens[i];
-		}
-		
-		end = tokens[i].find(": ",0);
-		
-		if (end != std::string::npos) {
-			m_headers[tokens[i].substr(0,end)] = tokens[i].substr(end+2);
-		}
-	}
-	
-	// handshake error checking
-	try {
-		std::stringstream err;
-		std::string h;
-		
-		// check the method
-		if (m_request.substr(0,4) != "GET ") {
-			err << "Websocket handshake has invalid method: "
-				<< m_request.substr(0,4);
-			
-			throw(handshake_error(err.str(),400));
-		}
-		
-		// check the HTTP version
-		// TODO: allow versions greater than 1.1
-		end = m_request.find(" HTTP/1.1",4);
-		if (end == std::string::npos) {
-			err << "Websocket handshake has invalid HTTP version";
-			throw(handshake_error(err.str(),400));
-		}
-		
-		m_request = m_request.substr(4,end-4);
-		
-		// verify the presence of required headers
-		h = get_header("Host");
-		if (h == "") {
-			throw(handshake_error("Required Host header is missing",400));
-		} else if (!m_server->validate_host(h)) {
-			err << "Host " << h << " is not one of this server's names.";
-			throw(handshake_error(err.str(),400));
-		}
-		
-		h = get_header("Upgrade");
-		if (h == "") {
-			throw(handshake_error("Required Upgrade header is missing",400));
-		} else if (!boost::iequals(h,"websocket")) {
-			err << "Upgrade header was " << h << " instead of \"websocket\"";
-			throw(handshake_error(err.str(),400));
-		}
-		
-		h = get_header("Connection");
-		if (h == "") {
-			throw(handshake_error("Required Connection header is missing",400));
-		} else if (!boost::ifind_first(h,"upgrade")) {
-			err << "Connection header, \"" << h 
-				<< "\", does not contain required token \"upgrade\"";
-			throw(handshake_error(err.str(),400));
-		}
-		
-		if (get_header("Sec-WebSocket-Key") == "") {
-			throw(handshake_error("Required Sec-WebSocket-Key header is missing",400));
-		}
-		
-		h = get_header("Sec-WebSocket-Version");
-		if (h == "") {
-			throw(handshake_error("Required Sec-WebSocket-Version header is missing",400));
-		} else {
-			m_version = atoi(h.c_str());
-			
-			if (m_version != 7 && m_version != 8 && m_version != 13) {
-				err << "This server doesn't support WebSocket protocol version "
-					<< m_version;
-				throw(handshake_error(err.str(),400));
-			}
-		}
-		
-		// optional headers (delegated to the local interface)
-		if (m_local_interface) {
-			m_local_interface->validate(shared_from_this());
-		}
-		
-	} catch (const handshake_error& e) {
-		std::stringstream err;
-		err << "Caught handshake exception: " << e.what();
-		
-		m_server->error_log(err.str());
-		e.write(shared_from_this());
-		return;
-	}
-	
-	this->write_handshake();
-}
-
-void session::write_handshake() {
-	std::string server_handshake = "";
-	std::string server_key = m_headers["Sec-WebSocket-Key"];
-	server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-	
-	SHA1		sha;
-	uint32_t	message_digest[5];
-	
-	sha.Reset();
-	sha << server_key.c_str();
-	
-	if (!sha.Result(message_digest)) {
-		m_server->error_log("Error computing handshake sha1 hash.");
-		write_http_error(500,"");
-		return;
-	}
-	
-	// convert sha1 hash bytes to network byte order because this sha1
-	//  library works on ints rather than bytes
-	for (int i = 0; i < 5; i++) {
-		message_digest[i] = htonl(message_digest[i]);
-	}
-	
-	server_key = base64_encode(
-					reinterpret_cast<const unsigned char*>(message_digest),20);
-	
-	server_handshake += "HTTP/1.1 101 Switching Protocols\r\n";
-	server_handshake += "Upgrade: websocket\r\n";
-	server_handshake += "Connection: Upgrade\r\n";
-	server_handshake += "Sec-WebSocket-Accept: "+server_key+"\r\n";
-	server_handshake += "Server: WebSocket++/2011-09-22\r\n\r\n";
-
-	// TODO: handler requested headers
-		
-	// start async write to handle_write_handshake
-	boost::asio::async_write(
-		m_socket,
-		boost::asio::buffer(server_handshake),
-		boost::bind(
-			&session::handle_write_handshake,
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void session::handle_write_handshake(const boost::system::error_code& error) {
-	if (error) {
-		handle_error("Error writing handshake",error);
-		return;
-	}
-	
-	access_log_open(101);
-	
-	m_status = OPEN;
-	
-	if (m_local_interface) {
-		m_local_interface->connect(shared_from_this());
-	}
-	
-	reset_message();
-	this->read_frame();
-}
-
-void session::write_http_error(int code,const std::string &msg) {
-	std::stringstream server_handshake;
-		
-	server_handshake << "HTTP/1.1 " << code << " " 
-					 << (msg != "" ? msg : lookup_http_error_string(code)) 
-					 << "\r\n"
-					 << "Server: WebSocket++/2011-09-22\r\n";
-	
-	// additional headers?
-	
-	server_handshake << "\r\n";
-	
-	// start async write to handle_write_handshake
-	boost::asio::async_write(
-		m_socket,
-		boost::asio::buffer(server_handshake.str()),
-		boost::bind(
-			&session::handle_write_http_error,
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-	
-	access_log_open(code);
-
-	std::stringstream err;
-	err << "Handshake ended with HTTP error: " << code << " " 
-		<< (msg != "" ? msg : lookup_http_error_string(code)); 
-	
-	m_server->error_log(err.str());
-}
-
-void session::handle_write_http_error(const boost::system::error_code& error) {
-	if (error) {
-		handle_error("Error writing http response",error);
-		return;
-	}
 }
 
 void session::read_frame() {
@@ -418,11 +215,10 @@ void session::read_frame() {
 	);
 }
 
-
-
 void session::handle_frame_header(const boost::system::error_code& error) {
 	if (error) {
 		handle_error("Error reading basic frame header",error);
+		// TODO: close behavior
 		return;	
 	}
 
@@ -431,6 +227,7 @@ void session::handle_frame_header(const boost::system::error_code& error) {
 	if (!m_read_frame.validate_basic_header()) {
 		handle_error("Basic header validation failed",boost::system::error_code());
 		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
+		// TODO: close behavior
 		return;
 	}
 
@@ -454,6 +251,7 @@ void session::handle_extended_frame_header(
 									const boost::system::error_code& error) {
 	if (error) {
 		handle_error("Error reading extended frame header",error);
+		// TODO: close behavior
 		return;
 	}
 	
@@ -464,16 +262,6 @@ void session::handle_extended_frame_header(
 }
 
 void session::read_payload() {
-	/*char * foo = m_read_frame.get_header();
-	
-	std::cout << std::hex << ((uint16_t*)foo)[0] << std::endl;
-	
-	std::cout << "opcode: " << m_read_frame.get_opcode() << std::endl;
-	std::cout << "fin: " << m_read_frame.get_fin() << std::endl;
-	std::cout << "mask: " << m_read_frame.get_masked() << std::endl;
-	std::cout << "size: " << (uint16_t)m_read_frame.get_basic_size() << std::endl;
-	std::cout << "payload_size: " << m_read_frame.get_payload_size() << std::endl;*/
-	
 	boost::asio::async_read(
 		m_socket,
 		boost::asio::buffer(m_read_frame.get_payload()),
@@ -488,11 +276,11 @@ void session::read_payload() {
 void session::handle_read_payload (const boost::system::error_code& error) {
 	if (error) {
 		handle_error("Error reading payload data frame header",error);
+		// TODO: close behavior
 		return;
 	}
 	
 	m_read_frame.process_payload();
-	
 
 	if (m_status == OPEN) {
 		switch (m_read_frame.get_opcode()) {
@@ -516,6 +304,7 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 				break;
 			default:
 				disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"Invalid Opcode");
+				// TODO: close behavior
 				break;
 		}
 	} else if (m_status == CLOSING) {
@@ -526,23 +315,26 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 		}
 	} else {
 		// Recieved message before or after connection was opened/closed
+		// TODO: close behavior
 		return;
 	}
 
 	// check if there was an error processing this frame and fail the connection
 	if (m_error) {
-		m_server->error_log("Connection has been closed uncleanly");
+		log("Connection has been closed uncleanly",LOG_ERROR);
+		// TODO: close behavior
 		return;
 	}
 	
 	if (m_status == CLOSED) {
-		access_log_close();
+		log_close_result();
 
 		if (m_local_interface) {
-			m_local_interface->disconnect(shared_from_this(),
-			                              m_close_code,
-										  m_close_message);
+			m_local_interface->on_close(shared_from_this(),
+			                            m_close_code,
+			                            m_close_message);
 		}
+		// TODO: close behavior
 		return;
 	}
 
@@ -552,14 +344,16 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 void session::handle_write_frame (const boost::system::error_code& error) {
 	if (error) {
 		handle_error("Error writing frame data",error);
+		// TODO: close behavior
 	}
 	
 	//std::cout << "Successfully wrote frame." << std::endl;
 }
 
 void session::process_ping() {
-	m_server->access_log("Ping");
-	
+	access_log("Ping",ALOG_MISC_CONTROL);
+	// TODO: on_ping
+
 	// send pong
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::PONG);
@@ -569,12 +363,14 @@ void session::process_ping() {
 }
 
 void session::process_pong() {
-	m_server->access_log("Pong");
+	access_log("Pong",ALOG_MISC_CONTROL);
+	// TODO: on_pong
 }
 
 void session::process_text() {
 	if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
 		disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
+		// TODO: close behavior
 		return;
 	}
 
@@ -586,6 +382,7 @@ void session::process_binary() {
 		handle_error("Got a new message before the previous was finished.",
 			boost::system::error_code());
 			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
+			// TODO: close behavior
 			return;
 	}
 	
@@ -605,12 +402,14 @@ void session::process_continuation() {
 		handle_error("Got a continuation frame without an outstanding message.",
 			boost::system::error_code());
 			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
+			// TODO: close behavior
 			return;
 	}
 	
 	if (m_current_opcode == frame::TEXT_FRAME) {
 		if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
 			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
+			// TODO: close behavior
 			return;
 		}
 	}
@@ -635,6 +434,7 @@ void session::process_close() {
 	if (m_status == OPEN) {
 		// This is the case where the remote initiated the close.
 		m_closed_by_me = false;
+		// TODO: close behavior
 		disconnect(status,message);
 	} else if (m_status == CLOSING) {
 		// this is an ack of our close message
@@ -654,9 +454,9 @@ void session::deliver_message() {
 	
 	if (m_current_opcode == frame::BINARY_FRAME) {
 		if (m_fragmented) {
-			m_local_interface->message(shared_from_this(),m_current_message);
+			m_local_interface->on_message(shared_from_this(),m_current_message);
 		} else {
-			m_local_interface->message(shared_from_this(),
+			m_local_interface->on_message(shared_from_this(),
 									   m_read_frame.get_payload());
 		}
 	} else if (m_current_opcode == frame::TEXT_FRAME) {
@@ -665,6 +465,7 @@ void session::deliver_message() {
 		// make sure the finished frame is valid utf8
 		if (m_utf8_state != utf8_validator::UTF8_ACCEPT) {
 			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");
+			// TODO: close behavior
 			return;
 		}
 
@@ -677,12 +478,12 @@ void session::deliver_message() {
 			);
 		}
 		
-		m_local_interface->message(shared_from_this(),msg);
+		m_local_interface->on_message(shared_from_this(),msg);
 	} else {
 		// Not sure if this should be a fatal error or not
 		std::stringstream err;
 		err << "Attempted to deliver a message of unsupported opcode " << m_current_opcode;
-		m_server->error_log(err.str());
+		log(err.str(),LOG_ERROR);
 	}
 	
 }
@@ -694,9 +495,6 @@ void session::extract_payload() {
 }
 
 void session::write_frame() {
-	// print debug info
-	m_write_frame.print_frame();
-	
 	std::vector<boost::asio::mutable_buffer> data;
 	
 	data.push_back(
@@ -729,7 +527,7 @@ void session::reset_message() {
 	m_utf8_codepoint = 0;
 }
 
-void session::access_log_close() {
+void session::log_close_result() {
 	std::stringstream msg;
 
 	msg << "[Connection " << this << "] "
@@ -739,19 +537,19 @@ void session::access_log_close() {
 		<< "] remote:[" << m_remote_close_code 
 		<< (m_remote_close_msg == "" ? "" : ","+m_remote_close_msg) << "]";
 	
-	m_server->access_log(msg.str());
+	access_log(msg.str(),ALOG_DISCONNECT);
 }
 
-void session::access_log_open(int code) {
+void session::log_open_result() {
 	std::stringstream msg;
 	
 	msg << "[Connection " << this << "] "
 	    << m_socket.remote_endpoint()
 	    << " v" << m_version << " "
-	    << (get_header("User-Agent") == "" ? "NULL" : get_header("User-Agent")) 
-	    << " " << m_request << " " << code;
+	    << (get_client_header("User-Agent") == "" ? "NULL" : get_client_header("User-Agent")) 
+	    << " " << m_resource << " " << m_server_http_code;
 	
-	m_server->access_log(msg.str());
+	access_log(msg.str(),ALOG_HANDSHAKE);
 }
 
 void session::handle_error(std::string msg,
@@ -760,10 +558,10 @@ void session::handle_error(std::string msg,
 	
 	e << "[Connection " << this << "] " << msg << " (" << error << ")";
 	
-	m_server->error_log(e.str());
+	log(e.str(),LOG_ERROR);
 		
 	if (m_local_interface) {
-		m_local_interface->disconnect(shared_from_this(),1006,e.str());
+		m_local_interface->on_close(shared_from_this(),1006,e.str());
 	}
 	
 	m_error = true;

@@ -25,59 +25,70 @@
  * 
  */
 
-#include "echo.hpp"
+#ifndef CHAT_CLIENT_HANDLER_HPP
+#define CHAT_CLIENT_HANDLER_HPP
+
+// com.zaphoyd.websocketpp.chat protocol
+// 
+// client messages:
+// alias [UTF8 text, 16 characters max]
+// msg [UTF8 text]
+// 
+// server messages:
+// {"type":"msg","sender":"<sender>","value":"<msg>" }
+// {"type":"participants","value":[<participant>,...]}
+
+#include <boost/shared_ptr.hpp>
 
 #include "../../src/websocketpp.hpp"
-#include <boost/asio.hpp>
+#include "../../src/websocket_connection_handler.hpp"
 
-#include <iostream>
+#include <map>
+#include <string>
+#include <queue>
 
-using boost::asio::ip::tcp;
+using websocketpp::session_ptr;
 
-int main(int argc, char* argv[]) {
-	std::string host = "localhost";
-	short port = 9002;
-	std::string full_host;
+namespace websocketchat {
+
+class chat_client_handler : public websocketpp::connection_handler {
+public:
+	chat_client_handler() {}
+	virtual ~chat_client_handler() {}
 	
-	if (argc == 3) {
-		// TODO: input validation?
-		host = argv[1];
-		port = atoi(argv[2]);
-	}
+	// ignored for clients?
+	void validate(session_ptr s) {} 
 	
-	std::stringstream temp;
+	// connection to chat room complete
+	void on_open(session_ptr s);
+
+	// connection to chat room closed
+	void on_close(session_ptr s,uint16_t status,const std::string &reason);
 	
-	temp << host << ":" << port;
-	full_host = temp.str();
+	// got a new message from server
+	void on_message(session_ptr s,const std::string &msg);
 	
-	websocketecho::echo_server_handler_ptr echo_handler(new websocketecho::echo_server_handler());
+	// ignore messages
+	void on_message(session_ptr s,const std::vector<unsigned char> &data) {}
 	
-	try {
-		boost::asio::io_service io_service;
-		tcp::endpoint endpoint(tcp::v6(), port);
-		
-		websocketpp::server_ptr server(
-			new websocketpp::server(io_service,endpoint,echo_handler)
-		);
-		
-		// setup server settings
-		server->add_host(host);
-		server->add_host(full_host);
-		
-		// bump up max message size to maximum since we may be using the echo 
-		// server to test performance and protocol extremes.
-		server->set_max_message_size(websocketpp::frame::PAYLOAD_64BIT_LIMIT); 
-		
-		// start the server
-		server->start_accept();
-		
-		std::cout << "Starting echo server on " << full_host << std::endl;
-		
-		// start asio
-		io_service.run();
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
+	// CLIENT API
+	void send(const std::string &msg);
+	void close();
+
+private:
+	// Client API internal
+	void do_send(const std::string &msg);
+	void do_close();
+
+	void decode_server_msg(const std::string &msg);
 	
-	return 0;
+	// list of other chat participants
+	std::set<std::string> m_participants;
+	std::queue<std::string> m_msg_queue;
+	session_ptr m_session;
+};
+
+typedef boost::shared_ptr<chat_client_handler> chat_client_handler_ptr;
+
 }
+#endif // CHAT_CLIENT_HANDLER_HPP

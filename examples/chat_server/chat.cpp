@@ -29,15 +29,15 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
-using websocketchat::chat_handler;
+using websocketchat::chat_server_handler;
 using websocketpp::session_ptr;
 
-void chat_handler::validate(session_ptr client) {
+void chat_server_handler::validate(session_ptr client) {
 	std::stringstream err;
 	
 	// We only know about the chat resource
-	if (client->get_request() != "/chat") {
-		err << "Request for unknown resource " << client->get_request();
+	if (client->get_resource() != "/chat") {
+		err << "Request for unknown resource " << client->get_resource();
 		throw(websocketpp::handshake_error(err.str(),404));
 	}
 	
@@ -49,7 +49,7 @@ void chat_handler::validate(session_ptr client) {
 }
 
 
-void chat_handler::connect(session_ptr client) {
+void chat_server_handler::on_open(session_ptr client) {
 	std::cout << "client " << client << " joined the lobby." << std::endl;
 	m_connections.insert(std::pair<session_ptr,std::string>(client,get_con_id(client)));
 
@@ -59,7 +59,7 @@ void chat_handler::connect(session_ptr client) {
 	send_to_all(encode_message("server",m_connections[client]+" has joined the chat."));
 }
 
-void chat_handler::disconnect(session_ptr client,uint16_t status,const std::string &reason) {
+void chat_server_handler::on_close(session_ptr client,uint16_t status,const std::string &reason) {
 	std::map<session_ptr,std::string>::iterator it = m_connections.find(client);
 	
 	if (it == m_connections.end()) {
@@ -80,7 +80,7 @@ void chat_handler::disconnect(session_ptr client,uint16_t status,const std::stri
 	send_to_all(encode_message("server",alias+" has left the chat."));
 }
 
-void chat_handler::message(session_ptr client,const std::string &msg) {
+void chat_server_handler::on_message(session_ptr client,const std::string &msg) {
 	std::cout << "message from client " << client << ": " << msg << std::endl;
 	
 	
@@ -126,7 +126,7 @@ void chat_handler::message(session_ptr client,const std::string &msg) {
 }
 
 // {"type":"participants","value":[<participant>,...]}
-std::string chat_handler::serialize_state() {
+std::string chat_server_handler::serialize_state() {
 	std::stringstream s;
 	
 	s << "{\"type\":\"participants\",\"value\":[";
@@ -147,7 +147,7 @@ std::string chat_handler::serialize_state() {
 }
 
 // {"type":"msg","sender":"<sender>","value":"<msg>" }
-std::string chat_handler::encode_message(std::string sender,std::string msg,bool escape) {
+std::string chat_server_handler::encode_message(std::string sender,std::string msg,bool escape) {
 	std::stringstream s;
 	
 	// escape JSON characters
@@ -167,13 +167,13 @@ std::string chat_handler::encode_message(std::string sender,std::string msg,bool
 	return s.str();
 }
 
-std::string chat_handler::get_con_id(session_ptr s) {
+std::string chat_server_handler::get_con_id(session_ptr s) {
 	std::stringstream endpoint;
 	endpoint << s->socket().remote_endpoint();
 	return endpoint.str();
 }
 
-void chat_handler::send_to_all(std::string data) {
+void chat_server_handler::send_to_all(std::string data) {
 	std::map<session_ptr,std::string>::iterator it;
 	for (it = m_connections.begin(); it != m_connections.end(); it++) {
 		(*it).first->send(data);

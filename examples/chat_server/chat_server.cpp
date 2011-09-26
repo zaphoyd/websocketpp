@@ -27,29 +27,32 @@
 
 #include "chat.hpp"
 
-#include <websocketpp/websocket_server.hpp>
+#include "../../src/websocketpp.hpp"
 #include <boost/asio.hpp>
 
 #include <iostream>
 
 using boost::asio::ip::tcp;
+using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
-	std::string host = "localhost:9000";
-	short port = 9000;
+	std::string host = "localhost";
+	short port = 9003;
+	std::string full_host;
 	
 	if (argc == 3) {
 		// TODO: input validation?
+		host = argv[1];
 		port = atoi(argv[2]);
-
-		
-		std::stringstream temp;
-		temp << argv[1] << ":" << port;
-		
-		host = temp.str();
 	}
+		
+	std::stringstream temp;
 	
-	websocketchat::chat_handler_ptr chat_handler(new websocketchat::chat_handler());
+	temp << host << ":" << port;	
+	full_host = temp.str();
+	
+	
+	chat_server_handler_ptr chat_handler(new chat_server_handler());
 	
 	try {
 		boost::asio::io_service io_service;
@@ -61,7 +64,7 @@ int main(int argc, char* argv[]) {
 		
 		// setup server settings
 		server->add_host(host);
-		
+		server->add_host(full_host);
 		// Chat server should only be receiving small text messages, reduce max
 		// message size limit slightly to save memory, improve performance, and 
 		// guard against DoS attacks.
@@ -70,7 +73,7 @@ int main(int argc, char* argv[]) {
 		// start the server
 		server->start_accept();
 		
-		std::cout << "Starting chat server on " << host << std::endl;
+		std::cout << "Starting chat server on " << full_host << std::endl;
 		
 		io_service.run();
 	} catch (std::exception& e) {

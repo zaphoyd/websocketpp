@@ -25,38 +25,40 @@
  * 
  */
 
-#ifndef ECHO_HANDLER_HPP
-#define ECHO_HANDLER_HPP
-
+#ifndef ECHO_SERVER_HANDLER_HPP
+#define ECHO_SERVER_HANDLER_HPP
+#include "../../src/websocketpp.hpp"
 #include "../../src/websocket_connection_handler.hpp"
 #include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
 
+using websocketpp::session_ptr;
+
 namespace websocketecho {
 
-class echo_handler : public websocketpp::connection_handler {
+class echo_server_handler : public websocketpp::connection_handler {
 public:
-	echo_handler() {}
-	virtual ~echo_handler() {}
+	echo_server_handler() {}
+	virtual ~echo_server_handler() {}
 	
 	// The echo server allows all domains is protocol free.
-	void validate(websocketpp::session_ptr client);
+	void validate(session_ptr client);
 	
-	// an echo server is stateless. The handler has no need to keep track of connected
-	// clients.
-	void connect(websocketpp::session_ptr client) {}
-	void disconnect(websocketpp::session_ptr client,uint16_t status,const std::string &reason) {}
+	// an echo server is stateless. 
+	// The handler has no need to keep track of connected clients.
+	void on_open(session_ptr client) {}
+	void on_close(session_ptr client,uint16_t status,const std::string &reason) {}
 	
 	// both text and binary messages are echoed back to the sending client.
-	void message(websocketpp::session_ptr client,const std::string &msg);
-	void message(websocketpp::session_ptr client,
+	void on_message(session_ptr client,const std::string &msg);
+	void on_message(session_ptr client,
 		const std::vector<unsigned char> &data);
 };
 
-typedef boost::shared_ptr<echo_handler> echo_handler_ptr;
+typedef boost::shared_ptr<echo_server_handler> echo_server_handler_ptr;
 
 }
 
-#endif // ECHO_HANDLER_HPP
+#endif // ECHO_SERVER_HANDLER_HPP

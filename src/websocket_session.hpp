@@ -52,7 +52,7 @@ namespace websocketpp {
 	class handshake_error;
 }
 
-#include "websocket_server.hpp"
+#include "websocketpp.hpp"
 #include "websocket_frame.hpp"
 #include "websocket_connection_handler.hpp"
 
@@ -62,6 +62,8 @@ namespace websocketpp {
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
+
+typedef std::map<std::string,std::string> header_list;
 
 class session : public boost::enable_shared_from_this<session> {
 public:
@@ -86,12 +88,12 @@ public:
 	static const uint16_t CLOSE_STATUS_POLICY_VIOLATION = 1008;
 	static const uint16_t CLOSE_STATUS_MESSAGE_TOO_BIG = 1009;
 	static const uint16_t CLOSE_STATUS_EXTENSION_REQUIRE = 1010;
-	
-	session (server_ptr s,
-			 boost::asio::io_service& io_service,
+
+	session (boost::asio::io_service& io_service,
 			 connection_handler_ptr defc);
 	
 	tcp::socket& socket();
+	boost::asio::io_service& io_service();
 	
 	/*** SERVER INTERFACE ***/
 	
@@ -99,7 +101,7 @@ public:
 	// that come after it are called as a result of an async event completing.
 	// if any method in this chain returns before adding a new async event the
 	// session will end.
-	void start();
+	virtual void on_connect() = 0;
 	
 	// sets the internal connection handler of this connection to new_con.
 	// This is useful if you want to switch handler objects during a connection
@@ -110,24 +112,20 @@ public:
 	
 	
 	/*** HANDSHAKE INTERFACE ***/
+	// Set session connection information (avaliable only before/during the
+	// opening handshake)
 	
-	// gets the value of a header or the empty string if not present.
-	std::string get_header(const std::string &key) const;
-	// adds an arbitrary header to the server handshake HTTP response.
-	void add_header(const std::string &key,const std::string &value);
+	// Get session status (valid once the connection is open)
 	
-	std::string get_request() const;
-	std::string get_origin() const;
-	
-	// sets the subprotocol being used. This will result in the appropriate 
-	// Sec-WebSocket-Protocol header being sent back to the client. The value
-	// here must have been present in the client's opening handshake.
-	void set_subprotocol(const std::string &protocol);
-	
-
-	//int get_version();
-
-	//void add_extension();
+	// returns the subprotocol that was negotiated during the opening handshake
+	// or the empty string if no subprotocol was requested.
+	const std::string& get_subprotocol() const;
+	const std::string& get_resource() const;
+	const std::string& get_origin() const;
+	std::string get_client_header(const std::string& key) const;
+	std::string get_server_header(const std::string& key) const;
+	const std::vector<std::string>& get_extensions() const;
+	unsigned int get_version() const;
 	
 	/*** SESSION INTERFACE ***/
 	
@@ -137,45 +135,29 @@ public:
 	void ping(const std::string &msg);
 	void pong(const std::string &msg);
 	
-	void disconnect(uint16_t status,const std::string &reason);
-private:	
-	// handle_read_handshake reads the HTTP headers of the initial websocket
-	// handshake, parses out the request and headers, and does error checking
-	// TODO: Generalize a lot of the hard coded things in this method.
-	void handle_read_handshake(const boost::system::error_code& e,
-		std::size_t bytes_transferred);
-	
-	// write_handshake calculates the server portion of the handshake and 
-	// sends it back.
-	// TODO: Generalize this to include things like protocols, cookies, etc
-	void write_handshake();
-	// handle_write_handshake checks for errors writing the server handshake,
-	// officially declares a connection open, notifies the local interface,
-	// and starts the frame reading loop.
-	void handle_write_handshake(const boost::system::error_code& error);
-	
-	// construct and write an HTTP error in the case the handshake goes poorly
-	void write_http_error(int http_code,const std::string &http_err_str);
-	void handle_write_http_error(const boost::system::error_code& error);
+	// initiate a connection close
+	void close(uint16_t status,const std::string &reason);
+	void disconnect(uint16_t status,const std::string& reason); // temp
+
+	virtual bool is_server() const = 0;
+protected:
+	// Opening handshake processors and callbacks. These need to be defined in
+	// derived classes.
+	virtual void write_handshake() = 0;
+	virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
+	virtual void read_handshake() = 0;
+	virtual void handle_read_handshake(const boost::system::error_code& e,
+	                                   std::size_t bytes_transferred) = 0;
 	
 	// start async read for a websocket frame (2 bytes) to handle_frame_header
 	void read_frame();
-	
-	// reads frame header and devices if it needs to read more header or go
-	// straight to the payload.
 	void handle_frame_header(const boost::system::error_code& error);
-	
-	// process extra headers and start payload read
 	void handle_extended_frame_header(const boost::system::error_code& error);
-	
-	// initiate payload read
 	void read_payload();
-	
-	// now the frame object should be complete. Process and send it on then 
-	// reset for new frame
 	void handle_read_payload (const boost::system::error_code& error);
 	
-	// checks for errors writing frames
+	// write m_write_frame out to the socket.
+	void write_frame();
 	void handle_write_frame (const boost::system::error_code& error);
 	
 	// helper functions for processing each opcode
@@ -194,27 +176,43 @@ private:
 	// messages are recieved.
 	void extract_payload();
 	
-	// write m_write_frame out to the socket.
-	void write_frame();
-	
 	// reset session for a new message
 	void reset_message();
 	
-	// prints connection state to the server access log with given http response
-	// code
-	void access_log_close();
-	void access_log_open(int code);
+	// logging
+	virtual void log(const std::string& msg, uint16_t level) const = 0;
+	virtual void access_log(const std::string& msg, uint16_t level) const = 0;
+	
+	void log_close_result();
+	void log_open_result();
 
 	// prints a diagnostic message and disconnects the local interface
 	void handle_error(std::string msg,const boost::system::error_code& error);
 private:
+	std::string get_header(const std::string& key,
+	                       const header_list& list) const;
+
+protected:
 	// Immutable state about the current connection from the handshake
-	std::string							m_handshake;
-	std::string 						m_request;
-	std::map<std::string,std::string>	m_headers;
-	unsigned int						m_version;
-	std::string							m_subprotocol;
-	
+	// Client handshake
+	std::string					m_raw_client_handshake;
+	std::string					m_client_http_request;
+	std::string					m_resource;
+	std::string					m_client_origin;
+	header_list					m_client_headers;
+	std::vector<std::string>	m_client_subprotocols;
+	std::vector<std::string>	m_client_extensions;
+	unsigned int				m_version;
+
+	// Server handshake
+	std::string					m_raw_server_handshake;
+	std::string					m_server_http_request;
+	header_list					m_server_headers;
+	std::string					m_server_subprotocol;
+	std::vector<std::string>	m_server_extensions;
+	uint16_t					m_server_http_code;
+	std::string					m_server_http_string;
+
 	// Mutable connection state;
 	status_code				m_status;
 	uint16_t				m_close_code;
@@ -230,9 +228,9 @@ private:
 	bool		m_dropped_by_me;
 
 	// Connection Resources
-	server_ptr				m_server;
-	tcp::socket 			m_socket;
-	connection_handler_ptr	m_local_interface;
+	tcp::socket 				m_socket;
+	boost::asio::io_service&	m_io_service;
+	connection_handler_ptr		m_local_interface;
 	
 	// Buffers
 	boost::asio::streambuf m_buf;
@@ -266,11 +264,6 @@ public:
 		return m_msg.c_str();
 	}
 	
-	void write(session_ptr s) const {
-		s->write_http_error(m_http_error_code,m_http_error_msg);
-	}
-	
-private:
 	std::string m_msg;
 	int			m_http_error_code;
 	std::string m_http_error_msg;

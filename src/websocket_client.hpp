@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKET_SERVER_HPP
-#define WEBSOCKET_SERVER_HPP
+#ifndef WEBSOCKET_CLIENT_HPP
+#define WEBSOCKET_CLIENT_HPP
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
@@ -34,23 +34,23 @@
 #include <set>
 
 namespace websocketpp {
-	class server;
-	typedef boost::shared_ptr<server> server_ptr;
+	class client;
+	typedef boost::shared_ptr<client> client_ptr;
 }
 
 #include "websocketpp.hpp"
-#include "websocket_server_session.hpp"
+#include "websocket_client_session.hpp"
 #include "websocket_connection_handler.hpp"
 
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
 
-class server_error : public std::exception {
+class client_error : public std::exception {
 public:	
-	server_error(const std::string& msg)
+	client_error(const std::string& msg)
 		: m_msg(msg) {}
-	~server_error() throw() {}
+	~client_error() throw() {}
 	
 	virtual const char* what() const throw() {
 		return m_msg.c_str();
@@ -59,10 +59,10 @@ private:
 	std::string m_msg;
 };
 
-class server : public boost::enable_shared_from_this<server> {
+class client : public boost::enable_shared_from_this<client> {
 	public:
 		// System logging levels
-		/*static const uint16_t LOG_ALL = 0;
+	/*	static const uint16_t LOG_ALL = 0;
 		static const uint16_t LOG_DEBUG = 1;
 		static const uint16_t LOG_INFO = 2;
 		static const uint16_t LOG_WARN = 3;
@@ -85,23 +85,37 @@ class server : public boost::enable_shared_from_this<server> {
 		                                   & ALOG_DISCONNECT 
 										   & ALOG_MISC_CONTROL;
 		static const uint16_t ALOG_ALL = 0xFFFF;
-*/
-		server(boost::asio::io_service& io_service, 
-			   const tcp::endpoint& endpoint,
-			   connection_handler_ptr defc);
-		
-		// creates a new session object and connects the next websocket
-		// connection to it.
-		void start_accept();
-		
-		// INTERFACE FOR LOCAL APPLICATIONS
+	*/	
+		static const uint16_t CLIENT_STATE_NULL = 0;
+		static const uint16_t CLIENT_STATE_INITIALIZED = 1;
+		static const uint16_t CLIENT_STATE_CONNECTING = 2;
+		static const uint16_t CLIENT_STATE_CONNECTED = 3;
 
-		// Add or remove a host string (host:port) to the list of acceptable 
-		// hosts to accept websocket connections from. Additions/deletions here 
-		// only affect new connections.
-		void add_host(std::string host);
-		void remove_host(std::string host);
+		client(boost::asio::io_service& io_service,
+			   connection_handler_ptr defc);
+
+		// INTERFACE FOR LOCAL APPLICATIONS
 		
+		// initializes the session. Methods that affect the opening handshake
+		// such as add_protocol and set_header must be called after init and
+		// before connect.
+		void init();
+
+		// starts the connection process. Should be called before 
+		// io_service.run(), connection process will not start until run() has
+		// been called.
+		void connect(const std::string& url);
+		
+		// Adds a protocol to the opening handshake.
+		// Must be called before connect
+		void add_subprotocol(const std::string& p);
+		
+		// Sets the value of the given HTTP header to be sent during the 
+		// opening handshake. Must be called before connect
+		void set_header(const std::string& key,const std::string& val);
+		
+		void set_origin(const std::string& val);
+
 		void set_max_message_size(uint64_t val);
 		
 		// Test methods determine if a message of the given level should be 
@@ -116,9 +130,6 @@ class server : public boost::enable_shared_from_this<server> {
 
 		// INTERFACE FOR SESSIONS
 
-		// Check if this server will respond to this host.
-		bool validate_host(std::string host);
-		
 		// Check if message size is within server's acceptable parameters
 		bool validate_message_size(uint64_t val);
 		
@@ -128,20 +139,22 @@ class server : public boost::enable_shared_from_this<server> {
 	private:
 		// if no errors starts the session's read loop and returns to the
 		// start_accept phase.
-		void handle_accept(server_session_ptr session,
-			const boost::system::error_code& error);
+		void handle_connect(const boost::system::error_code& error);
 		
 	private:
 		uint16_t					m_elog_level;
 		uint16_t					m_alog_level;
+		
+		uint16_t					m_state;
 
 		std::set<std::string>		m_hosts;
 		uint64_t					m_max_message_size;
 		boost::asio::io_service&	m_io_service;
-		tcp::acceptor				m_acceptor;
+		tcp::resolver				m_resolver;
+		client_session_ptr			m_client_session;
 		connection_handler_ptr		m_def_con_handler;
 };
 
 }
 
-#endif // WEBSOCKET_SERVER_HPP
+#endif // WEBSOCKET_CLIENT_HPP

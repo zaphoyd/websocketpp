@@ -25,35 +25,82 @@
  * 
  */
 
-#include "websocket_server.hpp"
+#include "websocket_client.hpp"
 
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <iostream>
 
-using websocketpp::server;
+using websocketpp::client;
+using boost::asio::ip::tcp;
 
-server::server(boost::asio::io_service& io_service, 
-			   const tcp::endpoint& endpoint,
-			   connection_handler_ptr defc)
+client::client(boost::asio::io_service& io_service,connection_handler_ptr defc)
 	: m_elog_level(LOG_ALL),
 	  m_alog_level(ALOG_ALL),
+	  m_state(CLIENT_STATE_NULL),
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
-	  m_io_service(io_service), 
-	  m_acceptor(io_service, endpoint), 
+	  m_io_service(io_service),
+	  m_resolver(io_service),
 	  m_def_con_handler(defc) {}
 
-void server::add_host(std::string host) {
-	m_hosts.insert(host);
+void client::init() {
+	m_client_session = client_session_ptr(
+		new client_session(
+	    	shared_from_this(),
+			m_io_service,
+			m_def_con_handler
+		)
+	);
+	m_state = CLIENT_STATE_INITIALIZED;
 }
 
-void server::remove_host(std::string host) {
-	m_hosts.erase(host);
+void client::connect(const std::string& url) {
+	if (m_state != CLIENT_STATE_INITIALIZED) {
+		throw client_error("connect can only be called after init and before a connection has been established");
+	}
+	
+	m_client_session->set_url(url);
+	
+	std::stringstream port;
+	port << m_client_session->get_port();
+
+
+	tcp::resolver::query query(m_client_session->get_host(),
+	                           port.str());
+	tcp::resolver::iterator iterator = m_resolver.resolve(query);
+	
+	boost::asio::async_connect(m_client_session->socket(),
+	                           iterator,boost::bind(&client::handle_connect,
+							   this,
+							   boost::asio::placeholders::error)); 
+	m_state = CLIENT_STATE_CONNECTING;
 }
 
 
-void server::set_max_message_size(uint64_t val) {
+void client::add_subprotocol(const std::string& p) {
+	if (m_state != CLIENT_STATE_INITIALIZED) {
+		throw client_error("add_protocol can only be called after init and before connect");
+	}
+	m_client_session->add_subprotocol(p);
+}
+
+void client::set_header(const std::string& key,const std::string& val) {
+	if (m_state != CLIENT_STATE_INITIALIZED) {
+		throw client_error("set_header can only be called after init and before connect");
+	}
+	m_client_session->set_header(key,val);
+}
+
+void client::set_origin(const std::string& val) {
+	if (m_state != CLIENT_STATE_INITIALIZED) {
+		throw client_error("set_origin can only be called after init and before connect");
+	}
+	m_client_session->set_origin(val);
+}
+
+
+void client::set_max_message_size(uint64_t val) {
 	if (val > frame::PAYLOAD_64BIT_LIMIT) {
 		std::stringstream err;
 		err << "Invalid maximum message size: " << val;
@@ -64,15 +111,15 @@ void server::set_max_message_size(uint64_t val) {
 		//   Log error and set value to maximum allowed
 		//   Log error and leave value at whatever it was before
 		log(err.str(),LOG_WARN);
-		//throw server_error(err.str());
+		//throw client_error(err.str());
 	}
 	m_max_message_size = val;
 }
 
-bool server::test_elog_level(uint16_t level) {
+bool client::test_elog_level(uint16_t level) {
 	return (level >= m_elog_level);
 }
-void server::set_elog_level(uint16_t level) {
+void client::set_elog_level(uint16_t level) {
 	std::stringstream msg;
 	msg << "Error logging level changing from " 
 	    << m_elog_level << " to " << level;
@@ -80,10 +127,10 @@ void server::set_elog_level(uint16_t level) {
 
 	m_elog_level = level;
 }
-bool server::test_alog_level(uint16_t level) {
+bool client::test_alog_level(uint16_t level) {
 	return (level & m_alog_level);
 }
-void server::set_alog_level(uint16_t level) {
+void client::set_alog_level(uint16_t level) {
 	if (test_alog_level(level)) {
 		return;
 	}
@@ -93,7 +140,7 @@ void server::set_alog_level(uint16_t level) {
 
 	m_alog_level |= level;
 }
-void server::unset_alog_level(uint16_t level) {
+void client::unset_alog_level(uint16_t level) {
 	if (!test_alog_level(level)) {
 		return;
 	}
@@ -104,21 +151,14 @@ void server::unset_alog_level(uint16_t level) {
 	m_alog_level &= ~level;
 }
 
-bool server::validate_host(std::string host) {
-	if (m_hosts.find(host) == m_hosts.end()) {
-		return false;
-	}
-	return true;
-}
-
-bool server::validate_message_size(uint64_t val) {
+bool client::validate_message_size(uint64_t val) {
 	if (val > m_max_message_size) {
 		return false;
 	}
 	return true;
 }
 
-void server::log(std::string msg,uint16_t level) {
+void client::log(std::string msg,uint16_t level) {
 	if (!test_elog_level(level)) {
 		return;
 	}
@@ -127,7 +167,7 @@ void server::log(std::string msg,uint16_t level) {
 			         boost::posix_time::second_clock::local_time())
               << " " << msg << std::endl;
 }
-void server::access_log(std::string msg,uint16_t level) {
+void client::access_log(std::string msg,uint16_t level) {
 	if (!test_alog_level(level)) {
 		return;
 	}
@@ -137,34 +177,15 @@ void server::access_log(std::string msg,uint16_t level) {
               << " " << msg << std::endl;
 }
 
-void server::start_accept() {
-	server_session_ptr new_session(new server_session(shared_from_this(),
-	                                                  m_io_service,
-	                                                  m_def_con_handler));
-	
-	m_acceptor.async_accept(
-		new_session->socket(),
-		boost::bind(
-			&server::handle_accept,
-			this,
-			new_session,
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void server::handle_accept(server_session_ptr session,
-	const boost::system::error_code& error) {
-	
+void client::handle_connect(const boost::system::error_code& error) {
 	if (!error) {
-		session->on_connect();
+		m_state = CLIENT_STATE_CONNECTED;
+		m_client_session->on_connect();
 	} else {
 		std::stringstream err;
-		err << "Error accepting socket connection: " << error;
+		err << "An error occurred while establishing a connection: " << error;
 		
 		log(err.str(),LOG_ERROR);
-		throw server_error(err.str());
+		throw client_error(err.str());
 	}
-	
-	this->start_accept();
 }

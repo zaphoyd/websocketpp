@@ -39,7 +39,7 @@
 // {"type":"participants","value":[<participant>,...]}
 
 #include <boost/shared_ptr.hpp>
-
+#include "../../src/websocketpp.hpp"
 #include "../../src/websocket_connection_handler.hpp"
 
 #include <map>
@@ -48,23 +48,23 @@
 
 namespace websocketchat {
 
-class chat_handler : public websocketpp::connection_handler {
+class chat_server_handler : public websocketpp::connection_handler {
 public:
-	chat_handler() {}
-	virtual ~chat_handler() {}
+	chat_server_handler() {}
+	virtual ~chat_server_handler() {}
 	
 	void validate(websocketpp::session_ptr client); 
 	
 	// add new connection to the lobby
-	void connect(websocketpp::session_ptr client);
+	void on_open(websocketpp::session_ptr client);
 		
 	// someone disconnected from the lobby, remove them
-	void disconnect(websocketpp::session_ptr client,uint16_t status,const std::string &reason);
+	void on_close(websocketpp::session_ptr client,uint16_t status,const std::string &reason);
 	
-	void message(websocketpp::session_ptr client,const std::string &msg);
+	void on_message(websocketpp::session_ptr client,const std::string &msg);
 	
 	// lobby will ignore binary messages
-	void message(websocketpp::session_ptr client,
+	void on_message(websocketpp::session_ptr client,
 		const std::vector<unsigned char> &data) {}
 private:
 	std::string serialize_state();
@@ -77,7 +77,7 @@ private:
 	std::map<websocketpp::session_ptr,std::string> m_connections;
 };
 
-typedef boost::shared_ptr<chat_handler> chat_handler_ptr;
+typedef boost::shared_ptr<chat_server_handler> chat_server_handler_ptr;
 
 }
 #endif // CHAT_HPP

@@ -56,11 +56,14 @@ public:
 	//    client (useful for returning non-standard error codes)
 	virtual void validate(session_ptr client) = 0;
 	
+	
+
 	// this will be called once the connected websocket is avaliable for 
 	// writing messages. client may be a new websocket session or an existing
 	// session that was recently passed to this handler.
-	virtual void connect(session_ptr client) = 0;
+	virtual void on_open(session_ptr client) = 0;
 	
+
 	// this will be called when the connected websocket is no longer avaliable
 	// for writing messages. This occurs under the following conditions:
 	// - Disconnect message recieved from the remote endpoint
@@ -69,15 +72,15 @@ public:
 	//     calls the disconnect method of session
 	// - The connection handler assigned to this client was set to another 
 	//     handler
-	virtual void disconnect(session_ptr client,uint16_t status,const std::string &reason) = 0;
+	virtual void on_close(session_ptr client,uint16_t status,const std::string &reason) = 0;
 	
 	// this will be called when a text message is recieved. Text will be 
 	// encoded as UTF-8.
-	virtual void message(session_ptr client,const std::string &msg) = 0;
+	virtual void on_message(session_ptr client,const std::string &msg) = 0;
 	
 	// this will be called when a binary message is recieved. Argument is a 
 	// vector of the raw bytes in the message body.
-	virtual void message(session_ptr client,
+	virtual void on_message(session_ptr client,
 		const std::vector<unsigned char> &data) = 0;
 };
 

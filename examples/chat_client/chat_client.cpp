@@ -25,56 +25,51 @@
  * 
  */
 
-#include "echo.hpp"
+#include "chat_client_handler.hpp"
 
-#include "../../src/websocketpp.hpp"
+#include <websocketpp/websocketpp.hpp>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
 
 #include <iostream>
 
 using boost::asio::ip::tcp;
+using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
-	std::string host = "localhost";
-	short port = 9002;
-	std::string full_host;
+	std::string url;
 	
-	if (argc == 3) {
-		// TODO: input validation?
-		host = argv[1];
-		port = atoi(argv[2]);
+	if (argc != 2) {
+		std::cout << "Usage: `chat_client ws_url`" << std::endl;
+	} else {
+		url = argv[1];
 	}
 	
-	std::stringstream temp;
-	
-	temp << host << ":" << port;
-	full_host = temp.str();
-	
-	websocketecho::echo_server_handler_ptr echo_handler(new websocketecho::echo_server_handler());
+	chat_client_handler_ptr c(new chat_client_handler());
 	
 	try {
 		boost::asio::io_service io_service;
-		tcp::endpoint endpoint(tcp::v6(), port);
 		
-		websocketpp::server_ptr server(
-			new websocketpp::server(io_service,endpoint,echo_handler)
-		);
+		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
 		
-		// setup server settings
-		server->add_host(host);
-		server->add_host(full_host);
+		client->init();
+
+		client->set_header("User Agent","WebSocket++/2011-09-25");
+		client->add_subprotocol("com.zaphoyd.websocketpp.chat");
 		
-		// bump up max message size to maximum since we may be using the echo 
-		// server to test performance and protocol extremes.
-		server->set_max_message_size(websocketpp::frame::PAYLOAD_64BIT_LIMIT); 
+		client->set_origin("http://zaphoyd.com");
+
+		client->connect(url);
 		
-		// start the server
-		server->start_accept();
+		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
 		
-		std::cout << "Starting echo server on " << full_host << std::endl;
+		char line[512];
+		while (std::cin.getline(line, 512)) {
+			c->send(line);
+		}
 		
-		// start asio
-		io_service.run();
+		t.join();
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}
