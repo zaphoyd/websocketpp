@@ -104,4 +104,68 @@ void chat_client_handler::do_close() {
 void chat_client_handler::decode_server_msg(const std::string &msg) {
 	// for messages of type participants, erase and rebuild m_participants
 	// for messages of type msg, print out message
+	
+	// NOTE: The chat server was written with the intention of the client having a built in
+	// JSON parser. To keep external dependencies low for this demonstration chat client I am
+	// parsing the server messages by hand.
+	
+	std::string::size_type start = 9;
+	std::string::size_type end;
+	
+	if (msg.substr(0,start) != "{\"type\":\"") {
+		// ignore
+		std::cout << "invalid message" << std::endl;
+		return;
+	}
+	
+	
+
+	if (msg.substr(start,15) == "msg\",\"sender\":\"") {
+		// parse message
+		std::string sender;
+		std::string message;
+		
+		start += 15;
+
+		end = msg.find("\"",start);
+		while (end != std::string::npos) {
+			if (msg[end-1] == '\\') {
+				sender += msg.substr(start,end-start-1) + "\"";
+				start = end+1;
+				end = msg.find("\"",start);
+			} else {
+				sender += msg.substr(start,end-start);
+				start = end;
+				break;
+			}
+		}
+		
+		if (msg.substr(start,11) != "\",\"value\":\"") {
+			std::cout << "invalid message" << std::endl;
+			return;
+		}
+
+		start += 11;
+
+		end = msg.find("\"",start);
+		while (end != std::string::npos) {
+			if (msg[end-1] == '\\') {
+				message += msg.substr(start,end-start-1) + "\"";
+				start = end+1;
+				end = msg.find("\"",start);
+			} else {
+				message += msg.substr(start,end-start);
+				start = end;
+				break;
+			}
+		}
+
+		std::cout << "[" << sender << "] " << message << std::endl;
+	} else if (msg.substr(start,23) == "participants\",\"value\":[") {
+		// parse participants
+		std::cout << "participants message" << std::endl;
+	} else {
+		// unknown message type
+		std::cout << "unknown message" << std::endl;
+	}
 }
