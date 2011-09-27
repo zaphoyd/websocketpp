@@ -261,20 +261,22 @@ void frame::set_status(uint16_t status,const std::string message) {
 	std::copy(message.begin(),message.end(),m_payload.begin()+2);
 }
 
-void frame::print_frame() const {
-	/*unsigned int len = get_header_len();
+std::string frame::print_frame() const {
+	std::stringstream f;
 	
-	std::cout << "frame: ";
+	unsigned int len = get_header_len();
+	
+	f << "frame: ";
 	// print header
 	for (unsigned int i = 0; i < len; i++) {
-		std::cout << std::hex << (unsigned short)m_header[i] << " ";
+		f << std::hex << (unsigned short)m_header[i] << " ";
 	}
 	// print message
-	for (auto &i: m_payload) {
-		std::cout << i;
+	std::vector<unsigned char>::const_iterator it;
+	for (it = m_payload.begin(); it != m_payload.end(); it++) {
+		f << *it;
 	}
-	
-	std::cout << std::endl;*/
+	return f.str();
 }
 
 unsigned int frame::process_basic_header() {
@@ -338,8 +340,10 @@ void frame::process_extended_header() {
 }
 
 void frame::process_payload() {
-	for (uint64_t i = 0; i < m_payload.size(); i++) {
-		m_payload[i] = (m_payload[i] ^ m_masking_key[i%4]);
+	if (get_masked()) {
+		for (uint64_t i = 0; i < m_payload.size(); i++) {
+			m_payload[i] = (m_payload[i] ^ m_masking_key[i%4]);
+		}
 	}
 }
 

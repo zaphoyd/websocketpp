@@ -119,7 +119,7 @@ public:
 	
 	bool is_control() const;
 	
-	void print_frame() const;
+	std::string print_frame() const;
 	
 	// reads basic header, sets and returns m_header_bits_needed
 	unsigned int process_basic_header();
