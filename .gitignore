@@ -19,3 +19,5 @@ examples/echo_server/echo_server
 examples/echo_server/echo_server
 
 examples/chat_client/chat_client
+
+examples/chat_client/chat_client
