@@ -56,10 +56,71 @@ void client_session::set_url(const std::string& url) {
 	// TODO: impliment
 	// TODO: input validation
 	
-	m_host = "thor-websocket.zaphoyd.net";
-	m_port = 9003;
-	m_resource = "/chat";
-
+	std::string::size_type start = 0;
+	std::string::size_type end;
+	
+	if (url.substr(0,5) == "ws://") {
+		m_secure = false;
+		start = 5;
+	} else if (url.substr(0,6) == "wss://") {
+		m_secure = true;
+		start = 6;
+		throw client_error("wss / secure connections are not supported by WebSocket++ at this time");
+	} else {
+		throw client_error("Invalid websocket URL");
+	}
+	
+	end = url.find(":",start);
+	
+	if (end == std::string::npos) {
+		// no port
+		if (m_secure) {
+			m_port = 443;
+		} else {
+			m_port = 80;
+		}
+		
+		end = url.find("/",start);
+		
+		if (end == std::string::npos) {
+			m_host = url.substr(start);
+			m_resource = "/";
+		} else {
+			m_host = url.substr(start,end-start);
+			m_resource = url.substr(end);
+		}
+	} else {
+		m_host = url.substr(start,end-start);
+		
+		start += end-start + 1;
+		
+		end = url.find("/",start);
+		
+		std::string port_str;
+		if (end == std::string::npos) {
+			port_str = url.substr(start);
+			m_resource = "/";
+		} else {
+			port_str = url.substr(start,end-start);
+			m_resource = url.substr(end);
+		}
+		
+		unsigned int port = std::atoi(port_str.c_str());
+		
+		if (port > 65535) {
+			throw client_error("Invalid websocket URL");
+		}
+		
+		// TODO: fix cast
+		m_port = (uint16_t) port;
+	}
+	
+	std::stringstream l;
+	
+	l << "parsed websocket url: secure: " << m_secure << " host: " << m_host
+	  << " port (final): " << m_port << " resource " << m_resource;
+	
+	log(l.str(),LOG_DEBUG);
 }
 
 bool client_session::get_secure() const {
