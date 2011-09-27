@@ -221,17 +221,21 @@ void session::handle_frame_header(const boost::system::error_code& error) {
 		// TODO: close behavior
 		return;	
 	}
-
+	log(m_read_frame.print_frame(),LOG_DEBUG);
+	
 	uint16_t extended_header_bytes = m_read_frame.process_basic_header();
 
 	if (!m_read_frame.validate_basic_header()) {
 		handle_error("Basic header validation failed",boost::system::error_code());
 		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
+		
+		
 		// TODO: close behavior
 		return;
 	}
 
 	if (extended_header_bytes == 0) {
+		m_read_frame.process_extended_header();
 		read_payload();
 	} else {
 		boost::asio::async_read(
@@ -507,6 +511,8 @@ void session::write_frame() {
 		boost::asio::buffer(m_write_frame.get_payload())
 	);
 	
+	log("Write Frame: "+m_write_frame.print_frame(),LOG_DEBUG);
+
 	boost::asio::async_write(
 		m_socket,
 		data,
