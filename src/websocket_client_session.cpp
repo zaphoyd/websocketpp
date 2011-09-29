@@ -52,87 +52,35 @@ void client_session::on_connect() {
 	write_handshake();
 }
 
-void client_session::set_url(const std::string& url) {
-	// TODO: impliment
-	// TODO: input validation
-	
-	std::string::size_type start = 0;
-	std::string::size_type end;
-	
-	if (url.substr(0,5) == "ws://") {
-		m_secure = false;
-		start = 5;
-	} else if (url.substr(0,6) == "wss://") {
-		m_secure = true;
-		start = 6;
-		throw client_error("wss / secure connections are not supported by WebSocket++ at this time");
-	} else {
-		throw client_error("Invalid websocket URL");
+void client_session::set_uri(const std::string& uri) {
+	if (!m_uri.parse(uri)) {
+		throw client_error("Invalid WebSocket URI");
+	}
+
+	if (m_uri.secure) {
+		throw client_error("wss / secure connections are not supported at this time");
 	}
 	
-	end = url.find(":",start);
-	
-	if (end == std::string::npos) {
-		// no port
-		if (m_secure) {
-			m_port = 443;
-		} else {
-			m_port = 80;
-		}
-		
-		end = url.find("/",start);
-		
-		if (end == std::string::npos) {
-			m_host = url.substr(start);
-			m_resource = "/";
-		} else {
-			m_host = url.substr(start,end-start);
-			m_resource = url.substr(end);
-		}
-	} else {
-		m_host = url.substr(start,end-start);
-		
-		start += end-start + 1;
-		
-		end = url.find("/",start);
-		
-		std::string port_str;
-		if (end == std::string::npos) {
-			port_str = url.substr(start);
-			m_resource = "/";
-		} else {
-			port_str = url.substr(start,end-start);
-			m_resource = url.substr(end);
-		}
-		
-		unsigned int port = std::atoi(port_str.c_str());
-		
-		if (port > 65535) {
-			throw client_error("Invalid websocket URL");
-		}
-		
-		// TODO: fix cast
-		m_port = (uint16_t) port;
-	}
+	m_resource = m_uri.resource;
 	
 	std::stringstream l;
 	
-	l << "parsed websocket url: secure: " << m_secure << " host: " << m_host
-	  << " port (final): " << m_port << " resource " << m_resource;
+	l << "parsed websocket url: secure: " << m_uri.secure << " host: " << m_uri.host
+	  << " port (final): " << m_uri.port << " resource " << m_uri.resource;
 	
 	log(l.str(),LOG_DEBUG);
 }
 
 bool client_session::get_secure() const {
-	return m_secure;
+	return m_uri.secure;
 }
 
 std::string client_session::get_host() const{
-	return m_host;
+	return m_uri.host;
 }
 
 uint16_t client_session::get_port() const {
-	return m_port;
+	return m_uri.port;
 }
 
 void client_session::set_header(const std::string &key,const std::string &val) {
@@ -320,7 +268,7 @@ void client_session::write_handshake() {
 	set_header("Connection","Upgrade");
 	set_header("Sec-WebSocket-Version","13");
 	
-	set_header("Host",m_host);
+	set_header("Host",m_uri.host);
 
 	if (m_client_origin != "") {
 		set_header("Origin",m_client_origin);

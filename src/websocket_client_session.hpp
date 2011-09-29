@@ -71,7 +71,7 @@ public:
 	
 	/*** HANDSHAKE INTERFACE ***/
 	
-	void set_url(const std::string& url);
+	void set_uri(const std::string& url);
 
 	bool get_secure() const;
 	std::string get_host() const;
@@ -110,6 +110,7 @@ protected:
 private:
 	
 protected:
+	ws_uri		m_uri;
 	// url parts
 	bool		m_secure;
 	std::string	m_host;

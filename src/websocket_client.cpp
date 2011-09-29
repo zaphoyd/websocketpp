@@ -55,12 +55,12 @@ void client::init() {
 	m_state = CLIENT_STATE_INITIALIZED;
 }
 
-void client::connect(const std::string& url) {
+void client::connect(const std::string& uri) {
 	if (m_state != CLIENT_STATE_INITIALIZED) {
 		throw client_error("connect can only be called after init and before a connection has been established");
 	}
 	
-	m_client_session->set_url(url);
+	m_client_session->set_uri(uri);
 	
 	std::stringstream port;
 	port << m_client_session->get_port();
