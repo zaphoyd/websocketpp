@@ -48,7 +48,7 @@ void chat_client_handler::on_close(session_ptr s,uint16_t status,const std::stri
 }
 
 void chat_client_handler::on_message(session_ptr s,const std::string &msg) {
-	std::cout << "message from server: " << msg << std::endl;
+	//std::cout << "message from server: " << msg << std::endl;
 
 	decode_server_msg(msg);
 }
@@ -82,9 +82,9 @@ void chat_client_handler::do_send(const std::string &msg) {
 	}
 	
 	// check for local commands
-	if (msg == "list") {
+	if (msg == "/list") {
 		std::cout << "list all participants" << std::endl;
-	} else if (msg == "close") {
+	} else if (msg == "/close") {
 		do_close();
 	} else {
 		m_session->send(msg);

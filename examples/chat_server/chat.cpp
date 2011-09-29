@@ -104,8 +104,19 @@ void chat_server_handler::on_message(session_ptr client,const std::string &msg) 
 			alias = msg.substr(7);
 		}
 		
-		// store alias
 		response = m_connections[client] + " is now known as "+alias;
+
+		// store alias pre-escaped so we don't have to do this replacing every time this
+		// user sends a message
+		
+		// escape JSON characters
+		boost::algorithm::replace_all(alias,"\\","\\\\");
+		boost::algorithm::replace_all(alias,"\"","\\\"");
+		
+		// escape HTML characters
+		boost::algorithm::replace_all(alias,"&","&amp;");
+		boost::algorithm::replace_all(alias,"<","&lt;");
+		boost::algorithm::replace_all(alias,">","&gt;");
 		
 		m_connections[client] = alias;
 		
