@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <boost/regex.hpp>
 
 // http://www.viva64.com/en/k/0018/
 // TODO: impliment stuff from here: 
@@ -44,5 +45,17 @@ uint64_t ntohll(uint64_t src);
 
 std::string lookup_http_error_string(int code);
 std::string lookup_ws_close_status_string(uint16_t code);
+
+namespace websocketpp {
+struct ws_uri {
+	bool parse(const std::string& uri);
+
+	bool		secure;
+	std::string	host;
+	uint16_t	port;
+	std::string	resource;
+};
+}
+
 
 #endif // NETWORK_UTILITIES_HPP

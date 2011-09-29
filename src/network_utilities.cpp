@@ -133,3 +133,41 @@ std::string lookup_ws_close_status_string(uint16_t code) {
 			return "Unknown";
 	}
 }
+
+bool websocketpp::ws_uri::parse(const std::string& uri) {
+	boost::cmatch what;
+	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/.*)?");
+
+	if (boost::regex_match(uri.c_str(), what, expression)) {
+		if (what[1] == "wss") {
+			secure = true;
+		} else {
+			secure = false;
+		}
+		
+		host = what[2];
+
+		if (what[3] == "") {
+			port = (secure ? 443 : 80);
+		} else {
+			unsigned int t_port = atoi(std::string(what[3]).substr(1).c_str());
+
+			if (t_port > 65535) {
+				return false;
+			}
+
+			port = atoi(std::string(what[3]).substr(1).c_str());
+		}
+		
+		if (what[4] == "") {
+			resource = "/";
+		} else {
+			resource = what[4];
+		}
+
+		return true;
+	} else {
+		return false;
+	}
+
+}
