@@ -38,12 +38,12 @@ using boost::asio::ip::tcp;
 using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
-	std::string url;
+	std::string uri;
 	
 	if (argc != 2) {
-		std::cout << "Usage: `chat_client ws_url`" << std::endl;
+		std::cout << "Usage: `chat_client ws_uri`" << std::endl;
 	} else {
-		url = argv[1];
+		uri = argv[1];
 	}
 	
 	chat_client_handler_ptr c(new chat_client_handler());
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 		
 		client->set_origin("http://zaphoyd.com");
 
-		client->connect(url);
+		client->connect(uri);
 		
 		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
 		
