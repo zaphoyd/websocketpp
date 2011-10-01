@@ -25,3 +25,7 @@ examples/chat_client/chat_client
 test/basic/tests
 
 examples/chat_client/chat_client
+
+libwebsocketpp.dylib.0.1.0
+
+echo_server/echo_server.1
