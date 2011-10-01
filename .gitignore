@@ -17,3 +17,5 @@ examples/echo_server/echo_server
 examples/chat_client/chat_client
 test/basic/tests
 libwebsocketpp.dylib.0.1.0
+
+websocketpp.xcodeproj/xcuserdata/*
