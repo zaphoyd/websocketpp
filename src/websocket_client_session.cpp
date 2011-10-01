@@ -34,6 +34,8 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 
 
 #include <cstdlib>
@@ -49,6 +51,8 @@ client_session::client_session (client_ptr c,
 	: session(io_service,defc),m_client(c) {}
 
 void client_session::on_connect() {
+	// TODO: section 4.1: Figure out if we have another connection to this 
+	// host/port pending.
 	write_handshake();
 }
 
@@ -276,6 +280,20 @@ void client_session::write_handshake() {
 	
 	// TODO: generate proper key
 	m_client_key = "XO4pxrIMLnK1CEVQP9untQ==";
+	
+	int32_t raw_key[4];
+	
+	boost::random::random_device rng;
+	boost::random::variate_generator<boost::random::random_device&, boost::random::uniform_int_distribution<> > gen(rng, boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX));
+	
+	for (int i = 0; i < 4; i++) {
+		raw_key[i] = gen();
+	}
+	
+	m_client_key = base64_encode(reinterpret_cast<unsigned char const*>(raw_key), 16);
+	
+	m_client->access_log("Client key chosen: "+m_client_key, ALOG_HANDSHAKE);
+	
 	set_header("Sec-WebSocket-Key",m_client_key);
 	
 	
