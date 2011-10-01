@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828875143745DA002BA48B /* chat_client_handler.cpp */; };
+		B68288881437460E002BA48B /* chat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828877143745DA002BA48B /* chat_client.cpp */; };
+		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
+		B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
+		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B6DF1C7A1434AB740029A1B1 /* network_utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C791434AB740029A1B1 /* network_utilities.cpp */; };
 		B6DF1C7D1434AB920029A1B1 /* network_utilities.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C7B1434AB920029A1B1 /* network_utilities.hpp */; };
 		B6DF1C7E1434AB9E0029A1B1 /* network_utilities.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C7B1434AB920029A1B1 /* network_utilities.hpp */; };
@@ -59,7 +65,26 @@
 		B6DF1CE41435F8250029A1B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE31435F8250029A1B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B682889014374B77002BA48B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B6DF1C471434A5940029A1B1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B6DF1C711434A8280029A1B1;
+			remoteInfo = "WebSocket++ Dynamic Library";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		B682887B143745F2002BA48B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		B6DF1CCF1435ED910029A1B1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,6 +97,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
+		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
+		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
+		B682887D143745F2002BA48B /* chat_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = chat_client; sourceTree = BUILT_PRODUCTS_DIR; };
+		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
+		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
+		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
 		B6DF1C691434A7A30029A1B1 /* libwebsocketpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libwebsocketpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libwebsocketpp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1C791434AB740029A1B1 /* network_utilities.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = network_utilities.cpp; path = src/network_utilities.cpp; sourceTree = "<group>"; };
@@ -108,6 +140,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B682887A143745F2002BA48B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */,
+				B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */,
+				B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B6DF1C661434A7A30029A1B1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -119,6 +161,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */,
 				B6DF1CC11434AF6A0029A1B1 /* libboost_date_time.dylib in Frameworks */,
 				B6DF1CC21434AF6A0029A1B1 /* libboost_regex.dylib in Frameworks */,
 				B6DF1CC31434AF6A0029A1B1 /* libboost_system.dylib in Frameworks */,
@@ -141,6 +184,9 @@
 		B6DF1C451434A5940029A1B1 = {
 			isa = PBXGroup;
 			children = (
+				B682888E14374689002BA48B /* libboost_thread.dylib */,
+				B682888C1437464A002BA48B /* libboost_random.dylib */,
+				B682888A14374623002BA48B /* libboost_system.dylib */,
 				B6DF1CE31435F8250029A1B1 /* Foundation.framework */,
 				B6DF1CC61435ED380029A1B1 /* examples */,
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
@@ -155,6 +201,7 @@
 				B6DF1C691434A7A30029A1B1 /* libwebsocketpp.a */,
 				B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */,
 				B6DF1CD11435ED910029A1B1 /* echo_server */,
+				B682887D143745F2002BA48B /* chat_client */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -248,6 +295,9 @@
 		B6DF1CC81435ED440029A1B1 /* chat_client */ = {
 			isa = PBXGroup;
 			children = (
+				B6828875143745DA002BA48B /* chat_client_handler.cpp */,
+				B6828876143745DA002BA48B /* chat_client_handler.hpp */,
+				B6828877143745DA002BA48B /* chat_client.cpp */,
 			);
 			name = chat_client;
 			sourceTree = "<group>";
@@ -303,6 +353,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		B682887C143745F2002BA48B /* chat_client */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6828884143745F2002BA48B /* Build configuration list for PBXNativeTarget "chat_client" */;
+			buildPhases = (
+				B6828879143745F2002BA48B /* Sources */,
+				B682887A143745F2002BA48B /* Frameworks */,
+				B682887B143745F2002BA48B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B682889114374B77002BA48B /* PBXTargetDependency */,
+			);
+			name = chat_client;
+			productName = chat_client;
+			productReference = B682887D143745F2002BA48B /* chat_client */;
+			productType = "com.apple.product-type.tool";
+		};
 		B6DF1C681434A7A30029A1B1 /* WebSocket++ Static Library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B6DF1C6B1434A7A30029A1B1 /* Build configuration list for PBXNativeTarget "WebSocket++ Static Library" */;
@@ -377,11 +445,21 @@
 				B6DF1C681434A7A30029A1B1 /* WebSocket++ Static Library */,
 				B6DF1C711434A8280029A1B1 /* WebSocket++ Dynamic Library */,
 				B6DF1CD01435ED910029A1B1 /* echo_server */,
+				B682887C143745F2002BA48B /* chat_client */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B6828879143745F2002BA48B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */,
+				B68288881437460E002BA48B /* chat_client.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B6DF1C651434A7A30029A1B1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -425,7 +503,53 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		B682889114374B77002BA48B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B6DF1C711434A8280029A1B1 /* WebSocket++ Dynamic Library */;
+			targetProxy = B682889014374B77002BA48B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		B6828885143745F2002BA48B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B6828886143745F2002BA48B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		B6DF1C481434A5940029A1B1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -574,6 +698,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B6828884143745F2002BA48B /* Build configuration list for PBXNativeTarget "chat_client" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6828885143745F2002BA48B /* Debug */,
+				B6828886143745F2002BA48B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -590,6 +722,7 @@
 				B6DF1C6D1434A7A30029A1B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6DF1C731434A8280029A1B1 /* Build configuration list for PBXNativeTarget "WebSocket++ Dynamic Library" */ = {
 			isa = XCConfigurationList;
@@ -598,6 +731,7 @@
 				B6DF1C751434A8280029A1B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6DF1CD81435ED910029A1B1 /* Build configuration list for PBXNativeTarget "echo_server" */ = {
 			isa = XCConfigurationList;
@@ -606,6 +740,7 @@
 				B6DF1CDA1435ED910029A1B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
