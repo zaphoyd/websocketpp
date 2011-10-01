@@ -341,8 +341,10 @@ void frame::process_extended_header() {
 
 void frame::process_payload() {
 	if (get_masked()) {
+		char *masking_key = &m_header[get_header_len()-4];
+		
 		for (uint64_t i = 0; i < m_payload.size(); i++) {
-			m_payload[i] = (m_payload[i] ^ m_masking_key[i%4]);
+			m_payload[i] = (m_payload[i] ^ masking_key[i%4]);
 		}
 	}
 }
@@ -417,7 +419,21 @@ bool frame::validate_basic_header() const {
 }
 
 void frame::generate_masking_key() {
-	throw "masking key generation not implimented";
+	//throw "masking key generation not implimented";
+	
+	int32_t key = m_gen();
+	
+	std::cout << "genkey: " << key << std::endl;
+	
+	//m_masking_key[0] = reinterpret_cast<char*>(&key)[0];
+	//m_masking_key[1] = reinterpret_cast<char*>(&key)[1];
+	//m_masking_key[2] = reinterpret_cast<char*>(&key)[2];
+	//m_masking_key[3] = reinterpret_cast<char*>(&key)[3];
+	
+	*(reinterpret_cast<int32_t *>(&m_header[get_header_len()-4])) = key;
+	
+	//std::cout << "maskkey: " << m_masking_key << std::endl;
+	
 	/* TODO: test and tune
 	
 	boost::random::random_device rng;
@@ -429,8 +445,7 @@ void frame::generate_masking_key() {
 }
 
 void frame::clear_masking_key() {
-	m_masking_key[0] = 0;
-	m_masking_key[1] = 0;
-	m_masking_key[2] = 0;
-	m_masking_key[3] = 0;
+	// this is a no-op as clearing the mask bit also changes the get_header_len
+	// method to not include these byte ranges. Whenever the masking bit is re-
+	// set a new key is generated anyways.
 }

@@ -34,6 +34,9 @@
 #include <vector>
 #include <cstring>
 
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+
 namespace websocketpp {
 
 class frame {
@@ -72,7 +75,8 @@ public:
 	static const uint64_t max_payload_size = 100000000; // 100MB
 	
 	// create an empty frame for writing into
-	frame() {
+	frame() : m_gen(m_rng, 
+	          boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)) {
 		// not sure if these are necessary with c++ but putting in just in case
 		memset(m_header,0,MAX_HEADER_LENGTH);
 	}
@@ -139,6 +143,11 @@ private:
 	
 	char m_masking_key[4];	
 	unsigned int m_extended_header_bytes_needed;
+	
+	boost::random::random_device m_rng;
+	boost::random::variate_generator<boost::random::random_device&, 
+	                                 boost::random::uniform_int_distribution<> > 
+	    m_gen;
 };
 
 }
