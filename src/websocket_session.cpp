@@ -499,6 +499,12 @@ void session::extract_payload() {
 }
 
 void session::write_frame() {
+	if (!is_server()) {
+		m_write_frame.set_masked(true); // client must mask frames
+	}
+	
+	m_write_frame.process_payload();
+	
 	std::vector<boost::asio::mutable_buffer> data;
 	
 	data.push_back(
