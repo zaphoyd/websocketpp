@@ -54,7 +54,6 @@ struct ws_uri {
 	std::string	host;
 	uint16_t	port;
 	std::string	resource;
-	std::string query;
 };
 }
 

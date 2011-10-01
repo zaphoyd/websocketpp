@@ -145,3 +145,22 @@ BOOST_AUTO_TEST_CASE( uri_invalid_gt_16_bit_port ) {
 
 	BOOST_CHECK( uri.parse("wss:/localhost:70000/chat") == false);
 }
+
+// Invalid URI includes uri fragment
+BOOST_AUTO_TEST_CASE( uri_invalid_fragment ) {
+	websocketpp::ws_uri uri;
+
+	BOOST_CHECK( uri.parse("wss:/localhost:70000/chat#foo") == false);
+}
+
+// Valid URI complicated resource path with query
+BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
+	websocketpp::ws_uri uri;
+
+	BOOST_CHECK( uri.parse("wss://localhost:9000/chat/foo/bar?foo=bar") == true);
+	BOOST_CHECK( uri.secure == true );
+	BOOST_CHECK( uri.host == "localhost");
+	BOOST_CHECK( uri.port == 9000 );
+	BOOST_CHECK( uri.resource == "/chat/foo/bar?foo=bar" );
+}
+
