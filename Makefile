@@ -31,6 +31,8 @@
 objects = websocket_server_session.o websocket_client_session.o websocket_session.o  websocket_server.o websocket_client.o websocket_frame.o \
           network_utilities.o sha1.o base64.o
 
+libs = -lboost_system -lboost_date_time -lboost_regex
+
 OS=$(shell uname)
 
 # Defaults
@@ -116,9 +118,9 @@ $(lib_target): banner installdirs $(addprefix $(objdir)/, $(objects))
 	@echo "Link "
 	cd $(objdir) ; \
 	if test "$(OS)" = "Darwin" ; then \
-		$(CXX) -dynamiclib -lboost_system -Wl,-dylib_install_name -Wl,$(libname_shared_major_version) -o $@ $(objects) ; \
+		$(CXX) -dynamiclib $(libs) -Wl,-dylib_install_name -Wl,$(libname_shared_major_version) -o $@ $(objects) ; \
 	else \
-		$(CXX) -shared -lboost_system -Wl,-soname,$(libname_shared_major_version) -o $@ $(objects) ; \
+		$(CXX) -shared $(libs) -Wl,-soname,$(libname_shared_major_version) -o $@ $(objects) ; \
 	fi ; \
 	mv -f $@ ../
 	@echo "Link: Done"
