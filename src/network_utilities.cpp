@@ -137,7 +137,11 @@ std::string lookup_ws_close_status_string(uint16_t code) {
 bool websocketpp::ws_uri::parse(const std::string& uri) {
 	boost::cmatch what;
 	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/.*)?");
-
+	
+	// TODO: finish section 3 conformance:
+	// - forbid # character (fragment is meaningless to websocket
+	// - maybe split out query portion into path/query?
+	
 	if (boost::regex_match(uri.c_str(), what, expression)) {
 		if (what[1] == "wss") {
 			secure = true;
