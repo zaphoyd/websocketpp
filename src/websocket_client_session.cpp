@@ -131,7 +131,16 @@ void client_session::handle_read_handshake(const boost::system::error_code& e,
 	line << &m_buf;
 	m_raw_server_handshake += line.str();
 	
+	m_buf << m_raw_server_handshake.substr(bytes_transferred);
+	
+	std::stringstream foo;
+	
+	foo << "data size: " << m_raw_server_handshake.size() 
+	<< " bytes transferred" << bytes_transferred;
+	
+	m_client->access_log(foo.str(), ALOG_HANDSHAKE);
 	m_client->access_log(m_raw_server_handshake,ALOG_HANDSHAKE);
+	m_client->access_log("SPACER",ALOG_HANDSHAKE);
 	
 	std::vector<std::string> tokens;
 	std::string::size_type start = 0;
