@@ -19,3 +19,4 @@ test/basic/tests
 libwebsocketpp.dylib.0.1.0
 
 websocketpp.xcodeproj/xcuserdata/*
+examples/echo_client/echo_client
