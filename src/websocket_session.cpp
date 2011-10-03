@@ -44,7 +44,7 @@
 using websocketpp::session;
 
 session::session (boost::asio::io_service& io_service,
-				  connection_handler_ptr defc)
+				  websocketpp::connection_handler_ptr defc)
 	: m_status(CONNECTING),
 	  m_local_close_code(CLOSE_STATUS_NO_STATUS),
 	  m_remote_close_code(CLOSE_STATUS_NO_STATUS),
@@ -67,7 +67,7 @@ boost::asio::io_service& session::io_service() {
 	return m_io_service;
 }
 
-void session::set_handler(connection_handler_ptr new_con) {
+void session::set_handler(websocketpp::connection_handler_ptr new_con) {
 	if (m_local_interface) {
 		// TODO: this should be another method and not reusing onclose
 		//m_local_interface->disconnect(shared_from_this(),4000,"Setting new connection handler");
@@ -101,7 +101,7 @@ std::string session::get_server_header(const std::string& key) const {
 }
 
 std::string session::get_header(const std::string& key,
-                                const header_list& list) const {
+                                const websocketpp::header_list& list) const {
 	header_list::const_iterator h = list.find(key);
 	
 	if (h == list.end()) {
