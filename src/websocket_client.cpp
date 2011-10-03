@@ -35,7 +35,8 @@
 using websocketpp::client;
 using boost::asio::ip::tcp;
 
-client::client(boost::asio::io_service& io_service,connection_handler_ptr defc)
+client::client(boost::asio::io_service& io_service,
+               websocketpp::connection_handler_ptr defc)
 	: m_elog_level(LOG_ALL),
 	  m_alog_level(ALOG_ALL),
 	  m_state(CLIENT_STATE_NULL),
@@ -128,7 +129,7 @@ void client::set_elog_level(uint16_t level) {
 	m_elog_level = level;
 }
 bool client::test_alog_level(uint16_t level) {
-	return (level & m_alog_level);
+	return ((level & m_alog_level) != 0);
 }
 void client::set_alog_level(uint16_t level) {
 	if (test_alog_level(level)) {

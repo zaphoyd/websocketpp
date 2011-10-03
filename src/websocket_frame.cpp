@@ -33,7 +33,11 @@
 #include <iostream>
 #include <algorithm>
 
+#if defined(WIN32)
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 using websocketpp::frame;
 
