@@ -34,7 +34,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#if defined(WIN32)
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 
 #include <algorithm>
 #include <exception>
@@ -140,14 +144,15 @@ public:
 	void disconnect(uint16_t status,const std::string& reason); // temp
 
 	virtual bool is_server() const = 0;
-protected:
+
 	// Opening handshake processors and callbacks. These need to be defined in
 	// derived classes.
-	virtual void write_handshake() = 0;
 	virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
-	virtual void read_handshake() = 0;
 	virtual void handle_read_handshake(const boost::system::error_code& e,
 	                                   std::size_t bytes_transferred) = 0;
+protected:
+	virtual void write_handshake() = 0;
+	virtual void read_handshake() = 0;
 	
 	// start async read for a websocket frame (2 bytes) to handle_frame_header
 	void read_frame();

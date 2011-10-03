@@ -45,9 +45,9 @@
 
 using websocketpp::client_session;
 
-client_session::client_session (client_ptr c,
+client_session::client_session (websocketpp::client_ptr c,
                                 boost::asio::io_service& io_service,
-                                connection_handler_ptr defc)
+                                websocketpp::connection_handler_ptr defc)
 	: session(io_service,defc),m_client(c) {}
 
 void client_session::on_connect() {
