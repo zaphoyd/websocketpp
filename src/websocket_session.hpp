@@ -94,7 +94,8 @@ public:
 	static const uint16_t CLOSE_STATUS_EXTENSION_REQUIRE = 1010;
 
 	session (boost::asio::io_service& io_service,
-			 connection_handler_ptr defc);
+			 connection_handler_ptr defc,
+			 uint64_t buf_size);
 	
 	tcp::socket& socket();
 	boost::asio::io_service& io_service();

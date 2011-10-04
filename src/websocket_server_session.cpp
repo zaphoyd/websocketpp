@@ -45,8 +45,9 @@ using websocketpp::server_session;
 
 server_session::server_session(websocketpp::server_ptr s,
                                boost::asio::io_service& io_service,
-                               websocketpp::connection_handler_ptr defc)
-	: session(io_service,defc),m_server(s) {}
+                               websocketpp::connection_handler_ptr defc,
+							   uint64_t buf_size)
+	: session(io_service,defc,buf_size),m_server(s) {}
 
 void server_session::on_connect() {
 	read_handshake();
@@ -91,6 +92,7 @@ void server_session::select_extension(const std::string& val) {
 }
 
 void server_session::read_handshake() {
+	// TODO: pass maximum size to m_buf cosntructor to prevent DoS here
 	boost::asio::async_read_until(
 		m_socket,
 		m_buf,

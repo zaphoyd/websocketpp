@@ -44,7 +44,8 @@
 using websocketpp::session;
 
 session::session (boost::asio::io_service& io_service,
-				  websocketpp::connection_handler_ptr defc)
+				  websocketpp::connection_handler_ptr defc,
+				  uint64_t buf_size)
 	: m_status(CONNECTING),
 	  m_local_close_code(CLOSE_STATUS_NO_STATUS),
 	  m_remote_close_code(CLOSE_STATUS_NO_STATUS),
@@ -54,8 +55,7 @@ session::session (boost::asio::io_service& io_service,
 	  m_socket(io_service),
 	  m_io_service(io_service),
 	  m_local_interface(defc),
-	  
-	  
+	  m_buf(buf_size), // maximum buffered (unconsumed) bytes from network
 	  m_utf8_state(utf8_validator::UTF8_ACCEPT),
 	  m_utf8_codepoint(0) {}
 

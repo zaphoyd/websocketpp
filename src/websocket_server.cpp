@@ -138,9 +138,11 @@ void server::access_log(std::string msg,uint16_t level) {
 }
 
 void server::start_accept() {
+	// TODO: sanity check whether the session buffer size bound could be reduced
 	server_session_ptr new_session(new server_session(shared_from_this(),
 	                                                  m_io_service,
-	                                                  m_def_con_handler));
+	                                                  m_def_con_handler,
+													  m_max_message_size*2));
 	
 	m_acceptor.async_accept(
 		new_session->socket(),
