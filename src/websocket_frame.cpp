@@ -41,6 +41,46 @@
 
 using websocketpp::frame;
 
+
+uint8_t frame::get_state() const {
+	return m_state;
+}
+
+void frame::reset() {
+	m_state = STATE_BASIC_HEADER;
+	m_bytes_needed = BASIC_HEADER_LENGTH;
+}
+
+void frame::consume(std::istream &s) {
+	if (m_state == STATE_BASIC_HEADER) {
+		s.read(&m_header[BASIC_HEADER_LENGTH-m_bytes_needed],m_bytes_needed);
+		
+		m_bytes_needed -= s.gcount();
+		
+		if (m_bytes_needed == 0) {
+			process_basic_header();
+			
+			// basic header validation
+			validate_basic_header();
+			
+			if (m_bytes_needed > 0) {
+				m_state = STATE_EXTENDED_HEADER;
+			} else {
+				m_state = STATE_PAYLOAD;
+			}
+		}
+	} else if (m_state == STATE_EXTENDED_HEADER) {
+		s.read(&m_header[BASIC_HEADER_LENGTH+get_header_len()-m_bytes_needed],m_bytes_needed);
+		
+		m_bytes_needed -= s.gcount();
+		
+		if (m_bytes_needed == 0) {
+			process_extended_header();
+			m_state = STATE_PAYLOAD;
+		}
+	}
+}
+
 char* frame::get_header() {
 	return m_header;
 }
@@ -283,13 +323,9 @@ std::string frame::print_frame() const {
 	return f.str();
 }
 
-unsigned int frame::process_basic_header() {
-	m_extended_header_bytes_needed = 0;
+void frame::process_basic_header() {
 	m_payload.empty();
-	
-	m_extended_header_bytes_needed = get_header_len() - BASIC_HEADER_LENGTH;
-	
-	return m_extended_header_bytes_needed;
+	m_bytes_needed = get_header_len() - BASIC_HEADER_LENGTH;
 }
 
 void frame::process_extended_header() {
@@ -308,22 +344,26 @@ void frame::process_extended_header() {
 			reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
 		));
 		
+		if (payload_size < s) {
+			throw frame_error("payload length not minimally encoded");
+		}
+		
 		mask_index += 2;
 	} else if (s == BASIC_PAYLOAD_64BIT_CODE) {
-		// reinterpret the second eight bytes as a 16 bit integer in 
+		// reinterpret the second eight bytes as a 64 bit integer in 
 		// network byte order. Convert to host byte order and store.
 		payload_size = ntohll(*(
 			reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
 		));
 		
+		if (payload_size <= PAYLOAD_16BIT_LIMIT) {
+			throw frame_error("payload length not minimally encoded");
+		}
+		
 		mask_index += 8;
 	} else {
 		// shouldn't be here
-		throw server_error("invalid get_basic_size in process_extended_header");
-	}
-	
-	if (payload_size < s) {
-		throw server_error("payload size error");
+		throw frame_error("invalid get_basic_size in process_extended_header");
 	}
 	
 	if (get_masked() == 0) {
@@ -394,32 +434,30 @@ bool frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
 	return true;
 }
 
-bool frame::validate_basic_header() const {
+void frame::validate_basic_header() const {
 	// check for control frame size
 	if (get_basic_size() > BASIC_PAYLOAD_LIMIT && is_control()) {
-		return false;	
+		throw frame_error("Control Frame is too large");
 	}
 	
 	// check for reserved opcodes
 	if (get_rsv1() || get_rsv2() || get_rsv3()) {
-		return false;
+		throw frame_error("Reserved bit used");
 	}
 	
 	// check for reserved opcodes
 	opcode op = get_opcode();
 	if (op > 0x02 && op < 0x08) {
-		return false;
+		throw frame_error("Reserved opcode used");
 	}
 	if (op > 0x0A) {
-		return false;
+		throw frame_error("Reserved opcode used");
 	}
 	
 	// check for fragmented control message
 	if (is_control() && !get_fin()) {
-		return false;
+		throw frame_error("Fragmented control message");
 	}
-	
-	return true;
 }
 
 void frame::generate_masking_key() {

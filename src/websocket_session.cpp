@@ -202,6 +202,42 @@ void session::pong(const std::string &msg) {
 	write_frame();
 }
 
+void session::handle_read_frame(const boost::system::error_code& error) {
+	// while
+	//		if there are enough bytes to do something:
+	//			do something
+	// read more
+		
+	std::istream s(&m_buf);
+	
+	try {
+		while (m_buf.size() > 0) {
+			m_read_frame.consume(s);
+		}
+	} catch (const frame_error& e) {
+		std::stringstream err;
+		err << "Caught frame exception: " << e.what();
+		
+		access_log(e.what(),ALOG_FRAME);
+		log(err.str(),LOG_ERROR);
+		
+		// TODO: close behavior
+		return;
+	}
+	// we have read everything, check if we should read more
+	
+	boost::asio::async_read(
+		m_socket,
+		m_buf,
+		boost::asio::transfer_at_least(1),
+		boost::bind(
+			&session::handle_read_frame,
+			shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
+}
+
 void session::read_frame() {
 	boost::asio::async_read(
 		m_socket,

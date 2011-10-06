@@ -54,6 +54,11 @@ public:
 	
 	static const uint8_t MAX_FRAME_OPCODE = 0x07;
 	
+	static const uint8_t STATE_BASIC_HEADER = 1;
+	static const uint8_t STATE_EXTENDED_HEADER = 2;
+	static const uint8_t STATE_PAYLOAD = 3;
+	static const uint8_t STATE_READY = 4;
+	
 	// basic payload byte flags
 	static const uint8_t BPB0_OPCODE = 0x0F;
 	static const uint8_t BPB0_RSV3 = 0x10;
@@ -80,6 +85,11 @@ public:
 		// not sure if these are necessary with c++ but putting in just in case
 		memset(m_header,0,MAX_HEADER_LENGTH);
 	}
+	
+	uint8_t get_state() const;
+	void reset();
+	
+	void consume(std::istream &s);
 	
 	// get pointers to underlying buffers
 	char* get_header();
@@ -126,18 +136,21 @@ public:
 	std::string print_frame() const;
 	
 	// reads basic header, sets and returns m_header_bits_needed
-	unsigned int process_basic_header();
+	void process_basic_header();
 	void process_extended_header();
 	void process_payload();
 	void process_payload2(); // experiment with more efficient masking code.
 	
 	bool validate_utf8(uint32_t* state,uint32_t* codep) const;
-	bool validate_basic_header() const;
+	void validate_basic_header() const;
 	
 	void generate_masking_key();
 	void clear_masking_key();
 	
 private:
+	uint8_t		m_state;
+	uint64_t	m_bytes_needed;
+	
 	char m_header[MAX_HEADER_LENGTH];
 	std::vector<unsigned char> m_payload;
 	
@@ -150,6 +163,19 @@ private:
 	    m_gen;
 };
 
+// Exception classes
+class frame_error : public std::exception {
+public:	
+	frame_error(const std::string& msg) : m_msg(msg) {}
+	~frame_error() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	std::string m_msg;
+};
+	
 }
 
 #endif // WEBSOCKET_FRAME_HPP
