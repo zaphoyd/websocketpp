@@ -73,14 +73,10 @@ class session : public boost::enable_shared_from_this<session> {
 public:
 	friend class handshake_error;
 
-	enum ws_status {
-		CONNECTING,
-		OPEN,
-		CLOSING,
-		CLOSED
-	};
-	
-	typedef enum ws_status status_code;
+	static const uint8_t STATE_CONNECTING = 0;
+	static const uint8_t STATE_OPEN = 1;
+	static const uint8_t STATE_CLOSING = 2;
+	static const uint8_t STATE_CLOSED = 3;
 	
 	static const uint16_t CLOSE_STATUS_NORMAL = 1000;
 	static const uint16_t CLOSE_STATUS_GOING_AWAY = 1001;
@@ -160,13 +156,14 @@ protected:
 	void handle_frame_header(const boost::system::error_code& error);
 	void handle_extended_frame_header(const boost::system::error_code& error);
 	void read_payload();
-	void handle_read_payload (const boost::system::error_code& error);
+	void handle_read_frame (const boost::system::error_code& error);
 	
 	// write m_write_frame out to the socket.
 	void write_frame();
 	void handle_write_frame (const boost::system::error_code& error);
 	
 	// helper functions for processing each opcode
+	void process_frame();
 	void process_ping();
 	void process_pong();
 	void process_text();
@@ -194,6 +191,9 @@ protected:
 
 	// prints a diagnostic message and disconnects the local interface
 	void handle_error(std::string msg,const boost::system::error_code& error);
+	
+	// misc helpers
+	bool validate_app_close_status(uint16_t status);
 private:
 	std::string get_header(const std::string& key,
 	                       const header_list& list) const;
@@ -220,7 +220,7 @@ protected:
 	std::string					m_server_http_string;
 
 	// Mutable connection state;
-	status_code				m_status;
+	uint8_t					m_state;
 	uint16_t				m_close_code;
 	std::string				m_close_message;
 

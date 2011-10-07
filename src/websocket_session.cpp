@@ -120,7 +120,7 @@ unsigned int session::get_version() const {
 }
 
 void session::send(const std::string &msg) {
-	if (m_status != OPEN) {
+	if (m_state != STATE_OPEN) {
 		log("Tried to send a message from a session that wasn't open",LOG_WARN);
 		return;
 	}
@@ -132,7 +132,7 @@ void session::send(const std::string &msg) {
 }
 
 void session::send(const std::vector<unsigned char> &data) {
-	if (m_status != OPEN) {
+	if (m_state != STATE_OPEN) {
 		log("Tried to send a message from a session that wasn't open",LOG_WARN);
 		return;
 	}
@@ -143,19 +143,28 @@ void session::send(const std::vector<unsigned char> &data) {
 	write_frame();
 }
 
+// end user interface to close the connection
 void session::close(uint16_t status,const std::string& msg) {
+	validate_app_close_status(status);
+	
 	disconnect(status,msg);
 	// TODO: close behavior
 }
 
 // TODO: clean this up, needs to be broken out into more specific methods
+
+// This method initiates a clean disconnect with the given status code and reason
+// it logs an error and is ignored if it is called from a state other than OPEN
+
+// called by process_close when an initiate close method is received.
+
 void session::disconnect(uint16_t status,const std::string &message) {
-	if (m_status != OPEN) {
+	if (m_state != STATE_OPEN) {
 		log("Tried to disconnect a session that wasn't open",LOG_WARN);
 		return;
 	}
 
-	m_status = CLOSING;
+	m_state = STATE_CLOSING;
 	
 	m_close_code = status;
 	m_close_message = message;
@@ -179,7 +188,7 @@ void session::disconnect(uint16_t status,const std::string &message) {
 }
 
 void session::ping(const std::string &msg) {
-	if (m_status != OPEN) {
+	if (m_state != STATE_OPEN) {
 		log("Tried to send a ping from a session that wasn't open",LOG_WARN);
 		return;
 	}
@@ -191,7 +200,7 @@ void session::ping(const std::string &msg) {
 }
 
 void session::pong(const std::string &msg) {
-	if (m_status != OPEN) {
+	if (m_state != STATE_OPEN) {
 		log("Tried to send a pong from a session that wasn't open",LOG_WARN);
 		return;
 	}
@@ -203,16 +212,28 @@ void session::pong(const std::string &msg) {
 }
 
 void session::handle_read_frame(const boost::system::error_code& error) {
-	// while
-	//		if there are enough bytes to do something:
-	//			do something
-	// read more
-		
+	if (error) {
+		handle_error("Error reading extended frame header",error);
+		// TODO: close behavior
+		return;
+	}
+	
+	if (m_state != STATE_OPEN && m_state != STATE_CLOSING) {
+		// stop processing frames.
+		log("handle_read_frame called in invalid state",LOG_ERROR);
+		return;
+	}
+	
 	std::istream s(&m_buf);
 	
 	try {
 		while (m_buf.size() > 0) {
 			m_read_frame.consume(s);
+			if (m_read_frame.get_state() == frame::STATE_READY) {
+				process_frame();
+				
+				// should we break?
+			}
 		}
 	} catch (const frame_error& e) {
 		std::stringstream err;
@@ -221,15 +242,24 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 		access_log(e.what(),ALOG_FRAME);
 		log(err.str(),LOG_ERROR);
 		
+		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
+		
 		// TODO: close behavior
 		return;
 	}
 	// we have read everything, check if we should read more
 	
+	if (m_state != STATE_OPEN && m_state != STATE_CLOSING) {
+		// stop processing frames.
+		log("handle_read_frame called in invalid state");
+		return;
+	}
+	
+	// read more
 	boost::asio::async_read(
 		m_socket,
 		m_buf,
-		boost::asio::transfer_at_least(1),
+		boost::asio::transfer_at_least(m_read_frame.get_bytes_needed()),
 		boost::bind(
 			&session::handle_read_frame,
 			shared_from_this(),
@@ -313,16 +343,8 @@ void session::read_payload() {
 	);
 }
 
-void session::handle_read_payload (const boost::system::error_code& error) {
-	if (error) {
-		handle_error("Error reading payload data frame header",error);
-		// TODO: close behavior
-		return;
-	}
-	
-	m_read_frame.process_payload();
-
-	if (m_status == OPEN) {
+void session::process_frame () {
+	if (m_state == STATE_OPEN) {
 		switch (m_read_frame.get_opcode()) {
 			case frame::CONTINUATION_FRAME:
 				process_continuation();
@@ -347,7 +369,7 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 				// TODO: close behavior
 				break;
 		}
-	} else if (m_status == CLOSING) {
+	} else if (m_state == STATE_CLOSING) {
 		if (m_read_frame.get_opcode() == frame::CONNECTION_CLOSE) {
 			process_close();
 		} else {
@@ -377,8 +399,8 @@ void session::handle_read_payload (const boost::system::error_code& error) {
 		// TODO: close behavior
 		return;
 	}
-
-	this->read_frame();
+	
+	m_read_frame.reset();
 }
 
 void session::handle_write_frame (const boost::system::error_code& error) {
@@ -408,22 +430,17 @@ void session::process_pong() {
 }
 
 void session::process_text() {
-	if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
-		disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
-		// TODO: close behavior
-		return;
-	}
-
+	// this will throw an exception if validation fails at any point
+	m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint);
+	
+	// otherwise, treat as binary
 	process_binary();
 }
 
 void session::process_binary() {
 	if (m_fragmented) {
-		handle_error("Got a new message before the previous was finished.",
-			boost::system::error_code());
-			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
-			// TODO: close behavior
-			return;
+		throw frame_error("Got a new message before the previous was finished.",
+						  frame::FERR_PROTOCOL_VIOLATION);
 	}
 	
 	m_current_opcode = m_read_frame.get_opcode();
@@ -439,19 +456,13 @@ void session::process_binary() {
 
 void session::process_continuation() {
 	if (!m_fragmented) {
-		handle_error("Got a continuation frame without an outstanding message.",
-			boost::system::error_code());
-			disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
-			// TODO: close behavior
-			return;
+		throw frame_error("Got a continuation frame without an outstanding message.",
+						  frame::FERR_PROTOCOL_VIOLATION);
 	}
 	
 	if (m_current_opcode == frame::TEXT_FRAME) {
-		if (!m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint)) {
-			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");	
-			// TODO: close behavior
-			return;
-		}
+		// this will throw an exception if validation fails at any point
+		m_read_frame.validate_utf8(&m_utf8_state,&m_utf8_codepoint);
 	}
 
 	extract_payload();
@@ -470,17 +481,16 @@ void session::process_close() {
 	m_remote_close_code = status;
 	m_remote_close_msg = message;
 
-
-	if (m_status == OPEN) {
+	if (m_state == STATE_OPEN) {
 		// This is the case where the remote initiated the close.
 		m_closed_by_me = false;
 		// TODO: close behavior
 		disconnect(status,message);
-	} else if (m_status == CLOSING) {
+	} else if (m_state == STATE_CLOSING) {
 		// this is an ack of our close message
 		m_closed_by_me = true;
 	} else {
-		throw "fixme";
+		throw frame_error("process_closed called from wrong state");
 	}
 
 	m_was_clean = true;
@@ -503,10 +513,11 @@ void session::deliver_message() {
 		std::string msg;
 		
 		// make sure the finished frame is valid utf8
+		// the streaming validator checks for bad codepoints as it goes. It 
+		// doesn't know where the end of the message is though, so we need to 
+		// check here to make sure the final message ends on a valid codepoint.
 		if (m_utf8_state != utf8_validator::UTF8_ACCEPT) {
-			disconnect(CLOSE_STATUS_INVALID_PAYLOAD,"Invalid UTF8 Data");
-			// TODO: close behavior
-			return;
+			throw frame_error("Invalid UTF-8 Data",FERR_PAYLOAD_VIOLATION);
 		}
 
 		if (m_fragmented) {
@@ -523,7 +534,7 @@ void session::deliver_message() {
 		// Not sure if this should be a fatal error or not
 		std::stringstream err;
 		err << "Attempted to deliver a message of unsupported opcode " << m_current_opcode;
-		log(err.str(),LOG_ERROR);
+		throw frame_error(err.str(),frame::FERR_SOFT_SESSION_ERROR);
 	}
 	
 }
@@ -613,4 +624,17 @@ void session::handle_error(std::string msg,
 	}
 	
 	m_error = true;
+}
+
+// validates status codes that the end application is allowed to use
+bool session::validate_app_close_status(uint16_t status) {
+	if (status == CLOSE_STATUS_NORMAL) {
+		return true;
+	}
+	
+	if (status >= 4000 && status < 5000) {
+		return true;
+	}
+	
+	return false;
 }

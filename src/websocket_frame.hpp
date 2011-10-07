@@ -59,6 +59,11 @@ public:
 	static const uint8_t STATE_PAYLOAD = 3;
 	static const uint8_t STATE_READY = 4;
 	
+	static const uint16_t FERR_FATAL_SESSION_ERROR = 0; // must end session
+	static const uint16_t FERR_SOFT_SESSION_ERROR = 1; // should log and ignore
+	static const uint16_t FERR_PROTOCOL_VIOLATION = 2; // must end session
+	static const uint16_t FERR_PAYLOAD_VIOLATION = 3; // should end session
+	
 	// basic payload byte flags
 	static const uint8_t BPB0_OPCODE = 0x0F;
 	static const uint8_t BPB0_RSV3 = 0x10;
@@ -87,6 +92,7 @@ public:
 	}
 	
 	uint8_t get_state() const;
+	uint64_t get_bytes_needed() const;
 	void reset();
 	
 	void consume(std::istream &s);
@@ -141,7 +147,7 @@ public:
 	void process_payload();
 	void process_payload2(); // experiment with more efficient masking code.
 	
-	bool validate_utf8(uint32_t* state,uint32_t* codep) const;
+	void validate_utf8(uint32_t* state,uint32_t* codep) const;
 	void validate_basic_header() const;
 	
 	void generate_masking_key();
@@ -166,7 +172,9 @@ private:
 // Exception classes
 class frame_error : public std::exception {
 public:	
-	frame_error(const std::string& msg) : m_msg(msg) {}
+	frame_error(const std::string& msg,
+				uint16_t code = frame::FERR_FATAL_SESSION_ERROR) 
+	 : m_msg(msg),m_code(code) {}
 	~frame_error() throw() {}
 	
 	virtual const char* what() const throw() {
@@ -174,6 +182,7 @@ public:
 	}
 	
 	std::string m_msg;
+	uint16_t m_code;
 };
 	
 }

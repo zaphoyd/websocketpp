@@ -49,6 +49,7 @@ uint8_t frame::get_state() const {
 void frame::reset() {
 	m_state = STATE_BASIC_HEADER;
 	m_bytes_needed = BASIC_HEADER_LENGTH;
+	m_payload.empty();
 }
 
 void frame::consume(std::istream &s) {
@@ -77,6 +78,15 @@ void frame::consume(std::istream &s) {
 		if (m_bytes_needed == 0) {
 			process_extended_header();
 			m_state = STATE_PAYLOAD;
+		}
+	} else if (m_state == STATE_PAYLOAD) {
+		s.read(reinterpret_cast<char *>(&m_payload[0]),m_bytes_needed);
+		
+		m_bytes_needed -= s.gcount();
+		
+		if (m_bytes_needed == 0) {
+			process_payload();
+			m_state = STATE_READY;
 		}
 	}
 }
@@ -324,13 +334,10 @@ std::string frame::print_frame() const {
 }
 
 void frame::process_basic_header() {
-	m_payload.empty();
 	m_bytes_needed = get_header_len() - BASIC_HEADER_LENGTH;
 }
 
 void frame::process_extended_header() {
-	m_extended_header_bytes_needed = 0;
-	
 	uint8_t s = get_basic_size();
 	uint64_t payload_size;
 	int mask_index = BASIC_HEADER_LENGTH;
@@ -345,7 +352,8 @@ void frame::process_extended_header() {
 		));
 		
 		if (payload_size < s) {
-			throw frame_error("payload length not minimally encoded");
+			throw frame_error("payload length not minimally encoded",
+							  FERR_PROTOCOL_VIOLATION);
 		}
 		
 		mask_index += 2;
@@ -357,7 +365,8 @@ void frame::process_extended_header() {
 		));
 		
 		if (payload_size <= PAYLOAD_16BIT_LIMIT) {
-			throw frame_error("payload length not minimally encoded");
+			throw frame_error("payload length not minimally encoded",
+							  FERR_PROTOCOL_VIOLATION);
 		}
 		
 		mask_index += 8;
@@ -378,9 +387,11 @@ void frame::process_extended_header() {
 	}
 	
 	if (payload_size > max_payload_size) {
+		// TODO: frame/message size limits
 		throw server_error("got frame with payload greater than maximum frame buffer size.");
 	}
 	m_payload.resize(payload_size);
+	m_bytes_needed = payload_size;
 }
 
 void frame::process_payload() {
@@ -420,43 +431,39 @@ void frame::process_payload2() {
 	}
 }
 
-bool frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
+void frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
 	for (size_t i = 0; i < m_payload.size(); i++) {
 		using utf8_validator::decode;
 		
-		//std::cout << "decoding: " << std::hex << m_payload[i] << std::endl;
 		if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
-		//	std::cout << "bad byte" << std::endl;
-			return false;
+			throw frame_error("Invalid UTF-8 Data",FERR_PAYLOAD_VIOLATION);
 		}
 	}
-
-	return true;
 }
 
 void frame::validate_basic_header() const {
 	// check for control frame size
 	if (get_basic_size() > BASIC_PAYLOAD_LIMIT && is_control()) {
-		throw frame_error("Control Frame is too large");
+		throw frame_error("Control Frame is too large",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for reserved opcodes
 	if (get_rsv1() || get_rsv2() || get_rsv3()) {
-		throw frame_error("Reserved bit used");
+		throw frame_error("Reserved bit used",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for reserved opcodes
 	opcode op = get_opcode();
 	if (op > 0x02 && op < 0x08) {
-		throw frame_error("Reserved opcode used");
+		throw frame_error("Reserved opcode used",FERR_PROTOCOL_VIOLATION);
 	}
 	if (op > 0x0A) {
-		throw frame_error("Reserved opcode used");
+		throw frame_error("Reserved opcode used",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for fragmented control message
 	if (is_control() && !get_fin()) {
-		throw frame_error("Fragmented control message");
+		throw frame_error("Fragmented control message",FERR_PROTOCOL_VIOLATION);
 	}
 }
 
