@@ -46,7 +46,7 @@ using websocketpp::session;
 session::session (boost::asio::io_service& io_service,
 				  websocketpp::connection_handler_ptr defc,
 				  uint64_t buf_size)
-	: m_status(CONNECTING),
+	: m_state(STATE_CONNECTING),
 	  m_local_close_code(CLOSE_STATUS_NO_STATUS),
 	  m_remote_close_code(CLOSE_STATUS_NO_STATUS),
 	  m_was_clean(false),
@@ -77,7 +77,7 @@ void session::set_handler(websocketpp::connection_handler_ptr new_con) {
 }
 
 const std::string& session::get_subprotocol() const {
-	if (m_status == CONNECTING) {
+	if (m_state == STATE_CONNECTING) {
 		log("Subprotocol is not avaliable before the handshake has completed.",LOG_WARN);
 		throw server_error("Subprotocol is not avaliable before the handshake has completed.");
 	}
@@ -147,8 +147,7 @@ void session::send(const std::vector<unsigned char> &data) {
 void session::close(uint16_t status,const std::string& msg) {
 	validate_app_close_status(status);
 	
-	disconnect(status,msg);
-	// TODO: close behavior
+	send_close(status,msg);
 }
 
 // TODO: clean this up, needs to be broken out into more specific methods
@@ -158,7 +157,7 @@ void session::close(uint16_t status,const std::string& msg) {
 
 // called by process_close when an initiate close method is received.
 
-void session::disconnect(uint16_t status,const std::string &message) {
+void session::send_close(uint16_t status,const std::string &message) {
 	if (m_state != STATE_OPEN) {
 		log("Tried to disconnect a session that wasn't open",LOG_WARN);
 		return;
@@ -242,6 +241,17 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 		access_log(e.what(),ALOG_FRAME);
 		log(err.str(),LOG_ERROR);
 		
+		if (e.code() == frame::FERR_PROTOCOL_VIOLATION) {
+			disconnect(CLOSE_STATUS_PROTOCOL_ERROR, e.what());
+		} else if (e.code() == frame::FERR_PAYLOAD_VIOLATION) {
+			disconnect(CLOSE_STATUS_INVALID_PAYLOAD, e.what());
+		} else if (e.code() == frame::FERR_SOFT_SESSION_ERROR) {
+			// ???
+		} else {
+			// Fatal error
+			disconnect(CLOSE_STATUS_NO_STATUS, "");
+		}
+		
 		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
 		
 		// TODO: close behavior
@@ -251,7 +261,7 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 	
 	if (m_state != STATE_OPEN && m_state != STATE_CLOSING) {
 		// stop processing frames.
-		log("handle_read_frame called in invalid state");
+		log("handle_read_frame called in invalid state",LOG_ERROR);
 		return;
 	}
 	
@@ -262,81 +272,6 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 		boost::asio::transfer_at_least(m_read_frame.get_bytes_needed()),
 		boost::bind(
 			&session::handle_read_frame,
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void session::read_frame() {
-	boost::asio::async_read(
-		m_socket,
-		boost::asio::buffer(m_read_frame.get_header(),
-			frame::BASIC_HEADER_LENGTH),
-		boost::bind(
-			&session::handle_frame_header,
-			shared_from_this(),
-			boost::asio::placeholders::error
-		)
-	);
-}
-
-void session::handle_frame_header(const boost::system::error_code& error) {
-	if (error) {
-		handle_error("Error reading basic frame header",error);
-		// TODO: close behavior
-		return;	
-	}
-	log(m_read_frame.print_frame(),LOG_DEBUG);
-	
-	uint16_t extended_header_bytes = m_read_frame.process_basic_header();
-
-	if (!m_read_frame.validate_basic_header()) {
-		handle_error("Basic header validation failed",boost::system::error_code());
-		disconnect(CLOSE_STATUS_PROTOCOL_ERROR,"");
-		
-		
-		// TODO: close behavior
-		return;
-	}
-
-	if (extended_header_bytes == 0) {
-		m_read_frame.process_extended_header();
-		read_payload();
-	} else {
-		boost::asio::async_read(
-			m_socket,
-			boost::asio::buffer(m_read_frame.get_extended_header(),
-				extended_header_bytes),
-			boost::bind(
-				&session::handle_extended_frame_header,
-				shared_from_this(),
-				boost::asio::placeholders::error
-			)
-		);
-	}
-}
-
-void session::handle_extended_frame_header(
-									const boost::system::error_code& error) {
-	if (error) {
-		handle_error("Error reading extended frame header",error);
-		// TODO: close behavior
-		return;
-	}
-	
-	// this sets up the buffer we are about to read into.
-	m_read_frame.process_extended_header();
-	
-	this->read_payload();
-}
-
-void session::read_payload() {
-	boost::asio::async_read(
-		m_socket,
-		boost::asio::buffer(m_read_frame.get_payload()),
-		boost::bind(
-			&session::handle_read_payload,
 			shared_from_this(),
 			boost::asio::placeholders::error
 		)
@@ -494,7 +429,7 @@ void session::process_close() {
 	}
 
 	m_was_clean = true;
-	m_status = CLOSED;
+	m_state = STATE_CLOSED;
 }
 
 void session::deliver_message() {
@@ -517,7 +452,8 @@ void session::deliver_message() {
 		// doesn't know where the end of the message is though, so we need to 
 		// check here to make sure the final message ends on a valid codepoint.
 		if (m_utf8_state != utf8_validator::UTF8_ACCEPT) {
-			throw frame_error("Invalid UTF-8 Data",FERR_PAYLOAD_VIOLATION);
+			throw frame_error("Invalid UTF-8 Data",
+							  frame::FERR_PAYLOAD_VIOLATION);
 		}
 
 		if (m_fragmented) {

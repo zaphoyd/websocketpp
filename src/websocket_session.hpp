@@ -138,7 +138,6 @@ public:
 	
 	// initiate a connection close
 	void close(uint16_t status,const std::string &reason);
-	void disconnect(uint16_t status,const std::string& reason); // temp
 
 	virtual bool is_server() const = 0;
 
@@ -151,11 +150,6 @@ protected:
 	virtual void write_handshake() = 0;
 	virtual void read_handshake() = 0;
 	
-	// start async read for a websocket frame (2 bytes) to handle_frame_header
-	void read_frame();
-	void handle_frame_header(const boost::system::error_code& error);
-	void handle_extended_frame_header(const boost::system::error_code& error);
-	void read_payload();
 	void handle_read_frame (const boost::system::error_code& error);
 	
 	// write m_write_frame out to the socket.
@@ -194,6 +188,7 @@ protected:
 	
 	// misc helpers
 	bool validate_app_close_status(uint16_t status);
+	void send_close(uint16_t status,const std::string& reason);
 private:
 	std::string get_header(const std::string& key,
 	                       const header_list& list) const;

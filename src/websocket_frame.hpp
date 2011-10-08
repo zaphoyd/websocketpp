@@ -181,6 +181,10 @@ public:
 		return m_msg.c_str();
 	}
 	
+	uint16_t code() const throw() {
+		
+	}
+	
 	std::string m_msg;
 	uint16_t m_code;
 };
