@@ -37,8 +37,8 @@ using boost::asio::ip::tcp;
 
 client::client(boost::asio::io_service& io_service,
                websocketpp::connection_handler_ptr defc)
-	: m_elog_level(LOG_ALL),
-	  m_alog_level(ALOG_ALL),
+	: m_elog_level(LOG_OFF),
+	  m_alog_level(ALOG_OFF),
 	  m_state(CLIENT_STATE_NULL),
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service),
@@ -182,6 +182,10 @@ void client::access_log(std::string msg,uint16_t level) {
 
 void client::handle_connect(const boost::system::error_code& error) {
 	if (!error) {
+		std::stringstream err;
+		err << "Successful Connection ";
+		log(err.str(),LOG_ERROR);
+		
 		m_state = CLIENT_STATE_CONNECTED;
 		m_client_session->on_connect();
 	} else {
