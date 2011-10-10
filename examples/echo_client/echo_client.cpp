@@ -56,8 +56,34 @@ int main(int argc, char* argv[]) {
 		client->set_header("User Agent","WebSocket++/2011-09-25");
 		
 		client->connect("ws://localhost:9001/getCaseCount");
-		
 		io_service.run();
+		
+		std::cout << "case count: " << c->m_case_count;
+		
+		for (int i = 1; i <= c->m_case_count; i++) {
+			io_service.reset();
+			//boost::asio::io_service ios;
+			
+			//client.reset();
+			//client = websocketpp::client_ptr(new websocketpp::client(io_service,c));
+			
+			std::cout << "foo: " << i << std::endl;
+			//websocketpp::client_ptr client2(new websocketpp::client(io_service,c));
+						
+			client->set_alog_level(websocketpp::ALOG_OFF);
+			client->set_elog_level(websocketpp::LOG_OFF);
+			
+			client->init();
+			client->set_header("User Agent","WebSocket++/2011-09-25");
+			
+			
+			std::stringstream foo;
+			
+			foo << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-08\"";
+			
+			client->connect(foo.str());
+			io_service.run();
+		}
 		
 		std::cout << "done" << std::endl;
 		

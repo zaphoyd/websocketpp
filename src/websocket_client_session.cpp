@@ -124,6 +124,13 @@ void client_session::read_handshake() {
 
 void client_session::handle_read_handshake(const boost::system::error_code& e,
 	std::size_t bytes_transferred) {
+	
+	if (e) {
+		log_error("Error reading server handshake",e);
+		drop_tcp();
+		return;
+	}
+	
 	// parse server handshake
 	std::istream response_stream(&m_buf);
 	std::string header;
@@ -255,7 +262,7 @@ void client_session::handle_read_handshake(const boost::system::error_code& e,
 	
 	log_open_result();
 
-	m_status = OPEN;
+	m_state = STATE_OPEN;
 
 	if (m_local_interface) {
 		m_local_interface->on_open(shared_from_this());
@@ -326,8 +333,8 @@ void client_session::write_handshake() {
 
 void client_session::handle_write_handshake(const boost::system::error_code& error) {
 	if (error) {
-		handle_error("Error writing handshake",error);
-		// TODO: close behavior
+		log_error("Error writing handshake",error);
+		drop_tcp();
 		return;
 	}
 	

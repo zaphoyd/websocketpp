@@ -58,11 +58,14 @@ public:
 	static const uint8_t STATE_EXTENDED_HEADER = 2;
 	static const uint8_t STATE_PAYLOAD = 3;
 	static const uint8_t STATE_READY = 4;
+	static const uint8_t STATE_RECOVERY = 5;
 	
-	static const uint16_t FERR_FATAL_SESSION_ERROR = 0; // must end session
+	static const uint16_t FERR_FATAL_SESSION_ERROR = 0; // force session end
 	static const uint16_t FERR_SOFT_SESSION_ERROR = 1; // should log and ignore
 	static const uint16_t FERR_PROTOCOL_VIOLATION = 2; // must end session
 	static const uint16_t FERR_PAYLOAD_VIOLATION = 3; // should end session
+	static const uint16_t FERR_INTERNAL_SERVER_ERROR = 4; // cleanly end session
+	static const uint16_t FERR_MSG_TOO_BIG = 5;
 	
 	// basic payload byte flags
 	static const uint8_t BPB0_OPCODE = 0x0F;
@@ -86,9 +89,8 @@ public:
 	
 	// create an empty frame for writing into
 	frame() : m_gen(m_rng, 
-	          boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)) {
-		// not sure if these are necessary with c++ but putting in just in case
-		memset(m_header,0,MAX_HEADER_LENGTH);
+	          boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)),m_degraded(false) {
+		reset();
 	}
 	
 	uint8_t get_state() const;
@@ -156,12 +158,12 @@ public:
 private:
 	uint8_t		m_state;
 	uint64_t	m_bytes_needed;
+	bool		m_degraded;
 	
 	char m_header[MAX_HEADER_LENGTH];
 	std::vector<unsigned char> m_payload;
 	
 	char m_masking_key[4];	
-	unsigned int m_extended_header_bytes_needed;
 	
 	boost::random::random_device m_rng;
 	boost::random::variate_generator<boost::random::random_device&, 
@@ -182,7 +184,7 @@ public:
 	}
 	
 	uint16_t code() const throw() {
-		
+		return m_code;
 	}
 	
 	std::string m_msg;

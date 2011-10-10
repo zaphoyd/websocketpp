@@ -70,7 +70,7 @@ public:
 	
 	// ignore messages
 	void on_message(session_ptr s,const std::vector<unsigned char> &data);
-private:
+	
 	int m_case_count;
 };
 

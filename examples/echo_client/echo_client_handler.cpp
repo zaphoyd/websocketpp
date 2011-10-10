@@ -42,8 +42,8 @@ void echo_client_handler::on_close(session_ptr s,uint16_t status,const std::stri
 
 void echo_client_handler::on_message(session_ptr s,const std::string &msg) {
 	if (s->get_resource() == "/getCaseCount") {
-		std::cout << "msg |" << msg.substr(1,msg.size()-2) << "|" << std::endl;
-		m_case_count = atoi(msg.substr(1,msg.size()-2).c_str());
+		std::cout << "Detected " << msg << " test cases." << std::endl;
+		m_case_count = atoi(msg.c_str());
 	} else {
 		s->send(msg);
 	}

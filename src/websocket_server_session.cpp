@@ -314,7 +314,8 @@ void server_session::write_handshake() {
 
 void server_session::handle_write_handshake(const boost::system::error_code& error) {
 	if (error) {
-		handle_error("Error writing handshake response",error);
+		log_error("Error writing handshake response",error);
+		drop_tcp();
 		return;
 	}
 	
@@ -325,11 +326,12 @@ void server_session::handle_write_handshake(const boost::system::error_code& err
 		err << "Handshake ended with HTTP error: " << m_server_http_code << " "
 		    << (m_server_http_string != "" ? m_server_http_string : lookup_http_error_string(m_server_http_code));
 		log(err.str(),LOG_ERROR);
-		// TODO: close behavior
+		drop_tcp();
+		// TODO: tell client that connection failed.
 		return;
 	}
 	
-	m_status = OPEN;
+	m_state = STATE_OPEN;
 	
 	if (m_local_interface) {
 		m_local_interface->on_open(shared_from_this());
