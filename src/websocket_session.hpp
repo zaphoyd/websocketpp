@@ -193,6 +193,8 @@ protected:
 	void write_frame();
 	void handle_write_frame (const boost::system::error_code& error);
 	
+	void handle_timer_expired(const boost::system::error_code& error);
+	
 	// helper functions for processing each opcode
 	void process_frame();
 	void process_ping();
@@ -267,6 +269,7 @@ protected:
 	tcp::socket 				m_socket;
 	boost::asio::io_service&	m_io_service;
 	connection_handler_ptr		m_local_interface;
+	boost::asio::deadline_timer	m_timer;
 	
 	// Buffers
 	boost::asio::streambuf		m_buf;

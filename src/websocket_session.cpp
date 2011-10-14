@@ -56,6 +56,7 @@ session::session (boost::asio::io_service& io_service,
 	  m_socket(io_service),
 	  m_io_service(io_service),
 	  m_local_interface(defc),
+	  m_timer(io_service,boost::posix_time::seconds(0)),
 	  m_buf(buf_size), // maximum buffered (unconsumed) bytes from network
 	  m_utf8_state(utf8_validator::UTF8_ACCEPT),
 	  m_utf8_codepoint(0) {}
@@ -388,6 +389,24 @@ void session::handle_write_frame (const boost::system::error_code& error) {
 	access_log("handle_write_frame complete",ALOG_FRAME);
 	m_writing = false;
 }
+
+
+void session::handle_timer_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("timer ended with error",LOG_DEBUG);
+		}
+		return;
+	}
+	
+	log("timer ended without error",LOG_DEBUG);
+	
+	
+}
+
 
 void session::process_ping() {
 	access_log("Ping",ALOG_MISC_CONTROL);

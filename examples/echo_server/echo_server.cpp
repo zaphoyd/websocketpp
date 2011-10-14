@@ -61,8 +61,8 @@ int main(int argc, char* argv[]) {
 		);
 		
 		// setup server settings
-		server->set_alog_level(websocketpp::ALOG_OFF);
-		server->set_elog_level(websocketpp::LOG_OFF);
+		//server->set_alog_level(websocketpp::ALOG_OFF);
+		//server->set_elog_level(websocketpp::LOG_OFF);
 		
 		server->add_host(host);
 		server->add_host(full_host);

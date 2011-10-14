@@ -92,7 +92,16 @@ void server_session::select_extension(const std::string& val) {
 }
 
 void server_session::read_handshake() {
-	// TODO: pass maximum size to m_buf cosntructor to prevent DoS here
+	m_timer.expires_from_now(boost::posix_time::seconds(5));
+	
+	m_timer.async_wait(
+		boost::bind(
+			&session::handle_timer_expired,
+			this,
+			boost::asio::placeholders::error
+		)
+	);
+	
 	boost::asio::async_read_until(
 		m_socket,
 		m_buf,
