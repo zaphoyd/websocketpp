@@ -105,3 +105,56 @@ Acknowledgements
 - Autobahn test suite
 - testing by Keith Brisson
 
+
+
+API spec notes
+
+
+6.59
+
+
+Server API
+websocketpp.hpp
+
+create a websocketpp::server_ptr initialized to a new websocketpp::server object
+
+the server constructor will need three things.
+- A boost::asio::io_service object to use to manage its async operations
+- A boost::asio::ip::tcp::endpoint to listen to for new connections
+- An object that impliments the websocketpp::connection_handler interface to provide callback functions (See Handler API)
+
+After construction the server object will be in the initialization state. At this time you can set up server config options either via calling individual set option commands or by loading them in a batch from a config file.
+
+The only required option is that at least one host value must be set. Incoming websocket connections must specify a host value that they wish to connect to and if the server object does not have that host value in it's list of canonical hosts it will reject the connection.
+
+[note about settings that can be changed live?]
+
+Once the server has been configured the way you want, call the start_accept() method. This will add the first async call to your io_service. If your io_service was already running, the server will start accepting connections immediately. If not you will need to call io_service.run() to start it.
+
+Client API
+include websocketpp.hpp
+
+create a websocketpp::client_ptr initialized to a new websocketpp::client object
+
+the client constructor will need:
+- A boost::asio::io_service object to use to manage its async operations
+- An object that impliments the websocketpp::connection_handler interface to privde callback functions (See Handler API)
+
+After construction, the client object will be in the initialization state. At this time you can set up client config options either via calling individual set options commands or by loading them in a batch from a config file.
+
+Opening a new connection:
+Per the websocket spec, a client can only have one connection in the connecting state at a time. Client method new_session() will create a new session and return a shared pointer to it. After this point new_session will throw an exception if you attempt to call it again before the most recently created session has either successfully connected or failed to connect. new_session()
+- call websocketpp::client::new_session(). This will return a session_ptr
+
+
+Handler API
+
+
+
+
+Session API
+
+
+
+
+

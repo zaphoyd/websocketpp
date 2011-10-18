@@ -59,6 +59,17 @@
  Server Frame Reading Paths
  - async read returns EOF. Close our own socket and notify our local interface.
  - async read returns another error
+ 
+ 
+ 
+ 
+ Timeouts:
+ - handshake timeout
+ - wait for close frame after error
+ - (client) wait for server to drop tcp after close handshake
+ - idle client timeout? API specifiable?
+ - wait for pong?
+ 
  */
 
 #ifndef WEBSOCKET_SESSION_HPP
