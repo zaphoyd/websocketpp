@@ -49,39 +49,56 @@ public:
 	// connection based on application specific logic (ex: restrict domains or
 	// negotiate subprotocols). To reject the connection throw a handshake_error
 	//
+	// Validate is never called for client sessions. To refuse a client session 
+	// (ex: if you do not like the set of extensions/subprotocols the server 
+	// chose) you can close the connection immediately in the on_open method.
+	//
 	// handshake_error parameters:
 	//  log_message - error message to send to server log
 	//  http_error_code - numeric HTTP error code to return to the client
 	//  http_error_msg - (optional) string HTTP error code to return to the
 	//    client (useful for returning non-standard error codes)
-	virtual void validate(session_ptr client) = 0;
+	virtual void validate(session_ptr session) = 0;
 	
-	
+	// on_fail is called whenever a session is terminated or failed before it 
+	// was successfully established. This happens if there is an error during 
+	// the handshake process or if the server refused the connection.
+	// 
+	// on_fail will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_fail(session_ptr session) = 0;
 
-	// this will be called once the connected websocket is avaliable for 
-	// writing messages. client may be a new websocket session or an existing
-	// session that was recently passed to this handler.
-	virtual void on_open(session_ptr client) = 0;
-	
+	// on_open is called after the websocket session has been successfully 
+	// established and is in the OPEN state. The session is now avaliable to 
+	// send messages and will begin reading frames and calling the on_message/
+	// on_close/on_error callbacks. A client may reject the connection by 
+	// closing the session at this point.
+	virtual void on_open(session_ptr session) = 0;
 
-	// this will be called when the connected websocket is no longer avaliable
-	// for writing messages. This occurs under the following conditions:
-	// - Disconnect message recieved from the remote endpoint
-	// - Someone (usually this object) calls the disconnect method of session
-	// - A disconnect acknowledgement is recieved (in case another object 
-	//     calls the disconnect method of session
-	// - The connection handler assigned to this client was set to another 
-	//     handler
-	virtual void on_close(session_ptr client,uint16_t status,const std::string &reason) = 0;
+	// on_close is called whenever an open session is closed for any reason. 
+	// This can be due to either endpoint requesting a connection close or an 
+	// error occuring. Information about why the session was closed can be 
+	// extracted from the session itself. 
+	// 
+	// on_close will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_close(session_ptr session) = 0;
 	
-	// this will be called when a text message is recieved. Text will be 
-	// encoded as UTF-8.
-	virtual void on_message(session_ptr client,const std::string &msg) = 0;
+	// on_message (binary version) will be called when a binary message is 
+	// recieved. Message data is passed as a vector of bytes (unsigned char).
+	// data will not be avaliable after this callback ends so the handler must 
+	// either completely process the message or copy it somewhere else for 
+	// processing later.
+	virtual void on_message(session_ptr session,
+	                        const std::vector<unsigned char> &data) = 0;
 	
-	// this will be called when a binary message is recieved. Argument is a 
-	// vector of the raw bytes in the message body.
-	virtual void on_message(session_ptr client,
-		const std::vector<unsigned char> &data) = 0;
+	// on_message (text version). Identical to on_message except the data 
+	// parameter is a string interpreted as UTF-8. WebSocket++ guarantees that
+	// this string is valid UTF-8.
+	virtual void on_message(session_ptr session,const std::string &msg) = 0;
+	
 };
 
 
