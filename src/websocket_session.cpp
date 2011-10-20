@@ -329,7 +329,8 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 		log_close_result();
 		
 		if (m_local_interface) {
-			m_local_interface->on_close(shared_from_this(),m_remote_close_code,m_remote_close_msg);
+			// TODO: make sure close code/msg are properly set.
+			m_local_interface->on_close(shared_from_this());
 		}
 	} else {
 		log("handle_read_frame called in invalid state",LOG_ERROR);
@@ -407,6 +408,21 @@ void session::handle_timer_expired (const boost::system::error_code& error) {
 	
 }
 
+void session::handle_handshake_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("Unexpected handshake timer error.",LOG_DEBUG);
+			drop_tcp(false);
+		}
+		return;
+	}
+	
+	log("Handshake timed out",LOG_DEBUG);
+	drop_tcp(false);
+}
 
 void session::process_ping() {
 	access_log("Ping",ALOG_MISC_CONTROL);

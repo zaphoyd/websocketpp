@@ -96,8 +96,8 @@ void server_session::read_handshake() {
 	
 	m_timer.async_wait(
 		boost::bind(
-			&session::handle_timer_expired,
-			this,
+			&session::handle_handshake_expired,
+			shared_from_this(),
 			boost::asio::placeholders::error
 		)
 	);
@@ -341,6 +341,9 @@ void server_session::handle_write_handshake(const boost::system::error_code& err
 	}
 	
 	m_state = STATE_OPEN;
+	
+	// stop the handshake timer
+	m_timer.cancel();
 	
 	if (m_local_interface) {
 		m_local_interface->on_open(shared_from_this());
