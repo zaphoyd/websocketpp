@@ -13,6 +13,8 @@
 		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
 		B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
 		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
+		B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
+		B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
 		B6CF18281437C3B1009295BE /* echo_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18131437C370009295BE /* echo_client.cpp */; };
 		B6CF18291437C3B1009295BE /* echo_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18141437C370009295BE /* echo_client_handler.cpp */; };
 		B6CF182A1437C3BD009295BE /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -124,6 +126,7 @@
 		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
+		B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_endpoint.hpp; path = src/websocket_endpoint.hpp; sourceTree = "<group>"; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
 		B6CF18141437C370009295BE /* echo_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client_handler.cpp; sourceTree = "<group>"; };
 		B6CF18151437C370009295BE /* echo_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = echo_client_handler.hpp; sourceTree = "<group>"; };
@@ -265,6 +268,7 @@
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
 				B6DF1C951434AC470029A1B1 /* websocket_client.hpp */,
 				B6DF1C961434AC470029A1B1 /* websocket_connection_handler.hpp */,
+				B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */,
 				B6DF1C971434AC470029A1B1 /* websocket_frame.cpp */,
 				B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */,
 				B6DF1C991434AC470029A1B1 /* websocket_server_session.cpp */,
@@ -388,6 +392,7 @@
 				B6DF1CB01434AC470029A1B1 /* websocket_server_session.hpp in Headers */,
 				B6DF1CB41434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB81434AC470029A1B1 /* websocket_session.hpp in Headers */,
+				B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,6 +412,7 @@
 				B6DF1CB11434AC470029A1B1 /* websocket_server_session.hpp in Headers */,
 				B6DF1CB51434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB91434AC470029A1B1 /* websocket_session.hpp in Headers */,
+				B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -260,5 +260,40 @@ private:
 }
 
 class client_interface {
+public:
+	session_ptr connect(const std::string &url);
+protected:
+	
+private:
+
+}
+
+
+
+template<class HandshakePolicy>
+class session : public HandshakePolicy {
+public:
+	session();
+private:
 	
 }
+
+namespace websocketpp {
+namespace handshake {
+
+/* a handshake policy must define:
+void on_connect();
+bool is_server() const;
+
+*/
+
+class server {
+	
+}
+
+class client {
+	
+}
+
+} // handshake
+} // websocketpp
