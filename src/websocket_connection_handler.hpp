@@ -58,16 +58,7 @@ public:
 	//  http_error_code - numeric HTTP error code to return to the client
 	//  http_error_msg - (optional) string HTTP error code to return to the
 	//    client (useful for returning non-standard error codes)
-	virtual void validate(session_ptr session) = 0;
-	
-	// on_fail is called whenever a session is terminated or failed before it 
-	// was successfully established. This happens if there is an error during 
-	// the handshake process or if the server refused the connection.
-	// 
-	// on_fail will be the last time a session calls its handler. If your 
-	// application will need information from `session` after this function you
-	// should either save the session_ptr somewhere or copy the data out.
-	virtual void on_fail(session_ptr session) = 0;
+	virtual void validate(session_ptr session) {};
 
 	// on_open is called after the websocket session has been successfully 
 	// established and is in the OPEN state. The session is now avaliable to 
@@ -99,6 +90,21 @@ public:
 	// this string is valid UTF-8.
 	virtual void on_message(session_ptr session,const std::string &msg) = 0;
 	
+	
+	
+	// #### optional error cases ####
+	
+	// on_fail is called whenever a session is terminated or failed before it 
+	// was successfully established. This happens if there is an error during 
+	// the handshake process or if the server refused the connection.
+	// 
+	// on_fail will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_fail(session_ptr session) {};
+	
+	// experimental
+	virtual void on_ping_timeout(session_ptr session) {}
 };
 
 

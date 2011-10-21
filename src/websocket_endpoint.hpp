@@ -42,7 +42,7 @@ namespace websocketpp {
 
 namespace websocketpp {
 
-class endpoint {
+class endpoint : public boost::enable_shared_from_this<endpoint> {
 public:
 	virtual bool is_server() = 0;
 	// log
