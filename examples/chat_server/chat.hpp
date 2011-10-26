@@ -59,7 +59,7 @@ public:
 	void on_open(websocketpp::session_ptr client);
 		
 	// someone disconnected from the lobby, remove them
-	void on_close(websocketpp::session_ptr client,uint16_t status,const std::string &reason);
+	void on_close(websocketpp::session_ptr client);
 	
 	void on_message(websocketpp::session_ptr client,const std::string &msg);
 	
