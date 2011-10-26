@@ -193,7 +193,7 @@ public:
 	virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
 	virtual void handle_read_handshake(const boost::system::error_code& e,
 	                                   std::size_t bytes_transferred) = 0;
-protected:
+public: //protected:
 	virtual void write_handshake() = 0;
 	virtual void read_handshake() = 0;
 	
