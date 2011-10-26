@@ -36,7 +36,7 @@ void echo_client_handler::on_open(session_ptr s) {
 	std::cout << "Successfully connected: " << s->get_resource() << std::endl;
 }
 
-void echo_client_handler::on_close(session_ptr s,uint16_t status,const std::string &reason) {
+void echo_client_handler::on_close(session_ptr s) {
 	std::cout << "client was disconnected" << std::endl;
 }
 
