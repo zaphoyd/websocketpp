@@ -711,9 +711,18 @@ bool session::validate_app_close_status(uint16_t status) {
 
 void session::drop_tcp(bool dropped_by_me) {
 	m_timer.cancel();
-	if (m_socket.is_open()) {
-		m_socket.shutdown(tcp::socket::shutdown_both);
-		m_socket.close();
+	try {
+		if (m_socket.is_open()) {
+			m_socket.shutdown(tcp::socket::shutdown_both);
+			m_socket.close();
+		}
+	} catch (boost::system::system_error& e) {
+		if (e.code() == boost::asio::error::not_connected) {
+			// this means the socket was disconnected by the other side before
+			// we had a chance to. Ignore and continue.
+		} else {
+			throw e;
+		}
 	}
 	m_dropped_by_me = dropped_by_me;
 	m_state = STATE_CLOSED;
