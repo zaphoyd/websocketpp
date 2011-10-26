@@ -207,6 +207,7 @@ protected:
 	void handle_timer_expired(const boost::system::error_code& error);
 	void handle_handshake_expired(const boost::system::error_code& error);
 	void handle_close_expired(const boost::system::error_code& error);
+	void handle_error_timer_expired (const boost::system::error_code& error);
 	
 	// helper functions for processing each opcode
 	void process_frame();

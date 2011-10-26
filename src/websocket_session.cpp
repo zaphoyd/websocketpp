@@ -281,6 +281,7 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 				err.str("");
 				err << "processing frame " << m_buf.size();
 				log(err.str(),LOG_DEBUG);
+				m_timer.cancel();
 				process_frame();
 			}
 		} catch (const frame_error& e) {
@@ -430,18 +431,36 @@ void session::handle_timer_expired (const boost::system::error_code& error) {
 
 void session::handle_handshake_expired (const boost::system::error_code& error) {
 	if (error) {
-		if (error == boost::asio::error::operation_aborted) {
-			log("timer was aborted",LOG_DEBUG);
-			//drop_tcp(false);
-		} else {
+		if (error != boost::asio::error::operation_aborted) {
 			log("Unexpected handshake timer error.",LOG_DEBUG);
-			drop_tcp(false);
+			drop_tcp(true);
 		}
 		return;
 	}
 	
 	log("Handshake timed out",LOG_DEBUG);
-	drop_tcp(false);
+	drop_tcp(true);
+}
+
+// The error timer is set when we want to give the other endpoint some time to
+// do something but don't want to wait forever. There is a special error code
+// that represents the timer being canceled by us (because the other endpoint
+// responded in time. All other cases should assume that the other endpoint is
+// irrepairibly broken and drop the TCP connection.
+void session::handle_error_timer_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("error timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("error timer ended with error",LOG_DEBUG);
+			drop_tcp(true);
+		}
+		return;
+	}
+	
+	log("error timer ended without error",LOG_DEBUG);
+	drop_tcp(true);
 }
 
 void session::handle_close_expired (const boost::system::error_code& error) {
@@ -555,6 +574,7 @@ void session::deliver_message() {
 	}
 	
 	if (m_current_opcode == frame::BINARY_FRAME) {
+		//log("Dispatching Binary Message",LOG_DEBUG);
 		if (m_fragmented) {
 			m_local_interface->on_message(shared_from_this(),m_current_message);
 		} else {
@@ -582,6 +602,7 @@ void session::deliver_message() {
 			);
 		}
 		
+		//log("Dispatching Text Message",LOG_DEBUG);
 		m_local_interface->on_message(shared_from_this(),msg);
 	} else {
 		// Not sure if this should be a fatal error or not
