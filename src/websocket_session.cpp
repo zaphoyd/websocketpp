@@ -167,6 +167,16 @@ void session::send_close(uint16_t status,const std::string &message) {
 
 	m_state = STATE_CLOSING;
 	
+	m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	
+	m_timer.async_wait(
+		boost::bind(
+			&session::handle_close_expired,
+			shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
+	
 	m_local_close_code = status;
 	m_local_close_msg = message;
 
@@ -280,6 +290,13 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 			access_log(e.what(),ALOG_FRAME);
 			log(err.str(),LOG_ERROR);
 			
+			// if the exception happened while processing.
+			// TODO: this is not elegant, perhaps separate frame read vs process
+			// exceptions need to be used.
+			if (m_read_frame.get_state() == frame::STATE_READY) {
+				m_read_frame.reset();
+			}
+			
 			// process different types of frame errors
 			// 
 			if (e.code() == frame::FERR_PROTOCOL_VIOLATION) {
@@ -293,6 +310,7 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 				continue;
 			} else {
 				// Fatal error, forcibly end connection immediately.
+				log("Dropping TCP due to unrecoverable exception",LOG_DEBUG);
 				drop_tcp(true);
 			}
 			
@@ -332,6 +350,8 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 			// TODO: make sure close code/msg are properly set.
 			m_local_interface->on_close(shared_from_this());
 		}
+		
+		m_timer.cancel();
 	} else {
 		log("handle_read_frame called in invalid state",LOG_ERROR);
 	}
@@ -422,6 +442,24 @@ void session::handle_handshake_expired (const boost::system::error_code& error) 
 	
 	log("Handshake timed out",LOG_DEBUG);
 	drop_tcp(false);
+}
+
+void session::handle_close_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("Unexpected close timer error.",LOG_DEBUG);
+			drop_tcp(false);
+		}
+		return;
+	}
+	
+	if (m_state != STATE_CLOSED) {
+		log("close timed out",LOG_DEBUG);
+		drop_tcp(false);
+	}
 }
 
 void session::process_ping() {
@@ -651,10 +689,12 @@ bool session::validate_app_close_status(uint16_t status) {
 }
 
 void session::drop_tcp(bool dropped_by_me) {
+	m_timer.cancel();
 	if (m_socket.is_open()) {
 		m_socket.shutdown(tcp::socket::shutdown_both);
 		m_socket.close();
 	}
 	m_dropped_by_me = dropped_by_me;
 	m_state = STATE_CLOSED;
+	
 }
