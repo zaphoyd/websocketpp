@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\boost_1_47_0;."
+				AdditionalIncludeDirectories="..\..\..\boost_1_47_0;."
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\..\boost_1_47_0;."
+				AdditionalIncludeDirectories="..\..\..\boost_1_47_0;."
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -155,38 +155,38 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\network_utilities.cpp"
+				RelativePath="..\..\src\network_utilities.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_client.cpp"
+				RelativePath="..\..\src\websocket_client.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_client_session.cpp"
+				RelativePath="..\..\src\websocket_client_session.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_frame.cpp"
+				RelativePath="..\..\src\websocket_frame.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_server.cpp"
+				RelativePath="..\..\src\websocket_server.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_server_session.cpp"
+				RelativePath="..\..\src\websocket_server_session.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_session.cpp"
+				RelativePath="..\..\src\websocket_session.cpp"
 				>
 			</File>
 			<Filter
 				Name="base64"
 				>
 				<File
-					RelativePath="..\src\base64\base64.cpp"
+					RelativePath="..\..\src\base64\base64.cpp"
 					>
 				</File>
 			</Filter>
@@ -194,7 +194,7 @@
 				Name="sha"
 				>
 				<File
-					RelativePath="..\src\sha1\sha1.cpp"
+					RelativePath="..\..\src\sha1\sha1.cpp"
 					>
 				</File>
 			</Filter>
@@ -205,46 +205,46 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\src\network_utilities.hpp"
+				RelativePath="..\..\src\network_utilities.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_client.hpp"
+				RelativePath="..\..\src\websocket_client.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_client_session.hpp"
+				RelativePath="..\..\src\websocket_client_session.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_connection_handler.hpp"
+				RelativePath="..\..\src\websocket_connection_handler.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_frame.hpp"
+				RelativePath="..\..\src\websocket_frame.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_server.hpp"
+				RelativePath="..\..\src\websocket_server.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_server_session.hpp"
+				RelativePath="..\..\src\websocket_server_session.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocket_session.hpp"
+				RelativePath="..\..\src\websocket_session.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\websocketpp.hpp"
+				RelativePath="..\..\src\websocketpp.hpp"
 				>
 			</File>
 			<Filter
 				Name="base64"
 				>
 				<File
-					RelativePath="..\src\base64\base64.h"
+					RelativePath="..\..\src\base64\base64.h"
 					>
 				</File>
 			</Filter>
@@ -252,7 +252,7 @@
 				Name="sha"
 				>
 				<File
-					RelativePath="..\src\sha1\sha1.h"
+					RelativePath="..\..\src\sha1\sha1.h"
 					>
 				</File>
 			</Filter>
@@ -260,7 +260,7 @@
 				Name="utf8_validator"
 				>
 				<File
-					RelativePath="..\src\utf8_validator\utf8_validator.hpp"
+					RelativePath="..\..\src\utf8_validator\utf8_validator.hpp"
 					>
 				</File>
 			</Filter>
