@@ -186,6 +186,8 @@ void client::handle_connect(const boost::system::error_code& error) {
 		err << "Successful Connection ";
 		log(err.str(),LOG_ERROR);
 		
+		std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " TCP established" << std::endl;
+		
 		m_state = CLIENT_STATE_CONNECTED;
 		m_client_session->on_connect();
 	} else {
