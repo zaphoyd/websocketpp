@@ -30,6 +30,7 @@
 #include "../../src/websocketpp.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <iostream>
 
@@ -61,13 +62,13 @@ int main(int argc, char* argv[]) {
 		std::cout << "case count: " << c->m_case_count << std::endl;
 		
 		for (int i = 1; i <= c->m_case_count; i++) {
-			std::cout << "Resetting io_service" << std::endl;
+			std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " Resetting io_service" << std::endl;
 			io_service.reset();
 						
 			client->set_alog_level(websocketpp::ALOG_OFF);
 			client->set_elog_level(websocketpp::LOG_OFF);
 			
-			std::cout << "Initializing client" << std::endl;
+			std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " Initializing client (constructing socket)" << std::endl;
 			client->init();
 			client->set_header("User Agent","WebSocket++/2011-10-27");
 			
@@ -76,13 +77,13 @@ int main(int argc, char* argv[]) {
 			
 			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
 			
-			std::cout << "Parsing URL and resolving DNS" << std::endl;
+			std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " Parsing URL and resolving DNS" << std::endl;
 			client->connect(url.str());
 			
-			std::cout << "Starting io_service for test " << i << std::endl;
+			std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " Starting io_service for test " << i << std::endl;
 			io_service.run();
 			
-			std::cout << "test " << i << " complete" << std::endl;
+			std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " test " << i << " complete" << std::endl;
 		}
 		
 		std::cout << "done" << std::endl;
