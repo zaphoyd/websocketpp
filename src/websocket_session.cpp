@@ -183,15 +183,20 @@ void session::send_close(uint16_t status,const std::string &message) {
 	m_write_frame.set_fin(true);
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
 	
+	// echo close value unless there is a good reason not to.
 	if (status == CLOSE_STATUS_NO_STATUS) {
 		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
 	} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
 		// Internal implimentation error. There is no good close code for this.
 		m_write_frame.set_status(CLOSE_STATUS_POLICY_VIOLATION,message);
+	} else if (close::status::invalid(status)) {
+		m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is invalid");
+	} else if (close::status::reserved(status)) {
+		m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is reserved");
 	} else {
 		m_write_frame.set_status(status,message);
 	}
-
+		
 	write_frame();
 }
 
@@ -544,18 +549,21 @@ void session::process_continuation() {
 }
 
 void session::process_close() {
-	uint16_t status = m_read_frame.get_close_status();
-	std::string message = m_read_frame.get_close_msg();
-	
-	m_remote_close_code = status;
-	m_remote_close_msg = message;
+	m_remote_close_code = m_read_frame.get_close_status();
+	m_remote_close_msg = m_read_frame.get_close_msg();
 
 	if (m_state == STATE_OPEN) {
 		log("process_close sending ack",LOG_DEBUG);
 		// This is the case where the remote initiated the close.
 		m_closed_by_me = false;
 		// send acknowledgement
-		send_close(status,message);
+		
+		// check if the remote close code
+		if (m_remote_close_code >= close::status::RSV_START) {
+			
+		}
+		
+		send_close(m_remote_close_code,m_remote_close_msg);
 	} else if (m_state == STATE_CLOSING) {
 		log("process_close got ack",LOG_DEBUG);
 		// this is an ack of our close message

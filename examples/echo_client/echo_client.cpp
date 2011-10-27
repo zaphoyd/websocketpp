@@ -53,12 +53,12 @@ int main(int argc, char* argv[]) {
 		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
 		
 		client->init();
-		client->set_header("User Agent","WebSocket++/2011-09-25");
+		client->set_header("User Agent","WebSocket++/2011-10-27");
 		
 		client->connect("ws://localhost:9001/getCaseCount");
 		io_service.run();
 		
-		std::cout << "case count: " << c->m_case_count;
+		std::cout << "case count: " << c->m_case_count << std::endl;
 		
 		for (int i = 1; i <= c->m_case_count; i++) {
 			io_service.reset();
@@ -74,12 +74,12 @@ int main(int argc, char* argv[]) {
 			client->set_elog_level(websocketpp::LOG_OFF);
 			
 			client->init();
-			client->set_header("User Agent","WebSocket++/2011-09-25");
+			client->set_header("User Agent","WebSocket++/2011-10-27");
 			
 			
 			std::stringstream foo;
 			
-			foo << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-08\"";
+			foo << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
 			
 			client->connect(foo.str());
 			io_service.run();
