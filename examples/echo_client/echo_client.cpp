@@ -27,7 +27,7 @@
 
 #include "echo_client_handler.hpp"
 
-#include <websocketpp/websocketpp.hpp>
+#include "../../src/websocketpp.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
