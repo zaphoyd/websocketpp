@@ -28,16 +28,17 @@
 #include "echo_client_handler.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using websocketecho::echo_client_handler;
 using websocketpp::client_session_ptr;
 
 void echo_client_handler::on_open(session_ptr s) {
-	std::cout << "Successfully connected: " << s->get_resource() << std::endl;
+	std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " Successfully connected (handshake complete): " << s->get_resource() << std::endl;
 }
 
 void echo_client_handler::on_close(session_ptr s) {
-	std::cout << "client was disconnected" << std::endl;
+	std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " client was disconnected (WS state is now CLOSED)" << std::endl;
 }
 
 void echo_client_handler::on_message(session_ptr s,const std::string &msg) {
