@@ -285,7 +285,9 @@ size_t frame::get_payload_size() const {
 }
 
 uint16_t frame::get_close_status() const {
-	if (get_payload_size() >= 2) {
+	if (get_payload_size() == 0) {
+		return close::status::NO_STATUS;
+	} else if (get_payload_size() >= 2) {
 		char val[2];
 		
 		val[0] = m_payload[0];
@@ -295,14 +297,25 @@ uint16_t frame::get_close_status() const {
 			reinterpret_cast<uint16_t*>(&val[0])
 		));
 		
-		return code;
+		if (close::status::invalid(code)) {
+			return close::status::PROTOCOL_ERROR;
+		} else {
+			return code;
+		}
 	} else {
-		return 1005; // defined in spec as "no status recieved"
+		return close::status::PROTOCOL_ERROR;
 	}
 }
 
 std::string frame::get_close_msg() const {
 	if (get_payload_size() > 2) {
+		uint32_t state = utf8_validator::UTF8_ACCEPT;
+		uint32_t codep = 0;
+		validate_utf8(&state,&codep,2);
+		if (state != utf8_validator::UTF8_ACCEPT) {
+			throw frame_error("Invalid UTF-8 Data",
+							  frame::FERR_PAYLOAD_VIOLATION);
+		}
 		return std::string(m_payload.begin()+2,m_payload.end());
 	} else {
 		return std::string();
@@ -360,12 +373,16 @@ void frame::set_payload_helper(size_t s) {
 
 void frame::set_status(uint16_t status,const std::string message) {
 	// check for valid statuses
-	if (status < 1000 || status > 4999) {
-		throw frame_error("Status codes must be in the range 1000-4999");
+	if (close::status::invalid(status)) {
+		std::stringstream err;
+		err << "Status code " << status << " is invalid";
+		throw frame_error(err.str());
 	}
 	
-	if (status == 1005 || status == 1006) {
-		throw frame_error("Status codes 1005 and 1006 are reserved for internal use and cannot be written to a frame.");
+	if (close::status::reserved(status)) {
+		std::stringstream err;
+		err << "Status code " << status << " is reserved";
+		throw frame_error(err.str());
 	}
 	
 	m_payload.resize(2+message.size());
@@ -506,8 +523,8 @@ void frame::process_payload2() {
 	}
 }
 
-void frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
-	for (size_t i = 0; i < m_payload.size(); i++) {
+void frame::validate_utf8(uint32_t* state,uint32_t* codep, size_t offset) const {
+	for (size_t i = offset; i < m_payload.size(); i++) {
 		using utf8_validator::decode;
 		
 		if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {

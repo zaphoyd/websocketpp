@@ -135,6 +135,7 @@ public:
 	static const uint16_t CLOSE_STATUS_POLICY_VIOLATION = 1008;
 	static const uint16_t CLOSE_STATUS_MESSAGE_TOO_BIG = 1009;
 	static const uint16_t CLOSE_STATUS_EXTENSION_REQUIRE = 1010;
+	static const uint16_t CLOSE_STATUS_MAXIMUM = 1011;
 
 	session (boost::asio::io_service& io_service,
 			 connection_handler_ptr defc,

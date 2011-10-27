@@ -130,7 +130,7 @@ public:
 	
 	uint16_t get_close_status() const;
 	std::string get_close_msg() const;
-		
+	
 	std::vector<unsigned char> &get_payload();
 	
 	void set_payload(const std::vector<unsigned char> source);
@@ -149,7 +149,7 @@ public:
 	void process_payload();
 	void process_payload2(); // experiment with more efficient masking code.
 	
-	void validate_utf8(uint32_t* state,uint32_t* codep) const;
+	void validate_utf8(uint32_t* state,uint32_t* codep,size_t offset = 0) const;
 	void validate_basic_header() const;
 	
 	void generate_masking_key();
