@@ -39,6 +39,13 @@
 
 namespace websocketpp {
 
+/* policies to abstract out
+ 
+ - random number generation
+ - utf8 validation
+ 
+ */	
+
 class frame {
 public:	
 	enum opcode_s {

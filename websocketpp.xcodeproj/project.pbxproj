@@ -69,6 +69,7 @@
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6DF1CE41435F8250029A1B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE31435F8250029A1B1 /* Foundation.framework */; };
+		B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -167,6 +168,7 @@
 		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -200,6 +202,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */,
 				B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */,
 				B6DF1CC11434AF6A0029A1B1 /* libboost_date_time.dylib in Frameworks */,
 				B6DF1CC21434AF6A0029A1B1 /* libboost_regex.dylib in Frameworks */,
@@ -235,6 +238,7 @@
 		B6DF1C451434A5940029A1B1 = {
 			isa = PBXGroup;
 			children = (
+				B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */,
 				B6CF182B1437C3CA009295BE /* libboost_system.dylib */,
 				B682888E14374689002BA48B /* libboost_thread.dylib */,
 				B682888C1437464A002BA48B /* libboost_random.dylib */,
