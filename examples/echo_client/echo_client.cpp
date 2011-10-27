@@ -27,7 +27,7 @@
 
 #include "echo_client_handler.hpp"
 
-#include <websocketpp/websocketpp.hpp>
+#include "../../src/websocketpp.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -61,28 +61,28 @@ int main(int argc, char* argv[]) {
 		std::cout << "case count: " << c->m_case_count << std::endl;
 		
 		for (int i = 1; i <= c->m_case_count; i++) {
+			std::cout << "Resetting io_service" << std::endl;
 			io_service.reset();
-			//boost::asio::io_service ios;
-			
-			//client.reset();
-			//client = websocketpp::client_ptr(new websocketpp::client(io_service,c));
-			
-			std::cout << "foo: " << i << std::endl;
-			//websocketpp::client_ptr client2(new websocketpp::client(io_service,c));
 						
 			client->set_alog_level(websocketpp::ALOG_OFF);
 			client->set_elog_level(websocketpp::LOG_OFF);
 			
+			std::cout << "Initializing client" << std::endl;
 			client->init();
 			client->set_header("User Agent","WebSocket++/2011-10-27");
 			
 			
-			std::stringstream foo;
+			std::stringstream url;
 			
-			foo << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
+			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
 			
-			client->connect(foo.str());
+			std::cout << "Parsing URL and resolving DNS" << std::endl;
+			client->connect(url.str());
+			
+			std::cout << "Starting io_service for test " << i << std::endl;
 			io_service.run();
+			
+			std::cout << "test " << i << " complete" << std::endl;
 		}
 		
 		std::cout << "done" << std::endl;
