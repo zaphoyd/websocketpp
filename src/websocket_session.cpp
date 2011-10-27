@@ -167,6 +167,16 @@ void session::send_close(uint16_t status,const std::string &message) {
 
 	m_state = STATE_CLOSING;
 	
+	m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
+	
+	m_timer.async_wait(
+		boost::bind(
+			&session::handle_close_expired,
+			shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
+	
 	m_local_close_code = status;
 	m_local_close_msg = message;
 
@@ -271,6 +281,7 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 				err.str("");
 				err << "processing frame " << m_buf.size();
 				log(err.str(),LOG_DEBUG);
+				m_timer.cancel();
 				process_frame();
 			}
 		} catch (const frame_error& e) {
@@ -279,6 +290,13 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 			
 			access_log(e.what(),ALOG_FRAME);
 			log(err.str(),LOG_ERROR);
+			
+			// if the exception happened while processing.
+			// TODO: this is not elegant, perhaps separate frame read vs process
+			// exceptions need to be used.
+			if (m_read_frame.get_state() == frame::STATE_READY) {
+				m_read_frame.reset();
+			}
 			
 			// process different types of frame errors
 			// 
@@ -293,6 +311,7 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 				continue;
 			} else {
 				// Fatal error, forcibly end connection immediately.
+				log("Dropping TCP due to unrecoverable exception",LOG_DEBUG);
 				drop_tcp(true);
 			}
 			
@@ -332,6 +351,8 @@ void session::handle_read_frame(const boost::system::error_code& error) {
 			// TODO: make sure close code/msg are properly set.
 			m_local_interface->on_close(shared_from_this());
 		}
+		
+		m_timer.cancel();
 	} else {
 		log("handle_read_frame called in invalid state",LOG_ERROR);
 	}
@@ -410,18 +431,54 @@ void session::handle_timer_expired (const boost::system::error_code& error) {
 
 void session::handle_handshake_expired (const boost::system::error_code& error) {
 	if (error) {
-		if (error == boost::asio::error::operation_aborted) {
-			log("timer was aborted",LOG_DEBUG);
-			//drop_tcp(false);
-		} else {
+		if (error != boost::asio::error::operation_aborted) {
 			log("Unexpected handshake timer error.",LOG_DEBUG);
-			drop_tcp(false);
+			drop_tcp(true);
 		}
 		return;
 	}
 	
 	log("Handshake timed out",LOG_DEBUG);
-	drop_tcp(false);
+	drop_tcp(true);
+}
+
+// The error timer is set when we want to give the other endpoint some time to
+// do something but don't want to wait forever. There is a special error code
+// that represents the timer being canceled by us (because the other endpoint
+// responded in time. All other cases should assume that the other endpoint is
+// irrepairibly broken and drop the TCP connection.
+void session::handle_error_timer_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("error timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("error timer ended with error",LOG_DEBUG);
+			drop_tcp(true);
+		}
+		return;
+	}
+	
+	log("error timer ended without error",LOG_DEBUG);
+	drop_tcp(true);
+}
+
+void session::handle_close_expired (const boost::system::error_code& error) {
+	if (error) {
+		if (error == boost::asio::error::operation_aborted) {
+			log("timer was aborted",LOG_DEBUG);
+			//drop_tcp(false);
+		} else {
+			log("Unexpected close timer error.",LOG_DEBUG);
+			drop_tcp(false);
+		}
+		return;
+	}
+	
+	if (m_state != STATE_CLOSED) {
+		log("close timed out",LOG_DEBUG);
+		drop_tcp(false);
+	}
 }
 
 void session::process_ping() {
@@ -517,6 +574,7 @@ void session::deliver_message() {
 	}
 	
 	if (m_current_opcode == frame::BINARY_FRAME) {
+		//log("Dispatching Binary Message",LOG_DEBUG);
 		if (m_fragmented) {
 			m_local_interface->on_message(shared_from_this(),m_current_message);
 		} else {
@@ -544,6 +602,7 @@ void session::deliver_message() {
 			);
 		}
 		
+		//log("Dispatching Text Message",LOG_DEBUG);
 		m_local_interface->on_message(shared_from_this(),msg);
 	} else {
 		// Not sure if this should be a fatal error or not
@@ -651,10 +710,21 @@ bool session::validate_app_close_status(uint16_t status) {
 }
 
 void session::drop_tcp(bool dropped_by_me) {
-	if (m_socket.is_open()) {
-		m_socket.shutdown(tcp::socket::shutdown_both);
-		m_socket.close();
+	m_timer.cancel();
+	try {
+		if (m_socket.is_open()) {
+			m_socket.shutdown(tcp::socket::shutdown_both);
+			m_socket.close();
+		}
+	} catch (boost::system::system_error& e) {
+		if (e.code() == boost::asio::error::not_connected) {
+			// this means the socket was disconnected by the other side before
+			// we had a chance to. Ignore and continue.
+		} else {
+			throw e;
+		}
 	}
 	m_dropped_by_me = dropped_by_me;
 	m_state = STATE_CLOSED;
+	
 }
