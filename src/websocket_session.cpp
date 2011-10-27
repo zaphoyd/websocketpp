@@ -184,17 +184,17 @@ void session::send_close(uint16_t status,const std::string &message) {
 	m_write_frame.set_opcode(frame::CONNECTION_CLOSE);
 	
 	// echo close value unless there is a good reason not to.
-	try {
-		if (status == CLOSE_STATUS_NO_STATUS) {
-			m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
-		} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
-			// Internal implimentation error. There is no good close code for this.
-			m_write_frame.set_status(CLOSE_STATUS_POLICY_VIOLATION,message);
-		} else {
-			m_write_frame.set_status(status,message);
-		}
-	} catch (const frame_error& e) {
-		m_write_frame.set_status(close::status::PROTOCOL_ERROR,e.what());
+	if (status == CLOSE_STATUS_NO_STATUS) {
+		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
+	} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
+		// Internal implimentation error. There is no good close code for this.
+		m_write_frame.set_status(CLOSE_STATUS_POLICY_VIOLATION,message);
+	} else if (close::status::invalid(status)) {
+		m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is invalid");
+	} else if (close::status::reserved(status)) {
+		m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is reserved");
+	} else {
+		m_write_frame.set_status(status,message);
 	}
 		
 	write_frame();

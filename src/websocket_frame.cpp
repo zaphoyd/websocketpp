@@ -297,11 +297,7 @@ uint16_t frame::get_close_status() const {
 			reinterpret_cast<uint16_t*>(&val[0])
 		));
 		
-		if (close::status::invalid(code)) {
-			return close::status::PROTOCOL_ERROR;
-		} else {
-			return code;
-		}
+		return code;
 	} else {
 		return close::status::PROTOCOL_ERROR;
 	}
