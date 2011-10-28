@@ -25,6 +25,53 @@
  * 
  */
 
+/*
+ 
+ Exit path mapping
+ 
+ In every path:
+ - If it is safe to close cleanly, close cleanly
+ - Write to the access log on clean close
+ - Write to the error log on unclean close and clean closes with a server error.
+ - If session state is open and a local client is connected, send on_close msg
+ 
+ - make sure the following bits are properly set:
+ 
+ - If we initiated the close by sending the first close frame or by dropping the TCP connection, set closed_by_me. If the other endpoint sent the first close method or we got an EOF while reading clear closed_by_me
+ - If we initiated the TCP connection drop set dropped_by_me. If we got EOF while reading clear dropped_by_me
+ - If we sent and received a close frame or we received and sent an acknowledgement close frame set was_clean to true.
+ 
+ - If we are the server we should drop TCP immediately
+ - If we are the client we should drop TCP immediately except in the case where we just recieved an acknowledgement close frame. In this case wait a certain period of time for the server EOF.
+ 
+ Questions:
+ - if the client rejects
+ 
+ Paths: (+ indicates path has been checked and implimented)
+ Server Handshake Paths
+ - Accept connection, read handshake, handshake is valid, write handshake, no errors. This is the correct path and leads to the frame reading paths
+ - Accept connection, connection is not in state open after a time out (due to no bytes being read or no CRLFCRLF being read). This needs a time out after which we drop TCP.
+ - Accept connection, read handshake, handshake is invalid. write HTTP error. drop TCP
+ - Accept connection, read handshake, handshake is valid, write handshake returns EOF. This means client rejected something about our response. We should drop and notify our client. (note alternative client handshake reject method is to accept the handshake then immediately send a close message with the non-acceptance reason)
+ - Accept connection, read handshake, handshake is valid, write handshake returns another error. We should drop and notify our client.
+ Client Handshake Paths
+ - 
+ Server Frame Reading Paths
+ - async read returns EOF. Close our own socket and notify our local interface.
+ - async read returns another error
+ 
+ 
+ 
+ 
+ Timeouts:
+ - handshake timeout
+ - wait for close frame after error
+ - (client) wait for server to drop tcp after close handshake
+ - idle client timeout? API specifiable?
+ - wait for pong?
+ 
+ */
+
 #ifndef WEBSOCKET_SESSION_HPP
 #define WEBSOCKET_SESSION_HPP
 
@@ -73,14 +120,10 @@ class session : public boost::enable_shared_from_this<session> {
 public:
 	friend class handshake_error;
 
-	enum ws_status {
-		CONNECTING,
-		OPEN,
-		CLOSING,
-		CLOSED
-	};
-	
-	typedef enum ws_status status_code;
+	static const uint8_t STATE_CONNECTING = 0;
+	static const uint8_t STATE_OPEN = 1;
+	static const uint8_t STATE_CLOSING = 2;
+	static const uint8_t STATE_CLOSED = 3;
 	
 	static const uint16_t CLOSE_STATUS_NORMAL = 1000;
 	static const uint16_t CLOSE_STATUS_GOING_AWAY = 1001;
@@ -92,9 +135,11 @@ public:
 	static const uint16_t CLOSE_STATUS_POLICY_VIOLATION = 1008;
 	static const uint16_t CLOSE_STATUS_MESSAGE_TOO_BIG = 1009;
 	static const uint16_t CLOSE_STATUS_EXTENSION_REQUIRE = 1010;
+	static const uint16_t CLOSE_STATUS_MAXIMUM = 1011;
 
 	session (boost::asio::io_service& io_service,
-			 connection_handler_ptr defc);
+			 connection_handler_ptr defc,
+			 uint64_t buf_size);
 	
 	tcp::socket& socket();
 	boost::asio::io_service& io_service();
@@ -141,7 +186,6 @@ public:
 	
 	// initiate a connection close
 	void close(uint16_t status,const std::string &reason);
-	void disconnect(uint16_t status,const std::string& reason); // temp
 
 	virtual bool is_server() const = 0;
 
@@ -150,22 +194,24 @@ public:
 	virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
 	virtual void handle_read_handshake(const boost::system::error_code& e,
 	                                   std::size_t bytes_transferred) = 0;
-protected:
+public: //protected:
 	virtual void write_handshake() = 0;
 	virtual void read_handshake() = 0;
 	
-	// start async read for a websocket frame (2 bytes) to handle_frame_header
 	void read_frame();
-	void handle_frame_header(const boost::system::error_code& error);
-	void handle_extended_frame_header(const boost::system::error_code& error);
-	void read_payload();
-	void handle_read_payload (const boost::system::error_code& error);
+	void handle_read_frame (const boost::system::error_code& error);
 	
 	// write m_write_frame out to the socket.
 	void write_frame();
 	void handle_write_frame (const boost::system::error_code& error);
 	
+	void handle_timer_expired(const boost::system::error_code& error);
+	void handle_handshake_expired(const boost::system::error_code& error);
+	void handle_close_expired(const boost::system::error_code& error);
+	void handle_error_timer_expired (const boost::system::error_code& error);
+	
 	// helper functions for processing each opcode
+	void process_frame();
 	void process_ping();
 	void process_pong();
 	void process_text();
@@ -190,9 +236,12 @@ protected:
 	
 	void log_close_result();
 	void log_open_result();
-
-	// prints a diagnostic message and disconnects the local interface
-	void handle_error(std::string msg,const boost::system::error_code& error);
+	void log_error(std::string msg,const boost::system::error_code& e);
+	
+	// misc helpers
+	bool validate_app_close_status(uint16_t status);
+	void send_close(uint16_t status,const std::string& reason);
+	void drop_tcp(bool dropped_by_me = true);
 private:
 	std::string get_header(const std::string& key,
 	                       const header_list& list) const;
@@ -219,26 +268,26 @@ protected:
 	std::string					m_server_http_string;
 
 	// Mutable connection state;
-	status_code				m_status;
-	uint16_t				m_close_code;
-	std::string				m_close_message;
+	uint8_t						m_state;
+	bool						m_writing;
 
 	// Close state
-	uint16_t	m_local_close_code;
-	std::string	m_local_close_msg;
-	uint16_t	m_remote_close_code;
-	std::string	m_remote_close_msg;
-	bool		m_was_clean;
-	bool		m_closed_by_me;
-	bool		m_dropped_by_me;
+	uint16_t					m_local_close_code;
+	std::string					m_local_close_msg;
+	uint16_t					m_remote_close_code;
+	std::string					m_remote_close_msg;
+	bool						m_was_clean;
+	bool						m_closed_by_me;
+	bool						m_dropped_by_me;
 
 	// Connection Resources
 	tcp::socket 				m_socket;
 	boost::asio::io_service&	m_io_service;
 	connection_handler_ptr		m_local_interface;
+	boost::asio::deadline_timer	m_timer;
 	
 	// Buffers
-	boost::asio::streambuf m_buf;
+	boost::asio::streambuf		m_buf;
 	
 	// current message state
 	uint32_t					m_utf8_state;
@@ -248,11 +297,11 @@ protected:
 	frame::opcode 				m_current_opcode;
 	
 	// current frame state
-	frame m_read_frame;
+	frame						m_read_frame;
 
 	// unorganized
-	frame m_write_frame;
-	bool m_error;
+	frame						m_write_frame;
+	bool						m_error;
 };
 
 // Exception classes
@@ -277,13 +326,3 @@ public:
 }
 
 #endif // WEBSOCKET_SESSION_HPP
-
-
-
-// better debug printing system
-// set acceptible origin and host headers
-// case sensitive header values? e.g. websocket
-
-
-// double check bugs in autobahn (sending wrong localhost:9000 header) not 
-// checking masking in the 9.x tests

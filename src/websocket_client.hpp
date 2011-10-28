@@ -61,31 +61,6 @@ private:
 
 class client : public boost::enable_shared_from_this<client> {
 	public:
-		// System logging levels
-	/*	static const uint16_t LOG_ALL = 0;
-		static const uint16_t LOG_DEBUG = 1;
-		static const uint16_t LOG_INFO = 2;
-		static const uint16_t LOG_WARN = 3;
-		static const uint16_t LOG_ERROR = 4;
-		static const uint16_t LOG_FATAL = 5;
-		static const uint16_t LOG_OFF = 6;
-		
-		// Access logging controls
-		// Individual bits
-		static const uint16_t ALOG_CONNECT = 0x1;
-		static const uint16_t ALOG_DISCONNECT = 0x2;
-		static const uint16_t ALOG_MISC_CONTROL = 0x4;
-		static const uint16_t ALOG_FRAME = 0x8;
-		static const uint16_t ALOG_MESSAGE = 0x10;
-		static const uint16_t ALOG_INFO = 0x20;
-		static const uint16_t ALOG_HANDSHAKE = 0x40;
-		// Useful groups
-		static const uint16_t ALOG_OFF = 0x0;
-		static const uint16_t ALOG_CONTROL = ALOG_CONNECT 
-		                                   & ALOG_DISCONNECT 
-										   & ALOG_MISC_CONTROL;
-		static const uint16_t ALOG_ALL = 0xFFFF;
-	*/	
 		static const uint16_t CLIENT_STATE_NULL = 0;
 		static const uint16_t CLIENT_STATE_INITIALIZED = 1;
 		static const uint16_t CLIENT_STATE_CONNECTING = 2;

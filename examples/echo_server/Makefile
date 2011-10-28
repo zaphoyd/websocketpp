@@ -7,7 +7,7 @@ SHARED  ?= "1"
 ifeq ($(SHARED), 1)
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_regex -lboost_random ../../libwebsocketpp.a
+	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options ../../libwebsocketpp.a
 endif
 
 echo_server: echo_server.o echo.o

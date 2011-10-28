@@ -13,6 +13,8 @@
 		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
 		B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
 		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
+		B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
+		B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
 		B6CF18281437C3B1009295BE /* echo_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18131437C370009295BE /* echo_client.cpp */; };
 		B6CF18291437C3B1009295BE /* echo_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18141437C370009295BE /* echo_client_handler.cpp */; };
 		B6CF182A1437C3BD009295BE /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -67,6 +69,7 @@
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6DF1CE41435F8250029A1B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE31435F8250029A1B1 /* Foundation.framework */; };
+		B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -117,6 +120,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B6138760145AD09700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server/Makefile; sourceTree = "<group>"; };
+		B6138762145AD0A500ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_client/Makefile; sourceTree = "<group>"; };
+		B6138763145AD1F700ED9B19 /* chat_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = chat_client.html; path = examples/chat_server/chat_client.html; sourceTree = "<group>"; };
+		B6138764145AD1F700ED9B19 /* chat_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_server.cpp; path = examples/chat_server/chat_server.cpp; sourceTree = "<group>"; };
+		B6138765145AD1F700ED9B19 /* chat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat.cpp; path = examples/chat_server/chat.cpp; sourceTree = "<group>"; };
+		B6138766145AD1F700ED9B19 /* chat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat.hpp; path = examples/chat_server/chat.hpp; sourceTree = "<group>"; };
+		B6138767145AD1F700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_server/Makefile; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -124,6 +134,7 @@
 		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
+		B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_endpoint.hpp; path = src/websocket_endpoint.hpp; sourceTree = "<group>"; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
 		B6CF18141437C370009295BE /* echo_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client_handler.cpp; sourceTree = "<group>"; };
 		B6CF18151437C370009295BE /* echo_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = echo_client_handler.hpp; sourceTree = "<group>"; };
@@ -163,6 +174,8 @@
 		B6DF1CD11435ED910029A1B1 /* echo_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -196,6 +209,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */,
 				B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */,
 				B6DF1CC11434AF6A0029A1B1 /* libboost_date_time.dylib in Frameworks */,
 				B6DF1CC21434AF6A0029A1B1 /* libboost_regex.dylib in Frameworks */,
@@ -231,11 +245,13 @@
 		B6DF1C451434A5940029A1B1 = {
 			isa = PBXGroup;
 			children = (
+				B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */,
 				B6CF182B1437C3CA009295BE /* libboost_system.dylib */,
 				B682888E14374689002BA48B /* libboost_thread.dylib */,
 				B682888C1437464A002BA48B /* libboost_random.dylib */,
 				B682888A14374623002BA48B /* libboost_system.dylib */,
 				B6DF1CE31435F8250029A1B1 /* Foundation.framework */,
+				B6FE8CE4144DE18900B32547 /* documentation */,
 				B6DF1CC61435ED380029A1B1 /* examples */,
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
 				B6DF1C7F1434ABB70029A1B1 /* src */,
@@ -263,6 +279,7 @@
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
 				B6DF1C951434AC470029A1B1 /* websocket_client.hpp */,
 				B6DF1C961434AC470029A1B1 /* websocket_connection_handler.hpp */,
+				B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */,
 				B6DF1C971434AC470029A1B1 /* websocket_frame.cpp */,
 				B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */,
 				B6DF1C991434AC470029A1B1 /* websocket_server_session.cpp */,
@@ -338,6 +355,7 @@
 				B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */,
 				B6DF1CCB1435ED760029A1B1 /* echo.cpp */,
 				B6DF1CCC1435ED760029A1B1 /* echo.hpp */,
+				B6138760145AD09700ED9B19 /* Makefile */,
 			);
 			name = echo_server;
 			sourceTree = "<group>";
@@ -348,6 +366,7 @@
 				B6828875143745DA002BA48B /* chat_client_handler.cpp */,
 				B6828876143745DA002BA48B /* chat_client_handler.hpp */,
 				B6828877143745DA002BA48B /* chat_client.cpp */,
+				B6138762145AD0A500ED9B19 /* Makefile */,
 			);
 			name = chat_client;
 			sourceTree = "<group>";
@@ -355,8 +374,21 @@
 		B6DF1CC91435ED460029A1B1 /* chat_server */ = {
 			isa = PBXGroup;
 			children = (
+				B6138763145AD1F700ED9B19 /* chat_client.html */,
+				B6138764145AD1F700ED9B19 /* chat_server.cpp */,
+				B6138765145AD1F700ED9B19 /* chat.cpp */,
+				B6138766145AD1F700ED9B19 /* chat.hpp */,
+				B6138767145AD1F700ED9B19 /* Makefile */,
 			);
 			name = chat_server;
+			sourceTree = "<group>";
+		};
+		B6FE8CE4144DE18900B32547 /* documentation */ = {
+			isa = PBXGroup;
+			children = (
+				B6FE8CE2144DE17F00B32547 /* readme.txt */,
+			);
+			name = documentation;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -378,6 +410,7 @@
 				B6DF1CB01434AC470029A1B1 /* websocket_server_session.hpp in Headers */,
 				B6DF1CB41434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB81434AC470029A1B1 /* websocket_session.hpp in Headers */,
+				B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,6 +430,7 @@
 				B6DF1CB11434AC470029A1B1 /* websocket_server_session.hpp in Headers */,
 				B6DF1CB51434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB91434AC470029A1B1 /* websocket_session.hpp in Headers */,
+				B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,7 +530,7 @@
 		B6DF1C471434A5940029A1B1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0410;
+				LastUpgradeCheck = 0420;
 			};
 			buildConfigurationList = B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -835,6 +869,7 @@
 				B6CF18251437C397009295BE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */ = {
 			isa = XCConfigurationList;
