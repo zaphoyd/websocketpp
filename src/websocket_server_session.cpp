@@ -45,8 +45,9 @@ using websocketpp::server_session;
 
 server_session::server_session(websocketpp::server_ptr s,
                                boost::asio::io_service& io_service,
-                               websocketpp::connection_handler_ptr defc)
-	: session(io_service,defc),m_server(s) {}
+                               websocketpp::connection_handler_ptr defc,
+							   uint64_t buf_size)
+	: session(io_service,defc,buf_size),m_server(s) {}
 
 void server_session::on_connect() {
 	read_handshake();
@@ -91,6 +92,16 @@ void server_session::select_extension(const std::string& val) {
 }
 
 void server_session::read_handshake() {
+	m_timer.expires_from_now(boost::posix_time::seconds(5));
+	
+	m_timer.async_wait(
+		boost::bind(
+			&session::handle_handshake_expired,
+			shared_from_this(),
+			boost::asio::placeholders::error
+		)
+	);
+	
 	boost::asio::async_read_until(
 		m_socket,
 		m_buf,
@@ -312,7 +323,8 @@ void server_session::write_handshake() {
 
 void server_session::handle_write_handshake(const boost::system::error_code& error) {
 	if (error) {
-		handle_error("Error writing handshake response",error);
+		log_error("Error writing handshake response",error);
+		drop_tcp();
 		return;
 	}
 	
@@ -323,11 +335,15 @@ void server_session::handle_write_handshake(const boost::system::error_code& err
 		err << "Handshake ended with HTTP error: " << m_server_http_code << " "
 		    << (m_server_http_string != "" ? m_server_http_string : lookup_http_error_string(m_server_http_code));
 		log(err.str(),LOG_ERROR);
-		// TODO: close behavior
+		drop_tcp();
+		// TODO: tell client that connection failed.
 		return;
 	}
 	
-	m_status = OPEN;
+	m_state = STATE_OPEN;
+	
+	// stop the handshake timer
+	m_timer.cancel();
 	
 	if (m_local_interface) {
 		m_local_interface->on_open(shared_from_this());

@@ -39,6 +39,13 @@
 
 namespace websocketpp {
 
+/* policies to abstract out
+ 
+ - random number generation
+ - utf8 validation
+ 
+ */	
+
 class frame {
 public:	
 	enum opcode_s {
@@ -53,6 +60,19 @@ public:
 	typedef enum opcode_s opcode;
 	
 	static const uint8_t MAX_FRAME_OPCODE = 0x07;
+	
+	static const uint8_t STATE_BASIC_HEADER = 1;
+	static const uint8_t STATE_EXTENDED_HEADER = 2;
+	static const uint8_t STATE_PAYLOAD = 3;
+	static const uint8_t STATE_READY = 4;
+	static const uint8_t STATE_RECOVERY = 5;
+	
+	static const uint16_t FERR_FATAL_SESSION_ERROR = 0; // force session end
+	static const uint16_t FERR_SOFT_SESSION_ERROR = 1; // should log and ignore
+	static const uint16_t FERR_PROTOCOL_VIOLATION = 2; // must end session
+	static const uint16_t FERR_PAYLOAD_VIOLATION = 3; // should end session
+	static const uint16_t FERR_INTERNAL_SERVER_ERROR = 4; // cleanly end session
+	static const uint16_t FERR_MSG_TOO_BIG = 5;
 	
 	// basic payload byte flags
 	static const uint8_t BPB0_OPCODE = 0x0F;
@@ -76,10 +96,15 @@ public:
 	
 	// create an empty frame for writing into
 	frame() : m_gen(m_rng, 
-	          boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)) {
-		// not sure if these are necessary with c++ but putting in just in case
-		memset(m_header,0,MAX_HEADER_LENGTH);
+	          boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)),m_degraded(false) {
+		reset();
 	}
+	
+	uint8_t get_state() const;
+	uint64_t get_bytes_needed() const;
+	void reset();
+	
+	void consume(std::istream &s);
 	
 	// get pointers to underlying buffers
 	char* get_header();
@@ -112,7 +137,7 @@ public:
 	
 	uint16_t get_close_status() const;
 	std::string get_close_msg() const;
-		
+	
 	std::vector<unsigned char> &get_payload();
 	
 	void set_payload(const std::vector<unsigned char> source);
@@ -126,23 +151,26 @@ public:
 	std::string print_frame() const;
 	
 	// reads basic header, sets and returns m_header_bits_needed
-	unsigned int process_basic_header();
+	void process_basic_header();
 	void process_extended_header();
 	void process_payload();
 	void process_payload2(); // experiment with more efficient masking code.
 	
-	bool validate_utf8(uint32_t* state,uint32_t* codep) const;
-	bool validate_basic_header() const;
+	void validate_utf8(uint32_t* state,uint32_t* codep,size_t offset = 0) const;
+	void validate_basic_header() const;
 	
 	void generate_masking_key();
 	void clear_masking_key();
 	
 private:
+	uint8_t		m_state;
+	uint64_t	m_bytes_needed;
+	bool		m_degraded;
+	
 	char m_header[MAX_HEADER_LENGTH];
 	std::vector<unsigned char> m_payload;
 	
 	char m_masking_key[4];	
-	unsigned int m_extended_header_bytes_needed;
 	
 	boost::random::random_device m_rng;
 	boost::random::variate_generator<boost::random::random_device&, 
@@ -150,6 +178,26 @@ private:
 	    m_gen;
 };
 
+// Exception classes
+class frame_error : public std::exception {
+public:	
+	frame_error(const std::string& msg,
+				uint16_t code = frame::FERR_FATAL_SESSION_ERROR) 
+	 : m_msg(msg),m_code(code) {}
+	~frame_error() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	uint16_t code() const throw() {
+		return m_code;
+	}
+	
+	std::string m_msg;
+	uint16_t m_code;
+};
+	
 }
 
 #endif // WEBSOCKET_FRAME_HPP

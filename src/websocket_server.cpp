@@ -30,6 +30,8 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <iostream>
 
 using websocketpp::server;
@@ -42,7 +44,34 @@ server::server(boost::asio::io_service& io_service,
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
-	  m_def_con_handler(defc) {}
+	  m_def_con_handler(defc),
+	  m_desc("websocketpp::server") {
+	  m_desc.add_options()
+		  ("help", "produce help message")
+		  ("host,h",po::value<std::vector<std::string> >()->multitoken()->composing(), "hostnames to listen on")
+		  ("port,p",po::value<int>(), "port to listen on")
+	;
+	  
+}
+
+void server::parse_command_line(int ac, char* av[]) {
+	po::store(po::parse_command_line(ac,av, m_desc),m_vm);
+	po::notify(m_vm);
+	
+	if (m_vm.count("help") ) {
+		std::cout << m_desc << std::endl;
+	}
+	
+	//m_vm["host"].as<std::string>();
+	
+	const std::vector< std::string > &foo = m_vm["host"].as< std::vector<std::string> >();
+	
+	for (int i = 0; i < foo.size(); i++) {
+		std::cout << foo[i] << std::endl;
+	}
+	
+	//std::cout << m_vm["host"].as< std::vector<std::string> >() << std::endl;
+}
 
 void server::add_host(std::string host) {
 	m_hosts.insert(host);
@@ -138,9 +167,11 @@ void server::access_log(std::string msg,uint16_t level) {
 }
 
 void server::start_accept() {
+	// TODO: sanity check whether the session buffer size bound could be reduced
 	server_session_ptr new_session(new server_session(shared_from_this(),
 	                                                  m_io_service,
-	                                                  m_def_con_handler));
+	                                                  m_def_con_handler,
+													  m_max_message_size*2));
 	
 	m_acceptor.async_accept(
 		new_session->socket(),
