@@ -120,6 +120,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B6138760145AD09700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server/Makefile; sourceTree = "<group>"; };
+		B6138762145AD0A500ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_client/Makefile; sourceTree = "<group>"; };
+		B6138763145AD1F700ED9B19 /* chat_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = chat_client.html; path = examples/chat_server/chat_client.html; sourceTree = "<group>"; };
+		B6138764145AD1F700ED9B19 /* chat_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_server.cpp; path = examples/chat_server/chat_server.cpp; sourceTree = "<group>"; };
+		B6138765145AD1F700ED9B19 /* chat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat.cpp; path = examples/chat_server/chat.cpp; sourceTree = "<group>"; };
+		B6138766145AD1F700ED9B19 /* chat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat.hpp; path = examples/chat_server/chat.hpp; sourceTree = "<group>"; };
+		B6138767145AD1F700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_server/Makefile; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -348,6 +355,7 @@
 				B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */,
 				B6DF1CCB1435ED760029A1B1 /* echo.cpp */,
 				B6DF1CCC1435ED760029A1B1 /* echo.hpp */,
+				B6138760145AD09700ED9B19 /* Makefile */,
 			);
 			name = echo_server;
 			sourceTree = "<group>";
@@ -358,6 +366,7 @@
 				B6828875143745DA002BA48B /* chat_client_handler.cpp */,
 				B6828876143745DA002BA48B /* chat_client_handler.hpp */,
 				B6828877143745DA002BA48B /* chat_client.cpp */,
+				B6138762145AD0A500ED9B19 /* Makefile */,
 			);
 			name = chat_client;
 			sourceTree = "<group>";
@@ -365,6 +374,11 @@
 		B6DF1CC91435ED460029A1B1 /* chat_server */ = {
 			isa = PBXGroup;
 			children = (
+				B6138763145AD1F700ED9B19 /* chat_client.html */,
+				B6138764145AD1F700ED9B19 /* chat_server.cpp */,
+				B6138765145AD1F700ED9B19 /* chat.cpp */,
+				B6138766145AD1F700ED9B19 /* chat.hpp */,
+				B6138767145AD1F700ED9B19 /* Makefile */,
 			);
 			name = chat_server;
 			sourceTree = "<group>";

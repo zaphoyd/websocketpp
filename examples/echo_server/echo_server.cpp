@@ -60,6 +60,10 @@ int main(int argc, char* argv[]) {
 			new websocketpp::server(io_service,endpoint,echo_handler)
 		);
 		
+		//server->parse_command_line(argc, argv);
+		
+		
+		
 		// setup server settings
 		//server->set_alog_level(websocketpp::ALOG_OFF);
 		//server->set_elog_level(websocketpp::LOG_OFF);

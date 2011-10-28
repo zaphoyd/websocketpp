@@ -45,10 +45,11 @@ server::server(boost::asio::io_service& io_service,
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
 	  m_def_con_handler(defc),
-	  m_desc("test") {
-	m_desc.add_options()
-		("help", "produce help message")
-		("intval",po::value<int>(), "set compression level")
+	  m_desc("websocketpp::server") {
+	  m_desc.add_options()
+		  ("help", "produce help message")
+		  ("host,h",po::value<std::vector<std::string> >()->multitoken()->composing(), "hostnames to listen on")
+		  ("port,p",po::value<int>(), "port to listen on")
 	;
 	  
 }
@@ -56,6 +57,20 @@ server::server(boost::asio::io_service& io_service,
 void server::parse_command_line(int ac, char* av[]) {
 	po::store(po::parse_command_line(ac,av, m_desc),m_vm);
 	po::notify(m_vm);
+	
+	if (m_vm.count("help") ) {
+		std::cout << m_desc << std::endl;
+	}
+	
+	//m_vm["host"].as<std::string>();
+	
+	const std::vector< std::string > &foo = m_vm["host"].as< std::vector<std::string> >();
+	
+	for (int i = 0; i < foo.size(); i++) {
+		std::cout << foo[i] << std::endl;
+	}
+	
+	//std::cout << m_vm["host"].as< std::vector<std::string> >() << std::endl;
 }
 
 void server::add_host(std::string host) {
