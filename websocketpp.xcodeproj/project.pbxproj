@@ -496,7 +496,7 @@
 		B6DF1C471434A5940029A1B1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0410;
+				LastUpgradeCheck = 0420;
 			};
 			buildConfigurationList = B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -835,6 +835,7 @@
 				B6CF18251437C397009295BE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */ = {
 			isa = XCConfigurationList;
