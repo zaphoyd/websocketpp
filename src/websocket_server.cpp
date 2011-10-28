@@ -30,6 +30,8 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <iostream>
 
 using websocketpp::server;
@@ -42,7 +44,19 @@ server::server(boost::asio::io_service& io_service,
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
-	  m_def_con_handler(defc) {}
+	  m_def_con_handler(defc),
+	  m_desc("test") {
+	m_desc.add_options()
+		("help", "produce help message")
+		("intval",po::value<int>(), "set compression level")
+	;
+	  
+}
+
+void server::parse_command_line(int ac, char* av[]) {
+	po::store(po::parse_command_line(ac,av, m_desc),m_vm);
+	po::notify(m_vm);
+}
 
 void server::add_host(std::string host) {
 	m_hosts.insert(host);
