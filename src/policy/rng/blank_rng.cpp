@@ -27,17 +27,12 @@
  * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
 
-#ifndef WEBSOCKETPP_HPP
-#define WEBSOCKETPP_HPP
+#include "blank_rng.hpp"
 
-#include <stdint.h>
+using websocketpp::blank_rng;
 
-#include "websocket_constants.hpp"
+blank_rng::blank_rng() {}
 
-#include "websocket_session.hpp"
-#include "websocket_server_session.hpp"
-#include "websocket_client_session.hpp"
-#include "websocket_server.hpp"
-#include "websocket_client.hpp"
-
-#endif // WEBSOCKETPP_HPP
+int32_t blank_rng::gen() {
+	throw "Random Number generation not supported";
+}

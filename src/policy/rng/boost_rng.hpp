@@ -27,17 +27,26 @@
  * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
 
-#ifndef WEBSOCKETPP_HPP
-#define WEBSOCKETPP_HPP
+#ifndef BOOST_RNG_HPP
+#define BOOST_RNG_HPP
 
 #include <stdint.h>
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 
-#include "websocket_constants.hpp"
+namespace websocketpp {
+	class boost_rng {
+	public:
+		boost_rng();
+		int32_t gen();
+	private:
+		boost::random::random_device m_rng;
+		boost::random::variate_generator
+		<
+			boost::random::random_device&,
+			boost::random::uniform_int_distribution<>
+		> m_gen;
+	}
+}
 
-#include "websocket_session.hpp"
-#include "websocket_server_session.hpp"
-#include "websocket_client_session.hpp"
-#include "websocket_server.hpp"
-#include "websocket_client.hpp"
-
-#endif // WEBSOCKETPP_HPP
+#endif // BOOST_RNG_HPP

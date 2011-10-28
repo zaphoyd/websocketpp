@@ -27,17 +27,17 @@
  * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
 
-#ifndef WEBSOCKETPP_HPP
-#define WEBSOCKETPP_HPP
+#ifndef BLANK_RNG_HPP
+#define BLANK_RNG_HPP
 
 #include <stdint.h>
 
-#include "websocket_constants.hpp"
+namespace websocketpp {
+	class blank_rng {
+	public:
+		blank_rng();
+		int32_t gen();
+	}
+}
 
-#include "websocket_session.hpp"
-#include "websocket_server_session.hpp"
-#include "websocket_client_session.hpp"
-#include "websocket_server.hpp"
-#include "websocket_client.hpp"
-
-#endif // WEBSOCKETPP_HPP
+#endif // BLANK_RNG_HPP

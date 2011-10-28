@@ -30,19 +30,24 @@
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 #include <set>
 
 namespace websocketpp {
-	class server;
-	typedef boost::shared_ptr<server> server_ptr;
+	//class server;
+	//typedef boost::shared_ptr<server> server_ptr;
 }
 
 #include "websocketpp.hpp"
 #include "websocket_server_session.hpp"
 #include "websocket_connection_handler.hpp"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include "policy/rng/blank_rng.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -61,54 +66,198 @@ private:
 	std::string m_msg;
 };
 
-class server : public boost::enable_shared_from_this<server> {
+template <class rng_policy = blank_rng>
+class server : public boost::enable_shared_from_this< server<rng_policy> > {
 public:
-	server(boost::asio::io_service& io_service, 
+	typedef boost::shared_ptr< server<rng_policy> > ptr;
+	
+	server<rng_policy>(boost::asio::io_service& io_service, 
 		   const tcp::endpoint& endpoint,
-		   connection_handler_ptr defc);
+		   connection_handler_ptr defc) 
+	: m_elog_level(LOG_ALL),
+	  m_alog_level(ALOG_ALL),
+	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
+	  m_io_service(io_service), 
+	  m_acceptor(io_service, endpoint), 
+	  m_def_con_handler(defc),
+	  m_desc("websocketpp::server") 
+	{
+		m_desc.add_options()
+		  ("help", "produce help message")
+		  ("host,h",po::value<std::vector<std::string> >()->multitoken()->composing(), "hostnames to listen on")
+		  ("port,p",po::value<int>(), "port to listen on")
+		;
+	}
 	
 	// creates a new session object and connects the next websocket
 	// connection to it.
-	void start_accept();
+	void start_accept() {
+		// TODO: sanity check whether the session buffer size bound could be reduced
+		server_session_ptr new_session(
+			new server_session(
+				shared_from_this(),
+				m_io_service,
+				m_def_con_handler,
+				m_max_message_size*2
+			)
+		);
+		
+		m_acceptor.async_accept(
+			new_session->socket(),
+			boost::bind(
+				&server::handle_accept,
+				shared_from_this(),
+				new_session,
+				boost::asio::placeholders::error
+			)
+		);
+	}
 	
 	// INTERFACE FOR LOCAL APPLICATIONS
 
 	// Add or remove a host string (host:port) to the list of acceptable 
 	// hosts to accept websocket connections from. Additions/deletions here 
 	// only affect new connections.
-	void add_host(std::string host);
-	void remove_host(std::string host);
+	void add_host(std::string host) {
+		m_hosts.insert(host);
+	}
+	void remove_host(std::string host) {
+		m_hosts.erase(host);
+	}
 	
-	void set_max_message_size(uint64_t val);
+	void set_max_message_size(uint64_t val) {
+		if (val > frame::limits::JUMBO_PAYLOAD_SIZE) {
+			std::stringstream err;
+			err << "Invalid maximum message size: " << val;
+			
+			// TODO: Figure out what the ideal error behavior for this method.
+			// Options:
+			//   Throw exception
+			//   Log error and set value to maximum allowed
+			//   Log error and leave value at whatever it was before
+			log(err.str(),LOG_WARN);
+			//throw server_error(err.str());
+		}
+		m_max_message_size = val;
+	}
 	
 	// Test methods determine if a message of the given level should be 
 	// written. elog shows all values above the level set. alog shows only
 	// the values explicitly set.
-	bool test_elog_level(uint16_t level);
-	void set_elog_level(uint16_t level);
+	bool test_elog_level(uint16_t level) {
+		return (level >= m_elog_level);
+	}
+	void set_elog_level(uint16_t level) {
+		std::stringstream msg;
+		msg << "Error logging level changing from " 
+	    << m_elog_level << " to " << level;
+		log(msg.str(),LOG_INFO);
+		
+		m_elog_level = level;
+	}
 	
-	bool test_alog_level(uint16_t level);
-	void set_alog_level(uint16_t level);
-	void unset_alog_level(uint16_t level);
+	bool test_alog_level(uint16_t level) {
+		return ((level & m_alog_level) != 0);
+	}
+	void set_alog_level(uint16_t level) {
+		if (test_alog_level(level)) {
+			return;
+		}
+		std::stringstream msg;
+		msg << "Access logging level " << level << " being set"; 
+		access_log(msg.str(),ALOG_INFO);
+		
+		m_alog_level |= level;
+	}
+	void unset_alog_level(uint16_t level) {
+		if (!test_alog_level(level)) {
+			return;
+		}
+		std::stringstream msg;
+		msg << "Access logging level " << level << " being unset"; 
+		access_log(msg.str(),ALOG_INFO);
+		
+		m_alog_level &= ~level;
+	}
 	
-	void parse_command_line(int ac, char* av[]);
+	void parse_command_line(int ac, char* av[]) {
+		po::store(po::parse_command_line(ac,av, m_desc),m_vm);
+		po::notify(m_vm);
+		
+		if (m_vm.count("help") ) {
+			std::cout << m_desc << std::endl;
+		}
+		
+		//m_vm["host"].as<std::string>();
+		
+		const std::vector< std::string > &foo = m_vm["host"].as< std::vector<std::string> >();
+		
+		for (int i = 0; i < foo.size(); i++) {
+			std::cout << foo[i] << std::endl;
+		}
+		
+		//std::cout << m_vm["host"].as< std::vector<std::string> >() << std::endl;
+	}
 	
 	// INTERFACE FOR SESSIONS
-
+	
+	rng_policy& get_rng() {
+		return &m_rng;
+	}
+	
 	// Check if this server will respond to this host.
-	bool validate_host(std::string host);
+	bool validate_host(std::string host) {
+		if (m_hosts.find(host) == m_hosts.end()) {
+			return false;
+		}
+		return true;
+	}
 	
 	// Check if message size is within server's acceptable parameters
-	bool validate_message_size(uint64_t val);
+	bool validate_message_size(uint64_t val) {
+		if (val > m_max_message_size) {
+			return false;
+		}
+		return true;
+	}
 	
 	// write to the server's logs
-	void log(std::string msg,uint16_t level = LOG_ERROR);
-	void access_log(std::string msg,uint16_t level);
+	void log(std::string msg,uint16_t level = LOG_ERROR) {
+		if (!test_elog_level(level)) {
+			return;
+		}
+		std::cerr << "[Error Log] "
+		<< boost::posix_time::to_iso_extended_string(
+													 boost::posix_time::second_clock::local_time())
+		<< " " << msg << std::endl;
+	}
+	void access_log(std::string msg,uint16_t level) {
+		if (!test_alog_level(level)) {
+			return;
+		}
+		std::cout << "[Access Log] " 
+		<< boost::posix_time::to_iso_extended_string(
+													 boost::posix_time::second_clock::local_time())
+		<< " " << msg << std::endl;
+	}
 private:
 	// if no errors starts the session's read loop and returns to the
 	// start_accept phase.
 	void handle_accept(server_session_ptr session,
-		const boost::system::error_code& error);
+					   const boost::system::error_code& error) 
+	{
+		if (!error) {
+			session->on_connect();
+		} else {
+			std::stringstream err;
+			err << "Error accepting socket connection: " << error;
+			
+			log(err.str(),LOG_ERROR);
+			throw server_error(err.str());
+		}
+		
+		this->start_accept();
+	}
 	
 private:
 	uint16_t					m_elog_level;
@@ -119,6 +268,8 @@ private:
 	boost::asio::io_service&	m_io_service;
 	tcp::acceptor				m_acceptor;
 	connection_handler_ptr		m_def_con_handler;
+	
+	rng_policy					m_rng;
 	
 	po::options_description		m_desc;
 	po::variables_map			m_vm;

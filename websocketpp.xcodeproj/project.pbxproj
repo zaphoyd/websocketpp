@@ -70,6 +70,8 @@
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6DF1CE41435F8250029A1B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE31435F8250029A1B1 /* Foundation.framework */; };
 		B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
+		B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
+		B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -176,6 +178,11 @@
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
+		B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_constants.hpp; path = src/websocket_constants.hpp; sourceTree = "<group>"; };
+		B6FE8D0A145B0FA400B32547 /* blank_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = blank_rng.cpp; path = src/policy/rng/blank_rng.cpp; sourceTree = "<group>"; };
+		B6FE8D0B145B0FA400B32547 /* blank_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = blank_rng.hpp; path = src/policy/rng/blank_rng.hpp; sourceTree = "<group>"; };
+		B6FE8D0C145B0FA400B32547 /* boost_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = boost_rng.cpp; path = src/policy/rng/boost_rng.cpp; sourceTree = "<group>"; };
+		B6FE8D0D145B0FA400B32547 /* boost_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = boost_rng.hpp; path = src/policy/rng/boost_rng.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +281,8 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B6FE8D08145B0F6600B32547 /* policy */,
+				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
@@ -391,6 +400,25 @@
 			name = documentation;
 			sourceTree = "<group>";
 		};
+		B6FE8D08145B0F6600B32547 /* policy */ = {
+			isa = PBXGroup;
+			children = (
+				B6FE8D09145B0F7400B32547 /* rng */,
+			);
+			name = policy;
+			sourceTree = "<group>";
+		};
+		B6FE8D09145B0F7400B32547 /* rng */ = {
+			isa = PBXGroup;
+			children = (
+				B6FE8D0A145B0FA400B32547 /* blank_rng.cpp */,
+				B6FE8D0B145B0FA400B32547 /* blank_rng.hpp */,
+				B6FE8D0C145B0FA400B32547 /* boost_rng.cpp */,
+				B6FE8D0D145B0FA400B32547 /* boost_rng.hpp */,
+			);
+			name = rng;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -411,6 +439,7 @@
 				B6DF1CB41434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB81434AC470029A1B1 /* websocket_session.hpp in Headers */,
 				B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
+				B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +460,7 @@
 				B6DF1CB51434AC470029A1B1 /* websocket_server.hpp in Headers */,
 				B6DF1CB91434AC470029A1B1 /* websocket_session.hpp in Headers */,
 				B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
+				B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
