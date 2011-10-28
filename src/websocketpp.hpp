@@ -59,7 +59,42 @@ namespace websocketpp {
 	static const uint16_t ALOG_CONTROL = ALOG_CONNECT 
 									   & ALOG_DISCONNECT 
 									   & ALOG_MISC_CONTROL;
-	static const uint16_t ALOG_ALL = 0xFFFF;	
+	static const uint16_t ALOG_ALL = 0xFFFF;
+	
+	
+	namespace close {
+	namespace status {
+		enum value {
+			INVALID_END = 999,
+			NORMAL = 1000,
+			GOING_AWAY = 1001,
+			PROTOCOL_ERROR = 1002,
+			UNSUPPORTED_DATA = 1003,
+			RSV_ADHOC_1 = 1004,
+			NO_STATUS = 1005,
+			ABNORMAL_CLOSE = 1006,
+			INVALID_PAYLOAD = 1007,
+			POLICY_VIOLATION = 1008,
+			MESSAGE_TOO_BIG = 1009,
+			EXTENSION_REQUIRE = 1010,
+			RSV_START = 1011,
+			RSV_END = 2999,
+			INVALID_START = 5000
+		};
+		
+		inline bool reserved(uint16_t s) {
+			return ((s >= RSV_START && s <= RSV_END) || 
+					s == RSV_ADHOC_1);
+		}
+		
+		inline bool invalid(uint16_t s) {
+			return ((s <= INVALID_END || s >= INVALID_START) || 
+					s == NO_STATUS || 
+					s == ABNORMAL_CLOSE);
+		}
+	}
+	}
+
 }
 
 #include "websocket_session.hpp"

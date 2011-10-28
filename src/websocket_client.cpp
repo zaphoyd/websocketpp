@@ -37,8 +37,8 @@ using boost::asio::ip::tcp;
 
 client::client(boost::asio::io_service& io_service,
                websocketpp::connection_handler_ptr defc)
-	: m_elog_level(LOG_ALL),
-	  m_alog_level(ALOG_ALL),
+	: m_elog_level(LOG_OFF),
+	  m_alog_level(ALOG_OFF),
 	  m_state(CLIENT_STATE_NULL),
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service),
@@ -46,11 +46,13 @@ client::client(boost::asio::io_service& io_service,
 	  m_def_con_handler(defc) {}
 
 void client::init() {
+	// TODO: sanity check whether the session buffer size bound could be reduced
 	m_client_session = client_session_ptr(
 		new client_session(
 	    	shared_from_this(),
 			m_io_service,
-			m_def_con_handler
+			m_def_con_handler,
+			m_max_message_size*2
 		)
 	);
 	m_state = CLIENT_STATE_INITIALIZED;
@@ -180,6 +182,12 @@ void client::access_log(std::string msg,uint16_t level) {
 
 void client::handle_connect(const boost::system::error_code& error) {
 	if (!error) {
+		std::stringstream err;
+		err << "Successful Connection ";
+		log(err.str(),LOG_ERROR);
+		
+		std::cout << boost::posix_time::to_iso_extended_string(boost::posix_time::microsec_clock::local_time()) << " TCP established" << std::endl;
+		
 		m_state = CLIENT_STATE_CONNECTED;
 		m_client_session->on_connect();
 	} else {

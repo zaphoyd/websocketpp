@@ -48,8 +48,9 @@ public:
 	
 	// an echo server is stateless. 
 	// The handler has no need to keep track of connected clients.
+	void on_fail(session_ptr client) {}
 	void on_open(session_ptr client) {}
-	void on_close(session_ptr client,uint16_t status,const std::string &reason) {}
+	void on_close(session_ptr client) {}
 	
 	// both text and binary messages are echoed back to the sending client.
 	void on_message(session_ptr client,const std::string &msg);

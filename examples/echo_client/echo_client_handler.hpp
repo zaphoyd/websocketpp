@@ -56,21 +56,18 @@ public:
 	echo_client_handler() : m_case_count(0) {}
 	virtual ~echo_client_handler() {}
 	
-	// ignored for clients?
-	void validate(session_ptr s) {} 
-	
 	// connection to chat room complete
 	void on_open(session_ptr s);
 
 	// connection to chat room closed
-	void on_close(session_ptr s,uint16_t status,const std::string &reason);
+	void on_close(session_ptr sn);
 	
 	// got a new message from server
 	void on_message(session_ptr s,const std::string &msg);
 	
 	// ignore messages
 	void on_message(session_ptr s,const std::vector<unsigned char> &data);
-private:
+	
 	int m_case_count;
 };
 

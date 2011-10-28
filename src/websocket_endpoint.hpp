@@ -25,70 +25,31 @@
  * 
  */
 
-#ifndef CHAT_CLIENT_HANDLER_HPP
-#define CHAT_CLIENT_HANDLER_HPP
-
-// com.zaphoyd.websocketpp.chat protocol
-// 
-// client messages:
-// alias [UTF8 text, 16 characters max]
-// msg [UTF8 text]
-// 
-// server messages:
-// {"type":"msg","sender":"<sender>","value":"<msg>" }
-// {"type":"participants","value":[<participant>,...]}
+#ifndef WEBSOCKET_ENDPOINT_HPP
+#define WEBSOCKET_ENDPOINT_HPP
 
 #include <boost/shared_ptr.hpp>
 
-#include "../../src/websocketpp.hpp"
-#include "../../src/websocket_connection_handler.hpp"
-
-#include <map>
 #include <string>
-#include <queue>
+#include <map>
 
-using websocketpp::session_ptr;
+namespace websocketpp {
+	class endpoint;
+	typedef boost::shared_ptr<endpoint> endpoint_ptr;
+}
 
-namespace websocketchat {
+#include "websocket_session.hpp"
 
-class chat_client_handler : public websocketpp::connection_handler {
+namespace websocketpp {
+
+class endpoint : public boost::enable_shared_from_this<endpoint> {
 public:
-	chat_client_handler() {}
-	virtual ~chat_client_handler() {}
-	
-	// ignored for clients?
-	void validate(session_ptr s) {} 
-	
-	// connection to chat room complete
-	void on_open(session_ptr s);
-
-	// connection to chat room closed
-	void on_close(session_ptr s);
-	
-	// got a new message from server
-	void on_message(session_ptr s,const std::string &msg);
-	
-	// ignore messages
-	void on_message(session_ptr s,const std::vector<unsigned char> &data) {}
-	
-	// CLIENT API
-	void send(const std::string &msg);
-	void close();
-
-private:
-	// Client API internal
-	void do_send(const std::string &msg);
-	void do_close();
-
-	void decode_server_msg(const std::string &msg);
-	
-	// list of other chat participants
-	std::set<std::string> m_participants;
-	std::queue<std::string> m_msg_queue;
-	session_ptr m_session;
+	virtual bool is_server() = 0;
+	// log
+	// access_log
 };
 
-typedef boost::shared_ptr<chat_client_handler> chat_client_handler_ptr;
+
 
 }
-#endif // CHAT_CLIENT_HANDLER_HPP
+#endif // WEBSOCKET_ENDPOINT_HPP
