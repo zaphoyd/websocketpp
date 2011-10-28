@@ -59,7 +59,7 @@ void chat_server_handler::on_open(session_ptr client) {
 	send_to_all(encode_message("server",m_connections[client]+" has joined the chat."));
 }
 
-void chat_server_handler::on_close(session_ptr client,uint16_t status,const std::string &reason) {
+void chat_server_handler::on_close(session_ptr client) {
 	std::map<session_ptr,std::string>::iterator it = m_connections.find(client);
 	
 	if (it == m_connections.end()) {
