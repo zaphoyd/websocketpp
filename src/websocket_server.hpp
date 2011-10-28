@@ -30,6 +30,8 @@
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 #include <set>
 
@@ -60,86 +62,66 @@ private:
 };
 
 class server : public boost::enable_shared_from_this<server> {
-	public:
-		// System logging levels
-		/*static const uint16_t LOG_ALL = 0;
-		static const uint16_t LOG_DEBUG = 1;
-		static const uint16_t LOG_INFO = 2;
-		static const uint16_t LOG_WARN = 3;
-		static const uint16_t LOG_ERROR = 4;
-		static const uint16_t LOG_FATAL = 5;
-		static const uint16_t LOG_OFF = 6;
-		
-		// Access logging controls
-		// Individual bits
-		static const uint16_t ALOG_CONNECT = 0x1;
-		static const uint16_t ALOG_DISCONNECT = 0x2;
-		static const uint16_t ALOG_MISC_CONTROL = 0x4;
-		static const uint16_t ALOG_FRAME = 0x8;
-		static const uint16_t ALOG_MESSAGE = 0x10;
-		static const uint16_t ALOG_INFO = 0x20;
-		static const uint16_t ALOG_HANDSHAKE = 0x40;
-		// Useful groups
-		static const uint16_t ALOG_OFF = 0x0;
-		static const uint16_t ALOG_CONTROL = ALOG_CONNECT 
-		                                   & ALOG_DISCONNECT 
-										   & ALOG_MISC_CONTROL;
-		static const uint16_t ALOG_ALL = 0xFFFF;
-*/
-		server(boost::asio::io_service& io_service, 
-			   const tcp::endpoint& endpoint,
-			   connection_handler_ptr defc);
-		
-		// creates a new session object and connects the next websocket
-		// connection to it.
-		void start_accept();
-		
-		// INTERFACE FOR LOCAL APPLICATIONS
+public:
+	server(boost::asio::io_service& io_service, 
+		   const tcp::endpoint& endpoint,
+		   connection_handler_ptr defc);
+	
+	// creates a new session object and connects the next websocket
+	// connection to it.
+	void start_accept();
+	
+	// INTERFACE FOR LOCAL APPLICATIONS
 
-		// Add or remove a host string (host:port) to the list of acceptable 
-		// hosts to accept websocket connections from. Additions/deletions here 
-		// only affect new connections.
-		void add_host(std::string host);
-		void remove_host(std::string host);
-		
-		void set_max_message_size(uint64_t val);
-		
-		// Test methods determine if a message of the given level should be 
-		// written. elog shows all values above the level set. alog shows only
-		// the values explicitly set.
-		bool test_elog_level(uint16_t level);
-		void set_elog_level(uint16_t level);
-		
-		bool test_alog_level(uint16_t level);
-		void set_alog_level(uint16_t level);
-		void unset_alog_level(uint16_t level);
+	// Add or remove a host string (host:port) to the list of acceptable 
+	// hosts to accept websocket connections from. Additions/deletions here 
+	// only affect new connections.
+	void add_host(std::string host);
+	void remove_host(std::string host);
+	
+	void set_max_message_size(uint64_t val);
+	
+	// Test methods determine if a message of the given level should be 
+	// written. elog shows all values above the level set. alog shows only
+	// the values explicitly set.
+	bool test_elog_level(uint16_t level);
+	void set_elog_level(uint16_t level);
+	
+	bool test_alog_level(uint16_t level);
+	void set_alog_level(uint16_t level);
+	void unset_alog_level(uint16_t level);
+	
+	void parse_command_line(int ac, char* av[]);
+	
+	// INTERFACE FOR SESSIONS
 
-		// INTERFACE FOR SESSIONS
+	// Check if this server will respond to this host.
+	bool validate_host(std::string host);
+	
+	// Check if message size is within server's acceptable parameters
+	bool validate_message_size(uint64_t val);
+	
+	// write to the server's logs
+	void log(std::string msg,uint16_t level = LOG_ERROR);
+	void access_log(std::string msg,uint16_t level);
+private:
+	// if no errors starts the session's read loop and returns to the
+	// start_accept phase.
+	void handle_accept(server_session_ptr session,
+		const boost::system::error_code& error);
+	
+private:
+	uint16_t					m_elog_level;
+	uint16_t					m_alog_level;
 
-		// Check if this server will respond to this host.
-		bool validate_host(std::string host);
-		
-		// Check if message size is within server's acceptable parameters
-		bool validate_message_size(uint64_t val);
-		
-		// write to the server's logs
-		void log(std::string msg,uint16_t level = LOG_ERROR);
-		void access_log(std::string msg,uint16_t level);
-	private:
-		// if no errors starts the session's read loop and returns to the
-		// start_accept phase.
-		void handle_accept(server_session_ptr session,
-			const boost::system::error_code& error);
-		
-	private:
-		uint16_t					m_elog_level;
-		uint16_t					m_alog_level;
-
-		std::set<std::string>		m_hosts;
-		uint64_t					m_max_message_size;
-		boost::asio::io_service&	m_io_service;
-		tcp::acceptor				m_acceptor;
-		connection_handler_ptr		m_def_con_handler;
+	std::set<std::string>		m_hosts;
+	uint64_t					m_max_message_size;
+	boost::asio::io_service&	m_io_service;
+	tcp::acceptor				m_acceptor;
+	connection_handler_ptr		m_def_con_handler;
+	
+	po::options_description		m_desc;
+	po::variables_map			m_vm;
 };
 
 }

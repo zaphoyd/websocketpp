@@ -39,7 +39,7 @@ void chat_client_handler::on_open(session_ptr s) {
 	std::cout << "Successfully connected" << std::endl;
 }
 
-void chat_client_handler::on_close(session_ptr s,uint16_t status,const std::string &reason) {
+void chat_client_handler::on_close(session_ptr s) {
 	// not sure if anything needs to happen here either.
 	
 	m_session = client_session_ptr();

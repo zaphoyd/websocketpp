@@ -47,8 +47,9 @@ using websocketpp::client_session;
 
 client_session::client_session (websocketpp::client_ptr c,
                                 boost::asio::io_service& io_service,
-                                websocketpp::connection_handler_ptr defc)
-	: session(io_service,defc),m_client(c) {}
+                                websocketpp::connection_handler_ptr defc,
+								uint64_t buf_size)
+	: session(io_service,defc,buf_size),m_client(c) {}
 
 void client_session::on_connect() {
 	// TODO: section 4.1: Figure out if we have another connection to this 
@@ -123,56 +124,56 @@ void client_session::read_handshake() {
 
 void client_session::handle_read_handshake(const boost::system::error_code& e,
 	std::size_t bytes_transferred) {
+	
+	if (e) {
+		log_error("Error reading server handshake",e);
+		drop_tcp();
+		return;
+	}
+	
 	// parse server handshake
-	
-	
-	// read handshake and set local state (or pass to write_handshake)
-	std::ostringstream line;
-	line << &m_buf;
-	m_raw_server_handshake += line.str();
-	
-	m_buf << m_raw_server_handshake.substr(bytes_transferred);
-	
-	std::stringstream foo;
-	
-	foo << "data size: " << m_raw_server_handshake.size() 
-	<< " bytes transferred" << bytes_transferred;
-	
-	m_client->access_log(foo.str(), ALOG_HANDSHAKE);
-	m_client->access_log(m_raw_server_handshake,ALOG_HANDSHAKE);
-	m_client->access_log("SPACER",ALOG_HANDSHAKE);
-	
-	std::vector<std::string> tokens;
-	std::string::size_type start = 0;
+	std::istream response_stream(&m_buf);
+	std::string header;
 	std::string::size_type end;
 	
-	// Get request and parse headers
-	end = m_raw_server_handshake.find("\r\n",start);
-	
-	while(end != std::string::npos) {
-		tokens.push_back(m_raw_server_handshake.substr(start, end - start));
-		
-		start = end + 2;
-		
-		end = m_raw_server_handshake.find("\r\n",start);
+	// get status line
+	std::getline(response_stream, header);
+	if (header[header.size()-1] == '\r') {
+		header.erase(header.end()-1);
+		m_server_http_request = header;
+		m_raw_server_handshake += header+"\n";
 	}
 	
-	for (size_t i = 0; i < tokens.size(); i++) {
-		if (i == 0) {
-			m_server_http_request = tokens[i];
+	// get headers
+	while (std::getline(response_stream, header) && header != "\r") {
+		if (header[header.size()-1] != '\r') {
+			continue; // ignore malformed header lines?
+		} else {
+			header.erase(header.end()-1);
 		}
 		
-		end = tokens[i].find(": ",0);
+		end = header.find(": ",0);
 		
-		if (end != std::string::npos) {
-			std::string h = tokens[i].substr(0,end);
+		if (end != std::string::npos) {			
+			std::string h = header.substr(0,end);
 			if (get_server_header(h) == "") {
-				m_server_headers[h] = tokens[i].substr(end+2);
+				m_server_headers[h] = header.substr(end+2);
 			} else {
-				m_server_headers[h] += ", " + tokens[i].substr(end+2);
+				m_server_headers[h] += ", " + header.substr(end+2);
 			}
 		}
+		
+		m_raw_server_handshake += header+"\n";
 	}
+	
+	// temporary debugging
+	if (m_buf.size() > 0) {
+		std::stringstream foo;
+		foo << "bytes left over: " << m_buf.size();
+		access_log(foo.str(), ALOG_HANDSHAKE);
+	}
+	
+	m_client->access_log(m_raw_server_handshake,ALOG_HANDSHAKE);
 	
 	// handshake error checking
 	try {
@@ -202,7 +203,7 @@ void client_session::handle_read_handshake(const boost::system::error_code& e,
 		if (h == "") {
 			throw(handshake_error("Required Upgrade header is missing",400));
 		} else if (!boost::iequals(h,"websocket")) {
-			err << "Upgrade header was " << h << " instead of \"websocket\"";
+			err << "Upgrade header was \"" << h << "\" instead of \"websocket\"";
 			throw(handshake_error(err.str(),400));
 		}
 		
@@ -261,7 +262,7 @@ void client_session::handle_read_handshake(const boost::system::error_code& e,
 	
 	log_open_result();
 
-	m_status = OPEN;
+	m_state = STATE_OPEN;
 
 	if (m_local_interface) {
 		m_local_interface->on_open(shared_from_this());
@@ -332,8 +333,8 @@ void client_session::write_handshake() {
 
 void client_session::handle_write_handshake(const boost::system::error_code& error) {
 	if (error) {
-		handle_error("Error writing handshake",error);
-		// TODO: close behavior
+		log_error("Error writing handshake",error);
+		drop_tcp();
 		return;
 	}
 	

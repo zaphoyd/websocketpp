@@ -41,6 +41,123 @@
 
 using websocketpp::frame;
 
+
+uint8_t frame::get_state() const {
+	return m_state;
+}
+
+uint64_t frame::get_bytes_needed() const {
+	return m_bytes_needed;
+}
+
+void frame::reset() {
+	m_state = STATE_BASIC_HEADER;
+	m_bytes_needed = BASIC_HEADER_LENGTH;
+	m_degraded = false;
+	m_payload.empty();
+	memset(m_header,0,MAX_HEADER_LENGTH);
+}
+
+// Method invariant: One of the following must always be true even in the case 
+// of exceptions.
+// - m_bytes_needed > 0
+// - m-state = STATE_READY
+void frame::consume(std::istream &s) {
+	try {
+		switch (m_state) {
+			case STATE_BASIC_HEADER:
+				s.read(&m_header[BASIC_HEADER_LENGTH-m_bytes_needed],m_bytes_needed);
+		
+				m_bytes_needed -= s.gcount();
+				
+				if (m_bytes_needed == 0) {
+					process_basic_header();
+					
+					validate_basic_header();
+					
+					if (m_bytes_needed > 0) {
+						m_state = STATE_EXTENDED_HEADER;
+					} else {
+						process_extended_header();
+						
+						if (m_bytes_needed == 0) {
+							m_state = STATE_READY;
+							process_payload();
+							
+						} else {
+							m_state = STATE_PAYLOAD;
+						}
+					}
+				}
+				break;
+			case STATE_EXTENDED_HEADER:
+				s.read(&m_header[get_header_len()-m_bytes_needed],m_bytes_needed);
+				
+				m_bytes_needed -= s.gcount();
+				
+				if (m_bytes_needed == 0) {
+					process_extended_header();
+					if (m_bytes_needed == 0) {
+						m_state = STATE_READY;
+						process_payload();
+					} else {
+						m_state = STATE_PAYLOAD;
+					}
+				}
+				break;
+			case STATE_PAYLOAD:
+				s.read(reinterpret_cast<char *>(&m_payload[m_payload.size()-m_bytes_needed]),
+					   m_bytes_needed);
+				
+				m_bytes_needed -= s.gcount();
+				
+				if (m_bytes_needed == 0) {
+					m_state = STATE_READY;
+					process_payload();
+				}
+				break;
+			case STATE_RECOVERY:
+				// Recovery state discards all bytes that are not the first byte
+				// of a close frame.
+				do {
+					s.read(reinterpret_cast<char *>(&m_header[0]),1);
+					
+					//std::cout << std::hex << int(static_cast<unsigned char>(m_header[0])) << " ";
+					
+					if (int(static_cast<unsigned char>(m_header[0])) == 0x88) {
+						//(BPB0_FIN && CONNECTION_CLOSE)
+						m_bytes_needed--;
+						m_state = STATE_BASIC_HEADER;
+						break;
+					}
+				} while (s.gcount() > 0);
+				
+				//std::cout << std::endl;
+				
+				break;
+			default:
+				break;
+		}
+		
+		/*if (s.gcount() == 0) {
+			throw frame_error("consume read zero bytes",FERR_FATAL_SESSION_ERROR);
+		}*/
+	} catch (const frame_error& e) {
+		// After this point all non-close frames must be considered garbage, 
+		// including the current one. Reset it and put the reading frame into
+		// a recovery state.
+		if (m_degraded == true) {
+			throw frame_error("An error occurred while trying to gracefully recover from a less serious frame error.",FERR_FATAL_SESSION_ERROR);
+		} else {
+			reset();
+			m_state = STATE_RECOVERY;
+			m_degraded = true;
+			
+			throw e;
+		}
+	}
+}
+
 char* frame::get_header() {
 	return m_header;
 }
@@ -66,8 +183,8 @@ unsigned int frame::get_header_len() const {
 }
 
 char* frame::get_masking_key() {
-	if (m_extended_header_bytes_needed > 0) {
-		throw "attempted to get masking_key before reading full header";
+	if (m_state != STATE_READY) {
+		throw frame_error("attempted to get masking_key before reading full header");
 	}
 	return m_masking_key;
 }
@@ -128,12 +245,12 @@ frame::opcode frame::get_opcode() const {
 
 void frame::set_opcode(frame::opcode op) {
 	if (op > 0x0F) {
-		throw "invalid opcode";
+		throw frame_error("invalid opcode",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	if (get_basic_size() > BASIC_PAYLOAD_LIMIT && 
 		is_control()) {
-		throw "control frames can't have large payloads";
+		throw frame_error("control frames can't have large payloads",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	m_header[0] &= (0xFF ^ BPB0_OPCODE); // clear op bits
@@ -159,16 +276,18 @@ uint8_t frame::get_basic_size() const {
 }
 
 size_t frame::get_payload_size() const {
-	if (m_extended_header_bytes_needed > 0) {
+	if (m_state != STATE_READY && m_state != STATE_PAYLOAD) {
 		// problem
-		throw "attempted to get payload size before reading full header";
+		throw frame_error("attempted to get payload size before reading full header");
 	}
 	
 	return m_payload.size();
 }
 
 uint16_t frame::get_close_status() const {
-	if (get_payload_size() >= 2) {
+	if (get_payload_size() == 0) {
+		return close::status::NO_STATUS;
+	} else if (get_payload_size() >= 2) {
 		char val[2];
 		
 		val[0] = m_payload[0];
@@ -180,12 +299,19 @@ uint16_t frame::get_close_status() const {
 		
 		return code;
 	} else {
-		return 1005; // defined in spec as "no status recieved"
+		return close::status::PROTOCOL_ERROR;
 	}
 }
 
 std::string frame::get_close_msg() const {
 	if (get_payload_size() > 2) {
+		uint32_t state = utf8_validator::UTF8_ACCEPT;
+		uint32_t codep = 0;
+		validate_utf8(&state,&codep,2);
+		if (state != utf8_validator::UTF8_ACCEPT) {
+			throw frame_error("Invalid UTF-8 Data",
+							  frame::FERR_PAYLOAD_VIOLATION);
+		}
 		return std::string(m_payload.begin()+2,m_payload.end());
 	} else {
 		return std::string();
@@ -213,13 +339,13 @@ bool frame::is_control() const {
 
 void frame::set_payload_helper(size_t s) {
 	if (s > max_payload_size) {
-		throw "requested payload is over implimentation defined limit";
+		throw frame_error("requested payload is over implimentation defined limit",FERR_MSG_TOO_BIG);
 	}
 	
 	// limits imposed by the websocket spec
 	if (s > BASIC_PAYLOAD_LIMIT && 
 		get_opcode() > MAX_FRAME_OPCODE) {
-		throw "control frames can't have large payloads";
+		throw frame_error("control frames can't have large payloads",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	if (s <= BASIC_PAYLOAD_LIMIT) {
@@ -235,7 +361,7 @@ void frame::set_payload_helper(size_t s) {
 		m_header[1] = BASIC_PAYLOAD_64BIT_CODE;
 		*reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = htonll(s);
 	} else {
-		throw "payload size limit is 63 bits";
+		throw frame_error("payload size limit is 63 bits",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	m_payload.resize(s);
@@ -243,12 +369,16 @@ void frame::set_payload_helper(size_t s) {
 
 void frame::set_status(uint16_t status,const std::string message) {
 	// check for valid statuses
-	if (status < 1000 || status > 4999) {
-		throw server_error("Status codes must be in the range 1000-4999");
+	if (close::status::invalid(status)) {
+		std::stringstream err;
+		err << "Status code " << status << " is invalid";
+		throw frame_error(err.str());
 	}
 	
-	if (status == 1005 || status == 1006) {
-		throw server_error("Status codes 1005 and 1006 are reserved for internal use and cannot be written to a frame.");
+	if (close::status::reserved(status)) {
+		std::stringstream err;
+		err << "Status code " << status << " is reserved";
+		throw frame_error(err.str());
 	}
 	
 	m_payload.resize(2+message.size());
@@ -276,25 +406,22 @@ std::string frame::print_frame() const {
 		f << std::hex << (unsigned short)m_header[i] << " ";
 	}
 	// print message
-	std::vector<unsigned char>::const_iterator it;
-	for (it = m_payload.begin(); it != m_payload.end(); it++) {
-		f << *it;
+	if (m_payload.size() > 50) {
+		f << "[payload of " << m_payload.size() << " bytes]";
+	} else {
+		std::vector<unsigned char>::const_iterator it;
+		for (it = m_payload.begin(); it != m_payload.end(); it++) {
+			f << *it;
+		}
 	}
 	return f.str();
 }
 
-unsigned int frame::process_basic_header() {
-	m_extended_header_bytes_needed = 0;
-	m_payload.empty();
-	
-	m_extended_header_bytes_needed = get_header_len() - BASIC_HEADER_LENGTH;
-	
-	return m_extended_header_bytes_needed;
+void frame::process_basic_header() {
+	m_bytes_needed = get_header_len() - BASIC_HEADER_LENGTH;
 }
 
 void frame::process_extended_header() {
-	m_extended_header_bytes_needed = 0;
-	
 	uint8_t s = get_basic_size();
 	uint64_t payload_size;
 	int mask_index = BASIC_HEADER_LENGTH;
@@ -308,22 +435,32 @@ void frame::process_extended_header() {
 			reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
 		));
 		
+		if (payload_size < s) {
+			std::stringstream err;
+			err << "payload length not minimally encoded. Using 16 bit form for payload size: " << payload_size;
+			m_bytes_needed = payload_size;
+			throw frame_error(err.str(),
+							  FERR_PROTOCOL_VIOLATION);
+		}
+		
 		mask_index += 2;
 	} else if (s == BASIC_PAYLOAD_64BIT_CODE) {
-		// reinterpret the second eight bytes as a 16 bit integer in 
+		// reinterpret the second eight bytes as a 64 bit integer in 
 		// network byte order. Convert to host byte order and store.
 		payload_size = ntohll(*(
 			reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
 		));
 		
+		if (payload_size <= PAYLOAD_16BIT_LIMIT) {
+			m_bytes_needed = payload_size;
+			throw frame_error("payload length not minimally encoded",
+							  FERR_PROTOCOL_VIOLATION);
+		}
+		
 		mask_index += 8;
 	} else {
 		// shouldn't be here
-		throw server_error("invalid get_basic_size in process_extended_header");
-	}
-	
-	if (payload_size < s) {
-		throw server_error("payload size error");
+		throw frame_error("invalid get_basic_size in process_extended_header");
 	}
 	
 	if (get_masked() == 0) {
@@ -338,9 +475,11 @@ void frame::process_extended_header() {
 	}
 	
 	if (payload_size > max_payload_size) {
+		// TODO: frame/message size limits
 		throw server_error("got frame with payload greater than maximum frame buffer size.");
 	}
 	m_payload.resize(payload_size);
+	m_bytes_needed = payload_size;
 }
 
 void frame::process_payload() {
@@ -380,55 +519,47 @@ void frame::process_payload2() {
 	}
 }
 
-bool frame::validate_utf8(uint32_t* state,uint32_t* codep) const {
-	for (size_t i = 0; i < m_payload.size(); i++) {
+void frame::validate_utf8(uint32_t* state,uint32_t* codep, size_t offset) const {
+	for (size_t i = offset; i < m_payload.size(); i++) {
 		using utf8_validator::decode;
 		
-		//std::cout << "decoding: " << std::hex << m_payload[i] << std::endl;
 		if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
-		//	std::cout << "bad byte" << std::endl;
-			return false;
+			throw frame_error("Invalid UTF-8 Data",FERR_PAYLOAD_VIOLATION);
 		}
 	}
-
-	return true;
 }
 
-bool frame::validate_basic_header() const {
+void frame::validate_basic_header() const {
 	// check for control frame size
 	if (get_basic_size() > BASIC_PAYLOAD_LIMIT && is_control()) {
-		return false;	
+		throw frame_error("Control Frame is too large",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for reserved opcodes
 	if (get_rsv1() || get_rsv2() || get_rsv3()) {
-		return false;
+		throw frame_error("Reserved bit used",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for reserved opcodes
 	opcode op = get_opcode();
 	if (op > 0x02 && op < 0x08) {
-		return false;
+		throw frame_error("Reserved opcode used",FERR_PROTOCOL_VIOLATION);
 	}
 	if (op > 0x0A) {
-		return false;
+		throw frame_error("Reserved opcode used",FERR_PROTOCOL_VIOLATION);
 	}
 	
 	// check for fragmented control message
 	if (is_control() && !get_fin()) {
-		return false;
+		throw frame_error("Fragmented control message",FERR_PROTOCOL_VIOLATION);
 	}
-	
-	return true;
 }
 
 void frame::generate_masking_key() {
 	//throw "masking key generation not implimented";
 	
 	int32_t key = m_gen();
-	
-	std::cout << "genkey: " << key << std::endl;
-	
+		
 	//m_masking_key[0] = reinterpret_cast<char*>(&key)[0];
 	//m_masking_key[1] = reinterpret_cast<char*>(&key)[1];
 	//m_masking_key[2] = reinterpret_cast<char*>(&key)[2];

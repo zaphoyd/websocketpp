@@ -65,7 +65,8 @@ class client_session : public session {
 public:
 	client_session (client_ptr c,
 			 boost::asio::io_service& io_service,
-			 connection_handler_ptr defc);
+			 connection_handler_ptr defc,
+			 uint64_t buf_size);
 
 	/*** CLIENT INTERFACE ***/
 	

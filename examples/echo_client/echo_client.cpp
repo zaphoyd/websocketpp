@@ -27,9 +27,10 @@
 
 #include "echo_client_handler.hpp"
 
-#include <websocketpp/websocketpp.hpp>
+#include "../../src/websocketpp.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <iostream>
 
@@ -53,11 +54,31 @@ int main(int argc, char* argv[]) {
 		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
 		
 		client->init();
-		client->set_header("User Agent","WebSocket++/2011-09-25");
+		client->set_header("User Agent","WebSocket++/2011-10-27");
 		
 		client->connect("ws://localhost:9001/getCaseCount");
-		
 		io_service.run();
+		
+		std::cout << "case count: " << c->m_case_count << std::endl;
+		
+		for (int i = 1; i <= c->m_case_count; i++) {
+			io_service.reset();
+						
+			client->set_alog_level(websocketpp::ALOG_OFF);
+			client->set_elog_level(websocketpp::LOG_OFF);
+			
+			client->init();
+			client->set_header("User Agent","WebSocket++/2011-10-27");
+			
+			
+			std::stringstream url;
+			
+			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
+			
+			client->connect(url.str());
+			
+			io_service.run();
+		}
 		
 		std::cout << "done" << std::endl;
 		
