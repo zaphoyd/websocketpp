@@ -105,7 +105,7 @@ namespace websocketpp {
 				PROTOCOL_VIOLATION = 2,		// must end session
 				PAYLOAD_VIOLATION = 3,		// should end session
 				INTERNAL_SERVER_ERROR = 4,	// cleanly end session
-				MSG_TOO_BIG = 5				// ???
+				MESSAGE_TOO_BIG = 5			// ???
 			};
 		}
 		

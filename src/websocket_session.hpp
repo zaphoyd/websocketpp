@@ -99,9 +99,6 @@
 #include <vector>
 
 namespace websocketpp {
-	class session;
-	typedef boost::shared_ptr<session> session_ptr;
-	
 	class handshake_error;
 }
 
@@ -117,31 +114,31 @@ using boost::asio::ip::tcp;
 
 namespace websocketpp {
 
+namespace state {
+	enum value {
+		CONNECTING = 0,
+		OPEN = 1,
+		CLOSING = 2,
+		CLOSED = 3
+	};
+}
+	
 typedef std::map<std::string,std::string> header_list;
 
-template <template <class rng_policy> endpoint_policy>
-class session : public boost::enable_shared_from_this<session<endpoint_policy<rng_policy> > > {
+template <typename endpoint_policy>
+class session : public boost::enable_shared_from_this<session<endpoint_policy> > {
 public:
-	typedef endpoint_policy<rng_policy> endpoint_t;
-	typedef boost::shared_ptr<session<endpoint_t> > ptr;
+	typedef endpoint_policy endpoint_t;
+	typedef boost::shared_ptr<session<endpoint_policy> > ptr;
 	
 	
 	friend class handshake_error;
-	
-	namespace state {
-		enum value {
-			CONNECTING = 0,
-			OPEN = 1,
-			CLOSING = 2,
-			CLOSED = 3
-		};
-	}
 
-	session (endpoint_t::ptr e,
+	session (typename endpoint_policy::ptr e,
 			 boost::asio::io_service& io_service,
 			 connection_handler_ptr defc,
 			 uint64_t buf_size)
-	: m_state(STATE_CONNECTING),
+	: m_state(state::CONNECTING),
 	  m_writing(false),
 	  m_local_close_code(close::status::NO_STATUS),
 	  m_remote_close_code(close::status::NO_STATUS),
@@ -276,9 +273,9 @@ public:
 	}
 	
 	// initiate a connection close
-	void close(uint16_t status,const std::string &reason) {
+	void close(close::status::value status,const std::string &reason) {
 		validate_app_close_status(status);
-		send_close(status,msg);
+		send_close(status,reason);
 	}
 
 	virtual bool is_server() const = 0;
@@ -330,7 +327,7 @@ public: //protected:
 		while (m_buf.size() > 0 && m_state != state::CLOSED) {
 			try {
 				if (m_read_frame.get_bytes_needed() == 0) {
-					throw frame_error("have bytes that no frame needs",frame::error::FATAL_SESSION_ERROR);
+					throw frame::exception("have bytes that no frame needs",frame::error::FATAL_SESSION_ERROR);
 				}
 				
 				// Consume will read bytes from s
@@ -356,7 +353,7 @@ public: //protected:
 					m_timer.cancel();
 					process_frame();
 				}
-			} catch (const frame_error& e) {
+			} catch (const frame::exception& e) {
 				std::stringstream err;
 				err << "Caught frame exception: " << e.what();
 				
@@ -372,13 +369,13 @@ public: //protected:
 				
 				// process different types of frame errors
 				// 
-				if (e.code() == frame::FERR_PROTOCOL_VIOLATION) {
+				if (e.code() == frame::error::PROTOCOL_VIOLATION) {
 					send_close(close::status::PROTOCOL_ERROR, e.what());
-				} else if (e.code() == frame::FERR_PAYLOAD_VIOLATION) {
+				} else if (e.code() == frame::error::PAYLOAD_VIOLATION) {
 					send_close(close::status::INVALID_PAYLOAD, e.what());
-				} else if (e.code() == frame::FERR_INTERNAL_SERVER_ERROR) {
+				} else if (e.code() == frame::error::INTERNAL_SERVER_ERROR) {
 					send_close(close::status::ABNORMAL_CLOSE, e.what());
-				} else if (e.code() == frame::FERR_SOFT_SESSION_ERROR) {
+				} else if (e.code() == frame::error::SOFT_SESSION_ERROR) {
 					// ignore and continue processing frames
 					continue;
 				} else {
@@ -431,7 +428,40 @@ public: //protected:
 	}
 	
 	// write m_write_frame out to the socket.
-	void write_frame();
+	void write_frame() {
+		if (!is_server()) {
+			m_write_frame.set_masked(true); // client must mask frames
+		}
+		
+		m_write_frame.process_payload();
+		
+		std::vector<boost::asio::mutable_buffer> data;
+		
+		data.push_back(
+		   boost::asio::buffer(
+			   m_write_frame.get_header(),
+			   m_write_frame.get_header_len()
+			   )
+		   );
+		data.push_back(
+			boost::asio::buffer(m_write_frame.get_payload())
+		);
+		
+		log("Write Frame: "+m_write_frame.print_frame(),LOG_DEBUG);
+		
+		m_writing = true;
+		
+		boost::asio::async_write(
+		    m_socket,
+		    data,
+		    boost::bind(
+		        &session::handle_write_frame,
+		        shared_from_this(),
+		        boost::asio::placeholders::error
+		    )
+		);
+	
+	}
 	void handle_write_frame (const boost::system::error_code& error) {
 		if (error) {
 			log_error("Error writing frame data",error);
@@ -479,7 +509,7 @@ public: //protected:
 			return;
 		}
 		
-		if (m_state != STATE_CLOSED) {
+		if (m_state != state::CLOSED) {
 			log("close timed out",LOG_DEBUG);
 			drop_tcp(false);
 		}
@@ -532,7 +562,7 @@ public: //protected:
 					break;
 				default:
 					throw frame::exception("Invalid Opcode",
-									  frame::FERR_PROTOCOL_VIOLATION);
+									  frame::error::PROTOCOL_VIOLATION);
 					break;
 			}
 		} else if (m_state == state::CLOSING) {
@@ -555,7 +585,7 @@ public: //protected:
 		
 		// send pong
 		m_write_frame.set_fin(true);
-		m_write_frame.set_opcode(frame::PONG);
+		m_write_frame.set_opcode(frame::opcode::PONG);
 		m_write_frame.set_payload(m_read_frame.get_payload());
 		
 		write_frame();
@@ -573,7 +603,7 @@ public: //protected:
 	}
 	void process_binary() {
 		if (m_fragmented) {
-			throw frame::exception("Got a new message before the previous was finished.",frame::FERR_PROTOCOL_VIOLATION);
+			throw frame::exception("Got a new message before the previous was finished.",frame::error::PROTOCOL_VIOLATION);
 		}
 		
 		m_current_opcode = m_read_frame.get_opcode();
@@ -588,7 +618,7 @@ public: //protected:
 	}
 	void process_continuation() {
 		if (!m_fragmented) {
-			throw frame::exception("Got a continuation frame without an outstanding message.",frame::FERR_PROTOCOL_VIOLATION);
+			throw frame::exception("Got a continuation frame without an outstanding message.",frame::error::PROTOCOL_VIOLATION);
 		}
 		
 		if (m_current_opcode == frame::opcode::TEXT) {
@@ -655,7 +685,7 @@ public: //protected:
 			// check here to make sure the final message ends on a valid codepoint.
 			if (m_utf8_state != utf8_validator::UTF8_ACCEPT) {
 				throw frame::exception("Invalid UTF-8 Data",
-								  frame::FERR_PAYLOAD_VIOLATION);
+								  frame::error::PAYLOAD_VIOLATION);
 			}
 			
 			if (m_fragmented) {
@@ -765,7 +795,7 @@ public: //protected:
 		   );
 		
 		m_local_close_code = status;
-		m_local_close_msg = message;
+		m_local_close_msg = reason;
 		
 		m_write_frame.set_fin(true);
 		m_write_frame.set_opcode(frame::opcode::CLOSE);
@@ -775,49 +805,18 @@ public: //protected:
 			m_write_frame.set_status(close::status::NORMAL,"");
 		} else if (status == close::status::ABNORMAL_CLOSE) {
 			// Internal implimentation error. There is no good close code for this.
-			m_write_frame.set_status(close::status::POLICY_VIOLATION,message);
+			m_write_frame.set_status(close::status::POLICY_VIOLATION,reason);
 		} else if (close::status::invalid(status)) {
 			m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is invalid");
 		} else if (close::status::reserved(status)) {
 			m_write_frame.set_status(close::status::PROTOCOL_ERROR,"Status code is reserved");
 		} else {
-			m_write_frame.set_status(status,message);
+			m_write_frame.set_status(status,reason);
 		}
 		
-		write_frame() {
-			if (!is_server()) {
-				m_write_frame.set_masked(true); // client must mask frames
-			}
-			
-			m_write_frame.process_payload();
-			
-			std::vector<boost::asio::mutable_buffer> data;
-			
-			data.push_back(
-				boost::asio::buffer(
-					m_write_frame.get_header(),
-					m_write_frame.get_header_len()
-				)
-			);
-			data.push_back(
-				boost::asio::buffer(m_write_frame.get_payload())
-			);
-			
-			log("Write Frame: "+m_write_frame.print_frame(),LOG_DEBUG);
-			
-			m_writing = true;
-			
-			boost::asio::async_write(
-				m_socket,
-				data,
-				boost::bind(
-					&session::handle_write_frame,
-					shared_from_this(),
-					boost::asio::placeholders::error
-				)
-			);
-		}
+		write_frame();
 	}
+	
 	void drop_tcp(bool dropped_by_me = true) {
 		m_timer.cancel();
 		try {
@@ -899,8 +898,8 @@ protected:
 	frame::opcode::value 		m_current_opcode;
 	
 	// frame parsers
-	frame::parser<rng_policy>	m_read_frame;
-	frame::parser<rng_policy>	m_write_frame;
+	frame::parser<typename endpoint_policy::rng_t>	m_read_frame;
+	frame::parser<typename endpoint_policy::rng_t>	m_write_frame;
 	
 	// unknown
 	bool						m_error;

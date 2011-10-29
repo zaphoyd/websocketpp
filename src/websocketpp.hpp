@@ -35,9 +35,9 @@
 #include "websocket_constants.hpp"
 
 #include "websocket_session.hpp"
-#include "websocket_server_session.hpp"
-#include "websocket_client_session.hpp"
+//#include "websocket_server_session.hpp"
+//#include "websocket_client_session.hpp"
 #include "websocket_server.hpp"
-#include "websocket_client.hpp"
+//#include "websocket_client.hpp"
 
 #endif // WEBSOCKETPP_HPP

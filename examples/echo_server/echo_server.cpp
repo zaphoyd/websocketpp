@@ -57,19 +57,14 @@ int main(int argc, char* argv[]) {
 		tcp::endpoint endpoint(tcp::v6(), port);
 		
 		websocketpp::server_ptr server(
-			new websocketpp::server(io_service,endpoint,echo_handler)
+			new websocketpp::server<>(io_service,endpoint,echo_handler)
 		);
 		
 		//server->parse_command_line(argc, argv);
 		
-		
-		
 		// setup server settings
 		//server->set_alog_level(websocketpp::ALOG_OFF);
 		//server->set_elog_level(websocketpp::LOG_OFF);
-		
-		server->add_host(host);
-		server->add_host(full_host);
 		
 		// bump up max message size to maximum since we may be using the echo 
 		// server to test performance and protocol extremes.

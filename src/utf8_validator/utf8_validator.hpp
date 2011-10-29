@@ -1,6 +1,9 @@
 // Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
 // See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
 
+#ifndef UTF8_VALIDATOR_HPP
+#define UTF8_VALIDATOR_HPP
+
 #include <stdint.h>
 
 namespace utf8_validator {
@@ -38,3 +41,5 @@ decode(uint32_t* state, uint32_t* codep, uint32_t byte) {
 }
 
 } // namespace utf8_validator
+
+#endif // UTF8_VALIDATOR_HPP

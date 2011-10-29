@@ -33,11 +33,13 @@
 #include <stdint.h>
 
 namespace websocketpp {
-	class blank_rng {
-	public:
-		blank_rng();
-		int32_t gen();
-	}
+	
+class blank_rng {
+public:
+	blank_rng();
+	int32_t gen();
+};
+	
 }
 
 #endif // BLANK_RNG_HPP

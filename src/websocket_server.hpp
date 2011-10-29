@@ -42,7 +42,7 @@ namespace websocketpp {
 }
 
 #include "websocketpp.hpp"
-#include "websocket_server_session.hpp"
+#include "websocket_session.hpp"
 #include "websocket_connection_handler.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -70,6 +70,7 @@ template <class rng_policy = blank_rng>
 class server : public boost::enable_shared_from_this< server<rng_policy> > {
 public:
 	typedef boost::shared_ptr< server<rng_policy> > ptr;
+	typedef rng_policy rng_t;
 	
 	server<rng_policy>(boost::asio::io_service& io_service, 
 		   const tcp::endpoint& endpoint,
@@ -93,8 +94,8 @@ public:
 	// connection to it.
 	void start_accept() {
 		// TODO: sanity check whether the session buffer size bound could be reduced
-		server_session_ptr new_session(
-			new server_session(
+		session<server<rng_policy> >::ptr new_session(
+			new session<server<rng_policy> >(
 				shared_from_this(),
 				m_io_service,
 				m_def_con_handler,
@@ -126,7 +127,7 @@ public:
 	}
 	
 	void set_max_message_size(uint64_t val) {
-		if (val > frame::limits::JUMBO_PAYLOAD_SIZE) {
+		if (val > frame::limits::PAYLOAD_SIZE_JUMBO) {
 			std::stringstream err;
 			err << "Invalid maximum message size: " << val;
 			
@@ -190,7 +191,10 @@ public:
 		
 		//m_vm["host"].as<std::string>();
 		
-		const std::vector< std::string > &foo = m_vm["host"].as< std::vector<std::string> >();
+		// TODO: template "as" weirdness 
+		// const std::vector< std::string > &foo = m_vm["host"].as< std::vector<std::string> >();
+		
+		const std::vector< std::string > &foo = m_vm["host"].template as< std::vector<std::string> >();
 		
 		for (int i = 0; i < foo.size(); i++) {
 			std::cout << foo[i] << std::endl;
