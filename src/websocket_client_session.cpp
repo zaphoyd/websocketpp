@@ -282,7 +282,11 @@ void client_session::write_handshake() {
 	set_header("Connection","Upgrade");
 	set_header("Sec-WebSocket-Version","13");
 	
-	set_header("Host",m_uri.host);
+	std::stringstream h;
+	
+	h << m_uri.host << ":" << m_uri.port;
+	
+	set_header("Host",h.str());
 
 	if (m_client_origin != "") {
 		set_header("Origin",m_client_origin);
