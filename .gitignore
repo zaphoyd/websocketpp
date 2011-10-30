@@ -22,3 +22,5 @@ libwebsocketpp.dylib.0.1.0
 websocketpp.xcodeproj/xcuserdata/*
 websocketpp.xcodeproj/project.xcworkspace/xcuserdata/*
 policy_based_notes.hpp
+
+examples/echo_server/echo_server_old
