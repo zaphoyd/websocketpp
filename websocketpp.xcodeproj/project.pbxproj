@@ -129,6 +129,12 @@
 		B6138766145AD1F700ED9B19 /* chat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat.hpp; path = examples/chat_server/chat.hpp; sourceTree = "<group>"; };
 		B6138767145AD1F700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_server/Makefile; sourceTree = "<group>"; };
 		B6138791145CA6F700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B61387A0145D846400ED9B19 /* blank_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = blank_rng.cpp; path = src/rng/blank_rng.cpp; sourceTree = "<group>"; };
+		B61387A1145D846400ED9B19 /* blank_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = blank_rng.hpp; path = src/rng/blank_rng.hpp; sourceTree = "<group>"; };
+		B61387A2145D846400ED9B19 /* boost_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = boost_rng.cpp; path = src/rng/boost_rng.cpp; sourceTree = "<group>"; };
+		B61387A3145D846400ED9B19 /* boost_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = boost_rng.hpp; path = src/rng/boost_rng.hpp; sourceTree = "<group>"; };
+		B61387A5145D849E00ED9B19 /* constants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = constants.hpp; path = src/http/constants.hpp; sourceTree = "<group>"; };
+		B61387A6145D849E00ED9B19 /* parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = parser.hpp; path = src/http/parser.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -179,10 +185,6 @@
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 		B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_constants.hpp; path = src/websocket_constants.hpp; sourceTree = "<group>"; };
-		B6FE8D0A145B0FA400B32547 /* blank_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = blank_rng.cpp; path = src/policy/rng/blank_rng.cpp; sourceTree = "<group>"; };
-		B6FE8D0B145B0FA400B32547 /* blank_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = blank_rng.hpp; path = src/policy/rng/blank_rng.hpp; sourceTree = "<group>"; };
-		B6FE8D0C145B0FA400B32547 /* boost_rng.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = boost_rng.cpp; path = src/policy/rng/boost_rng.cpp; sourceTree = "<group>"; };
-		B6FE8D0D145B0FA400B32547 /* boost_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = boost_rng.hpp; path = src/policy/rng/boost_rng.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,6 +241,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B61387A4145D847A00ED9B19 /* http */ = {
+			isa = PBXGroup;
+			children = (
+				B61387A5145D849E00ED9B19 /* constants.hpp */,
+				B61387A6145D849E00ED9B19 /* parser.hpp */,
+			);
+			name = http;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -284,7 +295,8 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				B6FE8D08145B0F6600B32547 /* policy */,
+				B61387A4145D847A00ED9B19 /* http */,
+				B6FE8D09145B0F7400B32547 /* rng */,
 				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
@@ -403,21 +415,13 @@
 			name = documentation;
 			sourceTree = "<group>";
 		};
-		B6FE8D08145B0F6600B32547 /* policy */ = {
-			isa = PBXGroup;
-			children = (
-				B6FE8D09145B0F7400B32547 /* rng */,
-			);
-			name = policy;
-			sourceTree = "<group>";
-		};
 		B6FE8D09145B0F7400B32547 /* rng */ = {
 			isa = PBXGroup;
 			children = (
-				B6FE8D0A145B0FA400B32547 /* blank_rng.cpp */,
-				B6FE8D0B145B0FA400B32547 /* blank_rng.hpp */,
-				B6FE8D0C145B0FA400B32547 /* boost_rng.cpp */,
-				B6FE8D0D145B0FA400B32547 /* boost_rng.hpp */,
+				B61387A0145D846400ED9B19 /* blank_rng.cpp */,
+				B61387A1145D846400ED9B19 /* blank_rng.hpp */,
+				B61387A2145D846400ED9B19 /* boost_rng.cpp */,
+				B61387A3145D846400ED9B19 /* boost_rng.hpp */,
 			);
 			name = rng;
 			sourceTree = "<group>";

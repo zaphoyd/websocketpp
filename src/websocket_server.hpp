@@ -42,7 +42,7 @@ namespace po = boost::program_options;
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "policy/rng/blank_rng.hpp"
+#include "rng/blank_rng.hpp"
 
 using boost::asio::ip::tcp;
 
