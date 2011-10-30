@@ -36,8 +36,9 @@ namespace websocketpp {
 	
 class blank_rng {
 public:
-	blank_rng();
-	int32_t gen();
+	int32_t gen() {
+		throw "Random Number generation not supported";
+	}
 };
 	
 }

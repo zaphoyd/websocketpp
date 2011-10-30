@@ -26,13 +26,3 @@
  * This Makefile was derived from a similar one included in the libjson project
  * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
-
-#include "blank_rng.hpp"
-
-using websocketpp::blank_rng;
-
-blank_rng::blank_rng() {}
-
-int32_t blank_rng::gen() {
-	throw "Random Number generation not supported";
-}

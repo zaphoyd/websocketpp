@@ -25,17 +25,3 @@
  * 
  */
 
-#include "echo.hpp"
-
-using websocketecho::echo_server_handler;
-
-void echo_server_handler::validate(websocketpp::session_ptr client) {}
-
-void echo_server_handler::on_message(websocketpp::session_ptr client, const std::string &msg) {
-	client->send(msg);
-}
-
-void echo_server_handler::on_message(websocketpp::session_ptr client,
-	const std::vector<unsigned char> &data) {
-	client->send(data);
-}

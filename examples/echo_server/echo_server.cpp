@@ -50,15 +50,22 @@ int main(int argc, char* argv[]) {
 	temp << host << ":" << port;
 	full_host = temp.str();
 	
-	websocketecho::echo_server_handler_ptr echo_handler(new websocketecho::echo_server_handler());
+	
 	
 	try {
 		boost::asio::io_service io_service;
 		tcp::endpoint endpoint(tcp::v6(), port);
 		
-		websocketpp::server_ptr server(
-			new websocketpp::server<>(io_service,endpoint,echo_handler)
-		);
+		using websocketpp::server;
+		
+		typedef boost::shared_ptr< server<> > server_ptr;
+		//typedef server<>::ptr server_ptr;
+		
+		server_ptr s(new server<>(io_service,endpoint));
+		
+		server<>::connection_handler_ptr handler = s->make_handler<websocketecho::echo_server_handler>();
+		
+		s->set_default_connection_handler(handler);
 		
 		//server->parse_command_line(argc, argv);
 		
@@ -68,10 +75,10 @@ int main(int argc, char* argv[]) {
 		
 		// bump up max message size to maximum since we may be using the echo 
 		// server to test performance and protocol extremes.
-		server->set_max_message_size(websocketpp::frame::PAYLOAD_64BIT_LIMIT); 
+		s->set_max_message_size(websocketpp::frame::limits::PAYLOAD_SIZE_JUMBO); 
 		
 		// start the server
-		server->start_accept();
+		s->start_accept();
 		
 		std::cout << "Starting echo server on " << full_host << std::endl;
 		

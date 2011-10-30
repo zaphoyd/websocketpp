@@ -5,7 +5,7 @@ CXX		?= c++
 SHARED  ?= "1"
 
 ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lwebsocketpp
+	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lwebsocketpp
 else
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options ../../libwebsocketpp.a
 endif

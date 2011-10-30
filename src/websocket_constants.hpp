@@ -32,6 +32,10 @@
 
 #include <stdint.h>
 
+// for exceptions that should be somewhere else
+#include <string>
+#include <exception>
+
 // Defaults
 namespace websocketpp {
 	const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
@@ -151,6 +155,20 @@ namespace websocketpp {
 			static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
 		}
 	}
+	
+	// TODO: these classes need a better place to live
+	class server_error : public std::exception {
+	public:	
+		server_error(const std::string& msg)
+		: m_msg(msg) {}
+		~server_error() throw() {}
+		
+		virtual const char* what() const throw() {
+			return m_msg.c_str();
+		}
+	private:
+		std::string m_msg;
+	};
 }
 
 #endif // WEBSOCKET_CONSTANTS_HPP

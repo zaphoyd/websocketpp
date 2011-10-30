@@ -534,7 +534,10 @@ public:
 		
 		if (payload_size > max_payload_size) {
 			// TODO: frame/message size limits
-			throw websocketpp::server_error("got frame with payload greater than maximum frame buffer size.");
+			// TODO: find a way to throw a server error without coupling frame
+			//       with server
+			// throw websocketpp::server_error("got frame with payload greater than maximum frame buffer size.");
+			throw "Got frame with payload greater than maximum frame buffer size.";
 		}
 		m_payload.resize(payload_size);
 		m_bytes_needed = payload_size;

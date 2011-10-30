@@ -28,10 +28,9 @@
 #  It's authors were Jonathan Wallace and Bernhard Fluehmann.
 
 
-objects = websocket_server_session.o websocket_client_session.o websocket_session.o  websocket_server.o websocket_client.o websocket_frame.o \
-          network_utilities.o sha1.o base64.o
+objects = network_utilities.o sha1.o base64.o
 
-libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random
+libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
 
 OS=$(shell uname)
 

@@ -34,17 +34,20 @@
 #include <string>
 #include <vector>
 
-using websocketpp::session_ptr;
-
 namespace websocketecho {
 
-class echo_server_handler : public websocketpp::connection_handler {
+template <typename session_type>
+class echo_server_handler : public websocketpp::connection_handler<session_type> {
 public:
+	//typedef boost::shared_ptr<echo_server_handler<session_type> >
+	//typedef typename websocketpp::connection_handler<session_type>::ptr session_ptr;
+	typedef typename websocketpp::connection_handler<session_type>::session_ptr session_ptr;
+	
 	echo_server_handler() {}
 	virtual ~echo_server_handler() {}
 	
 	// The echo server allows all domains is protocol free.
-	void validate(session_ptr client);
+	void validate(session_ptr client) {}
 	
 	// an echo server is stateless. 
 	// The handler has no need to keep track of connected clients.
@@ -53,12 +56,14 @@ public:
 	void on_close(session_ptr client) {}
 	
 	// both text and binary messages are echoed back to the sending client.
-	void on_message(session_ptr client,const std::string &msg);
+	void on_message(session_ptr client,const std::string &msg) {
+		client->send(msg);
+	}
 	void on_message(session_ptr client,
-		const std::vector<unsigned char> &data);
+					const std::vector<unsigned char> &data) {
+		client->send(data);
+	}
 };
-
-typedef boost::shared_ptr<echo_server_handler> echo_server_handler_ptr;
 
 }
 

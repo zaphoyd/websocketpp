@@ -36,11 +36,6 @@ namespace po = boost::program_options;
 
 #include <set>
 
-namespace websocketpp {
-	//class server;
-	//typedef boost::shared_ptr<server> server_ptr;
-}
-
 #include "websocketpp.hpp"
 #include "websocket_session.hpp"
 #include "websocket_connection_handler.hpp"
@@ -53,34 +48,28 @@ using boost::asio::ip::tcp;
 
 namespace websocketpp {
 
-class server_error : public std::exception {
-public:	
-	server_error(const std::string& msg)
-		: m_msg(msg) {}
-	~server_error() throw() {}
-	
-	virtual const char* what() const throw() {
-		return m_msg.c_str();
-	}
-private:
-	std::string m_msg;
-};
 
-template <class rng_policy = blank_rng>
+
+template <typename rng_policy = blank_rng>
 class server : public boost::enable_shared_from_this< server<rng_policy> > {
 public:
-	typedef boost::shared_ptr< server<rng_policy> > ptr;
 	typedef rng_policy rng_t;
 	
+	typedef server<rng_policy> server_type;
+	typedef session<server_type> session_type;
+	typedef connection_handler<session_type> connection_handler_type;
+	
+	typedef boost::shared_ptr<server_type> ptr;
+	typedef boost::shared_ptr<session_type> session_ptr;
+	typedef boost::shared_ptr<connection_handler_type> connection_handler_ptr;
+	
 	server<rng_policy>(boost::asio::io_service& io_service, 
-		   const tcp::endpoint& endpoint,
-		   connection_handler_ptr defc) 
+		   const tcp::endpoint& endpoint) 
 	: m_elog_level(LOG_ALL),
 	  m_alog_level(ALOG_ALL),
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
-	  m_def_con_handler(defc),
 	  m_desc("websocketpp::server") 
 	{
 		m_desc.add_options()
@@ -90,13 +79,21 @@ public:
 		;
 	}
 	
+	void set_default_connection_handler(connection_handler_ptr c) {
+		m_def_con_handler = c;
+	}
+	
 	// creates a new session object and connects the next websocket
 	// connection to it.
 	void start_accept() {
+		if (m_def_con_handler == connection_handler_ptr()) {
+			throw server_error("start_accept called before a connection handler was set");
+		}
+		
 		// TODO: sanity check whether the session buffer size bound could be reduced
-		session<server<rng_policy> >::ptr new_session(
-			new session<server<rng_policy> >(
-				shared_from_this(),
+		session_ptr new_session(
+			new session_type(
+				server_type::shared_from_this(),
 				m_io_service,
 				m_def_con_handler,
 				m_max_message_size*2
@@ -106,26 +103,20 @@ public:
 		m_acceptor.async_accept(
 			new_session->socket(),
 			boost::bind(
-				&server::handle_accept,
-				shared_from_this(),
+				&server_type::handle_accept,
+				server_type::shared_from_this(),
 				new_session,
 				boost::asio::placeholders::error
 			)
 		);
 	}
 	
-	// INTERFACE FOR LOCAL APPLICATIONS
-
-	// Add or remove a host string (host:port) to the list of acceptable 
-	// hosts to accept websocket connections from. Additions/deletions here 
-	// only affect new connections.
-	void add_host(std::string host) {
-		m_hosts.insert(host);
-	}
-	void remove_host(std::string host) {
-		m_hosts.erase(host);
+	template <template <class> class T>
+	connection_handler_ptr make_handler() {
+		return boost::shared_ptr< T<session_type> >(new T<session_type>());
 	}
 	
+	// INTERFACE FOR LOCAL APPLICATIONS
 	void set_max_message_size(uint64_t val) {
 		if (val > frame::limits::PAYLOAD_SIZE_JUMBO) {
 			std::stringstream err;
@@ -205,15 +196,25 @@ public:
 	
 	// INTERFACE FOR SESSIONS
 	
+	static const bool is_server = true;
+	
 	rng_policy& get_rng() {
-		return &m_rng;
+		return m_rng;
 	}
 	
-	// Check if this server will respond to this host.
+	// Confirms that the port in the host string matches the port we are listening
+	// on. End user application is responsible for checking the /host/ part.
 	bool validate_host(std::string host) {
-		if (m_hosts.find(host) == m_hosts.end()) {
-			return false;
-		}
+		// find colon.
+		// if no colon assume default port
+		
+		// if port == port
+		// return true
+		// else
+		// return false
+		
+		// TODO: just check the port. Otherwise user is responsible for checking this
+		
 		return true;
 	}
 	
@@ -247,8 +248,7 @@ public:
 private:
 	// if no errors starts the session's read loop and returns to the
 	// start_accept phase.
-	void handle_accept(server_session_ptr session,
-					   const boost::system::error_code& error) 
+	void handle_accept(session_ptr session,const boost::system::error_code& error) 
 	{
 		if (!error) {
 			session->on_connect();
@@ -266,8 +266,9 @@ private:
 private:
 	uint16_t					m_elog_level;
 	uint16_t					m_alog_level;
-
-	std::set<std::string>		m_hosts;
+	
+	std::vector<session_ptr>	m_sessions;
+	
 	uint64_t					m_max_message_size;
 	boost::asio::io_service&	m_io_service;
 	tcp::acceptor				m_acceptor;

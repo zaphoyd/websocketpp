@@ -104,6 +104,7 @@ namespace websocketpp {
 
 #include "websocketpp.hpp"
 #include "websocket_frame.hpp"
+#include "websocket_server.hpp" // for server error?
 #include "websocket_connection_handler.hpp"
 
 #include "base64/base64.h"
@@ -122,19 +123,42 @@ namespace state {
 		CLOSED = 3
 	};
 }
+
+// Exception classes
+
+class handshake_error : public std::exception {
+public:	
+	handshake_error(const std::string& msg,
+					int http_error,
+					const std::string& http_msg = "")
+	: m_msg(msg),m_http_error_code(http_error),m_http_error_msg(http_msg) {}
+	~handshake_error() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	std::string m_msg;
+	int			m_http_error_code;
+	std::string m_http_error_msg;
+};
 	
 typedef std::map<std::string,std::string> header_list;
 
 template <typename endpoint_policy>
-class session : public boost::enable_shared_from_this<session<endpoint_policy> > {
+class session : public boost::enable_shared_from_this< session<endpoint_policy> > {
 public:
-	typedef endpoint_policy endpoint_t;
-	typedef boost::shared_ptr<session<endpoint_policy> > ptr;
+	typedef endpoint_policy endpoint_type;
+	typedef session<endpoint_policy> session_type;
+	typedef connection_handler<session_type> connection_handler_type;
 	
+	typedef boost::shared_ptr<endpoint_type> endpoint_ptr;
+	typedef boost::shared_ptr<session_type> ptr;
+	typedef boost::shared_ptr<connection_handler_type> connection_handler_ptr;
 	
 	friend class handshake_error;
 
-	session (typename endpoint_policy::ptr e,
+	session (endpoint_ptr e,
 			 boost::asio::io_service& io_service,
 			 connection_handler_ptr defc,
 			 uint64_t buf_size)
@@ -147,6 +171,7 @@ public:
 	  m_dropped_by_me(false),
 	  m_socket(io_service),
 	  m_io_service(io_service),
+	  m_endpoint(e),
 	  m_local_interface(defc),
 	  m_timer(io_service,boost::posix_time::seconds(0)),
 	  m_buf(buf_size), // maximum buffered (unconsumed) bytes from network
@@ -171,7 +196,10 @@ public:
 	// that come after it are called as a result of an async event completing.
 	// if any method in this chain returns before adding a new async event the
 	// session will end.
-	virtual void on_connect() = 0;
+	// TODO: this needs to be a template specialization or member of the endpoint
+	void on_connect() {
+		read_handshake();
+	}
 	
 	// sets the internal connection handler of this connection to new_con.
 	// This is useful if you want to switch handler objects during a connection
@@ -184,7 +212,7 @@ public:
 			//m_local_interface->disconnect(shared_from_this(),4000,"Setting new connection handler");
 		}
 		m_local_interface = new_con;
-		m_local_interface->on_open(shared_from_this());
+		m_local_interface->on_open(session_type::shared_from_this());
 	}
 	
 	
@@ -199,7 +227,9 @@ public:
 	const std::string& get_subprotocol() const {
 		if (m_state == state::CONNECTING) {
 			log("Subprotocol is not avaliable before the handshake has completed.",LOG_WARN);
-			throw server_error("Subprotocol is not avaliable before the handshake has completed.");
+			// TODO: fix server_error
+			//throw server_error("Subprotocol is not avaliable before the handshake has completed.");
+			throw "Subprotocol is not avaliable before the handshake has completed";
 		}
 		return m_server_subprotocol;
 	}
@@ -222,6 +252,48 @@ public:
 	unsigned int get_version() const {
 		return m_version;
 	}
+	
+	
+	/**** TODO: SERVER SPECIFIC ****/
+	 
+	void set_header(const std::string &key,const std::string &val) {
+		// TODO: prevent use of reserved headers;
+		m_server_headers[key] = val;
+	}
+	
+	void select_subprotocol(const std::string& val) {
+		std::vector<std::string>::iterator it;
+		
+		it = std::find(m_client_subprotocols.begin(),
+					   m_client_subprotocols.end(),
+					   val);
+		
+		if (val != "" && it == m_client_subprotocols.end()) {
+			throw server_error("Attempted to choose a subprotocol not proposed by the client");
+		}
+		
+		m_server_subprotocol = val;
+	}
+	
+	void select_extension(const std::string& val) {
+		if (val == "") {
+			return;
+		}
+		
+		std::vector<std::string>::iterator it;
+		
+		it = std::find(m_client_extensions.begin(),
+					   m_client_extensions.end(),
+					   val);
+		
+		if (it == m_client_extensions.end()) {
+			throw server_error("Attempted to choose an extension not proposed by the client");
+		}
+		
+		m_server_extensions.push_back(val);
+	}
+	
+	/********/
 	
 	/*** SESSION INTERFACE ***/
 	
@@ -278,16 +350,279 @@ public:
 		send_close(status,reason);
 	}
 
-	virtual bool is_server() const = 0;
+	bool is_server() const {
+		return endpoint_type::is_server;
+	}
 
 	// Opening handshake processors and callbacks. These need to be defined in
 	// derived classes.
-	virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
-	virtual void handle_read_handshake(const boost::system::error_code& e,
-	                                   std::size_t bytes_transferred) = 0;
+	
+	// TODO: endpoint specific
+	//virtual void handle_write_handshake(const boost::system::error_code& e) = 0;
+	void handle_write_handshake(const boost::system::error_code& error) {
+		if (error) {
+			log_error("Error writing handshake response",error);
+			drop_tcp();
+			return;
+		}
+		
+		log_open_result();
+		
+		if (m_server_http_code != 101) {
+			std::stringstream err;
+			err << "Handshake ended with HTTP error: " << m_server_http_code << " "
+		    << (m_server_http_string != "" ? m_server_http_string : lookup_http_error_string(m_server_http_code));
+			log(err.str(),LOG_ERROR);
+			drop_tcp();
+			// TODO: tell client that connection failed.
+			return;
+		}
+		
+		m_state = state::OPEN;
+		
+		// stop the handshake timer
+		m_timer.cancel();
+		
+		if (m_local_interface) {
+			m_local_interface->on_open(session_type::shared_from_this());
+		}
+		
+		reset_message();
+		this->read_frame();
+	}
+	
+	// TODO: endpoint specific
+	//virtual void handle_read_handshake(const boost::system::error_code& e,std::size_t bytes_transferred) = 0;
+	void handle_read_handshake(const boost::system::error_code& e,
+											   std::size_t bytes_transferred) {
+		std::ostringstream line;
+		line << &m_buf;
+		m_raw_client_handshake += line.str();
+		
+		access_log(m_raw_client_handshake,ALOG_HANDSHAKE);
+		
+		std::vector<std::string> tokens;
+		std::string::size_type start = 0;
+		std::string::size_type end;
+		
+		// Get request and parse headers
+		end = m_raw_client_handshake.find("\r\n",start);
+		
+		while(end != std::string::npos) {
+			tokens.push_back(m_raw_client_handshake.substr(start, end - start));
+			
+			start = end + 2;
+			
+			end = m_raw_client_handshake.find("\r\n",start);
+		}
+		
+		for (size_t i = 0; i < tokens.size(); i++) {
+			if (i == 0) {
+				m_client_http_request = tokens[i];
+			}
+			
+			end = tokens[i].find(": ",0);
+			
+			if (end != std::string::npos) {
+				std::string h = tokens[i].substr(0,end);
+				
+				if (get_client_header(h) == "") {
+					m_client_headers[h] = tokens[i].substr(end+2);
+				} else {
+					m_client_headers[h] += ", " + tokens[i].substr(end+2);
+				}
+			}
+		}
+		
+		// handshake error checking
+		try {
+			std::stringstream err;
+			std::string h;
+			
+			// check the method
+			if (m_client_http_request.substr(0,4) != "GET ") {
+				err << "Websocket handshake has invalid method: "
+				<< m_client_http_request.substr(0,4);
+				
+				throw(handshake_error(err.str(),400));
+			}
+			
+			// check the HTTP version
+			// TODO: allow versions greater than 1.1
+			end = m_client_http_request.find(" HTTP/1.1",4);
+			if (end == std::string::npos) {
+				err << "Websocket handshake has invalid HTTP version";
+				throw(handshake_error(err.str(),400));
+			}
+			
+			m_resource = m_client_http_request.substr(4,end-4);
+			
+			// verify the presence of required headers
+			h = get_client_header("Host");
+			if (h == "") {
+				throw(handshake_error("Required Host header is missing",400));
+			} else if (!m_endpoint->validate_host(h)) {
+				err << "Host " << h << " is not one of this server's names.";
+				throw(handshake_error(err.str(),400));
+			}
+			
+			h = get_client_header("Upgrade");
+			if (h == "") {
+				throw(handshake_error("Required Upgrade header is missing",400));
+			} else if (!boost::iequals(h,"websocket")) {
+				err << "Upgrade header was " << h << " instead of \"websocket\"";
+				throw(handshake_error(err.str(),400));
+			}
+			
+			h = get_client_header("Connection");
+			if (h == "") {
+				throw(handshake_error("Required Connection header is missing",400));
+			} else if (!boost::ifind_first(h,"upgrade")) {
+				err << "Connection header, \"" << h 
+				<< "\", does not contain required token \"upgrade\"";
+				throw(handshake_error(err.str(),400));
+			}
+			
+			if (get_client_header("Sec-WebSocket-Key") == "") {
+				throw(handshake_error("Required Sec-WebSocket-Key header is missing",400));
+			}
+			
+			h = get_client_header("Sec-WebSocket-Version");
+			if (h == "") {
+				throw(handshake_error("Required Sec-WebSocket-Version header is missing",400));
+			} else {
+				m_version = atoi(h.c_str());
+				
+				if (m_version != 7 && m_version != 8 && m_version != 13) {
+					err << "This server doesn't support WebSocket protocol version "
+					<< m_version;
+					throw(handshake_error(err.str(),400));
+				}
+			}
+			
+			if (m_version < 13) {
+				h = get_client_header("Sec-WebSocket-Origin");
+			} else {
+				h = get_client_header("Origin");
+			}
+			
+			if (h != "") {
+				m_client_origin = h;
+			}
+			
+			// TODO: extract subprotocols
+			// TODO: extract extensions
+			
+			// optional headers (delegated to the local interface)
+			if (m_local_interface) {
+				m_local_interface->validate(session_type::shared_from_this());
+			}
+			
+			m_server_http_code = 101;
+			m_server_http_string = "Switching Protocols";
+		} catch (const handshake_error& e) {
+			std::stringstream err;
+			err << "Caught handshake exception: " << e.what();
+			
+			access_log(e.what(),ALOG_HANDSHAKE);
+			log(err.str(),LOG_ERROR);
+			
+			m_server_http_code = e.m_http_error_code;
+			m_server_http_string = e.m_http_error_msg;
+		}
+		
+		write_handshake();
+	}
 public: //protected:
-	virtual void write_handshake() = 0;
-	virtual void read_handshake() = 0;
+	// TODO: endpoint specific
+	void write_handshake() {
+		std::stringstream h;
+		
+		if (m_server_http_code == 101) {
+			std::string server_key = get_client_header("Sec-WebSocket-Key");
+			server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+			
+			SHA1		sha;
+			uint32_t	message_digest[5];
+			
+			sha.Reset();
+			sha << server_key.c_str();
+			
+			if (sha.Result(message_digest)){
+				// convert sha1 hash bytes to network byte order because this sha1
+				//  library works on ints rather than bytes
+				for (int i = 0; i < 5; i++) {
+					message_digest[i] = htonl(message_digest[i]);
+				}
+				
+				server_key = base64_encode(
+										   reinterpret_cast<const unsigned char*>(message_digest),20);
+				
+				// set handshake accept headers
+				set_header("Sec-WebSocket-Accept",server_key);
+				set_header("Upgrade","websocket");
+				set_header("Connection","Upgrade");
+			} else {
+				log("Error computing handshake sha1 hash.",LOG_ERROR);
+				m_server_http_code = 500;
+				m_server_http_string = "";
+			}
+		}
+		
+		// hardcoded server headers
+		set_header("Server","WebSocket++/2011-09-25");
+		
+		h << "HTTP/1.1 " << m_server_http_code << " "
+		<< (m_server_http_string != "" ? m_server_http_string : 
+			lookup_http_error_string(m_server_http_code))
+		<< "\r\n";
+		
+		header_list::iterator it;
+		for (it = m_server_headers.begin(); it != m_server_headers.end(); it++) {
+			h << it->first << ": " << it->second << "\r\n";
+		}
+		
+		h << "\r\n";
+		
+		m_raw_server_handshake = h.str();
+		
+		// start async write to handle_write_handshake
+		boost::asio::async_write(
+			m_socket,
+			boost::asio::buffer(m_raw_server_handshake),
+			boost::bind(
+				&session_type::handle_write_handshake,
+				session_type::shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
+	}
+
+	// TODO: endpoint specific
+	//virtual void read_handshake() = 0;
+	void read_handshake() {
+		m_timer.expires_from_now(boost::posix_time::seconds(5));
+		
+		m_timer.async_wait(
+			boost::bind(
+				&session_type::handle_handshake_expired,
+				session_type::shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
+		
+		boost::asio::async_read_until(
+			m_socket,
+			m_buf,
+			"\r\n\r\n",
+			boost::bind(
+				&session_type::handle_read_handshake,
+				session_type::shared_from_this(),
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred
+			)
+		);
+	}
 	
 	void read_frame() {
 		// the initial read in the handshake may have read in the first frame.
@@ -335,13 +670,13 @@ public: //protected:
 				
 				std::stringstream err;
 				
-				err << "consuming. have: " << m_buf.size() << " bytes. Need: " << m_read_frame.get_bytes_needed() << " state: " << (int)m_read_frame.get_state();
-				log(err.str(),LOG_DEBUG);
+				//err << "consuming. have: " << m_buf.size() << " bytes. Need: " << m_read_frame.get_bytes_needed() << " state: " << (int)m_read_frame.get_state();
+				//log(err.str(),LOG_DEBUG);
 				m_read_frame.consume(s);
 				
-				err.str("");
-				err << "consume complete, " << m_buf.size() << " bytes left, " << m_read_frame.get_bytes_needed() << " still needed, state: " << (int)m_read_frame.get_state();
-				log(err.str(),LOG_DEBUG);
+				//err.str("");
+				//err << "consume complete, " << m_buf.size() << " bytes left, " << m_read_frame.get_bytes_needed() << " still needed, state: " << (int)m_read_frame.get_state();
+				//log(err.str(),LOG_DEBUG);
 				
 				if (m_read_frame.ready()) {
 					// process frame and reset frame state for the next frame.
@@ -408,8 +743,8 @@ public: //protected:
 				m_buf,
 				boost::asio::transfer_at_least(m_read_frame.get_bytes_needed()),
 				boost::bind(
-					&session::handle_read_frame,
-					shared_from_this(),
+					&session<endpoint_policy>::handle_read_frame,
+					session<endpoint_policy>::shared_from_this(),
 					boost::asio::placeholders::error
 					)
 				);
@@ -418,7 +753,7 @@ public: //protected:
 			
 			if (m_local_interface) {
 				// TODO: make sure close code/msg are properly set.
-				m_local_interface->on_close(shared_from_this());
+				m_local_interface->on_close(session_type::shared_from_this());
 			}
 			
 			m_timer.cancel();
@@ -455,8 +790,8 @@ public: //protected:
 		    m_socket,
 		    data,
 		    boost::bind(
-		        &session::handle_write_frame,
-		        shared_from_this(),
+		        &session<endpoint_policy>::handle_write_frame,
+		        session<endpoint_policy>::shared_from_this(),
 		        boost::asio::placeholders::error
 		    )
 		);
@@ -671,9 +1006,9 @@ public: //protected:
 		if (m_current_opcode == frame::opcode::BINARY) {
 			//log("Dispatching Binary Message",LOG_DEBUG);
 			if (m_fragmented) {
-				m_local_interface->on_message(shared_from_this(),m_current_message);
+				m_local_interface->on_message(session_type::shared_from_this(),m_current_message);
 			} else {
-				m_local_interface->on_message(shared_from_this(),
+				m_local_interface->on_message(session_type::shared_from_this(),
 											  m_read_frame.get_payload());
 			}
 		} else if (m_current_opcode == frame::opcode::TEXT) {
@@ -698,7 +1033,7 @@ public: //protected:
 			}
 			
 			//log("Dispatching Text Message",LOG_DEBUG);
-			m_local_interface->on_message(shared_from_this(),msg);
+			m_local_interface->on_message(session_type::shared_from_this(),msg);
 		} else {
 			// Not sure if this should be a fatal error or not
 			std::stringstream err;
@@ -727,8 +1062,13 @@ public: //protected:
 	}
 	
 	// logging
-	virtual void log(const std::string& msg, uint16_t level) const = 0;
-	virtual void access_log(const std::string& msg, uint16_t level) const = 0;
+	// TODO: endpoint specific
+	void log(const std::string& msg, uint16_t level) const {
+		m_endpoint->log(msg,level);
+	}
+	void access_log(const std::string& msg, uint16_t level) const {
+		m_endpoint->access_log(msg,level);
+	}
 	
 	void log_close_result() {
 		std::stringstream msg;
@@ -788,8 +1128,8 @@ public: //protected:
 		
 		m_timer.async_wait(
 		   boost::bind(
-			   &session::handle_close_expired,
-			   shared_from_this(),
+			   &session<endpoint_policy>::handle_close_expired,
+			   session<endpoint_policy>::shared_from_this(),
 			   boost::asio::placeholders::error
 			   )
 		   );
@@ -884,6 +1224,7 @@ protected:
 	// Connection Resources
 	tcp::socket 				m_socket;
 	boost::asio::io_service&	m_io_service;
+	endpoint_ptr				m_endpoint;
 	connection_handler_ptr		m_local_interface;
 	boost::asio::deadline_timer	m_timer;
 	
@@ -905,24 +1246,7 @@ protected:
 	bool						m_error;
 };
 
-// Exception classes
 
-class handshake_error : public std::exception {
-public:	
-	handshake_error(const std::string& msg,
-					int http_error,
-					const std::string& http_msg = "")
-		: m_msg(msg),m_http_error_code(http_error),m_http_error_msg(http_msg) {}
-	~handshake_error() throw() {}
-	
-	virtual const char* what() const throw() {
-		return m_msg.c_str();
-	}
-	
-	std::string m_msg;
-	int			m_http_error_code;
-	std::string m_http_error_msg;
-};
 
 }
 

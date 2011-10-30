@@ -34,16 +34,15 @@
 #include <map>
 
 namespace websocketpp {
-	class connection_handler;
-	typedef boost::shared_ptr<connection_handler> connection_handler_ptr;
-}
 
-#include "websocket_session.hpp"
-
-namespace websocketpp {
-
+template <typename session_type>
 class connection_handler {
 public:
+	typedef connection_handler<session_type> connection_handler_type;
+	
+	typedef boost::shared_ptr<connection_handler_type> ptr;
+	typedef boost::shared_ptr<session_type> session_ptr;
+		
 	// validate will be called after a websocket handshake has been received and
 	// before it is accepted. It provides a handler the ability to refuse a 
 	// connection based on application specific logic (ex: restrict domains or
