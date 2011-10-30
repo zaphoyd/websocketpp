@@ -297,6 +297,11 @@ uint16_t frame::get_close_status() const {
 			reinterpret_cast<uint16_t*>(&val[0])
 		));
 		
+		// these two codes should never be on the wire
+		if (code == close::status::NO_STATUS || code == close::status::ABNORMAL_CLOSE) {
+			throw frame_error("Invalid close status code on the wire");
+		}
+		
 		return code;
 	} else {
 		return close::status::PROTOCOL_ERROR;

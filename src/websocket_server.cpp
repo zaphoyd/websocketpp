@@ -39,8 +39,8 @@ using websocketpp::server;
 server::server(boost::asio::io_service& io_service, 
 			   const tcp::endpoint& endpoint,
 			   websocketpp::connection_handler_ptr defc)
-	: m_elog_level(LOG_ALL),
-	  m_alog_level(ALOG_ALL),
+	: m_elog_level(LOG_ERROR),
+	  m_alog_level(ALOG_CONTROL),
 	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 

@@ -185,7 +185,7 @@ void session::send_close(uint16_t status,const std::string &message) {
 	
 	// echo close value unless there is a good reason not to.
 	if (status == CLOSE_STATUS_NO_STATUS) {
-		//m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
+		m_write_frame.set_status(CLOSE_STATUS_NORMAL,"");
 	} else if (status == CLOSE_STATUS_ABNORMAL_CLOSE) {
 		// Internal implimentation error. There is no good close code for this.
 		m_write_frame.set_status(CLOSE_STATUS_POLICY_VIOLATION,message);
@@ -559,15 +559,15 @@ void session::process_close() {
 		// send acknowledgement
 		
 		// check if the remote close code
-		if (close::status::invalid(m_remote_close_code)) {
+		if (m_remote_close_code == close::status::NO_STATUS) {
+			send_close(close::status::NORMAL,"");
+		} else if (close::status::invalid(m_remote_close_code)) {
 			send_close(close::status::PROTOCOL_ERROR,"Invalid status code");
-		} else if(close::status::reserved(m_remote_close_code)) {
+		} else if (close::status::reserved(m_remote_close_code)) {
 			send_close(close::status::PROTOCOL_ERROR,"Reserved status code");
 		} else {
 			send_close(m_remote_close_code,m_remote_close_msg);
 		}
-		
-		
 	} else if (m_state == STATE_CLOSING) {
 		log("process_close got ack",LOG_DEBUG);
 		// this is an ack of our close message
@@ -696,7 +696,7 @@ void session::log_open_result() {
 	    << (get_client_header("User-Agent") == "" ? "NULL" : get_client_header("User-Agent")) 
 	    << " " << m_resource << " " << m_server_http_code;
 	
-	access_log(msg.str(),ALOG_HANDSHAKE);
+	access_log(msg.str(),ALOG_CONNECT);
 }
 
 // this is called when an async asio call encounters an error
