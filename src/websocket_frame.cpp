@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
-
+#include "websocketpp.hpp"
 #include "websocket_frame.hpp"
 
 #include "websocket_server.hpp"

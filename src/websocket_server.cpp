@@ -25,6 +25,7 @@
  * 
  */
 
+#include "websocketpp.hpp"
 #include "websocket_server.hpp"
 
 #include <boost/bind.hpp>

@@ -30,6 +30,7 @@
 #ifndef WEBSOCKETPP_HPP
 #define WEBSOCKETPP_HPP
 
+#define __STDC_LIMIT_MACROS 
 #include <stdint.h>
 
 // Defaults
