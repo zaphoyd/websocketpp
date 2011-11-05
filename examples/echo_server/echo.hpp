@@ -27,6 +27,7 @@
 
 #ifndef ECHO_SERVER_HANDLER_HPP
 #define ECHO_SERVER_HANDLER_HPP
+
 #include "../../src/websocketpp.hpp"
 #include "../../src/websocket_connection_handler.hpp"
 #include <boost/shared_ptr.hpp>

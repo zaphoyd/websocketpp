@@ -135,6 +135,8 @@
 		B61387A3145D846400ED9B19 /* boost_rng.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = boost_rng.hpp; path = src/rng/boost_rng.hpp; sourceTree = "<group>"; };
 		B61387A5145D849E00ED9B19 /* constants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = constants.hpp; path = src/http/constants.hpp; sourceTree = "<group>"; };
 		B61387A6145D849E00ED9B19 /* parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = parser.hpp; path = src/http/parser.hpp; sourceTree = "<group>"; };
+		B61387B31462AD4900ED9B19 /* session_handler_interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = session_handler_interface.hpp; path = src/session_handler_interface.hpp; sourceTree = "<group>"; };
+		B61387B61462B35700ED9B19 /* logger.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = logger.hpp; path = src/logger/logger.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -250,6 +252,14 @@
 			name = http;
 			sourceTree = "<group>";
 		};
+		B61387B51462B34400ED9B19 /* logger */ = {
+			isa = PBXGroup;
+			children = (
+				B61387B61462B35700ED9B19 /* logger.hpp */,
+			);
+			name = logger;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -295,6 +305,7 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B61387B51462B34400ED9B19 /* logger */,
 				B61387A4145D847A00ED9B19 /* http */,
 				B6FE8D09145B0F7400B32547 /* rng */,
 				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
@@ -302,6 +313,7 @@
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
 				B6DF1C951434AC470029A1B1 /* websocket_client.hpp */,
+				B61387B31462AD4900ED9B19 /* session_handler_interface.hpp */,
 				B6DF1C961434AC470029A1B1 /* websocket_connection_handler.hpp */,
 				B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */,
 				B6DF1C971434AC470029A1B1 /* websocket_frame.cpp */,

@@ -44,22 +44,25 @@ namespace po = boost::program_options;
 
 #include "rng/blank_rng.hpp"
 
+#include "http/parser.hpp"
+
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
 
 
-
+// TODO: potential policies:
+// - http parser
 template <typename rng_policy = blank_rng>
 class server : public boost::enable_shared_from_this< server<rng_policy> > {
 public:
 	typedef rng_policy rng_t;
 	
-	typedef server<rng_policy> server_type;
-	typedef session<server_type> session_type;
+	typedef server<rng_policy> endpoint_type;
+	typedef session<endpoint_type> session_type;
 	typedef connection_handler<session_type> connection_handler_type;
 	
-	typedef boost::shared_ptr<server_type> ptr;
+	typedef boost::shared_ptr<endpoint_type> ptr;
 	typedef boost::shared_ptr<session_type> session_ptr;
 	typedef boost::shared_ptr<connection_handler_type> connection_handler_ptr;
 	
@@ -93,7 +96,7 @@ public:
 		// TODO: sanity check whether the session buffer size bound could be reduced
 		session_ptr new_session(
 			new session_type(
-				server_type::shared_from_this(),
+				endpoint_type::shared_from_this(),
 				m_io_service,
 				m_def_con_handler,
 				m_max_message_size*2
@@ -103,8 +106,8 @@ public:
 		m_acceptor.async_accept(
 			new_session->socket(),
 			boost::bind(
-				&server_type::handle_accept,
-				server_type::shared_from_this(),
+				&endpoint_type::handle_accept,
+				endpoint_type::shared_from_this(),
 				new_session,
 				boost::asio::placeholders::error
 			)
@@ -202,6 +205,75 @@ public:
 		return m_rng;
 	}
 	
+	// checks a handshake for validity. Returns true if valid and throws a 
+	// handshake_error otherwise
+	bool validate_handshake(const http::parser::request& handshake) {
+		std::stringstream err;
+		std::string h;
+		
+		if (handshake.method() != "GET") {
+			err << "Websocket handshake has invalid method: " 
+			    << handshake.method();
+			
+			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+		}
+		
+		// TODO: allow versions greater than 1.1
+		if (handshake.version() != "HTTP/1.1") {
+			err << "Websocket handshake has invalid HTTP version: " 
+			<< handshake.method();
+			
+			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+		}
+		
+		// verify the presence of required headers
+		h = handshake.header("Host");
+		if (h == "") {
+			throw(handshake_error("Required Host header is missing",http::status_code::BAD_REQUEST));
+		} else if (!this->validate_host(h)) {
+			err << "Host " << h << " is not one of this server's names.";
+			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+		}
+		
+		h = handshake.header("Upgrade");
+		if (h == "") {
+			throw(handshake_error("Required Upgrade header is missing",http::status_code::BAD_REQUEST));
+		} else if (!boost::ifind_first(h,"websocket")) {
+			err << "Upgrade header \"" << h << "\", does not contain required token \"websocket\"";
+			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+		}
+		
+		h = handshake.header("Connection");
+		if (h == "") {
+			throw(handshake_error("Required Connection header is missing",http::status_code::BAD_REQUEST));
+		} else if (!boost::ifind_first(h,"upgrade")) {
+			err << "Connection header, \"" << h 
+			<< "\", does not contain required token \"upgrade\"";
+			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+		}
+		
+		if (handshake.header("Sec-WebSocket-Key") == "") {
+			throw(handshake_error("Required Sec-WebSocket-Key header is missing",http::status_code::BAD_REQUEST));
+		}
+		
+		h = handshake.header("Sec-WebSocket-Version");
+		if (h == "") {
+			// TODO: if we want to support draft 00 this line should set version to 0
+			// rather than bail
+			throw(handshake_error("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
+		} else {
+			int version = atoi(h.c_str());
+			
+			if (version != 7 && version != 8 && version != 13) {
+				err << "This server doesn't support WebSocket protocol version "
+				<< version;
+				throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
+			}
+		}
+		
+		return true;
+	}
+	
 	// Confirms that the port in the host string matches the port we are listening
 	// on. End user application is responsible for checking the /host/ part.
 	bool validate_host(std::string host) {
@@ -251,7 +323,7 @@ private:
 	void handle_accept(session_ptr session,const boost::system::error_code& error) 
 	{
 		if (!error) {
-			session->on_connect();
+			session->read_request();
 		} else {
 			std::stringstream err;
 			err << "Error accepting socket connection: " << error;

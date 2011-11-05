@@ -23,8 +23,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * This Makefile was derived from a similar one included in the libjson project
- * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
 
 #ifndef HTTP_CONSTANTS_HPP
@@ -36,6 +34,7 @@ namespace http {
 		enum value {
 			CONTINUE = 100,
 			SWITCHING_PROTOCOLS = 101,
+			
 			OK = 200,
 			CREATED = 201,
 			ACCEPTED = 202,
@@ -43,6 +42,7 @@ namespace http {
 			NO_CONTENT = 204,
 			RESET_CONTENT = 205,
 			PARTIAL_CONTENT = 206,
+			
 			MULTIPLE_CHOICES = 300,
 			MOVED_PERMANENTLY = 301,
 			FOUND = 302,
@@ -50,6 +50,7 @@ namespace http {
 			NOT_MODIFIED = 304,
 			USE_PROXY = 305,
 			TEMPORARY_REDIRECT = 307,
+			
 			BAD_REQUEST = 400,
 			UNAUTHORIZED = 401,
 			PAYMENT_REQUIRED = 402,
@@ -68,9 +69,7 @@ namespace http {
 			UNSUPPORTED_MEDIA_TYPE = 415,
 			REQUEST_RANGE_NOT_SATISFIABLE = 416,
 			EXPECTATION_FAILED = 417,
-			
 			IM_A_TEAPOT = 418,
-			
 			UPGRADE_REQUIRED = 426,
 			PRECONDITION_REQUIRED = 428,
 			TOO_MANY_REQUESTS = 429,
@@ -82,7 +81,6 @@ namespace http {
 			SERVICE_UNAVAILABLE = 503,
 			GATEWAY_TIMEOUT = 504,
 			HTTP_VERSION_NOT_SUPPORTED = 505,
-			
 			NOT_EXTENDED = 510,
 			NETWORK_AUTHENTICATION_REQUIRED = 511
 		};

@@ -23,8 +23,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * This Makefile was derived from a similar one included in the libjson project
- * It's authors were Jonathan Wallace and Bernhard Fluehmann.
  */
 
 #ifndef WEBSOCKET_CONSTANTS_HPP

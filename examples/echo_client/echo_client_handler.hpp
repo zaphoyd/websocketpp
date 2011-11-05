@@ -47,8 +47,6 @@
 #include <string>
 #include <queue>
 
-using websocketpp::session_ptr;
-
 namespace websocketecho {
 
 class echo_client_handler : public websocketpp::connection_handler {

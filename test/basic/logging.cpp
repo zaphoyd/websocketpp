@@ -25,17 +25,16 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_HPP
-#define WEBSOCKETPP_HPP
+#include "../../src/logger/logger.hpp"
 
-#include <stdint.h>
+int main () {
+	websocketpp::log::logger<websocketpp::log::elog_level::value> log;
+	
+	log.set_level(websocketpp::log::elog_level::ALL);
+	log.at(websocketpp::log::elog_level::DEBUG) << "debug: " << 5 << websocketpp::log::endl;
+	log.at(websocketpp::log::elog_level::INFO) << "info: " << 5 << websocketpp::log::endl;
+	log.at(websocketpp::log::elog_level::WARN) << "warn: " << 5 << websocketpp::log::endl;
+	log.at(websocketpp::log::elog_level::ERROR) << "error: " << 5 << websocketpp::log::endl;
+	log.at(websocketpp::log::elog_level::FATAL) << "fatal: " << 5 << websocketpp::log::endl;
 
-#include "websocket_constants.hpp"
-
-//#include "websocket_session.hpp"
-//#include "websocket_server_session.hpp"
-//#include "websocket_client_session.hpp"
-#include "websocket_server.hpp"
-//#include "websocket_client.hpp"
-
-#endif // WEBSOCKETPP_HPP
+}

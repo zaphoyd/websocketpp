@@ -25,17 +25,25 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_HPP
-#define WEBSOCKETPP_HPP
+#ifndef WEBSOCKETPP_SESSION_HANDLER_INTERFACE_HPP
+#define WEBSOCKETPP_SESSION_HANDLER_INTERFACE_HPP
 
-#include <stdint.h>
+#include <boost/shared_ptr.hpp>
 
-#include "websocket_constants.hpp"
+#include <string>
+#include <map>
 
-//#include "websocket_session.hpp"
-//#include "websocket_server_session.hpp"
-//#include "websocket_client_session.hpp"
-#include "websocket_server.hpp"
-//#include "websocket_client.hpp"
+namespace websocketpp {
+namespace session {
 
-#endif // WEBSOCKETPP_HPP
+
+
+class session_handler_interface {
+public:
+	
+};
+
+
+}
+}
+#endif // WEBSOCKETPP_SESSION_HANDLER_INTERFACE_HPP
