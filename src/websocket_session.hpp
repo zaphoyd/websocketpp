@@ -202,6 +202,7 @@ namespace websocketpp {
 #include "utf8_validator/utf8_validator.hpp"
 
 #include "http/parser.hpp"
+#include "logger/logger.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -383,7 +384,10 @@ public:
 	// or the empty string if no subprotocol was requested.
 	const std::string& get_subprotocol() const {
 		if (m_state == state::CONNECTING) {
-			log("Subprotocol is not avaliable before the handshake has completed.",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::LIBRARY) 
+			    << "Subprotocol is not avaliable before the handshake has completed" 
+				<< log::endl;
+			
 			// TODO: fix server_error
 			//throw server_error("Subprotocol is not avaliable before the handshake has completed.");
 			throw "Subprotocol is not avaliable before the handshake has completed";
@@ -410,54 +414,15 @@ public:
 		return m_version;
 	}
 	
-	
-	/**** TODO: SERVER SPECIFIC ****/
-	/* 
-	void set_header(const std::string &key,const std::string &val) {
-		// TODO: prevent use of reserved headers;
-		m_server_headers[key] = val;
-	}
-	
-	void select_subprotocol(const std::string& val) {
-		std::vector<std::string>::iterator it;
-		
-		it = std::find(m_client_subprotocols.begin(),
-					   m_client_subprotocols.end(),
-					   val);
-		
-		if (val != "" && it == m_client_subprotocols.end()) {
-			throw server_error("Attempted to choose a subprotocol not proposed by the client");
-		}
-		
-		m_server_subprotocol = val;
-	}
-	
-	void select_extension(const std::string& val) {
-		if (val == "") {
-			return;
-		}
-		
-		std::vector<std::string>::iterator it;
-		
-		it = std::find(m_client_extensions.begin(),
-					   m_client_extensions.end(),
-					   val);
-		
-		if (it == m_client_extensions.end()) {
-			throw server_error("Attempted to choose an extension not proposed by the client");
-		}
-		
-		m_server_extensions.push_back(val);
-	}*/
-	
-	/********/
-	
 	/*** SESSION INTERFACE ***/
 	
 	// send basic frame types
 	void send(const std::string &msg) {
 		if (m_state != state::OPEN) {
-			log("Tried to send a message from a session that wasn't open",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::WARN) 
+			    << "Tried to send a message from a session that wasn't open" 
+			    << log::endl;
+			
 			return;
 		}
 		m_write_frame.set_fin(true);
@@ -469,7 +434,9 @@ public:
 	
 	void send(const std::vector<unsigned char> &data) {
 		if (m_state != state::OPEN) {
-			log("Tried to send a message from a session that wasn't open",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::WARN) 
+			    << "Tried to send a message from a session that wasn't open" 
+			    << log::endl;
 			return;
 		}
 		m_write_frame.set_fin(true);
@@ -480,7 +447,9 @@ public:
 	}
 	void ping(const std::string &msg) {
 		if (m_state != state::OPEN) {
-			log("Tried to send a ping from a session that wasn't open",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::WARN) 
+			    << "Tried to send a ping from a session that wasn't open" 
+			    << log::endl;
 			return;
 		}
 		m_write_frame.set_fin(true);
@@ -491,7 +460,9 @@ public:
 	}
 	void pong(const std::string &msg) {
 		if (m_state != state::OPEN) {
-			log("Tried to send a pong from a session that wasn't open",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::WARN) 
+			    << "Tried to send a pong from a session that wasn't open" 
+			    << log::endl;
 			return;
 		}
 		m_write_frame.set_fin(true);
@@ -574,7 +545,7 @@ public:
 			}
 			
 			// Log the raw handshake.
-			access_log(m_request.raw(),ALOG_HANDSHAKE);
+			m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
 			
 			// confirm that this is a valid handshake / response for our endpoint type.
 			m_endpoint->validate_handshake(m_request);
@@ -604,124 +575,15 @@ public:
 			// TODO: add a hook here for passing the request to the local handler
 			//       in case they can answer it instead of returning an error.
 			
-			std::stringstream err;
-			err << "Caught handshake exception: " << e.what();
+			m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) << e.what() << log::endl;
 			
-			access_log(e.what(),ALOG_HANDSHAKE);
-			log(err.str(),LOG_ERROR);
+			m_endpoint->elog().at(log::elevel::ERROR) 
+			    << "Caught handshake exception: " << e.what() << log::endl;
 			
 			m_response.set_status(e.m_http_error_code,e.m_http_error_msg);
 		}
 		
 		write_response();
-		
-		/* legacy code here until I am sure I wont need any of it */
-		
-		/*std::vector<std::string> tokens;
-		std::string::size_type start = 0;
-		std::string::size_type end;
-		
-		// Get request and parse headers
-		end = m_raw_client_handshake.find("\r\n",start);
-		
-		while(end != std::string::npos) {
-			tokens.push_back(m_raw_client_handshake.substr(start, end - start));
-			
-			start = end + 2;
-			
-			end = m_raw_client_handshake.find("\r\n",start);
-		}
-		
-		for (size_t i = 0; i < tokens.size(); i++) {
-			if (i == 0) {
-				m_client_http_request = tokens[i];
-			}
-			
-			end = tokens[i].find(": ",0);
-			
-			if (end != std::string::npos) {
-				std::string h = tokens[i].substr(0,end);
-				
-				if (get_client_header(h) == "") {
-					m_client_headers[h] = tokens[i].substr(end+2);
-				} else {
-					m_client_headers[h] += ", " + tokens[i].substr(end+2);
-				}
-			}
-		}*/
-		
-		
-		
-		// handshake error checking
-		/*try {
-			std::stringstream err;
-			std::string h;
-			
-			
-			h = get_client_header("Upgrade");
-			if (h == "") {
-				throw(handshake_error("Required Upgrade header is missing",400));
-			} else if (!boost::iequals(h,"websocket")) {
-				err << "Upgrade header was " << h << " instead of \"websocket\"";
-				throw(handshake_error(err.str(),400));
-			}
-			
-			h = get_client_header("Connection");
-			if (h == "") {
-				throw(handshake_error("Required Connection header is missing",400));
-			} else if (!boost::ifind_first(h,"upgrade")) {
-				err << "Connection header, \"" << h 
-				<< "\", does not contain required token \"upgrade\"";
-				throw(handshake_error(err.str(),400));
-			}
-			
-			if (get_client_header("Sec-WebSocket-Key") == "") {
-				throw(handshake_error("Required Sec-WebSocket-Key header is missing",400));
-			}
-			
-			h = get_client_header("Sec-WebSocket-Version");
-			if (h == "") {
-				throw(handshake_error("Required Sec-WebSocket-Version header is missing",400));
-			} else {
-				m_version = atoi(h.c_str());
-				
-				if (m_version != 7 && m_version != 8 && m_version != 13) {
-					err << "This server doesn't support WebSocket protocol version "
-					<< m_version;
-					throw(handshake_error(err.str(),400));
-				}
-			}
-			
-			if (m_version < 13) {
-				h = get_client_header("Sec-WebSocket-Origin");
-			} else {
-				h = get_client_header("Origin");
-			}
-			
-			if (h != "") {
-				m_client_origin = h;
-			}
-			
-			// TODO: extract subprotocols
-			// TODO: extract extensions
-			
-			// optional headers (delegated to the local interface)
-			if (m_local_interface) {
-				m_local_interface->validate(session_type::shared_from_this());
-			}
-			
-			m_server_http_code = 101;
-			m_server_http_string = "Switching Protocols";
-		} catch (const handshake_error& e) {
-			std::stringstream err;
-			err << "Caught handshake exception: " << e.what();
-			
-			access_log(e.what(),ALOG_HANDSHAKE);
-			log(err.str(),LOG_ERROR);
-			
-			m_server_http_code = e.m_http_error_code;
-			m_server_http_string = e.m_http_error_msg;
-		}*/
 	}
 	
 	// write the response to the client's request.
@@ -756,7 +618,9 @@ public:
 				m_response.set_header("Upgrade","websocket");
 				m_response.set_header("Connection","Upgrade");
 			} else {
-				log("Error computing handshake sha1 hash.",LOG_ERROR);
+				m_endpoint->elog().at(log::elevel::ERROR) 
+			        << "Error computing handshake sha1 hash" << log::endl;
+				
 				m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
 			}
 		}
@@ -771,7 +635,8 @@ public:
 		// TODO: make this configurable
 		m_response.replace_header("Server","WebSocket++/2011-10-31");
 		
-		access_log(m_response.raw(),ALOG_HANDSHAKE);
+		m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) 
+		    << m_response.raw() << log::endl;
 		
 		// start async write to handle_write_handshake
 		boost::asio::async_write(
@@ -796,10 +661,11 @@ public:
 		log_open_result();
 		
 		if (m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
-			std::stringstream err;
-			err << "Handshake ended with HTTP error: " << m_response.status_code() 
-			    << " " << m_response.status_code();
-			log(err.str(),LOG_ERROR);
+			m_endpoint->elog().at(log::elevel::ERROR) 
+			    << "Handshake ended with HTTP error: " 
+			    << m_response.status_code() << " " << m_response.status_msg() 
+			    << log::endl;
+			
 			drop_tcp();
 			// TODO: tell client that connection failed?
 			// use on_fail?
@@ -851,21 +717,16 @@ public:
 		std::string client_key;
 		int32_t raw_key[4];
 		
-		/*boost::random::random_device rng;
-		boost::random::variate_generator<boost::random::random_device&, boost::random::uniform_int_distribution<> > gen(rng, boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX));*/
-		
 		for (int i = 0; i < 4; i++) {
 			raw_key[i] = m_endpoint->get_rng().gen();
 		}
 		
 		client_key = base64_encode(reinterpret_cast<unsigned char const*>(raw_key), 16);
 		
-		access_log("Client key chosen: "+client_key, ALOG_HANDSHAKE);
+		m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) 
+		    << "Client key chosen: " << client_key << log::endl;
 		
 		m_request.replace_header("Sec-WebSocket-Key",client_key);
-		
-		
-		
 		m_request.replace_header("User Agent","WebSocket++/2011-10-31");
 		
 		// start async write to write the request
@@ -918,7 +779,8 @@ public:
 	// itself as the callback. The connection is over when this method returns.
 	void handle_read_frame (const boost::system::error_code& error) {
 		if (m_state != state::OPEN && m_state != state::CLOSING) {
-			log("handle_read_frame called in invalid state",LOG_ERROR);
+			m_endpoint->elog().at(log::elevel::ERROR) 
+			    << "handle_read_frame called in invalid state" << log::endl;
 			return;
 		}
 		
@@ -952,7 +814,6 @@ public:
 				// Consume will read bytes from s
 				// will throw a frame_error on error.
 				
-				std::stringstream err;
 				
 				//err << "consuming. have: " << m_buf.size() << " bytes. Need: " << m_read_frame.get_bytes_needed() << " state: " << (int)m_read_frame.get_state();
 				//log(err.str(),LOG_DEBUG);
@@ -966,18 +827,15 @@ public:
 					// process frame and reset frame state for the next frame.
 					// will throw a frame_error on error. May set m_state to CLOSED,
 					// if so no more frames should be processed.
-					err.str("");
-					err << "processing frame " << m_buf.size();
-					log(err.str(),LOG_DEBUG);
+					m_endpoint->elog().at(log::elevel::DEVEL) 
+					    << "processing frame " << m_buf.size() << log::endl;
+					
 					m_timer.cancel();
 					process_frame();
 				}
 			} catch (const frame::exception& e) {
-				std::stringstream err;
-				err << "Caught frame exception: " << e.what();
-				
-				access_log(e.what(),ALOG_FRAME);
-				log(err.str(),LOG_ERROR);
+				m_endpoint->elog().at(log::elevel::ERROR) 
+			        << "Caught frame exception: " << e.what() << log::endl;
 				
 				// if the exception happened while processing.
 				// TODO: this is not elegant, perhaps separate frame read vs process
@@ -999,7 +857,9 @@ public:
 					continue;
 				} else {
 					// Fatal error, forcibly end connection immediately.
-					log("Dropping TCP due to unrecoverable exception",LOG_DEBUG);
+					m_endpoint->elog().at(log::elevel::DEVEL) 
+					    << "Dropping TCP due to unrecoverable exception" 
+					    << log::endl;
 					drop_tcp(true);
 				}
 				
@@ -1014,10 +874,10 @@ public:
 		// we have read everything, check if we should read more
 		
 		if ((m_state == state::OPEN || m_state == state::CLOSING) && m_read_frame.get_bytes_needed() > 0) {
-			std::stringstream msg;
-			msg << "starting async read for " << m_read_frame.get_bytes_needed() << " bytes.";
+			m_endpoint->elog().at(log::elevel::DEVEL) 
+			    << "Starting async read for " << m_read_frame.get_bytes_needed() 
+			    << " bytes" << log::endl;
 			
-			log(msg.str(),LOG_DEBUG);
 			
 			// TODO: set a timer here in case we don't want to read forever. 
 			// Ex: when the frame is in a degraded state.
@@ -1042,7 +902,8 @@ public:
 			
 			m_timer.cancel();
 		} else {
-			log("handle_read_frame called in invalid state",LOG_ERROR);
+			m_endpoint->elog().at(log::elevel::ERROR) 
+			    << "handle_read_frame ended in an invalid state" << log::endl;
 		}
 	}
 	
@@ -1066,7 +927,8 @@ public:
 			boost::asio::buffer(m_write_frame.get_payload())
 		);
 		
-		log("Write Frame: "+m_write_frame.print_frame(),LOG_DEBUG);
+		m_endpoint->elog().at(log::elevel::DEVEL) 
+		    << "Write Frame: " << m_write_frame.print_frame() << log::endl;
 		
 		m_writing = true;
 		
@@ -1087,49 +949,54 @@ public:
 			drop_tcp(false);
 		}
 		
-		access_log("handle_write_frame complete",ALOG_FRAME);
 		m_writing = false;
 	}
 	
 	void handle_timer_expired(const boost::system::error_code& error) {
 		if (error) {
 			if (error == boost::asio::error::operation_aborted) {
-				log("timer was aborted",LOG_DEBUG);
-				//drop_tcp(false);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "timer was aborted" << log::endl;
 			} else {
-				log("timer ended with error",LOG_DEBUG);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "timer ended with error" << log::endl;
 			}
 			return;
 		}
 		
-		log("timer ended without error",LOG_DEBUG);
+		m_endpoint->elog().at(log::elevel::DEVEL) 
+		    << "timer ended without error" << log::endl;
 	}
 	void handle_handshake_expired(const boost::system::error_code& error) {
 		if (error) {
 			if (error != boost::asio::error::operation_aborted) {
-				log("Unexpected handshake timer error.",LOG_DEBUG);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "unexpected handshake timer error" << log::endl;
 				drop_tcp(true);
 			}
 			return;
 		}
 		
-		log("Handshake timed out",LOG_DEBUG);
+		m_endpoint->elog().at(log::elevel::DEVEL) 
+		    << "Handshake timed out" << log::endl;
 		drop_tcp(true);
 	}
 	void handle_close_expired(const boost::system::error_code& error) {
 		if (error) {
 			if (error == boost::asio::error::operation_aborted) {
-				log("timer was aborted",LOG_DEBUG);
-				//drop_tcp(false);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "timer was aborted" << log::endl;
 			} else {
-				log("Unexpected close timer error.",LOG_DEBUG);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "Unexpected close timer error" << log::endl;
 				drop_tcp(false);
 			}
 			return;
 		}
 		
 		if (m_state != state::CLOSED) {
-			log("close timed out",LOG_DEBUG);
+			m_endpoint->elog().at(log::elevel::DEVEL) 
+			    << "close timed out" << log::endl;
 			drop_tcp(false);
 		}
 	}
@@ -1141,23 +1008,23 @@ public:
 	void handle_error_timer_expired (const boost::system::error_code& error) {
 		if (error) {
 			if (error == boost::asio::error::operation_aborted) {
-				log("error timer was aborted",LOG_DEBUG);
-				//drop_tcp(false);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "error timer was aborted" << log::endl;
 			} else {
-				log("error timer ended with error",LOG_DEBUG);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "error timer ended with error" << log::endl;
 				drop_tcp(true);
 			}
 			return;
 		}
 		
-		log("error timer ended without error",LOG_DEBUG);
+		m_endpoint->elog().at(log::elevel::DEVEL) 
+		    << "error timer ended without error" << log::endl;
 		drop_tcp(true);
 	}
 	
 	// helper functions for processing each opcode
 	void process_frame() {
-		log("process_frame",LOG_DEBUG);
-		
 		if (m_state == state::OPEN) {
 			switch (m_read_frame.get_opcode()) {
 				case frame::opcode::CONTINUATION:
@@ -1170,7 +1037,6 @@ public:
 					process_binary();
 					break;
 				case frame::opcode::CLOSE:
-					log("process_close",LOG_DEBUG);
 					process_close();
 					break;
 				case frame::opcode::PING:
@@ -1189,7 +1055,8 @@ public:
 				process_close();
 			} else {
 				// Ignore all other frames in closing state
-				log("ignoring this frame",LOG_DEBUG);
+				m_endpoint->elog().at(log::elevel::DEVEL) 
+			        << "ignoring this frame" << log::endl;
 			}
 		} else {
 			// Recieved message before or after connection was opened/closed
@@ -1199,7 +1066,8 @@ public:
 		m_read_frame.reset();
 	}
 	void process_ping() {
-		access_log("Ping",ALOG_MISC_CONTROL);
+		m_endpoint->alog().at(log::alevel::CONTROL) 
+		    << "Recieved Ping Frame" << log::endl;
 		// TODO: on_ping
 		
 		// send pong
@@ -1210,7 +1078,8 @@ public:
 		write_frame();
 	}
 	void process_pong() {
-		access_log("Pong",ALOG_MISC_CONTROL);
+		m_endpoint->alog().at(log::alevel::CONTROL) 
+		    << "Recieved Pong Frame" << log::endl;
 		// TODO: on_pong
 	}
 	void process_text() {
@@ -1258,7 +1127,8 @@ public:
 		m_remote_close_msg = m_read_frame.get_close_msg();
 		
 		if (m_state == state::OPEN) {
-			log("process_close sending ack",LOG_DEBUG);
+			m_endpoint->elog().at(log::elevel::DEVEL) 
+			    << "process_close sending ack" << log::endl;
 			// This is the case where the remote initiated the close.
 			m_closed_by_me = false;
 			// send acknowledgement
@@ -1270,7 +1140,8 @@ public:
 			
 			send_close(m_remote_close_code,m_remote_close_msg);
 		} else if (m_state == state::CLOSING) {
-			log("process_close got ack",LOG_DEBUG);
+			m_endpoint->elog().at(log::elevel::DEVEL) 
+			    << "process_close got ack" << log::endl;
 			// this is an ack of our close message
 			m_closed_by_me = true;
 		} else {
@@ -1345,44 +1216,26 @@ public:
 	}
 	
 	// logging
-	// TODO: endpoint specific
-	void log(const std::string& msg, uint16_t level) const {
-		m_endpoint->log(msg,level);
-	}
-	void access_log(const std::string& msg, uint16_t level) const {
-		m_endpoint->access_log(msg,level);
-	}
-	
 	void log_close_result() {
-		std::stringstream msg;
-		
-		msg << "[Connection " << this << "] "
-		<< (m_was_clean ? "Clean " : "Unclean ")
-		<< "close local:[" << m_local_close_code
-		<< (m_local_close_msg == "" ? "" : ","+m_local_close_msg) 
-		<< "] remote:[" << m_remote_close_code 
-		<< (m_remote_close_msg == "" ? "" : ","+m_remote_close_msg) << "]";
-		
-		access_log(msg.str(),ALOG_DISCONNECT);
+		m_endpoint->alog().at(log::alevel::DISCONNECT) 
+		    << "Disconnect " << (m_was_clean ? "Clean" : "Unclean")
+		    << " close local:[" << m_local_close_code
+		    << (m_local_close_msg == "" ? "" : ","+m_local_close_msg) 
+		    << "] remote:[" << m_remote_close_code 
+		    << (m_remote_close_msg == "" ? "" : ","+m_remote_close_msg) << "]"
+		    << log::endl;
 	}
 	void log_open_result() {
-		std::stringstream msg;
-		
-		msg << "[Connection " << this << "] "
-	    << m_socket.remote_endpoint()
-	    << " v" << m_version << " "
-	    << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
-	    << " " << m_uri.resource << " " << m_response.status_code();
-		
-		access_log(msg.str(),ALOG_HANDSHAKE);
+		m_endpoint->alog().at(log::alevel::CONNECT) << "Connection "
+	        << m_socket.remote_endpoint() << " v" << m_version << " "
+	        << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+	        << " " << m_uri.resource << " " << m_response.status_code() 
+		    << log::endl;
 	}
 	// this is called when an async asio call encounters an error
 	void log_error(std::string msg,const boost::system::error_code& e) {
-		std::stringstream err;
-		
-		err << "[Connection " << this << "] " << msg << " (" << e << ")";
-		
-		log(err.str(),LOG_ERROR);
+		m_endpoint->elog().at(log::elevel::ERROR) 
+		    << msg << "(" << e << ")" << log::endl;
 	}
 	
 	// misc helpers
@@ -1402,7 +1255,8 @@ public:
 	
 	void send_close(close::status::value status,const std::string& reason) {
 		if (m_state != state::OPEN) {
-			log("Tried to disconnect a session that wasn't open",LOG_WARN);
+			m_endpoint->elog().at(log::elevel::WARN) 
+		        << "Tried to disconnect a session that wasn't open" << log::endl;
 			return;
 		}
 		

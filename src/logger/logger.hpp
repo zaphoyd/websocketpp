@@ -31,10 +31,12 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace websocketpp {
 namespace log {
 
-namespace alog_level {
+namespace alevel {
 	typedef uint16_t value;
 	
 	static const value OFF = 0x0;
@@ -57,17 +59,22 @@ namespace alog_level {
 	// Adds payloads to message logs. Note these can be long!
 	static const value MESSAGE_PAYLOAD = 0x80;
 	
+	
+	// DEBUG values
+	static const value DEBUG_HANDSHAKE = 0x8000;
+	
 	static const value ALL = 0xFFFF;
 }	
 
-namespace elog_level {
+namespace elevel {
 	typedef uint16_t value;
 	
 	static const value OFF = 0x0;
 	
-	static const value DEBUG = 0x1;
-	static const value INFO = 0x2;
-	static const value WARN = 0x4;
+	static const value DEVEL = 0x1;		// debugging
+	static const value LIBRARY = 0x2;	// library usage exceptions
+	static const value INFO = 0x4;
+	static const value WARN = 0x8;
 	static const value ERROR = 0x10;
 	static const value FATAL = 0x20;
 	
@@ -77,30 +84,17 @@ namespace elog_level {
 template <typename level_type>
 class logger {
 public:
-	
-
-	//template <typename T>
-	//logger& operator<<(T a);
-	
 	template <typename T>
 	logger<level_type>& operator<<(T a) {
 		if (test_level(m_write_level)) {
-			oss << a;
+			m_oss << a;
 		}
 		return *this;
 	}
 	
-	logger<level_type>& operator<<(logger<level_type>& (*f)(logger<level_type>& out)) {
+	logger<level_type>& operator<<(logger<level_type>& (*f)(logger<level_type>&)) {
 		return f(*this);
 	}
-	
-	/*
-	logger& operator<<(endl) {
-		std::cout << "fff" << oss.str() << std::endl;
-		oss.str("");
-		
-		return *this;
-	}*/
 	
 	bool test_level(level_type l) {
 		return (m_level & l) != 0;
@@ -110,14 +104,34 @@ public:
 		m_level |= l;
 	}
 	
+	void set_levels(level_type l1, level_type l2) {
+		level_type i = l1;
+		
+		while (i <= l2) {
+			set_level(i);
+			i *= 2;
+		}
+	}
+	
 	void unset_level(level_type l) {
 		m_level &= ~l;
 	}
 	
+	void set_prefix(const std::string& prefix) {
+		if (prefix == "") {
+			m_prefix = prefix;
+		} else {
+			m_prefix = prefix + " ";
+		}
+	}
+	
 	logger<level_type>& print() {
 		if (test_level(m_write_level)) {
-			std::cout << "[timestamp] " << oss.str() << std::endl;
-			oss.str("");
+			std::cout << m_prefix << 
+			    boost::posix_time::to_iso_extended_string(
+			        boost::posix_time::second_clock::local_time()
+			    ) << " " << m_oss.str() << std::endl;
+			m_oss.str("");
 		}
 		
 		return *this;
@@ -128,9 +142,10 @@ public:
 		return *this;
 	}
 private:
-	std::ostringstream oss;
+	std::ostringstream m_oss;
 	level_type m_write_level;
 	level_type m_level;
+	std::string m_prefix;
 };
 
 template <typename level_type>

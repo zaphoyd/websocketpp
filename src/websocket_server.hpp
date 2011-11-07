@@ -45,15 +45,16 @@ namespace po = boost::program_options;
 #include "rng/blank_rng.hpp"
 
 #include "http/parser.hpp"
+#include "logger/logger.hpp"
 
-using boost::asio::ip::tcp;
+using boost::asio ::ip::tcp;
 
 namespace websocketpp {
 
 
 // TODO: potential policies:
 // - http parser
-template <typename rng_policy = blank_rng>
+template <typename rng_policy = blank_rng, template <class> class logger_type = log::logger>
 class server : public boost::enable_shared_from_this< server<rng_policy> > {
 public:
 	typedef rng_policy rng_t;
@@ -68,9 +69,7 @@ public:
 	
 	server<rng_policy>(boost::asio::io_service& io_service, 
 		   const tcp::endpoint& endpoint) 
-	: m_elog_level(LOG_ALL),
-	  m_alog_level(ALOG_ALL),
-	  m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
+	: m_max_message_size(DEFAULT_MAX_MESSAGE_SIZE),
 	  m_io_service(io_service), 
 	  m_acceptor(io_service, endpoint), 
 	  m_desc("websocketpp::server") 
@@ -122,57 +121,16 @@ public:
 	// INTERFACE FOR LOCAL APPLICATIONS
 	void set_max_message_size(uint64_t val) {
 		if (val > frame::limits::PAYLOAD_SIZE_JUMBO) {
-			std::stringstream err;
-			err << "Invalid maximum message size: " << val;
-			
 			// TODO: Figure out what the ideal error behavior for this method.
 			// Options:
 			//   Throw exception
 			//   Log error and set value to maximum allowed
 			//   Log error and leave value at whatever it was before
-			log(err.str(),LOG_WARN);
+			elog().at(log::elevel::WARN) << "Invalid maximum message size: " 
+			                          << val << log::endl;
 			//throw server_error(err.str());
 		}
 		m_max_message_size = val;
-	}
-	
-	// Test methods determine if a message of the given level should be 
-	// written. elog shows all values above the level set. alog shows only
-	// the values explicitly set.
-	bool test_elog_level(uint16_t level) {
-		return (level >= m_elog_level);
-	}
-	void set_elog_level(uint16_t level) {
-		std::stringstream msg;
-		msg << "Error logging level changing from " 
-	    << m_elog_level << " to " << level;
-		log(msg.str(),LOG_INFO);
-		
-		m_elog_level = level;
-	}
-	
-	bool test_alog_level(uint16_t level) {
-		return ((level & m_alog_level) != 0);
-	}
-	void set_alog_level(uint16_t level) {
-		if (test_alog_level(level)) {
-			return;
-		}
-		std::stringstream msg;
-		msg << "Access logging level " << level << " being set"; 
-		access_log(msg.str(),ALOG_INFO);
-		
-		m_alog_level |= level;
-	}
-	void unset_alog_level(uint16_t level) {
-		if (!test_alog_level(level)) {
-			return;
-		}
-		std::stringstream msg;
-		msg << "Access logging level " << level << " being unset"; 
-		access_log(msg.str(),ALOG_INFO);
-		
-		m_alog_level &= ~level;
 	}
 	
 	void parse_command_line(int ac, char* av[]) {
@@ -298,25 +256,14 @@ public:
 		return true;
 	}
 	
-	// write to the server's logs
-	void log(std::string msg,uint16_t level = LOG_ERROR) {
-		if (!test_elog_level(level)) {
-			return;
-		}
-		std::cerr << "[Error Log] "
-		<< boost::posix_time::to_iso_extended_string(
-													 boost::posix_time::second_clock::local_time())
-		<< " " << msg << std::endl;
+	logger_type<log::alevel::value>& alog() {
+		return m_alog;
 	}
-	void access_log(std::string msg,uint16_t level) {
-		if (!test_alog_level(level)) {
-			return;
-		}
-		std::cout << "[Access Log] " 
-		<< boost::posix_time::to_iso_extended_string(
-													 boost::posix_time::second_clock::local_time())
-		<< " " << msg << std::endl;
+	
+	logger_type<log::elevel::value>& elog() {
+		return m_elog;
 	}
+	
 private:
 	// if no errors starts the session's read loop and returns to the
 	// start_accept phase.
@@ -328,7 +275,7 @@ private:
 			std::stringstream err;
 			err << "Error accepting socket connection: " << error;
 			
-			log(err.str(),LOG_ERROR);
+			elog().at(log::elevel::ERROR) << err.str() << log::endl;
 			throw server_error(err.str());
 		}
 		
@@ -336,8 +283,8 @@ private:
 	}
 	
 private:
-	uint16_t					m_elog_level;
-	uint16_t					m_alog_level;
+	logger_type<log::alevel::value>	m_alog;
+	logger_type<log::elevel::value> m_elog;
 	
 	std::vector<session_ptr>	m_sessions;
 	

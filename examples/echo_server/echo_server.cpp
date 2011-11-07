@@ -67,6 +67,11 @@ int main(int argc, char* argv[]) {
 		
 		s->set_default_connection_handler(handler);
 		
+		s->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
+		
+		s->alog().set_level(websocketpp::log::alevel::CONNECT);
+		s->alog().set_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
+		
 		//server->parse_command_line(argc, argv);
 		
 		// setup server settings
