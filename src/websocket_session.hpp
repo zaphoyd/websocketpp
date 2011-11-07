@@ -561,6 +561,35 @@ public:
 			
 			m_origin = m_request.header(h);
 			
+			// TODO: how does a server know if it is secure or not?
+			// set m_uri based on client host header
+			// TODO: what if uri is a full uri?
+			m_uri.secure = false;
+			m_uri.host = "localhost";
+			m_uri.port = 9002;
+			m_uri.resource = m_request.uri();
+			
+			h = m_request.header("Sec-WebSocket-Version");
+			
+			// TODO: the generic consume API will handle this better.
+			// if we have determined that this is trying to be a websocket 
+			// connection for hybi-00 read the key after the HTTP request.
+			if (m_version == 0) {
+				char foo[9];
+				foo[8] = 0;
+				
+				request.get(foo,9);
+				
+				if (request.gcount() != 8) {
+					
+					std::cout << "gcount: " << request.gcount() << " foo: " << foo << std::endl;
+					
+					throw handshake_error("Missing Key3",http::status_code::BAD_REQUEST);
+				}
+				
+				m_request.set_header("Sec-WebSocket-Key3",std::string(foo));
+			}
+			
 			// TODO: extract subprotocols?
 			// TODO: extract extensions?
 			
@@ -592,36 +621,74 @@ public:
 		
 		m_response.set_version("HTTP/1.1");
 		
+		char digest[17];
+		
 		if (m_response.status_code() == http::status_code::SWITCHING_PROTOCOLS) {
-			std::string server_key = m_request.header("Sec-WebSocket-Key");
-			server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-			
-			SHA1		sha;
-			uint32_t	message_digest[5];
-			
-			sha.Reset();
-			sha << server_key.c_str();
-			
-			if (sha.Result(message_digest)){
-				// convert sha1 hash bytes to network byte order because this sha1
-				//  library works on ints rather than bytes
-				for (int i = 0; i < 5; i++) {
-					message_digest[i] = htonl(message_digest[i]);
-				}
+			if (m_version == 0) {
+				char key_final[16];
 				
-				server_key = base64_encode(
-					reinterpret_cast<const unsigned char*>(message_digest),20
-				);
+				// key1
+				*reinterpret_cast<uint32_t*>(&key_final[0]) = decode_hybi_00_client_key(
+				        m_request.header("Sec-WebSocket-Key2"));
 				
-				// set handshake accept headers
-				m_response.replace_header("Sec-WebSocket-Accept",server_key);
+				// key2
+				*reinterpret_cast<uint32_t*>(&key_final[4]) = decode_hybi_00_client_key(
+						m_request.header("Sec-WebSocket-Key2"));
+				
+				// key3
+				memcpy(&key_final[8],
+					   m_request.header("Sec-WebSocket-Key3").c_str(),
+					   8);
+				
+				// md5
+				md5_hash_string(key_final,digest);
+				digest[16] = 0;
+				
 				m_response.set_header("Upgrade","websocket");
 				m_response.set_header("Connection","Upgrade");
-			} else {
-				m_endpoint->elog().at(log::elevel::ERROR) 
-			        << "Error computing handshake sha1 hash" << log::endl;
 				
-				m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+				// Echo back client's origin unless our local application set a
+				// more restrictive one.
+				if (m_response.header("Sec-WebSocket-Origin") == "") {
+					m_response.set_header("Sec-WebSocket-Origin",m_request.header("Origin"));
+				}
+				
+				// Echo back the client's request host unless our local application
+				// set a different one.
+				if (m_response.header("Sec-WebSocket-Location") == "") {
+					m_response.set_header("Sec-WebSocket-Location",m_uri.base());
+				}
+			} else {
+				std::string server_key = m_request.header("Sec-WebSocket-Key");
+				server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+				
+				SHA1		sha;
+				uint32_t	message_digest[5];
+				
+				sha.Reset();
+				sha << server_key.c_str();
+				
+				if (sha.Result(message_digest)){
+					// convert sha1 hash bytes to network byte order because this sha1
+					//  library works on ints rather than bytes
+					for (int i = 0; i < 5; i++) {
+						message_digest[i] = htonl(message_digest[i]);
+					}
+					
+					server_key = base64_encode(
+						reinterpret_cast<const unsigned char*>(message_digest),20
+					);
+					
+					// set handshake accept headers
+					m_response.replace_header("Sec-WebSocket-Accept",server_key);
+					m_response.set_header("Upgrade","websocket");
+					m_response.set_header("Connection","Upgrade");
+				} else {
+					m_endpoint->elog().at(log::elevel::ERROR) 
+						<< "Error computing handshake sha1 hash" << log::endl;
+					
+					m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+				}
 			}
 		}
 		
@@ -638,10 +705,16 @@ public:
 		m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) 
 		    << m_response.raw() << log::endl;
 		
+		std::string raw = m_response.raw();
+		
+		if (m_version == 0) {
+			raw += digest;
+		}
+		
 		// start async write to handle_write_handshake
 		boost::asio::async_write(
 			m_socket,
-			boost::asio::buffer(m_response.raw()),
+			boost::asio::buffer(raw),
 			boost::bind(
 				&session_type::handle_write_response,
 				session_type::shared_from_this(),

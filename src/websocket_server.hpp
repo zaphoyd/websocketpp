@@ -210,7 +210,7 @@ public:
 			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
 		}
 		
-		if (handshake.header("Sec-WebSocket-Key") == "") {
+		if (handshake.header("Sec-WebSocket-Key") == "" && handshake.header("Sec-WebSocket-Key1") == "" && handshake.header("Sec-WebSocket-Key2") == "") {
 			throw(handshake_error("Required Sec-WebSocket-Key header is missing",http::status_code::BAD_REQUEST));
 		}
 		
@@ -218,7 +218,7 @@ public:
 		if (h == "") {
 			// TODO: if we want to support draft 00 this line should set version to 0
 			// rather than bail
-			throw(handshake_error("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
+			//throw(handshake_error("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
 		} else {
 			int version = atoi(h.c_str());
 			

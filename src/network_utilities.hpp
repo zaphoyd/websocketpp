@@ -32,6 +32,8 @@
 #include <string>
 #include <boost/regex.hpp>
 
+
+
 // http://www.viva64.com/en/k/0018/
 // TODO: impliment stuff from here: 
 // http://stackoverflow.com/questions/809902/64-bit-ntohl-in-c
@@ -49,7 +51,8 @@ std::string lookup_ws_close_status_string(uint16_t code);
 namespace websocketpp {
 struct ws_uri {
 	bool parse(const std::string& uri);
-
+	std::string base();
+	
 	bool		secure;
 	std::string	host;
 	uint16_t	port;
@@ -57,5 +60,11 @@ struct ws_uri {
 };
 }
 
+// calculate the md5 hash of string and store it in the 16 byte hash buffer
+void md5_hash_string(char *string,char *hash);
+
+
+
+uint32_t decode_hybi_00_client_key(const std::string& key);
 
 #endif // NETWORK_UTILITIES_HPP

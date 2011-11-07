@@ -71,6 +71,10 @@
 		B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
 		B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
 		B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
+		B6FE8D181468707200B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
+		B6FE8D191468708200B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
+		B6FE8D1A1468709300B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
+		B6FE8D1B1468709A00B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -187,6 +191,8 @@
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 		B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_constants.hpp; path = src/websocket_constants.hpp; sourceTree = "<group>"; };
+		B6FE8D1614686A8500B32547 /* md5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = md5.c; path = src/md5/md5.c; sourceTree = "<group>"; };
+		B6FE8D1714686A8500B32547 /* md5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = md5.h; path = src/md5/md5.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -305,6 +311,7 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B6FE8D1414686A6D00B32547 /* md5 */,
 				B61387B51462B34400ED9B19 /* logger */,
 				B61387A4145D847A00ED9B19 /* http */,
 				B6FE8D09145B0F7400B32547 /* rng */,
@@ -438,6 +445,15 @@
 			name = rng;
 			sourceTree = "<group>";
 		};
+		B6FE8D1414686A6D00B32547 /* md5 */ = {
+			isa = PBXGroup;
+			children = (
+				B6FE8D1614686A8500B32547 /* md5.c */,
+				B6FE8D1714686A8500B32547 /* md5.h */,
+			);
+			name = md5;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -447,6 +463,7 @@
 			files = (
 				B6DF1CBA1434AC470029A1B1 /* websocketpp.hpp in Headers */,
 				B6DF1CA81434AC470029A1B1 /* websocket_connection_handler.hpp in Headers */,
+				B6FE8D1B1468709A00B32547 /* md5.h in Headers */,
 				B6DF1C7E1434AB9E0029A1B1 /* network_utilities.hpp in Headers */,
 				B6DF1C851434ABE20029A1B1 /* base64.h in Headers */,
 				B6DF1C8C1434AC330029A1B1 /* sha1.h in Headers */,
@@ -468,6 +485,7 @@
 			files = (
 				B6DF1CBB1434AC470029A1B1 /* websocketpp.hpp in Headers */,
 				B6DF1CA91434AC470029A1B1 /* websocket_connection_handler.hpp in Headers */,
+				B6FE8D191468708200B32547 /* md5.h in Headers */,
 				B6DF1C7D1434AB920029A1B1 /* network_utilities.hpp in Headers */,
 				B6DF1C861434ABE20029A1B1 /* base64.h in Headers */,
 				B6DF1C8D1434AC330029A1B1 /* sha1.h in Headers */,
@@ -625,6 +643,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6FE8D1A1468709300B32547 /* md5.c in Sources */,
 				B6DF1C7A1434AB740029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C831434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8A1434AC330029A1B1 /* sha1.cpp in Sources */,
@@ -641,6 +660,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6FE8D181468707200B32547 /* md5.c in Sources */,
 				B6DF1CC41434AF9E0029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C841434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8B1434AC330029A1B1 /* sha1.cpp in Sources */,

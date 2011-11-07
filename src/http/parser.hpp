@@ -253,7 +253,6 @@ private:
 	status_code::value	m_status_code;
 	std::string			m_status_msg;
 };
-	
 
 }
 }

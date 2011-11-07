@@ -28,7 +28,7 @@
 #  It's authors were Jonathan Wallace and Bernhard Fluehmann.
 
 
-objects = network_utilities.o sha1.o base64.o
+objects = network_utilities.o sha1.o base64.o md5.o
 
 libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
 
@@ -137,6 +137,9 @@ $(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp
 	$(CXX) $< -o $@ $(CXXFLAGS)
 	
 $(objdir)/base64.o: $(srcdir)/base64/base64.cpp
+	$(CXX) $< -o $@ $(CXXFLAGS)
+
+$(objdir)/md5.o: $(srcdir)/md5/md5.c
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 $(objdir)/%.o: $(srcdir)/%.cpp

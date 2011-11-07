@@ -27,6 +27,9 @@
 
 #include "network_utilities.hpp"
 
+#include <sstream>
+#include "md5/md5.h"
+
 uint64_t htonll(uint64_t src) { 
 	static int typ = TYP_INIT; 
 	unsigned char c; 
@@ -173,3 +176,49 @@ bool websocketpp::ws_uri::parse(const std::string& uri) {
 	}
 
 }
+
+std::string websocketpp::ws_uri::base() {
+	std::stringstream s;
+	
+	s << "ws" << (secure ? "s" : "") << "://" << host;
+	
+	if (port != (secure ? 443 : 80)) {
+		s << ":" << port;
+	}
+	
+	s << "/";
+	return s.str();
+}
+
+void md5_hash_string(char *string,char *hash) {
+	md5_state_t state;
+	
+	md5_init(&state);
+	md5_append(&state, (const md5_byte_t *)string, 16);
+	md5_finish(&state, (md5_byte_t *)hash);
+}
+
+// Given a hybi 00 websocket key returns the 32 bit decoded value or 0 on error.
+uint32_t decode_hybi_00_client_key(const std::string& key) {
+	int spaces = 0;
+	std::string digits = "";
+	uint32_t num;
+	
+	// key2
+	for (size_t i = 0; i < key.size(); i++) {
+		if (key[i] == ' ') {
+			spaces++;
+		} else if (key[i] >= '0' && key[i] <= '9') {
+			digits += key[i];
+		}
+	}
+	
+	num = atoi(digits.c_str());
+	if (spaces > 0 && num > 0) {
+		return htonl(num/spaces);
+	} else {
+		return 0;
+	}
+}
+
+

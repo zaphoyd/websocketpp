@@ -638,6 +638,106 @@ private:
 	rng_policy& m_rng;
 };
 
+class hybi_00_parser {
+public:
+	// TODO: not hardcode this
+	static const uint64_t max_payload_size = 100000000; // 100MB
+	
+	hybi_00_parser() : m_state(STATE_READ_TYPE) {
+		reset();
+	}
+	
+	bool ready() const {
+		return m_state == STATE_READY;
+	}
+	uint64_t get_bytes_needed() const {
+		return 1;
+	}
+	void reset() {
+		m_state = STATE_READ_TYPE;
+	}
+	
+	void set_fin(bool fin) {}
+	void set_opcode(opcode::value op) {
+		if (op != frame::opcode::TEXT) {
+			// TODO: what happens when you try to send non-text to a hybi_00 frame
+		}
+	}
+	
+	// hybi_00 frames are UTF-8 text only.
+	opcode::value get_opcode() const {
+		return frame::opcode::TEXT;
+	}
+	
+	void set_payload(const std::string source) {
+		if (source.size() > max_payload_size) {
+			throw exception("requested payload is over implimentation defined limit",error::MESSAGE_TOO_BIG);
+		}
+		
+		// TODO: utf8 validation?
+		
+		m_payload.resize(source.size()+2);
+		
+		m_payload[0] = 0x00;
+		std::copy(source.begin(),source.end(),m_payload.begin()+1);
+		m_payload[m_payload.size()-1] = 0xFF;
+	}
+	
+	void set_masked(bool masked) {}
+	
+	void process_payload() {}
+	
+	bool is_control() const {
+		return false;
+	}
+	
+	std::vector<unsigned char> &get_payload() {
+		return m_payload;
+	}
+	
+	char* get_header() {
+		// TODO: this might be a problem
+		return NULL;
+	}
+
+	unsigned int get_header_len() const {
+		return 0;
+	}
+	
+	void validate_utf8(uint32_t* state,uint32_t* codep,size_t offset = 0) const {
+		for (size_t i = offset; i < m_payload.size(); i++) {
+			using utf8_validator::decode;
+			
+			if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
+				throw exception("Invalid UTF-8 Data",error::PAYLOAD_VIOLATION);
+			}
+		}
+	}
+	
+	// Method invariant: One of the following must always be true even in the case 
+	// of exceptions.
+	// - m_bytes_needed > 0
+	// - m-state = STATE_READY
+	void consume(std::istream &s) {
+		// read a byte. if it is 0x00 then read payload bytes until 0xFF.
+		// otherwise it may be another type of frame. Test whether or not
+		// hybi00 clients actually send them.
+		
+		// should do streaming utf8 validation and throw an exception on error.
+	}
+private:
+	static const uint8_t STATE_READ_TYPE = 1;
+	static const uint8_t STATE_READ_LENGTH = 2;
+	static const uint8_t STATE_READ_PAYLOAD = 3;
+	static const uint8_t STATE_READY = 4;
+	
+	uint8_t m_state;
+	std::vector<unsigned char> m_payload;
+};
+
+
+
+
 }
 }
 
