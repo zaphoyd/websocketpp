@@ -28,10 +28,12 @@
 #ifndef WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
 #define WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
 
+#include <boost/shared_ptr.hpp>
+
 namespace websocketpp {
 namespace protocol {
 
-class protocol {
+class processor {
 	// validate client handshake
 	// validate server handshake
 	
@@ -39,8 +41,9 @@ class protocol {
 	// to start a websocket session. If so begin constructing a response, if not throw a handshake 
 	// exception.
 	// validate handshake request
+	virtual void validate_handshake(const http::parser::request& headers) const = 0;
 	
-	
+	virtual void handshake_response(const http::parser::request& headers,http::parser::response& headers) = 0;
 	
 	// Given a list of HTTP headers determin if the values are a reasonable 
 	// response to our handshake request. If so 
@@ -54,6 +57,7 @@ class protocol {
 	// some sort of message type? for onping onpong?
 };
 
+typedef boost::shared_ptr<processor> processor_ptr;
 
 }
 }

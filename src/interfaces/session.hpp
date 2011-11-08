@@ -28,21 +28,217 @@
 #ifndef WEBSOCKET_INTERFACE_SESSION_HPP
 #define WEBSOCKET_INTERFACE_SESSION_HPP
 
-namespace websocketpp {
+#include <boost/shared_ptr.hpp>
+
+#include <string>
+#include <vector>
+
+#include "websocket_constants.hpp"
+#include "network_utilities.hpp"
+
+namespace websocketpp {	
 namespace session {
 
+namespace state {
+	enum value {
+		CONNECTING = 0,
+		OPEN = 1,
+		CLOSING = 2,
+		CLOSED = 3
+	};
+}
 
-// 
-class interface {
+ /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  *                             Server Session API                          *
+  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+class server {
 public:
 	// Valid always
-	//virtual ??? get_state() const = 0;
+	virtual session::state::value get_state() const = 0;
+	virtual int get_version() const = 0;
 	
-	// Valid for CONNECTING connections
+	virtual std::string get_origin() const = 0;
+	virtual std::string get_request_header(const std::string& key) const = 0;
+	virtual const ws_uri& get_uri() const = 0;
+	virtual bool get_secure() const = 0;
 	
+	// Valid for CONNECTING state
+	virtual void add_response_header(const std::string& key, const std::string& value) = 0;
+	virtual void replace_response_header(const std::string& key, const std::string& value) = 0;
+	virtual const std::vector<std::string>& get_subprotocols() const = 0;
+	virtual const std::vector<std::string>& get_extensions() const = 0;
+	virtual void select_subprotocol(const std::string& value) = 0;
+	virtual void select_extension(const std::string& value) = 0;
+	
+	// Valid for OPEN state
+	virtual void send(const std::string& msg) = 0;
+	virtual void send(const std::vector<unsigned char>& data) = 0;
+	virtual void close(close::status::value code, const std::string& reason) = 0;
+	virtual void ping(const std::string& payload) = 0;
+	virtual void pong(const std::string& payload) = 0;
+	
+	// Valid for CLOSED state
+	virtual close::status::value get_local_close_code() const = 0;
+	virtual std::string get_local_close_reason() const = 0;
+	virtual close::status::value get_remote_close_code() const = 0;
+	virtual std::string get_remote_close_reason() const = 0;
+	virtual bool failed_by_me() const = 0;
+	virtual bool dropped_by_me() const = 0;
+	virtual bool closed_by_me() const = 0;
+};
+typedef boost::shared_ptr<server> server_ptr;
+
+ /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  *                             Server Handler API                          *
+  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+class server_handler {
+	// validate will be called after a websocket handshake has been received and
+	// before it is accepted. It provides a handler the ability to refuse a 
+	// connection based on application specific logic (ex: restrict domains or
+	// negotiate subprotocols). To reject the connection throw a handshake_error
+	//
+	// handshake_error parameters:
+	//  log_message - error message to send to server log
+	//  http_error_code - numeric HTTP error code to return to the client
+	//  http_error_msg - (optional) string HTTP error code to return to the
+	//    client (useful for returning non-standard error codes)
+	virtual void validate(server_ptr session) = 0;
+	
+	// on_open is called after the websocket session has been successfully 
+	// established and is in the OPEN state. The session is now avaliable to 
+	// send messages and will begin reading frames and calling the on_message/
+	// on_close/on_error callbacks. A client may reject the connection by 
+	// closing the session at this point.
+	virtual void on_open(server_ptr session) = 0;
+	
+	// on_close is called whenever an open session is closed for any reason. 
+	// This can be due to either endpoint requesting a connection close or an 
+	// error occuring. Information about why the session was closed can be 
+	// extracted from the session itself. 
+	// 
+	// on_close will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_close(server_ptr session) = 0;
+	
+	// on_message (binary version) will be called when a binary message is 
+	// recieved. Message data is passed as a vector of bytes (unsigned char).
+	// data will not be avaliable after this callback ends so the handler must 
+	// either completely process the message or copy it somewhere else for 
+	// processing later.
+	virtual void on_message(server_ptr session,
+	                        const std::vector<unsigned char> &data) = 0;
+	
+	// on_message (text version). Identical to on_message except the data 
+	// parameter is a string interpreted as UTF-8. WebSocket++ guarantees that
+	// this string is valid UTF-8.
+	virtual void on_message(server_ptr session,const std::string &msg) = 0;
+	
+	// on_fail is called whenever a session is terminated or failed before it 
+	// was successfully established. This happens if there is an error during 
+	// the handshake process or if the server refused the connection.
+	// 
+	// on_fail will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_fail(server_ptr session) {};
 };
 
+typedef boost::shared_ptr<server_handler> server_handler_ptr;
 
+ /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  *                             Client Session API                          *
+  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	
+class client {
+public:
+	client(const std::string& uri) = 0;
+	
+	// Valid always
+	virtual session::state::value get_state() const = 0;
+	virtual int get_version() const = 0;
+	
+	virtual std::string get_origin() const = 0;
+	virtual const ws_uri& get_uri() const = 0;
+	virtual bool get_secure() const = 0;
+	
+	// Valid for CONNECTING state
+	virtual void set_origin(const std::string& origin) = 0;
+	virtual void add_request_header(const std::string& key, const std::string& value) = 0;
+	virtual void replace_request_header(const std::string& key, const std::string& value) = 0;
+	virtual void request_subprotocol(const std::string& value) = 0;
+	virtual void request_extension(const std::string& value) = 0;
+	
+	// Valid for OPEN state
+	virtual std::string get_response_header(const std::string& key) const = 0;
+	virtual std::string get_subprotocol() const;
+	virtual const std::vector<std::string>& get_extensions() const = 0;
+	
+	virtual void send(const std::string& msg) = 0;
+	virtual void send(const std::vector<unsigned char>& data) = 0;
+	virtual void close(close::status::value code, const std::string& reason) = 0;
+	virtual void ping(const std::string& payload) = 0;
+	virtual void pong(const std::string& payload) = 0;
+	
+	// Valid for CLOSED state
+	virtual close::status::value get_local_close_code() const = 0;
+	virtual std::string get_local_close_reason() const = 0;
+	virtual close::status::value get_remote_close_code() const = 0;
+	virtual std::string get_remote_close_reason() const = 0;
+	virtual bool failed_by_me() const = 0;
+	virtual bool dropped_by_me() const = 0;
+	virtual bool closed_by_me() const = 0;
+};
+
+typedef boost::shared_ptr<client> client_ptr;
+
+ /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  *                             Client Handler API                          *
+  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	
+class client_handler {
+	// on_open is called after the websocket session has been successfully 
+	// established and is in the OPEN state. The session is now avaliable to 
+	// send messages and will begin reading frames and calling the on_message/
+	// on_close/on_error callbacks. A client may reject the connection by 
+	// closing the session at this point.
+	virtual void on_open(client_ptr session) = 0;
+	
+	// on_close is called whenever an open session is closed for any reason. 
+	// This can be due to either endpoint requesting a connection close or an 
+	// error occuring. Information about why the session was closed can be 
+	// extracted from the session itself. 
+	// 
+	// on_close will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_close(client_ptr session) = 0;
+	
+	// on_message (binary version) will be called when a binary message is 
+	// recieved. Message data is passed as a vector of bytes (unsigned char).
+	// data will not be avaliable after this callback ends so the handler must 
+	// either completely process the message or copy it somewhere else for 
+	// processing later.
+	virtual void on_message(client_ptr session,
+							const std::vector<unsigned char> &data) = 0;
+	
+	// on_message (text version). Identical to on_message except the data 
+	// parameter is a string interpreted as UTF-8. WebSocket++ guarantees that
+	// this string is valid UTF-8.
+	virtual void on_message(client_ptr session,const std::string &msg) = 0;
+	
+	// on_fail is called whenever a session is terminated or failed before it 
+	// was successfully established. This happens if there is an error during 
+	// the handshake process or if the server refused the connection.
+	// 
+	// on_fail will be the last time a session calls its handler. If your 
+	// application will need information from `session` after this function you
+	// should either save the session_ptr somewhere or copy the data out.
+	virtual void on_fail(client_ptr session) {};
+};
+
+typedef boost::shared_ptr<client_handler> client_handler_ptr;
+	
 }
 }
 #endif // WEBSOCKET_INTERFACE_SESSION_HPP
