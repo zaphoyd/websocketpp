@@ -72,7 +72,8 @@ public:
 	  m_socket(io_service),
 	  m_timer(io_service,boost::posix_time::seconds(0)),
 	  m_buf(/* TODO: needs a max here */),
-	  m_handler(handler) {}
+	  m_handler(handler),
+	  m_state(session::state::CONNECTING) {}
 	
 	tcp::socket& get_socket() {
 		return m_socket;
@@ -271,6 +272,134 @@ public:
 		// TODO: start read message loop.
 	}
 	
+	void handle_read_frame (const boost::system::error_code& error) {
+		if (error) {
+			if (error == boost::asio::error::eof) {			
+				if (m_state == session::state::CLOSED) {
+					// this was expected
+					return;
+				} else {
+					// got unexpected EOF
+					// TODO: log error
+					// TODO: drop tcp
+					// TODO: set state to CLOSED
+				}
+			} else if (error == boost::asio::error::operation_aborted) {
+				if (m_state == session::state::CLOSED) {
+					// some other part of our client called shutdown on our 
+					// socket. This is usually due to a write error. Everything 
+					// should have already been logged and dropped so we just 
+					// return here
+					return;
+				} else {
+					// got unexpected abort (likely our server issued an abort on
+					// all connections on this io_service)
+					
+					// TODO: log error
+					// TODO: drop tcp
+					// TODO: set state to CLOSED
+				}
+			} else {
+				// Other unexpected error
+				
+				// TODO: log error
+				// TODO: drop tcp
+				// TODO: set state to CLOSED
+			}
+		}
+		
+		// check if state changed while we were waiting for a read.
+		if (m_state == session::state::CLOSED) {
+			// TODO: on_close
+			return;
+		}
+		
+		// process data from the buffer just read into
+		std::istream s(&m_buf);
+		
+		while (m_buf.size() > 0) {
+			try {
+				m_processor.consume(s);
+				
+				if (m_processor.ready()) {
+					switch (m_processor.get_opcode()) {
+						case TEXT:
+							// TODO: on_message
+							break;
+						case BINARY:
+							// TODO: on_message
+							break;
+						case PING:
+							// TODO: on_ping
+							// TODO: auto-respond pong perhaps based on
+							break;
+						case PONG:
+							// TODO: on_pong
+							break;
+						case CLOSE:
+							// TODO: send_close
+							// if we are server
+							//   drop tcp
+							//   m_state = CLOSED
+							// else
+							//   set timer
+							//   on timer, drop tcp, m_state = closed.
+							break;
+						default:
+							// error
+							break;
+					}
+				}
+			} catch (/* session exception */) {
+				
+			}
+			
+			// if the result of processing/consuming a frame closed the 
+			// connection exit the process loop. Otherwise re-check if we have 
+			// any bytes left to process.
+			if (m_state == session::state::CLOSED) {
+				// TODO: on_close
+				break;
+			}
+		}
+		
+		// check if state changed while processing frames
+		if (m_state == session::state::CLOSED) {
+			// notify end user and don't refresh the ASIO loop
+			return;
+		}
+		
+		// try and read more
+	}
+	
+	// end conditions
+	// - tcp connection is closed
+	// - session state is CLOSED
+	// - session end flags are set
+	void terminate_connection() {
+		// cancel the close timeout
+		m_timer.cancel();
+		
+		try {
+			if (m_socket.is_open()) {
+				m_socket.shutdown(tcp::socket::shutdown_both);
+				m_socket.close();
+				m_dropped_by_me = true;
+			}
+		} catch (boost::system::system_error& e) {
+			if (e.code() == boost::asio::error::not_connected) {
+				// this means the socket was disconnected by the other side before
+				// we had a chance to. Ignore and continue.
+			} else {
+				throw e;
+			}
+		}
+		
+		
+		
+		m_state = session::state::CLOSED;
+	}
+	
 	void fail_on_expire(const boost::system::error_code& error) {
 		if (error) {
 			if (error != boost::asio::error::operation_aborted) {
@@ -298,6 +427,13 @@ private:
 				
 	http::parser::request		m_request;
 	http::parser::response		m_response;
+	
+	session::state::value		m_state;
+	int							m_version;
+	
+	bool						m_closed_by_me;
+	bool						m_failed_by_me;
+	bool						m_dropped_by_me;
 };
 
 

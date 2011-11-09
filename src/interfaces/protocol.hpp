@@ -50,6 +50,12 @@ class processor {
 	
 	// construct
 	
+	// consume bytes, throw on exception
+	virtual void consume(std::istream& s) = 0;
+	
+	// is there a message ready to be dispatched?
+	virtual bool ready() = 0;
+	virtual ? get_opcode() = 0;
 	
 	// consume
 	// is_message_complete
