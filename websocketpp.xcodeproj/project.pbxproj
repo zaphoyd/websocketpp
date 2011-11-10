@@ -145,6 +145,7 @@
 		B62A5A3214695185005F9EB0 /* frame_parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = frame_parser.hpp; path = src/interfaces/frame_parser.hpp; sourceTree = "<group>"; };
 		B62A5A3314695185005F9EB0 /* session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = session.hpp; path = src/interfaces/session.hpp; sourceTree = "<group>"; };
 		B62A5A34146963FE005F9EB0 /* protocol.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = protocol.hpp; path = src/interfaces/protocol.hpp; sourceTree = "<group>"; };
+		B62A5A35146BFC7D005F9EB0 /* hybi_00_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_00_processor.hpp; path = src/hybi_00_processor.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -326,6 +327,7 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B62A5A35146BFC7D005F9EB0 /* hybi_00_processor.hpp */,
 				B62A5A2F1469512A005F9EB0 /* interfaces */,
 				B6FE8D1414686A6D00B32547 /* md5 */,
 				B61387B51462B34400ED9B19 /* logger */,

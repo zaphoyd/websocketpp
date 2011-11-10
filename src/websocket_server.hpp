@@ -39,6 +39,7 @@ namespace po = boost::program_options;
 #include "websocketpp.hpp"
 
 #include "interfaces/session.hpp"
+#include "interfaces/protocol.hpp"
 
 #include "websocket_session.hpp"
 #include "websocket_connection_handler.hpp"
@@ -52,6 +53,7 @@ namespace po = boost::program_options;
 
 using boost::asio ::ip::tcp;
 using websocketpp::session::server_handler_ptr;
+using websocketpp::protocol::processor_ptr;
 
 namespace websocketpp {
 namespace server {
@@ -113,7 +115,7 @@ public:
 							 std::size_t bytes_transferred) {
 		if (e) {
 			log_error("Error reading HTTP request",e);
-			drop_tcp();
+			terminate_connection(false);
 			return;
 		}
 		
@@ -141,10 +143,10 @@ public:
 			int m_version = -1;
 			
 			if (boost::ifind_first(m_request.header("Upgrade","websocket"))) {
-				if (handshake.header("Sec-WebSocket-Version") == "") {
+				if (m_request.header("Sec-WebSocket-Version") == "") {
 					m_version = 0;
 				} else {
-					m_version = atoi(h.c_str());
+					m_version = atoi(m_request.header("Sec-WebSocket-Version").c_str());
 					if (m_version == 0) {
 						throw(handshake_error("Unable to determine connection version",http::status_code::BAD_REQUEST));
 					}
@@ -171,7 +173,7 @@ public:
 					}
 					m_request.set_header("Sec-WebSocket-Key3",std::string(foo));
 					
-					m_processor = protocol::processor_ptr(new protocol::hybi_00_processor());
+					m_processor = processor_ptr(new protocol::hybi_00_processor());
 				} else if (m_version == 7 || m_version == 8 || m_version == 13) {
 					// create hybi 17 processor
 					m_processor = protocol::processor_ptr(new protocol::hybi_17_processor());
@@ -242,30 +244,31 @@ public:
 	}
 	
 	void handle_write_response(const boost::system::error_code& error) {
+		// stop the handshake timer
+		m_timer.cancel();
+		
 		if (error) {
-			log_error("Error writing handshake response",error);
-			drop_tcp();
+			log_error("Network error writing handshake response",error);
+			terminate_connection(false);
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
 			return;
 		}
 		
 		log_open_result();
 		
-		if (m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
+		// log error if this was 
+		if (m_version != -1 && m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
 			m_server->elog().at(log::elevel::ERROR) 
 			<< "Handshake ended with HTTP error: " 
 			<< m_response.status_code() << " " << m_response.status_msg() 
 			<< log::endl;
 			
-			drop_tcp();
-			// TODO: tell client that connection failed?
-			// use on_fail?
+			terminate_connection(true);
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
 			return;
 		}
 		
 		m_state = state::OPEN;
-		
-		// stop the handshake timer
-		m_timer.cancel();
 		
 		m_handler->on_open(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
 		
@@ -281,8 +284,7 @@ public:
 				} else {
 					// got unexpected EOF
 					// TODO: log error
-					// TODO: drop tcp
-					// TODO: set state to CLOSED
+					terminate_connection(false);
 				}
 			} else if (error == boost::asio::error::operation_aborted) {
 				if (m_state == session::state::CLOSED) {
@@ -296,21 +298,18 @@ public:
 					// all connections on this io_service)
 					
 					// TODO: log error
-					// TODO: drop tcp
-					// TODO: set state to CLOSED
+					terminate_connection(true);
 				}
 			} else {
 				// Other unexpected error
 				
 				// TODO: log error
-				// TODO: drop tcp
-				// TODO: set state to CLOSED
+				terminate_connection(false);
 			}
 		}
 		
 		// check if state changed while we were waiting for a read.
 		if (m_state == session::state::CLOSED) {
-			// TODO: on_close
 			return;
 		}
 		
@@ -358,14 +357,12 @@ public:
 			// connection exit the process loop. Otherwise re-check if we have 
 			// any bytes left to process.
 			if (m_state == session::state::CLOSED) {
-				// TODO: on_close
 				break;
 			}
 		}
 		
 		// check if state changed while processing frames
 		if (m_state == session::state::CLOSED) {
-			// notify end user and don't refresh the ASIO loop
 			return;
 		}
 		
@@ -376,7 +373,11 @@ public:
 	// - tcp connection is closed
 	// - session state is CLOSED
 	// - session end flags are set
-	void terminate_connection() {
+	void terminate_connection(bool failed_by_me) {
+		if (m_state == session::state::CLOSED) {
+			// shouldn't be here
+		}
+		
 		// cancel the close timeout
 		m_timer.cancel();
 		
@@ -395,9 +396,26 @@ public:
 			}
 		}
 		
+		m_failed_by_me = failed_by_me;
 		
-		
+		session::state::value old_state = m_state;
 		m_state = session::state::CLOSED;
+		
+		// If we called terminate from the connecting state call on_fail
+		if (old_state == session::state::CONNECTING) {
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+		} else if (old_state == session::state::OPEN || 
+				   old_state == session::state::CLOSING) {
+			m_handler->on_close(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+		} else {
+			// if we were already closed something is wrong
+		}
+	}
+	
+	// this is called when an async asio call encounters an error
+	void log_error(std::string msg,const boost::system::error_code& e) {
+		m_server->elog().at(log::elevel::ERROR) 
+		<< msg << "(" << e << ")" << log::endl;
 	}
 	
 	void fail_on_expire(const boost::system::error_code& error) {
@@ -405,13 +423,13 @@ public:
 			if (error != boost::asio::error::operation_aborted) {
 				m_server->elog().at(log::elevel::DEVEL) 
 				<< "fail_on_expire timer ended in unknown error" << log::endl;
-				//drop_tcp(true);
+				terminate_connection(false);
 			}
 			return;
 		}
 		m_server->elog().at(log::elevel::DEVEL) 
 		<< "fail_on_expire timer expired" << log::endl;
-		drop_tcp(true);
+		terminate_connection(true);
 	}
 	
 private:
@@ -423,7 +441,7 @@ private:
 	boost::asio::streambuf		m_buf;
 	
 	server_handler_ptr			m_handler;
-	protocol::processor_ptr		m_processor;
+	processor_ptr				m_processor;
 				
 	http::parser::request		m_request;
 	http::parser::response		m_response;

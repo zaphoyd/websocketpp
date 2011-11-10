@@ -25,49 +25,25 @@
  * 
  */
 
-#ifndef WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
-#define WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
+#ifndef WEBSOCKET_HYBI_00_PROCESSOR_HPP
+#define WEBSOCKET_HYBI_00_PROCESSOR_HPP
 
-#include <boost/shared_ptr.hpp>
-
-#include "../http/parser.hpp"
+#include "interfaces/protocol.hpp"
 
 namespace websocketpp {
 namespace protocol {
 
-class processor {
+class hybi_00_processor : public processor {
 public:
-	// validate client handshake
-	// validate server handshake
+	void validate_handshake(const http::parser::request& headers) const {
+		
+	}
 	
-	// Given a list of HTTP headers determine if the values are sufficient
-	// to start a websocket session. If so begin constructing a response, if not throw a handshake 
-	// exception.
-	// validate handshake request
-	virtual void validate_handshake(const http::parser::request& headers) const = 0;
-	
-	virtual void handshake_response(const http::parser::request& request,http::parser::response& response) = 0;
-	
-	// Given a list of HTTP headers determin if the values are a reasonable 
-	// response to our handshake request. If so 
-	
-	// construct
-	
-	// consume bytes, throw on exception
-	virtual void consume(std::istream& s) = 0;
-	
-	// is there a message ready to be dispatched?
-	virtual bool ready() = 0;
-	virtual ? get_opcode() = 0;
-	
-	// consume
-	// is_message_complete
-	// deliver message (get_payload)
-	// some sort of message type? for onping onpong?
+	void handshake_response(const http::parser::request& request,http::parser::response& response) {
+		
+	}
 };
 
-typedef boost::shared_ptr<processor> processor_ptr;
-
 }
 }
-#endif // WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
+#endif // WEBSOCKET_HYBI_00_PROCESSOR_HPP
