@@ -29,22 +29,29 @@
 #define WEBSOCKET_SERVER_HPP
 
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 #include <set>
+#include <queue>
 
 #include "websocketpp.hpp"
 
 #include "interfaces/session.hpp"
-#include "interfaces/protocol.hpp"
 
-#include "websocket_session.hpp"
+// Session processors
+#include "interfaces/protocol.hpp"
+#include "hybi_legacy_processor.hpp"
+#include "hybi_processor.hpp"
+
+//#include "websocket_session.hpp"
 #include "websocket_connection_handler.hpp"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "rng/blank_rng.hpp"
 
@@ -58,15 +65,23 @@ using websocketpp::protocol::processor_ptr;
 namespace websocketpp {
 namespace server {
 
+namespace write_state {
+	enum value {
+		IDLE = 0,
+		WRITING = 1,
+		INTURRUPT = 2
+	};
+}
+	
 template <typename server_policy>
-class session : public websocketpp::session::server, boost::enable_shared_from_this< session<server_policy> >  {
+class connection : public websocketpp::session::server, public boost::enable_shared_from_this< connection<server_policy> >  {
 public:
 	typedef server_policy server_type;
-	typedef session<server_policy> session_type;
+	typedef connection<server_policy> connection_type;
 	
 	typedef boost::shared_ptr<server_type> server_ptr;
 	
-	session(server_ptr s,
+	connection(server_ptr s,
 			boost::asio::io_service& io_service,
 			server_handler_ptr handler)
 	: m_server(s),
@@ -75,7 +90,139 @@ public:
 	  m_timer(io_service,boost::posix_time::seconds(0)),
 	  m_buf(/* TODO: needs a max here */),
 	  m_handler(handler),
-	  m_state(session::state::CONNECTING) {}
+	  m_state(session::state::CONNECTING),
+	  m_write_buffer(0),
+	  m_write_state(write_state::IDLE) {}
+	
+	// implimentation of the server session API
+	
+	// Valid always
+	session::state::value get_state() const {
+		// TODO: syncronize
+		return m_state;
+	}
+	
+	unsigned int get_version() const {
+		return m_version;
+	}
+	
+	std::string get_origin() const {
+		return m_origin;
+	}
+	
+	std::string get_request_header(const std::string& key) const {
+		return m_request.header(key);
+	}
+	
+	const ws_uri& get_uri() const {
+		return m_uri;
+	}
+	
+	bool get_secure() const {
+		// TODO
+		return false;
+	}
+	
+	// Valid for CONNECTING state
+	void add_response_header(const std::string& key, const std::string& value) {
+		m_response.add_header(key,value);
+	}
+	void replace_response_header(const std::string& key, const std::string& value) {
+		m_response.replace_header(key,value);
+	}
+	const std::vector<std::string>& get_subprotocols() const {
+		return m_requested_subprotocols;
+	}
+	const std::vector<std::string>& get_extensions() const {
+		return m_requested_extensions;
+	}
+	void select_subprotocol(const std::string& value) {
+		std::vector<std::string>::iterator it;
+		
+		it = std::find(m_requested_subprotocols.begin(),
+					   m_requested_subprotocols.end(),
+					   value);
+		
+		if (value != "" && it == m_requested_subprotocols.end()) {
+			throw server_error("Attempted to choose a subprotocol not proposed by the client");
+		}
+		
+		m_subprotocol = value;
+	}
+	void select_extension(const std::string& value) {
+		if (value == "") {
+			return;
+		}
+		
+		std::vector<std::string>::iterator it;
+		
+		it = std::find(m_requested_extensions.begin(),
+					   m_requested_extensions.end(),
+					   value);
+		
+		if (it == m_requested_extensions.end()) {
+			throw server_error("Attempted to choose an extension not proposed by the client");
+		}
+		
+		m_extensions.push_back(value);
+	}
+	
+	// Valid for OPEN state
+	
+	// These functions invoke write_message through the io_service to gain 
+	// thread safety
+	void send(const utf8_string& payload) {
+		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::TEXT,false,payload));
+		
+		m_io_service.post(boost::bind(&connection_type::write_message,connection_type::shared_from_this(),msg));
+		
+		// TODO: return bytes in flight somehow?
+	}
+	
+	void send(const binary_string& data) {
+		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,false,data));
+		m_io_service.post(boost::bind(&connection_type::write_message,connection_type::shared_from_this(),msg));
+	}
+	
+	void close(close::status::value code, const utf8_string& reason) {
+		// TODO
+	}
+	
+	void ping(const binary_string& payload) {
+		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,false,payload));
+		
+		m_io_service.post(boost::bind(&connection_type::write_message,connection_type::shared_from_this(),msg));
+	}
+	
+	void pong(const binary_string& payload) {
+		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,false,payload));
+		m_io_service.post(boost::bind(&connection_type::write_message,connection_type::shared_from_this(),msg));
+	}
+	
+	// Valid for CLOSED state
+	close::status::value get_local_close_code() const {
+		return m_local_close_code;
+	}
+	utf8_string get_local_close_reason() const {
+		return m_local_close_reason;
+	}
+	close::status::value get_remote_close_code() const {
+		return m_remote_close_code;
+	}
+	utf8_string get_remote_close_reason() const {
+		return m_remote_close_reason;
+	}
+	bool get_failed_by_me() const {
+		return m_failed_by_me;
+	}
+	bool get_dropped_by_me() const {
+		return m_dropped_by_me;
+	}
+	bool get_closed_by_me() const {
+		return m_closed_by_me;
+	}
+	
+	////////
 	
 	tcp::socket& get_socket() {
 		return m_socket;
@@ -92,8 +239,8 @@ public:
 		
 		m_timer.async_wait(
 		    boost::bind(
-		        &session_type::fail_on_expire,
-		        session_type::shared_from_this(),
+		        &connection_type::fail_on_expire,
+		        connection_type::shared_from_this(),
 		        boost::asio::placeholders::error
 		    )
 		);
@@ -103,8 +250,8 @@ public:
 		    m_buf,
 		    "\r\n\r\n",
 		    boost::bind(
-		        &session_type::handle_read_request,
-		        session_type::shared_from_this(),
+		        &connection_type::handle_read_request,
+		        connection_type::shared_from_this(),
 		        boost::asio::placeholders::error,
 		        boost::asio::placeholders::bytes_transferred
 		    )
@@ -133,29 +280,34 @@ public:
 			//m_remote_handshake.consume(response_stream);
 			if (!m_request.parse_complete(request)) {
 				// not a valid HTTP request/response
-				throw handshake_error("Recieved invalid HTTP Request",http::status_code::BAD_REQUEST);
+				throw http::exception("Recieved invalid HTTP Request",http::status_code::BAD_REQUEST);
 			}
 			
 			// Log the raw handshake.
 			m_server->alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
 			
 			// Determine what sort of connection this is:
-			int m_version = -1;
+			m_version = -1;
 			
-			if (boost::ifind_first(m_request.header("Upgrade","websocket"))) {
-				if (m_request.header("Sec-WebSocket-Version") == "") {
+			std::string h = m_request.header("Upgrade");
+			if (boost::ifind_first(h,"websocket")) {
+				h = m_request.header("Sec-WebSocket-Version");
+				if (h == "") {
 					m_version = 0;
 				} else {
-					m_version = atoi(m_request.header("Sec-WebSocket-Version").c_str());
+					m_version = atoi(h.c_str());
 					if (m_version == 0) {
-						throw(handshake_error("Unable to determine connection version",http::status_code::BAD_REQUEST));
+						throw(http::exception("Unable to determine connection version",http::status_code::BAD_REQUEST));
 					}
 				}
 			}
 			
+			m_server->alog().at(log::alevel::DEBUG_HANDSHAKE) << "determined connection version: " << m_version << log::endl;
+			
 			if (m_version == -1) {
 				// Probably a plain HTTP request
 				// TODO: forward to an http handler?
+				
 			} else {
 				// websocket connection
 				// create a processor based on version.
@@ -169,14 +321,14 @@ public:
 					request.get(foo,9);
 					
 					if (request.gcount() != 8) {
-						throw handshake_error("Missing Key3",http::status_code::BAD_REQUEST);
+						throw http::exception("Missing Key3",http::status_code::BAD_REQUEST);
 					}
-					m_request.set_header("Sec-WebSocket-Key3",std::string(foo));
+					m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
 					
-					m_processor = processor_ptr(new protocol::hybi_00_processor());
+					m_processor = processor_ptr(new protocol::hybi_legacy_processor());
 				} else if (m_version == 7 || m_version == 8 || m_version == 13) {
 					// create hybi 17 processor
-					m_processor = protocol::processor_ptr(new protocol::hybi_17_processor());
+					m_processor = processor_ptr(new protocol::hybi_processor<blank_rng>(m_rng));
 				} else {
 					// TODO: respond with unknown version message per spec
 				}
@@ -185,18 +337,18 @@ public:
 				m_processor->validate_handshake(m_request);
 				
 				// ask local application to confirm that it wants to accept
-				m_handler->validate(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+				m_handler->validate(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 				
 				m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
 			}
 			
-		} catch (const handshake_error& e) {
+		} catch (const http::exception& e) {
 			m_server->alog().at(log::alevel::DEBUG_HANDSHAKE) << e.what() << log::endl;
 			
 			m_server->elog().at(log::elevel::ERROR) 
 			<< "Caught handshake exception: " << e.what() << log::endl;
 			
-			m_response.set_status(e.m_http_error_code,e.m_http_error_msg);
+			m_response.set_status(e.m_error_code,e.m_error_msg);
 		}
 		
 		write_response();
@@ -225,8 +377,9 @@ public:
 		
 		std::string raw = m_response.raw();
 		
+		// Hack for legacy HyBi
 		if (m_version == 0) {
-			raw += digest;
+			raw += boost::dynamic_pointer_cast<protocol::hybi_legacy_processor>(m_processor)->get_key3();
 		}
 		
 		m_server->alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
@@ -236,8 +389,8 @@ public:
 		    m_socket,
 		    boost::asio::buffer(raw),
 		    boost::bind(
-		        &session_type::handle_write_response,
-		        session_type::shared_from_this(),
+		        &connection_type::handle_write_response,
+		        connection_type::shared_from_this(),
 		        boost::asio::placeholders::error
 		    )
 		);
@@ -250,7 +403,7 @@ public:
 		if (error) {
 			log_error("Network error writing handshake response",error);
 			terminate_connection(false);
-			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 			return;
 		}
 		
@@ -264,15 +417,17 @@ public:
 			<< log::endl;
 			
 			terminate_connection(true);
-			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 			return;
 		}
 		
-		m_state = state::OPEN;
+		m_state = session::state::OPEN;
 		
-		m_handler->on_open(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+		m_handler->on_open(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 		
 		// TODO: start read message loop.
+		m_server->alog().at(log::alevel::DEVEL) << "calling handle_read_frame" << log::endl;
+		handle_read_frame(boost::system::error_code());
 	}
 	
 	void handle_read_frame (const boost::system::error_code& error) {
@@ -316,41 +471,105 @@ public:
 		// process data from the buffer just read into
 		std::istream s(&m_buf);
 		
+		
+		
 		while (m_buf.size() > 0) {
 			try {
-				m_processor.consume(s);
+				m_server->alog().at(log::alevel::DEVEL) << "starting consume, buffer size: " << m_buf.size() << log::endl;
+				m_processor->consume(s);
+				m_server->alog().at(log::alevel::DEVEL) << "done consume, buffer size: " << m_buf.size() << log::endl;
 				
-				if (m_processor.ready()) {
-					switch (m_processor.get_opcode()) {
-						case TEXT:
-							// TODO: on_message
+				if (m_processor->ready()) {
+					m_server->alog().at(log::alevel::DEVEL) << "new message ready" << m_buf.size() << log::endl;
+					
+					bool response;
+					switch (m_processor->get_opcode()) {
+						case frame::opcode::TEXT:
+							m_handler->on_message(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()),m_processor->get_utf8_payload());
 							break;
-						case BINARY:
-							// TODO: on_message
+						case frame::opcode::BINARY:
+							m_handler->on_message(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()),m_processor->get_binary_payload());
 							break;
-						case PING:
-							// TODO: on_ping
-							// TODO: auto-respond pong perhaps based on
+						case frame::opcode::PING:
+							response = m_handler->on_ping(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()),m_processor->get_binary_payload());
+							
+							if (response) {
+								// send response ping
+							}
 							break;
-						case PONG:
-							// TODO: on_pong
+						case frame::opcode::PONG:
+							m_handler->on_pong(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()),m_processor->get_binary_payload());
+							
+							// TODO: disable ping response timer
+							
 							break;
-						case CLOSE:
-							// TODO: send_close
-							// if we are server
-							//   drop tcp
-							//   m_state = CLOSED
-							// else
-							//   set timer
-							//   on timer, drop tcp, m_state = closed.
+						case frame::opcode::CLOSE:
+							if (m_state == session::state::OPEN) {
+								// other end is initiating
+								m_server->elog().at(log::elevel::DEVEL) 
+								<< "sending close ack" << log::endl;
+																
+								m_remote_close_code = m_processor->get_close_code();
+								m_remote_close_reason = m_processor->get_close_reason();
+								
+								send_close_ack();
+							} else if (m_state == session::state::CLOSING) {
+								// ack of our close
+								m_server->elog().at(log::elevel::DEVEL) 
+								<< "got close ack" << log::endl;
+								
+								m_remote_close_code = m_processor->get_close_code();
+								m_remote_close_reason = m_processor->get_close_reason();
+								terminate_connection(false);
+								// TODO: start terminate timer (if client)
+							}
 							break;
 						default:
 							// error
 							break;
 					}
+					m_processor->reset();
 				}
-			} catch (/* session exception */) {
+			} catch (const session::exception& e) {
+				m_server->elog().at(log::elevel::ERROR) 
+				    << "Caught session exception: " << e.what() << log::endl;
 				
+				// if the exception happened while processing.
+				// TODO: this is not elegant, perhaps separate frame read vs process
+				// exceptions need to be used.
+				if (m_processor->ready()) {
+					m_processor->reset();
+				}
+				
+				if (e.code() == session::error::PROTOCOL_VIOLATION) {
+					//send_close(close::status::PROTOCOL_ERROR, e.what());
+					m_server->elog().at(log::elevel::DEVEL) 
+					<< "Dropping TCP due to unrecoverable protocol violation" 
+					<< log::endl;
+					terminate_connection(true);
+				} else if (e.code() == session::error::PAYLOAD_VIOLATION) {
+					//send_close(close::status::INVALID_PAYLOAD, e.what());
+					m_server->elog().at(log::elevel::DEVEL) 
+					<< "Dropping TCP due to unrecoverable payload violation" 
+					<< log::endl;
+					terminate_connection(true);
+				} else if (e.code() == session::error::INTERNAL_SERVER_ERROR) {
+					//send_close(close::status::ABNORMAL_CLOSE, e.what());
+					m_server->elog().at(log::elevel::DEVEL) 
+					<< "Dropping TCP due to unrecoverable internal server error" 
+					<< log::endl;
+					terminate_connection(true);
+				} else if (e.code() == session::error::SOFT_ERROR) {
+					// ignore and continue processing frames
+					continue;
+				} else {
+					// Fatal error, forcibly end connection immediately.
+					m_server->elog().at(log::elevel::DEVEL) 
+					<< "Dropping TCP due to unrecoverable exception" 
+					<< log::endl;
+					terminate_connection(true);
+				}
+				break;
 			}
 			
 			// if the result of processing/consuming a frame closed the 
@@ -367,13 +586,142 @@ public:
 		}
 		
 		// try and read more
+		if (m_processor->get_bytes_needed() > 0) {
+			// TODO: read timeout timer?
+			
+			boost::asio::async_read(
+				m_socket,
+				m_buf,
+				boost::asio::transfer_at_least(m_processor->get_bytes_needed()),
+				boost::bind(
+					&connection_type::handle_read_frame,
+					connection_type::shared_from_this(),
+					boost::asio::placeholders::error
+				)
+			);
+		} else {
+			// TODO: ????
+		}
+	}
+	
+	void send_close() {
+		
+	}
+	
+	// send an acknowledgement close frame
+	void send_close_ack() {
+		// TODO: state should be OPEN
+		
+		// echo close value unless there is a good reason not to.
+		if (m_remote_close_code == close::status::NO_STATUS) {
+			m_local_close_code = close::status::NORMAL;
+			m_local_close_reason = "";
+		} else if (m_remote_close_code == close::status::ABNORMAL_CLOSE) {
+			// TODO: can we possibly get here? This means send_close_ack was
+			//       called after a connection ended without getting a close
+			//       frame
+			throw "shouldn't be here";
+		} else if (close::status::invalid(m_remote_close_code)) {
+			m_local_close_code = close::status::PROTOCOL_ERROR;
+			m_local_close_reason = "Status code is invalid";
+		} else if (close::status::reserved(m_remote_close_code)) {
+			m_local_close_code = close::status::PROTOCOL_ERROR;
+			m_local_close_reason = "Status code is reserved";
+		} else {
+			m_local_close_code = m_remote_close_code;
+			m_local_close_reason = m_remote_close_reason;
+		}
+				
+		binary_string_ptr msg = m_processor->prepare_close_frame(m_local_close_code,false,m_local_close_reason);
+		
+		// TODO: check whether we should cancel the current in flight write.
+		//       if not canceled the close message will be sent as soon as the
+		//       current write completes.
+		
+		m_write_state = write_state::INTURRUPT;
+		write_message(m_processor->prepare_close_frame(m_local_close_code,
+													   false,
+													   m_local_close_reason));
+	}
+	
+	void write_message(binary_string_ptr msg) {
+		m_write_buffer += msg->size();
+		m_write_queue.push(msg);
+		write();
+	}
+	
+	void write() {
+		switch (m_write_state) {
+			case write_state::IDLE:
+				break;
+			case write_state::WRITING:
+				// already writing. write() will get called again by the write
+				// handler once it is ready.
+				return;
+			case write_state::INTURRUPT:
+				// clear the queue except for the last message
+				while (m_write_queue.size() > 1) {
+					m_write_buffer -= m_write_queue.front()->size();
+					m_write_queue.pop();
+				}
+				break;
+			default:
+				// TODO: assert shouldn't be here
+				break;
+		}
+		
+		if (m_write_queue.size() > 0) {
+			if (m_write_state == write_state::IDLE) {
+				m_write_state = write_state::WRITING;
+			}
+			
+			boost::asio::async_write(
+			    m_socket,
+			    boost::asio::buffer(*m_write_queue.front()),
+			    boost::bind(
+			        &connection_type::handle_write,
+			        connection_type::shared_from_this(),
+			        boost::asio::placeholders::error
+			    )
+			);
+		} else {
+			// if we are in an inturrupted state and had nothing else to write
+			// it is safe to terminate the connection.
+			if (m_write_state == write_state::INTURRUPT) {
+				terminate_connection(false);
+			}
+		}
+	}
+	
+	void handle_write(const boost::system::error_code& error) {
+		if (error) {
+			if (error == boost::asio::error::operation_aborted) {
+				// previous write was aborted
+			} else {
+				log_error("Error writing frame data",error);
+				terminate_connection(false);
+				return;
+			}
+		}
+		
+		m_write_buffer -= m_write_queue.front()->size();
+		m_write_queue.pop();
+		
+		if (m_write_state == write_state::WRITING) {
+			m_write_state = write_state::IDLE;
+		}
+		
+		write();
 	}
 	
 	// end conditions
 	// - tcp connection is closed
 	// - session state is CLOSED
 	// - session end flags are set
+	// - application is notified
 	void terminate_connection(bool failed_by_me) {
+		m_server->alog().at(log::alevel::DEBUG_CLOSE) << "terminate called" << log::endl;
+		
 		if (m_state == session::state::CLOSED) {
 			// shouldn't be here
 		}
@@ -403,10 +751,10 @@ public:
 		
 		// If we called terminate from the connecting state call on_fail
 		if (old_state == session::state::CONNECTING) {
-			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+			m_handler->on_fail(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 		} else if (old_state == session::state::OPEN || 
 				   old_state == session::state::CLOSING) {
-			m_handler->on_close(boost::static_pointer_cast<websocketpp::session::server>(session_type::shared_from_this()));
+			m_handler->on_close(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
 		} else {
 			// if we were already closed something is wrong
 		}
@@ -416,6 +764,23 @@ public:
 	void log_error(std::string msg,const boost::system::error_code& e) {
 		m_server->elog().at(log::elevel::ERROR) 
 		<< msg << "(" << e << ")" << log::endl;
+	}
+	void log_close_result() {
+		m_server->alog().at(log::alevel::DISCONNECT) 
+		//<< "Disconnect " << (m_was_clean ? "Clean" : "Unclean")
+		<< "Disconnect " 
+		<< " close local:[" << m_local_close_code
+		<< (m_local_close_reason == "" ? "" : ","+m_local_close_reason) 
+		<< "] remote:[" << m_remote_close_code 
+		<< (m_remote_close_reason == "" ? "" : ","+m_remote_close_reason) << "]"
+		<< log::endl;
+	}
+	void log_open_result() {
+		m_server->alog().at(log::alevel::CONNECT) << "Connection "
+		<< m_socket.remote_endpoint() << " v" << m_version << " "
+		<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+		<< " " << m_uri.resource << " " << m_response.status_code() 
+		<< log::endl;
 	}
 	
 	void fail_on_expire(const boost::system::error_code& error) {
@@ -433,6 +798,8 @@ public:
 	}
 	
 private:
+	
+	
 	server_ptr					m_server;
 	
 	boost::asio::io_service&	m_io_service;
@@ -442,13 +809,33 @@ private:
 	
 	server_handler_ptr			m_handler;
 	processor_ptr				m_processor;
-				
+	blank_rng					m_rng;
+	
+	// Connection state
 	http::parser::request		m_request;
 	http::parser::response		m_response;
 	
-	session::state::value		m_state;
-	int							m_version;
+	std::vector<std::string>	m_requested_subprotocols;
+	std::vector<std::string>	m_requested_extensions;
+	std::string					m_subprotocol;
+	std::vector<std::string>	m_extensions;
+	std::string					m_origin;
+	unsigned int				m_version;
+	bool						m_secure;
+	ws_uri						m_uri;
 	
+	session::state::value		m_state;
+	
+	// Write queue
+	std::queue<binary_string_ptr>	m_write_queue;
+	size_t							m_write_buffer;
+	write_state::value				m_write_state;
+	
+	// Close state
+	close::status::value		m_local_close_code;
+	std::string					m_local_close_reason;
+	close::status::value		m_remote_close_code;
+	std::string					m_remote_close_reason;
 	bool						m_closed_by_me;
 	bool						m_failed_by_me;
 	bool						m_dropped_by_me;
@@ -461,11 +848,11 @@ template <template <class> class logger_type = log::logger>
 class server : public boost::enable_shared_from_this< server<logger_type> > {
 public:
 	typedef server<logger_type> endpoint_type;
-	typedef websocketpp::server::session<endpoint_type> session_type;
+	typedef websocketpp::server::connection<endpoint_type> connection_type;
 	
 	typedef boost::shared_ptr<endpoint_type> ptr;
 	//typedef websocketpp::session::server_ptr session_ptr;
-	typedef boost::shared_ptr<session_type> session_ptr;
+	typedef boost::shared_ptr<connection_type> connection_ptr;
 	
 	server<logger_type>(uint16_t port, server_handler_ptr handler) 
 	: m_endpoint(tcp::v6(),port),
@@ -481,12 +868,17 @@ public:
 		;
 	}
 	
+	void run() {
+		start_accept();
+		m_io_service.run();
+	}
+	
 	// creates a new session object and connects the next websocket
 	// connection to it.
 	void start_accept() {
 		// TODO: sanity check whether the session buffer size bound could be reduced
-		session_ptr new_session(
-			new session_type(
+		connection_ptr new_session(
+			new connection_type(
 				endpoint_type::shared_from_this(),
 				m_io_service,
 				m_handler
@@ -502,6 +894,8 @@ public:
 				boost::asio::placeholders::error
 			)
 		);
+		
+		
 	}
 	
 	// INTERFACE FOR LOCAL APPLICATIONS
@@ -545,78 +939,9 @@ public:
 	
 	static const bool is_server = true;
 	
-	rng_policy& get_rng() {
+	/*rng_policy& get_rng() {
 		return m_rng;
-	}
-	
-	// checks a handshake for validity. Returns true if valid and throws a 
-	// handshake_error otherwise
-	bool validate_handshake(const http::parser::request& handshake) {
-		std::stringstream err;
-		std::string h;
-		
-		if (handshake.method() != "GET") {
-			err << "Websocket handshake has invalid method: " 
-			    << handshake.method();
-			
-			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		// TODO: allow versions greater than 1.1
-		if (handshake.version() != "HTTP/1.1") {
-			err << "Websocket handshake has invalid HTTP version: " 
-			<< handshake.method();
-			
-			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		// verify the presence of required headers
-		h = handshake.header("Host");
-		if (h == "") {
-			throw(handshake_error("Required Host header is missing",http::status_code::BAD_REQUEST));
-		} else if (!this->validate_host(h)) {
-			err << "Host " << h << " is not one of this server's names.";
-			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		h = handshake.header("Upgrade");
-		if (h == "") {
-			throw(handshake_error("Required Upgrade header is missing",http::status_code::BAD_REQUEST));
-		} else if (!boost::ifind_first(h,"websocket")) {
-			err << "Upgrade header \"" << h << "\", does not contain required token \"websocket\"";
-			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		h = handshake.header("Connection");
-		if (h == "") {
-			throw(handshake_error("Required Connection header is missing",http::status_code::BAD_REQUEST));
-		} else if (!boost::ifind_first(h,"upgrade")) {
-			err << "Connection header, \"" << h 
-			<< "\", does not contain required token \"upgrade\"";
-			throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		if (handshake.header("Sec-WebSocket-Key") == "" && handshake.header("Sec-WebSocket-Key1") == "" && handshake.header("Sec-WebSocket-Key2") == "") {
-			throw(handshake_error("Required Sec-WebSocket-Key header is missing",http::status_code::BAD_REQUEST));
-		}
-		
-		h = handshake.header("Sec-WebSocket-Version");
-		if (h == "") {
-			// TODO: if we want to support draft 00 this line should set version to 0
-			// rather than bail
-			//throw(handshake_error("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
-		} else {
-			int version = atoi(h.c_str());
-			
-			if (version != 7 && version != 8 && version != 13) {
-				err << "This server doesn't support WebSocket protocol version "
-				<< version;
-				throw(handshake_error(err.str(),http::status_code::BAD_REQUEST));
-			}
-		}
-		
-		return true;
-	}
+	}*/
 	
 	// Confirms that the port in the host string matches the port we are listening
 	// on. End user application is responsible for checking the /host/ part.
@@ -653,10 +978,10 @@ public:
 private:
 	// if no errors starts the session's read loop and returns to the
 	// start_accept phase.
-	void handle_accept(session_ptr session,const boost::system::error_code& error) 
+	void handle_accept(connection_ptr connection,const boost::system::error_code& error) 
 	{
 		if (!error) {
-			session->read_request();
+			connection->read_request();
 			
 			// TODO: add session to local session vector
 		} else {
@@ -680,7 +1005,7 @@ private:
 	logger_type<log::alevel::value>	m_alog;
 	logger_type<log::elevel::value> m_elog;
 	
-	std::vector<session_ptr>	m_sessions;
+	std::vector<connection_ptr>	m_connections;
 	
 	uint64_t					m_max_message_size;	
 	

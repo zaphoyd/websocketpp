@@ -185,8 +185,27 @@ namespace http {
 		}
 	}
 	
-	
-	
+	class exception : public std::exception {
+	public:	
+		exception(const std::string& log_msg,
+				  status_code::value error_code,
+				  const std::string& error_msg = "",
+				  const std::string& body = "")
+		: m_msg(log_msg),
+		m_error_code(error_code),
+		m_error_msg(error_msg),
+		m_body(body) {}
+		~exception() throw() {}
+		
+		virtual const char* what() const throw() {
+			return m_msg.c_str();
+		}
+		
+		std::string			m_msg;
+		status_code::value	m_error_code;
+		std::string			m_error_msg;
+		std::string			m_body;
+	};
 }
 }
 

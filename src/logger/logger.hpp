@@ -62,6 +62,8 @@ namespace alevel {
 	
 	// DEBUG values
 	static const value DEBUG_HANDSHAKE = 0x8000;
+	static const value DEBUG_CLOSE = 0x4000;
+	static const value DEVEL = 0x2000;
 	
 	static const value ALL = 0xFFFF;
 }	

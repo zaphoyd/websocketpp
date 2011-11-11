@@ -33,8 +33,8 @@
 #include <string>
 #include <vector>
 
-#include "websocket_constants.hpp"
-#include "network_utilities.hpp"
+#include "../websocket_constants.hpp"
+#include "../network_utilities.hpp"
 
 namespace websocketpp {	
 namespace session {
@@ -48,6 +48,36 @@ namespace state {
 	};
 }
 
+namespace error {
+	enum value {
+		FATAL_ERROR = 0,			// force session end
+		SOFT_ERROR = 1,				// should log and ignore
+		PROTOCOL_VIOLATION = 2,		// must end session
+		PAYLOAD_VIOLATION = 3,		// should end session
+		INTERNAL_SERVER_ERROR = 4,	// cleanly end session
+		MESSAGE_TOO_BIG = 5			// ???
+	};
+}
+	
+class exception : public std::exception {
+public:	
+	exception(const std::string& msg,
+			  error::value code = error::FATAL_ERROR) 
+	: m_msg(msg),m_code(code) {}
+	~exception() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	error::value code() const throw() {
+		return m_code;
+	}
+	
+	std::string m_msg;
+	error::value m_code;
+};
+
  /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   *                             Server Session API                          *
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -55,7 +85,7 @@ class server {
 public:
 	// Valid always
 	virtual session::state::value get_state() const = 0;
-	virtual int get_version() const = 0;
+	virtual unsigned int get_version() const = 0;
 	
 	virtual std::string get_origin() const = 0;
 	virtual std::string get_request_header(const std::string& key) const = 0;
@@ -71,20 +101,20 @@ public:
 	virtual void select_extension(const std::string& value) = 0;
 	
 	// Valid for OPEN state
-	virtual void send(const std::string& msg) = 0;
-	virtual void send(const std::vector<unsigned char>& data) = 0;
-	virtual void close(close::status::value code, const std::string& reason) = 0;
-	virtual void ping(const std::string& payload) = 0;
-	virtual void pong(const std::string& payload) = 0;
+	virtual void send(const utf8_string& payload) = 0;
+	virtual void send(const binary_string& data) = 0;
+	virtual void close(close::status::value code, const utf8_string& reason) = 0;
+	virtual void ping(const binary_string& payload) = 0;
+	virtual void pong(const binary_string& payload) = 0;
 	
 	// Valid for CLOSED state
 	virtual close::status::value get_local_close_code() const = 0;
-	virtual std::string get_local_close_reason() const = 0;
+	virtual utf8_string get_local_close_reason() const = 0;
 	virtual close::status::value get_remote_close_code() const = 0;
-	virtual std::string get_remote_close_reason() const = 0;
-	virtual bool failed_by_me() const = 0;
-	virtual bool dropped_by_me() const = 0;
-	virtual bool closed_by_me() const = 0;
+	virtual utf8_string get_remote_close_reason() const = 0;
+	virtual bool get_failed_by_me() const = 0;
+	virtual bool get_dropped_by_me() const = 0;
+	virtual bool get_closed_by_me() const = 0;
 };
 typedef boost::shared_ptr<server> server_ptr;
 
@@ -92,6 +122,9 @@ typedef boost::shared_ptr<server> server_ptr;
   *                             Server Handler API                          *
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 class server_handler {
+public:
+	virtual ~server_handler() {}
+	
 	// validate will be called after a websocket handshake has been received and
 	// before it is accepted. It provides a handler the ability to refuse a 
 	// connection based on application specific logic (ex: restrict domains or
@@ -126,13 +159,12 @@ class server_handler {
 	// data will not be avaliable after this callback ends so the handler must 
 	// either completely process the message or copy it somewhere else for 
 	// processing later.
-	virtual void on_message(server_ptr session,
-	                        const std::vector<unsigned char> &data) = 0;
+	virtual void on_message(server_ptr session, binary_string_ptr data) = 0;
 	
 	// on_message (text version). Identical to on_message except the data 
 	// parameter is a string interpreted as UTF-8. WebSocket++ guarantees that
 	// this string is valid UTF-8.
-	virtual void on_message(server_ptr session,const std::string &msg) = 0;
+	virtual void on_message(server_ptr session, utf8_string_ptr msg) = 0;
 	
 	// on_fail is called whenever a session is terminated or failed before it 
 	// was successfully established. This happens if there is an error during 
@@ -142,6 +174,19 @@ class server_handler {
 	// application will need information from `session` after this function you
 	// should either save the session_ptr somewhere or copy the data out.
 	virtual void on_fail(server_ptr session) {};
+	
+	// on_ping is called whenever a ping is recieved with the binary 
+	// application data from the ping. If on_ping returns true the
+	// implimentation will send a response pong.
+	virtual bool on_ping(server_ptr session, binary_string_ptr data) {
+		return true;
+	}
+	
+	// on_pong is called whenever a pong is recieved with the binary 
+	// application data from the pong.
+	virtual void on_pong(server_ptr session, binary_string_ptr data) {}
+	
+	// TODO: on_ping_timeout
 };
 
 typedef boost::shared_ptr<server_handler> server_handler_ptr;
@@ -152,7 +197,7 @@ typedef boost::shared_ptr<server_handler> server_handler_ptr;
 	
 class client {
 public:
-	client(const std::string& uri) = 0;
+	client(const std::string& uri) {};
 	
 	// Valid always
 	virtual session::state::value get_state() const = 0;
@@ -174,17 +219,17 @@ public:
 	virtual std::string get_subprotocol() const;
 	virtual const std::vector<std::string>& get_extensions() const = 0;
 	
-	virtual void send(const std::string& msg) = 0;
-	virtual void send(const std::vector<unsigned char>& data) = 0;
-	virtual void close(close::status::value code, const std::string& reason) = 0;
-	virtual void ping(const std::string& payload) = 0;
-	virtual void pong(const std::string& payload) = 0;
+	virtual void send(const utf8_string& msg) = 0;
+	virtual void send(const binary_string& data) = 0;
+	virtual void close(close::status::value code, const binary_string& reason) = 0;
+	virtual void ping(const binary_string& payload) = 0;
+	virtual void pong(const binary_string& payload) = 0;
 	
 	// Valid for CLOSED state
 	virtual close::status::value get_local_close_code() const = 0;
-	virtual std::string get_local_close_reason() const = 0;
+	virtual utf8_string get_local_close_reason() const = 0;
 	virtual close::status::value get_remote_close_code() const = 0;
-	virtual std::string get_remote_close_reason() const = 0;
+	virtual utf8_string get_remote_close_reason() const = 0;
 	virtual bool failed_by_me() const = 0;
 	virtual bool dropped_by_me() const = 0;
 	virtual bool closed_by_me() const = 0;
@@ -197,6 +242,7 @@ typedef boost::shared_ptr<client> client_ptr;
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	
 class client_handler {
+public:
 	// on_open is called after the websocket session has been successfully 
 	// established and is in the OPEN state. The session is now avaliable to 
 	// send messages and will begin reading frames and calling the on_message/
@@ -219,13 +265,12 @@ class client_handler {
 	// data will not be avaliable after this callback ends so the handler must 
 	// either completely process the message or copy it somewhere else for 
 	// processing later.
-	virtual void on_message(client_ptr session,
-							const std::vector<unsigned char> &data) = 0;
+	virtual void on_message(client_ptr session, binary_string_ptr data) = 0;
 	
 	// on_message (text version). Identical to on_message except the data 
 	// parameter is a string interpreted as UTF-8. WebSocket++ guarantees that
 	// this string is valid UTF-8.
-	virtual void on_message(client_ptr session,const std::string &msg) = 0;
+	virtual void on_message(client_ptr session, utf8_string_ptr msg) = 0;
 	
 	// on_fail is called whenever a session is terminated or failed before it 
 	// was successfully established. This happens if there is an error during 
@@ -235,6 +280,19 @@ class client_handler {
 	// application will need information from `session` after this function you
 	// should either save the session_ptr somewhere or copy the data out.
 	virtual void on_fail(client_ptr session) {};
+	
+	// on_ping is called whenever a ping is recieved with the binary 
+	// application data from the ping. If on_ping returns true the
+	// implimentation will send a response pong.
+	virtual bool on_ping(server_ptr session, binary_string_ptr data) {
+		return true;
+	}
+	
+	// on_pong is called whenever a pong is recieved with the binary 
+	// application data from the pong.
+	virtual void on_pong(server_ptr session, binary_string_ptr data) {}
+	
+	// TODO: on_ping_timeout
 };
 
 typedef boost::shared_ptr<client_handler> client_handler_ptr;

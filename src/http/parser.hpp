@@ -76,9 +76,9 @@ public:
 		}
 	}
 	
-	// multiple calls to set header will result in values aggregating.
+	// multiple calls to add header will result in values aggregating.
 	// use replace_header if you do not want this behavior.
-	void set_header(const std::string &key,const std::string &val) {
+	void add_header(const std::string &key,const std::string &val) {
 		// TODO: prevent use of reserved headers?
 		if (this->header(key) == "") {
 			m_headers[key] = val;
@@ -106,7 +106,7 @@ protected:
 			end = header.find(": ",0);
 			
 			if (end != std::string::npos) {			
-				set_header(header.substr(0,end),header.substr(end+2));
+				add_header(header.substr(0,end),header.substr(end+2));
 			}
 		}
 		

@@ -28,9 +28,11 @@
 #ifndef WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
 #define WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
 
+#include "../http/parser.hpp"
+
 #include <boost/shared_ptr.hpp>
 
-#include "../http/parser.hpp"
+#include <iostream>
 
 namespace websocketpp {
 namespace protocol {
@@ -47,23 +49,38 @@ public:
 	virtual void validate_handshake(const http::parser::request& headers) const = 0;
 	
 	virtual void handshake_response(const http::parser::request& request,http::parser::response& response) = 0;
-	
-	// Given a list of HTTP headers determin if the values are a reasonable 
-	// response to our handshake request. If so 
-	
-	// construct
-	
+		
 	// consume bytes, throw on exception
 	virtual void consume(std::istream& s) = 0;
 	
 	// is there a message ready to be dispatched?
-	virtual bool ready() = 0;
-	virtual ? get_opcode() = 0;
+	virtual bool ready() const = 0;
+	virtual void reset() = 0;
 	
-	// consume
-	// is_message_complete
-	// deliver message (get_payload)
-	// some sort of message type? for onping onpong?
+	virtual uint64_t get_bytes_needed() const = 0;
+	
+	// Get information about the message that is ready
+	virtual frame::opcode::value get_opcode() const = 0;
+	
+	virtual utf8_string_ptr get_utf8_payload() const = 0;
+	virtual binary_string_ptr get_binary_payload() const = 0;
+	virtual close::status::value get_close_code() const = 0;
+	virtual utf8_string get_close_reason() const = 0;
+	
+	// TODO: prepare a frame
+	virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
+											bool mask,
+											const utf8_string& payload)  = 0;
+	virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
+											bool mask,
+											const binary_string& payload)  = 0;
+	
+	virtual binary_string_ptr prepare_close_frame(close::status::value code,
+												  bool mask,
+												  const std::string& reason) const = 0;
+	
+	
+	
 };
 
 typedef boost::shared_ptr<processor> processor_ptr;

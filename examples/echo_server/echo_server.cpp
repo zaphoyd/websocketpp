@@ -53,24 +53,17 @@ int main(int argc, char* argv[]) {
 	
 	
 	try {
-		boost::asio::io_service io_service;
-		tcp::endpoint endpoint(tcp::v6(), port);
+		// create an instance of our handler
+		server_handler_ptr default_handler(new websocketecho::echo_server_handler());
+				
+		// create a server that listens on port `port` and uses our handler
+		typedef boost::shared_ptr< websocketpp::server::server<> > server_ptr;
 		
-		using websocketpp::server;
+		server_ptr server(new websocketpp::server::server<>(port,default_handler));
 		
-		typedef boost::shared_ptr< server<> > server_ptr;
-		//typedef server<>::ptr server_ptr;
+		server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
 		
-		server_ptr s(new server<>(io_service,endpoint));
-		
-		server<>::connection_handler_ptr handler = s->make_handler<websocketecho::echo_server_handler>();
-		
-		s->set_default_connection_handler(handler);
-		
-		s->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
-		
-		s->alog().set_level(websocketpp::log::alevel::CONNECT);
-		s->alog().set_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
+		server->alog().set_level(websocketpp::log::alevel::ALL);
 		
 		//server->parse_command_line(argc, argv);
 		
@@ -80,15 +73,12 @@ int main(int argc, char* argv[]) {
 		
 		// bump up max message size to maximum since we may be using the echo 
 		// server to test performance and protocol extremes.
-		s->set_max_message_size(websocketpp::frame::limits::PAYLOAD_SIZE_JUMBO); 
+		//server->set_max_message_size(websocketpp::frame::limits::PAYLOAD_SIZE_JUMBO); 
 		
 		// start the server
-		s->start_accept();
+		server->run();
 		
 		std::cout << "Starting echo server on " << full_host << std::endl;
-		
-		// start asio
-		io_service.run();
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}

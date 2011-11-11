@@ -46,7 +46,7 @@ namespace websocketpp {
 			boost::random::random_device&,
 			boost::random::uniform_int_distribution<>
 		> m_gen;
-	}
+	};
 }
 
 #endif // BOOST_RNG_HPP

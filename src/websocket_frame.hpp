@@ -382,12 +382,12 @@ public:
 		return m_payload;
 	}
 	
-	void set_payload(const std::vector<unsigned char> source) {
+	void set_payload(const std::vector<unsigned char>& source) {
 		set_payload_helper(source.size());
 		
 		std::copy(source.begin(),source.end(),m_payload.begin());
 	}
-	void set_payload(const std::string source) {
+	void set_payload(const std::string& source) {
 		set_payload_helper(source.size());
 		
 		std::copy(source.begin(),source.end(),m_payload.begin());

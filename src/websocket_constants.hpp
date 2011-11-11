@@ -33,9 +33,18 @@
 // for exceptions that should be somewhere else
 #include <string>
 #include <exception>
+#include <vector>
+
+#include <boost/shared_ptr.hpp>
 
 // Defaults
 namespace websocketpp {
+	typedef std::vector<unsigned char> binary_string;
+	typedef boost::shared_ptr<binary_string> binary_string_ptr;
+	
+	typedef std::string utf8_string;
+	typedef boost::shared_ptr<utf8_string> utf8_string_ptr;
+	
 	const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
 	
 	// System logging levels
@@ -153,6 +162,8 @@ namespace websocketpp {
 			static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
 		}
 	}
+	
+	
 	
 	// TODO: these classes need a better place to live
 	class server_error : public std::exception {

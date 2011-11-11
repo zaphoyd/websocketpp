@@ -198,6 +198,8 @@
 		B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_constants.hpp; path = src/websocket_constants.hpp; sourceTree = "<group>"; };
 		B6FE8D1614686A8500B32547 /* md5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = md5.c; path = src/md5/md5.c; sourceTree = "<group>"; };
 		B6FE8D1714686A8500B32547 /* md5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = md5.h; path = src/md5/md5.h; sourceTree = "<group>"; };
+		B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_legacy_processor.hpp; path = src/hybi_legacy_processor.hpp; sourceTree = "<group>"; };
+		B6FE8D30146C721200B32547 /* hybi_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_processor.hpp; path = src/hybi_processor.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -327,6 +329,8 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B6FE8D30146C721200B32547 /* hybi_processor.hpp */,
+				B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */,
 				B62A5A35146BFC7D005F9EB0 /* hybi_00_processor.hpp */,
 				B62A5A2F1469512A005F9EB0 /* interfaces */,
 				B6FE8D1414686A6D00B32547 /* md5 */,
