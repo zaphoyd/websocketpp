@@ -117,7 +117,8 @@ public:
 	virtual bool get_closed_by_me() const = 0;
 };
 typedef boost::shared_ptr<server> server_ptr;
-
+typedef server_ptr server_session_ptr;
+	
  /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   *                             Server Handler API                          *
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

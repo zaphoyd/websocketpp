@@ -77,7 +77,7 @@ public:
 	
 	virtual binary_string_ptr prepare_close_frame(close::status::value code,
 												  bool mask,
-												  const std::string& reason) const = 0;
+												  const std::string& reason) = 0;
 	
 	
 	

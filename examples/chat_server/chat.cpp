@@ -30,13 +30,13 @@
 #include <boost/algorithm/string/replace.hpp>
 
 using websocketchat::chat_server_handler;
-using websocketpp::session_ptr;
+using websocketpp::session::server_session_ptr;
 
-void chat_server_handler::validate(session_ptr client) {
+void chat_server_handler::validate(server_session_ptr session) {
 	std::stringstream err;
 	
 	// We only know about the chat resource
-	if (client->get_resource() != "/chat") {
+	if (session->get_uri().resource != "/chat") {
 		err << "Request for unknown resource " << client->get_resource();
 		throw(websocketpp::handshake_error(err.str(),404));
 	}

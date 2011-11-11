@@ -38,43 +38,42 @@
 // {"type":"msg","sender":"<sender>","value":"<msg>" }
 // {"type":"participants","value":[<participant>,...]}
 
-#include <boost/shared_ptr.hpp>
 #include "../../src/websocketpp.hpp"
-#include "../../src/websocket_connection_handler.hpp"
+#include "../../src/interfaces/session.hpp"
+#include <boost/shared_ptr.hpp>
 
 #include <map>
 #include <string>
 #include <vector>
 
+using websocketpp::session::server_session_ptr;
+using websocketpp::session::server_handler;
+
 namespace websocketchat {
 
-class chat_server_handler : public websocketpp::connection_handler {
+class chat_server_handler : public server_handler {
 public:
-	chat_server_handler() {}
-	virtual ~chat_server_handler() {}
-	
-	void validate(websocketpp::session_ptr client); 
+	void validate(server_session_ptr session); 
 	
 	// add new connection to the lobby
-	void on_open(websocketpp::session_ptr client);
+	void on_open(server_session_ptr session);
 		
 	// someone disconnected from the lobby, remove them
-	void on_close(websocketpp::session_ptr client);
+	void on_close(server_session_ptr session);
 	
-	void on_message(websocketpp::session_ptr client,const std::string &msg);
+	void on_message(server_session_ptr session,websocketpp::utf8_string_ptr msg);
 	
 	// lobby will ignore binary messages
-	void on_message(websocketpp::session_ptr client,
-		const std::vector<unsigned char> &data) {}
+	void on_message(server_session_ptr session,websocketpp::binary_string_ptr data) {}
 private:
 	std::string serialize_state();
 	std::string encode_message(std::string sender,std::string msg,bool escape = true);
-	std::string get_con_id(websocketpp::session_ptr s);
+	std::string get_con_id(server_session_ptr s);
 	
 	void send_to_all(std::string data);
 	
 	// list of outstanding connections
-	std::map<websocketpp::session_ptr,std::string> m_connections;
+	std::map<server_session_ptr,std::string> m_connections;
 };
 
 typedef boost::shared_ptr<chat_server_handler> chat_server_handler_ptr;

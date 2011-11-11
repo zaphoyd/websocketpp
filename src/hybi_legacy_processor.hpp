@@ -219,7 +219,7 @@ public:
 	
 	binary_string_ptr prepare_close_frame(close::status::value code,
 										  bool mask,
-										  const std::string& reason) const {
+										  const std::string& reason) {
 		binary_string_ptr response(new binary_string(2));
 		
 		(*response)[0] = 0xFF;

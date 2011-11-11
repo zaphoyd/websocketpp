@@ -40,7 +40,7 @@ using websocketpp::session::server_handler;
 
 namespace websocketecho {
 
-	class echo_server_handler : public server_handler {
+class echo_server_handler : public server_handler {
 public:
 	// The echo server allows all domains is protocol free.
 	void validate(server_ptr session) {}
