@@ -152,49 +152,56 @@ public:
 	}
 	
 	void consume(std::istream& s) {
-		// TODO:
-		
 		while (s.good() && m_state != hybi_state::DONE) {
-			m_read_frame.consume(s);
-			
-			if (m_read_frame.ready()) {
-				switch (m_read_frame.get_opcode()) {
-					case frame::opcode::CONTINUATION:
-						if (m_opcode == frame::opcode::BINARY) {
-							extract_binary();
-						} else if (m_opcode == frame::opcode::TEXT) {
+			try {
+				m_read_frame.consume(s);
+				
+				if (m_read_frame.ready()) {
+					switch (m_read_frame.get_opcode()) {
+						case frame::opcode::CONTINUATION:
+							if (m_opcode == frame::opcode::BINARY) {
+								extract_binary();
+							} else if (m_opcode == frame::opcode::TEXT) {
+								extract_utf8();
+							} else {
+								// can't be here
+							}
+							break;
+						case frame::opcode::TEXT:
+							m_opcode = frame::opcode::TEXT;
 							extract_utf8();
-						} else {
-							// can't be here
-						}
-						break;
-					case frame::opcode::TEXT:
-						m_opcode = frame::opcode::TEXT;
-						extract_utf8();
-						break;
-					case frame::opcode::BINARY:
-						m_opcode = frame::opcode::BINARY;
-						extract_binary();
-						break;
-					case frame::opcode::CLOSE:
-						// TODO:
-						break;
-					case frame::opcode::PING:
-					case frame::opcode::PONG:
-						m_opcode = m_read_frame.get_opcode();
-						extract_binary();
-						break;
-					default:
-						throw session::exception("Invalid Opcode",session::error::PROTOCOL_VIOLATION);
-						break;
+							break;
+						case frame::opcode::BINARY:
+							m_opcode = frame::opcode::BINARY;
+							extract_binary();
+							break;
+						case frame::opcode::CLOSE:
+							m_opcode = frame::opcode::CLOSE;
+							m_close_code = m_read_frame.get_close_status();
+							m_close_reason = m_read_frame.get_close_msg();
+							break;
+						case frame::opcode::PING:
+						case frame::opcode::PONG:
+							m_opcode = m_read_frame.get_opcode();
+							extract_binary();
+							break;
+						default:
+							throw session::exception("Invalid Opcode",session::error::PROTOCOL_VIOLATION);
+							break;
+					}
+					if (m_read_frame.get_fin()) {
+						m_state = hybi_state::DONE;
+					}
+					m_read_frame.reset();
 				}
-				if (m_read_frame.get_fin()) {
-					m_state = hybi_state::DONE;
+			} catch (const frame::exception& e) {
+				if (m_read_frame.ready()) {
+					m_read_frame.reset();
 				}
+				
+				throw session::exception("Frame Error",session::error::PROTOCOL_VIOLATION);
 			}
 		}
-		
-		
 	}
 	
 	void extract_binary() {
@@ -260,13 +267,19 @@ public:
 	
 	// legacy hybi doesn't have close codes
 	close::status::value get_close_code() const {
-		// TODO
-		return close::status::NO_STATUS;
+		if (!ready()) {
+			throw "not ready";
+		}
+		
+		return m_close_code;
 	}
 	
 	utf8_string get_close_reason() const {
-		// TODO
-		return "";
+		if (!ready()) {
+			throw "not ready";
+		}
+
+		return m_close_reason;
 	}
 	
 	binary_string_ptr prepare_frame(frame::opcode::value opcode,
@@ -346,6 +359,9 @@ private:
 	
 	utf8_string_ptr			m_utf8_payload;
 	binary_string_ptr		m_binary_payload;
+	
+	close::status::value	m_close_code;
+	std::string				m_close_reason;
 	
 	frame::parser<rng_policy>	m_read_frame;
 	frame::parser<rng_policy>	m_write_frame;

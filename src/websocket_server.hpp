@@ -431,30 +431,20 @@ public:
 	}
 	
 	void handle_read_frame (const boost::system::error_code& error) {
+		// check if state changed while we were waiting for a read.
+		if (m_state == session::state::CLOSED) { return; }
+		
 		if (error) {
 			if (error == boost::asio::error::eof) {			
-				if (m_state == session::state::CLOSED) {
-					// this was expected
-					return;
-				} else {
-					// got unexpected EOF
-					// TODO: log error
-					terminate_connection(false);
-				}
+				// got unexpected EOF
+				// TODO: log error
+				terminate_connection(false);
 			} else if (error == boost::asio::error::operation_aborted) {
-				if (m_state == session::state::CLOSED) {
-					// some other part of our client called shutdown on our 
-					// socket. This is usually due to a write error. Everything 
-					// should have already been logged and dropped so we just 
-					// return here
-					return;
-				} else {
-					// got unexpected abort (likely our server issued an abort on
-					// all connections on this io_service)
-					
-					// TODO: log error
-					terminate_connection(true);
-				}
+				// got unexpected abort (likely our server issued an abort on
+				// all connections on this io_service)
+				
+				// TODO: log error
+				terminate_connection(true);
 			} else {
 				// Other unexpected error
 				
@@ -462,18 +452,13 @@ public:
 				terminate_connection(false);
 			}
 		}
-		
-		// check if state changed while we were waiting for a read.
-		if (m_state == session::state::CLOSED) {
-			return;
-		}
-		
+				
 		// process data from the buffer just read into
 		std::istream s(&m_buf);
 		
+		m_server->alog().at(log::alevel::DEVEL) << "starting while, buffer size: " << m_buf.size() << log::endl;
 		
-		
-		while (m_buf.size() > 0) {
+		while (m_state != session::state::CLOSED && m_buf.size() > 0) {
 			try {
 				m_server->alog().at(log::alevel::DEVEL) << "starting consume, buffer size: " << m_buf.size() << log::endl;
 				m_processor->consume(s);
@@ -495,6 +480,7 @@ public:
 							
 							if (response) {
 								// send response ping
+								write_message(m_processor->prepare_frame(frame::opcode::PONG,false,*m_processor->get_binary_payload()));
 							}
 							break;
 						case frame::opcode::PONG:
@@ -504,28 +490,37 @@ public:
 							
 							break;
 						case frame::opcode::CLOSE:
+							m_remote_close_code = m_processor->get_close_code();
+							m_remote_close_reason = m_processor->get_close_reason();
+							
+							// check that the codes we got over the wire are
+							// valid
+							
+							if (close::status::invalid(m_remote_close_code)) {
+								throw session::exception("Invalid close code",session::error::PROTOCOL_VIOLATION);
+							}
+							
+							if (close::status::reserved(m_remote_close_code)) {
+								throw session::exception("Reserved close code",session::error::PROTOCOL_VIOLATION);
+							}
+							
 							if (m_state == session::state::OPEN) {
 								// other end is initiating
 								m_server->elog().at(log::elevel::DEVEL) 
 								<< "sending close ack" << log::endl;
 																
-								m_remote_close_code = m_processor->get_close_code();
-								m_remote_close_reason = m_processor->get_close_reason();
-								
 								send_close_ack();
 							} else if (m_state == session::state::CLOSING) {
 								// ack of our close
 								m_server->elog().at(log::elevel::DEVEL) 
 								<< "got close ack" << log::endl;
 								
-								m_remote_close_code = m_processor->get_close_code();
-								m_remote_close_reason = m_processor->get_close_reason();
 								terminate_connection(false);
 								// TODO: start terminate timer (if client)
 							}
 							break;
 						default:
-							// error
+							throw session::exception("Invalid Opcode",session::error::PROTOCOL_VIOLATION);
 							break;
 					}
 					m_processor->reset();
@@ -542,23 +537,11 @@ public:
 				}
 				
 				if (e.code() == session::error::PROTOCOL_VIOLATION) {
-					//send_close(close::status::PROTOCOL_ERROR, e.what());
-					m_server->elog().at(log::elevel::DEVEL) 
-					<< "Dropping TCP due to unrecoverable protocol violation" 
-					<< log::endl;
-					terminate_connection(true);
+					send_close(close::status::PROTOCOL_ERROR, e.what());
 				} else if (e.code() == session::error::PAYLOAD_VIOLATION) {
-					//send_close(close::status::INVALID_PAYLOAD, e.what());
-					m_server->elog().at(log::elevel::DEVEL) 
-					<< "Dropping TCP due to unrecoverable payload violation" 
-					<< log::endl;
-					terminate_connection(true);
+					send_close(close::status::INVALID_PAYLOAD, e.what());
 				} else if (e.code() == session::error::INTERNAL_SERVER_ERROR) {
-					//send_close(close::status::ABNORMAL_CLOSE, e.what());
-					m_server->elog().at(log::elevel::DEVEL) 
-					<< "Dropping TCP due to unrecoverable internal server error" 
-					<< log::endl;
-					terminate_connection(true);
+					send_close(close::status::POLICY_VIOLATION, e.what());
 				} else if (e.code() == session::error::SOFT_ERROR) {
 					// ignore and continue processing frames
 					continue;
@@ -571,22 +554,11 @@ public:
 				}
 				break;
 			}
-			
-			// if the result of processing/consuming a frame closed the 
-			// connection exit the process loop. Otherwise re-check if we have 
-			// any bytes left to process.
-			if (m_state == session::state::CLOSED) {
-				break;
-			}
-		}
-		
-		// check if state changed while processing frames
-		if (m_state == session::state::CLOSED) {
-			return;
 		}
 		
 		// try and read more
-		if (m_processor->get_bytes_needed() > 0) {
+		if (m_state != session::state::CLOSED && 
+			m_processor->get_bytes_needed() > 0) {
 			// TODO: read timeout timer?
 			
 			boost::asio::async_read(
@@ -599,13 +571,47 @@ public:
 					boost::asio::placeholders::error
 				)
 			);
-		} else {
-			// TODO: ????
 		}
 	}
 	
-	void send_close() {
+	void send_close(close::status::value code, const std::string& reason) {
+		if (m_state != session::state::OPEN) {
+			m_server->elog().at(log::elevel::WARN) 
+			<< "Tried to disconnect a session that wasn't open" << log::endl;
+			return;
+		}
 		
+		if (close::status::invalid(code)) {
+			m_server->elog().at(log::elevel::WARN) 
+			<< "Tried to close a connection with invalid close code: " << code << log::endl;
+			return;
+		} else if (close::status::reserved(code)) {
+			m_server->elog().at(log::elevel::WARN) 
+			<< "Tried to close a connection with reserved close code: " << code << log::endl;
+			return;
+		}
+		
+		m_state = session::state::CLOSING;
+		
+		m_closed_by_me = true;
+		
+		m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
+		m_timer.async_wait(
+			boost::bind(
+				&connection_type::fail_on_expire,
+				connection_type::shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
+		
+		m_local_close_code = code;
+		m_local_close_reason = reason;
+		
+		
+		write_message(m_processor->prepare_close_frame(m_local_close_code,
+													   false,
+													   m_local_close_reason));
+		m_write_state = write_state::INTURRUPT;
 	}
 	
 	// send an acknowledgement close frame
@@ -631,17 +637,16 @@ public:
 			m_local_close_code = m_remote_close_code;
 			m_local_close_reason = m_remote_close_reason;
 		}
-				
-		binary_string_ptr msg = m_processor->prepare_close_frame(m_local_close_code,false,m_local_close_reason);
 		
 		// TODO: check whether we should cancel the current in flight write.
 		//       if not canceled the close message will be sent as soon as the
 		//       current write completes.
 		
-		m_write_state = write_state::INTURRUPT;
+		
 		write_message(m_processor->prepare_close_frame(m_local_close_code,
 													   false,
 													   m_local_close_reason));
+		m_write_state = write_state::INTURRUPT;
 	}
 	
 	void write_message(binary_string_ptr msg) {
@@ -662,7 +667,9 @@ public:
 				// clear the queue except for the last message
 				while (m_write_queue.size() > 1) {
 					m_write_buffer -= m_write_queue.front()->size();
+					std::cout << "int size before: " << m_write_queue.size() << std::endl;
 					m_write_queue.pop();
+					std::cout << "int size after: " << m_write_queue.size() << std::endl;
 				}
 				break;
 			default:
@@ -674,6 +681,8 @@ public:
 			if (m_write_state == write_state::IDLE) {
 				m_write_state = write_state::WRITING;
 			}
+			
+			std::cout << "starting async write " << std::endl;
 			
 			boost::asio::async_write(
 			    m_socket,
@@ -697,6 +706,7 @@ public:
 		if (error) {
 			if (error == boost::asio::error::operation_aborted) {
 				// previous write was aborted
+				std::cout << "aborted" << std::endl;
 			} else {
 				log_error("Error writing frame data",error);
 				terminate_connection(false);
@@ -704,8 +714,15 @@ public:
 			}
 		}
 		
+		if (m_write_queue.size() == 0) {
+			std::cout << "handle_write called with empty queue" << std::endl;
+			return;
+		}
+		
+		std::cout << "size before: " << m_write_queue.size() << std::endl;
 		m_write_buffer -= m_write_queue.front()->size();
 		m_write_queue.pop();
+		std::cout << "size after: " << m_write_queue.size() << std::endl;
 		
 		if (m_write_state == write_state::WRITING) {
 			m_write_state = write_state::IDLE;
