@@ -45,7 +45,7 @@ namespace hybi_legacy_state {
 	
 class hybi_legacy_processor : public processor {
 public:
-	hybi_legacy_processor() : m_state(hybi_legacy_state::INIT) {
+	hybi_legacy_processor(bool secure) : m_secure(secure),m_state(hybi_legacy_state::INIT) {
 		reset();
 	}
 	
@@ -86,12 +86,24 @@ public:
 		// set a different one.
 		if (response.header("Sec-WebSocket-Location") == "") {
 			// TODO: extract from host header rather than hard code
-			ws_uri uri;
-			uri.secure = false;
-			uri.host = "localhost";
-			uri.port = 9002;
+			ws_uri uri = get_uri(request);
 			response.add_header("Sec-WebSocket-Location",uri.base());
 		}
+	}
+	
+	std::string get_origin(const http::parser::request& request) const {
+		return request.header("Origin");
+	}
+	
+	ws_uri get_uri(const http::parser::request& request) const {
+		ws_uri uri;
+		
+		uri.secure = m_secure;
+		// TODO: check if get_uri is a full uri
+		// TODO: host and port
+		uri.resource = request.uri();
+		
+		return uri;
 	}
 	
 	void consume(std::istream& s) {
@@ -250,6 +262,8 @@ private:
 			return 0;
 		}
 	}
+	
+	bool						m_secure;
 	
 	hybi_legacy_state::value	m_state;
 	frame::opcode::value		m_opcode;

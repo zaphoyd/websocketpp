@@ -85,7 +85,8 @@ namespace http {
 			NETWORK_AUTHENTICATION_REQUIRED = 511
 		};
 		
-		std::string get_string(value c) {
+		// TODO: should this be inline?
+		inline std::string get_string(value c) {
 			switch (c) {
 				case CONTINUE:
 					return "Continue";

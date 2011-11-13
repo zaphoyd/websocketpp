@@ -32,35 +32,36 @@
 using websocketchat::chat_server_handler;
 using websocketpp::session::server_session_ptr;
 
+
 void chat_server_handler::validate(server_session_ptr session) {
 	std::stringstream err;
 	
 	// We only know about the chat resource
-	if (session->get_uri().resource != "/chat") {
-		err << "Request for unknown resource " << client->get_resource();
-		throw(websocketpp::handshake_error(err.str(),404));
+	if (session->get_resource() != "/chat") {
+		err << "Request for unknown resource " << session->get_resource();
+		throw(websocketpp::http::exception(err.str(),websocketpp::http::status_code::NOT_FOUND));
 	}
 	
 	// Require specific origin example
-	if (client->get_origin() != "http://zaphoyd.com") {
-		err << "Request from unrecognized origin: " << client->get_origin();
-		throw(websocketpp::handshake_error(err.str(),403));
+	if (session->get_origin() != "http://zaphoyd.com") {
+		err << "Request from unrecognized origin: " << session->get_origin();
+		throw(websocketpp::http::exception(err.str(),websocketpp::http::status_code::FORBIDDEN));
 	}
 }
 
 
-void chat_server_handler::on_open(session_ptr client) {
-	std::cout << "client " << client << " joined the lobby." << std::endl;
-	m_connections.insert(std::pair<session_ptr,std::string>(client,get_con_id(client)));
+void chat_server_handler::on_open(server_session_ptr session) {
+	std::cout << "client " << session << " joined the lobby." << std::endl;
+	m_connections.insert(std::pair<server_session_ptr,std::string>(session,get_con_id(session)));
 
 	// send user list and signon message to all clients
 	send_to_all(serialize_state());
-	client->send(encode_message("server","Welcome, use the /alias command to set a name, /help for a list of other commands."));
-	send_to_all(encode_message("server",m_connections[client]+" has joined the chat."));
+	session->send(encode_message("server","Welcome, use the /alias command to set a name, /help for a list of other commands."));
+	send_to_all(encode_message("server",m_connections[session]+" has joined the chat."));
 }
 
-void chat_server_handler::on_close(session_ptr client) {
-	std::map<session_ptr,std::string>::iterator it = m_connections.find(client);
+void chat_server_handler::on_close(server_session_ptr session) {
+	std::map<server_session_ptr,std::string>::iterator it = m_connections.find(session);
 	
 	if (it == m_connections.end()) {
 		// this client has already disconnected, we can ignore this.
@@ -70,7 +71,7 @@ void chat_server_handler::on_close(session_ptr client) {
 		return;
 	}
 	
-	std::cout << "client " << client << " left the lobby." << std::endl;
+	std::cout << "client " << session << " left the lobby." << std::endl;
 	
 	const std::string alias = it->second;
 	m_connections.erase(it);
@@ -80,31 +81,31 @@ void chat_server_handler::on_close(session_ptr client) {
 	send_to_all(encode_message("server",alias+" has left the chat."));
 }
 
-void chat_server_handler::on_message(session_ptr client,const std::string &msg) {
-	std::cout << "message from client " << client << ": " << msg << std::endl;
+void chat_server_handler::on_message(server_session_ptr session,websocketpp::utf8_string_ptr msg) {
+	std::cout << "message from client " << session << ": " << *msg << std::endl;
 	
 	
 	
 	// check for special command messages
-	if (msg == "/help") {
+	if (*msg == "/help") {
 		// print command list
-		client->send(encode_message("server","avaliable commands:<br />&nbsp;&nbsp;&nbsp;&nbsp;/help - show this help<br />&nbsp;&nbsp;&nbsp;&nbsp;/alias foo - set alias to foo",false));
+		session->send(encode_message("server","avaliable commands:<br />&nbsp;&nbsp;&nbsp;&nbsp;/help - show this help<br />&nbsp;&nbsp;&nbsp;&nbsp;/alias foo - set alias to foo",false));
 		return;
 	}
 	
-	if (msg.substr(0,7) == "/alias ") {
+	if (msg->substr(0,7) == "/alias ") {
 		std::string response;
 		std::string alias;
 		
-		if (msg.size() == 7) {
+		if (msg->size() == 7) {
 			response = "You must enter an alias.";
-			client->send(encode_message("server",response));
+			session->send(encode_message("server",response));
 			return;
 		} else {
-			alias = msg.substr(7);
+			alias = msg->substr(7);
 		}
 		
-		response = m_connections[client] + " is now known as "+alias;
+		response = m_connections[session] + " is now known as "+alias;
 
 		// store alias pre-escaped so we don't have to do this replacing every time this
 		// user sends a message
@@ -118,7 +119,7 @@ void chat_server_handler::on_message(session_ptr client,const std::string &msg) 
 		boost::algorithm::replace_all(alias,"<","&lt;");
 		boost::algorithm::replace_all(alias,">","&gt;");
 		
-		m_connections[client] = alias;
+		m_connections[session] = alias;
 		
 		// set alias
 		send_to_all(serialize_state());
@@ -127,13 +128,13 @@ void chat_server_handler::on_message(session_ptr client,const std::string &msg) 
 	}
 	
 	// catch other slash commands
-	if (msg[0] == '/') {
-		client->send(encode_message("server","unrecognized command"));
+	if ((*msg)[0] == '/') {
+		session->send(encode_message("server","unrecognized command"));
 		return;
 	}
 	
 	// create JSON message to send based on msg
-	send_to_all(encode_message(m_connections[client],msg));
+	send_to_all(encode_message(m_connections[session],*msg));
 }
 
 // {"type":"participants","value":[<participant>,...]}
@@ -142,7 +143,7 @@ std::string chat_server_handler::serialize_state() {
 	
 	s << "{\"type\":\"participants\",\"value\":[";
 	
-	std::map<session_ptr,std::string>::iterator it;
+	std::map<server_session_ptr,std::string>::iterator it;
 	
 	for (it = m_connections.begin(); it != m_connections.end(); it++) {
 		s << "\"" << (*it).second << "\"";
@@ -178,14 +179,14 @@ std::string chat_server_handler::encode_message(std::string sender,std::string m
 	return s.str();
 }
 
-std::string chat_server_handler::get_con_id(session_ptr s) {
+std::string chat_server_handler::get_con_id(server_session_ptr s) {
 	std::stringstream endpoint;
-	endpoint << s->socket().remote_endpoint();
+	endpoint << s->get_endpoint();
 	return endpoint.str();
 }
 
 void chat_server_handler::send_to_all(std::string data) {
-	std::map<session_ptr,std::string>::iterator it;
+	std::map<server_session_ptr,std::string>::iterator it;
 	for (it = m_connections.begin(); it != m_connections.end(); it++) {
 		(*it).first->send(data);
 	}

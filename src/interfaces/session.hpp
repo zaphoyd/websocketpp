@@ -87,10 +87,17 @@ public:
 	virtual session::state::value get_state() const = 0;
 	virtual unsigned int get_version() const = 0;
 	
-	virtual std::string get_origin() const = 0;
 	virtual std::string get_request_header(const std::string& key) const = 0;
-	virtual const ws_uri& get_uri() const = 0;
+	virtual std::string get_origin() const = 0;
+	
+	// Information about the requested URI
 	virtual bool get_secure() const = 0;
+	virtual std::string get_host() const = 0;
+	virtual std::string get_resource() const = 0;
+	virtual uint16_t get_port() const = 0;
+	
+	// Information about the connected endpoint
+	/* Tentative API member function */ virtual boost::asio::ip::tcp::endpoint get_endpoint() const = 0;
 	
 	// Valid for CONNECTING state
 	virtual void add_response_header(const std::string& key, const std::string& value) = 0;

@@ -58,7 +58,7 @@ namespace po = boost::program_options;
 #include "http/parser.hpp"
 #include "logger/logger.hpp"
 
-using boost::asio ::ip::tcp;
+using boost::asio::ip::tcp;
 using websocketpp::session::server_handler_ptr;
 using websocketpp::protocol::processor_ptr;
 
@@ -114,13 +114,25 @@ public:
 		return m_request.header(key);
 	}
 	
-	const ws_uri& get_uri() const {
-		return m_uri;
-	}
-	
 	bool get_secure() const {
 		// TODO
 		return false;
+	}
+	
+	std::string get_host() const {
+		return m_uri.host;
+	}
+	
+	uint16_t get_port() const {
+		return m_uri.port;
+	}
+	
+	std::string get_resource() const {
+		return m_uri.resource;
+	}
+	
+	tcp::endpoint get_endpoint() const {
+		return m_socket.remote_endpoint();
 	}
 	
 	// Valid for CONNECTING state
@@ -325,16 +337,18 @@ public:
 					}
 					m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
 					
-					m_processor = processor_ptr(new protocol::hybi_legacy_processor());
+					m_processor = processor_ptr(new protocol::hybi_legacy_processor(false));
 				} else if (m_version == 7 || m_version == 8 || m_version == 13) {
 					// create hybi 17 processor
-					m_processor = processor_ptr(new protocol::hybi_processor<blank_rng>(m_rng));
+					m_processor = processor_ptr(new protocol::hybi_processor<blank_rng>(false,m_rng));
 				} else {
 					// TODO: respond with unknown version message per spec
 				}
 				
 				// ask new protocol whether this set of headers is valid
 				m_processor->validate_handshake(m_request);
+				m_origin = m_processor->get_origin(m_request);
+				m_uri = m_processor->get_uri(m_request);
 				
 				// ask local application to confirm that it wants to accept
 				m_handler->validate(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
@@ -1029,8 +1043,20 @@ private:
 	po::options_description		m_desc;
 	po::variables_map			m_vm;
 };
-
+	
 }
+	
+// convenience type interface
+
+// websocketpp::server_ptr represents a basic non-secure websocket server
+typedef server::server<> basic_server;
+typedef basic_server::ptr basic_server_ptr;
+
+// websocketpp::secure_server_ptr represents a basic secure websocket server
+// TODO: 
+typedef server::server<> secure_server;
+typedef secure_server::ptr secure_server_ptr;
+	
 }
 
 #endif // WEBSOCKET_SERVER_HPP

@@ -35,31 +35,19 @@
 using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[]) {
-	std::string host = "localhost";
 	short port = 9002;
-	std::string full_host;
 	
-	if (argc == 3) {
+	if (argc == 2) {
 		// TODO: input validation?
-		host = argv[1];
 		port = atoi(argv[2]);
 	}
-	
-	std::stringstream temp;
-	
-	temp << host << ":" << port;
-	full_host = temp.str();
-	
-	
 	
 	try {
 		// create an instance of our handler
 		server_handler_ptr default_handler(new websocketecho::echo_server_handler());
 				
 		// create a server that listens on port `port` and uses our handler
-		typedef boost::shared_ptr< websocketpp::server::server<> > server_ptr;
-		
-		server_ptr server(new websocketpp::server::server<>(port,default_handler));
+		websocketpp::basic_server_ptr server(new websocketpp::basic_server(port,default_handler));
 		
 		server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
 		
@@ -75,10 +63,10 @@ int main(int argc, char* argv[]) {
 		// server to test performance and protocol extremes.
 		//server->set_max_message_size(websocketpp::frame::limits::PAYLOAD_SIZE_JUMBO); 
 		
+		std::cout << "Starting echo server on port " << port << std::endl;
+		
 		// start the server
 		server->run();
-		
-		std::cout << "Starting echo server on " << full_host << std::endl;
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}

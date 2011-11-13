@@ -49,7 +49,12 @@ public:
 	virtual void validate_handshake(const http::parser::request& headers) const = 0;
 	
 	virtual void handshake_response(const http::parser::request& request,http::parser::response& response) = 0;
-		
+	
+	// Extracts client origin from a handshake request
+	virtual std::string get_origin(const http::parser::request& request) const = 0;
+	// Extracts client uri from a handshake request
+	virtual ws_uri get_uri(const http::parser::request& request) const = 0;
+	
 	// consume bytes, throw on exception
 	virtual void consume(std::istream& s) = 0;
 	

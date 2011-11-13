@@ -78,7 +78,8 @@ private:
 
 // convenience function that creates a validator, validates a complete string 
 // and returns the result.
-bool validate(const std::string& s) {
+// TODO: should this be inline?
+inline bool validate(const std::string& s) {
 	validator v;
 	if (!v.decode(s.begin(),s.end())) {
 		return false;

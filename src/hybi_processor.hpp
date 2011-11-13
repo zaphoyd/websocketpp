@@ -52,7 +52,7 @@ namespace hybi_state {
 template <class rng_policy>
 class hybi_processor : public processor {
 public:
-	hybi_processor(rng_policy &rng) : m_fragmented_opcode(frame::opcode::CONTINUATION),m_utf8_payload(new utf8_string()),m_binary_payload(new binary_string()),m_read_frame(rng),m_write_frame(rng) {
+	hybi_processor(bool secure,rng_policy &rng) : m_secure(secure),m_fragmented_opcode(frame::opcode::CONTINUATION),m_utf8_payload(new utf8_string()),m_binary_payload(new binary_string()),m_read_frame(rng),m_write_frame(rng) {
 		reset();
 	}		
 	
@@ -113,6 +113,30 @@ public:
 				throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
 			}
 		}
+	}
+	
+	std::string get_origin(const http::parser::request& request) const {
+		std::string h = request.header("Sec-WebSocket-Version");
+		int version = atoi(h.c_str());
+				
+		if (version == 13) {
+			return request.header("Origin");
+		} else if (version == 7 || version == 8) {
+			return request.header("Sec-WebSocket-Origin");
+		} else {
+			throw(http::exception("Could not determine origin header.",http::status_code::BAD_REQUEST));
+		}
+	}
+	
+	ws_uri get_uri(const http::parser::request& request) const {
+		ws_uri uri;
+		
+		uri.secure = m_secure;
+		// TODO: check if get_uri is a full uri
+		// TODO: host and port
+		uri.resource = request.uri();
+		
+		return uri;
 	}
 	
 	void handshake_response(const http::parser::request& request,http::parser::response& response) {
@@ -416,6 +440,7 @@ public:
 	}
 	
 private:
+	bool					m_secure;
 	int						m_state;
 	frame::opcode::value	m_opcode;
 	frame::opcode::value	m_fragmented_opcode;
