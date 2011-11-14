@@ -52,6 +52,7 @@ namespace websocketpp {
 struct ws_uri {
 	bool parse(const std::string& uri);
 	std::string base();
+	std::string str();
 	
 	bool		secure;
 	std::string	host;

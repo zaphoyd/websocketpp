@@ -47,6 +47,13 @@ namespace websocketpp {
 	
 	const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
 	
+	const uint16_t DEFAULT_PORT = 80;
+	const uint16_t DEFAULT_SECURE_PORT = 443;
+	
+	inline uint16_t default_port(bool secure) {
+		return (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+	}
+	
 	// System logging levels
 	static const uint16_t LOG_ALL = 0;
 	static const uint16_t LOG_DEBUG = 1;

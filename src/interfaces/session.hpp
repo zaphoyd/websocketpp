@@ -78,6 +78,17 @@ public:
 	error::value m_code;
 };
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                 Server API                              *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/*
+server(uint16_t port, server_handler_ptr handler)
+void run();
+
+ 
+*/
+ 
  /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   *                             Server Session API                          *
   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -113,6 +124,8 @@ public:
 	virtual void close(close::status::value code, const utf8_string& reason) = 0;
 	virtual void ping(const binary_string& payload) = 0;
 	virtual void pong(const binary_string& payload) = 0;
+	
+	virtual uint64_t buffered_amount() const = 0;
 	
 	// Valid for CLOSED state
 	virtual close::status::value get_local_close_code() const = 0;
@@ -212,8 +225,10 @@ public:
 	virtual int get_version() const = 0;
 	
 	virtual std::string get_origin() const = 0;
-	virtual const ws_uri& get_uri() const = 0;
 	virtual bool get_secure() const = 0;
+	virtual std::string get_host() const = 0;
+	virtual std::string get_resource() const = 0;
+	virtual uint16_t get_port() const = 0;
 	
 	// Valid for CONNECTING state
 	virtual void set_origin(const std::string& origin) = 0;

@@ -26,6 +26,7 @@
  */
 
 #include "network_utilities.hpp"
+#include "websocket_constants.hpp"
 
 #include <sstream>
 #include "md5/md5.h"
@@ -153,7 +154,7 @@ bool websocketpp::ws_uri::parse(const std::string& uri) {
 		host = what[2];
 
 		if (what[3] == "") {
-			port = (secure ? 443 : 80);
+			port = (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
 		} else {
 			unsigned int t_port = atoi(std::string(what[3]).substr(1).c_str());
 
@@ -182,11 +183,24 @@ std::string websocketpp::ws_uri::base() {
 	
 	s << "ws" << (secure ? "s" : "") << "://" << host;
 	
-	if (port != (secure ? 443 : 80)) {
+	if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
 		s << ":" << port;
 	}
 	
 	s << "/";
+	return s.str();
+}
+
+std::string websocketpp::ws_uri::str() {
+	std::stringstream s;
+	
+	s << "ws" << (secure ? "s" : "") << "://" << host;
+	
+	if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
+		s << ":" << port;
+	}
+	
+	s << resource;
 	return s.str();
 }
 

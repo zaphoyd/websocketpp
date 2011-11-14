@@ -48,13 +48,9 @@ namespace po = boost::program_options;
 #include "hybi_legacy_processor.hpp"
 #include "hybi_processor.hpp"
 
-//#include "websocket_session.hpp"
 #include "websocket_connection_handler.hpp"
 
-//#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include "rng/blank_rng.hpp"
-
 #include "http/parser.hpp"
 #include "logger/logger.hpp"
 
@@ -209,6 +205,11 @@ public:
 	void pong(const binary_string& payload) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,false,payload));
 		m_io_service.post(boost::bind(&connection_type::write_message,connection_type::shared_from_this(),msg));
+	}
+	
+	uint64_t buffered_amount() const {
+		// TODO: syncronize this member function
+		return m_write_buffer;
 	}
 	
 	// Valid for CLOSED state
@@ -681,9 +682,7 @@ public:
 				// clear the queue except for the last message
 				while (m_write_queue.size() > 1) {
 					m_write_buffer -= m_write_queue.front()->size();
-					std::cout << "int size before: " << m_write_queue.size() << std::endl;
 					m_write_queue.pop();
-					std::cout << "int size after: " << m_write_queue.size() << std::endl;
 				}
 				break;
 			default:
@@ -695,9 +694,7 @@ public:
 			if (m_write_state == write_state::IDLE) {
 				m_write_state = write_state::WRITING;
 			}
-			
-			std::cout << "starting async write " << std::endl;
-			
+						
 			boost::asio::async_write(
 			    m_socket,
 			    boost::asio::buffer(*m_write_queue.front()),
@@ -733,10 +730,8 @@ public:
 			return;
 		}
 		
-		std::cout << "size before: " << m_write_queue.size() << std::endl;
 		m_write_buffer -= m_write_queue.front()->size();
 		m_write_queue.pop();
-		std::cout << "size after: " << m_write_queue.size() << std::endl;
 		
 		if (m_write_state == write_state::WRITING) {
 			m_write_state = write_state::IDLE;
@@ -829,8 +824,6 @@ public:
 	}
 	
 private:
-	
-	
 	server_ptr					m_server;
 	
 	boost::asio::io_service&	m_io_service;
@@ -859,7 +852,7 @@ private:
 	
 	// Write queue
 	std::queue<binary_string_ptr>	m_write_queue;
-	size_t							m_write_buffer;
+	uint64_t						m_write_buffer;
 	write_state::value				m_write_state;
 	
 	// Close state
@@ -904,30 +897,7 @@ public:
 		m_io_service.run();
 	}
 	
-	// creates a new session object and connects the next websocket
-	// connection to it.
-	void start_accept() {
-		// TODO: sanity check whether the session buffer size bound could be reduced
-		connection_ptr new_session(
-			new connection_type(
-				endpoint_type::shared_from_this(),
-				m_io_service,
-				m_handler
-			)
-		);
-		
-		m_acceptor.async_accept(
-			new_session->get_socket(),
-			boost::bind(
-				&endpoint_type::handle_accept,
-				endpoint_type::shared_from_this(),
-				new_session,
-				boost::asio::placeholders::error
-			)
-		);
-		
-		
-	}
+	
 	
 	// INTERFACE FOR LOCAL APPLICATIONS
 	void set_max_message_size(uint64_t val) {
@@ -1007,6 +977,29 @@ public:
 	}
 	
 private:
+	// creates a new session object and connects the next websocket
+	// connection to it.
+	void start_accept() {
+		// TODO: sanity check whether the session buffer size bound could be reduced
+		connection_ptr new_session(
+			new connection_type(
+				endpoint_type::shared_from_this(),
+				m_io_service,
+				m_handler
+			)
+		);
+		
+		m_acceptor.async_accept(
+			new_session->get_socket(),
+			boost::bind(
+				&endpoint_type::handle_accept,
+				endpoint_type::shared_from_this(),
+				new_session,
+				boost::asio::placeholders::error
+			)
+		);
+	}
+	
 	// if no errors starts the session's read loop and returns to the
 	// start_accept phase.
 	void handle_accept(connection_ptr connection,const boost::system::error_code& error) 

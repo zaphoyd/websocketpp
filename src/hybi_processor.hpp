@@ -124,7 +124,7 @@ public:
 		} else if (version == 7 || version == 8) {
 			return request.header("Sec-WebSocket-Origin");
 		} else {
-			throw(http::exception("Could not determine origin header.",http::status_code::BAD_REQUEST));
+			throw(http::exception("Could not determine origin header. Check Sec-WebSocket-Version header",http::status_code::BAD_REQUEST));
 		}
 	}
 	
@@ -132,9 +132,29 @@ public:
 		ws_uri uri;
 		
 		uri.secure = m_secure;
+		
+		
+		std::string h = request.header("Host");
+		
+		size_t found = h.find(":");
+		if (found == std::string::npos) {
+			uri.host = h;
+			uri.port = (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+		} else {
+			uint16_t p = atoi(h.substr(found+1).c_str());
+			
+			if (p == 0) {
+				throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
+			} else {
+				uri.host = h.substr(0,found);
+				uri.port = p;
+			}
+		}
+		
 		// TODO: check if get_uri is a full uri
-		// TODO: host and port
 		uri.resource = request.uri();
+		
+		std::cout << "parsed uri: " << uri.str() << std::endl;
 		
 		return uri;
 	}
