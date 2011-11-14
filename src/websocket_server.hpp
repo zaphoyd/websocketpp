@@ -34,6 +34,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/program_options.hpp>
+
+//#include <boost/asio/ssl.hpp> // for the ssl policy only
+
 namespace po = boost::program_options;
 
 #include <set>
@@ -69,20 +72,30 @@ namespace write_state {
 	};
 }
 	
-template <typename server_policy>
-class connection : public websocketpp::session::server, public boost::enable_shared_from_this< connection<server_policy> >  {
+template 
+	<
+	typename server_policy,
+	template <class> class security_policy
+	>
+class connection 
+	: 
+	public security_policy< connection<server_policy,security_policy> >, 
+	public boost::enable_shared_from_this< connection<server_policy,security_policy> >  {
 public:
 	typedef server_policy server_type;
-	typedef connection<server_policy> connection_type;
-	
+	typedef connection<server_policy,security_policy> connection_type;
+	typedef security_policy< connection<server_policy,security_policy> > security_policy_type;
+		
+	typedef boost::shared_ptr<connection_type> ptr;
 	typedef boost::shared_ptr<server_type> server_ptr;
 	
 	connection(server_ptr s,
 			boost::asio::io_service& io_service,
 			server_handler_ptr handler)
-	: m_server(s),
+	: security_policy_type(io_service),
+	  m_server(s),
 	  m_io_service(io_service),
-	  m_socket(io_service),
+	  //m_socket(io_service),
 	  m_timer(io_service,boost::posix_time::seconds(0)),
 	  m_buf(/* TODO: needs a max here */),
 	  m_handler(handler),
@@ -128,7 +141,7 @@ public:
 	}
 	
 	tcp::endpoint get_endpoint() const {
-		return m_socket.remote_endpoint();
+		return security_policy_type::socket().remote_endpoint();
 	}
 	
 	// Valid for CONNECTING state
@@ -237,9 +250,10 @@ public:
 	
 	////////
 	
-	tcp::socket& get_socket() {
+	// now provided by a policy class
+	/*tcp::socket& get_socket() {
 		return m_socket;
-	}
+	}*/
 	
 	void read_request() {
 		// start reading HTTP header and attempt to determine if the incoming 
@@ -259,7 +273,7 @@ public:
 		);
 		
 		boost::asio::async_read_until(
-		    m_socket,
+		    security_policy_type::socket(),
 		    m_buf,
 		    "\r\n\r\n",
 		    boost::bind(
@@ -401,7 +415,7 @@ public:
 		
 		// start async write to handle_write_handshake
 		boost::asio::async_write(
-		    m_socket,
+		    security_policy_type::socket(),
 		    boost::asio::buffer(raw),
 		    boost::bind(
 		        &connection_type::handle_write_response,
@@ -577,7 +591,7 @@ public:
 			// TODO: read timeout timer?
 			
 			boost::asio::async_read(
-				m_socket,
+				security_policy_type::socket(),
 				m_buf,
 				boost::asio::transfer_at_least(m_processor->get_bytes_needed()),
 				boost::bind(
@@ -696,7 +710,7 @@ public:
 			}
 						
 			boost::asio::async_write(
-			    m_socket,
+			    security_policy_type::socket(),
 			    boost::asio::buffer(*m_write_queue.front()),
 			    boost::bind(
 			        &connection_type::handle_write,
@@ -756,9 +770,9 @@ public:
 		m_timer.cancel();
 		
 		try {
-			if (m_socket.is_open()) {
-				m_socket.shutdown(tcp::socket::shutdown_both);
-				m_socket.close();
+			if (security_policy_type::socket().is_open()) {
+				security_policy_type::socket().shutdown(tcp::socket::shutdown_both);
+				security_policy_type::socket().close();
 				m_dropped_by_me = true;
 			}
 		} catch (boost::system::system_error& e) {
@@ -803,7 +817,7 @@ public:
 	}
 	void log_open_result() {
 		m_server->alog().at(log::alevel::CONNECT) << "Connection "
-		<< m_socket.remote_endpoint() << " v" << m_version << " "
+		<< security_policy_type::socket().remote_endpoint() << " v" << m_version << " "
 		<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
 		<< " " << m_uri.resource << " " << m_response.status_code() 
 		<< log::endl;
@@ -827,7 +841,7 @@ private:
 	server_ptr					m_server;
 	
 	boost::asio::io_service&	m_io_service;
-	tcp::socket					m_socket;
+	//tcp::socket					m_socket;
 	boost::asio::deadline_timer	m_timer;
 	boost::asio::streambuf		m_buf;
 	
@@ -865,20 +879,127 @@ private:
 	bool						m_dropped_by_me;
 };
 
+class server_connection_policy {
+	
+};
+
+class server_role {
+	typedef websocketpp::session::server connection_interface;
+	typedef websocketpp::server::server_connection_policy connection_policy;
+};
+
+// ******* SSL SECURITY POLICY *******
+//typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+	
+/*class connection_ssl {
+public:
+	ssl_socket::lowest_layer_type& socket() {
+		return m_socket.lowest_layer();
+	}
+	
+	void handshake() {
+		m_socket.async_handshake(
+		    boost::asio::ssl::stream_base::server,
+			boost::bind(
+				&connection_ssl::handle_handshake,
+				shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
+	}
+	
+	void handle_handshake() {
+		read_request();
+	}
+	
+private:
+	ssl_socket m_socket;
+};
+	
+class endpoint_ssl {
+public:
+	typedef websocketpp::server::connection_ssl connection_policy;
+	
+private:
+	boost::asio::ssl::context m_context;
+};*/
+// ******* END SSL SECURITY POLICY *******
+	
+// ******* PLAIN SECURITY POLICY *******
+template <typename connection_type>
+class connection_plain {
+public:
+	connection_plain(boost::asio::io_service& io_service) : m_socket(io_service) {}
+	
+	boost::asio::ip::tcp::socket& socket() {
+		return m_socket;
+	}
+	
+	void handshake() {
+		connection_type::read_request();
+	}
+private:
+	boost::asio::ip::tcp::socket m_socket;
+};
+
+template <typename xxx>
+class endpoint_plain {
+protected:	
+	// base security class for connections that plain endpoints create
+	template <typename connection_type>
+	class connection_security_policy {
+	public:
+		connection_security_policy(boost::asio::io_service& io_service) : m_socket(io_service) {}
+		
+		typedef connection_security_policy<connection_type> foo;
+		
+		boost::asio::ip::tcp::socket& socket() {
+			return m_socket;
+		}
+		
+		void handshake(boost::shared_ptr<connection_type> foo) {
+			//connection_type::read_request();
+			//static_cast<connection_type*>(this)->read_request();
+			foo->read_request();
+			
+			//boost::static_pointer_cast<connection_type>(foo::shared_from_this())
+			
+			//m_handler->on_close(boost::static_pointer_cast<websocketpp::session::server>(connection_type::shared_from_this()));
+		}
+	private:
+		boost::asio::ip::tcp::socket m_socket;
+	};
+	
+};
+// ******* END PLAIN SECURITY POLICY *******
 
 // TODO: potential policies:
 // - http parser
-template <template <class> class logger_type = log::logger>
-class server : public boost::enable_shared_from_this< server<logger_type> > {
+template
+	<
+	template <class> class security_policy,
+	template <class> class logger_type = log::logger
+	>
+class endpoint 
+	: 
+	public security_policy< endpoint<security_policy,logger_type> >,
+	public boost::enable_shared_from_this< endpoint<security_policy,logger_type> > {
 public:
-	typedef server<logger_type> endpoint_type;
-	typedef websocketpp::server::connection<endpoint_type> connection_type;
+	typedef endpoint<security_policy,logger_type> endpoint_type;
+	typedef security_policy< endpoint<security_policy,logger_type> > security_type;
+	
+	typedef logger_type<log::alevel::value> alog_type;
+	typedef logger_type<log::elevel::value> elog_type;
+	
+	using security_type::connection_security_policy;
+	
+	typedef connection<endpoint_type,security_type::template connection_security_policy> connection_type;
 	
 	typedef boost::shared_ptr<endpoint_type> ptr;
 	//typedef websocketpp::session::server_ptr session_ptr;
 	typedef boost::shared_ptr<connection_type> connection_ptr;
 	
-	server<logger_type>(uint16_t port, server_handler_ptr handler) 
+	endpoint<security_policy,logger_type>(uint16_t port, server_handler_ptr handler) 
 	: m_endpoint(tcp::v6(),port),
 	  m_acceptor(m_io_service,m_endpoint),
 	  m_handler(handler),
@@ -990,7 +1111,7 @@ private:
 		);
 		
 		m_acceptor.async_accept(
-			new_session->get_socket(),
+			new_session->socket(),
 			boost::bind(
 				&endpoint_type::handle_accept,
 				endpoint_type::shared_from_this(),
@@ -1005,7 +1126,7 @@ private:
 	void handle_accept(connection_ptr connection,const boost::system::error_code& error) 
 	{
 		if (!error) {
-			connection->read_request();
+			connection->handshake(connection);
 			
 			// TODO: add session to local session vector
 		} else {
@@ -1042,13 +1163,13 @@ private:
 // convenience type interface
 
 // websocketpp::server_ptr represents a basic non-secure websocket server
-typedef server::server<> basic_server;
+typedef server::endpoint<server::endpoint_plain> basic_server;
 typedef basic_server::ptr basic_server_ptr;
 
 // websocketpp::secure_server_ptr represents a basic secure websocket server
 // TODO: 
-typedef server::server<> secure_server;
-typedef secure_server::ptr secure_server_ptr;
+//typedef server::server<> secure_server;
+//typedef secure_server::ptr secure_server_ptr;
 	
 }
 
