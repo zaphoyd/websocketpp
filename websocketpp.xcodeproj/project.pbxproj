@@ -75,6 +75,11 @@
 		B6FE8D191468708200B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
 		B6FE8D1A1468709300B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
 		B6FE8D1B1468709A00B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
+		B6FE8D5514730AEA00B32547 /* Policy_Test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = B6FE8D5414730AEA00B32547 /* Policy_Test.1 */; };
+		B6FE8D5914730B0300B32547 /* policy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D4914730AA600B32547 /* policy.cpp */; };
+		B6FE8D5A14730B1200B32547 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
+		B6FE8D5C14730B1A00B32547 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
+		B6FE8D5E14730B2200B32547 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,6 +124,16 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		B6FE8D4D14730AE900B32547 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				B6FE8D5514730AEA00B32547 /* Policy_Test.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -199,6 +214,12 @@
 		B6FE8D1714686A8500B32547 /* md5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = md5.h; path = src/md5/md5.h; sourceTree = "<group>"; };
 		B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_legacy_processor.hpp; path = src/hybi_legacy_processor.hpp; sourceTree = "<group>"; };
 		B6FE8D30146C721200B32547 /* hybi_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_processor.hpp; path = src/hybi_processor.hpp; sourceTree = "<group>"; };
+		B6FE8D4914730AA600B32547 /* policy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = policy.cpp; path = src/policy.cpp; sourceTree = "<group>"; };
+		B6FE8D4F14730AE900B32547 /* Policy Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Policy Test"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6FE8D5214730AEA00B32547 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		B6FE8D5414730AEA00B32547 /* Policy_Test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Policy_Test.1; sourceTree = "<group>"; };
+		B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		B6FE8D5D14730B2200B32547 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -252,6 +273,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B6FE8D4C14730AE900B32547 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6FE8D5E14730B2200B32547 /* libssl.dylib in Frameworks */,
+				B6FE8D5C14730B1A00B32547 /* libcrypto.dylib in Frameworks */,
+				B6FE8D5A14730B1200B32547 /* libboost_system.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -298,6 +329,8 @@
 		B6DF1C451434A5940029A1B1 = {
 			isa = PBXGroup;
 			children = (
+				B6FE8D5D14730B2200B32547 /* libssl.dylib */,
+				B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */,
 				B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */,
 				B6CF182B1437C3CA009295BE /* libboost_system.dylib */,
 				B682888E14374689002BA48B /* libboost_thread.dylib */,
@@ -309,6 +342,7 @@
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
 				B6138791145CA6F700ED9B19 /* Makefile */,
 				B6DF1C7F1434ABB70029A1B1 /* src */,
+				B6FE8D5114730AE900B32547 /* Policy Test */,
 				B6DF1C6A1434A7A30029A1B1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -321,6 +355,7 @@
 				B6DF1CD11435ED910029A1B1 /* echo_server */,
 				B682887D143745F2002BA48B /* chat_client */,
 				B6CF181C1437C397009295BE /* echo_client */,
+				B6FE8D4F14730AE900B32547 /* Policy Test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -336,6 +371,7 @@
 				B61387A4145D847A00ED9B19 /* http */,
 				B6FE8D09145B0F7400B32547 /* rng */,
 				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
+				B6FE8D4914730AA600B32547 /* policy.cpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
@@ -472,6 +508,15 @@
 				B6FE8D1714686A8500B32547 /* md5.h */,
 			);
 			name = md5;
+			sourceTree = "<group>";
+		};
+		B6FE8D5114730AE900B32547 /* Policy Test */ = {
+			isa = PBXGroup;
+			children = (
+				B6FE8D5214730AEA00B32547 /* main.cpp */,
+				B6FE8D5414730AEA00B32547 /* Policy_Test.1 */,
+			);
+			path = "Policy Test";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -611,6 +656,23 @@
 			productReference = B6DF1CD11435ED910029A1B1 /* echo_server */;
 			productType = "com.apple.product-type.tool";
 		};
+		B6FE8D4E14730AE900B32547 /* policy_test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6FE8D5614730AEA00B32547 /* Build configuration list for PBXNativeTarget "policy_test" */;
+			buildPhases = (
+				B6FE8D4B14730AE900B32547 /* Sources */,
+				B6FE8D4C14730AE900B32547 /* Frameworks */,
+				B6FE8D4D14730AE900B32547 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = policy_test;
+			productName = "Policy Test";
+			productReference = B6FE8D4F14730AE900B32547 /* Policy Test */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -636,6 +698,7 @@
 				B6DF1CD01435ED910029A1B1 /* echo_server */,
 				B682887C143745F2002BA48B /* chat_client */,
 				B6CF181B1437C397009295BE /* echo_client */,
+				B6FE8D4E14730AE900B32547 /* policy_test */,
 			);
 		};
 /* End PBXProject section */
@@ -696,6 +759,14 @@
 			files = (
 				B6DF1CDB1435EDCE0029A1B1 /* echo_server.cpp in Sources */,
 				B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6FE8D4B14730AE900B32547 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6FE8D5914730B0300B32547 /* policy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -936,6 +1007,44 @@
 			};
 			name = Release;
 		};
+		B6FE8D5714730AEA00B32547 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B6FE8D5814730AEA00B32547 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -992,6 +1101,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		B6FE8D5614730AEA00B32547 /* Build configuration list for PBXNativeTarget "policy_test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6FE8D5714730AEA00B32547 /* Debug */,
+				B6FE8D5814730AEA00B32547 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

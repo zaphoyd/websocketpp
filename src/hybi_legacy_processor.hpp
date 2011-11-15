@@ -86,11 +86,25 @@ public:
 		// set a different one.
 		if (response.header("Sec-WebSocket-Location") == "") {
 			// TODO: extract from host header rather than hard code
-			ws_uri uri;
+			/*ws_uri uri;
 			uri.secure = false;
-			uri.host = "localhost";
-			uri.port = 9002;
-			response.add_header("Sec-WebSocket-Location",uri.base());
+			
+			std::string h = request.get_header("Host");
+			
+			size_t found = h.find(":");
+			if (found == string::npos) {
+				uri.host = h;
+				uri.port = 80;
+			} else {
+				uri.host = h.substr();
+			}
+			
+			
+			uri.port = 9002;*/
+			
+			std::string h = "ws://"+request.header("Host")+"/";
+			
+			response.add_header("Sec-WebSocket-Location",h);
 		}
 	}
 	
