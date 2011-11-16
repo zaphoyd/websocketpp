@@ -357,6 +357,7 @@ private:
 			
 		m_acceptor.async_accept(
 			con->get_raw_socket(),
+
 			boost::bind(
 				&server_type::handle_accept,
 				this,
@@ -454,14 +455,16 @@ class application_client_handler : public client_handler {
 	}
 };
 
+
 int main () {
 	std::cout << "Endpoint 0" << std::endl;
 	server_handler_ptr h(new application_server_handler());
 	websocketpp::endpoint<endpoint::server,endpoint::ssl> e(h);
+
 	e.listen(9000);
 	//e.connect();
 	//e.public_api();
 	std::cout << std::endl;
-	
+
 	return 0;
 }
