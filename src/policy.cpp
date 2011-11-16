@@ -10,11 +10,12 @@ SSL:
 */
 
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
-
+#include <set>
 
 class server_handler {
 	virtual void on_action() = 0;
@@ -31,10 +32,12 @@ typedef boost::shared_ptr<client_handler> client_handler_ptr;
 
 namespace connection {
 template <typename endpoint_type,template <class> class security_policy>
-class connection : public security_policy< connection<endpoint_type,security_policy> > {
+class connection 
+	: public security_policy< connection<endpoint_type,security_policy> >,
+	  public boost::enable_shared_from_this< connection<endpoint_type, security_policy> > {
 public:
-	//typedef role< connection<role,security_policy> > role_type;
-	typedef security_policy< connection<endpoint_type,security_policy> > security_policy_type;
+	typedef connection<endpoint_type,security_policy> type;
+	typedef security_policy< type > security_policy_type;
 	
 	//typedef typename role_type::handler_ptr handler_ptr;
 	
@@ -44,13 +47,56 @@ public:
 	
 	void websocket_handshake() {
 		std::cout << "Websocket Handshake" << std::endl;
+		
+		security_policy_type::get_socket().async_read_some(
+			boost::asio::buffer(m_data, 512),
+			boost::bind(
+				&type::handle_read,
+				type::shared_from_this(),
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred
+			)
+		);
+		
 		this->websocket_messages();
 	}
 	void websocket_messages() {
 		std::cout << "Websocket Messages" << std::endl;
 	}
+	
+	void handle_read(const boost::system::error_code& error,size_t bytes_transferred) {
+		if (error) {
+			std::cout << "read error" << std::endl;
+		} else {
+			std::cout << "read complete: " << m_data << std::endl;
+			
+			std::string r = "HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nbar";
+			
+			boost::asio::async_write(
+				security_policy_type::get_socket(),
+				boost::asio::buffer(r, r.size()),
+				boost::bind(
+					&type::handle_write,
+					type::shared_from_this(),
+					boost::asio::placeholders::error
+				)
+			);
+		}
+	}
+	
+	void handle_write(const boost::system::error_code& error) {
+		if (error) {
+			std::cout << "write error" << std::endl;
+		} else {
+			std::cout << "write successful" << std::endl;
+			// end session
+			m_endpoint.remove_connection(type::shared_from_this());
+		}
+	}
+	
 protected:
 	endpoint_type& m_endpoint;
+	char m_data[512];
 };
 
 // Connection roles
@@ -63,17 +109,7 @@ public:
 		std::cout << "setup server connection role" << std::endl;
 	}
 	
-	void public_api() {
-		std::cout << "connection::server::public_api()" << std::endl;
-	}
-protected:
-	void protected_api() {
-		std::cout << "connection::server::protected_api()" << std::endl;
-	}
 private:
-	void private_api() {
-		std::cout << "connection::server::private_api()" << std::endl;
-	}
 	handler_ptr	m_handler;
 };
 
@@ -86,17 +122,7 @@ public:
 		std::cout << "setup client connection role" << std::endl;
 	}
 	
-	void public_api() {
-		std::cout << "connection::client::public_api()" << std::endl;
-	}
-protected:
-	void protected_api() {
-		std::cout << "connection::client::protected_api()" << std::endl;
-	}
 private:
-	void private_api() {
-		std::cout << "connection::client::private_api()" << std::endl;
-	}
 	handler_ptr m_handler;
 };
 
@@ -104,7 +130,6 @@ private:
 
 namespace endpoint {
 
-// test
 template <typename derived_t>
 struct endpoint_traits;
 	
@@ -141,8 +166,16 @@ public:
 	}
 	
 	connection_ptr create_connection() {
-		return connection_ptr(new connection_type(*this));
+		connection_ptr new_connection(new connection_type(*this));
+		m_connections.insert(new_connection);
+		return new_connection;
 	}
+	
+	void remove_connection(connection_ptr con) {
+		m_connections.erase(con);
+	}
+private:
+	std::set<connection_ptr> m_connections;
 };
 
 // endpoint related types that it's policy classes need.
@@ -174,7 +207,11 @@ public:
 			std::cout << "performing plain security handshake" << std::endl;
 			static_cast< connection_type* >(this)->websocket_handshake();
 		}
-	
+		
+		boost::asio::ip::tcp::socket& get_raw_socket() {
+			return m_socket;
+		}
+		
 		boost::asio::ip::tcp::socket& get_socket() {
 			return m_socket;
 		}
@@ -219,32 +256,30 @@ public:
 		void security_handshake() {
 			std::cout << "performing ssl security handshake" << std::endl;
 			
-			/*m_socket.get_io_service().post(
-				boost::bind(
-					&connection<connection_type>::test,
-					this
-				)
-			);*/
-			
 			m_socket.async_handshake(
 				boost::asio::ssl::stream_base::server,
 				boost::bind(
-					&connection<connection_type>::test,
-					this
+					&connection<connection_type>::handle_handshake,
+					this,
+					boost::asio::placeholders::error
 				)
 			);
 		}
 		
-		void test() {
-			static_cast< connection_type* >(this)->websocket_handshake();
-		}
-		
 		void handle_handshake(const boost::system::error_code& error) {
-			static_cast< connection_type* >(this)->websocket_handshake();
+			if (error) {
+				std::cout << "SSL handshake error" << std::endl;
+			} else {
+				static_cast< connection_type* >(this)->websocket_handshake();
+			}
 		}
 		
-		ssl_socket::lowest_layer_type& get_socket() {
+		ssl_socket::lowest_layer_type& get_raw_socket() {
 			return m_socket.lowest_layer();
+		}
+		
+		ssl_socket& get_socket() {
+			return m_socket;
 		}
 	private:
 		ssl_socket m_socket;
@@ -258,9 +293,9 @@ protected:
 								 boost::asio::ssl::context::no_sslv2 |
 								 boost::asio::ssl::context::single_dh_use);
 			m_context.set_password_callback(boost::bind(&type::get_password, this));
-			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
-			m_context.use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
+			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem");
+			m_context.use_private_key_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
+			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/dh512.pem");
 		} catch (std::exception& e) {
 			std::cout << e.what() << std::endl;
 		}
@@ -321,7 +356,7 @@ private:
 		connection_ptr con = static_cast< endpoint_type* >(this)->create_connection();
 			
 		m_acceptor.async_accept(
-			con->get_socket(),
+			con->get_raw_socket(),
 			boost::bind(
 				&server_type::handle_accept,
 				this,
@@ -399,8 +434,15 @@ public:
 
 }
 
-// application
-class application_server_handler : public server_handler {
+// Application start
+#include "endpoint.hpp"
+#include "roles/server.hpp"
+#include "sockets/ssl.hpp"
+
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> endpoint_type;
+
+// application headers
+class application_server_handler : public websocketpp::role::server::handler {
 	void on_action() {
 		std::cout << "application_server_handler::on_action()" << std::endl;
 	}
@@ -412,53 +454,14 @@ class application_client_handler : public client_handler {
 	}
 };
 
-
-using endpoint::factory;
-
 int main () {
 	std::cout << "Endpoint 0" << std::endl;
 	server_handler_ptr h(new application_server_handler());
-	endpoint::endpoint<endpoint::server,endpoint::ssl> e(h);
+	websocketpp::endpoint<endpoint::server,endpoint::ssl> e(h);
 	e.listen(9000);
 	//e.connect();
 	//e.public_api();
 	std::cout << std::endl;
-	
-	/*std::cout << "Endpoint 1" << std::endl;
-	server_handler_ptr handler1(new application_server_handler());
-	factory<endpoint::server,endpoint::plain> ef1;
-	factory<endpoint::server,endpoint::plain>::endpoint_ptr e1(ef1.create(handler1));
-	e1->connect();
-	e1->public_api();
-	std::cout << std::endl;
-	
-	std::cout << "Endpoint 2" << std::endl;
-	server_handler_ptr handler2(new application_server_handler());
-	factory<endpoint::server,endpoint::ssl> ef2;
-	factory<endpoint::server,endpoint::ssl>::endpoint_ptr e2(ef2.create(handler2));
-	e2->connect();
-	e2->public_api();
-	std::cout << std::endl;
-	
-	std::cout << "Endpoint 3" << std::endl;
-	client_handler_ptr handler3(new application_client_handler());
-	factory<endpoint::client,endpoint::plain> ef3;
-	factory<endpoint::client,endpoint::plain>::endpoint_ptr e3(ef3.create(handler3));
-	e3->connect();
-	e3->public_api();
-	std::cout << std::endl;
-	
-	std::cout << "Endpoint 4" << std::endl;
-	client_handler_ptr handler4(new application_client_handler());
-	factory<endpoint::client,endpoint::ssl> ef4;
-	factory<endpoint::client,endpoint::ssl>::endpoint_ptr e4(ef4.create(handler4));
-	e4->connect();
-	e4->public_api();
-	std::cout << std::endl;*/
-	
-	//connection::connection<connection::ssl> c;
-	
-	//c.security_handshake();
 	
 	return 0;
 }

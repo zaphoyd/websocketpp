@@ -160,6 +160,12 @@
 		B62A5A3214695185005F9EB0 /* frame_parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = frame_parser.hpp; path = src/interfaces/frame_parser.hpp; sourceTree = "<group>"; };
 		B62A5A3314695185005F9EB0 /* session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = session.hpp; path = src/interfaces/session.hpp; sourceTree = "<group>"; };
 		B62A5A34146963FE005F9EB0 /* protocol.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = protocol.hpp; path = src/interfaces/protocol.hpp; sourceTree = "<group>"; };
+		B62A5A511473EBB0005F9EB0 /* connection.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = connection.hpp; path = src/connection.hpp; sourceTree = "<group>"; };
+		B62A5A521473EBB0005F9EB0 /* endpoint.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = endpoint.hpp; path = src/endpoint.hpp; sourceTree = "<group>"; };
+		B62A5A561473EBE8005F9EB0 /* client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = client.hpp; path = src/roles/client.hpp; sourceTree = "<group>"; };
+		B62A5A571473EBE8005F9EB0 /* server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = server.hpp; path = src/roles/server.hpp; sourceTree = "<group>"; };
+		B62A5A581473EBF1005F9EB0 /* plain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = plain.hpp; path = src/sockets/plain.hpp; sourceTree = "<group>"; };
+		B62A5A591473EBF1005F9EB0 /* ssl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ssl.hpp; path = src/sockets/ssl.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -215,7 +221,7 @@
 		B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_legacy_processor.hpp; path = src/hybi_legacy_processor.hpp; sourceTree = "<group>"; };
 		B6FE8D30146C721200B32547 /* hybi_processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = hybi_processor.hpp; path = src/hybi_processor.hpp; sourceTree = "<group>"; };
 		B6FE8D4914730AA600B32547 /* policy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = policy.cpp; path = src/policy.cpp; sourceTree = "<group>"; };
-		B6FE8D4F14730AE900B32547 /* Policy Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Policy Test"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6FE8D4F14730AE900B32547 /* Policy Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = "Policy Test"; path = policy_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6FE8D5214730AEA00B32547 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B6FE8D5414730AEA00B32547 /* Policy_Test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Policy_Test.1; sourceTree = "<group>"; };
 		B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
@@ -314,6 +320,24 @@
 			name = interfaces;
 			sourceTree = "<group>";
 		};
+		B62A5A541473EBB9005F9EB0 /* roles */ = {
+			isa = PBXGroup;
+			children = (
+				B62A5A561473EBE8005F9EB0 /* client.hpp */,
+				B62A5A571473EBE8005F9EB0 /* server.hpp */,
+			);
+			name = roles;
+			sourceTree = "<group>";
+		};
+		B62A5A551473EBC4005F9EB0 /* sockets */ = {
+			isa = PBXGroup;
+			children = (
+				B62A5A581473EBF1005F9EB0 /* plain.hpp */,
+				B62A5A591473EBF1005F9EB0 /* ssl.hpp */,
+			);
+			name = sockets;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -363,6 +387,8 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B62A5A551473EBC4005F9EB0 /* sockets */,
+				B62A5A541473EBB9005F9EB0 /* roles */,
 				B6FE8D30146C721200B32547 /* hybi_processor.hpp */,
 				B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */,
 				B62A5A2F1469512A005F9EB0 /* interfaces */,
@@ -372,6 +398,8 @@
 				B6FE8D09145B0F7400B32547 /* rng */,
 				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
 				B6FE8D4914730AA600B32547 /* policy.cpp */,
+				B62A5A511473EBB0005F9EB0 /* connection.hpp */,
+				B62A5A521473EBB0005F9EB0 /* endpoint.hpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
 				B6DF1C941434AC470029A1B1 /* websocket_client.cpp */,
@@ -1109,6 +1137,7 @@
 				B6FE8D5814730AEA00B32547 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
