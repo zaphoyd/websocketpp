@@ -103,7 +103,7 @@ private:
 	
 	void handle_accept(connection_ptr con, const boost::system::error_code& error) {
 		if (!error) {
-			con->security_handshake();
+			con->start();
 		} else {
 			throw "";
 		}

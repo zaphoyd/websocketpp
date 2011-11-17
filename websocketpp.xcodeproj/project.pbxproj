@@ -166,6 +166,7 @@
 		B62A5A571473EBE8005F9EB0 /* server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = server.hpp; path = src/roles/server.hpp; sourceTree = "<group>"; };
 		B62A5A581473EBF1005F9EB0 /* plain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = plain.hpp; path = src/sockets/plain.hpp; sourceTree = "<group>"; };
 		B62A5A591473EBF1005F9EB0 /* ssl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ssl.hpp; path = src/sockets/ssl.hpp; sourceTree = "<group>"; };
+		B62A5A6114755443005F9EB0 /* socket_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = socket_base.hpp; path = src/sockets/socket_base.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -332,6 +333,7 @@
 		B62A5A551473EBC4005F9EB0 /* sockets */ = {
 			isa = PBXGroup;
 			children = (
+				B62A5A6114755443005F9EB0 /* socket_base.hpp */,
 				B62A5A581473EBF1005F9EB0 /* plain.hpp */,
 				B62A5A591473EBF1005F9EB0 /* ssl.hpp */,
 			);

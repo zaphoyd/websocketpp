@@ -29,10 +29,12 @@
 #define WEBSOCKETPP_ENDPOINT_HPP
 
 #include "connection.hpp"
+#include "sockets/plain.hpp" // should this be here?
 
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
+#include <set>
 
 namespace websocketpp {
 
@@ -71,7 +73,7 @@ public:
 		std::cout << "Connect" << std::endl;
 		
 		connection_ptr con = create_connection();
-		con->security_handshake();
+		con->start();
 	}
 	
 	connection_ptr create_connection() {

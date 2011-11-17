@@ -30,9 +30,12 @@
 
 #include <stdint.h>
 
-#include "websocket_constants.hpp"
+#include "endpoint.hpp"
+#include "sockets/plain.hpp"
 
-#include "websocket_server.hpp"
+//#include "websocket_constants.hpp"
+
+//#include "websocket_server.hpp"
 //#include "websocket_client.hpp"
 
 #endif // WEBSOCKETPP_HPP

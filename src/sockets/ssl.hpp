@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_SOCKET_SSL_HPP
 #define WEBSOCKETPP_SOCKET_SSL_HPP
 
+#include "socket_base.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/bind.hpp>
@@ -66,25 +68,28 @@ public:
 			std::cout << "setup ssl connection" << std::endl;
 		}
 		
-		void security_handshake() {
+		void async_init(boost::function<void(const boost::system::error_code&)> callback) {
 			std::cout << "performing ssl security handshake" << std::endl;
 			
 			m_socket.async_handshake(
 				boost::asio::ssl::stream_base::server,
 				boost::bind(
-					&connection<connection_type>::handle_handshake,
+					&connection<connection_type>::handle_init,
 					this,
-					 boost::asio::placeholders::error
+					callback,
+					boost::asio::placeholders::error
 				)
 			);
 		}
 		
-		void handle_handshake(const boost::system::error_code& error) {
-			if (error) {
+		void handle_init(socket_init_callback callback,const boost::system::error_code& error) {
+			/*if (error) {
 				std::cout << "SSL handshake error" << std::endl;
 			} else {
-				static_cast< connection_type* >(this)->websocket_handshake();
-			}
+				//static_cast< connection_type* >(this)->websocket_handshake();
+				
+			}*/
+			callback(error);
 		}
 		
 		ssl_socket::lowest_layer_type& get_raw_socket() {

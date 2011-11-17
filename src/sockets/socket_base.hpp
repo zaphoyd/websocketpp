@@ -25,60 +25,35 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_SOCKET_PLAIN_HPP
-#define WEBSOCKETPP_SOCKET_PLAIN_HPP
+#ifndef WEBSOCKETPP_SOCKET_BASE_HPP
+#define WEBSOCKETPP_SOCKET_BASE_HPP
 
-#include "socket_base.hpp"
+/*
+ 
+ websocketpp::socket API
+ endpoint policy that provides:
+ 
+ 
+ nested connection policy called `connection` that provides:
+ - constructor that takes a reference to the endpoint_policy
+ - async_init
+ - async_read_some
+ - async_write_some
+ - get_raw_socket
+ 
+ */
 
-#include <boost/asio.hpp>
 #include <boost/function.hpp>
-
-#include <iostream>
 
 namespace websocketpp {
 namespace socket {
 
-template <typename endpoint_type>
-class plain {
-public:
-	boost::asio::io_service& get_io_service() {
-		return m_io_service;
-	}
-	
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {
-			std::cout << "setup plain connection" << std::endl;
-		}
-		
-		void async_init(socket_init_callback callback) {
-			std::cout << "performing plain security handshake" << std::endl;
-			//static_cast< connection_type* >(this)->websocket_handshake();
-			callback(boost::system::error_code());
-		}
-		
-		boost::asio::ip::tcp::socket& get_raw_socket() {
-			return m_socket;
-		}
-		
-		boost::asio::ip::tcp::socket& get_socket() {
-			return m_socket;
-		}
-	private:
-		boost::asio::ip::tcp::socket m_socket;
-	};
-protected:
-	plain (boost::asio::io_service& m) : m_io_service(m) {
-		std::cout << "setup plain endpoint" << std::endl;
-	}
-private:
-	boost::asio::io_service& m_io_service;
-};
+typedef boost::function<void(const boost::system::error_code&)> socket_init_callback;
 
-	
+
 } // namespace socket
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_SOCKET_PLAIN_HPP
+
+
+#endif // WEBSOCKETPP_SOCKET_BASE_HPP

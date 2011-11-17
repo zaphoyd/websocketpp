@@ -9,7 +9,7 @@ SSL:
 
 */
 
-#include <boost/shared_ptr.hpp>
+/*#include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -433,33 +433,35 @@ public:
 	}
 };
 
-}
+}*/
 
 // Application start
 #include "endpoint.hpp"
 #include "roles/server.hpp"
 #include "sockets/ssl.hpp"
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> endpoint_type;
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> endpoint_type;
+typedef websocketpp::role::server<endpoint_type>::handler handler_type;
+typedef websocketpp::role::server<endpoint_type>::handler_ptr handler_ptr;
 
 // application headers
-class application_server_handler : public websocketpp::role::server::handler {
+class application_server_handler : public handler_type {
 	void on_action() {
 		std::cout << "application_server_handler::on_action()" << std::endl;
 	}
 };
 
-class application_client_handler : public client_handler {
+/*class application_client_handler : public client_handler {
 	void on_action() {
 		std::cout << "application_client_handler::on_action()" << std::endl;
 	}
-};
+};*/
 
 
 int main () {
 	std::cout << "Endpoint 0" << std::endl;
-	server_handler_ptr h(new application_server_handler());
-	websocketpp::endpoint<endpoint::server,endpoint::ssl> e(h);
+	handler_ptr h(new application_server_handler());
+	endpoint_type e(h);
 
 	e.listen(9000);
 	//e.connect();

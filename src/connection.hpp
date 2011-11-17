@@ -63,6 +63,25 @@ public:
 		std::cout << "setup connection" << std::endl;
 	}
 	
+	void start() {
+		// initialize the socket.
+		socket_type::async_init(
+			boost::bind(
+				&type::handle_socket_init,
+				type::shared_from_this(),
+				boost::asio::placeholders::error
+			)
+		);
+	}
+	
+	void handle_socket_init(const boost::system::error_code& error) {
+		if (error) {
+			std::cout << "SSL handshake error" << std::endl;
+		} else {
+			this->websocket_handshake();
+		}
+	}
+	
 	void websocket_handshake() {
 		std::cout << "Websocket Handshake" << std::endl;
 		
