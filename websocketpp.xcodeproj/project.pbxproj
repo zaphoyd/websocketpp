@@ -80,6 +80,7 @@
 		B6FE8D5A14730B1200B32547 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
 		B6FE8D5C14730B1A00B32547 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
 		B6FE8D5E14730B2200B32547 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
+		B6FE8D6614757D6400B32547 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -284,6 +285,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6FE8D6614757D6400B32547 /* libboost_date_time.dylib in Frameworks */,
 				B6FE8D5E14730B2200B32547 /* libssl.dylib in Frameworks */,
 				B6FE8D5C14730B1A00B32547 /* libcrypto.dylib in Frameworks */,
 				B6FE8D5A14730B1200B32547 /* libboost_system.dylib in Frameworks */,

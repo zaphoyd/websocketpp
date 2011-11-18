@@ -43,6 +43,7 @@ template <typename endpoint_type>
 class ssl {
 public:
 	typedef ssl<endpoint_type> type;
+	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 	
 	std::string get_password() const {
 		return "test";
@@ -58,21 +59,26 @@ public:
 		return m_context;
 	}
 	
+	// should be private friended?
+	ssl_socket::handshake_type get_handshake_type() {
+		if (static_cast< endpoint_type* >(this)->is_server()) {
+			return boost::asio::ssl::stream_base::server;
+		} else {
+			return boost::asio::ssl::stream_base::client;
+		}
+	}
+	
 	// Connection specific details
 	template <typename connection_type>
 	class connection {
 	public:
-		typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
-		
-		connection(ssl<endpoint_type>& e) : m_socket(e.get_io_service(),e.get_context()) {
-			std::cout << "setup ssl connection" << std::endl;
-		}
+		connection(ssl<endpoint_type>& e) : m_socket(e.get_io_service(),e.get_context()),m_endpoint(e) {}
 		
 		void async_init(boost::function<void(const boost::system::error_code&)> callback) {
 			std::cout << "performing ssl security handshake" << std::endl;
 			
 			m_socket.async_handshake(
-				boost::asio::ssl::stream_base::server,
+				m_endpoint.get_handshake_type(),
 				boost::bind(
 					&connection<connection_type>::handle_init,
 					this,
@@ -100,7 +106,8 @@ public:
 			return m_socket;
 		}
 	private:
-		ssl_socket m_socket;
+		ssl_socket			m_socket;
+		ssl<endpoint_type>&	m_endpoint;
 	};
 protected:
 	ssl (boost::asio::io_service& m) : m_io_service(m),m_context(boost::asio::ssl::context::sslv23) {
@@ -112,16 +119,17 @@ protected:
 								  boost::asio::ssl::context::no_sslv2 |
 								  boost::asio::ssl::context::single_dh_use);
 			m_context.set_password_callback(boost::bind(&type::get_password, this));
-			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem");
-			m_context.use_private_key_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/dh512.pem");
+			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
+			m_context.use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
+			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
 		} catch (std::exception& e) {
 			std::cout << e.what() << std::endl;
 		}
 	}
 private:
-	boost::asio::io_service& m_io_service;
-	boost::asio::ssl::context m_context;
+	boost::asio::io_service&	m_io_service;
+	boost::asio::ssl::context	m_context;
+	ssl_socket::handshake_type	m_handshake_type;
 };
 	
 } // namespace socket

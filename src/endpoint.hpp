@@ -28,83 +28,123 @@
 #ifndef WEBSOCKETPP_ENDPOINT_HPP
 #define WEBSOCKETPP_ENDPOINT_HPP
 
+#include <boost/asio.hpp>
+#include <boost/shared_ptr.hpp>
+
+namespace websocketpp {
+	template <typename T>
+	struct endpoint_traits;
+	
+	
+	
+	class endpoint_base {
+	protected:
+		boost::asio::io_service	m_io_service;
+	};
+}
+
 #include "connection.hpp"
 #include "sockets/plain.hpp" // should this be here?
+#include "logger.hpp"
 
-#include <boost/shared_ptr.hpp>
+
 
 #include <iostream>
 #include <set>
 
 namespace websocketpp {
 
-
-template <typename T>
-struct endpoint_traits;
-
 // endpoint_base provides core functionality used by policy base class constructors
-class endpoint_base {
-protected:
-	boost::asio::io_service	m_io_service;
-};
+
 
 // endpoint host class
-template <template <class> class role,template <class> class socket>
+template <
+	template <class> class role,
+	template <class> class socket = socket::plain,
+	template <class> class logger = log::logger>
 class endpoint 
  : public endpoint_base,
    public role< endpoint<role,socket> >,
    public socket< endpoint<role,socket> > 
 {
 public:
-	typedef endpoint_traits< endpoint<role,socket> > traits;
+	typedef endpoint_traits< endpoint<role,socket,logger> > traits;
 	
 	// get types that we need from our traits class
+	typedef typename traits::type type;
 	typedef typename traits::handler_ptr handler_ptr;
 	typedef typename traits::role_type role_type;
 	typedef typename traits::socket_type socket_type;
+	typedef typename traits::alogger_type alogger_type;
+	typedef typename traits::elogger_type elogger_type;
 	typedef typename traits::connection_type connection_type;
 	typedef typename traits::connection_ptr connection_ptr;
 	
-	endpoint(handler_ptr h) : role_type(m_io_service,h),socket_type(m_io_service) {
-		std::cout << "Setup endpoint" << std::endl;
+	// Friend is used here to allow the CRTP base classes to access member 
+	// functions in the derived endpoint. This is done to limit the use of 
+	// public methods in endpoint and its CRTP bases to only those methods 
+	// intended for end-application use.
+	friend class role< endpoint<role,socket> >;
+	friend class socket< endpoint<role,socket> >;
+	friend class connection<type,role< type >::template connection,socket< type >::template connection>;
+	
+	// Highly simplified and preferred C++11 version:
+	// friend role_type; 
+	// friend socket_type;
+	// friend connection_type;
+	
+	endpoint(handler_ptr h) : role_type(m_io_service,h),socket_type(m_io_service) {}
+	
+	alogger_type& alog() {
+		return m_alog;
 	}
 	
-	void start() {
-		std::cout << "Connect" << std::endl;
-		
-		connection_ptr con = create_connection();
-		con->start();
+	elogger_type& elog() {
+		return m_elog;
 	}
-	
+protected:
 	connection_ptr create_connection() {
 		connection_ptr new_connection(new connection_type(*this));
 		m_connections.insert(new_connection);
+		
+		alog().at(log::alevel::DEVEL) << "Connection created: count is now: " << m_connections.size() << log::endl;
+		
 		return new_connection;
 	}
 	
 	void remove_connection(connection_ptr con) {
 		m_connections.erase(con);
+		
+		alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " << m_connections.size() << log::endl;
 	}
 private:
-	std::set<connection_ptr> m_connections;
+	std::set<connection_ptr>	m_connections;
+	alogger_type				m_alog;
+	elogger_type				m_elog;
 };
 
 // endpoint related types that it and its policy classes need.
-template <template <class> class role,template <class> class socket>
-struct endpoint_traits< endpoint<role, socket> > {
+template <
+	template <class> class role,
+	template <class> class socket,
+	template <class> class logger>
+struct endpoint_traits< endpoint<role, socket, logger> > {
 	// type of the endpoint itself
-	typedef endpoint<role,socket> type;
+	typedef endpoint<role,socket,logger> type;
 	
 	// types of the endpoint policies
 	typedef role< type > role_type;
 	typedef socket< type > socket_type;
+	
+	typedef logger<log::alevel::value> alogger_type;
+	typedef logger<log::elevel::value> elogger_type;
 	
 	// type of the handler that this endpoint and its connections call back.
 	typedef typename role_type::handler handler;
 	typedef typename role_type::handler_ptr handler_ptr;
 	
 	// types of the connections that this endpoint manages and pointers to them
-	typedef connection<type,socket< type >::template connection> connection_type;
+	typedef connection<type,role< type >::template connection,socket< type >::template connection> connection_type;
 	typedef boost::shared_ptr<connection_type> connection_ptr;
 };
 

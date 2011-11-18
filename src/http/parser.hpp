@@ -28,8 +28,10 @@
 #ifndef HTTP_PARSER_HPP
 #define HTTP_PARSER_HPP
 
+#include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 
 #include "constants.hpp"
 

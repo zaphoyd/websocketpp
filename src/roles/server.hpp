@@ -42,6 +42,16 @@ namespace role {
 template <class endpoint>
 class server {
 public:
+	// Connection specific details
+	template <typename foo_type>
+	class connection {
+	public:
+		connection(server<endpoint>& e) {}
+		
+	private:
+		
+	};
+	
 	// handler interface callback class
 	class handler {
 		virtual void on_action() = 0;
@@ -52,16 +62,16 @@ public:
 	// types
 	typedef server<endpoint> type;
 	typedef endpoint endpoint_type;
+	
 	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
 		
 	server(boost::asio::io_service& m,handler_ptr h) 
-	 : m_handler(h),
+	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
+	   m_handler(h),
 	   m_io_service(m),
 	   m_endpoint(),
 	   m_acceptor(m)
-	{
-		std::cout << "setup server endpoint role" << std::endl;
-	}
+	{}
 	
 	void listen(unsigned short port) {
 		m_endpoint.port(port);
@@ -70,25 +80,24 @@ public:
 		m_acceptor.bind(m_endpoint);
 		m_acceptor.listen();
 		
-		this->accept();
+		this->start_accept();
+		
+		m_ws_endpoint.alog().at(log::alevel::DEVEL) << "role::server listening on port " << port << log::endl;
 		
 		m_io_service.run();
 	}
-	
-	void public_api() {
-		std::cout << "role::server::public_api()" << std::endl;
-	}
 protected:
+	bool is_server() {
+		return true;
+	}
+	
 	handler_ptr get_handler() {
 		return m_handler;
 	}
-	
-	void protected_api() {
-		std::cout << "role::server::protected_api()" << std::endl;
-	}
 private:
-	void accept() {
-		connection_ptr con = static_cast< endpoint_type* >(this)->create_connection();
+	// start_accept creates a new connection and begins an async_accept on it
+	void start_accept() {
+		connection_ptr con = m_ws_endpoint.create_connection();
 		
 		m_acceptor.async_accept(
 			con->get_raw_socket(),
@@ -101,20 +110,20 @@ private:
 		);
 	}
 	
+	// handle_accept will begin the connection's read/write loop and then reset
+	// the server to accept a new connection. Errors returned by async_accept
+	// are logged and ingored.
 	void handle_accept(connection_ptr con, const boost::system::error_code& error) {
-		if (!error) {
-			con->start();
+		if (error) {
+			m_ws_endpoint.elog().at(log::elevel::ERROR) << "async_accept returned error: " << error << log::endl;
 		} else {
-			throw "";
+			con->start();
 		}
 		
-		this->accept();
+		this->start_accept();
 	}
 	
-	void private_api() {
-		std::cout << "role::server::private_api()" << std::endl;
-	}
-	
+	endpoint_type&					m_ws_endpoint;
 	handler_ptr						m_handler;
 	boost::asio::io_service&		m_io_service;
 	boost::asio::ip::tcp::endpoint	m_endpoint;

@@ -54,31 +54,36 @@ public:
 	typedef endpoint endpoint_type;
 	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
 	
-	client (boost::asio::io_service& m,handler_ptr h) : m_handler(h),m_io_service(m) {
-		std::cout << "setup client endpoint role" << std::endl;
-	}
+	client (boost::asio::io_service& m,handler_ptr h) 
+	 : m_endpoint(static_cast< endpoint_type& >(*this)),
+	   m_handler(h),
+	   m_io_service(m) {}
 	
 	void connect() {
 		static_cast< endpoint_type* >(this)->start();
 	}
 	
-	void public_api() {
-		std::cout << "endpoint::client::public_api()" << std::endl;
-	}
+	// Connection specific details
+	template <typename connection_type>
+	class connection {
+	public:
+		connection(server<endpoint_type>& e) {}
+		
+	private:
+		
+	};
 protected:
+	bool is_server() {
+		return false;
+	}
+	
 	handler_ptr get_handler() {
 		return m_handler;
 	}
-	
-	void protected_api() {
-		std::cout << "endpoint::client::protected_api()" << std::endl;
-	}
 private:
-	void private_api() {
-		std::cout << "endpoint::client::private_api()" << std::endl;
-	}
-	handler_ptr m_handler;
-	boost::asio::io_service& m_io_service;
+	endpoint_type&				m_endpoint;
+	handler_ptr					m_handler;
+	boost::asio::io_service&	m_io_service;
 };
 
 

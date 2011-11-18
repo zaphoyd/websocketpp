@@ -66,7 +66,7 @@ namespace alevel {
 	static const value DEVEL = 0x2000;
 	
 	static const value ALL = 0xFFFF;
-}	
+}
 
 namespace elevel {
 	typedef uint16_t value;
@@ -82,7 +82,7 @@ namespace elevel {
 	
 	static const value ALL = 0xFFFF;
 }
-
+	
 template <typename level_type>
 class logger {
 public:
@@ -132,7 +132,7 @@ public:
 			std::cout << m_prefix << 
 			    boost::posix_time::to_iso_extended_string(
 			        boost::posix_time::second_clock::local_time()
-			    ) << " " << m_oss.str() << std::endl;
+			    ) << " [" << m_write_level << "] " << m_oss.str() << std::endl;
 			m_oss.str("");
 		}
 		

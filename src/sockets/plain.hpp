@@ -49,13 +49,10 @@ public:
 	template <typename connection_type>
 	class connection {
 	public:
-		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {
-			std::cout << "setup plain connection" << std::endl;
-		}
+		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
 		
 		void async_init(socket_init_callback callback) {
-			std::cout << "performing plain security handshake" << std::endl;
-			//static_cast< connection_type* >(this)->websocket_handshake();
+			// TODO: should this use post()?
 			callback(boost::system::error_code());
 		}
 		
@@ -70,9 +67,7 @@ public:
 		boost::asio::ip::tcp::socket m_socket;
 	};
 protected:
-	plain (boost::asio::io_service& m) : m_io_service(m) {
-		std::cout << "setup plain endpoint" << std::endl;
-	}
+	plain (boost::asio::io_service& m) : m_io_service(m) {}
 private:
 	boost::asio::io_service& m_io_service;
 };
