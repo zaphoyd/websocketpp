@@ -43,13 +43,46 @@ template <class endpoint>
 class server {
 public:
 	// Connection specific details
-	template <typename foo_type>
+	template <typename connection_type>
 	class connection {
 	public:
-		connection(server<endpoint>& e) {}
+		// Valid always
+		std::string get_request_header(const std::string& key) const {}
+		std::string get_origin() const {}
+		
+		// Valid for CONNECTING state
+		void add_response_header(const std::string& key, const std::string& value) {};
+		void replace_response_header(const std::string& key, const std::string& e) {};
+		const std::vector<std::string>& get_subprotocols() const {};
+		const std::vector<std::string>& get_extensions() const {};
+		void select_subprotocol(const std::string& value) {};
+		void select_extension(const std::string& value) {};
+	protected:
+		//connection(server<endpoint>& e) : m_endpoint(e) {}
+		connection(endpoint& e) : m_endpoint(e) {}
+		
+		// initializes the websocket connection
+		void async_init() {
+			/*boost::asio::async_read_until(
+				m_endpoint.socket(),
+				m_buf,
+				"\r\n\r\n",
+				boost::bind(
+					&connection_type::handle_read_request,
+					connection_type::shared_from_this(),
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred
+				)
+			);*/
+		}
+		
+		
 		
 	private:
+		endpoint&					m_endpoint;
 		
+		http::parser::request		m_request;
+		http::parser::response		m_response;
 	};
 	
 	// handler interface callback class

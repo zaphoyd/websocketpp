@@ -40,9 +40,65 @@
 #include <boost/shared_ptr.hpp>
 
 #include <iostream> // temporary?
+#include <vector>
+#include <string>
 
 namespace websocketpp {
 
+// types to use for utf8 string and binary messages
+typedef std::vector<unsigned char> binary_string;
+typedef boost::shared_ptr<binary_string> binary_string_ptr;
+
+typedef std::string utf8_string;
+typedef boost::shared_ptr<utf8_string> utf8_string_ptr;
+	
+// Universal close status codes. Might be better somewhere else.
+namespace close {
+namespace status {
+	enum value {
+		INVALID_END = 999,
+		NORMAL = 1000,
+		GOING_AWAY = 1001,
+		PROTOCOL_ERROR = 1002,
+		UNSUPPORTED_DATA = 1003,
+		RSV_ADHOC_1 = 1004,
+		NO_STATUS = 1005,
+		ABNORMAL_CLOSE = 1006,
+		INVALID_PAYLOAD = 1007,
+		POLICY_VIOLATION = 1008,
+		MESSAGE_TOO_BIG = 1009,
+		EXTENSION_REQUIRE = 1010,
+		RSV_START = 1011,
+		RSV_END = 2999,
+		INVALID_START = 5000
+	};
+	
+	inline bool reserved(value s) {
+		return ((s >= RSV_START && s <= RSV_END) || 
+				s == RSV_ADHOC_1);
+	}
+	
+	inline bool invalid(value s) {
+		return ((s <= INVALID_END || s >= INVALID_START) || 
+				s == NO_STATUS || 
+				s == ABNORMAL_CLOSE);
+	}
+	
+	// TODO functions for application ranges?
+}
+}
+
+namespace session {
+namespace state {
+	enum value {
+		CONNECTING = 0,
+		OPEN = 1,
+		CLOSING = 2,
+		CLOSED = 3
+	};
+}
+}
+	
 template <typename T>
 struct connection_traits;
 	
@@ -69,6 +125,8 @@ public:
 	// protected instead of public.
 	// friend typename endpoint_traits<endpoint_type>::role_type;
 	
+	
+	
 	connection(endpoint_type& e) 
 	 : role_type(e),
 	   socket_type(e),
@@ -84,6 +142,29 @@ public:
 			)
 		);
 	}
+	
+	// Valid always
+	session::state::value get_state() const {
+		return m_state;
+	}
+	
+	// Valid for OPEN state
+	void send(utf8_string_ptr msg) {}
+	void send(binary_string_ptr data) {}
+	void close(close::status::value code, const utf8_string& reason) {}
+	void ping(binary_string_ptr data) {}
+	void pong(binary_string_ptr data) {}
+	
+	uint64_t buffered_amount() const;
+	
+	// Valid for CLOSED state
+	close::status::value get_local_close_code() const {};
+	utf8_string get_local_close_reason() const {};
+	close::status::value get_remote_close_code() const {};
+	utf8_string get_remote_close_reason() const {};
+	bool failed_by_me() const {};
+	bool dropped_by_me() const {};
+	bool closed_by_me() const {};
 protected:	
 	void handle_socket_init(const boost::system::error_code& error) {
 		if (error) {
@@ -151,8 +232,9 @@ protected:
 	endpoint_type& m_endpoint;
 	char m_data[512]; // temporary
 	
-	http::parser::request		m_request;
-	http::parser::response		m_response;
+	boost::asio::streambuf		m_buf;
+	
+	session::state::value		m_state;
 };
 
 // connection related types that it and its policy classes need.
