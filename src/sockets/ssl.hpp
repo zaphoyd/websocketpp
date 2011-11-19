@@ -84,8 +84,6 @@ public:
 		connection(ssl<endpoint_type>& e) : m_socket(e.get_io_service(),e.get_context()),m_endpoint(e) {}
 		
 		void async_init(boost::function<void(const boost::system::error_code&)> callback) {
-			std::cout << "performing ssl security handshake" << std::endl;
-			
 			m_socket.async_handshake(
 				m_endpoint.get_handshake_type(),
 				boost::bind(
@@ -123,8 +121,6 @@ public:
 	};
 protected:
 	ssl (boost::asio::io_service& m) : m_io_service(m),m_context(boost::asio::ssl::context::sslv23) {
-		std::cout << "setup ssl endpoint" << std::endl;
-		
 		try {
 			// this should all be in separate init functions
 			m_context.set_options(boost::asio::ssl::context::default_workarounds |

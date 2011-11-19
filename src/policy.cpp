@@ -70,8 +70,6 @@ int main () {
 	
 	
 	e.listen(9002);
-	//e.connect();
-	//e.public_api();
 	std::cout << std::endl;
 
 	return 0;

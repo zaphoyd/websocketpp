@@ -25,48 +25,89 @@
  * 
  */
 
-#include "echo.hpp"
+#include "../../src/endpoint.hpp"
+#include "../../src/roles/server.hpp"
+#include "../../src/sockets/ssl.hpp"
 
-#include "../../src/websocketpp.hpp"
-#include <boost/asio.hpp>
+#include <cstring>
 
-#include <iostream>
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> ssl_endpoint_type;
+typedef websocketpp::role::server<plain_endpoint_type>::handler_ptr plain_handler_ptr;
+typedef websocketpp::role::server<ssl_endpoint_type>::handler_ptr ssl_handler_ptr;
 
-using boost::asio::ip::tcp;
+template <typename T>
+class echo_server_handler : public T::handler {
+public:
+	typedef typename websocketpp::role::server<T>::handler handler_type;
+	typedef typename websocketpp::role::server<T>::handler_ptr handler_ptr;
+	typedef typename handler_type::connection_ptr connection_ptr;
+	
+	void validate(connection_ptr connection) {
+		//std::cout << "state: " << connection->get_state() << std::endl;
+	}
+	
+	void on_open(connection_ptr connection) {
+		//std::cout << "connection opened" << std::endl;
+	}
+	
+	void on_close(connection_ptr connection) {
+		//std::cout << "connection closed" << std::endl;
+	}
+	
+	void on_message(connection_ptr connection,websocketpp::utf8_string_ptr msg) {
+		//std::cout << "got message: " << *msg << std::endl;
+		connection->send(*msg);
+	}
+	void on_message(connection_ptr connection,websocketpp::binary_string_ptr data) {
+		//std::cout << "got binary message of length: " << data->size() << std::endl;
+		connection->send(*data);
+	}
+	
+	void http(connection_ptr connection) {
+		connection->set_body("HTTP Response!!");
+	}
+	
+	void on_fail(connection_ptr connection) {
+		std::cout << "connection failed" << std::endl;
+	}
+};
 
 int main(int argc, char* argv[]) {
 	short port = 9002;
+	bool ssl = false;
 	
 	if (argc == 2) {
 		// TODO: input validation?
 		port = atoi(argv[2]);
 	}
 	
+	if (argc == 3) {
+		// TODO: input validation?
+		port = atoi(argv[2]);
+		ssl = (strcmp(argv[3],"-ssl"));
+	}
+	
 	try {
-		// create an instance of our handler
-		server_handler_ptr default_handler(new websocketecho::echo_server_handler());
-				
-		// create a server that listens on port `port` and uses our handler
-		websocketpp::basic_server_ptr server(new websocketpp::basic_server(port,default_handler));
+		if (!ssl) {
+			plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
+			plain_endpoint_type e(h);
+			
+			e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
+			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
+			
+			e.listen(port);
+		} else {
+			ssl_handler_ptr h(new echo_server_handler<ssl_endpoint_type>());
+			ssl_endpoint_type e(h);
+			
+			e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
+			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
+			
+			e.listen(port);
+		}
 		
-		server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
 		
-		server->alog().set_level(websocketpp::log::alevel::ALL);
-		
-		//server->parse_command_line(argc, argv);
-		
-		// setup server settings
-		//server->set_alog_level(websocketpp::ALOG_OFF);
-		//server->set_elog_level(websocketpp::LOG_OFF);
-		
-		// bump up max message size to maximum since we may be using the echo 
-		// server to test performance and protocol extremes.
-		//server->set_max_message_size(websocketpp::frame::limits::PAYLOAD_SIZE_JUMBO); 
-		
-		std::cout << "Starting echo server on port " << port << std::endl;
-		
-		// start the server
-		server->run();
 	} catch (std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	}
