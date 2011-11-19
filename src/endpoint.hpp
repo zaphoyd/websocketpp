@@ -45,7 +45,7 @@ namespace websocketpp {
 
 #include "connection.hpp"
 #include "sockets/plain.hpp" // should this be here?
-#include "logger.hpp"
+#include "logger/logger.hpp"
 
 
 

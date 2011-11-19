@@ -41,7 +41,7 @@ class echo_server_handler : public T::handler {
 public:
 	typedef typename websocketpp::role::server<T>::handler handler_type;
 	typedef typename websocketpp::role::server<T>::handler_ptr handler_ptr;
-	typedef typename handler_type::connection_ptr connection_ptr;
+	typedef typename handler_type::foo connection_ptr;
 	
 	void validate(connection_ptr connection) {
 		//std::cout << "state: " << connection->get_state() << std::endl;
@@ -74,18 +74,18 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-	short port = 9002;
+	unsigned short port = 9002;
 	bool ssl = false;
-	
+		
 	if (argc == 2) {
 		// TODO: input validation?
-		port = atoi(argv[2]);
+		port = atoi(argv[1]);
 	}
 	
 	if (argc == 3) {
 		// TODO: input validation?
-		port = atoi(argv[2]);
-		ssl = (strcmp(argv[3],"-ssl"));
+		port = atoi(argv[1]);
+		ssl = !strcmp(argv[2],"-ssl");
 	}
 	
 	try {
@@ -93,9 +93,14 @@ int main(int argc, char* argv[]) {
 			plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
 			plain_endpoint_type e(h);
 			
-			e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
+			e.alog().set_level(websocketpp::log::alevel::CONNECT);
+			e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
+			
+			// TODO: fix
+			//e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
 			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
 			
+			std::cout << "Starting WebSocket echo server on port " << port << std::endl;
 			e.listen(port);
 		} else {
 			ssl_handler_ptr h(new echo_server_handler<ssl_endpoint_type>());
@@ -104,6 +109,7 @@ int main(int argc, char* argv[]) {
 			e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
 			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
 			
+			std::cout << "Starting Secure WebSocket echo server on port " << port << std::endl;
 			e.listen(port);
 		}
 		

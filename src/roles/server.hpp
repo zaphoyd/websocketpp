@@ -217,6 +217,30 @@ public:
 					// continue as HTTP?
 					m_endpoint.get_handler()->http(m_connection.shared_from_this());
 					
+					// should there be a more encapsulated http processor here?
+					m_origin = m_request.header("Origin");
+					m_uri.secure = m_endpoint.is_secure();
+					
+					std::string h = m_request.header("Host");
+					
+					size_t found = h.find(":");
+					if (found == std::string::npos) {
+						m_uri.host = h;
+						m_uri.port = (m_uri.secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+					} else {
+						uint16_t p = atoi(h.substr(found+1).c_str());
+						
+						if (p == 0) {
+							throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
+						} else {
+							m_uri.host = h.substr(0,found);
+							m_uri.port = p;
+						}
+					}
+					
+					// TODO: check if get_uri is a full uri
+					m_uri.resource = m_request.uri();
+					
 					m_response.set_status(http::status_code::OK);
 				}
 			} catch (const http::exception& e) {
@@ -337,21 +361,21 @@ public:
 	// handler interface callback class
 	class handler {
 	public:
-		typedef connection_ptr connection_ptr;
+		typedef connection_ptr foo;
 		
 		// Required
-		virtual void validate(connection_ptr connection) = 0;
-		virtual void on_open(connection_ptr connection) = 0;
-		virtual void on_close(connection_ptr connection) = 0;
+		virtual void validate(foo connection) = 0;
+		virtual void on_open(foo connection) = 0;
+		virtual void on_close(foo connection) = 0;
 		
-		virtual void on_message(connection_ptr connection,utf8_string_ptr) = 0;
-		virtual void on_message(connection_ptr connection,binary_string_ptr) = 0;
+		virtual void on_message(foo connection,utf8_string_ptr) = 0;
+		virtual void on_message(foo connection,binary_string_ptr) = 0;
 		
 		// Optional
-		virtual bool on_ping(connection_ptr connection,binary_string_ptr) {return true;}
-		virtual void on_pong(connection_ptr connection,binary_string_ptr) {}
-		virtual void http(connection_ptr connection) {}
-		virtual void on_fail(connection_ptr connection) {}
+		virtual bool on_ping(foo connection,binary_string_ptr) {return true;}
+		virtual void on_pong(foo connection,binary_string_ptr) {}
+		virtual void http(foo connection) {}
+		virtual void on_fail(foo connection) {}
 	};
 	
 	server(boost::asio::io_service& m,handler_ptr h) 

@@ -30,7 +30,7 @@
 
 #include "common.hpp"
 #include "http/parser.hpp"
-#include "logger.hpp"
+#include "logger/logger.hpp"
 
 #include "roles/server.hpp"
 
@@ -72,12 +72,13 @@ public:
 		
 	// friends (would require C++11) this would enable connection::start to be 
 	// protected instead of public.
-	// friend typename endpoint_traits<endpoint_type>::role_type;
+	friend typename endpoint_traits<endpoint_type>::role_type;
+	friend typename endpoint_traits<endpoint_type>::socket_type;
 	//friend class role<endpoint>;
 	//friend class socket<endpoint>;
 	
-	friend class role<endpoint>:: template connection<type>;
-	friend class socket<endpoint>:: template connection<type>;
+	friend class role<endpoint>::template connection<type>;
+	friend class socket<endpoint>::template connection<type>;
 	
 	enum write_state {
 		IDLE = 0,

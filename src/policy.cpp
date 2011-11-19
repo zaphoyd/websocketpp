@@ -53,24 +53,51 @@ public:
 	}
 };
 
-/*class application_client_handler : public client_handler {
-	void on_action() {
-		std::cout << "application_client_handler::on_action()" << std::endl;
+typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> basic_client;
+typedef websocketpp::role::client<basic_client>::handler client_handler_type;
+typedef websocketpp::role::client<basic_client>::handler_ptr client_handler_ptr;
+
+class application_client_handler : public client_handler_type {
+	void validate(handler_type::connection_ptr connection) {
+		std::cout << "state: " << connection->get_state() << std::endl;
 	}
-};*/
+	
+	void on_open(handler_type::connection_ptr connection) {
+		std::cout << "connection opened" << std::endl;
+	}
+	
+	void on_close(handler_type::connection_ptr connection) {
+		std::cout << "connection closed" << std::endl;
+	}
+	
+	void on_message(connection_ptr connection,websocketpp::utf8_string_ptr msg) {
+		std::cout << "got message: " << *msg << std::endl;
+		connection->send(*msg);
+	}
+	void on_message(connection_ptr connection,websocketpp::binary_string_ptr data) {
+		std::cout << "got binary message of length: " << data->size() << std::endl;
+		connection->send(*data);
+	}
+	
+	void http(handler_type::connection_ptr connection) {
+		connection->set_body("HTTP Response!!");
+	}
+	
+	void on_fail(handler_type::connection_ptr connection) {
+		std::cout << "connection failed" << std::endl;
+	}
+};
 
 
 int main () {
-	std::cout << "Endpoint 0" << std::endl;
-	handler_ptr h(new application_server_handler());
+	handler_ptr h(new application_client_handler());
 	endpoint_type e(h);
 	
 	e.alog().set_level(websocketpp::log::alevel::ALL);
 	e.elog().set_level(websocketpp::log::elevel::ALL);
 	
 	
-	e.listen(9002);
-	std::cout << std::endl;
+	e.connect("ws://localhost:9002");
 
 	return 0;
 }

@@ -68,6 +68,10 @@ public:
 		}
 	}
 	
+	bool is_secure() {
+		return true;
+	}
+	
 	// Connection specific details
 	template <typename connection_type>
 	class connection {

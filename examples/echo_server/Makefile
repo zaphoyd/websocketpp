@@ -1,4 +1,4 @@
-CFLAGS = -O2
+CFLAGS = -O2 -std=c++0x
 LDFLAGS = 
 
 CXX		?= c++
@@ -7,10 +7,10 @@ SHARED  ?= "1"
 ifeq ($(SHARED), 1)
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options ../../libwebsocketpp.a
+	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_regex -lcrypto -lssl ../../libwebsocketpp.a
 endif
 
-echo_server: echo_server.o echo.o
+echo_server: echo_server.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp

@@ -150,8 +150,6 @@ public:
 		// TODO: check if get_uri is a full uri
 		connection_uri.resource = request.uri();
 		
-		std::cout << "parsed uri: " << connection_uri.str() << std::endl;
-		
 		return connection_uri;
 	}
 	

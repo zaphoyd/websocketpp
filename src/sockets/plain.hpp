@@ -45,6 +45,10 @@ public:
 		return m_io_service;
 	}
 	
+	bool is_secure() {
+		return false;
+	}
+	
 	// Connection specific details
 	template <typename connection_type>
 	class connection {
