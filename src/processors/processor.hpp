@@ -25,19 +25,60 @@
  * 
  */
 
-#ifndef WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
-#define WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
+#ifndef WEBSOCKET_PROCESSOR_HPP
+#define WEBSOCKET_PROCESSOR_HPP
 
+#include <exception>
+#include <string>
+
+namespace websocketpp {
+namespace processor {
+	
+namespace error {
+	enum value {
+		FATAL_ERROR = 0,			// force session end
+		SOFT_ERROR = 1,				// should log and ignore
+		PROTOCOL_VIOLATION = 2,		// must end session
+		PAYLOAD_VIOLATION = 3,		// should end session
+		INTERNAL_SERVER_ERROR = 4,	// cleanly end session
+		MESSAGE_TOO_BIG = 5			// ???
+	};
+}
+
+class exception : public std::exception {
+public:	
+	exception(const std::string& msg,
+			  error::value code = error::FATAL_ERROR) 
+	: m_msg(msg),m_code(code) {}
+	~exception() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	error::value code() const throw() {
+		return m_code;
+	}
+	
+	std::string m_msg;
+	error::value m_code;
+};
+
+} // namespace processor
+} // namespace websocketpp
+	
 #include "../http/parser.hpp"
+#include "../uri.hpp"
+#include "../websocket_frame.hpp" // TODO: clean up
 
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
 
 namespace websocketpp {
-namespace protocol {
-
-class processor {
+namespace processor {
+	
+class processor_base {
 public:
 	// validate client handshake
 	// validate server handshake
@@ -53,7 +94,7 @@ public:
 	// Extracts client origin from a handshake request
 	virtual std::string get_origin(const http::parser::request& request) const = 0;
 	// Extracts client uri from a handshake request
-	virtual ws_uri get_uri(const http::parser::request& request) const = 0;
+	virtual uri get_uri(const http::parser::request& request) const = 0;
 	
 	// consume bytes, throw on exception
 	virtual void consume(std::istream& s) = 0;
@@ -88,8 +129,9 @@ public:
 	
 };
 
-typedef boost::shared_ptr<processor> processor_ptr;
+typedef boost::shared_ptr<processor_base> ptr;
 
-}
-}
-#endif // WEBSOCKET_INTERFACE_FRAME_PARSER_HPP
+} // namespace processor
+} // namespace websocketpp
+
+#endif // WEBSOCKET_PROCESSOR_HPP

@@ -30,9 +30,7 @@
 
 #include <stdint.h>
 
-// for exceptions that should be somewhere else
 #include <string>
-#include <exception>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -52,33 +50,18 @@ namespace websocketpp {
 	
 	inline uint16_t default_port(bool secure) {
 		return (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+	}	
+	
+	namespace session {
+		namespace state {
+			enum value {
+				CONNECTING = 0,
+				OPEN = 1,
+				CLOSING = 2,
+				CLOSED = 3
+			};
+		}
 	}
-	
-	// System logging levels
-	static const uint16_t LOG_ALL = 0;
-	static const uint16_t LOG_DEBUG = 1;
-	static const uint16_t LOG_INFO = 2;
-	static const uint16_t LOG_WARN = 3;
-	static const uint16_t LOG_ERROR = 4;
-	static const uint16_t LOG_FATAL = 5;
-	static const uint16_t LOG_OFF = 6;
-	
-	// Access logging controls
-	// Individual bits
-	static const uint16_t ALOG_CONNECT = 0x1;
-	static const uint16_t ALOG_DISCONNECT = 0x2;
-	static const uint16_t ALOG_MISC_CONTROL = 0x4;
-	static const uint16_t ALOG_FRAME = 0x8;
-	static const uint16_t ALOG_MESSAGE = 0x10;
-	static const uint16_t ALOG_INFO = 0x20;
-	static const uint16_t ALOG_HANDSHAKE = 0x40;
-	// Useful groups
-	static const uint16_t ALOG_OFF = 0x0;
-	static const uint16_t ALOG_CONTROL = ALOG_CONNECT 
-									   & ALOG_DISCONNECT 
-									   & ALOG_MISC_CONTROL;
-	static const uint16_t ALOG_ALL = 0xFFFF;
-	
 	
 	namespace close {
 	namespace status {
@@ -115,76 +98,6 @@ namespace websocketpp {
 	}
 	}
 	
-	namespace frame {
-		namespace error {
-			enum value {
-				FATAL_SESSION_ERROR = 0,	// force session end
-				SOFT_SESSION_ERROR = 1,		// should log and ignore
-				PROTOCOL_VIOLATION = 2,		// must end session
-				PAYLOAD_VIOLATION = 3,		// should end session
-				INTERNAL_SERVER_ERROR = 4,	// cleanly end session
-				MESSAGE_TOO_BIG = 5			// ???
-			};
-		}
-		
-		// Opcodes are 4 bits
-		// See spec section 5.2
-		namespace opcode {
-			enum value {
-				CONTINUATION = 0x0,
-				TEXT = 0x1,
-				BINARY = 0x2,
-				RSV3 = 0x3,
-				RSV4 = 0x4,
-				RSV5 = 0x5,
-				RSV6 = 0x6,
-				RSV7 = 0x7,
-				CLOSE = 0x8,
-				PING = 0x9,
-				PONG = 0xA,
-				CONTROL_RSVB = 0xB,
-				CONTROL_RSVC = 0xC,
-				CONTROL_RSVD = 0xD,
-				CONTROL_RSVE = 0xE,
-				CONTROL_RSVF = 0xF,
-			};
-			
-			inline bool reserved(value v) {
-				return (v >= RSV3 && v <= RSV7) || 
-				       (v >= CONTROL_RSVB && v <= CONTROL_RSVF);
-			}
-			
-			inline bool invalid(value v) {
-				return (v > 0xF || v < 0);
-			}
-			
-			inline bool is_control(value v) {
-				return v >= 0x8;
-			}
-		}
-		
-		namespace limits {
-			static const uint8_t PAYLOAD_SIZE_BASIC = 125;
-			static const uint16_t PAYLOAD_SIZE_EXTENDED = 0xFFFF; // 2^16, 65535
-			static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
-		}
-	}
-	
-	
-	
-	// TODO: these classes need a better place to live
-	class server_error : public std::exception {
-	public:	
-		server_error(const std::string& msg)
-		: m_msg(msg) {}
-		~server_error() throw() {}
-		
-		virtual const char* what() const throw() {
-			return m_msg.c_str();
-		}
-	private:
-		std::string m_msg;
-	};
 }
 
 #endif // WEBSOCKET_CONSTANTS_HPP

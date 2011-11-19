@@ -28,10 +28,54 @@
 #ifndef WEBSOCKET_FRAME_HPP
 #define WEBSOCKET_FRAME_HPP
 
-#include "network_utilities.hpp"
-#include "websocket_constants.hpp"
+namespace websocketpp {
+namespace frame {
+	// Opcodes are 4 bits
+	// See spec section 5.2
+	namespace opcode {
+		enum value {
+			CONTINUATION = 0x0,
+			TEXT = 0x1,
+			BINARY = 0x2,
+			RSV3 = 0x3,
+			RSV4 = 0x4,
+			RSV5 = 0x5,
+			RSV6 = 0x6,
+			RSV7 = 0x7,
+			CLOSE = 0x8,
+			PING = 0x9,
+			PONG = 0xA,
+			CONTROL_RSVB = 0xB,
+			CONTROL_RSVC = 0xC,
+			CONTROL_RSVD = 0xD,
+			CONTROL_RSVE = 0xE,
+			CONTROL_RSVF = 0xF,
+		};
+		
+		inline bool reserved(value v) {
+			return (v >= RSV3 && v <= RSV7) || 
+			(v >= CONTROL_RSVB && v <= CONTROL_RSVF);
+		}
+		
+		inline bool invalid(value v) {
+			return (v > 0xF || v < 0);
+		}
+		
+		inline bool is_control(value v) {
+			return v >= 0x8;
+		}
+	}
+	
+	namespace limits {
+		static const uint8_t PAYLOAD_SIZE_BASIC = 125;
+		static const uint16_t PAYLOAD_SIZE_EXTENDED = 0xFFFF; // 2^16, 65535
+		static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
+	}
+} // namespace frame
+} // namespace websocketpp
 
-#include "websocket_server.hpp" // for server error. this should be gotten rid of
+#include "network_utilities.hpp"
+#include "processor.hpp"
 #include "utf8_validator/utf8_validator.hpp"
 
 #if defined(WIN32)
@@ -67,27 +111,7 @@ private:
  boost::random::variate_generator<boost::random::random_device&,boost::random::uniform_int_distribution<> > m_gen;
  }
  
- */	
-
-// Exception classes
-class exception : public std::exception {
-public:	
-	exception(const std::string& msg,
-			  frame::error::value code = frame::error::FATAL_SESSION_ERROR) 
-	: m_msg(msg),m_code(code) {}
-	~exception() throw() {}
-	
-	virtual const char* what() const throw() {
-		return m_msg.c_str();
-	}
-	
-	frame::error::value code() const throw() {
-		return m_code;
-	}
-	
-	std::string m_msg;
-	frame::error::value m_code;
-};
+ */
 	
 template <class rng_policy>
 class parser {
@@ -212,12 +236,12 @@ public:
 			/*if (s.gcount() == 0) {
 			 throw frame_error("consume read zero bytes",FERR_FATAL_SESSION_ERROR);
 			 }*/
-		} catch (const exception& e) {
+		} catch (const processor::exception& e) {
 			// After this point all non-close frames must be considered garbage, 
 			// including the current one. Reset it and put the reading frame into
 			// a recovery state.
 			if (m_degraded == true) {
-				throw exception("An error occurred while trying to gracefully recover from a less serious frame error.",error::FATAL_SESSION_ERROR);
+				throw processor::exception("An error occurred while trying to gracefully recover from a less serious frame error.",processor::error::FATAL_ERROR);
 			} else {
 				reset();
 				m_state = STATE_RECOVERY;
@@ -253,7 +277,7 @@ public:
 	
 	char* get_masking_key() {
 		if (m_state != STATE_READY) {
-			throw exception("attempted to get masking_key before reading full header");
+			throw processor::exception("attempted to get masking_key before reading full header");
 		}
 		return m_header[get_header_len()-4];
 	}
@@ -307,16 +331,16 @@ public:
 		return frame::opcode::value(m_header[0] & BPB0_OPCODE);
 	}
 	void set_opcode(opcode::value op) {
-		if (frame::opcode::reserved(op)) {
-			throw exception("reserved opcode",error::PROTOCOL_VIOLATION);
+		if (opcode::reserved(op)) {
+			throw processor::exception("reserved opcode",processor::error::PROTOCOL_VIOLATION);
 		}
 		
-		if (frame::opcode::invalid(op)) {
-			throw exception("invalid opcode",error::PROTOCOL_VIOLATION);
+		if (opcode::invalid(op)) {
+			throw processor::exception("invalid opcode",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		if (is_control() && get_basic_size() > limits::PAYLOAD_SIZE_BASIC) {
-			throw exception("control frames can't have large payloads",error::PROTOCOL_VIOLATION);
+			throw processor::exception("control frames can't have large payloads",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		m_header[0] &= (0xFF ^ BPB0_OPCODE); // clear op bits
@@ -370,7 +394,7 @@ public:
 			uint32_t codep = 0;
 			validate_utf8(&state,&codep,2);
 			if (state != utf8_validator::UTF8_ACCEPT) {
-				throw exception("Invalid UTF-8 Data",error::PAYLOAD_VIOLATION);
+				throw processor::exception("Invalid UTF-8 Data",processor::error::PAYLOAD_VIOLATION);
 			}
 			return std::string(m_payload.begin()+2,m_payload.end());
 		} else {
@@ -394,12 +418,12 @@ public:
 	}
 	void set_payload_helper(size_t s) {
 		if (s > max_payload_size) {
-			throw exception("requested payload is over implimentation defined limit",error::MESSAGE_TOO_BIG);
+			throw processor::exception("requested payload is over implimentation defined limit",processor::error::MESSAGE_TOO_BIG);
 		}
 		
 		// limits imposed by the websocket spec
 		if (is_control() && s > limits::PAYLOAD_SIZE_BASIC) {
-			throw exception("control frames can't have large payloads",error::PROTOCOL_VIOLATION);
+			throw processor::exception("control frames can't have large payloads",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		if (s <= limits::PAYLOAD_SIZE_BASIC) {
@@ -415,7 +439,7 @@ public:
 			m_header[1] = BASIC_PAYLOAD_64BIT_CODE;
 			*reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = htonll(s);
 		} else {
-			throw exception("payload size limit is 63 bits",error::PROTOCOL_VIOLATION);
+			throw processor::exception("payload size limit is 63 bits",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		m_payload.resize(s);
@@ -426,13 +450,13 @@ public:
 		if (close::status::invalid(status)) {
 			std::stringstream err;
 			err << "Status code " << status << " is invalid";
-			throw exception(err.str());
+			throw processor::exception(err.str());
 		}
 		
 		if (close::status::reserved(status)) {
 			std::stringstream err;
 			err << "Status code " << status << " is reserved";
-			throw exception(err.str());
+			throw processor::exception(err.str());
 		}
 		
 		m_payload.resize(2+message.size());
@@ -450,7 +474,7 @@ public:
 	}
 	
 	bool is_control() const {
-		return (frame::opcode::is_control(get_opcode()));
+		return (opcode::is_control(get_opcode()));
 	}
 	
 	std::string print_frame() const {
@@ -490,14 +514,14 @@ public:
 			// reinterpret the second two bytes as a 16 bit integer in network
 			// byte order. Convert to host byte order and store locally.
 			payload_size = ntohs(*(
-								   reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
-								   ));
+				reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
+			));
 			
 			if (payload_size < s) {
 				std::stringstream err;
 				err << "payload length not minimally encoded. Using 16 bit form for payload size: " << payload_size;
 				m_bytes_needed = payload_size;
-				throw exception(err.str(),error::PROTOCOL_VIOLATION);
+				throw processor::exception(err.str(),processor::error::PROTOCOL_VIOLATION);
 			}
 			
 			mask_index += 2;
@@ -505,19 +529,19 @@ public:
 			// reinterpret the second eight bytes as a 64 bit integer in 
 			// network byte order. Convert to host byte order and store.
 			payload_size = ntohll(*(
-									reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
-									));
+				reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
+			));
 			
 			if (payload_size <= limits::PAYLOAD_SIZE_EXTENDED) {
 				m_bytes_needed = payload_size;
-				throw exception("payload length not minimally encoded",
-								error::PROTOCOL_VIOLATION);
+				throw processor::exception("payload length not minimally encoded",
+								processor::error::PROTOCOL_VIOLATION);
 			}
 			
 			mask_index += 8;
 		} else {
 			// TODO: shouldn't be here how to handle?
-			throw exception("invalid get_basic_size in process_extended_header");
+			throw processor::exception("invalid get_basic_size in process_extended_header");
 		}
 		
 		if (get_masked() == 0) {
@@ -586,29 +610,29 @@ public:
 			using utf8_validator::decode;
 			
 			if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
-				throw exception("Invalid UTF-8 Data",error::PAYLOAD_VIOLATION);
+				throw processor::exception("Invalid UTF-8 Data",processor::error::PAYLOAD_VIOLATION);
 			}
 		}
 	}
 	void validate_basic_header() const {
 		// check for control frame size
 		if (is_control() && get_basic_size() > limits::PAYLOAD_SIZE_BASIC) {
-			throw exception("Control Frame is too large",error::PROTOCOL_VIOLATION);
+			throw processor::exception("Control Frame is too large",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		// check for reserved bits
 		if (get_rsv1() || get_rsv2() || get_rsv3()) {
-			throw exception("Reserved bit used",error::PROTOCOL_VIOLATION);
+			throw processor::exception("Reserved bit used",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		// check for reserved opcodes
 		if (opcode::reserved(get_opcode())) {
-			throw exception("Reserved opcode used",error::PROTOCOL_VIOLATION);
+			throw processor::exception("Reserved opcode used",processor::error::PROTOCOL_VIOLATION);
 		}
 		
 		// check for fragmented control message
 		if (is_control() && !get_fin()) {
-			throw exception("Fragmented control message",error::PROTOCOL_VIOLATION);
+			throw processor::exception("Fragmented control message",processor::error::PROTOCOL_VIOLATION);
 		}
 	}
 	
@@ -637,106 +661,6 @@ private:
 		
 	rng_policy& m_rng;
 };
-
-class hybi_00_parser {
-public:
-	// TODO: not hardcode this
-	static const uint64_t max_payload_size = 100000000; // 100MB
-	
-	hybi_00_parser() : m_state(STATE_READ_TYPE) {
-		reset();
-	}
-	
-	bool ready() const {
-		return m_state == STATE_READY;
-	}
-	uint64_t get_bytes_needed() const {
-		return 1;
-	}
-	void reset() {
-		m_state = STATE_READ_TYPE;
-	}
-	
-	void set_fin(bool fin) {}
-	void set_opcode(opcode::value op) {
-		if (op != frame::opcode::TEXT) {
-			// TODO: what happens when you try to send non-text to a hybi_00 frame
-		}
-	}
-	
-	// hybi_00 frames are UTF-8 text only.
-	opcode::value get_opcode() const {
-		return frame::opcode::TEXT;
-	}
-	
-	void set_payload(const std::string source) {
-		if (source.size() > max_payload_size) {
-			throw exception("requested payload is over implimentation defined limit",error::MESSAGE_TOO_BIG);
-		}
-		
-		// TODO: utf8 validation?
-		
-		m_payload.resize(source.size()+2);
-		
-		m_payload[0] = 0x00;
-		std::copy(source.begin(),source.end(),m_payload.begin()+1);
-		m_payload[m_payload.size()-1] = 0xFF;
-	}
-	
-	void set_masked(bool masked) {}
-	
-	void process_payload() {}
-	
-	bool is_control() const {
-		return false;
-	}
-	
-	std::vector<unsigned char> &get_payload() {
-		return m_payload;
-	}
-	
-	char* get_header() {
-		// TODO: this might be a problem
-		return NULL;
-	}
-
-	unsigned int get_header_len() const {
-		return 0;
-	}
-	
-	void validate_utf8(uint32_t* state,uint32_t* codep,size_t offset = 0) const {
-		for (size_t i = offset; i < m_payload.size(); i++) {
-			using utf8_validator::decode;
-			
-			if (decode(state,codep,m_payload[i]) == utf8_validator::UTF8_REJECT) {
-				throw exception("Invalid UTF-8 Data",error::PAYLOAD_VIOLATION);
-			}
-		}
-	}
-	
-	// Method invariant: One of the following must always be true even in the case 
-	// of exceptions.
-	// - m_bytes_needed > 0
-	// - m-state = STATE_READY
-	void consume(std::istream &s) {
-		// read a byte. if it is 0x00 then read payload bytes until 0xFF.
-		// otherwise it may be another type of frame. Test whether or not
-		// hybi00 clients actually send them.
-		
-		// should do streaming utf8 validation and throw an exception on error.
-	}
-private:
-	static const uint8_t STATE_READ_TYPE = 1;
-	static const uint8_t STATE_READ_LENGTH = 2;
-	static const uint8_t STATE_READ_PAYLOAD = 3;
-	static const uint8_t STATE_READY = 4;
-	
-	uint8_t m_state;
-	std::vector<unsigned char> m_payload;
-};
-
-
-
 
 }
 }

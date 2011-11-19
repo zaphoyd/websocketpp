@@ -72,6 +72,15 @@ public:
 	template <typename connection_type>
 	class connection {
 	public:
+		// should these two be public or protected. If protected, how?
+		ssl_socket::lowest_layer_type& get_raw_socket() {
+			return m_socket.lowest_layer();
+		}
+		
+		ssl_socket& get_socket() {
+			return m_socket;
+		}
+	protected:
 		connection(ssl<endpoint_type>& e) : m_socket(e.get_io_service(),e.get_context()),m_endpoint(e) {}
 		
 		void async_init(boost::function<void(const boost::system::error_code&)> callback) {
@@ -98,12 +107,15 @@ public:
 			callback(error);
 		}
 		
-		ssl_socket::lowest_layer_type& get_raw_socket() {
-			return m_socket.lowest_layer();
-		}
-		
-		ssl_socket& get_socket() {
-			return m_socket;
+		bool shutdown() {
+			boost::system::error_code ignored_ec;
+			m_socket.shutdown(ignored_ec);
+			
+			if (ignored_ec) {
+				return false;
+			} else {
+				return true;
+			}
 		}
 	private:
 		ssl_socket			m_socket;
@@ -119,9 +131,9 @@ protected:
 								  boost::asio::ssl::context::no_sslv2 |
 								  boost::asio::ssl::context::single_dh_use);
 			m_context.set_password_callback(boost::bind(&type::get_password, this));
-			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
-			m_context.use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
+			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem");
+			m_context.use_private_key_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
+			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/dh512.pem");
 		} catch (std::exception& e) {
 			std::cout << e.what() << std::endl;
 		}

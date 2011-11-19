@@ -25,58 +25,25 @@
  * 
  */
 
-#include "network_utilities.hpp"
+#ifndef WEBSOCKETPP_MD5_WRAPPER_HPP
+#define WEBSOCKETPP_MD5_WRAPPER_HPP
 
-uint64_t htonll(uint64_t src) { 
-	static int typ = TYP_INIT; 
-	unsigned char c; 
-	union { 
-		uint64_t ull; 
-		unsigned char c[8]; 
-	} x; 
-	if (typ == TYP_INIT) { 
-		x.ull = 0x01; 
-		typ = (x.c[7] == 0x01ULL) ? TYP_BIGE : TYP_SMLE; 
-	} 
-	if (typ == TYP_BIGE) 
-		return src; 
-	x.ull = src; 
-	c = x.c[0]; x.c[0] = x.c[7]; x.c[7] = c; 
-	c = x.c[1]; x.c[1] = x.c[6]; x.c[6] = c; 
-	c = x.c[2]; x.c[2] = x.c[5]; x.c[5] = c; 
-	c = x.c[3]; x.c[3] = x.c[4]; x.c[4] = c; 
-	return x.ull; 
+#include "md5.h"
+
+namespace websocketpp {
+
+// could be compiled separately
+inline void md5_hash_string(const std::string& s);
+	char digest[17];
+	
+	md5_state_t state;
+	
+	md5_init(&state);
+	md5_append(&state, (const md5_byte_t *)s.c_str(), 16);
+	md5_finish(&state, (md5_byte_t *)digest);
+	
+	digest[16] = '\0';
+	return std::string(digest);
 }
 
-uint64_t ntohll(uint64_t src) { 
-	return htonll(src);
-}
-
-std::string lookup_ws_close_status_string(uint16_t code) {
-	switch (code) {
-		case 1000: 
-			return "Normal closure";
-		case 1001: 
-			return "Going away";
-		case 1002: 
-			return "Protocol error";
-		case 1003: 
-			return "Unacceptable data";
-		case 1004: 
-			return "Reserved";
-		case 1005: 
-			return "No status received";
-		case 1006: 
-			return "Abnormal closure";
-		case 1007: 
-			return "Invalid message data";
-		case 1008: 
-			return "Policy Violation";
-		case 1009: 
-			return "Message too large";
-		case 1010: 
-			return "Missing required extensions";
-		default:
-			return "Unknown";
-	}
-}
+#endif // WEBSOCKETPP_MD5_WRAPPER_HPP

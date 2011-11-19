@@ -40,6 +40,8 @@
 
 #include "sha1.h"
 
+using websocketpp::SHA1;
+
 /*  
  *  SHA1
  *

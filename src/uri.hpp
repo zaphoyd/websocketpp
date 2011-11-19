@@ -25,23 +25,88 @@
  * 
  */
 
-#ifndef NETWORK_UTILITIES_HPP
-#define NETWORK_UTILITIES_HPP
+#ifndef WEBSOCKETPP_URI_HPP
+#define WEBSOCKETPP_URI_HPP
+
+#include "common.hpp"
 
 #include <stdint.h>
 #include <string>
+#include <boost/regex.hpp>
 
-// http://www.viva64.com/en/k/0018/
-// TODO: impliment stuff from here: 
-// http://stackoverflow.com/questions/809902/64-bit-ntohl-in-c
+namespace websocketpp {
 
-#define TYP_INIT 0 
-#define TYP_SMLE 1 
-#define TYP_BIGE 2 
+struct uri {
+	bool parse(const std::string& uri) {
+		boost::cmatch what;
+		static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/[^#]*)?");
+		
+		// TODO: should this split resource into path/query?
+		
+		if (boost::regex_match(uri.c_str(), what, expression)) {
+			if (what[1] == "wss") {
+				secure = true;
+			} else {
+				secure = false;
+			}
+			
+			host = what[2];
+			
+			if (what[3] == "") {
+				port = (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+			} else {
+				unsigned int t_port = atoi(std::string(what[3]).substr(1).c_str());
+				
+				if (t_port > 65535) {
+					return false;
+				}
+				
+				port = atoi(std::string(what[3]).substr(1).c_str());
+			}
+			
+			if (what[4] == "") {
+				resource = "/";
+			} else {
+				resource = what[4];
+			}
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+	std::string base() {
+		std::stringstream s;
+		
+		s << "ws" << (secure ? "s" : "") << "://" << host;
+		
+		if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
+			s << ":" << port;
+		}
+		
+		s << "/";
+		return s.str();
 
-uint64_t htonll(uint64_t src);
-uint64_t ntohll(uint64_t src);
+	}
+	std::string str() {
+		std::stringstream s;
+		
+		s << "ws" << (secure ? "s" : "") << "://" << host;
+		
+		if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
+			s << ":" << port;
+		}
+		
+		s << resource;
+		return s.str();
+	}
+	
+	bool		secure;
+	std::string	host;
+	uint16_t	port;
+	std::string	resource;
+};
 
-std::string lookup_ws_close_status_string(uint16_t code);
+} // namespace websocketpp
 
-#endif // NETWORK_UTILITIES_HPP
+#endif // WEBSOCKETPP_URI_HPP

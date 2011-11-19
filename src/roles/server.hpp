@@ -29,12 +29,16 @@
 #define WEBSOCKETPP_ROLE_SERVER_HPP
 
 #include "../endpoint.hpp"
+#include "../processors/hybi.hpp"
+#include "../rng/blank_rng.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
+#include <stdexcept>
 
 namespace websocketpp {
 namespace role {
@@ -46,49 +50,281 @@ public:
 	template <typename connection_type>
 	class connection {
 	public:
+		typedef connection<connection_type> type;
+		typedef endpoint endpoint_type;
+		
 		// Valid always
-		std::string get_request_header(const std::string& key) const {}
-		std::string get_origin() const {}
+		unsigned int get_version() const {
+			return m_version;
+		}
+		std::string get_request_header(const std::string& key) const {
+			return m_request.header(key);
+		}
+		std::string get_origin() const {
+			return m_origin;
+		}
+		
+		// Information about the requested URI
+		bool get_secure() const {
+			return m_uri.secure;
+		}
+		std::string get_host() const {
+			return m_uri.host;
+		}
+		std::string get_resource() const {
+			return m_uri.resource;
+		}
+		unsigned short get_port() const {
+			return m_uri.port;
+		}
 		
 		// Valid for CONNECTING state
-		void add_response_header(const std::string& key, const std::string& value) {};
-		void replace_response_header(const std::string& key, const std::string& e) {};
-		const std::vector<std::string>& get_subprotocols() const {};
-		const std::vector<std::string>& get_extensions() const {};
-		void select_subprotocol(const std::string& value) {};
-		void select_extension(const std::string& value) {};
+		void add_response_header(const std::string& key, const std::string& value) {
+			m_response.add_header(key,value);
+		}
+		void replace_response_header(const std::string& key, const std::string& value) {
+			m_response.replace_header(key,value);
+		}
+		void remove_response_header(const std::string& key) {
+			m_response.remove_header(key);
+		}
+		
+		const std::vector<std::string>& get_subprotocols() const {
+			return m_requested_subprotocols;
+		}
+		const std::vector<std::string>& get_extensions() const {
+			return m_requested_extensions;
+		}
+		void select_subprotocol(const std::string& value) {
+			std::vector<std::string>::iterator it;
+			
+			it = std::find(m_requested_subprotocols.begin(),
+						   m_requested_subprotocols.end(),
+						   value);
+			
+			if (value != "" && it == m_requested_subprotocols.end()) {
+				throw std::invalid_argument("Attempted to choose a subprotocol not proposed by the client");
+			}
+			
+			m_subprotocol = value;
+		}
+		void select_extension(const std::string& value) {
+			if (value == "") {
+				return;
+			}
+			
+			std::vector<std::string>::iterator it;
+			
+			it = std::find(m_requested_extensions.begin(),
+						   m_requested_extensions.end(),
+						   value);
+			
+			if (it == m_requested_extensions.end()) {
+				throw std::invalid_argument("Attempted to choose an extension not proposed by the client");
+			}
+			
+			m_extensions.push_back(value);
+		}
+		
+		// Valid if get_version() returns -1 (ie this is an http connection)
+		void set_body(const std::string& value) {
+			if (m_connection.m_version != -1) {
+				// TODO: throw exception
+				throw std::invalid_argument("set_body called from invalid state");
+			}
+			
+			m_response.set_body(value);
+		}
 	protected:
 		//connection(server<endpoint>& e) : m_endpoint(e) {}
-		connection(endpoint& e) : m_endpoint(e) {}
+		connection(endpoint& e)
+		 : m_endpoint(e),
+		   m_connection(static_cast< connection_type& >(*this)),
+		   m_version(-1) {}
 		
 		// initializes the websocket connection
 		void async_init() {
-			/*boost::asio::async_read_until(
-				m_endpoint.socket(),
-				m_buf,
+			boost::asio::async_read_until(
+				m_connection.get_socket(),
+				m_connection.buffer(),
 				"\r\n\r\n",
 				boost::bind(
-					&connection_type::handle_read_request,
-					connection_type::shared_from_this(),
+					&type::handle_read_request,
+					m_connection.shared_from_this(), // shared from this?
 					boost::asio::placeholders::error,
 					boost::asio::placeholders::bytes_transferred
 				)
-			);*/
+			);
 		}
 		
+		void handle_read_request(const boost::system::error_code& error,
+								 std::size_t bytes_transferred)
+		{
+			if (error) {
+				// log error
+				m_endpoint.elog().at(log::elevel::ERROR) << "Error reading HTTP request. code: " << error << log::endl;
+				m_connection.terminate(false);
+				return;
+			}
+			
+			try {
+				std::istream request(&m_connection.buffer());
+				
+				if (!m_request.parse_complete(request)) {
+					// not a valid HTTP request/response
+					throw http::exception("Recieved invalid HTTP Request",http::status_code::BAD_REQUEST);
+				}
+				
+				m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
+								
+				std::string h = m_request.header("Upgrade");
+				if (boost::ifind_first(h,"websocket")) {
+					h = m_request.header("Sec-WebSocket-Version");
+					if (h == "") {
+						// websocket upgrade is present but version is not.
+						// assume hybi00
+						m_version = 0;
+					} else {
+						m_version = atoi(h.c_str());
+						if (m_version == 0) {
+							throw(http::exception("Unable to determine connection version",http::status_code::BAD_REQUEST));
+						}
+					}
+					
+					// create a websocket processor
+					if (m_version == 0) {
+						m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
+						
+						throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
+					} else if (m_version == 7 ||
+							   m_version == 8 ||
+							   m_version == 13) {
+						m_connection.m_processor = processor::ptr(new processor::hybi<blank_rng>(false,m_rng));
+					} else {
+						m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
+						
+						throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
+					}
+					
+					m_connection.m_processor->validate_handshake(m_request);
+					m_origin = m_connection.m_processor->get_origin(m_request);
+					m_uri = m_connection.m_processor->get_uri(m_request);
+					
+					m_endpoint.get_handler()->validate(m_connection.shared_from_this());
+					
+					m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
+				} else {
+					// continue as HTTP?
+					m_endpoint.get_handler()->http(m_connection.shared_from_this());
+					
+					m_response.set_status(http::status_code::OK);
+				}
+			} catch (const http::exception& e) {
+				m_endpoint.elog().at(log::elevel::ERROR) << e.what() << log::endl;
+				m_response.set_status(e.m_error_code,e.m_error_msg);
+				m_response.set_body(e.m_body);
+			}
+			
+			write_response();
+		}
 		
+		void write_response() {
+			m_response.set_version("HTTP/1.1");
+			
+			if (m_response.status_code() == http::status_code::SWITCHING_PROTOCOLS) {
+				// websocket response
+				m_connection.m_processor->handshake_response(m_request,m_response);
+				
+				if (m_subprotocol != "") {
+					m_response.replace_header("Sec-WebSocket-Protocol",m_subprotocol);
+				}
+				
+				// TODO: return negotiated extensions
+			} else {
+				// HTTP response
+			}
+			
+			m_response.replace_header("Server","WebSocket++/2011-11-18");
+			
+			std::string raw = m_response.raw();
+			
+			m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
+			
+			boost::asio::async_write(
+				m_connection.get_socket(),
+				boost::asio::buffer(raw),
+				boost::bind(
+					&type::handle_write_response,
+					m_connection.shared_from_this(),
+					boost::asio::placeholders::error
+				)
+			);
+		}
+		
+		void handle_write_response(const boost::system::error_code& error) {
+			// TODO: handshake timer
+			
+			if (error) {
+				m_endpoint.elog().at(log::elevel::ERROR) << "Network error writing handshake respons. code: " << error << log::endl;
+								
+				m_connection.terminate(false);
+				return;
+			}
+			
+			log_open_result();
+			
+			if (m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
+				if (m_version == -1) {
+					// if this was not a websocket connection, we have written 
+					// the expected response and the connection can be closed.
+				} else {
+					// this was a websocket connection that ended in an error
+					m_endpoint.elog().at(log::elevel::ERROR) 
+						<< "Handshake ended with HTTP error: " 
+						<< m_response.status_code() << " " 
+						<< m_response.status_msg() << log::endl;
+				}
+				m_connection.terminate(true);
+				return;
+			}
+			
+			m_connection.m_state = session::state::OPEN;
+			
+			m_endpoint.get_handler()->on_open(m_connection.shared_from_this());
+			
+			m_connection.handle_read_frame(boost::system::error_code());
+		}
+		
+		void log_open_result() {
+			std::stringstream version;
+			version << "v" << m_version << " ";
+			
+			m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
+			<< m_connection.get_raw_socket().remote_endpoint() << " "
+			<< (m_version == -1 ? "" : version.str())
+			<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+			<< " " << m_uri.resource << " " << m_response.status_code() 
+			<< log::endl;
+		}
 		
 	private:
 		endpoint&					m_endpoint;
+		connection_type&			m_connection;
+		
+		int							m_version;
+		uri							m_uri;
+		std::string					m_origin;
+		std::vector<std::string>	m_requested_subprotocols;
+		std::vector<std::string>	m_requested_extensions;
+		std::string					m_subprotocol;
+		std::vector<std::string>	m_extensions;
 		
 		http::parser::request		m_request;
 		http::parser::response		m_response;
+		blank_rng					m_rng;
 	};
 	
-	// handler interface callback class
-	class handler {
-		virtual void on_action() = 0;
-	};
+	class handler;
 	
 	typedef boost::shared_ptr<handler> handler_ptr;
 	
@@ -97,7 +333,27 @@ public:
 	typedef endpoint endpoint_type;
 	
 	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
+	
+	// handler interface callback class
+	class handler {
+	public:
+		typedef connection_ptr connection_ptr;
 		
+		// Required
+		virtual void validate(connection_ptr connection) = 0;
+		virtual void on_open(connection_ptr connection) = 0;
+		virtual void on_close(connection_ptr connection) = 0;
+		
+		virtual void on_message(connection_ptr connection,utf8_string_ptr) = 0;
+		virtual void on_message(connection_ptr connection,binary_string_ptr) = 0;
+		
+		// Optional
+		virtual bool on_ping(connection_ptr connection,binary_string_ptr) {return true;}
+		virtual void on_pong(connection_ptr connection,binary_string_ptr) {}
+		virtual void http(connection_ptr connection) {}
+		virtual void on_fail(connection_ptr connection) {}
+	};
+	
 	server(boost::asio::io_service& m,handler_ptr h) 
 	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
 	   m_handler(h),

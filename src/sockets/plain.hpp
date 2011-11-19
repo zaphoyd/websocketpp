@@ -49,6 +49,15 @@ public:
 	template <typename connection_type>
 	class connection {
 	public:
+		// should these two be public or protected. If protected, how?
+		boost::asio::ip::tcp::socket& get_raw_socket() {
+			return m_socket;
+		}
+		
+		boost::asio::ip::tcp::socket& get_socket() {
+			return m_socket;
+		}
+	protected:
 		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
 		
 		void async_init(socket_init_callback callback) {
@@ -56,12 +65,15 @@ public:
 			callback(boost::system::error_code());
 		}
 		
-		boost::asio::ip::tcp::socket& get_raw_socket() {
-			return m_socket;
-		}
-		
-		boost::asio::ip::tcp::socket& get_socket() {
-			return m_socket;
+		bool shutdown() {
+			boost::system::error_code ignored_ec;
+			m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both,ignored_ec);
+			
+			if (ignored_ec) {
+				return false;
+			} else {
+				return true;
+			}
 		}
 	private:
 		boost::asio::ip::tcp::socket m_socket;

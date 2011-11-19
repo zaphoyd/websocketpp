@@ -9,11 +9,11 @@
 /* Begin PBXBuildFile section */
 		B613878F145CA61300ED9B19 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
 		B6138790145CA61C00ED9B19 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
+		B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828875143745DA002BA48B /* chat_client_handler.cpp */; };
 		B68288881437460E002BA48B /* chat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828877143745DA002BA48B /* chat_client.cpp */; };
 		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
-		B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
 		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
 		B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */; };
@@ -34,41 +34,28 @@
 		B6DF1C8D1434AC330029A1B1 /* sha1.h in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C891434AC330029A1B1 /* sha1.h */; };
 		B6DF1C901434AC3E0029A1B1 /* utf8_validator.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C8F1434AC3E0029A1B1 /* utf8_validator.hpp */; };
 		B6DF1C911434AC3E0029A1B1 /* utf8_validator.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C8F1434AC3E0029A1B1 /* utf8_validator.hpp */; };
-		B6DF1CA01434AC470029A1B1 /* websocket_client_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */; };
 		B6DF1CA21434AC470029A1B1 /* websocket_client_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */; };
 		B6DF1CA31434AC470029A1B1 /* websocket_client_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */; };
-		B6DF1CA41434AC470029A1B1 /* websocket_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C941434AC470029A1B1 /* websocket_client.cpp */; };
 		B6DF1CA61434AC470029A1B1 /* websocket_client.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C951434AC470029A1B1 /* websocket_client.hpp */; };
 		B6DF1CA71434AC470029A1B1 /* websocket_client.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C951434AC470029A1B1 /* websocket_client.hpp */; };
 		B6DF1CA81434AC470029A1B1 /* websocket_connection_handler.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C961434AC470029A1B1 /* websocket_connection_handler.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6DF1CA91434AC470029A1B1 /* websocket_connection_handler.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C961434AC470029A1B1 /* websocket_connection_handler.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
-		B6DF1CAA1434AC470029A1B1 /* websocket_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C971434AC470029A1B1 /* websocket_frame.cpp */; };
-		B6DF1CAB1434AC470029A1B1 /* websocket_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C971434AC470029A1B1 /* websocket_frame.cpp */; };
 		B6DF1CAC1434AC470029A1B1 /* websocket_frame.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */; };
 		B6DF1CAD1434AC470029A1B1 /* websocket_frame.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */; };
-		B6DF1CAE1434AC470029A1B1 /* websocket_server_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C991434AC470029A1B1 /* websocket_server_session.cpp */; };
 		B6DF1CB01434AC470029A1B1 /* websocket_server_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9A1434AC470029A1B1 /* websocket_server_session.hpp */; };
 		B6DF1CB11434AC470029A1B1 /* websocket_server_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9A1434AC470029A1B1 /* websocket_server_session.hpp */; };
-		B6DF1CB21434AC470029A1B1 /* websocket_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C9B1434AC470029A1B1 /* websocket_server.cpp */; };
-		B6DF1CB31434AC470029A1B1 /* websocket_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C9B1434AC470029A1B1 /* websocket_server.cpp */; };
 		B6DF1CB41434AC470029A1B1 /* websocket_server.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9C1434AC470029A1B1 /* websocket_server.hpp */; };
 		B6DF1CB51434AC470029A1B1 /* websocket_server.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9C1434AC470029A1B1 /* websocket_server.hpp */; };
-		B6DF1CB61434AC470029A1B1 /* websocket_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C9D1434AC470029A1B1 /* websocket_session.cpp */; };
-		B6DF1CB71434AC470029A1B1 /* websocket_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C9D1434AC470029A1B1 /* websocket_session.cpp */; };
 		B6DF1CB81434AC470029A1B1 /* websocket_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9E1434AC470029A1B1 /* websocket_session.hpp */; };
 		B6DF1CB91434AC470029A1B1 /* websocket_session.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9E1434AC470029A1B1 /* websocket_session.hpp */; };
 		B6DF1CBA1434AC470029A1B1 /* websocketpp.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6DF1CBB1434AC470029A1B1 /* websocketpp.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
-		B6DF1CC11434AF6A0029A1B1 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
-		B6DF1CC21434AF6A0029A1B1 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
-		B6DF1CC31434AF6A0029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CC01434AF6A0029A1B1 /* libboost_system.dylib */; };
 		B6DF1CC41434AF9E0029A1B1 /* network_utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C791434AB740029A1B1 /* network_utilities.cpp */; };
 		B6DF1CDB1435EDCE0029A1B1 /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */; };
 		B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCB1435ED760029A1B1 /* echo.cpp */; };
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6DF1CE41435F8250029A1B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE31435F8250029A1B1 /* Foundation.framework */; };
-		B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
 		B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
 		B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */; };
 		B6FE8D181468707200B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
@@ -168,6 +155,12 @@
 		B62A5A581473EBF1005F9EB0 /* plain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = plain.hpp; path = src/sockets/plain.hpp; sourceTree = "<group>"; };
 		B62A5A591473EBF1005F9EB0 /* ssl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ssl.hpp; path = src/sockets/ssl.hpp; sourceTree = "<group>"; };
 		B62A5A6114755443005F9EB0 /* socket_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = socket_base.hpp; path = src/sockets/socket_base.hpp; sourceTree = "<group>"; };
+		B62A5A6B147748B2005F9EB0 /* hybi.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi.hpp; sourceTree = "<group>"; };
+		B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi_legacy.hpp; sourceTree = "<group>"; };
+		B62A5A6D147748B2005F9EB0 /* processor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = processor.hpp; sourceTree = "<group>"; };
+		B62A5A6F14774CD5005F9EB0 /* uri.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = src/uri.hpp; sourceTree = "<group>"; };
+		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
+		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -261,11 +254,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B6FE8CEC145A0F1900B32547 /* libboost_program_options.dylib in Frameworks */,
-				B682888D1437464A002BA48B /* libboost_random.dylib in Frameworks */,
-				B6DF1CC11434AF6A0029A1B1 /* libboost_date_time.dylib in Frameworks */,
-				B6DF1CC21434AF6A0029A1B1 /* libboost_regex.dylib in Frameworks */,
-				B6DF1CC31434AF6A0029A1B1 /* libboost_system.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +273,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */,
 				B6FE8D6614757D6400B32547 /* libboost_date_time.dylib in Frameworks */,
 				B6FE8D5E14730B2200B32547 /* libssl.dylib in Frameworks */,
 				B6FE8D5C14730B1A00B32547 /* libcrypto.dylib in Frameworks */,
@@ -342,6 +331,17 @@
 			name = sockets;
 			sourceTree = "<group>";
 		};
+		B62A5A6A147748B2005F9EB0 /* processors */ = {
+			isa = PBXGroup;
+			children = (
+				B62A5A6B147748B2005F9EB0 /* hybi.hpp */,
+				B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */,
+				B62A5A6D147748B2005F9EB0 /* processor.hpp */,
+			);
+			name = processors;
+			path = src/processors;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -396,13 +396,15 @@
 				B6FE8D30146C721200B32547 /* hybi_processor.hpp */,
 				B6FE8D2E146C2C9500B32547 /* hybi_legacy_processor.hpp */,
 				B62A5A2F1469512A005F9EB0 /* interfaces */,
-				B6FE8D1414686A6D00B32547 /* md5 */,
 				B61387B51462B34400ED9B19 /* logger */,
 				B61387A4145D847A00ED9B19 /* http */,
 				B6FE8D09145B0F7400B32547 /* rng */,
 				B6FE8D05145AFF5F00B32547 /* websocket_constants.hpp */,
+				B62A5A6A147748B2005F9EB0 /* processors */,
 				B6FE8D4914730AA600B32547 /* policy.cpp */,
+				B62A5A71147759EA005F9EB0 /* common.hpp */,
 				B62A5A511473EBB0005F9EB0 /* connection.hpp */,
+				B62A5A6F14774CD5005F9EB0 /* uri.hpp */,
 				B62A5A521473EBB0005F9EB0 /* endpoint.hpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
@@ -420,6 +422,7 @@
 				B6DF1C9D1434AC470029A1B1 /* websocket_session.cpp */,
 				B6DF1C9E1434AC470029A1B1 /* websocket_session.hpp */,
 				B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */,
+				B6FE8D1414686A6D00B32547 /* md5 */,
 				B6DF1C8E1434AC3E0029A1B1 /* utf8_validator */,
 				B6DF1C871434ABF30029A1B1 /* sha1 */,
 				B6DF1C801434ABE20029A1B1 /* base64 */,
@@ -538,6 +541,7 @@
 			children = (
 				B6FE8D1614686A8500B32547 /* md5.c */,
 				B6FE8D1714686A8500B32547 /* md5.h */,
+				B62A5A7014774F08005F9EB0 /* md5.hpp */,
 			);
 			name = md5;
 			sourceTree = "<group>";
@@ -762,12 +766,6 @@
 				B6DF1C7A1434AB740029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C831434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8A1434AC330029A1B1 /* sha1.cpp in Sources */,
-				B6DF1CA01434AC470029A1B1 /* websocket_client_session.cpp in Sources */,
-				B6DF1CA41434AC470029A1B1 /* websocket_client.cpp in Sources */,
-				B6DF1CAA1434AC470029A1B1 /* websocket_frame.cpp in Sources */,
-				B6DF1CAE1434AC470029A1B1 /* websocket_server_session.cpp in Sources */,
-				B6DF1CB21434AC470029A1B1 /* websocket_server.cpp in Sources */,
-				B6DF1CB61434AC470029A1B1 /* websocket_session.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -779,9 +777,6 @@
 				B6DF1CC41434AF9E0029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C841434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8B1434AC330029A1B1 /* sha1.cpp in Sources */,
-				B6DF1CAB1434AC470029A1B1 /* websocket_frame.cpp in Sources */,
-				B6DF1CB31434AC470029A1B1 /* websocket_server.cpp in Sources */,
-				B6DF1CB71434AC470029A1B1 /* websocket_session.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

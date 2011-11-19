@@ -24,9 +24,10 @@
 #ifndef _SHA1_H_
 #define _SHA1_H_
 
+namespace websocketpp {
+
 class SHA1
 {
-
     public:
 
         SHA1();
@@ -86,4 +87,6 @@ class SHA1
     
 };
 
-#endif
+} // namespace websocketpp
+	
+#endif // _SHA1_H_

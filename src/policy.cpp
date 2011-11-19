@@ -15,15 +15,41 @@ sockets/ssl.hpp
 #include "roles/server.hpp"
 #include "sockets/ssl.hpp"
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> endpoint_type;
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> endpoint_type;
 //typedef websocketpp::endpoint<websocketpp::role::server> endpoint_type;
 typedef websocketpp::role::server<endpoint_type>::handler handler_type;
 typedef websocketpp::role::server<endpoint_type>::handler_ptr handler_ptr;
 
 // application headers
 class application_server_handler : public handler_type {
-	void on_action() {
-		std::cout << "application_server_handler::on_action()" << std::endl;
+public:
+	void validate(handler_type::connection_ptr connection) {
+		//std::cout << "state: " << connection->get_state() << std::endl;
+	}
+	
+	void on_open(handler_type::connection_ptr connection) {
+		//std::cout << "connection opened" << std::endl;
+	}
+	
+	void on_close(handler_type::connection_ptr connection) {
+		//std::cout << "connection closed" << std::endl;
+	}
+	
+	void on_message(connection_ptr connection,websocketpp::utf8_string_ptr msg) {
+		//std::cout << "got message: " << *msg << std::endl;
+		connection->send(*msg);
+	}
+	void on_message(connection_ptr connection,websocketpp::binary_string_ptr data) {
+		//std::cout << "got binary message of length: " << data->size() << std::endl;
+		connection->send(*data);
+	}
+	
+	void http(handler_type::connection_ptr connection) {
+		connection->set_body("HTTP Response!!");
+	}
+	
+	void on_fail(handler_type::connection_ptr connection) {
+		std::cout << "connection failed" << std::endl;
 	}
 };
 
@@ -43,7 +69,7 @@ int main () {
 	e.elog().set_level(websocketpp::log::elevel::ALL);
 	
 	
-	e.listen(9000);
+	e.listen(9002);
 	//e.connect();
 	//e.public_api();
 	std::cout << std::endl;

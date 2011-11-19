@@ -25,21 +25,18 @@
  * 
  */
 
-#ifndef WEBSOCKET_HYBI_PROCESSOR_HPP
-#define WEBSOCKET_HYBI_PROCESSOR_HPP
+#ifndef WEBSOCKET_PROCESSOR_HYBI_HPP
+#define WEBSOCKET_PROCESSOR_HYBI_HPP
 
-#include "interfaces/protocol.hpp"
+#include "processor.hpp"
 
-#include "websocket_frame.hpp"
+#include "../base64/base64.h"
+#include "../sha1/sha1.h"
 
-#include "network_utilities.hpp"
-#include "http/parser.hpp"
-
-#include "base64/base64.h"
-#include "sha1/sha1.h"
+#include <boost/algorithm/string.hpp>
 
 namespace websocketpp {
-namespace protocol {
+namespace processor {
 
 namespace hybi_state {
 	enum value {
@@ -50,9 +47,9 @@ namespace hybi_state {
 }
 
 template <class rng_policy>
-class hybi_processor : public processor {
+class hybi : public processor_base {
 public:
-	hybi_processor(bool secure,rng_policy &rng) : m_secure(secure),m_fragmented_opcode(frame::opcode::CONTINUATION),m_utf8_payload(new utf8_string()),m_binary_payload(new binary_string()),m_read_frame(rng),m_write_frame(rng) {
+	hybi(bool secure,rng_policy &rng) : m_secure(secure),m_fragmented_opcode(frame::opcode::CONTINUATION),m_utf8_payload(new utf8_string()),m_binary_payload(new binary_string()),m_read_frame(rng),m_write_frame(rng) {
 		reset();
 	}		
 	
@@ -128,35 +125,34 @@ public:
 		}
 	}
 	
-	ws_uri get_uri(const http::parser::request& request) const {
-		ws_uri uri;
+	uri get_uri(const http::parser::request& request) const {
+		uri connection_uri;
 		
-		uri.secure = m_secure;
-		
+		connection_uri.secure = m_secure;
 		
 		std::string h = request.header("Host");
 		
 		size_t found = h.find(":");
 		if (found == std::string::npos) {
-			uri.host = h;
-			uri.port = (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+			connection_uri.host = h;
+			connection_uri.port = (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
 		} else {
 			uint16_t p = atoi(h.substr(found+1).c_str());
 			
 			if (p == 0) {
 				throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
 			} else {
-				uri.host = h.substr(0,found);
-				uri.port = p;
+				connection_uri.host = h.substr(0,found);
+				connection_uri.port = p;
 			}
 		}
 		
 		// TODO: check if get_uri is a full uri
-		uri.resource = request.uri();
+		connection_uri.resource = request.uri();
 		
-		std::cout << "parsed uri: " << uri.str() << std::endl;
+		std::cout << "parsed uri: " << connection_uri.str() << std::endl;
 		
-		return uri;
+		return connection_uri;
 	}
 	
 	void handshake_response(const http::parser::request& request,http::parser::response& response) {
@@ -201,55 +197,59 @@ public:
 				m_read_frame.consume(s);
 				
 				if (m_read_frame.ready()) {
-					switch (m_read_frame.get_opcode()) {
-						case frame::opcode::CONTINUATION:
-							process_continuation();
-							break;
-						case frame::opcode::TEXT:
-							process_text();
-							break;
-						case frame::opcode::BINARY:
-							process_binary();
-							break;
-						case frame::opcode::CLOSE:
-							if (!utf8_validator::validate(m_read_frame.get_close_msg())) {
-								throw session::exception("Invalid UTF8",session::error::PAYLOAD_VIOLATION);
-							}
-							
-							m_opcode = frame::opcode::CLOSE;
-							m_close_code = m_read_frame.get_close_status();
-							m_close_reason = m_read_frame.get_close_msg();
-							
-							break;
-						case frame::opcode::PING:
-						case frame::opcode::PONG:
-							m_opcode = m_read_frame.get_opcode();
-							extract_binary(m_control_payload);
-							break;
-						default:
-							throw session::exception("Invalid Opcode",session::error::PROTOCOL_VIOLATION);
-							break;
-					}
-					if (m_read_frame.get_fin()) {
-						m_state = hybi_state::DONE;
-						if (m_opcode == frame::opcode::TEXT) {
-							if (!m_validator.complete()) {
-								m_validator.reset();
-								throw session::exception("Invalid UTF8",session::error::PAYLOAD_VIOLATION);
-							}
-							m_validator.reset();
-						}
-					}
-					m_read_frame.reset();
+					process_frame();
 				}
-			} catch (const frame::exception& e) {
+			} catch (const processor::exception& e) {
 				if (m_read_frame.ready()) {
 					m_read_frame.reset();
 				}
 				
-				throw session::exception("Frame Error",session::error::PROTOCOL_VIOLATION);
+				throw e;
 			}
 		}
+	}
+	
+	void process_frame() {
+		switch (m_read_frame.get_opcode()) {
+			case frame::opcode::CONTINUATION:
+				process_continuation();
+				break;
+			case frame::opcode::TEXT:
+				process_text();
+				break;
+			case frame::opcode::BINARY:
+				process_binary();
+				break;
+			case frame::opcode::CLOSE:
+				if (!utf8_validator::validate(m_read_frame.get_close_msg())) {
+					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
+				}
+				
+				m_opcode = frame::opcode::CLOSE;
+				m_close_code = m_read_frame.get_close_status();
+				m_close_reason = m_read_frame.get_close_msg();
+				
+				break;
+			case frame::opcode::PING:
+			case frame::opcode::PONG:
+				m_opcode = m_read_frame.get_opcode();
+				extract_binary(m_control_payload);
+				break;
+			default:
+				throw processor::exception("Invalid Opcode",processor::error::PROTOCOL_VIOLATION);
+				break;
+		}
+		if (m_read_frame.get_fin()) {
+			m_state = hybi_state::DONE;
+			if (m_opcode == frame::opcode::TEXT) {
+				if (!m_validator.complete()) {
+					m_validator.reset();
+					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
+				}
+				m_validator.reset();
+			}
+		}
+		m_read_frame.reset();
 	}
 	
 	// frame type handlers:
@@ -260,7 +260,7 @@ public:
 			extract_utf8(m_utf8_payload);
 		} else if (m_fragmented_opcode == frame::opcode::CONTINUATION) {
 			// got continuation frame without a message to continue.
-			throw session::exception("No message to continue.",session::error::PROTOCOL_VIOLATION);
+			throw processor::exception("No message to continue.",processor::error::PROTOCOL_VIOLATION);
 		} else {
 			
 			// can't be here
@@ -272,7 +272,7 @@ public:
 	
 	void process_text() {
 		if (m_fragmented_opcode != frame::opcode::CONTINUATION) {
-			throw session::exception("New message started without closing previous.",session::error::PROTOCOL_VIOLATION);
+			throw processor::exception("New message started without closing previous.",processor::error::PROTOCOL_VIOLATION);
 		}
 		extract_utf8(m_utf8_payload);
 		m_opcode = frame::opcode::TEXT;
@@ -281,7 +281,7 @@ public:
 	
 	void process_binary() {
 		if (m_fragmented_opcode != frame::opcode::CONTINUATION) {
-			throw session::exception("New message started without closing previous.",session::error::PROTOCOL_VIOLATION);
+			throw processor::exception("New message started without closing previous.",processor::error::PROTOCOL_VIOLATION);
 		}
 		m_opcode = frame::opcode::BINARY;
 		m_fragmented_opcode = frame::opcode::BINARY;
@@ -298,7 +298,7 @@ public:
 		binary_string &msg = m_read_frame.get_payload();
 		
 		if (!m_validator.decode(msg.begin(),msg.end())) {
-			throw session::exception("Invalid UTF8",session::error::PAYLOAD_VIOLATION);
+			throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
 		}
 		
 		dest->reserve(dest->size() + msg.size());
@@ -477,9 +477,8 @@ private:
 	frame::parser<rng_policy>	m_read_frame;
 	frame::parser<rng_policy>	m_write_frame;
 };
-
-//typedef boost::shared_ptr<hybi_processor> hybi_processor_ptr;
 	
-}
-}
-#endif // WEBSOCKET_HYBI_PROCESSOR_HPP
+} // namespace processor
+} // namespace websocketpp
+
+#endif // WEBSOCKET_PROCESSOR_HYBI_HPP
