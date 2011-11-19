@@ -1,4 +1,4 @@
-CFLAGS = -O2 -std=c++0x
+CFLAGS = -O2
 LDFLAGS = 
 
 CXX		?= c++

@@ -72,8 +72,8 @@ public:
 		
 	// friends (would require C++11) this would enable connection::start to be 
 	// protected instead of public.
-	friend typename endpoint_traits<endpoint_type>::role_type;
-	friend typename endpoint_traits<endpoint_type>::socket_type;
+	//friend typename endpoint_traits<endpoint_type>::role_type;
+	//friend typename endpoint_traits<endpoint_type>::socket_type;
 	//friend class role<endpoint>;
 	//friend class socket<endpoint>;
 	
