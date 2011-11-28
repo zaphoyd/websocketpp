@@ -28,83 +28,66 @@
 #ifndef WEBSOCKETPP_URI_HPP
 #define WEBSOCKETPP_URI_HPP
 
-#include "common.hpp"
-
+#include <exception>
 #include <stdint.h>
 #include <string>
-#include <boost/regex.hpp>
 
 namespace websocketpp {
 
-struct uri {
-	bool parse(const std::string& uri) {
-		boost::cmatch what;
-		static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/[^#]*)?");
-		
-		// TODO: should this split resource into path/query?
-		
-		if (boost::regex_match(uri.c_str(), what, expression)) {
-			if (what[1] == "wss") {
-				secure = true;
-			} else {
-				secure = false;
-			}
-			
-			host = what[2];
-			
-			if (what[3] == "") {
-				port = (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
-			} else {
-				unsigned int t_port = atoi(std::string(what[3]).substr(1).c_str());
-				
-				if (t_port > 65535) {
-					return false;
-				}
-				
-				port = atoi(std::string(what[3]).substr(1).c_str());
-			}
-			
-			if (what[4] == "") {
-				resource = "/";
-			} else {
-				resource = what[4];
-			}
-			
-			return true;
-		} else {
-			return false;
-		}
-	}
-	std::string base() {
-		std::stringstream s;
-		
-		s << "ws" << (secure ? "s" : "") << "://" << host;
-		
-		if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
-			s << ":" << port;
-		}
-		
-		s << "/";
-		return s.str();
+// WebSocket URI only (not http/etc) 
 
-	}
-	std::string str() {
-		std::stringstream s;
-		
-		s << "ws" << (secure ? "s" : "") << "://" << host;
-		
-		if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
-			s << ":" << port;
-		}
-		
-		s << resource;
-		return s.str();
-	}
-	
-	bool		secure;
-	std::string	host;
-	uint16_t	port;
-	std::string	resource;
+class uri_exception : public std::exception {
+public:	
+    uri_exception(const std::string& msg) : m_msg(msg) {}
+    ~uri_exception() throw() {}
+
+    virtual const char* what() const throw() {
+        return m_msg.c_str();
+    }
+private:
+    std::string m_msg;
+};
+
+class uri {
+public:
+    static const int DEFAULT_PORT = 80;
+    static const int DEFAULT_SECURE_PORT = 443;
+    
+    uri(const std::string& uri);
+    uri(bool secure, const std::string& host, uint16_t port, const std::string& resource);
+    uri(bool secure, const std::string& host, const std::string& port, const std::string& resource);
+    
+    bool get_secure() const;
+    std::string get_host() const;
+    uint16_t get_port() const;
+    std::string get_resource() const;
+    std::string str() const;
+    
+    // get query?
+    // get fragment
+    
+    // hi <3
+    
+    // get the string representation of this URI
+    
+    //std::string base() const; // is this still needed?
+    
+    // setter methods set some or all (in the case of parse) based on the input.
+    // These functions throw a uri_exception on failure.
+    /*void set_uri(const std::string& uri);
+    
+    void set_secure(bool secure);
+    void set_host(const std::string& host);
+    void set_port(uint16_t port);
+    void set_port(const std::string& port);
+    void set_resource(const std::string& resource);*/
+private:
+    uint16_t get_port_from_string(const std::string& port) const;
+    
+    bool        m_secure;
+    std::string m_host;
+    uint16_t    m_port;
+    std::string m_resource;
 };
 
 } // namespace websocketpp
