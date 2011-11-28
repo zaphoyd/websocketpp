@@ -28,17 +28,22 @@
 #  It's authors were Jonathan Wallace and Bernhard Fluehmann.
 
 
-objects = network_utilities.o sha1.o base64.o md5.o
+objects = network_utilities.o sha1.o base64.o md5.o uri.o
+
+BOOST_LIB_PATH		?= /Users/zaphoyd/Documents/boost_1_48_0/stage/lib
+BOOST_INCLUDE_PATH ?= /Users/zaphoyd/Documents/boost_1_48_0
 
 libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
+
+//libs_static = $(BOOST_PATH)/boost_system.a $(BOOST_PATH)/boost_regex.a
 
 OS=$(shell uname)
 
 # Defaults
 ifeq ($(OS), Darwin)
-	cxxflags_default = -c -O2 -DNDEBUG
+	cxxflags_default = -c -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
 else
-	cxxflags_default = -c -O2 -DNDEBUG
+	cxxflags_default = -c -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
 endif
 cxxflags_small   = -c 
 cxxflags_debug   = -c -g
@@ -64,6 +69,7 @@ AR              ?= ar
 PIC             ?= PIC
 BUILD_TYPE      ?= "default"
 SHARED          ?= "1"
+
 
 # Internal Variables
 inst_path        = $(exec_prefix)/$(libdir)
