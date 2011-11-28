@@ -77,8 +77,10 @@ public:
 	//friend class role<endpoint>;
 	//friend class socket<endpoint>;
 	
-	friend class role<endpoint>::template connection<type>;
-	friend class socket<endpoint>::template connection<type>;
+	//friend class role<endpoint>::template connection<type>;
+	//friend class socket<endpoint>::template connection<type>;
+	friend class role< connection<endpoint,role,socket> >;
+	friend class socket< connection<endpoint,role,socket> >;
 	
 	enum write_state {
 		IDLE = 0,
