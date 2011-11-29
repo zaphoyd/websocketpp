@@ -30,8 +30,8 @@
 
 objects = network_utilities.o sha1.o base64.o md5.o uri.o
 
-BOOST_LIB_PATH		?= /Users/zaphoyd/Documents/boost_1_48_0/stage/lib
-BOOST_INCLUDE_PATH ?= /Users/zaphoyd/Documents/boost_1_48_0
+BOOST_LIB_PATH		?= /usr/local/lib
+BOOST_INCLUDE_PATH ?= /usr/local/include
 
 libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
 

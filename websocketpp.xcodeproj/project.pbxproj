@@ -12,6 +12,9 @@
 		B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B62A5A7314778E5C005F9EB0 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
 		B62A5A7414778E65005F9EB0 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
+		B6727429148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
+		B672742A148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
+		B672742D148531250029CF3E /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
 		B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828875143745DA002BA48B /* chat_client_handler.cpp */; };
 		B68288881437460E002BA48B /* chat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828877143745DA002BA48B /* chat_client.cpp */; };
 		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -163,6 +166,7 @@
 		B62A5A6F14774CD5005F9EB0 /* uri.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = src/uri.hpp; sourceTree = "<group>"; };
 		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
+		B6727428148517180029CF3E /* uri.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uri.cpp; path = src/uri.cpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -256,6 +260,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B672742D148531250029CF3E /* libboost_regex.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,6 +414,7 @@
 				B62A5A71147759EA005F9EB0 /* common.hpp */,
 				B62A5A511473EBB0005F9EB0 /* connection.hpp */,
 				B62A5A6F14774CD5005F9EB0 /* uri.hpp */,
+				B6727428148517180029CF3E /* uri.cpp */,
 				B62A5A521473EBB0005F9EB0 /* endpoint.hpp */,
 				B6DF1C921434AC470029A1B1 /* websocket_client_session.cpp */,
 				B6DF1C931434AC470029A1B1 /* websocket_client_session.hpp */,
@@ -770,6 +776,7 @@
 				B6DF1C7A1434AB740029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C831434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8A1434AC330029A1B1 /* sha1.cpp in Sources */,
+				B6727429148517180029CF3E /* uri.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -781,6 +788,7 @@
 				B6DF1CC41434AF9E0029A1B1 /* network_utilities.cpp in Sources */,
 				B6DF1C841434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8B1434AC330029A1B1 /* sha1.cpp in Sources */,
+				B672742A148517180029CF3E /* uri.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

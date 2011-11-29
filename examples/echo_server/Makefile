@@ -1,7 +1,8 @@
-BOOST_PATH = /Users/zaphoyd/Documents/boost_1_48_0/stage/lib
+BOOST_LIB_PATH		?= /usr/local/lib
+BOOST_INCLUDE_PATH ?= /usr/local/include
 
-CFLAGS = -O2 -I/Users/zaphoyd/Documents/boost_1_48_0
-LDFLAGS = -L/Users/zaphoyd/Documents/boost_1_48_0/stage/lib
+CFLAGS = -O2 -I$(BOOST_INCLUDE_PATH)
+LDFLAGS = -L$(BOOST_LIB_PATH)
 
 CXX		?= c++
 SHARED  ?= "1"
@@ -9,7 +10,7 @@ SHARED  ?= "1"
 ifeq ($(SHARED), 1)
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) $(BOOST_PATH)/libboost_system.a $(BOOST_PATH)/libboost_date_time.a $(BOOST_PATH)/libboost_regex.a -lcrypto -lssl ../../libwebsocketpp.a
+	LDFLAGS := $(LDFLAGS) $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a -lcrypto -lssl ../../libwebsocketpp.a
 endif
 
 echo_server: echo_server.o
