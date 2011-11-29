@@ -94,7 +94,7 @@ public:
 	// Extracts client origin from a handshake request
 	virtual std::string get_origin(const http::parser::request& request) const = 0;
 	// Extracts client uri from a handshake request
-	virtual uri get_uri(const http::parser::request& request) const = 0;
+	virtual uri_ptr get_uri(const http::parser::request& request) const = 0;
 	
 	// consume bytes, throw on exception
 	virtual void consume(std::istream& s) = 0;

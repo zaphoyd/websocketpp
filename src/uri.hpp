@@ -32,6 +32,8 @@
 #include <stdint.h>
 #include <string>
 
+#include <boost/shared_ptr.hpp>
+
 namespace websocketpp {
 
 // WebSocket URI only (not http/etc) 
@@ -53,8 +55,9 @@ public:
     static const int DEFAULT_PORT = 80;
     static const int DEFAULT_SECURE_PORT = 443;
     
-    uri(const std::string& uri);
+    explicit uri(const std::string& uri);
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource);
+	uri(bool secure, const std::string& host, const std::string& resource);
     uri(bool secure, const std::string& host, const std::string& port, const std::string& resource);
     
     bool get_secure() const;
@@ -90,6 +93,8 @@ private:
     std::string m_resource;
 };
 
+typedef boost::shared_ptr<uri> uri_ptr;
+	
 } // namespace websocketpp
 
 #endif // WEBSOCKETPP_URI_HPP

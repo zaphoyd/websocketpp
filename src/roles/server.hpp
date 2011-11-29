@@ -36,6 +36,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include <iostream>
 #include <stdexcept>
@@ -65,17 +66,19 @@ public:
 		}
 		
 		// Information about the requested URI
+		// valid only after URIs are loaded
+		// TODO: check m_uri for NULLness
 		bool get_secure() const {
-			return m_uri.secure;
+			return m_uri->get_secure();
 		}
 		std::string get_host() const {
-			return m_uri.host;
+			return m_uri->get_host();
 		}
 		std::string get_resource() const {
-			return m_uri.resource;
+			return m_uri->get_resource();
 		}
-		unsigned short get_port() const {
-			return m_uri.port;
+		uint16_t get_port() const {
+			return m_uri->get_port();
 		}
 		
 		// Valid for CONNECTING state
@@ -140,7 +143,8 @@ public:
 		connection(endpoint& e)
 		 : m_endpoint(e),
 		   m_connection(static_cast< connection_type& >(*this)),
-		   m_version(-1) {}
+		   m_version(-1),
+		   m_uri() {}
 		
 		// initializes the websocket connection
 		void async_init() {
@@ -219,27 +223,21 @@ public:
 					
 					// should there be a more encapsulated http processor here?
 					m_origin = m_request.header("Origin");
-					m_uri.secure = m_endpoint.is_secure();
 					
+					// Set URI
 					std::string h = m_request.header("Host");
 					
 					size_t found = h.find(":");
 					if (found == std::string::npos) {
-						m_uri.host = h;
-						m_uri.port = (m_uri.secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+						// TODO: this makes the assumption that WS and HTTP
+						// default ports are the same.
+						m_uri.reset(new uri(m_endpoint.is_secure(),h,m_request.uri()));
 					} else {
-						uint16_t p = atoi(h.substr(found+1).c_str());
-						
-						if (p == 0) {
-							throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
-						} else {
-							m_uri.host = h.substr(0,found);
-							m_uri.port = p;
-						}
+						m_uri.reset(new uri(m_endpoint.is_secure(),
+									h.substr(0,found),
+									h.substr(found+1),
+									m_request.uri()));
 					}
-					
-					// TODO: check if get_uri is a full uri
-					m_uri.resource = m_request.uri();
 					
 					m_response.set_status(http::status_code::OK);
 				}
@@ -247,6 +245,10 @@ public:
 				m_endpoint.elog().at(log::elevel::ERROR) << e.what() << log::endl;
 				m_response.set_status(e.m_error_code,e.m_error_msg);
 				m_response.set_body(e.m_body);
+			} catch (const uri_exception& e) {
+				// there was some error building the uri
+				m_endpoint.elog().at(log::elevel::ERROR) << e.what() << log::endl;
+				m_response.set_status(http::status_code::BAD_REQUEST);
 			}
 			
 			write_response();
@@ -327,7 +329,7 @@ public:
 			<< m_connection.get_raw_socket().remote_endpoint() << " "
 			<< (m_version == -1 ? "" : version.str())
 			<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
-			<< " " << m_uri.resource << " " << m_response.status_code() 
+			<< " " << m_uri->get_resource() << " " << m_response.status_code() 
 			<< log::endl;
 		}
 		
@@ -336,7 +338,7 @@ public:
 		connection_type&			m_connection;
 		
 		int							m_version;
-		uri							m_uri;
+		uri_ptr						m_uri;
 		std::string					m_origin;
 		std::vector<std::string>	m_requested_subprotocols;
 		std::vector<std::string>	m_requested_extensions;

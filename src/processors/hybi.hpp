@@ -35,6 +35,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+
 namespace websocketpp {
 namespace processor {
 
@@ -125,32 +126,37 @@ public:
 		}
 	}
 	
-	uri get_uri(const http::parser::request& request) const {
-		uri connection_uri;
+	uri_ptr get_uri(const http::parser::request& request) const {
+		//uri connection_uri;
 		
-		connection_uri.secure = m_secure;
+		
+		//connection_uri.secure = m_secure;
 		
 		std::string h = request.header("Host");
 		
+		//std::string host;
+		//std::string port;
+		
 		size_t found = h.find(":");
 		if (found == std::string::npos) {
-			connection_uri.host = h;
-			connection_uri.port = (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+			return uri_ptr(new uri(m_secure,h,request.uri()));
 		} else {
-			uint16_t p = atoi(h.substr(found+1).c_str());
+			return uri_ptr(new uri(m_secure,h.substr(0,found),h.substr(found+1),request.uri()));
+			
+			/*uint16_t p = atoi(h.substr(found+1).c_str());
 			
 			if (p == 0) {
 				throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
 			} else {
 				connection_uri.host = h.substr(0,found);
 				connection_uri.port = p;
-			}
+			}*/
 		}
 		
 		// TODO: check if get_uri is a full uri
-		connection_uri.resource = request.uri();
+		//connection_uri.resource = request.uri();
 		
-		return connection_uri;
+		//return uri(m_secure,host,port,request.uri());
 	}
 	
 	void handshake_response(const http::parser::request& request,http::parser::response& response) {

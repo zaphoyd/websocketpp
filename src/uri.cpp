@@ -71,6 +71,12 @@ uri::uri(bool secure, const std::string& host, uint16_t port, const std::string&
    m_port(port),
    m_resource(resource == "" ? "/" : resource) {}
 
+uri::uri(bool secure, const std::string& host, const std::string& resource) 
+: m_secure(secure),
+  m_host(host), 
+  m_port(m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT),
+  m_resource(resource == "" ? "/" : resource) {}
+
 uri::uri(bool secure, 
          const std::string& host, 
          const std::string& port, 
