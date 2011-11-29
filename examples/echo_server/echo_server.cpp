@@ -93,12 +93,18 @@ int main(int argc, char* argv[]) {
 			plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
 			plain_endpoint_type e(h);
 			
+			e.alog().unset_level(websocketpp::log::alevel::ALL);
 			e.alog().set_level(websocketpp::log::alevel::CONNECT);
 			e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
+			//e.alog().unset_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
+			
+			e.elog().unset_level(websocketpp::log::elevel::ALL);
+			e.elog().set_level(websocketpp::log::elevel::ERROR);
+			e.elog().set_level(websocketpp::log::elevel::FATAL);
 			
 			// TODO: fix
 			//e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
-			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
+			//e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
 			
 			std::cout << "Starting WebSocket echo server on port " << port << std::endl;
 			e.listen(port);
@@ -106,8 +112,15 @@ int main(int argc, char* argv[]) {
 			ssl_handler_ptr h(new echo_server_handler<ssl_endpoint_type>());
 			ssl_endpoint_type e(h);
 			
-			e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
-			e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
+			e.alog().unset_level(websocketpp::log::alevel::ALL);
+			e.alog().set_level(websocketpp::log::alevel::CONNECT);
+			e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
+			e.alog().set_level(websocketpp::log::alevel::DEVEL);
+			//e.alog().unset_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
+			
+			e.elog().unset_level(websocketpp::log::elevel::ALL);
+			e.elog().set_level(websocketpp::log::elevel::ERROR);
+			e.elog().set_level(websocketpp::log::elevel::FATAL);
 			
 			std::cout << "Starting Secure WebSocket echo server on port " << port << std::endl;
 			e.listen(port);
