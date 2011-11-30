@@ -32,16 +32,36 @@
 #include <cstring>
 
 typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> ssl_endpoint_type;
-typedef websocketpp::role::server<plain_endpoint_type>::handler_ptr plain_handler_ptr;
-typedef websocketpp::role::server<ssl_endpoint_type>::handler_ptr ssl_handler_ptr;
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
+typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
 
-template <typename T>
-class echo_server_handler : public T::handler {
+template <typename endpoint_type>
+class echo_server_handler : public endpoint_type::handler {
 public:
-	typedef typename websocketpp::role::server<T>::handler handler_type;
-	typedef typename websocketpp::role::server<T>::handler_ptr handler_ptr;
-	typedef typename handler_type::foo connection_ptr;
+	typedef echo_server_handler<endpoint_type> type;
+	typedef typename endpoint_type::connection_ptr connection_ptr;
+	
+	std::string get_password() const {
+		return "test";
+	}
+	
+	boost::shared_ptr<boost::asio::ssl::context> on_tls_init() {
+		// create a tls context, init, and return.
+		boost::shared_ptr<boost::asio::ssl::context> context(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
+		try {
+			context->set_options(boost::asio::ssl::context::default_workarounds |
+								 boost::asio::ssl::context::no_sslv2 |
+								 boost::asio::ssl::context::single_dh_use);
+			context->set_password_callback(boost::bind(&type::get_password, this));
+			context->use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
+			context->use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
+			context->use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
+		} catch (std::exception& e) {
+			std::cout << e.what() << std::endl;
+		}
+		return context;
+	}
 	
 	void validate(connection_ptr connection) {
 		//std::cout << "state: " << connection->get_state() << std::endl;
@@ -75,7 +95,7 @@ public:
 
 int main(int argc, char* argv[]) {
 	unsigned short port = 9002;
-	bool ssl = false;
+	bool tls = true;
 		
 	if (argc == 2) {
 		// TODO: input validation?
@@ -85,11 +105,11 @@ int main(int argc, char* argv[]) {
 	if (argc == 3) {
 		// TODO: input validation?
 		port = atoi(argv[1]);
-		ssl = !strcmp(argv[2],"-ssl");
+		tls = !strcmp(argv[2],"-tls");
 	}
 	
 	try {
-		if (!ssl) {
+		if (!tls) {
 			plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
 			plain_endpoint_type e(h);
 			
@@ -109,13 +129,14 @@ int main(int argc, char* argv[]) {
 			std::cout << "Starting WebSocket echo server on port " << port << std::endl;
 			e.listen(port);
 		} else {
-			ssl_handler_ptr h(new echo_server_handler<ssl_endpoint_type>());
-			ssl_endpoint_type e(h);
+			tls_handler_ptr h(new echo_server_handler<tls_endpoint_type>());
+			tls_endpoint_type e(h);
 			
 			e.alog().unset_level(websocketpp::log::alevel::ALL);
 			e.alog().set_level(websocketpp::log::alevel::CONNECT);
 			e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
 			e.alog().set_level(websocketpp::log::alevel::DEVEL);
+			e.alog().set_level(websocketpp::log::alevel::DEBUG_CLOSE);
 			//e.alog().unset_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
 			
 			e.elog().unset_level(websocketpp::log::elevel::ALL);
