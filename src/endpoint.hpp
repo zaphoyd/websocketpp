@@ -31,33 +31,33 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace websocketpp {
-	template <typename T>
-	struct endpoint_traits;
-	
-	
-	
-	class endpoint_base {
-	protected:
-		boost::asio::io_service	m_io_service;
-	};
-}
-
 #include "connection.hpp"
 #include "sockets/plain.hpp" // should this be here?
 #include "logger/logger.hpp"
-
-
 
 #include <iostream>
 #include <set>
 
 namespace websocketpp {
+    
+/// endpoint_base provides core functionality that needs to be constructed
+/// before endpoint policy classes are constructed.
+class endpoint_base {
+protected:
+    boost::asio::io_service	m_io_service;
+};
 
-// endpoint_base provides core functionality used by policy base class constructors
-
-
-// endpoint host class
+/// Describes a configurable WebSocket endpoint.
+/**
+ * The endpoint class template provides a configurable WebSocket endpoint 
+ * capable that manages WebSocket connection lifecycles. endpoint is a host 
+ * class to a series of enriched policy classes that together provide the public
+ * interface for a specific type of WebSocket endpoint.
+ * 
+ * @par Thread Safety
+ * @e Distinct @e objects: Safe.@n
+ * @e Shared @e objects: Will be safe when complete.
+ */
 template <
 	template <class> class role,
 	template <class> class socket = socket::plain,
@@ -68,18 +68,27 @@ class endpoint
    public socket< endpoint<role,socket> > 
 {
 public:
+    /// Type of the traits class that stores endpoint related types.
 	typedef endpoint_traits< endpoint<role,socket,logger> > traits;
 	
-	// get types that we need from our traits class
+	/// The type of the endpoint itself.
 	typedef typename traits::type type;
-	typedef typename traits::handler_ptr handler_ptr;
+    /// The type of the role policy.
 	typedef typename traits::role_type role_type;
+    /// The type of the socket policy.
 	typedef typename traits::socket_type socket_type;
+    /// The type of the access logger based on the logger policy.
 	typedef typename traits::alogger_type alogger_type;
+    /// The type of the error logger based on the logger policy.
 	typedef typename traits::elogger_type elogger_type;
+    /// The type of the connection that this endpoint creates.
 	typedef typename traits::connection_type connection_type;
+    /// A shared pointer to the type of connection that this endpoint creates.
 	typedef typename traits::connection_ptr connection_ptr;
-	
+    /// A shared pointer to the base class that all handlers for this endpoint
+    /// must derive from.
+	typedef typename traits::handler_ptr handler_ptr;
+    
 	// Friend is used here to allow the CRTP base classes to access member 
 	// functions in the derived endpoint. This is done to limit the use of 
 	// public methods in endpoint and its CRTP bases to only those methods 
@@ -93,18 +102,61 @@ public:
 	// friend socket_type;
 	// friend connection_type;
 	
-	endpoint(handler_ptr h) : role_type(m_io_service,h),socket_type(m_io_service) {}
+    /// Construct an endpoint.
+    /**
+     * This constructor creates an endpoint and registers the default connection
+     * handler.
+     * 
+     * @param handler A shared_ptr to the handler to use as the default handler
+     * when creating new connections.
+     */
+	explicit endpoint(handler_ptr handler) 
+	 : role_type(m_io_service),
+	   socket_type(m_io_service),
+	   m_handler(handler) {}
 	
+    /// Returns a reference to the endpoint's access logger.
+    /**
+     * @returns A reference to the endpoint's access logger. See @ref logger
+     * for more details about WebSocket++ logging policy classes.
+     *
+     * @par Example
+     * To print a message to the access log of endpoint e at access level DEVEL:
+     * @code
+     * e.alog().at(log::alevel::DEVEL) << "message" << log::endl;
+     * @endcode
+     */
 	alogger_type& alog() {
 		return m_alog;
 	}
 	
+    /// Returns a reference to the endpoint's error logger.
+    /**
+     * @returns A reference to the endpoint's error logger. See @ref logger
+     * for more details about WebSocket++ logging policy classes.
+     *
+     * @par Example
+     * To print a message to the error log of endpoint e at access level DEVEL:
+     * @code
+     * e.elog().at(log::elevel::DEVEL) << "message" << log::endl;
+     * @endcode
+     */
 	elogger_type& elog() {
 		return m_elog;
 	}
 protected:
-	connection_ptr create_connection() {
-		connection_ptr new_connection(new connection_type(*this));
+	/// Creates and returns a new connection
+    /**
+     * This function creates a new connection of the type and passes it a 
+     * reference to this as well as a shared pointer to the default connection
+     * handler. The newly created connection is added to the endpoint's 
+     * management list. The endpoint will retain this pointer until 
+     * remove_connection is called to remove it.
+     * 
+     * @returns A shared pointer to the newly created connection.
+     */
+    connection_ptr create_connection() {
+		connection_ptr new_connection(new connection_type(*this,get_handler()));
 		m_connections.insert(new_connection);
 		
 		alog().at(log::alevel::DEVEL) << "Connection created: count is now: " << m_connections.size() << log::endl;
@@ -112,40 +164,68 @@ protected:
 		return new_connection;
 	}
 	
+    /// Removes a connection from the list managed by this endpoint.
+    /**
+     * This function erases a connection from the list managed by the endpoint.
+     * After this function returns, endpoint all async events related to this
+     * connection should be canceled and neither ASIO nor this endpoint should
+     * have a pointer to this connection. Unless the end user retains a copy of
+     * the shared pointer the connection will be freed and any state it 
+     * contained (close code status, etc) will be lost.
+     * 
+     * @param con A shared pointer to a connection created by this endpoint.
+     */
 	void remove_connection(connection_ptr con) {
 		m_connections.erase(con);
 		
 		alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " << m_connections.size() << log::endl;
 	}
+	
+    /// Gets a shared pointer to this endpoint's default connection handler
+	handler_ptr get_handler() {
+		return m_handler;
+	}
 private:
+	handler_ptr					m_handler;
 	std::set<connection_ptr>	m_connections;
 	alogger_type				m_alog;
 	elogger_type				m_elog;
 };
 
-// endpoint related types that it and its policy classes need.
+/// traits class that allows looking up relevant endpoint types by the fully 
+/// defined endpoint type.
 template <
 	template <class> class role,
 	template <class> class socket,
 	template <class> class logger>
 struct endpoint_traits< endpoint<role, socket, logger> > {
-	// type of the endpoint itself
+	/// The type of the endpoint itself.
 	typedef endpoint<role,socket,logger> type;
 	
-	// types of the endpoint policies
+	/// The type of the role policy.
 	typedef role< type > role_type;
-	typedef socket< type > socket_type;
+	/// The type of the socket policy.
+    typedef socket< type > socket_type;
 	
+    /// The type of the access logger based on the logger policy.
 	typedef logger<log::alevel::value> alogger_type;
+    /// The type of the error logger based on the logger policy.
 	typedef logger<log::elevel::value> elogger_type;
 	
-	// type of the handler that this endpoint and its connections call back.
-	typedef typename role_type::handler handler;
-	typedef typename role_type::handler_ptr handler_ptr;
-	
-	// types of the connections that this endpoint manages and pointers to them
-	typedef connection<type,role< type >::template connection,socket< type >::template connection> connection_type;
+	/// The type of the connection that this endpoint creates.
+	typedef connection<type,
+                       role< type >::template connection,
+                       socket< type >::template connection> connection_type;
+    /// A shared pointer to the type of connection that this endpoint creates.
 	typedef boost::shared_ptr<connection_type> connection_ptr;
+	
+	/// Interface (ABC) that handlers for this type of endpoint must impliment
+    /// role policy and socket policy both may add methods to this interface
+	class handler : public role_type::handler_interface,
+                    public socket_type::handler_interface {};
+    /// A shared pointer to the base class that all handlers for this endpoint
+    /// must derive from.
+	typedef boost::shared_ptr<handler> handler_ptr;
 };
 
 } // namespace websocketpp
