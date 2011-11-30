@@ -8,12 +8,12 @@ CXX		?= c++
 SHARED  ?= "1"
 
 ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lwebsocketpp
+	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lcrypto -lssl -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a ../../libwebsocketpp.a
+	LDFLAGS := $(LDFLAGS) $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a -lcrypto -lssl ../../libwebsocketpp.a
 endif
 
-echo_server: echo_server.o
+echo_server_tls: echo_server_tls.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp
@@ -23,4 +23,4 @@ echo_server: echo_server.o
 #
 .PHONY:		clean
 clean:
-		rm -f *.o echo_server
+		rm -f *.o echo_server_tls
