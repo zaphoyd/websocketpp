@@ -49,6 +49,9 @@ public:
 		return false;
 	}
 	
+	// plain sockets do not add anything to the handler interface
+	class handler_interface {};
+	
 	// Connection specific details
 	template <typename connection_type>
 	class connection {
@@ -63,6 +66,8 @@ public:
 		}
 	protected:
 		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
+		
+		void init() {}
 		
 		void async_init(socket_init_callback callback) {
 			// TODO: should this use post()?

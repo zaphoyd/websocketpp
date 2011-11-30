@@ -44,19 +44,11 @@ class ssl {
 public:
 	typedef ssl<endpoint_type> type;
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
-	
-	std::string get_password() const {
-		return "test";
-	}
+	typedef boost::shared_ptr<ssl_socket> ssl_socket_ptr;
 	
 	// should be private friended
 	boost::asio::io_service& get_io_service() {
 		return m_io_service;
-	}
-	
-	// should be private friended
-	boost::asio::ssl::context& get_context() {
-		return m_context;
 	}
 	
 	// should be private friended?
@@ -72,23 +64,38 @@ public:
 		return true;
 	}
 	
+	// TLS policy adds the on_tls_init method to the handler to allow the user
+	// to set up their asio TLS context.
+	class handler_interface {
+	public:
+		virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
+	};
+	
 	// Connection specific details
 	template <typename connection_type>
 	class connection {
 	public:
 		// should these two be public or protected. If protected, how?
 		ssl_socket::lowest_layer_type& get_raw_socket() {
-			return m_socket.lowest_layer();
+			return m_socket_ptr->lowest_layer();
 		}
 		
 		ssl_socket& get_socket() {
-			return m_socket;
+			return *m_socket_ptr;
 		}
 	protected:
-		connection(ssl<endpoint_type>& e) : m_socket(e.get_io_service(),e.get_context()),m_endpoint(e) {}
+		connection(ssl<endpoint_type>& e)
+		 : m_endpoint(e),
+		   m_connection(static_cast< connection_type& >(*this)) {}
 		
-		void async_init(boost::function<void(const boost::system::error_code&)> callback) {
-			m_socket.async_handshake(
+		void init() {
+			m_context_ptr = m_connection.get_handler()->on_tls_init();
+			m_socket_ptr = ssl_socket_ptr(new ssl_socket(m_endpoint.get_io_service(),*m_context_ptr));
+		}
+		
+		void async_init(boost::function<void(const boost::system::error_code&)> callback)
+		{
+			m_socket_ptr->async_handshake(
 				m_endpoint.get_handshake_type(),
 				boost::bind(
 					&connection<connection_type>::handle_init,
@@ -111,7 +118,13 @@ public:
 		
 		bool shutdown() {
 			boost::system::error_code ignored_ec;
-			m_socket.shutdown(ignored_ec);
+			
+			// TODO: this call blocks, sometimes for a long period of time.
+			// need to figure out what is going on here and how to calculate
+			// if the socket was already closed by this point.
+			// Until this is fixed, dropped_by_me for TLS connections will be
+			// inaccurate.
+			//m_socket_ptr->shutdown(ignored_ec);
 			
 			if (ignored_ec) {
 				return false;
@@ -120,27 +133,15 @@ public:
 			}
 		}
 	private:
-		ssl_socket			m_socket;
-		ssl<endpoint_type>&	m_endpoint;
+		boost::shared_ptr<boost::asio::ssl::context>	m_context_ptr;
+		ssl_socket_ptr									m_socket_ptr;
+		ssl<endpoint_type>&								m_endpoint;
+		connection_type&								m_connection;
 	};
 protected:
-	ssl (boost::asio::io_service& m) : m_io_service(m),m_context(boost::asio::ssl::context::sslv23) {
-		try {
-			// this should all be in separate init functions
-			m_context.set_options(boost::asio::ssl::context::default_workarounds |
-								  boost::asio::ssl::context::no_sslv2 |
-								  boost::asio::ssl::context::single_dh_use);
-			m_context.set_password_callback(boost::bind(&type::get_password, this));
-			m_context.use_certificate_chain_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem");
-			m_context.use_private_key_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-			m_context.use_tmp_dh_file("/Users/zaphoyd/Documents/websocketpp/src/ssl/dh512.pem");
-		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
-		}
-	}
+	ssl (boost::asio::io_service& m) : m_io_service(m) {}
 private:
 	boost::asio::io_service&	m_io_service;
-	boost::asio::ssl::context	m_context;
 	ssl_socket::handshake_type	m_handshake_type;
 };
 	
