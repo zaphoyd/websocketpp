@@ -69,7 +69,9 @@ public:
 	typedef typename traits::socket_type socket_type;
 	
 	typedef endpoint endpoint_type;
-		
+	
+	typedef typename endpoint_type::handler_ptr handler_ptr;
+	
 	// friends (would require C++11) this would enable connection::start to be 
 	// protected instead of public.
 	//friend typename endpoint_traits<endpoint_type>::role_type;
@@ -88,14 +90,18 @@ public:
 		INTURRUPT = 2
 	};
 	
-	connection(endpoint_type& e) 
+	connection(endpoint_type& e,handler_ptr h) 
 	 : role_type(e),
 	   socket_type(e),
 	   m_endpoint(e),
+	   m_handler(h),
 	   m_timer(e.endpoint_base::m_io_service,boost::posix_time::seconds(0)),
 	   m_state(session::state::CONNECTING),
 	   m_write_buffer(0),
-	   m_write_state(IDLE) {}
+	   m_write_state(IDLE)
+	{
+		socket_type::init();
+	}
 	
 	// SHOULD BE PROTECTED
 	void start() {
@@ -503,7 +509,6 @@ protected:
 		// cancel the close timeout
 		m_timer.cancel();
 		
-		// TODO: figure out why this is really slow
 		m_dropped_by_me = socket_type::shutdown();
 		
 		m_failed_by_me = failed_by_me;
@@ -564,8 +569,12 @@ protected:
 		return m_buf;
 	}
 	
+	handler_ptr get_handler() {
+		return m_handler;
+	}
 protected:
 	endpoint_type&				m_endpoint;
+	handler_ptr					m_handler;
 	
 	// Network resources
 	boost::asio::streambuf		m_buf;
@@ -576,7 +585,6 @@ protected:
 	
 	// stuff that actually does the work
 	processor::ptr				m_processor;
-	
 	
 	// Write queue
 	std::queue<binary_string_ptr>	m_write_queue;
