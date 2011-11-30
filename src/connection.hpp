@@ -47,7 +47,9 @@
 #include <queue>
 
 namespace websocketpp {
-	
+
+class endpoint_base;
+
 template <typename T>
 struct connection_traits;
 	
