@@ -85,6 +85,9 @@ public:
 	typedef typename traits::connection_type connection_type;
     /// A shared pointer to the type of connection that this endpoint creates.
 	typedef typename traits::connection_ptr connection_ptr;
+    /// Interface (ABC) that handlers for this type of endpoint must impliment
+    /// role policy and socket policy both may add methods to this interface
+    typedef typename traits::handler handler;
     /// A shared pointer to the base class that all handlers for this endpoint
     /// must derive from.
 	typedef typename traits::handler_ptr handler_ptr;
