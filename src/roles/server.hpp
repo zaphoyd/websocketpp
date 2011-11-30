@@ -28,7 +28,6 @@
 #ifndef WEBSOCKETPP_ROLE_SERVER_HPP
 #define WEBSOCKETPP_ROLE_SERVER_HPP
 
-#include "../endpoint.hpp"
 #include "../processors/hybi.hpp"
 #include "../rng/blank_rng.hpp"
 
@@ -42,6 +41,10 @@
 #include <stdexcept>
 
 namespace websocketpp {
+
+// Forward declarations
+template <typename T> struct endpoint_traits;
+    
 namespace role {
 
 template <class endpoint>
@@ -350,39 +353,37 @@ public:
 		blank_rng					m_rng;
 	};
 	
-	class handler;
+	//class handler_interface;
 	
-	typedef boost::shared_ptr<handler> handler_ptr;
+	//typedef boost::shared_ptr<handler_interface> role_handler_ptr;
 	
 	// types
 	typedef server<endpoint> type;
 	typedef endpoint endpoint_type;
 	
 	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
-	
+	typedef typename endpoint_traits<endpoint>::handler_ptr handler_ptr;
+    
 	// handler interface callback class
-	class handler {
+	class handler_interface {
 	public:
-		typedef connection_ptr foo;
-		
 		// Required
-		virtual void validate(foo connection) = 0;
-		virtual void on_open(foo connection) = 0;
-		virtual void on_close(foo connection) = 0;
+		virtual void validate(connection_ptr connection) = 0;
+		virtual void on_open(connection_ptr connection) = 0;
+		virtual void on_close(connection_ptr connection) = 0;
 		
-		virtual void on_message(foo connection,utf8_string_ptr) = 0;
-		virtual void on_message(foo connection,binary_string_ptr) = 0;
+		virtual void on_message(connection_ptr connection,utf8_string_ptr) = 0;
+		virtual void on_message(connection_ptr connection,binary_string_ptr) = 0;
 		
 		// Optional
-		virtual bool on_ping(foo connection,binary_string_ptr) {return true;}
-		virtual void on_pong(foo connection,binary_string_ptr) {}
-		virtual void http(foo connection) {}
-		virtual void on_fail(foo connection) {}
+		virtual bool on_ping(connection_ptr connection,binary_string_ptr) {return true;}
+		virtual void on_pong(connection_ptr connection,binary_string_ptr) {}
+		virtual void http(connection_ptr connection) {}
+		virtual void on_fail(connection_ptr connection) {}
 	};
 	
-	server(boost::asio::io_service& m,handler_ptr h) 
+	server(boost::asio::io_service& m) 
 	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
-	   m_handler(h),
 	   m_io_service(m),
 	   m_endpoint(),
 	   m_acceptor(m)
@@ -404,10 +405,6 @@ public:
 protected:
 	bool is_server() {
 		return true;
-	}
-	
-	handler_ptr get_handler() {
-		return m_handler;
 	}
 private:
 	// start_accept creates a new connection and begins an async_accept on it
@@ -439,7 +436,6 @@ private:
 	}
 	
 	endpoint_type&					m_ws_endpoint;
-	handler_ptr						m_handler;
 	boost::asio::io_service&		m_io_service;
 	boost::asio::ip::tcp::endpoint	m_endpoint;
 	boost::asio::ip::tcp::acceptor	m_acceptor;
