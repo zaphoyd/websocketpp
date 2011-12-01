@@ -116,15 +116,12 @@ public:
 			callback(error);
 		}
 		
+        // note, this function for some reason shouldn't/doesn't need to be 
+        // called for plain HTTP connections. not sure why.
 		bool shutdown() {
 			boost::system::error_code ignored_ec;
 			
-			// TODO: this call blocks, sometimes for a long period of time.
-			// need to figure out what is going on here and how to calculate
-			// if the socket was already closed by this point.
-			// Until this is fixed, dropped_by_me for TLS connections will be
-			// inaccurate.
-			//m_socket_ptr->shutdown(ignored_ec);
+			m_socket_ptr->shutdown(ignored_ec);
 			
 			if (ignored_ec) {
 				return false;

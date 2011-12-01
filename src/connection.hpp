@@ -476,7 +476,7 @@ protected:
 		if (error) {
 			if (error == boost::asio::error::operation_aborted) {
 				// previous write was aborted
-				std::cout << "aborted" << std::endl;
+                m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "handle_write was called with operation_aborted error" << log::endl;
 			} else {
 				log_error("Error writing frame data",error);
 				terminate(false);
@@ -485,10 +485,10 @@ protected:
 		}
 		
 		if (m_write_queue.size() == 0) {
-			std::cout << "handle_write called with empty queue" << std::endl;
+            m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "handle_write called with empty queue" << log::endl;
 			return;
 		}
-		
+        
 		m_write_buffer -= m_write_queue.front()->size();
 		m_write_queue.pop();
 		
@@ -511,17 +511,23 @@ protected:
 		// cancel the close timeout
 		m_timer.cancel();
 		
-		m_dropped_by_me = socket_type::shutdown();
 		
-		m_failed_by_me = failed_by_me;
-		
-		session::state::value old_state = m_state;
-		m_state = session::state::CLOSED;
 		
 		// If this was a websocket connection notify the application handler
 		// about the close using either on_fail or on_close
 		if (role_type::get_version() != -1) {
-			if (old_state == session::state::CONNECTING) {
+            // TODO: note, calling shutdown on the ssl socket for an HTTP
+            // connection seems to cause shutdown to block for a very long time.
+            // NOT calling it for a websocket connection causes the connection
+            // to time out. Behavior now is correct but I am not sure why.
+			m_dropped_by_me = socket_type::shutdown();
+            
+            m_failed_by_me = failed_by_me;
+            
+            session::state::value old_state = m_state;
+            m_state = session::state::CLOSED;
+            
+            if (old_state == session::state::CONNECTING) {
 				m_endpoint.get_handler()->on_fail(type::shared_from_this());
 			} else if (old_state == session::state::OPEN || 
 					   old_state == session::state::CLOSING) {
