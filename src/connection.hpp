@@ -36,6 +36,9 @@
 
 #include "processors/hybi.hpp"
 
+#include "messages/data.hpp"
+#include "messages/control.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -192,6 +195,22 @@ public:
 	bool get_closed_by_me() const {
 		return m_closed_by_me;
 	}
+	
+	// flow control interface
+	message::data_ptr get_data_message() {
+		// if we have one of this type free
+		if (!m_read_queue_data.empty()) {
+			message::data_ptr p = m_read_queue_data.front();
+			m_read_queue_data.pop();
+			return p;
+		} else {
+			return message::data_ptr();
+		}
+	}
+	
+	message::control_ptr get_control_message() {
+		return m_control_message;
+	}
 protected:	
 	void handle_socket_init(const boost::system::error_code& error) {
 		if (error) {
@@ -204,6 +223,100 @@ protected:
 	}
 	
 	void handle_read_frame(const boost::system::error_code& error) {
+		// check if state changed while we were waiting for a read.
+		if (m_state == session::state::CLOSED) { return; }
+		
+		if (error) {
+			if (error == boost::asio::error::eof) {			
+				// got unexpected EOF
+				// TODO: log error
+				terminate(false);
+			} else if (error == boost::asio::error::operation_aborted) {
+				// got unexpected abort (likely our server issued an abort on
+				// all connections on this io_service)
+				
+				// TODO: log error
+				terminate(true);
+			} else {
+				// Other unexpected error
+				
+				// TODO: log error
+				terminate(false);
+			}
+		}
+		
+		// process data from the buffer just read into
+		std::istream s(&m_buf);
+		
+		while (m_state != session::state::CLOSED && m_buf.size() > 0) {
+			try {
+				m_processor->consume(s);
+				
+				if (m_processor->ready()) {
+					if (m_processor->is_control()) {
+						process_control(m_processor->get_control_message());
+					} else {
+						process_data(m_processor->get_data_message());
+					}					
+					m_processor->reset();
+				}
+			} catch (const processor::exception& e) {
+				if (m_processor->ready()) {
+					m_processor->reset();
+				}
+				
+				switch(e.code()) {
+					case processor::error::PROTOCOL_VIOLATION:
+						send_close(close::status::PROTOCOL_ERROR, e.what());
+						break;
+					case processor::error::PAYLOAD_VIOLATION:
+						send_close(close::status::INVALID_PAYLOAD, e.what());
+						break;
+					case processor::error::INTERNAL_SERVER_ERROR:
+						send_close(close::status::INTERNAL_ENDPOINT_ERROR, e.what());
+						break;
+					case processor::error::SOFT_ERROR:
+						continue;
+					case processor::error::MESSAGE_TOO_BIG:
+						send_close(close::status::MESSAGE_TOO_BIG, e.what());
+						break;
+					case processor::error::OUT_OF_MESSAGES:
+						// we need to wait for a message to be returned by the
+						// client. We exit the read loop. handle_read_frame
+						// will be restarted by recycle()
+						return;
+					default:
+						// Fatal error, forcibly end connection immediately.
+						m_endpoint.elog().at(log::elevel::DEVEL) 
+						<< "Dropping TCP due to unrecoverable exception" 
+						<< log::endl;
+						terminate(true);
+				}
+				break;
+				
+			}
+		}
+		
+		// try and read more
+		if (m_state != session::state::CLOSED && 
+			m_processor->get_bytes_needed() > 0) {
+			// TODO: read timeout timer?
+			
+			boost::asio::async_read(
+				socket_type::get_socket(),
+				m_buf,
+				boost::asio::transfer_at_least(m_processor->get_bytes_needed()),
+				boost::bind(
+					&type::handle_read_frame,
+					type::shared_from_this(),
+					boost::asio::placeholders::error
+				)
+			);
+		}
+	}
+
+	
+	void handle_read_frame_old(const boost::system::error_code& error) {
 		// check if state changed while we were waiting for a read.
 		if (m_state == session::state::CLOSED) { return; }
 		
@@ -607,6 +720,10 @@ protected:
 	bool						m_closed_by_me;
 	bool						m_failed_by_me;
 	bool						m_dropped_by_me;
+	
+	// Read queue
+	message::control_ptr				m_control_message;
+	std::queue<message::data_ptr>		m_read_queue_data;
 };
 
 // connection related types that it and its policy classes need.

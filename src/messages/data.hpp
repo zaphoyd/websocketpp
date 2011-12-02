@@ -25,94 +25,105 @@
  * 
  */
 
-#ifndef WEBSOCKET_UTF8_MESSAGE_HPP
-#define WEBSOCKET_UTF8_MESSAGE_HPP
+#ifndef WEBSOCKET_DATA_MESSAGE_HPP
+#define WEBSOCKET_DATA_MESSAGE_HPP
 
-#include "basic_message.hpp"
+#include "../websocket_frame.hpp"
+
+#include <algorithm>
 
 namespace websocketpp {
 namespace message {
 
-class utf8 : public basic {
+class data {
 public:
-    utf8() {
+    data() {
         m_payload.reserve(SIZE_INIT);
     }
     
+	frame::opcode::value get_opcode() const {
+        return m_opcode;
+    };
+	
     uint64_t process_payload(std::istream& input,uint64_t size) {
         char c;
-        
+        char *masking_key = reinterpret_cast<char *>(&m_masking_key);
         const uint64_t new_size = m_payload.size() + size;
-        
+        uint64_t i;
+		
         if (new_size > SIZE_MAX) {
             // TODO: real exception
             throw "message too big exception";
         }
         
         if (new_size > m_payload.capacity()) {
-            m_payload.reserve(max(new_size,2*m_payload.capacity()));
+            m_payload.reserve(std::max(new_size,static_cast<uint64_t>(2*m_payload.capacity())));
         }
         
-        for (uint64_t i = 0; i < size; ++i) {
+        for (i = 0; i < size; ++i) {
             if (input.good()) {
-                c = input.get(); 
+               c = input.get(); 
             } else if (input.eof()) {
                 break;
             } else {
                 // istream read error? throw?
+                throw "TODO: fix";
             }
             if (input.good()) {
                 // process c
                 if (m_masking_key) {
-                    c = c ^ m_masking_key[m_masking_index++%4];
+                    c = c ^ masking_key[(m_masking_index++)%4];
                 }
-                
-                if (!m_validator.consume(static_cast<uint32_t>(c))) {
+				
+				if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>(c))) {
                     // TODO
                     throw "bad utf8";
                 }
-                
+				
                 // add c to payload 
                 m_payload.push_back(c);
             } else if (input.eof()) {
                 break;
             } else {
                 // istream read error? throw?
+                throw "TODO: fix";
             }
         }
         
-        // we have read all bytes in the message.
+        // successfully read all bytes
         return i;
     }
     
-    void complete() {
-        if (m_validator.complete()) {
-            // TODO
-            throw "bad utf8";
-        }
-    }
-    
-    void reset(opcode::value opcode, uint32_t masking_key) {
+    void reset(frame::opcode::value opcode, uint32_t masking_key) {
         m_opcode = opcode;
         m_masking_key = masking_key;
         m_masking_index = 0;
         m_payload.resize(0);
-        m_validator.reset();
+		m_validator.reset();
     }
+	
+	void complete() {
+		if (m_opcode == frame::opcode::TEXT) {
+			if (!m_validator.complete()) {
+				// TODO
+				throw "bad utf8";
+			}
+		}
+	}
 private:
     static const uint64_t SIZE_INIT = 1000000; // 1MB
     static const uint64_t SIZE_MAX = 100000000;// 100MB
     
-    uint64_t                    m_max_size;
+	frame::opcode::value		m_opcode;
     utf8_validator::validator	m_validator;
     uint32_t                    m_masking_key;
     int                         m_masking_index;
-    std::string                 m_payload;
+    std::string					m_payload;
 };
 
-typedef boost::shared_ptr<utf8> utf8_ptr;
-    
+typedef boost::shared_ptr<data> data_ptr;
+	
 } // namespace message
 } // namespace websocketpp
 
-#endif // WEBSOCKET_UTF8_MESSAGE_HPP
+#endif // WEBSOCKET_DATA_MESSAGE_HPP

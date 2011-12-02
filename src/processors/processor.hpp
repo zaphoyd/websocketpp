@@ -41,7 +41,8 @@ namespace error {
 		PROTOCOL_VIOLATION = 2,		// must end session
 		PAYLOAD_VIOLATION = 3,		// should end session
 		INTERNAL_SERVER_ERROR = 4,	// cleanly end session
-		MESSAGE_TOO_BIG = 5			// ???
+		MESSAGE_TOO_BIG = 5,		// ???
+		OUT_OF_MESSAGES = 6			// read queue is empty, wait
 	};
 }
 
@@ -70,6 +71,9 @@ public:
 #include "../http/parser.hpp"
 #include "../uri.hpp"
 #include "../websocket_frame.hpp" // TODO: clean up
+
+#include "../messages/data.hpp"
+#include "../messages/control.hpp"
 
 #include <boost/shared_ptr.hpp>
 
@@ -101,6 +105,9 @@ public:
 	
 	// is there a message ready to be dispatched?
 	virtual bool ready() const = 0;
+	virtual bool is_control() const = 0;
+	virtual message::data_ptr get_data_message() const = 0;
+	virtual message::control_ptr get_control_message() const = 0;
 	virtual void reset() = 0;
 	
 	virtual uint64_t get_bytes_needed() const = 0;

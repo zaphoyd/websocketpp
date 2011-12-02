@@ -19,10 +19,10 @@
 		B663885C1487D7AA00DDAE13 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
 		B66388621487FE6C00DDAE13 /* basic_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885E1487FE6C00DDAE13 /* basic_message.hpp */; };
 		B66388631487FE6C00DDAE13 /* basic_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885E1487FE6C00DDAE13 /* basic_message.hpp */; };
-		B66388641487FE6C00DDAE13 /* binary_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885F1487FE6C00DDAE13 /* binary_message.hpp */; };
-		B66388651487FE6C00DDAE13 /* binary_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885F1487FE6C00DDAE13 /* binary_message.hpp */; };
-		B66388661487FE6C00DDAE13 /* control_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control_message.hpp */; };
-		B66388671487FE6C00DDAE13 /* control_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control_message.hpp */; };
+		B66388641487FE6C00DDAE13 /* data.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885F1487FE6C00DDAE13 /* data.hpp */; };
+		B66388651487FE6C00DDAE13 /* data.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885F1487FE6C00DDAE13 /* data.hpp */; };
+		B66388661487FE6C00DDAE13 /* control.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control.hpp */; };
+		B66388671487FE6C00DDAE13 /* control.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control.hpp */; };
 		B66388681487FE6C00DDAE13 /* utf8_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388611487FE6C00DDAE13 /* utf8_message.hpp */; };
 		B66388691487FE6C00DDAE13 /* utf8_message.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388611487FE6C00DDAE13 /* utf8_message.hpp */; };
 		B6727429148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
@@ -189,8 +189,8 @@
 		B66388461487D71800DDAE13 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server_tls/Makefile; sourceTree = "<group>"; };
 		B663884B1487D73200DDAE13 /* echo_server_tls */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server_tls; sourceTree = BUILT_PRODUCTS_DIR; };
 		B663885E1487FE6C00DDAE13 /* basic_message.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = basic_message.hpp; path = src/messages/basic_message.hpp; sourceTree = "<group>"; };
-		B663885F1487FE6C00DDAE13 /* binary_message.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = binary_message.hpp; path = src/messages/binary_message.hpp; sourceTree = "<group>"; };
-		B66388601487FE6C00DDAE13 /* control_message.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = control_message.hpp; path = src/messages/control_message.hpp; sourceTree = "<group>"; };
+		B663885F1487FE6C00DDAE13 /* data.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = data.hpp; path = src/messages/data.hpp; sourceTree = "<group>"; };
+		B66388601487FE6C00DDAE13 /* control.hpp */ = {isa = PBXFileReference; fileEncoding = 4; name = control.hpp; path = src/messages/control.hpp; sourceTree = "<group>"; };
 		B66388611487FE6C00DDAE13 /* utf8_message.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = utf8_message.hpp; path = src/messages/utf8_message.hpp; sourceTree = "<group>"; };
 		B6727428148517180029CF3E /* uri.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uri.cpp; path = src/uri.cpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
@@ -200,6 +200,7 @@
 		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
+		B6AEB1AA1488652A0091EE0A /* hybi2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi2.hpp; sourceTree = "<group>"; };
 		B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_endpoint.hpp; path = src/websocket_endpoint.hpp; sourceTree = "<group>"; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
 		B6CF18141437C370009295BE /* echo_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client_handler.cpp; sourceTree = "<group>"; };
@@ -377,6 +378,7 @@
 		B62A5A6A147748B2005F9EB0 /* processors */ = {
 			isa = PBXGroup;
 			children = (
+				B6AEB1AA1488652A0091EE0A /* hybi2.hpp */,
 				B62A5A6B147748B2005F9EB0 /* hybi.hpp */,
 				B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */,
 				B62A5A6D147748B2005F9EB0 /* processor.hpp */,
@@ -398,8 +400,8 @@
 			isa = PBXGroup;
 			children = (
 				B663885E1487FE6C00DDAE13 /* basic_message.hpp */,
-				B663885F1487FE6C00DDAE13 /* binary_message.hpp */,
-				B66388601487FE6C00DDAE13 /* control_message.hpp */,
+				B663885F1487FE6C00DDAE13 /* data.hpp */,
+				B66388601487FE6C00DDAE13 /* control.hpp */,
 				B66388611487FE6C00DDAE13 /* utf8_message.hpp */,
 			);
 			name = messages;
@@ -635,8 +637,8 @@
 				B6BE76EA144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 				B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 				B66388621487FE6C00DDAE13 /* basic_message.hpp in Headers */,
-				B66388641487FE6C00DDAE13 /* binary_message.hpp in Headers */,
-				B66388661487FE6C00DDAE13 /* control_message.hpp in Headers */,
+				B66388641487FE6C00DDAE13 /* data.hpp in Headers */,
+				B66388661487FE6C00DDAE13 /* control.hpp in Headers */,
 				B66388681487FE6C00DDAE13 /* utf8_message.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -661,8 +663,8 @@
 				B6BE76EB144EF53000716A77 /* websocket_endpoint.hpp in Headers */,
 				B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 				B66388631487FE6C00DDAE13 /* basic_message.hpp in Headers */,
-				B66388651487FE6C00DDAE13 /* binary_message.hpp in Headers */,
-				B66388671487FE6C00DDAE13 /* control_message.hpp in Headers */,
+				B66388651487FE6C00DDAE13 /* data.hpp in Headers */,
+				B66388671487FE6C00DDAE13 /* control.hpp in Headers */,
 				B66388691487FE6C00DDAE13 /* utf8_message.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1217,6 +1219,7 @@
 				B66388541487D73300DDAE13 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6828884143745F2002BA48B /* Build configuration list for PBXNativeTarget "chat_client" */ = {
 			isa = XCConfigurationList;

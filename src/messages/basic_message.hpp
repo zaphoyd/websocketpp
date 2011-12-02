@@ -33,9 +33,9 @@
 namespace websocketpp {
 namespace message {
     
-class basic_message {
+class basic {
 public:
-    basic_message() {}
+    basic() {}
     
     // copy up to `size` bytes from input into the internal payload buffer and 
     // perform any transformations required by the message type. Returns the
@@ -49,6 +49,8 @@ public:
 protected:
     opcode::value   m_opcode;
 };
+	
+typedef boost::shared_ptr<basic> ptr;
 
 } // namespace message
 } // namespace websocketpp
