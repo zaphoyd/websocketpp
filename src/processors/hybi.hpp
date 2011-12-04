@@ -29,6 +29,7 @@
 #define WEBSOCKET_PROCESSOR_HYBI_HPP
 
 #include "processor.hpp"
+#include "hybi_header.hpp"
 
 #include "../base64/base64.h"
 #include "../sha1/sha1.h"
@@ -41,16 +42,22 @@ namespace processor {
 
 namespace hybi_state {
 	enum value {
-		INIT = 0,
-		READ = 1,
-		DONE = 2
+		READ_HEADER = 0,
+		READ_PAYLOAD = 1,
+		READY = 2
 	};
 }
 
-template <class rng_policy>
+// connection must provide:
+// int32_t get_rng();
+// message::data_ptr get_data_message();
+// message::control_ptr get_control_message();
+// bool is_secure();
+
+template <class connection_type>
 class hybi : public processor_base {
 public:
-	hybi(bool secure,rng_policy &rng) : m_secure(secure),m_fragmented_opcode(frame::opcode::CONTINUATION),m_utf8_payload(new utf8_string()),m_binary_payload(new binary_string()),m_read_frame(rng),m_write_frame(rng) {
+	hybi(connection_type &connection) : m_connection(connection),m_write_frame(connection) {
 		reset();
 	}		
 	
@@ -116,7 +123,7 @@ public:
 	std::string get_origin(const http::parser::request& request) const {
 		std::string h = request.header("Sec-WebSocket-Version");
 		int version = atoi(h.c_str());
-				
+		
 		if (version == 13) {
 			return request.header("Origin");
 		} else if (version == 7 || version == 8) {
@@ -127,41 +134,24 @@ public:
 	}
 	
 	uri_ptr get_uri(const http::parser::request& request) const {
-		//uri connection_uri;
-		
-		
-		//connection_uri.secure = m_secure;
-		
 		std::string h = request.header("Host");
-		
-		//std::string host;
-		//std::string port;
 		
 		size_t found = h.find(":");
 		if (found == std::string::npos) {
-			return uri_ptr(new uri(m_secure,h,request.uri()));
+			return uri_ptr(new uri(m_connection.is_secure(),h,request.uri()));
 		} else {
-			return uri_ptr(new uri(m_secure,h.substr(0,found),h.substr(found+1),request.uri()));
-			
-			/*uint16_t p = atoi(h.substr(found+1).c_str());
-			
-			if (p == 0) {
-				throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
-			} else {
-				connection_uri.host = h.substr(0,found);
-				connection_uri.port = p;
-			}*/
+			return uri_ptr(new uri(m_connection.is_secure(),
+								   h.substr(0,found),
+								   h.substr(found+1),
+								   request.uri()));
 		}
 		
 		// TODO: check if get_uri is a full uri
-		//connection_uri.resource = request.uri();
-		
-		//return uri(m_secure,host,port,request.uri());
 	}
 	
-	void handshake_response(const http::parser::request& request,http::parser::response& response) {
-		// TODO:
-		
+	void handshake_response(const http::parser::request& request,
+							http::parser::response& response) 
+	{
 		std::string server_key = request.header("Sec-WebSocket-Key");
 		server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 		
@@ -179,9 +169,9 @@ public:
 			}
 			
 			server_key = base64_encode(
-				reinterpret_cast<const unsigned char*>
-					(message_digest),20
-			);
+									   reinterpret_cast<const unsigned char*>
+									   (message_digest),20
+									   );
 			
 			// set handshake accept headers
 			response.replace_header("Sec-WebSocket-Accept",server_key);
@@ -196,16 +186,24 @@ public:
 	}
 	
 	void consume(std::istream& s) {
-		while (s.good() && m_state != hybi_state::DONE) {
+		while (s.good() && m_state != hybi_state::READY) {
 			try {
-				m_read_frame.consume(s);
-				
-				if (m_read_frame.ready()) {
-					process_frame();
+				switch (m_state) {
+					case hybi_state::READ_HEADER:
+						process_header(s);
+						break;
+					case hybi_state::READ_PAYLOAD:
+						process_payload(s);
+						break;
+					case hybi_state::READY:
+						// shouldn't be here..
+						break;
+					default:
+						break;
 				}
 			} catch (const processor::exception& e) {
-				if (m_read_frame.ready()) {
-					m_read_frame.reset();
+				if (m_header.ready()) {
+					m_header.reset();
 				}
 				
 				throw e;
@@ -213,180 +211,149 @@ public:
 		}
 	}
 	
-	void process_frame() {
-		switch (m_read_frame.get_opcode()) {
-			case frame::opcode::CONTINUATION:
-				process_continuation();
-				break;
-			case frame::opcode::TEXT:
-				process_text();
-				break;
-			case frame::opcode::BINARY:
-				process_binary();
-				break;
-			case frame::opcode::CLOSE:
-				if (!utf8_validator::validate(m_read_frame.get_close_msg())) {
-					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
-				}
-				
-				m_opcode = frame::opcode::CLOSE;
-				m_close_code = m_read_frame.get_close_status();
-				m_close_reason = m_read_frame.get_close_msg();
-				
-				break;
-			case frame::opcode::PING:
-			case frame::opcode::PONG:
-				m_opcode = m_read_frame.get_opcode();
-				extract_binary(m_control_payload);
-				break;
-			default:
-				throw processor::exception("Invalid Opcode",processor::error::PROTOCOL_VIOLATION);
-				break;
-		}
-		if (m_read_frame.get_fin()) {
-			m_state = hybi_state::DONE;
-			if (m_opcode == frame::opcode::TEXT) {
-				if (!m_validator.complete()) {
-					m_validator.reset();
-					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
-				}
-				m_validator.reset();
+	void process_header(std::istream& s) {
+		m_header.consume(s);
+		
+		if (m_header.ready()) {
+			// Get a free message from the read queue for the type of the 
+			// current message
+			if (m_header.is_control()) {
+				process_control_header();
+			} else {
+				process_data_header();
 			}
 		}
-		m_read_frame.reset();
 	}
 	
-	// frame type handlers:
-	void process_continuation() {
-		if (m_fragmented_opcode == frame::opcode::BINARY) {
-			extract_binary(m_binary_payload);
-		} else if (m_fragmented_opcode == frame::opcode::TEXT) {
-			extract_utf8(m_utf8_payload);
-		} else if (m_fragmented_opcode == frame::opcode::CONTINUATION) {
-			// got continuation frame without a message to continue.
-			throw processor::exception("No message to continue.",processor::error::PROTOCOL_VIOLATION);
+	void process_control_header() {
+		m_control_message = m_connection.get_control_message();
+		
+		if (!m_control_message) {
+			throw processor::exception("Out of control messages",processor::error::OUT_OF_MESSAGES);
+		}
+		
+		m_control_message->reset(m_header.get_opcode(),m_header.get_masking_key());
+		
+		m_payload_left = m_header.get_payload_size();
+		
+		if (m_payload_left == 0) {
+			process_frame();
 		} else {
+			m_state = hybi_state::READ_PAYLOAD;
+		}
+	}
+	
+	void process_data_header() {
+		if (!m_data_message) {
+			// This is a new message. No continuation frames allowed.
+			if (m_header.get_opcode() == frame::opcode::CONTINUATION) {
+				throw processor::exception("Received continuation frame without an outstanding message.",processor::error::PROTOCOL_VIOLATION);
+			}
 			
-			// can't be here
-		}
-		if (m_read_frame.get_fin()) {
-			m_opcode = m_fragmented_opcode;
-		}
-	}
-	
-	void process_text() {
-		if (m_fragmented_opcode != frame::opcode::CONTINUATION) {
-			throw processor::exception("New message started without closing previous.",processor::error::PROTOCOL_VIOLATION);
-		}
-		extract_utf8(m_utf8_payload);
-		m_opcode = frame::opcode::TEXT;
-		m_fragmented_opcode = frame::opcode::TEXT;
-	}
-	
-	void process_binary() {
-		if (m_fragmented_opcode != frame::opcode::CONTINUATION) {
-			throw processor::exception("New message started without closing previous.",processor::error::PROTOCOL_VIOLATION);
-		}
-		m_opcode = frame::opcode::BINARY;
-		m_fragmented_opcode = frame::opcode::BINARY;
-		extract_binary(m_binary_payload);
-	}
-	
-	void extract_binary(binary_string_ptr dest) {
-		binary_string &msg = m_read_frame.get_payload();
-		dest->resize(dest->size() + msg.size());
-		std::copy(msg.begin(),msg.end(),dest->end() - msg.size());
-	}
-	
-	void extract_utf8(utf8_string_ptr dest) {
-		binary_string &msg = m_read_frame.get_payload();
-		
-		if (!m_validator.decode(msg.begin(),msg.end())) {
-			throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
+			m_data_message = m_connection.get_data_message();
+			
+			if (!m_data_message) {
+				throw processor::exception("Out of data messages",processor::error::OUT_OF_MESSAGES);
+			}
+			
+			m_data_message->reset(m_header.get_opcode());
+		} else {
+			// A message has already been started. Continuation frames only!
+			if (m_header.get_opcode() != frame::opcode::CONTINUATION) {
+				throw processor::exception("Received new message before the completion of the existing one.",processor::error::PROTOCOL_VIOLATION);
+			}
 		}
 		
-		dest->reserve(dest->size() + msg.size());
-		dest->append(msg.begin(),msg.end());
+		m_payload_left = m_header.get_payload_size();
+		
+		if (m_payload_left == 0) {
+			process_frame();
+		} else {
+			// each frame has a new masking key
+			m_data_message->set_masking_key(m_header.get_masking_key());
+			m_state = hybi_state::READ_PAYLOAD;
+		}
+	}
+	
+	void process_payload(std::istream& input) {
+		uint64_t written;
+		if (m_header.is_control()) {
+			written = m_control_message->process_payload(input,m_payload_left);
+		} else {
+			//m_connection.alog().at(log::alevel::DEVEL) << "process_payload. Size:  " << m_payload_left << log::endl;
+			written = m_data_message->process_payload(input,m_payload_left);
+		}
+		m_payload_left -= written;
+		
+		if (m_payload_left == 0) {
+			process_frame();
+		}
+		
+	}
+	
+	void process_frame() {
+		if (m_header.get_fin()) {
+			if (m_header.is_control()) {
+				m_control_message->complete();
+			} else {
+				m_data_message->complete();
+			}
+			m_state = hybi_state::READY;
+		} else {
+			reset();
+		}
 	}
 	
 	bool ready() const {
-		return m_state == hybi_state::DONE;
+		return m_state == hybi_state::READY;
+	}
+	
+	bool is_control() const {
+		return m_header.is_control();
+	}
+	
+	// note this can only be called once
+	message::data_ptr get_data_message() {
+		message::data_ptr p = m_data_message;
+		m_data_message.reset();
+		return p;
+	}
+	
+	// note this can only be called once
+	message::control_ptr get_control_message() {
+		message::control_ptr p = m_control_message;
+		m_control_message.reset();
+		return p;
 	}
 	
 	void reset() {
-		m_state = m_state = hybi_state::INIT;
-		m_control_payload = binary_string_ptr(new binary_string());
-		
-		if (m_fragmented_opcode == m_opcode) {
-			m_utf8_payload = utf8_string_ptr(new utf8_string());
-			m_binary_payload = binary_string_ptr(new binary_string());
-			m_fragmented_opcode = frame::opcode::CONTINUATION;
-		}
+		m_state = m_state = hybi_state::READ_HEADER;
+		m_header.reset();
 	}
 	
 	uint64_t get_bytes_needed() const {
-		return m_read_frame.get_bytes_needed();
-	}
-	
-	frame::opcode::value get_opcode() const {
-		if (!ready()) {
-			throw "not ready";
-		}
-		return m_opcode;
-	}
-	
-	utf8_string_ptr get_utf8_payload() const {
-		if (get_opcode() != frame::opcode::TEXT) {
-			throw "opcode doesn't have a utf8 payload";
-		}
-		
-		if (!ready()) {
-			throw "not ready";
-		}
-		
-		return m_utf8_payload;
-	}
-	
-	binary_string_ptr get_binary_payload() const {
-		if (!ready()) {
-			throw "not ready";
-		}
-		
-		if (get_opcode() == frame::opcode::BINARY) {
-			return m_binary_payload;
-		} else if (get_opcode() != frame::opcode::PING ||
-				   get_opcode() != frame::opcode::PONG) {
-			return m_control_payload;
-		} else {
-			throw "opcode doesn't have a binary payload";
+		switch (m_state) {
+			case hybi_state::READ_HEADER:
+				return m_header.get_bytes_needed();
+			case hybi_state::READ_PAYLOAD:
+				return m_payload_left;
+			case hybi_state::READY:
+				return 0;
+			default:
+				throw "shouldn't be here";
 		}
 	}
 	
-	// legacy hybi doesn't have close codes
-	close::status::value get_close_code() const {
-		if (!ready()) {
-			throw "not ready";
-		}
-		
-		return m_close_code;
-	}
-	
-	utf8_string get_close_reason() const {
-		if (!ready()) {
-			throw "not ready";
-		}
-
-		return m_close_reason;
-	}
-	
+	// TODO: replace all this to remove all lingering dependencies on 
+	// websocket_frame
 	binary_string_ptr prepare_frame(frame::opcode::value opcode,
 									bool mask,
 									const utf8_string& payload) {
-		if (opcode != frame::opcode::TEXT) {
-			// TODO: hybi_legacy doesn't allow non-text frames.
-			throw;
-		}
-				
+		/*if (opcode != frame::opcode::TEXT) {
+		 // TODO: hybi_legacy doesn't allow non-text frames.
+		 throw;
+		 }*/
+		
 		// TODO: utf8 validation on payload.
 		
 		binary_string_ptr response(new binary_string(0));
@@ -405,7 +372,7 @@ public:
 		
 		// copy payload
 		std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
-
+		
 		
 		return response;
 	}
@@ -414,10 +381,10 @@ public:
 									bool mask,
 									const binary_string& payload) {
 		/*if (opcode != frame::opcode::TEXT) {
-			// TODO: hybi_legacy doesn't allow non-text frames.
-			throw;
-		}*/
-				
+		 // TODO: hybi_legacy doesn't allow non-text frames.
+		 throw;
+		 }*/
+		
 		// TODO: utf8 validation on payload.
 		
 		binary_string_ptr response(new binary_string(0));
@@ -464,24 +431,17 @@ public:
 	}
 	
 private:
-	bool					m_secure;
+	connection_type&		m_connection;
 	int						m_state;
-	frame::opcode::value	m_opcode;
-	frame::opcode::value	m_fragmented_opcode;
 	
-	utf8_string_ptr			m_utf8_payload;
-	binary_string_ptr		m_binary_payload;
-	binary_string_ptr		m_control_payload;
+	message::data_ptr		m_data_message;
+	message::control_ptr	m_control_message;
+	hybi_header				m_header;
+	uint64_t				m_payload_left;
 	
-	close::status::value	m_close_code;
-	std::string				m_close_reason;
-	
-	utf8_validator::validator	m_validator;
-	
-	frame::parser<rng_policy>	m_read_frame;
-	frame::parser<rng_policy>	m_write_frame;
-};
-	
+	frame::parser<connection_type>	m_write_frame; // TODO: refactor this out
+};	
+
 } // namespace processor
 } // namespace websocketpp
 
