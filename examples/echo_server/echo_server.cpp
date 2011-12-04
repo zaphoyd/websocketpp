@@ -50,13 +50,11 @@ public:
 		//std::cout << "connection closed" << std::endl;
 	}
 	
-	void on_message(connection_ptr connection,websocketpp::utf8_string_ptr msg) {
+	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
 		//std::cout << "got message: " << *msg << std::endl;
-		connection->send(*msg);
-	}
-	void on_message(connection_ptr connection,websocketpp::binary_string_ptr data) {
-		//std::cout << "got binary message of length: " << data->size() << std::endl;
-		connection->send(*data);
+		connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+		
+		connection->recycle(msg);
 	}
 	
 	void http(connection_ptr connection) {
@@ -80,14 +78,16 @@ int main(int argc, char* argv[]) {
 		plain_handler_ptr h(new echo_server_handler());
 		plain_endpoint_type e(h);
 		
-		e.alog().unset_level(websocketpp::log::alevel::ALL);
-		e.alog().set_level(websocketpp::log::alevel::CONNECT);
-		e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
+		e.alog().set_level(websocketpp::log::alevel::ALL);
+		//e.alog().unset_level(websocketpp::log::alevel::ALL);
+		//e.alog().set_level(websocketpp::log::alevel::CONNECT);
+		//e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
 		//e.alog().unset_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
 		
-		e.elog().unset_level(websocketpp::log::elevel::ALL);
-		e.elog().set_level(websocketpp::log::elevel::ERROR);
-		e.elog().set_level(websocketpp::log::elevel::FATAL);
+		e.elog().set_level(websocketpp::log::elevel::ALL);
+		//e.elog().unset_level(websocketpp::log::elevel::ALL);
+		//e.elog().set_level(websocketpp::log::elevel::ERROR);
+		//e.elog().set_level(websocketpp::log::elevel::FATAL);
 		
 		// TODO: fix
 		//e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
