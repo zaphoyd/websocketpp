@@ -28,7 +28,9 @@
 #ifndef WEBSOCKET_DATA_MESSAGE_HPP
 #define WEBSOCKET_DATA_MESSAGE_HPP
 
+#include "../processors/processor.hpp"
 #include "../websocket_frame.hpp"
+#include "../utf8_validator/utf8_validator.hpp"
 
 #include <algorithm>
 
@@ -38,22 +40,25 @@ namespace message {
 class data {
 public:
     data() {
-        m_payload.reserve(SIZE_INIT);
+        m_payload.reserve(PAYLOAD_SIZE_INIT);
     }
     
 	frame::opcode::value get_opcode() const {
         return m_opcode;
     };
 	
+	const std::string& get_payload() const {
+        return m_payload;
+    };
+	
     uint64_t process_payload(std::istream& input,uint64_t size) {
-        char c;
-        char *masking_key = reinterpret_cast<char *>(&m_masking_key);
+		unsigned char c;
         const uint64_t new_size = m_payload.size() + size;
         uint64_t i;
 		
-        if (new_size > SIZE_MAX) {
+        if (new_size > PAYLOAD_SIZE_MAX) {
             // TODO: real exception
-            throw "message too big exception";
+			throw processor::exception("Message too big",processor::error::MESSAGE_TOO_BIG);
         }
         
         if (new_size > m_payload.capacity()) {
@@ -62,62 +67,76 @@ public:
         
         for (i = 0; i < size; ++i) {
             if (input.good()) {
-               c = input.get(); 
+				c = input.get();
             } else if (input.eof()) {
                 break;
             } else {
                 // istream read error? throw?
-                throw "TODO: fix";
+				throw processor::exception("istream read error",
+										   processor::error::FATAL_ERROR);
             }
             if (input.good()) {
-                // process c
-                if (m_masking_key) {
-                    c = c ^ masking_key[(m_masking_index++)%4];
-                }
-				
-				if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>(c))) {
-                    // TODO
-                    throw "bad utf8";
-                }
-				
-                // add c to payload 
-                m_payload.push_back(c);
+                process_character(c);
             } else if (input.eof()) {
                 break;
             } else {
                 // istream read error? throw?
-                throw "TODO: fix";
+                throw processor::exception("istream read error",
+										   processor::error::FATAL_ERROR);
             }
         }
         
         // successfully read all bytes
         return i;
     }
+	
+	void process_character(unsigned char c) {
+		if (m_masking_index >= 0) {
+			c = c ^ m_masking_key[(m_masking_index++)%4];
+		}
+		
+		if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>((unsigned char)(c)))) {
+			throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
+		}
+		
+		// add c to payload 
+		m_payload.push_back(c);
+	}
     
-    void reset(frame::opcode::value opcode, uint32_t masking_key) {
+    void reset(frame::opcode::value opcode) {
         m_opcode = opcode;
-        m_masking_key = masking_key;
         m_masking_index = 0;
         m_payload.resize(0);
 		m_validator.reset();
     }
-	
+		
 	void complete() {
 		if (m_opcode == frame::opcode::TEXT) {
 			if (!m_validator.complete()) {
-				// TODO
-				throw "bad utf8";
+				throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
 			}
 		}
 	}
+	
+	void set_masking_key(int32_t key) {
+		*reinterpret_cast<int32_t*>(m_masking_key) = key;
+		m_masking_index = (key == 0 ? -1 : 0);
+	}
 private:
-    static const uint64_t SIZE_INIT = 1000000; // 1MB
-    static const uint64_t SIZE_MAX = 100000000;// 100MB
+    static const uint64_t PAYLOAD_SIZE_INIT = 1000000; // 1MB
+    static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
     
+	// Message state
 	frame::opcode::value		m_opcode;
+	
+	// UTF8 validation state
     utf8_validator::validator	m_validator;
-    uint32_t                    m_masking_key;
+	
+	// Masking state
+	unsigned char				m_masking_key[4];
     int                         m_masking_index;
+	
+	// Message payload
     std::string					m_payload;
 };
 
