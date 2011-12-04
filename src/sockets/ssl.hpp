@@ -83,6 +83,10 @@ public:
 		ssl_socket& get_socket() {
 			return *m_socket_ptr;
 		}
+		
+		bool is_secure() {
+			return true;
+		}
 	protected:
 		connection(ssl<endpoint_type>& e)
 		 : m_endpoint(e),

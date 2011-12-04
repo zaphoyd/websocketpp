@@ -64,6 +64,10 @@ public:
 		boost::asio::ip::tcp::socket& get_socket() {
 			return m_socket;
 		}
+		
+		bool is_secure() {
+			return false;
+		}
 	protected:
 		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
 		
