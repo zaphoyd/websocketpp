@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_ROLE_SERVER_HPP
 
 #include "../processors/hybi.hpp"
+#include "../processors/hybi_legacy.hpp"
 #include "../rng/blank_rng.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -200,13 +201,24 @@ public:
 					
 					// create a websocket processor
 					if (m_version == 0) {
-						m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
+						//m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
 						
-						throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
+						char foo[9];
+						foo[8] = 0;
+						
+						request.get(foo,9);
+						
+						if (request.gcount() != 8) {
+							throw http::exception("Missing Key3",http::status_code::BAD_REQUEST);
+						}
+						m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
+						
+						//throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
+						m_connection.m_processor = processor::ptr(new processor::hybi_legacy<connection_type>(m_connection));
 					} else if (m_version == 7 ||
 							   m_version == 8 ||
 							   m_version == 13) {
-						m_connection.m_processor = processor::ptr(new processor::hybi<blank_rng>(false,m_rng));
+						m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
 					} else {
 						m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
 						
@@ -276,6 +288,16 @@ public:
 			m_response.replace_header("Server","WebSocket++/2011-11-18");
 			
 			std::string raw = m_response.raw();
+			
+			// Hack for legacy HyBi
+			// TODO
+			if (m_version == 0) {
+				//raw += boost::dynamic_pointer_cast<processor::hybi_legacy>(m_connection.m_processor)->get_key3();
+				raw += boost::dynamic_pointer_cast<processor::hybi_legacy<connection_type> >(m_connection.m_processor)->get_key3();
+				
+				
+				//raw += m_connection.m_processor->get_key3();
+			}
 			
 			m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
 			
@@ -372,12 +394,11 @@ public:
 		virtual void on_open(connection_ptr connection) = 0;
 		virtual void on_close(connection_ptr connection) = 0;
 		
-		virtual void on_message(connection_ptr connection,utf8_string_ptr) = 0;
-		virtual void on_message(connection_ptr connection,binary_string_ptr) = 0;
+		virtual void on_message(connection_ptr connection,message::data_ptr) = 0;
 		
 		// Optional
-		virtual bool on_ping(connection_ptr connection,binary_string_ptr) {return true;}
-		virtual void on_pong(connection_ptr connection,binary_string_ptr) {}
+		virtual bool on_ping(connection_ptr connection,std::string) {return true;}
+		virtual void on_pong(connection_ptr connection,std::string) {}
 		virtual void http(connection_ptr connection) {}
 		virtual void on_fail(connection_ptr connection) {}
 	};
