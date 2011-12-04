@@ -50,11 +50,13 @@ private:
     std::string m_msg;
 };
 
+
+	
 class uri {
 public:
-    static const int DEFAULT_PORT = 80;
-    static const int DEFAULT_SECURE_PORT = 443;
-    
+	static const uint16_t DEFAULT_PORT = 80;
+	static const uint16_t DEFAULT_SECURE_PORT = 443;
+	
     explicit uri(const std::string& uri);
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource);
 	uri(bool secure, const std::string& host, const std::string& resource);

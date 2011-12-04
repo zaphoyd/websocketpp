@@ -131,9 +131,9 @@ std::string uri::str() const {
 	
 	s << "ws" << (m_secure ? "s" : "") << "://" << m_host;
 	
-	/*if (m_port != (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
+	if (m_port != (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
 		s << ":" << m_port;
-	}*/
+	}
 	
 	s << m_resource;
 	return s.str();
@@ -156,87 +156,3 @@ uint16_t uri::get_port_from_string(const std::string& port) const {
 	
 	return t_port;
 }
-
-/*std::string uri::base() const {
-	std::stringstream s;
-	
-	s << "ws" << (secure ? "s" : "") << "://" << host;
-	
-	if (port != (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
-		s << ":" << port;
-	}
-	
-	s << "/";
-	return s.str();
-}
-
-void uri::set_secure(bool secure) {
-	m_secure = secure;
-}
-
-void uri::set_host(const std::string& host) {
-	// TODO: additional validation?
-	m_host = host;
-}
-void set_port(uint16_t port) {
-	if (port > 65535) {
-		throw uri_exception("Port must be less than 65535");
-	}
-}
-void set_port(const std::string& port);
-void set_resource(const std::string& resource);*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*bool uri::parse(const std::string& uri) {
-	boost::cmatch matches;
-	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/[^#]*)?");
-	
-	// TODO: should this split resource into path/query?
-	
-	if (boost::regex_match(uri.c_str(), matches, expression)) {
-		secure = (matches[1] == "wss");
-		host = matches[2];
-		
-		std::string port(matches[3]);
-		
-		if (port != "") {
-		    // strip off the :
-		    // this could probably be done with a better regex.
-		    port = port.substr(1);
-		}
-		
-		m_port = get_port_from_string(port);
-		
-		if (matches[3] == "") {
-			port = (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
-		} else {
-			unsigned int t_port = atoi(std::string(matches[3]).substr(1).c_str());
-			
-			if (t_port > 65535) {
-				return false;
-			}
-			
-			port = atoi(std::string(matches[3]).substr(1).c_str());
-		}
-		
-		resource = (matches[4] == "" ? "/" : matches[4]);
-		
-		return true;
-	}
-	
-	return false;
-}*/
-
-
-
