@@ -40,7 +40,7 @@ namespace error {
 		SOFT_ERROR = 1,				// should log and ignore
 		PROTOCOL_VIOLATION = 2,		// must end session
 		PAYLOAD_VIOLATION = 3,		// should end session
-		INTERNAL_SERVER_ERROR = 4,	// cleanly end session
+		INTERNAL_ENDPOINT_ERROR = 4,// cleanly end session
 		MESSAGE_TOO_BIG = 5,		// ???
 		OUT_OF_MESSAGES = 6			// read queue is empty, wait
 	};
@@ -106,19 +106,19 @@ public:
 	// is there a message ready to be dispatched?
 	virtual bool ready() const = 0;
 	virtual bool is_control() const = 0;
-	virtual message::data_ptr get_data_message() const = 0;
-	virtual message::control_ptr get_control_message() const = 0;
+	virtual message::data_ptr get_data_message() = 0;
+	virtual message::control_ptr get_control_message() = 0;
 	virtual void reset() = 0;
 	
 	virtual uint64_t get_bytes_needed() const = 0;
 	
 	// Get information about the message that is ready
-	virtual frame::opcode::value get_opcode() const = 0;
+	//virtual frame::opcode::value get_opcode() const = 0;
 	
-	virtual utf8_string_ptr get_utf8_payload() const = 0;
-	virtual binary_string_ptr get_binary_payload() const = 0;
-	virtual close::status::value get_close_code() const = 0;
-	virtual utf8_string get_close_reason() const = 0;
+	//virtual utf8_string_ptr get_utf8_payload() const = 0;
+	//virtual binary_string_ptr get_binary_payload() const = 0;
+	//virtual close::status::value get_close_code() const = 0;
+	//virtual utf8_string get_close_reason() const = 0;
 	
 	// TODO: prepare a frame
 	virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
