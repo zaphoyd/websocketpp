@@ -33,7 +33,7 @@
 namespace websocketpp {
 
 // could be compiled separately
-inline void md5_hash_string(const std::string& s);
+inline std::string md5_hash_string(const std::string& s) {
 	char digest[17];
 	
 	md5_state_t state;
@@ -45,5 +45,7 @@ inline void md5_hash_string(const std::string& s);
 	digest[16] = '\0';
 	return std::string(digest);
 }
+
+} // websocketpp
 
 #endif // WEBSOCKETPP_MD5_WRAPPER_HPP
