@@ -74,6 +74,7 @@ namespace frame {
 } // namespace frame
 } // namespace websocketpp
 
+#include "common.hpp"
 #include "network_utilities.hpp"
 #include "processors/processor.hpp"
 #include "utf8_validator/utf8_validator.hpp"
