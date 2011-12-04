@@ -8,8 +8,8 @@
 
 namespace utf8_validator {
 
-static const int UTF8_ACCEPT = 0;
-static const int UTF8_REJECT = 1;
+static const unsigned int UTF8_ACCEPT = 0;
+static const unsigned int UTF8_REJECT = 1;
 
 static const uint8_t utf8d[] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
@@ -29,7 +29,7 @@ static const uint8_t utf8d[] = {
 };
 
 uint32_t inline
-decode(uint32_t* state, uint32_t* codep, uint32_t byte) {
+decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
   uint32_t type = utf8d[byte];
 
   *codep = (*state != UTF8_ACCEPT) ?
