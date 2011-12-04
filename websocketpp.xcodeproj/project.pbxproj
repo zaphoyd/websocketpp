@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		B613878F145CA61300ED9B19 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
 		B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B653A715148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
+		B653A716148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
+		B653A719148AB555004D7BD9 /* hybi_header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B653A718148AB555004D7BD9 /* hybi_header.cpp */; };
+		B653A71A148AB555004D7BD9 /* hybi_header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B653A718148AB555004D7BD9 /* hybi_header.cpp */; };
 		B66388551487D74D00DDAE13 /* echo_server_tls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66388451487D71800DDAE13 /* echo_server_tls.cpp */; };
 		B66388561487D76000DDAE13 /* libwebsocketpp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C691434A7A30029A1B1 /* libwebsocketpp.a */; };
 		B66388571487D76E00DDAE13 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
@@ -181,6 +185,8 @@
 		B62A5A6F14774CD5005F9EB0 /* uri.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = src/uri.hpp; sourceTree = "<group>"; };
 		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
+		B653A714148A607D004D7BD9 /* hybi_header.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hybi_header.hpp; sourceTree = "<group>"; };
+		B653A718148AB555004D7BD9 /* hybi_header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hybi_header.cpp; sourceTree = "<group>"; };
 		B66388451487D71800DDAE13 /* echo_server_tls.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = echo_server_tls.cpp; path = examples/echo_server_tls/echo_server_tls.cpp; sourceTree = "<group>"; };
 		B66388461487D71800DDAE13 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server_tls/Makefile; sourceTree = "<group>"; };
 		B663884B1487D73200DDAE13 /* echo_server_tls */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server_tls; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -194,7 +200,6 @@
 		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
-		B6AEB1AA1488652A0091EE0A /* hybi2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi2.hpp; sourceTree = "<group>"; };
 		B6BE76E9144EF53000716A77 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_endpoint.hpp; path = src/websocket_endpoint.hpp; sourceTree = "<group>"; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
 		B6CF18141437C370009295BE /* echo_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client_handler.cpp; sourceTree = "<group>"; };
@@ -372,7 +377,8 @@
 		B62A5A6A147748B2005F9EB0 /* processors */ = {
 			isa = PBXGroup;
 			children = (
-				B6AEB1AA1488652A0091EE0A /* hybi2.hpp */,
+				B653A714148A607D004D7BD9 /* hybi_header.hpp */,
+				B653A718148AB555004D7BD9 /* hybi_header.cpp */,
 				B62A5A6B147748B2005F9EB0 /* hybi.hpp */,
 				B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */,
 				B62A5A6D147748B2005F9EB0 /* processor.hpp */,
@@ -630,6 +636,7 @@
 				B6FE8D06145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 				B66388641487FE6C00DDAE13 /* data.hpp in Headers */,
 				B66388661487FE6C00DDAE13 /* control.hpp in Headers */,
+				B653A715148A607D004D7BD9 /* hybi_header.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -654,6 +661,7 @@
 				B6FE8D07145AFF5F00B32547 /* websocket_constants.hpp in Headers */,
 				B66388651487FE6C00DDAE13 /* data.hpp in Headers */,
 				B66388671487FE6C00DDAE13 /* control.hpp in Headers */,
+				B653A716148A607D004D7BD9 /* hybi_header.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -848,6 +856,7 @@
 				B6DF1C831434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8A1434AC330029A1B1 /* sha1.cpp in Sources */,
 				B6727429148517180029CF3E /* uri.cpp in Sources */,
+				B653A719148AB555004D7BD9 /* hybi_header.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -860,6 +869,7 @@
 				B6DF1C841434ABE20029A1B1 /* base64.cpp in Sources */,
 				B6DF1C8B1434AC330029A1B1 /* sha1.cpp in Sources */,
 				B672742A148517180029CF3E /* uri.cpp in Sources */,
+				B653A71A148AB555004D7BD9 /* hybi_header.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

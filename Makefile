@@ -28,7 +28,7 @@
 #  It's authors were Jonathan Wallace and Bernhard Fluehmann.
 
 
-objects = network_utilities.o sha1.o base64.o md5.o uri.o
+objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o
 
 BOOST_LIB_PATH		?= /usr/local/lib
 BOOST_INCLUDE_PATH ?= /usr/local/include
@@ -143,6 +143,9 @@ $(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp
 	$(CXX) $< -o $@ $(CXXFLAGS)
 	
 $(objdir)/base64.o: $(srcdir)/base64/base64.cpp
+	$(CXX) $< -o $@ $(CXXFLAGS)
+
+$(objdir)/hybi_header.o: $(srcdir)/processors/hybi_header.cpp
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 $(objdir)/md5.o: $(srcdir)/md5/md5.c
