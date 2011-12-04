@@ -25,15 +25,17 @@
  * 
  */
 
-#ifndef WEBSOCKET_HYBI_LEGACY_PROCESSOR_HPP
-#define WEBSOCKET_HYBI_LEGACY_PROCESSOR_HPP
+#ifndef WEBSOCKET_PROCESSOR_HYBI_LEGACY_HPP
+#define WEBSOCKET_PROCESSOR_HYBI_LEGACY_HPP
 
-#include "interfaces/protocol.hpp"
+#include "processor.hpp"
 
-#include "network_utilities.hpp"
+#include "../md5/md5.h"
+#include "../md5/md5.hpp"
+#include "../network_utilities.hpp"
 
 namespace websocketpp {
-namespace protocol {
+namespace processor {
 
 namespace hybi_legacy_state {
 	enum value {
@@ -42,10 +44,14 @@ namespace hybi_legacy_state {
 		DONE = 2
 	};
 }
-	
-class hybi_legacy_processor : public processor {
+
+template <class connection_type>
+class hybi_legacy : public processor_base {
 public:
-	hybi_legacy_processor(bool secure) : m_secure(secure),m_state(hybi_legacy_state::INIT) {
+	hybi_legacy(connection_type &connection) 
+	 : m_connection(connection),
+	   m_state(hybi_legacy_state::INIT) 
+	{
 		reset();
 	}
 	
@@ -68,8 +74,7 @@ public:
 		memcpy(&key_final[8],request.header("Sec-WebSocket-Key3").c_str(),8);
 		
 		// md5
-		md5_hash_string(key_final,m_digest);
-		m_digest[16] = 0;
+		m_key3 = md5_hash_string(key_final);
 		
 		response.add_header("Upgrade","websocket");
 		response.add_header("Connection","Upgrade");
@@ -86,8 +91,8 @@ public:
 		// set a different one.
 		if (response.header("Sec-WebSocket-Location") == "") {
 			// TODO: extract from host header rather than hard code
-			ws_uri uri = get_uri(request);
-			response.add_header("Sec-WebSocket-Location",uri.str());
+			uri_ptr uri = get_uri(request);
+			response.add_header("Sec-WebSocket-Location",uri->str());
 		}
 	}
 	
@@ -95,67 +100,29 @@ public:
 		return request.header("Origin");
 	}
 	
-	ws_uri get_uri(const http::parser::request& request) const {
-		ws_uri uri;
-		
-		uri.secure = m_secure;
-		
-		
+	uri_ptr get_uri(const http::parser::request& request) const {
 		std::string h = request.header("Host");
 		
 		size_t found = h.find(":");
 		if (found == std::string::npos) {
-			uri.host = h;
-			uri.port = (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+			return uri_ptr(new uri(m_connection.is_secure(),h,request.uri()));
 		} else {
-			uint16_t p = atoi(h.substr(found+1).c_str());
-			
-			if (p == 0) {
-				throw(http::exception("Could not determine request uri. Check host header.",http::status_code::BAD_REQUEST));
-			} else {
-				uri.host = h.substr(0,found);
-				uri.port = p;
-			}
+			return uri_ptr(new uri(m_connection.is_secure(),
+								   h.substr(0,found),
+								   h.substr(found+1),
+								   request.uri()));
 		}
 		
 		// TODO: check if get_uri is a full uri
-		uri.resource = request.uri();
-		
-		std::cout << "parsed uri: " << uri.str() << std::endl;
-		
-		return uri;
 	}
 	
 	void consume(std::istream& s) {
-		unsigned char c;
+		//unsigned char c;
 		while (s.good() && m_state != hybi_legacy_state::DONE) {
-			c = s.get();
-			if (s.good()) {
-				process(c);
-			}
-		}
-	}
-	
-	void process(unsigned char c) {
-		if (m_state == hybi_legacy_state::INIT) {
-			// we are looking for a 0x00
-			if (c == 0x00) {
-				// start a message
-				
-				m_state = hybi_legacy_state::READ;
-			} else {
-				// TODO: ignore or error
-				throw session::exception("invalid character read",session::error::PROTOCOL_VIOLATION);
-			}
-		} else if (m_state == hybi_legacy_state::READ) {
-			// TODO: utf8 validation
-			
-			if (c == 0xFF) {
-				// end
-				m_state = hybi_legacy_state::DONE;
-			} else {
-				m_utf8_payload->push_back(c);
-			}
+			//c = s.get();
+			//if (s.good()) {
+				process(s);
+			//}
 		}
 	}
 	
@@ -163,50 +130,79 @@ public:
 		return m_state == hybi_legacy_state::DONE;
 	}
 	
+	// legacy hybi has no control messages.
+	bool is_control() const {
+		return false;
+	}
+	
+	message::data_ptr get_data_message() {
+		message::data_ptr p = m_data_message;
+		m_data_message.reset();
+		return p;
+	}
+	
+	message::control_ptr get_control_message() {
+		throw "Hybi legacy has no control messages.";
+	}
+	
+	void process(std::istream& input) {
+		if (m_state == hybi_legacy_state::INIT) {
+			// we are looking for a 0x00
+			if (input.peek() == 0x00) {
+				// start a message
+				input.ignore();
+				
+				m_state = hybi_legacy_state::READ;
+				
+				m_data_message = m_connection.get_data_message();
+				
+				if (!m_data_message) {
+					throw processor::exception("Out of data messages",processor::error::OUT_OF_MESSAGES);
+				}
+				
+				m_data_message->reset(frame::opcode::TEXT);
+			} else {
+				input.ignore();
+				// TODO: ignore or error
+				//std::stringstream foo;
+				
+				//foo << "invalid character read: |" << input.peek() << "|";
+				
+				std::cout << "invalid character read: |" << input.peek() << "|" << std::endl;
+				
+				//throw processor::exception(foo.str(),processor::error::PROTOCOL_VIOLATION);
+			}
+		} else if (m_state == hybi_legacy_state::READ) {
+			if (input.peek() == 0xFF) {
+				// end
+				input.ignore();
+				
+				m_state = hybi_legacy_state::DONE;
+			} else {
+				if (m_data_message) {
+					m_data_message->process_payload(input,1);
+				}
+			}
+		}
+	}
+	
 	void reset() {
 		m_state = hybi_legacy_state::INIT;
-		m_utf8_payload = utf8_string_ptr(new utf8_string());
+		if (m_data_message) {
+			m_connection.recycle(m_data_message);
+		}
+		m_data_message.reset();
 	}
 	
 	uint64_t get_bytes_needed() const {
 		return 1;
 	}
 	
-	frame::opcode::value get_opcode() const {
-		return frame::opcode::TEXT;
-	}
-	
 	std::string get_key3() const {
-		return std::string(m_digest);
+		return m_key3;
 	}
 	
-	utf8_string_ptr get_utf8_payload() const {
-		if (get_opcode() != frame::opcode::TEXT) {
-			throw "opcode doesn't match";
-		}
-		
-		if (!ready()) {
-			throw "not ready";
-		}
-		
-		return m_utf8_payload;
-	}
-	
-	binary_string_ptr get_binary_payload() const {
-		// TODO: opcode doesn't match
-		throw "opcode doesn't match";
-		return binary_string_ptr();
-	}
-	
-	// legacy hybi doesn't have close codes
-	close::status::value get_close_code() const {
-		return close::status::NO_STATUS;
-	}
-	
-	utf8_string get_close_reason() const {
-		return "";
-	}
-	
+	// TODO: to factor away
 	binary_string_ptr prepare_frame(frame::opcode::value opcode,
 									bool mask,
 									const binary_string& payload)  {
@@ -283,18 +279,14 @@ private:
 		}
 	}
 	
-	bool						m_secure;
-	
+	connection_type&			m_connection;
 	hybi_legacy_state::value	m_state;
-	frame::opcode::value		m_opcode;
 	
-	utf8_string_ptr				m_utf8_payload;
+	message::data_ptr			m_data_message;
 	
-	char						m_digest[17];
+	std::string					m_key3;
 };
-
-typedef boost::shared_ptr<hybi_legacy_processor> hybi_legacy_processor_ptr;
 	
-}
-}
-#endif // WEBSOCKET_HYBI_LEGACY_PROCESSOR_HPP
+} // processor
+} // websocketpp
+#endif // WEBSOCKET_PROCESSOR_HYBI_LEGACY_HPP
