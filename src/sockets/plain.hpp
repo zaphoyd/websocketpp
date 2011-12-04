@@ -71,10 +71,14 @@ public:
 	protected:
 		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
 		
-		void init() {}
+		void init() {
+			
+		}
 		
 		void async_init(socket_init_callback callback) {
 			// TODO: should this use post()?
+			m_socket.set_option(boost::asio::ip::tcp::no_delay(true));
+			
 			callback(boost::system::error_code());
 		}
 		
