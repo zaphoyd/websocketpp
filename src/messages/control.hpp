@@ -31,6 +31,7 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 
+#include "../processors/processor.hpp"
 #include "../websocket_frame.hpp"
 #include "../utf8_validator/utf8_validator.hpp"
 
@@ -40,22 +41,24 @@ namespace message {
 class control {
 public:
     control() {
-        m_payload.reserve(SIZE_INIT);
+        m_payload.reserve(PAYLOAD_SIZE_INIT);
     }
     
 	frame::opcode::value get_opcode() const {
         return m_opcode;
     };
 	
+	const std::string& get_payload() const {
+		return m_payload;
+	}
+	
     uint64_t process_payload(std::istream& input,uint64_t size) {
         char c;
-        char *masking_key = reinterpret_cast<char *>(&m_masking_key);
         const uint64_t new_size = m_payload.size() + size;
         uint64_t i;
 		
-        if (new_size > SIZE_MAX) {
-            // TODO: real exception
-            throw "message too big exception";
+        if (new_size > PAYLOAD_SIZE_MAX) {
+            throw processor::exception("Message payload was too large.",processor::error::MESSAGE_TOO_BIG);
         }
         
         for (i = 0; i < size; ++i) {
@@ -65,18 +68,13 @@ public:
                 break;
             } else {
                 // istream read error? throw?
-                throw "TODO: fix";
+                 throw processor::exception("istream read error",processor::error::FATAL_ERROR);
             }
             if (input.good()) {
                 // process c
-                if (m_masking_key) {
-                    c = c ^ masking_key[(m_masking_index++)%4];
-                }
-				
-				/*if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>(c))) {
-                    // TODO
-                    throw "bad utf8";
-                }*/
+                if (m_masking_index >= 0) {
+					c = c ^ m_masking_key[(m_masking_index++)%4];
+				}
 				
                 // add c to payload 
                 m_payload.push_back(c);
@@ -84,7 +82,7 @@ public:
                 break;
             } else {
                 // istream read error? throw?
-                throw "TODO: fix";
+                throw processor::exception("istream read error",processor::error::FATAL_ERROR);
             }
         }
         
@@ -92,21 +90,86 @@ public:
         return i;
     }
     
+	void complete() {
+		if (m_opcode == frame::opcode::CLOSE) {
+			if (m_payload.size() == 1) {
+				throw processor::exception("Single byte close code",processor::error::PROTOCOL_VIOLATION);
+			} else if (m_payload.size() >= 2) {
+				close::status::value code = close::status::value(get_raw_close_code());
+				
+				if (close::status::invalid(code)) {
+					throw processor::exception("Close code is not allowed on the wire.",processor::error::PROTOCOL_VIOLATION);
+				} else if (close::status::reserved(code)) {
+					throw processor::exception("Close code is reserved.",processor::error::PROTOCOL_VIOLATION);
+				}
+				
+			}
+			if (m_payload.size() > 2) {
+				if (!m_validator.decode(m_payload.begin()+2,m_payload.end())) {
+					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
+				}
+				if (!m_validator.complete()) {
+					throw processor::exception("Invalid UTF8",processor::error::PAYLOAD_VIOLATION);
+				}
+			}
+		}
+	}
+	
     void reset(frame::opcode::value opcode, uint32_t masking_key) {
         m_opcode = opcode;
-        m_masking_key = masking_key;
-        m_masking_index = 0;
+        set_masking_key(masking_key);
         m_payload.resize(0);
 		m_validator.reset();
     }
+	
+	close::status::value get_close_code() const {
+		if (m_payload.size() == 0) {
+			return close::status::NO_STATUS;
+		} else {
+			return close::status::value(get_raw_close_code());
+		}
+	}
+	
+	std::string get_close_reason() const {
+		if (m_payload.size() > 2) {
+			return m_payload.substr(2);
+		} else {
+			return std::string();
+		}
+	}
+	
+	void set_masking_key(int32_t key) {
+		*reinterpret_cast<int32_t*>(m_masking_key) = key;
+		m_masking_index = (key == 0 ? -1 : 0);
+	}
 private:
-    static const uint64_t SIZE_INIT = 128; // 128B
-    static const uint64_t SIZE_MAX = 128; // 128B
+	uint16_t get_raw_close_code() const {
+		if (m_payload.size() <= 1) {
+			throw processor::exception("get_raw_close_code called with invalid size",processor::error::FATAL_ERROR);
+		}
+		
+		char val[2];
+		
+		val[0] = m_payload[0];
+		val[1] = m_payload[1];
+		
+		return ntohs(*(reinterpret_cast<uint16_t*>(&val[0])));
+	}
+	
+    static const uint64_t PAYLOAD_SIZE_INIT = 128; // 128B
+    static const uint64_t PAYLOAD_SIZE_MAX = 128; // 128B
     
+	// Message state
 	frame::opcode::value		m_opcode;
+	
+	// UTF8 validation state
     utf8_validator::validator	m_validator;
-    uint32_t                    m_masking_key;
+	
+	// Masking state
+	unsigned char				m_masking_key[4];
     int                         m_masking_index;
+	
+	// Message payload
     std::string					m_payload;
 };
 
