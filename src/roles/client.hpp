@@ -42,7 +42,21 @@ namespace role {
 template <class endpoint>
 class client {
 public:
-	// handler interface callback class
+	// Connection specific details
+	template <typename connection_type>
+	class connection {
+	public:
+		typedef connection<connection_type> type;
+		typedef endpoint endpoint_type;
+        
+        connection(endpoint& e) : m_endpoint(e) {}
+		
+	private:
+		endpoint&           m_endpoint;
+        connection_type&    m_connection;
+	};
+    
+    // handler interface callback class
 	class handler {
 		virtual void on_action() = 0;
 	};
@@ -63,15 +77,7 @@ public:
 		static_cast< endpoint_type* >(this)->start();
 	}
 	
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		connection(server<endpoint_type>& e) {}
-		
-	private:
-		
-	};
+	
 protected:
 	bool is_server() {
 		return false;

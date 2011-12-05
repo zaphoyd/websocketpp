@@ -32,6 +32,7 @@
 
 typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> plain_endpoint_type;
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+typedef plain_endpoint_type::connection_ptr connection_ptr;
 
 class echo_client_handler : public plain_endpoint_type::handler {
 public:
@@ -88,15 +89,17 @@ int main(int argc, char* argv[]) {
 		uri = argv[1];
 	}*/
 	
-	echo_client_handler_ptr c(new echo_client_handler());
-	
 	try {
-		plain_handler_ptr h(new echo_client_handler());
-		plain_endpoint_type e(h);
+		plain_handler_ptr handler(new echo_client_handler());
+        connection_ptr connection;
+		plain_endpoint_type endpoint(handler);
 		
-		e.connect("ws://localhost:9001/getCaseCount");
+		connection = endpoint.connect("ws://localhost:9001/getCaseCount");
 		
-		boost::asio::io_service io_service;
+        
+        
+        
+		/*boost::asio::io_service io_service;
 		
 		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
 		
@@ -104,27 +107,16 @@ int main(int argc, char* argv[]) {
 		client->set_header("User Agent","WebSocket++/2011-10-27");
 		
 		client->connect("ws://localhost:9001/getCaseCount");
-		io_service.run();
+		io_service.run();*/
 		
 		std::cout << "case count: " << c->m_case_count << std::endl;
 		
 		for (int i = 1; i <= c->m_case_count; i++) {
-			io_service.reset();
-						
-			client->set_alog_level(websocketpp::ALOG_OFF);
-			client->set_elog_level(websocketpp::LOG_OFF);
-			
-			client->init();
-			client->set_header("User Agent","WebSocket++/2011-10-27");
-			
-			
 			std::stringstream url;
 			
 			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
-			
-			client->connect(url.str());
-			
-			io_service.run();
+						
+            connection = endpoint.connect(url.str());
 		}
 		
 		std::cout << "done" << std::endl;
