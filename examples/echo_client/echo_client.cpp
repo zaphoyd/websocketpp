@@ -25,17 +25,59 @@
  * 
  */
 
-#include "echo_client_handler.hpp"
-
-#include "../../src/websocketpp.hpp"
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include "../../src/endpoint.hpp"
+#include "../../src/roles/client.hpp"
 
 #include <iostream>
 
-using boost::asio::ip::tcp;
-using namespace websocketecho;
+typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> plain_endpoint_type;
+typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+
+class echo_client_handler : public plain_endpoint_type::handler {
+public:
+	typedef echo_client_handler type;
+	typedef plain_endpoint_type::connection_ptr connection_ptr;
+	
+	void validate(connection_ptr connection) {
+		//std::cout << "state: " << connection->get_state() << std::endl;
+	}
+	
+	void on_open(connection_ptr connection) {
+		//std::cout << "connection opened" << std::endl;
+	}
+	
+	void on_close(connection_ptr connection) {
+		//std::cout << "connection closed" << std::endl;
+	}
+	
+	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
+		//std::cout << "got message: " << *msg << std::endl;
+		connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+		
+		
+		
+		if (connection->get_resource() == "/getCaseCount") {
+			std::cout << "Detected " << msg.get_payload() << " test cases." << std::endl;
+			m_case_count = atoi(msg.get_payload().c_str());
+		} else {
+			connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+		}
+		
+		
+		connection->recycle(msg);
+	}
+	
+	void http(connection_ptr connection) {
+		connection->set_body("HTTP Response!!");
+	}
+	
+	void on_fail(connection_ptr connection) {
+		std::cout << "connection failed" << std::endl;
+	}
+	
+	int m_case_count;
+};
+
 
 int main(int argc, char* argv[]) {
 	std::string uri;
@@ -49,6 +91,11 @@ int main(int argc, char* argv[]) {
 	echo_client_handler_ptr c(new echo_client_handler());
 	
 	try {
+		plain_handler_ptr h(new echo_client_handler());
+		plain_endpoint_type e(h);
+		
+		e.connect("ws://localhost:9001/getCaseCount");
+		
 		boost::asio::io_service io_service;
 		
 		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
