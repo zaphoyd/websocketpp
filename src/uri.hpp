@@ -65,6 +65,7 @@ public:
     bool get_secure() const;
     std::string get_host() const;
     uint16_t get_port() const;
+	std::string get_port_str() const;
     std::string get_resource() const;
     std::string str() const;
     

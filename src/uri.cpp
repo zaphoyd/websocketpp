@@ -122,6 +122,12 @@ uint16_t uri::get_port() const {
 	return m_port;
 }
 
+std::string uri::get_port_str() const {
+	std::stringstream p;
+	p << m_port;
+	return p.str();
+}
+
 std::string uri::get_resource() const {
 	return m_resource;
 }
