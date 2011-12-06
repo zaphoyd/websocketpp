@@ -171,6 +171,24 @@
 		B663885F1487FE6C00DDAE13 /* data.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = data.hpp; path = src/messages/data.hpp; sourceTree = "<group>"; };
 		B66388601487FE6C00DDAE13 /* control.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = control.hpp; path = src/messages/control.hpp; sourceTree = "<group>"; };
 		B6727428148517180029CF3E /* uri.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uri.cpp; path = src/uri.cpp; sourceTree = "<group>"; };
+		B6732435148E543000FC2B04 /* connection_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = connection_handler.hpp; sourceTree = "<group>"; };
+		B6732436148E543000FC2B04 /* frame_parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = frame_parser.hpp; sourceTree = "<group>"; };
+		B6732437148E543000FC2B04 /* session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = session.hpp; sourceTree = "<group>"; };
+		B6732438148E543000FC2B04 /* policy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = policy.cpp; sourceTree = "<group>"; };
+		B6732439148E543000FC2B04 /* session_handler_interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = session_handler_interface.hpp; sourceTree = "<group>"; };
+		B673243A148E543000FC2B04 /* websocket_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_client.cpp; sourceTree = "<group>"; };
+		B673243B148E543000FC2B04 /* websocket_client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_client.hpp; sourceTree = "<group>"; };
+		B673243C148E543000FC2B04 /* websocket_client_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_client_session.cpp; sourceTree = "<group>"; };
+		B673243D148E543000FC2B04 /* websocket_client_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_client_session.hpp; sourceTree = "<group>"; };
+		B673243E148E543000FC2B04 /* websocket_connection_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_connection_handler.hpp; sourceTree = "<group>"; };
+		B673243F148E543000FC2B04 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_endpoint.hpp; sourceTree = "<group>"; };
+		B6732440148E543000FC2B04 /* websocket_frame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_frame.cpp; sourceTree = "<group>"; };
+		B6732441148E543000FC2B04 /* websocket_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_server.cpp; sourceTree = "<group>"; };
+		B6732442148E543000FC2B04 /* websocket_server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_server.hpp; sourceTree = "<group>"; };
+		B6732443148E543000FC2B04 /* websocket_server_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_server_session.cpp; sourceTree = "<group>"; };
+		B6732444148E543000FC2B04 /* websocket_server_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_server_session.hpp; sourceTree = "<group>"; };
+		B6732445148E543000FC2B04 /* websocket_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_session.cpp; sourceTree = "<group>"; };
+		B6732446148E543000FC2B04 /* websocket_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_session.hpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -355,6 +373,40 @@
 			name = messages;
 			sourceTree = "<group>";
 		};
+		B6732433148E543000FC2B04 /* legacy */ = {
+			isa = PBXGroup;
+			children = (
+				B6732434148E543000FC2B04 /* interfaces */,
+				B6732438148E543000FC2B04 /* policy.cpp */,
+				B6732439148E543000FC2B04 /* session_handler_interface.hpp */,
+				B673243A148E543000FC2B04 /* websocket_client.cpp */,
+				B673243B148E543000FC2B04 /* websocket_client.hpp */,
+				B673243C148E543000FC2B04 /* websocket_client_session.cpp */,
+				B673243D148E543000FC2B04 /* websocket_client_session.hpp */,
+				B673243E148E543000FC2B04 /* websocket_connection_handler.hpp */,
+				B673243F148E543000FC2B04 /* websocket_endpoint.hpp */,
+				B6732440148E543000FC2B04 /* websocket_frame.cpp */,
+				B6732441148E543000FC2B04 /* websocket_server.cpp */,
+				B6732442148E543000FC2B04 /* websocket_server.hpp */,
+				B6732443148E543000FC2B04 /* websocket_server_session.cpp */,
+				B6732444148E543000FC2B04 /* websocket_server_session.hpp */,
+				B6732445148E543000FC2B04 /* websocket_session.cpp */,
+				B6732446148E543000FC2B04 /* websocket_session.hpp */,
+			);
+			name = legacy;
+			path = src/legacy;
+			sourceTree = "<group>";
+		};
+		B6732434148E543000FC2B04 /* interfaces */ = {
+			isa = PBXGroup;
+			children = (
+				B6732435148E543000FC2B04 /* connection_handler.hpp */,
+				B6732436148E543000FC2B04 /* frame_parser.hpp */,
+				B6732437148E543000FC2B04 /* session.hpp */,
+			);
+			path = interfaces;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -404,6 +456,7 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B6732433148E543000FC2B04 /* legacy */,
 				B62A5A541473EBB9005F9EB0 /* roles */,
 				B62A5A551473EBC4005F9EB0 /* sockets */,
 				B61387B51462B34400ED9B19 /* logger */,

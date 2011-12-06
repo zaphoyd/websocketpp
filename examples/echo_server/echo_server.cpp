@@ -38,18 +38,6 @@ public:
 	typedef echo_server_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
-	void validate(connection_ptr connection) {
-		//std::cout << "state: " << connection->get_state() << std::endl;
-	}
-	
-	void on_open(connection_ptr connection) {
-		//std::cout << "connection opened" << std::endl;
-	}
-	
-	void on_close(connection_ptr connection) {
-		//std::cout << "connection closed" << std::endl;
-	}
-	
 	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
 		//std::cout << "got message: " << *msg << std::endl;
 		connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));

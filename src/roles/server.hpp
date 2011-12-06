@@ -389,18 +389,16 @@ public:
 	// handler interface callback class
 	class handler_interface {
 	public:
-		// Required
-		virtual void validate(connection_ptr connection) = 0;
-		virtual void on_open(connection_ptr connection) = 0;
-		virtual void on_close(connection_ptr connection) = 0;
+		virtual void validate(connection_ptr connection) {};
+		virtual void on_open(connection_ptr connection) {};
+		virtual void on_close(connection_ptr connection) {};
+		virtual void on_fail(connection_ptr connection) {}
 		
-		virtual void on_message(connection_ptr connection,message::data_ptr) = 0;
+		virtual void on_message(connection_ptr connection,message::data_ptr) {};
 		
-		// Optional
 		virtual bool on_ping(connection_ptr connection,std::string) {return true;}
 		virtual void on_pong(connection_ptr connection,std::string) {}
 		virtual void http(connection_ptr connection) {}
-		virtual void on_fail(connection_ptr connection) {}
 	};
 	
 	server(boost::asio::io_service& m) 
