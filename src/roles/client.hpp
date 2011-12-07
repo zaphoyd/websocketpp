@@ -61,13 +61,20 @@ public:
         int get_version() const {
 			return m_version;
 		}
-		/*std::string get_request_header(const std::string& key) const {
-			return m_request.header(key);
-		}*/
+		
 		std::string get_origin() const {
 			return m_origin;
 		}
         
+		// not sure when valid
+		std::string get_request_header(const std::string& key) const {
+			return m_request.header(key);
+		}
+		std::string get_response_header(const std::string& key) const {
+			return m_response.header(key);
+		}
+		
+		
         // Information about the requested URI
 		// valid only after URIs are loaded
 		// TODO: check m_uri for NULLness

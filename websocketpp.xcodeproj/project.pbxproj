@@ -31,6 +31,19 @@
 		B6727429148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
 		B672742A148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
 		B672742D148531250029CF3E /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
+		B6732462148FAF0000FC2B04 /* fuzzing_server_tls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6732451148F973D00FC2B04 /* fuzzing_server_tls.cpp */; };
+		B6732463148FAF0A00FC2B04 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B6732464148FAF1900FC2B04 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B6732465148FAF1900FC2B04 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
+		B6732466148FAF1900FC2B04 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
+		B6732467148FAF2C00FC2B04 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
+		B6732468148FAF3500FC2B04 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
+		B673247B148FB12400FC2B04 /* fuzzing_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B673246C148FB0F000FC2B04 /* fuzzing_client.cpp */; };
+		B673247C148FB12C00FC2B04 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B673247D148FB13900FC2B04 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B673247E148FB13900FC2B04 /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
+		B673247F148FB13900FC2B04 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
+		B6732480148FB13900FC2B04 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
 		B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828875143745DA002BA48B /* chat_client_handler.cpp */; };
 		B68288881437460E002BA48B /* chat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828877143745DA002BA48B /* chat_client.cpp */; };
 		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -90,6 +103,24 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		B66388491487D73200DDAE13 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		B6732456148FAEEB00FC2B04 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		B673246F148FB0FC00FC2B04 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -191,6 +222,13 @@
 		B6732444148E543000FC2B04 /* websocket_server_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_server_session.hpp; sourceTree = "<group>"; };
 		B6732445148E543000FC2B04 /* websocket_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_session.cpp; sourceTree = "<group>"; };
 		B6732446148E543000FC2B04 /* websocket_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_session.hpp; sourceTree = "<group>"; };
+		B6732450148F973D00FC2B04 /* echo_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = echo_client.html; sourceTree = "<group>"; };
+		B6732451148F973D00FC2B04 /* fuzzing_server_tls.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fuzzing_server_tls.cpp; sourceTree = "<group>"; };
+		B6732452148F973D00FC2B04 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B6732458148FAEEB00FC2B04 /* fuzzing_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fuzzing_server; sourceTree = BUILT_PRODUCTS_DIR; };
+		B673246B148FB0C400FC2B04 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B673246C148FB0F000FC2B04 /* fuzzing_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fuzzing_client.cpp; sourceTree = "<group>"; };
+		B6732471148FB0FC00FC2B04 /* fuzzing_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fuzzing_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -245,6 +283,31 @@
 				B66388581487D76E00DDAE13 /* libboost_regex.dylib in Frameworks */,
 				B66388591487D76E00DDAE13 /* libboost_system.dylib in Frameworks */,
 				B66388561487D76000DDAE13 /* libwebsocketpp.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6732455148FAEEB00FC2B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6732468148FAF3500FC2B04 /* libcrypto.dylib in Frameworks */,
+				B6732467148FAF2C00FC2B04 /* libssl.dylib in Frameworks */,
+				B6732464148FAF1900FC2B04 /* libboost_date_time.dylib in Frameworks */,
+				B6732465148FAF1900FC2B04 /* libboost_regex.dylib in Frameworks */,
+				B6732466148FAF1900FC2B04 /* libboost_system.dylib in Frameworks */,
+				B6732463148FAF0A00FC2B04 /* libwebsocketpp.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B673246E148FB0FC00FC2B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B673247D148FB13900FC2B04 /* libboost_date_time.dylib in Frameworks */,
+				B673247E148FB13900FC2B04 /* libboost_random.dylib in Frameworks */,
+				B673247F148FB13900FC2B04 /* libboost_regex.dylib in Frameworks */,
+				B6732480148FB13900FC2B04 /* libboost_system.dylib in Frameworks */,
+				B673247C148FB12C00FC2B04 /* libwebsocketpp.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,6 +475,27 @@
 			path = interfaces;
 			sourceTree = "<group>";
 		};
+		B673244F148F973D00FC2B04 /* fuzzing_server_tls */ = {
+			isa = PBXGroup;
+			children = (
+				B6732450148F973D00FC2B04 /* echo_client.html */,
+				B6732451148F973D00FC2B04 /* fuzzing_server_tls.cpp */,
+				B6732452148F973D00FC2B04 /* Makefile */,
+			);
+			name = fuzzing_server_tls;
+			path = examples/fuzzing_server_tls;
+			sourceTree = "<group>";
+		};
+		B6732469148FB0C400FC2B04 /* fuzzing_client */ = {
+			isa = PBXGroup;
+			children = (
+				B673246C148FB0F000FC2B04 /* fuzzing_client.cpp */,
+				B673246B148FB0C400FC2B04 /* Makefile */,
+			);
+			name = fuzzing_client;
+			path = examples/fuzzing_client;
+			sourceTree = "<group>";
+		};
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
@@ -454,6 +538,8 @@
 				B6CF181C1437C397009295BE /* echo_client */,
 				B6FE8D4F14730AE900B32547 /* Policy Test */,
 				B663884B1487D73200DDAE13 /* echo_server_tls */,
+				B6732458148FAEEB00FC2B04 /* fuzzing_server */,
+				B6732471148FB0FC00FC2B04 /* fuzzing_client */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -529,6 +615,8 @@
 		B6DF1CC61435ED380029A1B1 /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				B6732469148FB0C400FC2B04 /* fuzzing_client */,
+				B673244F148F973D00FC2B04 /* fuzzing_server_tls */,
 				B6CF18121437C370009295BE /* echo_client */,
 				B6DF1CC91435ED460029A1B1 /* chat_server */,
 				B6DF1CC81435ED440029A1B1 /* chat_client */,
@@ -656,6 +744,40 @@
 			name = echo_server_tls;
 			productName = echo_server_tls;
 			productReference = B663884B1487D73200DDAE13 /* echo_server_tls */;
+			productType = "com.apple.product-type.tool";
+		};
+		B6732457148FAEEB00FC2B04 /* fuzzing_server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B673245F148FAEEC00FC2B04 /* Build configuration list for PBXNativeTarget "fuzzing_server" */;
+			buildPhases = (
+				B6732454148FAEEB00FC2B04 /* Sources */,
+				B6732455148FAEEB00FC2B04 /* Frameworks */,
+				B6732456148FAEEB00FC2B04 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fuzzing_server;
+			productName = fuzzing_server;
+			productReference = B6732458148FAEEB00FC2B04 /* fuzzing_server */;
+			productType = "com.apple.product-type.tool";
+		};
+		B6732470148FB0FC00FC2B04 /* fuzzing_client */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6732478148FB0FC00FC2B04 /* Build configuration list for PBXNativeTarget "fuzzing_client" */;
+			buildPhases = (
+				B673246D148FB0FC00FC2B04 /* Sources */,
+				B673246E148FB0FC00FC2B04 /* Frameworks */,
+				B673246F148FB0FC00FC2B04 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fuzzing_client;
+			productName = fuzzing_client;
+			productReference = B6732471148FB0FC00FC2B04 /* fuzzing_client */;
 			productType = "com.apple.product-type.tool";
 		};
 		B682887C143745F2002BA48B /* chat_client */ = {
@@ -789,6 +911,8 @@
 				B6CF181B1437C397009295BE /* echo_client */,
 				B6FE8D4E14730AE900B32547 /* policy_test */,
 				B663884A1487D73200DDAE13 /* echo_server_tls */,
+				B6732457148FAEEB00FC2B04 /* fuzzing_server */,
+				B6732470148FB0FC00FC2B04 /* fuzzing_client */,
 			);
 		};
 /* End PBXProject section */
@@ -799,6 +923,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				B66388551487D74D00DDAE13 /* echo_server_tls.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6732454148FAEEB00FC2B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6732462148FAF0000FC2B04 /* fuzzing_server_tls.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B673246D148FB0FC00FC2B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B673247B148FB12400FC2B04 /* fuzzing_client.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -900,6 +1040,82 @@
 			name = Debug;
 		};
 		B66388541487D73300DDAE13 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		B6732460148FAEEC00FC2B04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B6732461148FAEEC00FC2B04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		B6732479148FB0FC00FC2B04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B673247A148FB0FC00FC2B04 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -1189,6 +1405,22 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		B673245F148FAEEC00FC2B04 /* Build configuration list for PBXNativeTarget "fuzzing_server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6732460148FAEEC00FC2B04 /* Debug */,
+				B6732461148FAEEC00FC2B04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		B6732478148FB0FC00FC2B04 /* Build configuration list for PBXNativeTarget "fuzzing_client" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6732479148FB0FC00FC2B04 /* Debug */,
+				B673247A148FB0FC00FC2B04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		B6828884143745F2002BA48B /* Build configuration list for PBXNativeTarget "chat_client" */ = {
 			isa = XCConfigurationList;

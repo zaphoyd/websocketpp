@@ -168,6 +168,7 @@ public:
 	}
 	void close(close::status::value code, const utf8_string& reason) {
 		// TODO:
+		send_close(code, reason);
 	}
 	void ping(const binary_string& payload) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,

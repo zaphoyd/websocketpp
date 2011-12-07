@@ -107,6 +107,10 @@ public:
 		
 		// Valid if get_version() returns -1 (ie this is an http connection)
 		void set_body(const std::string& value);
+		
+		int32_t rand() {
+            return 0;
+        }
 	protected:
 		connection(endpoint& e)
         : m_endpoint(e),
