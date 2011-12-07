@@ -139,9 +139,9 @@ public:
 	void send(const utf8_string& payload,bool binary = false) {
 		binary_string_ptr msg;
 		if (binary) {
-			msg = m_processor->prepare_frame(frame::opcode::BINARY,false,payload);
+			msg = m_processor->prepare_frame(frame::opcode::BINARY,!m_endpoint.is_server(),payload);
 		} else {
-			 msg = m_processor->prepare_frame(frame::opcode::TEXT,false,payload);
+			 msg = m_processor->prepare_frame(frame::opcode::TEXT,!m_endpoint.is_server(),payload);
 		}
 		
 		// TODO: decide which of these to use. Direct function call better
@@ -159,7 +159,7 @@ public:
 	}
 	void send(const binary_string& data) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,
-														 false,data));
+														 !m_endpoint.is_server(),data));
 		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
 				&type::write_message,
@@ -171,7 +171,8 @@ public:
 	}
 	void ping(const binary_string& payload) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,
-														 false,payload));
+														 !m_endpoint.is_server(),
+														 payload));
 		
 		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
@@ -181,7 +182,7 @@ public:
 	}
 	void pong(const binary_string& payload) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,
-														 false,payload));
+														 !m_endpoint.is_server(),payload));
 		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
 				&type::write_message,
@@ -380,7 +381,7 @@ protected:
 				
 				if (response) {
 					// send response ping
-					write_message(m_processor->prepare_frame(frame::opcode::PONG,false,msg->get_payload()));
+					write_message(m_processor->prepare_frame(frame::opcode::PONG,!m_endpoint.is_server(),msg->get_payload()));
 				}
 				break;
 			case frame::opcode::PONG:
@@ -454,7 +455,7 @@ protected:
 		
 		
 		write_message(m_processor->prepare_close_frame(m_local_close_code,
-													   false,
+													   !m_endpoint.is_server(),
 													   m_local_close_reason));
 		m_write_state = INTURRUPT;
 	}
@@ -491,7 +492,7 @@ protected:
 		
 		
 		write_message(m_processor->prepare_close_frame(m_local_close_code,
-													   false,
+													   !m_endpoint.is_server(),
 													   m_local_close_reason));
 		m_write_state = INTURRUPT;
 	}

@@ -213,12 +213,14 @@ public:
 			std::stringstream	ss(response);
 			std::string			str_val;
 			int					int_val;
+			char				char_val[256];
 			
 			ss >> str_val;
 			set_version(str_val);
 			
 			ss >> int_val;
-			set_status(status_code::value(int_val),str_val);
+			ss.getline(char_val,256);
+			set_status(status_code::value(int_val),std::string(char_val));
 		} else {
 			return false;
 		}

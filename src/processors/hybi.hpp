@@ -356,13 +356,20 @@ public:
 		
 		// TODO: utf8 validation on payload.
 		
+		
+		
 		binary_string_ptr response(new binary_string(0));
+		
 		
 		m_write_frame.reset();
 		m_write_frame.set_opcode(opcode);
 		m_write_frame.set_masked(mask);
+		
 		m_write_frame.set_fin(true);
 		m_write_frame.set_payload(payload);
+		
+		
+		m_write_frame.process_payload();
 		
 		// TODO
 		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
@@ -395,6 +402,8 @@ public:
 		m_write_frame.set_fin(true);
 		m_write_frame.set_payload(payload);
 		
+		m_write_frame.process_payload();
+		
 		// TODO
 		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
 		
@@ -417,6 +426,8 @@ public:
 		m_write_frame.set_masked(mask);
 		m_write_frame.set_fin(true);
 		m_write_frame.set_status(code,reason);
+		
+		m_write_frame.process_payload();
 		
 		// TODO
 		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());

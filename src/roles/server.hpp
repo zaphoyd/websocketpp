@@ -419,7 +419,7 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::write_response() {
     m_response.set_version("HTTP/1.1");
     
-    if (m_response.status_code() == http::status_code::SWITCHING_PROTOCOLS) {
+    if (m_response.get_status_code() == http::status_code::SWITCHING_PROTOCOLS) {
         // websocket response
         m_connection.m_processor->handshake_response(m_request,m_response);
         
@@ -470,7 +470,7 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
     
     log_open_result();
     
-    if (m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
+    if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) {
         if (m_version == -1) {
             // if this was not a websocket connection, we have written 
             // the expected response and the connection can be closed.
@@ -478,8 +478,8 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
             // this was a websocket connection that ended in an error
             m_endpoint.elog().at(log::elevel::ERROR) 
             << "Handshake ended with HTTP error: " 
-            << m_response.status_code() << " " 
-            << m_response.status_msg() << log::endl;
+            << m_response.get_status_code() << " " 
+            << m_response.get_status_msg() << log::endl;
         }
         m_connection.terminate(true);
         return;
@@ -502,7 +502,7 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     << m_connection.get_raw_socket().remote_endpoint() << " "
     << (m_version == -1 ? "" : version.str())
     << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
-    << " " << m_uri->get_resource() << " " << m_response.status_code() 
+    << " " << m_uri->get_resource() << " " << m_response.get_status_code() 
     << log::endl;
 }
     

@@ -277,10 +277,11 @@ public:
 	}
 	
 	char* get_masking_key() {
-		if (m_state != STATE_READY) {
+		/*if (m_state != STATE_READY) {
+			std::cout << "throw" << std::endl;
 			throw processor::exception("attempted to get masking_key before reading full header");
-		}
-		return m_header[get_header_len()-4];
+		}*/
+		return &m_header[get_header_len()-4];
 	}
 	
 	// get and set header bits
@@ -427,6 +428,8 @@ public:
 			throw processor::exception("control frames can't have large payloads",processor::error::PROTOCOL_VIOLATION);
 		}
 		
+		bool masked = get_masked();
+		
 		if (s <= limits::PAYLOAD_SIZE_BASIC) {
 			m_header[1] = s;
 		} else if (s <= limits::PAYLOAD_SIZE_EXTENDED) {
@@ -441,6 +444,10 @@ public:
 			*reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = htonll(s);
 		} else {
 			throw processor::exception("payload size limit is 63 bits",processor::error::PROTOCOL_VIOLATION);
+		}
+		
+		if (masked) {
+			m_header[1] |= BPB1_MASK;
 		}
 		
 		m_payload.resize(s);
@@ -466,7 +473,13 @@ public:
 		
 		*reinterpret_cast<uint16_t*>(&val[0]) = htons(status);
 		
+		bool masked = get_masked();
+		
 		m_header[1] = message.size()+2;
+		
+		if (masked) {
+			m_header[1] |= BPB1_MASK;
+		}
 		
 		m_payload[0] = val[0];
 		m_payload[1] = val[1];
@@ -570,7 +583,7 @@ public:
 	
 	void process_payload() {
 		if (get_masked()) {
-			char *masking_key = &m_header[get_header_len()-4];
+			char *masking_key = get_masking_key();
 			
 			for (uint64_t i = 0; i < m_payload.size(); i++) {
 				m_payload[i] = (m_payload[i] ^ masking_key[i%4]);
@@ -638,7 +651,7 @@ public:
 	}
 	
 	void generate_masking_key() {
-		*(reinterpret_cast<int32_t *>(&m_header[get_header_len()-4])) = m_rng.gen();
+		*(reinterpret_cast<int32_t *>(&m_header[get_header_len()-4])) = m_rng.rand();
 	}
 	void clear_masking_key() {
 		// this is a no-op as clearing the mask bit also changes the get_header_len

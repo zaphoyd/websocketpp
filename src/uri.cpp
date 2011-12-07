@@ -118,6 +118,17 @@ std::string uri::get_host() const {
 	return m_host;
 }
 
+std::string uri::get_host_port() const {
+	if (m_port == (m_secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT)) {
+		 return m_host;
+	} else {
+		std::stringstream p;
+		p << m_host << ":" << m_port;
+		return p.str();
+	}
+	
+}
+
 uint16_t uri::get_port() const {
 	return m_port;
 }

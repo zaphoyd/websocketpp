@@ -83,30 +83,36 @@ public:
 		uint16_t get_port() const {
 			return m_uri->get_port();
 		}
+		
+		int32_t rand() {
+            return m_endpoint.rand();
+        }
 	protected:
         connection(endpoint& e) 
          : m_endpoint(e),
            m_connection(static_cast< connection_type& >(*this)),
            // TODO: version shouldn't be hardcoded
-           m_version(17) {}
+           m_version(13) {}
 		
         void set_uri(uri_ptr u) {
             m_uri = u;
         }
         
 		void async_init() {
+			m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
+			
 			write_request();
 		}
 		
-        int32_t rand() {
-            return m_endpoint.rand();
-        }
+        
         
 		void write_request();
 		void handle_write_request(const boost::system::error_code& error);
 		void read_response();
 		void handle_read_response(const boost::system::error_code& error,
 								 std::size_t bytes_transferred);
+		
+		void log_open_result();
 	private:
 		endpoint&           m_endpoint;
         connection_type&    m_connection;
@@ -265,7 +271,7 @@ void client<endpoint>::connection<connection_type>::write_request() {
     m_request.add_header("Connection","Upgrade");
     m_request.replace_header("Sec-WebSocket-Version","13");
     
-    m_request.replace_header("Host",m_uri->get_host());
+    m_request.replace_header("Host",m_uri->get_host_port());
     
     if (m_origin != "") {
 		 m_request.replace_header("Origin",m_origin);
@@ -418,7 +424,7 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
     } catch (const http::exception& e) {
         m_endpoint.elog().at(log::elevel::ERROR) 
             << "Error processing server handshake. Server HTTP response: " 
-            << e.m_error_msg << "(" << e.m_error_code 
+            << e.m_error_msg << " (" << e.m_error_code 
             << ") Local error: " << e.what() << log::endl;
         return;
     }
@@ -427,6 +433,20 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
     // start session loop
 }
 
+template <class endpoint>
+template <class connection_type>
+void client<endpoint>::connection<connection_type>::log_open_result() {
+	/*std::stringstream version;
+	version << "v" << m_version << " ";
+	
+	m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
+	<< m_connection.get_raw_socket().remote_endpoint() << " "
+	<< (m_version == -1 ? "" : version.str())
+	<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+	<< " " << m_uri->get_resource() << " " << m_response.get_status_code() 
+	<< log::endl;*/
+}
+	
 } // namespace role
 } // namespace websocketpp
 

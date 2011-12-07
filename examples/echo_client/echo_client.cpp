@@ -39,31 +39,13 @@ public:
 	typedef echo_client_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
-	void validate(connection_ptr connection) {
-		//std::cout << "state: " << connection->get_state() << std::endl;
-	}
-	
-	void on_open(connection_ptr connection) {
-		//std::cout << "connection opened" << std::endl;
-	}
-	
-	void on_close(connection_ptr connection) {
-		//std::cout << "connection closed" << std::endl;
-	}
-	
-	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
-		//std::cout << "got message: " << *msg << std::endl;
-		connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
-		
-		
-		
+	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {		
 		if (connection->get_resource() == "/getCaseCount") {
 			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
 			m_case_count = atoi(msg->get_payload().c_str());
 		} else {
 			connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
 		}
-		
 		
 		connection->recycle(msg);
 	}
@@ -94,9 +76,13 @@ int main(int argc, char* argv[]) {
         connection_ptr connection;
 		plain_endpoint_type endpoint(handler);
 		
+		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+		
+		endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
+		
 		connection = endpoint.connect("ws://localhost:9001/getCaseCount");
 		
-        
+        endpoint.run();
         
         
 		/*boost::asio::io_service io_service;
@@ -112,11 +98,15 @@ int main(int argc, char* argv[]) {
 		std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
 		
 		for (int i = 1; i <= boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count; i++) {
+			endpoint.reset();
+			
 			std::stringstream url;
 			
-			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";
+			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-12-06\"";
 						
             connection = endpoint.connect(url.str());
+			
+			endpoint.run();
 		}
 		
 		std::cout << "done" << std::endl;
