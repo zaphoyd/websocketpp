@@ -58,8 +58,8 @@ public:
 		
 		
 		if (connection->get_resource() == "/getCaseCount") {
-			std::cout << "Detected " << msg.get_payload() << " test cases." << std::endl;
-			m_case_count = atoi(msg.get_payload().c_str());
+			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
+			m_case_count = atoi(msg->get_payload().c_str());
 		} else {
 			connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
 		}
@@ -69,7 +69,7 @@ public:
 	}
 	
 	void http(connection_ptr connection) {
-		connection->set_body("HTTP Response!!");
+		//connection->set_body("HTTP Response!!");
 	}
 	
 	void on_fail(connection_ptr connection) {
@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) {
 		client->connect("ws://localhost:9001/getCaseCount");
 		io_service.run();*/
 		
-		std::cout << "case count: " << c->m_case_count << std::endl;
+		std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
 		
-		for (int i = 1; i <= c->m_case_count; i++) {
+		for (int i = 1; i <= boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count; i++) {
 			std::stringstream url;
 			
 			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-10-27\"";

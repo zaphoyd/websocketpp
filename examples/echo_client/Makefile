@@ -10,7 +10,7 @@ else
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_thread -lboost_date_time -lboost_regex -lboost_random -lboost_program_options ../../libwebsocketpp.a
 endif
 
-echo_client: echo_client.o echo_client_handler.o
+echo_client: echo_client.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp

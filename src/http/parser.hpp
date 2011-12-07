@@ -263,11 +263,11 @@ public:
 		m_body = value;
 	}
 	
-	status_code::value status_code() const {
+	status_code::value get_status_code() const {
 		return m_status_code;
 	}
 	
-	const std::string& status_msg() const {
+	const std::string& get_status_msg() const {
 		return m_status_msg;
 	}
 private:

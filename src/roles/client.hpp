@@ -34,6 +34,8 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 
 #include <iostream>
 
@@ -51,60 +53,75 @@ public:
 	public:
 		typedef connection<connection_type> type;
 		typedef endpoint endpoint_type;
+        
+        // client connections are friends with their respective client endpoint
+        friend class client<endpoint>;
+        
+        // Valid always
+        int get_version() const {
+			return m_version;
+		}
+		/*std::string get_request_header(const std::string& key) const {
+			return m_request.header(key);
+		}*/
+		std::string get_origin() const {
+			return m_origin;
+		}
+        
+        // Information about the requested URI
+		// valid only after URIs are loaded
+		// TODO: check m_uri for NULLness
+		bool get_secure() const {
+			return m_uri->get_secure();
+		}
+		std::string get_host() const {
+			return m_uri->get_host();
+		}
+		std::string get_resource() const {
+			return m_uri->get_resource();
+		}
+		uint16_t get_port() const {
+			return m_uri->get_port();
+		}
 	protected:
-		 connection(endpoint& e) : m_endpoint(e) {}
+        connection(endpoint& e) 
+         : m_endpoint(e),
+           m_connection(static_cast< connection_type& >(*this)),
+           // TODO: version shouldn't be hardcoded
+           m_version(17) {}
 		
+        void set_uri(uri_ptr u) {
+            m_uri = u;
+        }
+        
 		void async_init() {
 			write_request();
 		}
 		
-		void write_request() {
-			// async write to handle_write
-		}
-		
-		void handle_write_request(const boost::system::error_code& error) {
-			if (error) {
-				m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
-				m_connection.terminate(false);
-				return;
-
-			}
-			
-			read_request();
-		}
-		
-		void read_request() {
-			boost::asio::async_read_until(
-				m_connection.get_socket(),
-				m_connection.buffer(),
-					"\r\n\r\n",
-				boost::bind(
-					&type::handle_read_request,
-					m_connection.shared_from_this(),
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred
-				)
-			);
-		}
-		
-		// 
-		void handle_read_request(const boost::system::error_code& error,
-								 std::size_t bytes_transferred)
-		{
-			if (error) {
-				m_endpoint.elog().at(log::elevel::ERROR) << "Error reading HTTP request. code: " << error << log::endl;
-				m_connection.terminate(false);
-				return;
-			}
-			
-			// read 
-			
-			
-			// start session loop
-		}
+        int32_t rand() {
+            return m_endpoint.rand();
+        }
+        
+		void write_request();
+		void handle_write_request(const boost::system::error_code& error);
+		void read_response();
+		void handle_read_response(const boost::system::error_code& error,
+								 std::size_t bytes_transferred);
 	private:
 		endpoint&           m_endpoint;
         connection_type&    m_connection;
+        
+        int							m_version;
+		uri_ptr						m_uri;
+		std::string					m_origin;
+		std::vector<std::string>	m_requested_subprotocols;
+		std::vector<std::string>	m_requested_extensions;
+		std::string					m_subprotocol;
+		std::vector<std::string>	m_extensions;
+		
+        std::string                 m_handshake_key;
+		http::parser::request		m_request;
+		http::parser::response		m_response;
 	};
     
 	// types
@@ -134,36 +151,11 @@ public:
 	 : m_state(UNINITIALIZED),
 	   m_endpoint(static_cast< endpoint_type& >(*this)),
 	   m_io_service(m),
-	   m_resolver(m) {}
+	   m_resolver(m),
+       m_gen(m_rng,boost::random::uniform_int_distribution<>(INT32_MIN,
+                                                             INT32_MAX)) {}
 	
-	connection_ptr connect(const std::string& u) {
-		// TODO: will throw, should we catch and wrap?
-		uri location(u);
-		
-		if (location.get_secure() && !m_endpoint.is_secure()) {
-			// TODO: what kind of exception does client throw?
-			throw "";
-		}
-		
-		tcp::resolver::query query(location.get_host(),location.get_port_str());
-		tcp::resolver::iterator iterator = m_resolver.resolve(query);
-		
-		connection_ptr con = m_endpoint.create_connection();
-		
-		boost::asio::async_connect(
-			con->get_raw_socket(),
-			iterator,
-			boost::bind(
-				&endpoint_type::handle_connect,
-				endpoint_type::shared_from_this(),
-				con,
-				boost::asio::placeholders::error
-			)
-		); 
-		m_state = CONNECTING;
-		
-		return con;
-	}
+	connection_ptr connect(const std::string& u);
 	
 	// TODO: add a `perpetual` option
 	void run() {
@@ -178,6 +170,9 @@ protected:
 	bool is_server() {
 		return false;
 	}
+    int32_t rand() {
+        return m_gen();
+    }
 private:
 	enum state {
 		UNINITIALIZED = 0,
@@ -186,26 +181,251 @@ private:
 		CONNECTED = 3
 	};
 	
-	void handle_connect(connection_ptr con, const boost::system::error_code& error) {
-		if (!error) {
-			m_endpoint.alog().at(log::alevel::CONNECT) << "Successful connection" << log::endl;
-			
-			m_state = CONNECTED;
-			con->start();
-		} else {
-			m_endpoint.elog().at(log::elevel::ERROR) << "An error occurred while establishing a connection: " << error << log::endl;
-			
-			// TODO: fix
-			throw "client error";
-		}
-	}
+	void handle_connect(connection_ptr con, 
+                        const boost::system::error_code& error);
 	
 	state						m_state;
 	endpoint_type&				m_endpoint;
 	boost::asio::io_service&	m_io_service;
 	tcp::resolver				m_resolver;
+    
+    boost::random::random_device    m_rng;
+	boost::random::variate_generator<
+        boost::random::random_device&,
+        boost::random::uniform_int_distribution<>
+    > m_gen;
 };
 
+// client implimentation
+
+template <class endpoint>
+typename endpoint_traits<endpoint>::connection_ptr
+client<endpoint>::connect(const std::string& u) {
+    // TODO: will throw, should we catch and wrap?
+    uri_ptr location(new uri(u));
+    
+    if (location->get_secure() && !m_endpoint.is_secure()) {
+        // TODO: what kind of exception does client throw?
+        throw "";
+    }
+    
+    tcp::resolver::query query(location->get_host(),location->get_port_str());
+    tcp::resolver::iterator iterator = m_resolver.resolve(query);
+    
+    connection_ptr con = m_endpoint.create_connection();
+    con->set_uri(location);
+    
+    boost::asio::async_connect(
+        con->get_raw_socket(),
+        iterator,
+        boost::bind(
+            &endpoint_type::handle_connect,
+            this, // shared from this?
+            con,
+            boost::asio::placeholders::error
+        )
+    ); 
+    m_state = CONNECTING;
+    
+    return con;
+}
+
+template <class endpoint>
+void client<endpoint>::handle_connect(connection_ptr con, 
+                                      const boost::system::error_code& error)
+{
+    if (!error) {
+        m_endpoint.alog().at(log::alevel::CONNECT)
+            << "Successful connection" << log::endl;
+        
+        m_state = CONNECTED;
+        con->start();
+    } else {
+        m_endpoint.elog().at(log::elevel::ERROR) 
+            << "An error occurred while establishing a connection: " 
+            << error << log::endl;
+        
+        // TODO: fix
+        throw "client error";
+    }
+}
+
+// client connection implimentation
+
+template <class endpoint>
+template <class connection_type>
+void client<endpoint>::connection<connection_type>::write_request() {
+    // async write to handle_write
+    
+    m_request.set_method("GET");
+    m_request.set_uri(m_uri->get_resource());
+    m_request.set_version("HTTP/1.1");
+    
+    m_request.add_header("Upgrade","websocket");
+    m_request.add_header("Connection","Upgrade");
+    m_request.replace_header("Sec-WebSocket-Version","13");
+    
+    m_request.replace_header("Host",m_uri->get_host());
+    
+    if (m_origin != "") {
+		 m_request.replace_header("Origin",m_origin);
+	}
+    
+    // Generate client key
+    int32_t raw_key[4];
+    
+    for (int i = 0; i < 4; i++) {
+		raw_key[i] = this->rand();
+	}
+    
+    m_handshake_key = base64_encode(reinterpret_cast<unsigned char const*>(raw_key), 16);
+    
+    m_request.replace_header("Sec-WebSocket-Key",m_handshake_key);
+    m_request.replace_header("User Agent","WebSocket++/2011-12-06");
+    
+    std::string raw = m_request.raw();
+    
+    m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
+    
+    boost::asio::async_write(
+        m_connection.get_socket(),
+        boost::asio::buffer(raw),
+        boost::bind(
+            &type::handle_write_request,
+            m_connection.shared_from_this(),
+            boost::asio::placeholders::error
+        )
+    );
+}
+
+template <class endpoint>
+template <class connection_type>
+void client<endpoint>::connection<connection_type>::handle_write_request(
+                                        const boost::system::error_code& error)
+{
+    if (error) {
+        m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
+        m_connection.terminate(false);
+        return;
+
+    }
+    
+    read_response();
+}
+
+template <class endpoint>
+template <class connection_type>
+void client<endpoint>::connection<connection_type>::read_response() {
+    boost::asio::async_read_until(
+        m_connection.get_socket(),
+        m_connection.buffer(),
+            "\r\n\r\n",
+        boost::bind(
+            &type::handle_read_response,
+            m_connection.shared_from_this(),
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred
+        )
+    );
+}
+
+template <class endpoint>
+template <class connection_type>
+void client<endpoint>::connection<connection_type>::handle_read_response (
+        const boost::system::error_code& error, std::size_t bytes_transferred)
+{
+    if (error) {
+        m_endpoint.elog().at(log::elevel::ERROR) << "Error reading HTTP request. code: " << error << log::endl;
+        m_connection.terminate(false);
+        return;
+    }
+    
+    try {
+        std::istream request(&m_connection.buffer());
+        
+        if (!m_response.parse_complete(request)) {
+            // not a valid HTTP response
+            // TODO: this should be a client error
+            throw http::exception("Could not parse server response.",http::status_code::BAD_REQUEST);
+        }
+        
+        m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_response.raw() << log::endl;
+        
+        // error checking
+        if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) {
+            throw http::exception("Server failed to upgrade connection.",
+                                  m_response.get_status_code(),
+                                  m_response.get_status_msg());
+        }
+        
+        std::string h = m_response.header("Upgrade");
+        if (!boost::ifind_first(h,"websocket")) {
+            throw http::exception("Token `websocket` missing from Upgrade header.",
+                                  m_response.get_status_code(),
+                                  m_response.get_status_msg());
+        }
+        
+        h = m_response.header("Connection");
+        if (!boost::ifind_first(h,"upgrade")) {
+            throw http::exception("Token `upgrade` missing from Connection header.",
+                                  m_response.get_status_code(),
+                                  m_response.get_status_msg());
+        }
+        
+        h = m_response.header("Sec-WebSocket-Accept");
+        if (h == "") {
+            throw http::exception("Required Sec-WebSocket-Accept header is missing.",
+                                  m_response.get_status_code(),
+                                  m_response.get_status_msg());
+        } else {
+            std::string server_key = m_handshake_key;
+			server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+            
+            SHA1		sha;
+			uint32_t	message_digest[5];
+			
+			sha.Reset();
+			sha << server_key.c_str();
+            
+            if (!sha.Result(message_digest)) {
+				m_endpoint.elog().at(log::elevel::ERROR) << "Error computing handshake sha1 hash." << log::endl;
+				// TODO: close behavior
+				return;
+			}
+            
+            // convert sha1 hash bytes to network byte order because this sha1
+			//  library works on ints rather than bytes
+			for (int i = 0; i < 5; i++) {
+				message_digest[i] = htonl(message_digest[i]);
+			}
+            
+            server_key = base64_encode(
+                reinterpret_cast<const unsigned char*>(message_digest),20);
+            if (server_key != h) {
+				m_endpoint.elog().at(log::elevel::ERROR) << "Server returned incorrect handshake key." << log::endl;
+				// TODO: close behavior
+				return;
+			}
+        }
+        
+        log_open_result();
+        
+        m_connection.m_state = session::state::OPEN;
+        
+        m_endpoint.get_handler()->on_open(m_connection.shared_from_this());
+        
+        m_connection.handle_read_frame(boost::system::error_code());
+    } catch (const http::exception& e) {
+        m_endpoint.elog().at(log::elevel::ERROR) 
+            << "Error processing server handshake. Server HTTP response: " 
+            << e.m_error_msg << "(" << e.m_error_code 
+            << ") Local error: " << e.what() << log::endl;
+        return;
+    }
+    
+    
+    // start session loop
+}
 
 } // namespace role
 } // namespace websocketpp

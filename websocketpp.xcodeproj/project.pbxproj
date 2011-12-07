@@ -25,6 +25,9 @@
 		B66388651487FE6C00DDAE13 /* data.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B663885F1487FE6C00DDAE13 /* data.hpp */; };
 		B66388661487FE6C00DDAE13 /* control.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control.hpp */; };
 		B66388671487FE6C00DDAE13 /* control.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B66388601487FE6C00DDAE13 /* control.hpp */; };
+		B663887B148EDBF700DDAE13 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B663887C148EDBF700DDAE13 /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
+		B663887D148EDBF700DDAE13 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
 		B6727429148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
 		B672742A148517180029CF3E /* uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6727428148517180029CF3E /* uri.cpp */; };
 		B672742D148531250029CF3E /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
@@ -34,7 +37,6 @@
 		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
 		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B6CF18281437C3B1009295BE /* echo_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18131437C370009295BE /* echo_client.cpp */; };
-		B6CF18291437C3B1009295BE /* echo_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18141437C370009295BE /* echo_client_handler.cpp */; };
 		B6CF182A1437C3BD009295BE /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6CF182C1437C3CA009295BE /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6CF182B1437C3CA009295BE /* libboost_system.dylib */; };
 		B6DF1C7A1434AB740029A1B1 /* network_utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C791434AB740029A1B1 /* network_utilities.cpp */; };
@@ -260,6 +262,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B663887B148EDBF700DDAE13 /* libboost_date_time.dylib in Frameworks */,
+				B663887C148EDBF700DDAE13 /* libboost_random.dylib in Frameworks */,
+				B663887D148EDBF700DDAE13 /* libboost_regex.dylib in Frameworks */,
 				B6CF182C1437C3CA009295BE /* libboost_system.dylib in Frameworks */,
 				B6CF182A1437C3BD009295BE /* libwebsocketpp.dylib in Frameworks */,
 			);
@@ -811,7 +816,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6CF18281437C3B1009295BE /* echo_client.cpp in Sources */,
-				B6CF18291437C3B1009295BE /* echo_client_handler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
