@@ -24,3 +24,5 @@ websocketpp.xcodeproj/project.xcworkspace/xcuserdata/*
 policy_based_notes.hpp
 
 examples/echo_server_tls/echo_server_tls
+
+examples/fuzzing_client/fuzzing_client
