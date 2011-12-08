@@ -50,12 +50,13 @@ private:
     std::string m_msg;
 };
 
-
+// TODO: figure out why this fixes horrible linking errors.
+static const uint16_t URI_DEFAULT_PORT = 80;
+static const uint16_t URI_DEFAULT_SECURE_PORT = 443;
 	
 class uri {
 public:
-	static const uint16_t DEFAULT_PORT = 80;
-	static const uint16_t DEFAULT_SECURE_PORT = 443;
+	
 	
     explicit uri(const std::string& uri);
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource);
