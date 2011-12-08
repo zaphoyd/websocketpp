@@ -147,6 +147,21 @@ public:
 	elogger_type& elog() {
 		return m_elog;
 	}
+	
+	/// Updates the default handler to be used for future connections
+    /**
+     * @param new_handler A shared pointer to the new default handler. Must not
+	 * be NULL.
+     */
+	void set_handler(handler_ptr new_handler) {
+		if (!new_handler) {
+			elog().at(log::elevel::FATAL) 
+				<< "Tried to switch to a NULL handler." << log::endl;
+			throw "TODO: handlers can't be null";
+		}
+		
+		m_handler = new_handler;
+	}
 protected:
 	/// Creates and returns a new connection
     /**
@@ -222,13 +237,34 @@ struct endpoint_traits< endpoint<role, socket, logger> > {
     /// A shared pointer to the type of connection that this endpoint creates.
 	typedef boost::shared_ptr<connection_type> connection_ptr;
 	
-	/// Interface (ABC) that handlers for this type of endpoint must impliment
-    /// role policy and socket policy both may add methods to this interface
-	class handler : public role_type::handler_interface,
-                    public socket_type::handler_interface {};
-    /// A shared pointer to the base class that all handlers for this endpoint
+	class handler;
+	
+	/// A shared pointer to the base class that all handlers for this endpoint
     /// must derive from.
 	typedef boost::shared_ptr<handler> handler_ptr;
+	
+	/// Interface (ABC) that handlers for this type of endpoint may impliment.
+    /// role policy and socket policy both may add methods to this interface
+	class handler : public role_type::handler_interface,
+                    public socket_type::handler_interface
+	{
+	public:
+		/// on_load is the first callback called for a handler after a new
+		/// connection has been transferred to it mid flight.
+		/**
+		 * @param connection A shared pointer to the connection that was transferred
+		 * @param old_handler A shared pointer to the previous handler
+		 */
+		virtual void on_load(connection_ptr connection, handler_ptr old_handler) {}
+		/// on_unload is the last callback called for a handler before control
+		/// of a connection is handed over to a new handler mid flight.
+		/**
+		 * @param connection A shared pointer to the connection being transferred
+		 * @param old_handler A shared pointer to the new handler
+		 */
+		virtual void on_unload(connection_ptr connection, handler_ptr new_handler) {}
+	};
+    
 };
 
 } // namespace websocketpp

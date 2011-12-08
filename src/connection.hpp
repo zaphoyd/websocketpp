@@ -254,6 +254,23 @@ public:
 		return m_control_message;
 	}
 	
+	
+	// stuff about switching handlers on the fly
+	// TODO: organize more	
+	void set_handler(handler_ptr new_handler) {
+		m_endpoint.elog().at(log::elevel::FATAL) 
+			<< "Tried to switch to a NULL handler." << log::endl;
+		if (!new_handler) {
+			throw "TODO";
+		}
+		
+		handler_ptr old_handler = get_handler();
+		
+		old_handler->on_unload(type::shared_from_this(),new_handler);
+		m_handler = new_handler;
+		new_handler->on_load(type::shared_from_this(),old_handler);
+	}
+	
 	// TODO: deprecated. will change to get_rng?
 	int32_t gen() {
 		return 0;
@@ -368,28 +385,25 @@ protected:
 	}
 	
 	void process_data(message::data_ptr msg) {
-		m_endpoint.get_handler()->on_message(type::shared_from_this(),msg);
+		get_handler()->on_message(type::shared_from_this(),msg);
 	}
 	
 	void process_control(message::control_ptr msg) {
 		bool response;
 		switch (msg->get_opcode()) {
 			case frame::opcode::PING:
-				response = m_endpoint.get_handler()->on_ping(
-					type::shared_from_this(),
-					msg->get_payload()
-				);
-				
+				response = get_handler()->on_ping(type::shared_from_this(),
+												  msg->get_payload());
 				if (response) {
 					// send response ping
-					write_message(m_processor->prepare_frame(frame::opcode::PONG,!m_endpoint.is_server(),msg->get_payload()));
+					write_message(m_processor->prepare_frame(frame::opcode::PONG,
+															 !m_endpoint.is_server(),
+															 msg->get_payload()));
 				}
 				break;
 			case frame::opcode::PONG:
-				m_endpoint.get_handler()->on_pong(
-					type::shared_from_this(),
-					msg->get_payload());
-				
+				get_handler()->on_pong(type::shared_from_this(),
+									   msg->get_payload());
 				// TODO: disable ping response timer
 				
 				break;
@@ -416,7 +430,8 @@ protected:
 				}
 				break;
 			default:
-				throw processor::exception("Invalid Opcode",processor::error::PROTOCOL_VIOLATION);
+				throw processor::exception("Invalid Opcode",
+					processor::error::PROTOCOL_VIOLATION);
 				break;
 		}
 	}
@@ -424,17 +439,20 @@ protected:
 	void send_close(close::status::value code, const std::string& reason) {
 		if (m_state != session::state::OPEN) {
 			m_endpoint.elog().at(log::elevel::WARN) 
-				<< "Tried to disconnect a session that wasn't open" << log::endl;
+				<< "Tried to disconnect a session that wasn't open" 
+				<< log::endl;
 			return;
 		}
 		
 		if (close::status::invalid(code)) {
 			m_endpoint.elog().at(log::elevel::WARN) 
-				<< "Tried to close a connection with invalid close code: " << code << log::endl;
+				<< "Tried to close a connection with invalid close code: " 
+				<< code << log::endl;
 			return;
 		} else if (close::status::reserved(code)) {
 			m_endpoint.elog().at(log::elevel::WARN) 
-				<< "Tried to close a connection with reserved close code: " << code << log::endl;
+				<< "Tried to close a connection with reserved close code: " 
+				<< code << log::endl;
 			return;
 		}
 		
@@ -607,10 +625,10 @@ protected:
             m_state = session::state::CLOSED;
             
             if (old_state == session::state::CONNECTING) {
-				m_endpoint.get_handler()->on_fail(type::shared_from_this());
+				get_handler()->on_fail(type::shared_from_this());
 			} else if (old_state == session::state::OPEN || 
 					   old_state == session::state::CLOSING) {
-				m_endpoint.get_handler()->on_close(type::shared_from_this());
+				get_handler()->on_close(type::shared_from_this());
 			} else {
 				// if we were already closed something is wrong
 			}
