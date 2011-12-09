@@ -44,6 +44,18 @@ using boost::asio::ip::tcp;
 namespace websocketpp {
 namespace role {
 
+/*class client_exception : public std::exception {
+public:	
+	client_exception(const std::string& msg) : m_msg(msg {}
+	~client_exception() throw() {}
+	
+	virtual const char* what() const throw() {
+		return m_msg.c_str();
+	}
+	
+	std::string m_msg;
+};*/
+	
 template <class endpoint>
 class client {
 public:
@@ -254,12 +266,32 @@ void client<endpoint>::handle_connect(connection_ptr con,
         m_state = CONNECTED;
         con->start();
     } else {
-        m_endpoint.elog().at(log::elevel::ERROR) 
-            << "An error occurred while establishing a connection: " 
-            << error << log::endl;
-        
-        // TODO: fix
-        throw "client error";
+        if (error == boost::system::errc::connection_refused) {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (connection refused)" << log::endl;
+		} else if (error == boost::system::errc::operation_canceled) {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (operation canceled)" << log::endl;
+		} else if (error == boost::system::errc::connection_reset) {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (connection reset)" << log::endl;
+		} else if (error == boost::system::errc::timed_out) {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (operation timed out)" << log::endl;
+		} else if (error == boost::system::errc::broken_pipe) {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (broken pipe)" << log::endl;
+		}else {
+			m_endpoint.elog().at(log::elevel::ERROR) 
+				<< "An error occurred while establishing a connection: " 
+				<< error << " (unknown)" << log::endl;
+			throw "client error";
+		}
     }
 }
 
@@ -317,7 +349,9 @@ void client<endpoint>::connection<connection_type>::handle_write_request(
                                         const boost::system::error_code& error)
 {
     if (error) {
-        m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
+        
+		
+		m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
 

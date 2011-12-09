@@ -231,7 +231,15 @@ void server<endpoint>::handle_accept(connection_ptr con,
                                      const boost::system::error_code& error)
 {
     if (error) {
-        m_ws_endpoint.elog().at(log::elevel::ERROR) << "async_accept returned error: " << error << log::endl;
+		if (error == boost::system::errc::too_many_files_open) {
+			m_ws_endpoint.elog().at(log::elevel::ERROR) 
+				<< "async_accept returned error: " << error 
+				<< " (too many files open)" << log::endl;
+		} else {
+			m_ws_endpoint.elog().at(log::elevel::ERROR) 
+				<< "async_accept returned error: " << error 
+				<< " (unknown)" << log::endl;
+		}
     } else {
         con->start();
     }
@@ -502,8 +510,21 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     std::stringstream version;
     version << "v" << m_version << " ";
     
+	std::string remote;
+	boost::system::error_code ec;
+	boost::asio::ip::tcp::endpoint ep = m_connection.get_raw_socket().remote_endpoint(ec);
+	if (ec) {
+		// An error occurred.
+		//remote = "Unknown";
+		//ignore?
+		m_endpoint.elog().at(log::elevel::WARN) << "Error getting remote endpoint. code: " << ec << log::endl;
+	} else {
+		
+	}
+	
+	
     m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
-    << m_connection.get_raw_socket().remote_endpoint() << " "
+    << ep << " "
     << (m_version == -1 ? "" : version.str())
     << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
     << " " << m_uri->get_resource() << " " << m_response.get_status_code() 
