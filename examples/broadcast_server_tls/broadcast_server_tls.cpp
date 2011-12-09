@@ -32,6 +32,8 @@
 #include <cstring>
 #include <set>
 
+#include <sys/resource.h>
+
 typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
 
@@ -107,7 +109,31 @@ private:
 int main(int argc, char* argv[]) {
 	unsigned short port = 9002;
 	bool tls = false;
-		
+    
+    // 12288 is max OS X limit without changing kernal settings
+    const rlim_t ideal_size = 100000;
+    rlim_t old_size;
+    
+    struct rlimit rl;
+    int result;
+    
+    result = getrlimit(RLIMIT_NOFILE, &rl);
+    if (result == 0) {
+        std::cout << "cur: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
+        
+        old_size = rl.rlim_cur;
+        
+        if (rl.rlim_cur < ideal_size) {
+            rl.rlim_cur = ideal_size;
+            //rl.rlim_cur = rl.rlim_max;
+            result = setrlimit(RLIMIT_NOFILE, &rl);
+            
+            if (result != 0) {
+                std::cout << "Unable to request an increase in the file descripter limit. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << std::endl;
+            }
+        }
+    }
+    
 	if (argc == 2) {
 		// TODO: input validation?
 		port = atoi(argv[1]);
