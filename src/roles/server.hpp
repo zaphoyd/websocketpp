@@ -169,7 +169,8 @@ public:
 	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
 	   m_io_service(m),
 	   m_endpoint(),
-	   m_acceptor(m) {}
+	   m_acceptor(m),
+       m_timer(m,boost::posix_time::seconds(0)) {}
 	
     void listen(uint16_t port);
 protected:
@@ -190,6 +191,8 @@ private:
 	boost::asio::io_service&		m_io_service;
 	boost::asio::ip::tcp::endpoint	m_endpoint;
 	boost::asio::ip::tcp::acceptor	m_acceptor;
+    
+    boost::asio::deadline_timer     m_timer;
 };
 
 // server<endpoint> Implimentation
@@ -235,6 +238,9 @@ void server<endpoint>::handle_accept(connection_ptr con,
 			m_ws_endpoint.elog().at(log::elevel::ERROR) 
 				<< "async_accept returned error: " << error 
 				<< " (too many files open)" << log::endl;
+            m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
+            m_timer.async_wait(boost::bind(&type::start_accept,this));
+            return;
 		} else {
 			m_ws_endpoint.elog().at(log::elevel::ERROR) 
 				<< "async_accept returned error: " << error 
