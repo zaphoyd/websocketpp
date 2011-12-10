@@ -33,6 +33,7 @@
 #include <iostream>
 
 // PLATFORM SPECIFIC STUFF
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/resource.h>
 
