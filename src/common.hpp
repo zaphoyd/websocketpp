@@ -28,6 +28,7 @@
 #ifndef WEBSOCKET_CONSTANTS_HPP
 #define WEBSOCKET_CONSTANTS_HPP
 
+#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
 #include <string>

@@ -28,12 +28,12 @@
 #ifndef WEBSOCKETPP_ENDPOINT_HPP
 #define WEBSOCKETPP_ENDPOINT_HPP
 
-#include <boost/asio.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "connection.hpp"
 #include "sockets/plain.hpp" // should this be here?
 #include "logger/logger.hpp"
+
+#include <boost/asio.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <set>

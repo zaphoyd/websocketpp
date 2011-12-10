@@ -38,6 +38,7 @@
 #include <boost/random/random_device.hpp>
 
 #include <iostream>
+#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
 using boost::asio::ip::tcp;
