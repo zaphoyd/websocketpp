@@ -38,6 +38,7 @@
 #include <boost/random/random_device.hpp>
 
 #include <iostream>
+#include <stdint.h>
 
 using boost::asio::ip::tcp;
 
