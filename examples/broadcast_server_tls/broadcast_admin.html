@@ -34,17 +34,30 @@ function connect() {
 	
 	ws.onclose = function(e) {
 		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed.<br />";
+		clear_hud()
 	};
 	
 	ws.onmessage = function(e) {
-		document.getElementById("messages").innerHTML += "Server: "+e.data+"<br />";
-	};
+		foo = JSON.parse(e.data);
+		
+		if (foo.type == "message") {
+			document.getElementById("messages").innerHTML += "Broadcasted Message: "+foo.value+"<br />";
+		} else if (foo.type == "con") {
+			document.getElementById("connected_clients").innerHTML = foo.value;
+		} else {
+			document.getElementById("messages").innerHTML += "Unrecognized Server Command.<br />";
+		}
+	}
 }
 
-function disconnect() {
-	ws.close();
+function clear_hud() {
 	document.getElementById("server_url").disabled = false;
 	document.getElementById("toggle_connect").innerHTML = "Connect";
+	document.getElementById("connected_clients").innerHTML = "N/A";
+}
+	
+function disconnect() {
+	ws.close();
 }
 
 function toggle_connect() {
@@ -74,19 +87,28 @@ body,html {
 }
 #controls {
 	float:right;
-	background-color: #999;
+	background-color: #333;
+	color: #fff;
+	padding: 5px;
 }
-
+#controls h2 {
+	font-family: sans-serif;
+	font-size: 16px;
+}
+	
 </style>
 
 <div id="controls">
 	<div id="server">
-	<input type="text" name="server_url" id="server_url" value="ws://localhost:5000" />
+	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002/admin" />
 	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
 	</div>
 
 	<div id="message_input"><input type="text" name="msg" id="msg" value="Hello World!" />
-	<button onclick="send();">Send</button></div>
+	<button onclick="send();">Broadcast</button></div>
+	
+	<h2>Stats</h2>
+	<div>Connected Clients: <span id="connected_clients">N/A</span></div>
 </div>
 <div id="messages"></div>
 

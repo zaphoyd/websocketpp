@@ -72,20 +72,62 @@ public:
 	}
 	
 	void on_open(connection_ptr connection) {
-		//std::cout << "connection opened" << std::endl;
-		m_connections.insert(connection);
+		
+		
+		if (connection->get_resource() == "/admin") {
+			m_admin_connections.insert(connection);
+		} else {
+			m_connections.insert(connection);
+		}
+		
+		typename std::set<connection_ptr>::iterator it;
+		
+		std::stringstream foo;
+		foo << "{\"type\":\"con\",\"value\":" << m_connections.size() << "}";
+		
+		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
+			(*it)->send(foo.str(),false);
+		}
 	}
 	
 	void on_close(connection_ptr connection) {
 		//std::cout << "connection closed" << std::endl;
 		m_connections.erase(connection);
+		m_admin_connections.erase(connection);
+		
+		typename std::set<connection_ptr>::iterator it;
+		
+		std::stringstream foo;
+		foo << "{\"type\":\"con\",\"value\":" << m_connections.size() << "}";
+		
+		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
+			(*it)->send(foo.str(),false);
+		}
+		
 	}
 	
 	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
 		typename std::set<connection_ptr>::iterator it;
 		
+		// broadcast to clients
 		for (it = m_connections.begin(); it != m_connections.end(); it++) {
 			(*it)->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+		}
+		
+		// broadcast to admins
+		std::stringstream foo;
+		foo << "{\"type\":\"message\",\"value\":\""; 
+		
+		if (msg->get_opcode() == websocketpp::frame::opcode::BINARY) {
+			foo << "[Binary Message length: " << msg->get_payload().size() << "]";
+		} else {
+			foo << msg->get_payload();
+		}
+		
+		foo << "\"}";
+		
+		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
+			(*it)->send(foo.str(),false);
 		}
 		
 		connection->recycle(msg);
@@ -104,6 +146,7 @@ public:
 	}
 private:
 	std::set<connection_ptr> m_connections;
+	std::set<connection_ptr> m_admin_connections;
 };
 
 int main(int argc, char* argv[]) {
