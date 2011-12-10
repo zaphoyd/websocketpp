@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
 	// 12288 is max OS X limit without changing kernal settings
     const rlim_t ideal_size = 200+num_connections;
     rlim_t old_size;
+	rlim_t old_max;
     
     struct rlimit rl;
     int result;
@@ -96,16 +97,24 @@ int main(int argc, char* argv[]) {
         //std::cout << "System FD limits: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
         
         old_size = rl.rlim_cur;
-        
+        old_max = rl.rlim_max;
+		
         if (rl.rlim_cur < ideal_size) {
             std::cout << "Attempting to raise system file descriptor limit from " << rl.rlim_cur << " to " << ideal_size << std::endl;
 			rl.rlim_cur = ideal_size;
-            result = setrlimit(RLIMIT_NOFILE, &rl);
             
-            if (result != 0) {
-                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << rl.rlim_max << std::endl;
-            } else {
-				std::cout << "Success" << std::endl; 
+			if (rl.rlim_max < ideal_size) {
+				rl.rlim_max = ideal_size;
+			}
+			
+			result = setrlimit(RLIMIT_NOFILE, &rl);
+            
+            if (result == 0) {
+                std::cout << "Success" << std::endl;
+			} else if (result == EPERM) {
+				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
+			} else {
+				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " old_max << std::endl;
 			}
         }
     }
