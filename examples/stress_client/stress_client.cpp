@@ -64,21 +64,28 @@ public:
 		std::cout << "connection failed" << std::endl;
 	}
 	
+
 	int m_case_count;
 };
 
 
 int main(int argc, char* argv[]) {
-	std::string uri;
+	std::string uri = "ws://localhost:9002/";
+	int num_batches = 1;
+	int batch_size = 50;
 	
-	/*if (argc != 2) {
-		std::cout << "Usage: `echo_client test_url`" << std::endl;
+	if (argc != 4) {
+		std::cout << "Usage: `echo_client test_url num_batches batch_size`" << std::endl;
 	} else {
 		uri = argv[1];
-	}*/
+		num_batches = atoi(argv[2]);
+		batch_size = atoi(argv[3]);
+	}
+	
+	int num_connections = num_batches*batch_size;
 	
 	// 12288 is max OS X limit without changing kernal settings
-    const rlim_t ideal_size = 100000;
+    const rlim_t ideal_size = 200+num_connections;
     rlim_t old_size;
     
     struct rlimit rl;
@@ -86,28 +93,22 @@ int main(int argc, char* argv[]) {
     
     result = getrlimit(RLIMIT_NOFILE, &rl);
     if (result == 0) {
-        std::cout << "cur: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
+        //std::cout << "System FD limits: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
         
         old_size = rl.rlim_cur;
         
         if (rl.rlim_cur < ideal_size) {
-            rl.rlim_cur = ideal_size;
-            //rl.rlim_cur = rl.rlim_max;
+            std::cout << "Attempting to raise system file descriptor limit from " << rl.rlim_cur << " to " << ideal_size << std::endl;
+			rl.rlim_cur = ideal_size;
             result = setrlimit(RLIMIT_NOFILE, &rl);
             
             if (result != 0) {
-                std::cout << "Unable to request an increase in the file descripter limit. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << std::endl;
-            }
+                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << rl.rlim_max << std::endl;
+            } else {
+				std::cout << "Success" << std::endl; 
+			}
         }
     }
-
-	
-	int num_connections = 500;
-	
-	if (argc == 2) {
-		// TODO: input validation?
-		num_connections = atoi(argv[1]);
-	}
 	
 	try {
 		plain_handler_ptr handler(new echo_client_handler());
@@ -119,17 +120,17 @@ int main(int argc, char* argv[]) {
 		std::set<connection_ptr> connections;
 		
 		
-		connections.insert(endpoint.connect("ws://localhost:9002/"));
+		connections.insert(endpoint.connect(uri));
 		
 		boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
 		
-		std::cout << "launching connections" << std::endl;
+		std::cout << "launching " << num_connections << " connections to " << uri << " in batches of " << batch_size << std::endl;
 		
-		for (int i = 0; i < num_connections; i++) {
-			if (i % 200 == 0) {
+		for (int i = 0; i < num_connections-1; i++) {
+			if (i % batch_size == 0) {
 				sleep(1);
 			}
-			connections.insert(endpoint.connect("ws://localhost:9002/"));
+			connections.insert(endpoint.connect(uri));
 		}
 		
 		std::cout << "complete" << std::endl;
