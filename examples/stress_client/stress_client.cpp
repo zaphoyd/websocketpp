@@ -32,6 +32,10 @@
 
 #include <iostream>
 
+// PLATFORM SPECIFIC STUFF
+#include <unistd.h>
+#include <sys/resource.h>
+
 typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> plain_endpoint_type;
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
 typedef plain_endpoint_type::connection_ptr connection_ptr;
@@ -73,6 +77,31 @@ int main(int argc, char* argv[]) {
 		uri = argv[1];
 	}*/
 	
+	// 12288 is max OS X limit without changing kernal settings
+    const rlim_t ideal_size = 100000;
+    rlim_t old_size;
+    
+    struct rlimit rl;
+    int result;
+    
+    result = getrlimit(RLIMIT_NOFILE, &rl);
+    if (result == 0) {
+        std::cout << "cur: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
+        
+        old_size = rl.rlim_cur;
+        
+        if (rl.rlim_cur < ideal_size) {
+            rl.rlim_cur = ideal_size;
+            //rl.rlim_cur = rl.rlim_max;
+            result = setrlimit(RLIMIT_NOFILE, &rl);
+            
+            if (result != 0) {
+                std::cout << "Unable to request an increase in the file descripter limit. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << std::endl;
+            }
+        }
+    }
+
+	
 	int num_connections = 500;
 	
 	if (argc == 2) {
@@ -92,17 +121,20 @@ int main(int argc, char* argv[]) {
 		
 		connections.insert(endpoint.connect("ws://localhost:9002/"));
 		
-		//boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
+		boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
 		
 		std::cout << "launching connections" << std::endl;
 		
 		for (int i = 0; i < num_connections; i++) {
+			if (i % 200 == 0) {
+				sleep(1);
+			}
 			connections.insert(endpoint.connect("ws://localhost:9002/"));
 		}
 		
 		std::cout << "complete" << std::endl;
 		
-		endpoint.run();
+		//endpoint.run();
 		
 		/*char line[512];
 		while (std::cin.getline(line, 512)) {
@@ -111,7 +143,7 @@ int main(int argc, char* argv[]) {
 			c->send(line);
 		}*/
 		
-		//t.join();
+		t.join();
 		
 		
 		std::cout << "done" << std::endl;
