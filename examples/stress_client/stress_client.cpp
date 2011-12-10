@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
 			} else if (result == EPERM) {
 				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
 			} else {
-				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " old_max << std::endl;
+				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
 			}
         }
     }
