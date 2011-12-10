@@ -26,3 +26,7 @@ policy_based_notes.hpp
 examples/echo_server_tls/echo_server_tls
 
 examples/fuzzing_client/fuzzing_client
+
+examples/stress_client/stress_client
+
+examples/broadcast_server_tls/broadcast_server
