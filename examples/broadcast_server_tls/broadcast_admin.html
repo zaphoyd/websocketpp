@@ -1,12 +1,29 @@
 <!doctype html>
 <html>
 <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>WebSocket++ Broadcast Admin</title>
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
 </head>
 <body>
 
 <script type="text/javascript">
+var options = {"console_enabled": false};
+
+
+
+
 var ws;
 var url;
+
+var data2 = [], total_points = 60;
+var stale_data = null;
+   
+var message_history = [];
+var client_history = [];
+
 
 function connect() {
 	url = document.getElementById("server_url").value;
@@ -41,9 +58,33 @@ function connect() {
 		foo = JSON.parse(e.data);
 		
 		if (foo.type == "message") {
-			document.getElementById("messages").innerHTML += "Broadcasted Message: "+foo.value+"<br />";
+			if (options.console_enabled) {
+                document.getElementById("messages").innerHTML += "Broadcasted Message: "+foo.value+"<br />";
+            }
 		} else if (foo.type == "con") {
 			document.getElementById("connected_clients").innerHTML = foo.value;
+		} else if (foo.type == "stats") {
+			document.getElementById("messages_per_sec").innerHTML = foo.messages+"/s";
+			document.getElementById("bytes_per_sec").innerHTML = format_data(foo.bytes)+"/s";
+			document.getElementById("messages_sent").innerHTML = foo.messages_sent;
+			document.getElementById("bytes_sent").innerHTML = format_data(foo.bytes_sent);
+            
+            document.getElementById("admin_connections").innerHTML = foo.admin_connections;
+            
+            client_history.push([foo.timestamp,foo.connections]);
+            if (client_history.length > total_points) {
+                client_history = client_history.slice(client_history.length-total_points);
+            }
+            
+            data2.push([foo.timestamp,foo.bytes]);
+            if (data2.length > total_points) {
+                data2 = data2.slice(data2.length-total_points);
+            }
+            
+            message_history.push([foo.timestamp,foo.messages]);
+            if (message_history.length > total_points) {
+                message_history = message_history.slice(message_history.length-total_points);
+            }
 		} else {
 			document.getElementById("messages").innerHTML += "Unrecognized Server Command.<br />";
 		}
@@ -54,6 +95,11 @@ function clear_hud() {
 	document.getElementById("server_url").disabled = false;
 	document.getElementById("toggle_connect").innerHTML = "Connect";
 	document.getElementById("connected_clients").innerHTML = "N/A";
+    document.getElementById("admin_connections").innerHTML = "N/A";
+	document.getElementById("messages_per_sec").innerHTML = "N/A";
+	document.getElementById("bytes_per_sec").innerHTML = "N/A";
+	document.getElementById("messages_sent").innerHTML = "N/A";
+	document.getElementById("bytes_sent").innerHTML = "N/A";
 }
 	
 function disconnect() {
@@ -78,12 +124,83 @@ function send() {
 	document.getElementById("msg").value = "";
 }
 
+function format_data(val) {
+    if (val > 1000000)
+        return (val / 1000000).toFixed(2) + " MB";
+    else if (val > 1000)
+        return (val / 1000).toFixed(2) + " kB";
+    else
+        return val.toFixed(0) + " B";
+}
+
+$(function () {
+    // setup control widget
+    var updateInterval = 500;
+    $("#updateInterval").val(updateInterval).change(function () {
+        var v = $(this).val();
+        if (v && !isNaN(+v)) {
+            updateInterval = +v;
+            if (updateInterval < 1)
+                updateInterval = 1;
+            if (updateInterval > 2000)
+                updateInterval = 2000;
+            $(this).val("" + updateInterval);
+        }
+    });
+    
+    function suffixFormatter(val, axis) {
+        if (val > 1000000)
+            return (val / 1000000).toFixed(axis.tickDecimals) + " MB";
+        else if (val > 1000)
+            return (val / 1000).toFixed(axis.tickDecimals) + " kB";
+        else
+            return val.toFixed(axis.tickDecimals) + " B";
+    }
+  
+    // setup plot
+    var options = {
+        series: { shadowSize: 0 }, // drawing is faster without shadows
+        xaxis: { mode: "time" }
+    };
+    
+    var options_data = {
+        series: { shadowSize: 0 }, // drawing is faster without shadows
+        yaxis: { tickFormatter: suffixFormatter},
+        xaxis: { mode: "time" }
+    };
+    
+    var plot_clients = $.plot($("#client_history"), [ client_history ], options);
+    var plot_messages = $.plot($("#message_history"), [ message_history ], options);
+    var plot_bytes = $.plot($("#bytes_history"), [ data2 ], options_data);
+
+    function update() {
+        plot_clients.setData([ client_history ]);
+        plot_clients.setupGrid();
+        plot_clients.draw();
+        
+        plot_messages.setData([ message_history ]);
+        plot_messages.setupGrid();
+        plot_messages.draw();
+        
+        plot_bytes.setData([ data2 ]);
+        plot_bytes.setupGrid();
+        plot_bytes.draw();
+
+        setTimeout(update, updateInterval);
+    }
+
+    update();
+});
+
 </script>
 
 <style>
 body,html {
 	margin: 0px;
 	padding: 0px;
+    height:100%; 
+    font-family: sans-serif;
+    font-size: 12px;
 }
 #controls {
 	float:right;
@@ -94,13 +211,23 @@ body,html {
 #controls h2 {
 	font-family: sans-serif;
 	font-size: 16px;
+    margin-bottom: 4px;
 }
-	
+#controls h3 {
+    font-family: sans-serif;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+#messages {
+    height: 100%;
+    overflow: scroll;
+}
+
 </style>
 
 <div id="controls">
 	<div id="server">
-	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002/admin" />
+	<input type="text" name="server_url" id="server_url" value="ws://thor-websocket.zaphoyd.net:9002/admin" />
 	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
 	</div>
 
@@ -108,7 +235,18 @@ body,html {
 	<button onclick="send();">Broadcast</button></div>
 	
 	<h2>Stats</h2>
-	<div>Connected Clients: <span id="connected_clients">N/A</span></div>
+	<h3>Server</h3>
+    <div>Connected Clients: <span id="connected_clients">N/A</span><br /></div>
+    <div>Admin Clients: <span id="admin_connections">N/A</span><br /></div>
+    <div id="client_history" style="width:320px;height:200px;"></div>
+    <h3>Messages</h3>
+    <div>Messages Sent: <span id="messages_sent">N/A</span><br /></div>
+    <div>Messages Rate: <span id="messages_per_sec">N/A</span><br /></div>
+	<div id="message_history" style="width:320px;height:200px;"></div>
+    <h3>Data</h3>
+    <div>Bytes Sent: <span id="bytes_sent">N/A</span><br /></div>
+    <div>Data Rate: <span id="bytes_per_sec">N/A</span><br /></div>
+    <div id="bytes_history" style="width:320px;height:200px;"></div>
 </div>
 <div id="messages"></div>
 

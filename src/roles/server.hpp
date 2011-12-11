@@ -111,6 +111,11 @@ public:
 		int32_t rand() {
             return 0;
         }
+		
+		// should this exist?
+		boost::asio::io_service& get_io_service() {
+			return m_endpoint.get_io_service();
+		}
 	protected:
 		connection(endpoint& e)
         : m_endpoint(e),
@@ -202,7 +207,7 @@ void server<endpoint>::listen(uint16_t port) {
     m_acceptor.open(m_endpoint.protocol());
     m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     m_acceptor.bind(m_endpoint);
-    m_acceptor.listen();
+    m_acceptor.listen(200000);
     
     this->start_accept();
     

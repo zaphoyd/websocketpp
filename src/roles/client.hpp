@@ -107,10 +107,18 @@ public:
 		uint16_t get_port() const {
 			return m_uri->get_port();
 		}
+        std::string get_uri() const {
+			return m_uri->str();
+		}
 		
 		int32_t rand() {
             return m_endpoint.rand();
         }
+		
+		// should this exist?
+		boost::asio::io_service& get_io_service() {
+			return m_endpoint.get_io_service();
+		}
 	protected:
         connection(endpoint& e) 
          : m_endpoint(e),
@@ -137,6 +145,16 @@ public:
 								 std::size_t bytes_transferred);
 		
 		void log_open_result();
+        
+        // retry once
+        bool retry() {
+            m_retry++;
+            if (m_retry > 1) {
+                return false;
+            } else {
+                return true;
+            }
+        }
 	private:
 		endpoint&           m_endpoint;
         connection_type&    m_connection;
@@ -152,6 +170,8 @@ public:
         std::string                 m_handshake_key;
 		http::parser::request		m_request;
 		http::parser::response		m_response;
+        
+        int                         m_retry;
 	};
     
 	// types
@@ -283,6 +303,13 @@ void client<endpoint>::handle_connect(connection_ptr con,
 			m_endpoint.elog().at(log::elevel::ERROR) 
 				<< "An error occurred while establishing a connection: " 
 				<< error << " (connection reset)" << log::endl;
+            
+            if (con->retry()) {
+                m_endpoint.elog().at(log::elevel::ERROR) 
+                    << "Retrying connection" << log::endl;
+                connect(con->get_uri());
+                m_endpoint.remove_connection(con);
+            }
 		} else if (error == boost::system::errc::timed_out) {
 			m_endpoint.elog().at(log::elevel::ERROR) 
 				<< "An error occurred while establishing a connection: " 
@@ -291,7 +318,7 @@ void client<endpoint>::handle_connect(connection_ptr con,
 			m_endpoint.elog().at(log::elevel::ERROR) 
 				<< "An error occurred while establishing a connection: " 
 				<< error << " (broken pipe)" << log::endl;
-		}else {
+		} else {
 			m_endpoint.elog().at(log::elevel::ERROR) 
 				<< "An error occurred while establishing a connection: " 
 				<< error << " (unknown)" << log::endl;
