@@ -48,6 +48,53 @@ namespace hybi_state {
 	};
 }
 
+/*
+
+client case
+end user asks connection for next message
+- connection returns the next avaliable message or throws if none are ready
+- connection resets the message and fills in a new masking key
+end user calls set payload with const ref string to final payload
+- set opcode... argument to set payload?
+- set payload checks utf8 if copies from source, masks, and stores in payload.
+
+
+prepare (hybi):
+- writes header (writes opcode, payload length, masking key, fin bit, mask bit)
+
+
+server case
+end user asks connection for next message
+- connection returns the next avaliable message or throws if none are ready
+- connection resets the message and sets masking to off.
+end user calls set payload with const ref string to final payload
+- std::copy msg to payload
+
+prepare
+- writes header (writes opcode, payload length, fin bit, mask bit)
+
+
+int reference_count
+std::list< std::pair< std::string,std::string > >
+
+
+*/
+
+/*class hybi_message {
+public:
+    hybi_message(frame::opcode::value opcode) : m_processed(false) {
+        
+    }
+    
+    void reset() {
+        
+    }
+private:
+    bool        m_processed;
+    std::string m_header;
+    std::string m_payload;
+};*/
+
 // connection must provide:
 // int32_t get_rng();
 // message::data_ptr get_data_message();

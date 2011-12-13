@@ -136,7 +136,7 @@ private:
 	unsigned char				m_masking_key[4];
     int                         m_masking_index;
 	
-	// Message payload
+	// Message buffers
     std::string					m_payload;
 };
 

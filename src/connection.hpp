@@ -149,13 +149,13 @@ public:
 		// close frame get written before the acknowledgement close frame.
 		// The async option will probably reduce latency
 		// See Autobahn test 7.1.3
-		write_message(msg);
+		//write_message(msg);
 		
-		/*m_endpoint.endpoint_base::m_io_service.post(
+		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
 				&type::write_message,
 				type::shared_from_this(),
-				msg));	*/
+				msg));
 	}
 	void send(const binary_string& data) {
 		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,
