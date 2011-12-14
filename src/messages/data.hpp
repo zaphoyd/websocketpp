@@ -123,7 +123,7 @@ public:
 		m_masking_index = (key == 0 ? -1 : 0);
 	}
 private:
-    static const uint64_t PAYLOAD_SIZE_INIT = 1000000; // 1MB
+    static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
     
 	// Message state
