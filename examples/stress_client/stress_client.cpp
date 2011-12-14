@@ -27,6 +27,7 @@
 
 #include "../../src/endpoint.hpp"
 #include "../../src/roles/client.hpp"
+#include "../../src/md5/md5.hpp"
 
 #include <boost/thread.hpp>
 
@@ -45,8 +46,24 @@ public:
 	typedef echo_client_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
-	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {		
-		/*if (connection->get_resource() == "/getCaseCount") {
+    void on_open(connection_ptr connection) {
+        //std::cout << "on_open: " << std::endl;
+        if (!m_timer) {
+			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
+			m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+			m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+		}
+    }
+    
+	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {		
+		// SHA1 or MD5 the message and 
+        
+        //std::cout << "got message: " << websocketpp::md5_hash_hex(msg->get_payload()) << std::endl;
+        
+        m_total++;
+        m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
+        
+        /*if (connection->get_resource() == "/getCaseCount") {
 			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
 			m_case_count = atoi(msg->get_payload().c_str());
 		} else {
@@ -64,15 +81,49 @@ public:
 		std::cout << "connection failed" << std::endl;
 	}
 	
-
-	int m_case_count;
+    void on_timer(connection_ptr connection,const boost::system::error_code& error) {
+        if (error) {
+            std::cout << "on_timer error" << std::endl;
+            return;
+        }
+        
+        //std::cout << "on_timer: " << m_total << std::endl;
+        std::stringstream foo;
+        foo << "{\"type\":\"acks\",\"messages\":[";
+        
+        std::map<std::string,size_t>::iterator it;
+        std::map<std::string,size_t>::iterator last = m_msg_stats.end();
+        if (m_msg_stats.size() > 0) {
+            last--;
+        }
+        
+        for (it = m_msg_stats.begin(); it != m_msg_stats.end(); it++) {
+            foo << "{\"" << (*it).first << "\":" << (*it).second << "}" << (it != last ? "," : "");
+        }
+        foo << "]}";
+        
+        //std::cout << "Sending " << foo.str() << std::endl;
+        
+        connection->send(foo.str(),false);
+                
+        m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+		m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+    }
+    
+    void on_close(connection_ptr connection) {
+        m_timer->cancel();
+    }
+    
+    size_t                          m_total;
+    std::map<std::string,size_t>    m_msg_stats;
+    boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 };
 
 
 int main(int argc, char* argv[]) {
 	std::string uri = "ws://localhost:9002/";
 	int num_batches = 1;
-	int batch_size = 50;
+	int batch_size = 1;
 	
 	if (argc != 4) {
 		std::cout << "Usage: `echo_client test_url num_batches batch_size`" << std::endl;

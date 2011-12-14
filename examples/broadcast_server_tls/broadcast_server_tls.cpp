@@ -28,6 +28,7 @@
 #include "../../src/endpoint.hpp"
 #include "../../src/roles/server.hpp"
 #include "../../src/sockets/ssl.hpp"
+#include "../../src/md5/md5.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -128,39 +129,89 @@ public:
 	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
 		typename std::set<connection_ptr>::iterator it;
 		
-		
-		
-		// broadcast to clients
-		for (it = m_connections.begin(); it != m_connections.end(); it++) {
-			m_messages++;
-			m_data += msg->get_payload().size();
-			(*it)->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
-		}
-		
-		// broadcast to admins
-		std::stringstream foo;
-		foo << "{\"type\":\"message\",\"value\":\""; 
-		
-		if (msg->get_opcode() == websocketpp::frame::opcode::BINARY) {
-			foo << "[Binary Message, length: " << msg->get_payload().size() << "]";
-		} else {
-            if (msg->get_payload().size() > 126) {
-                foo << "[UTF8 Message, length: " << msg->get_payload().size() << "]";
-            } else {
-                foo << msg->get_payload();
+		if (msg->get_payload().substr(0,27) == "{\"type\":\"acks\",\"messages\":[") {
+            //std::cout << msg->get_payload() << std::endl;
+            // process a 
+            //
+            
+            //{"type":"acks","messages":[{"e3458d0aceff8b70a3e5c0afec632881":38},{"e3458d0aceff8b70a3e5c0afec632881":38}]}
+            
+            std::string::size_type start = 27;
+            std::string::size_type end = msg->get_payload().find(",",start);
+            size_t count;
+            
+            m_messages_acked = 0;
+            
+            while (end != std::string::npos) {
+                if (end-start < 38) {
+                    // error, not the input we were expecting
+                    continue;
+                } else {
+                    count = atol(msg->get_payload().substr(start+36,end-2).c_str());
+                    if (count == 0) {
+                        // error parsing number
+                        continue;
+                    }
+                }
+                
+                m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
+                
+                start = end+1;
+                end = msg->get_payload().find(",",start);
             }
-		}
-		
-		foo << "\"}";
-		
-		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
-			m_messages++;
-			m_data += msg->get_payload().size();
-			(*it)->send(foo.str(),false);
-		}
+            
+            end = msg->get_payload().size();
+            
+            // get the last value
+            if (end-start < 38) {
+                // error, not the input we were expecting
+            } else {
+                count = atol(msg->get_payload().substr(start+36,end-4).c_str());
+                if (count == 0) {
+                    // error parsing number
+                }
+            }
+            
+            m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
+            m_messages_acked += count;
+        } else {
+            // broadcast to clients
+            for (it = m_connections.begin(); it != m_connections.end(); it++) {
+                std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
+                
+                //std::cout   << "sending message: (" << hash.size() << ") " << hash << std::endl;
+                m_messages++;
+                m_data += msg->get_payload().size();
+                (*it)->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+            }
+            
+            // broadcast to admins
+            std::stringstream foo;
+            foo << "{\"type\":\"message\",\"value\":\""; 
+            
+            if (msg->get_opcode() == websocketpp::frame::opcode::BINARY) {
+                foo << "[Binary Message, length: " << msg->get_payload().size() << "]";
+            } else {
+                if (msg->get_payload().size() > 126) {
+                    foo << "[UTF8 Message, length: " << msg->get_payload().size() << "]";
+                } else {
+                    foo << msg->get_payload();
+                }
+            }
+            
+            foo << "\"}";
+            
+            for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
+                //m_messages++;
+                //m_data += msg->get_payload().size();
+                (*it)->send(foo.str(),false);
+            }
+        }
 		
 		connection->recycle(msg);
 	}
+    
+    
 	
 	void http(connection_ptr connection) {
 		std::stringstream foo;
@@ -205,6 +256,7 @@ public:
                 << ",\"messages\":" << m_messages
                 << ",\"bytes\":" << m_data
                 << ",\"messages_sent\":" << m_messages_sent
+                << ",\"messages_acked\":" << m_messages_acked
                 << ",\"bytes_sent\":" << m_data_sent
                 << ",\"connections\":" << m_connections.size()
                 << ",\"admin_connections\":" << m_admin_connections.size()
@@ -242,6 +294,9 @@ private:
 	boost::posix_time::ptime	m_epoch;
     boost::posix_time::ptime	m_last_time;
 	
+    size_t                          m_messages_acked;
+    std::map<std::string,size_t>    m_ack_stats;
+    
 	std::set<connection_ptr>	m_connections;
 	std::set<connection_ptr>	m_admin_connections;
 };
