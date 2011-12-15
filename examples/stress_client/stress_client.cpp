@@ -41,11 +41,15 @@ typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::pla
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
 typedef plain_endpoint_type::connection_ptr connection_ptr;
 
-class echo_client_handler : public plain_endpoint_type::handler {
+class stress_client_handler : public plain_endpoint_type::handler {
 public:
-	typedef echo_client_handler type;
+	typedef stress_client_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
+    stress_client_handler(int num_connections) : m_connections(num_connections) {
+        
+    }
+    
     void on_open(connection_ptr connection) {
         if (!m_timer) {
 			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
@@ -56,6 +60,11 @@ public:
     
 	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {
         m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
+        
+        if (m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())] == m_connections) {
+            send_stats_update(connection);
+        }
+        
 		connection->recycle(msg);
 	}
 	
@@ -102,6 +111,7 @@ private:
         m_msg_stats.clear();
     }
     
+    int m_connections;
     std::map<std::string,size_t>                    m_msg_stats;
     boost::shared_ptr<boost::asio::deadline_timer>  m_timer;
 };
@@ -158,7 +168,7 @@ int main(int argc, char* argv[]) {
     }
 	
 	try {
-		plain_handler_ptr handler(new echo_client_handler());
+		plain_handler_ptr handler(new stress_client_handler(num_connections));
 		plain_endpoint_type endpoint(handler);
 		
 		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);

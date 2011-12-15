@@ -169,6 +169,21 @@ public:
                     }
                 }
                 
+                std::string hash = msg->get_payload().substr(start+2,32);
+                
+                std::map<std::string,struct msg>::iterator it = m_msgs.find(hash);
+                if (it == m_msgs.end()) {
+                    std::cout << "ack for message we didn't send" << std::endl;
+                    continue;
+                }
+                
+                struct msg& m(m_msgs[hash]);
+                
+                m.acked += count;
+                
+                if (m.acked == m.sent) {
+                    m.time = get_ms(m.time_sent);
+                }
                                 
                 start = end+1;
                 end = msg->get_payload().find(",",start);
@@ -179,11 +194,21 @@ public:
             // get the last value
             if (end-start < 38) {
                 // error, not the input we were expecting
+                return;
             } else {
                 count = atol(msg->get_payload().substr(start+36,end-4).c_str());
                 if (count == 0) {
                     // error parsing number
+                    return;
                 }
+            }
+            
+            std::string hash = msg->get_payload().substr(start+2,32);
+            
+            std::map<std::string,struct msg>::iterator it = m_msgs.find(hash);
+            if (it == m_msgs.end()) {
+                std::cout << "ack for message we didn't send" << std::endl;
+                return;
             }
             
             struct msg& m(m_msgs[msg->get_payload().substr(start+2,32)]);
@@ -194,8 +219,8 @@ public:
                 m.time = get_ms(m.time_sent);
             }
             
-            m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
-            m_messages_acked += count;
+            //m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
+           // m_messages_acked += count;
         } else {
             std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
             struct msg& new_msg(m_msgs[hash]);
