@@ -95,9 +95,9 @@ public:
 	}
 	
 	void on_open(connection_ptr connection) {
-		if (!m_timer) {
+        if (!m_timer) {
 			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
-			m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+			m_timer->expires_from_now(boost::posix_time::milliseconds(500));
 			m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
 			m_last_time = boost::posix_time::microsec_clock::local_time();
 		}
@@ -108,7 +108,7 @@ public:
 			m_connections.insert(connection);
 		}
 		
-		typename std::set<connection_ptr>::iterator it;
+		/*typename std::set<connection_ptr>::iterator it;
 		
 		std::stringstream foo;
         foo << "{\"type\":\"con\""
@@ -118,7 +118,7 @@ public:
 		
 		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
 			(*it)->send(foo.str(),false);
-		}
+		}*/
 	}
 	
 	void on_close(connection_ptr connection) {
@@ -126,7 +126,7 @@ public:
 		m_connections.erase(connection);
 		m_admin_connections.erase(connection);
 		
-		typename std::set<connection_ptr>::iterator it;
+		/*typename std::set<connection_ptr>::iterator it;
 		
 		std::stringstream foo;
         foo << "{\"type\":\"con\""
@@ -136,7 +136,7 @@ public:
         
 		for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
 			(*it)->send(foo.str(),false);
-		}
+		}*/
 		
 	}
 	
@@ -207,7 +207,8 @@ public:
             
             std::map<std::string,struct msg>::iterator it = m_msgs.find(hash);
             if (it == m_msgs.end()) {
-                std::cout << "ack for message we didn't send" << std::endl;
+                std::cout << "ack for message we didn't send: " << hash  
+                          << "(" << hash.size() << ")" << std::endl;
                 return;
             }
             
@@ -347,12 +348,12 @@ public:
                     << ",\"acked\":" << (*msg_it).second.acked
                     << ",\"size\":" << (*msg_it).second.size
                     << ",\"time\":" << (*msg_it).second.time
-                    << "}";
+                    << "}" << (msg_it == last ? "" : ",");
             }
             
             foo << "]}";
             
-            m_msgs.clear();
+            //m_msgs.clear();
             
 				//<< ((m_messages_cache * seconds)*1000) << ",\"data\":" 
 				//<< ((m_data_cache * seconds)*1000) << ",\"messages_sent\":" 
@@ -368,7 +369,7 @@ public:
 			//m_data = 0;
 		//}
 		
-		m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+		m_timer->expires_from_now(boost::posix_time::milliseconds(500));
 		m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
 	}
 	
@@ -391,7 +392,7 @@ private:
     
     int m_nextid;
     std::map<std::string,struct msg>    m_msgs;
-    
+        
 	std::set<connection_ptr>	m_connections;
 	std::set<connection_ptr>	m_admin_connections;
 };

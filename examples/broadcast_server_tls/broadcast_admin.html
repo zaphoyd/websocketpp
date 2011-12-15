@@ -50,11 +50,11 @@ function connect() {
 	
 	ws.onclose = function(e) {
 		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed.<br />";
-		clear_hud()
+		clear_hud();
 	};
 	
 	ws.onmessage = function(e) {
-		foo = JSON.parse(e.data);
+        foo = JSON.parse(e.data);
 		
 		if (foo.type == "message") {
 			if (options.console_enabled) {
@@ -63,13 +63,12 @@ function connect() {
 		} else if (foo.type == "con") {
 			document.getElementById("connected_clients").innerHTML = foo.value;
 		} else if (foo.type == "stats") {
-			console.log(foo);
             for (var i in foo.messages) {
                 var hash = foo.messages[i].hash;
                 
                 if (hash in msgs) {
-                    msgs[hash]["sent"] += foo.messages[i].sent;
-                    msgs[hash]["acked"] += foo.messages[i].acked;
+                    msgs[hash]["sent"] = foo.messages[i].sent;
+                    msgs[hash]["acked"] = foo.messages[i].acked;
                     msgs[hash]["time"] = foo.messages[i].time;
                 } else {
                     msgs[hash] = {"id":foo.messages[i].id,
@@ -80,13 +79,13 @@ function connect() {
                 }
             }
             
-            var foo = "";
+            var o = "";
             
             for (i in msgs) {
-                foo += "<tr><td>"+msgs[i].id+"</td><td>"+msgs[i].sent+"</td><td>"+msgs[i].acked+"</td><td>"+msgs[i].size+"</td><td>"+msgs[i].time+"</td></tr>";
+                o += "<tr><td>"+msgs[i].id+"</td><td>"+msgs[i].sent+"</td><td>"+msgs[i].acked+"</td><td>"+format_data(msgs[i].size)+"</td><td>"+msgs[i].time+"</td><td>"+(msgs[i].time != 0 ? (msgs[i].acked/(msgs[i].time/1000.0)).toFixed(0)+"/s" : "")+"</td><td>"+(msgs[i].time != 0 ? format_data(msgs[i].acked*msgs[i].size/(msgs[i].time/1000.0))+"/s" : "")+"</td></tr>";
             }
             
-            $("#sent_messages").html(foo);
+            $("#sent_messages").html(o);
             
             /*document.getElementById("messages_per_sec").innerHTML = foo.messages+"/s";
 			document.getElementById("bytes_per_sec").innerHTML = format_data(foo.bytes)+"/s";
@@ -94,12 +93,15 @@ function connect() {
             document.getElementById("messages_acked").innerHTML = foo.messages_acked;
 			document.getElementById("bytes_sent").innerHTML = format_data(foo.bytes_sent);*/
             
+            
             document.getElementById("admin_connections").innerHTML = foo.admin_connections;
+            document.getElementById("connected_clients").innerHTML = foo.connections;
             
             client_history.push([foo.timestamp,foo.connections]);
             if (client_history.length > total_points) {
                 client_history = client_history.slice(client_history.length-total_points);
             }
+            
             
             /*data2.push([foo.timestamp,foo.bytes]);
             if (data2.length > total_points) {
@@ -279,7 +281,7 @@ body,html {
     <div>
         <table>
             <thead>
-                <tr><th>id</th><th>sent</th><th>acked</th><th>size</th><th>time</th></tr>
+                <tr><th>id</th><th>sent</th><th>acked</th><th>size</th><th>time</th><th>message rate</th><th>data rate</th></tr>
             </thead>
             <tbody id="sent_messages">
             </tbody>
