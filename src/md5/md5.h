@@ -60,6 +60,8 @@
  * efficiently on either one than if ARCH_IS_BIG_ENDIAN is defined.
  */
 
+#include <stddef.h>
+
 typedef unsigned char md5_byte_t; /* 8-bit byte */
 typedef unsigned int md5_word_t; /* 32-bit word */
 

@@ -37,6 +37,18 @@
 
 #include <sys/resource.h>
 
+struct msg {
+    int         id;
+    size_t      sent;
+    size_t      acked;
+    size_t      size;
+    uint64_t    time;
+    
+    std::string hash;
+    boost::posix_time::ptime	time_sent;
+    
+};
+
 typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
 
@@ -50,9 +62,11 @@ public:
 	typedef typename endpoint_type::connection_ptr connection_ptr;
     
 	broadcast_server_handler() 
-     : m_epoch(boost::posix_time::time_from_string("1970-01-01 00:00:00.000")) {
-		m_messages = 0;
-		m_data = 0;
+     : m_epoch(boost::posix_time::time_from_string("1970-01-01 00:00:00.000")),
+       m_nextid(0)
+    {
+        m_messages = 0;
+        m_data = 0;
 	}
 	
 	std::string get_password() const {
@@ -98,7 +112,7 @@ public:
 		
 		std::stringstream foo;
         foo << "{\"type\":\"con\""
-            << ",\"timestamp\":" << get_ms()
+            << ",\"timestamp\":" << get_ms(m_epoch)
             << ",\"value\":" << m_connections.size()
             << "}";
 		
@@ -116,7 +130,7 @@ public:
 		
 		std::stringstream foo;
         foo << "{\"type\":\"con\""
-            << ",\"timestamp\":" << get_ms()
+            << ",\"timestamp\":" << get_ms(m_epoch)
             << ",\"value\":" << m_connections.size()
             << "}";
         
@@ -130,6 +144,7 @@ public:
 		typename std::set<connection_ptr>::iterator it;
 		
 		if (msg->get_payload().substr(0,27) == "{\"type\":\"acks\",\"messages\":[") {
+            //std::cout << "got ack" << std::endl;
             //std::cout << msg->get_payload() << std::endl;
             // process a 
             //
@@ -154,8 +169,7 @@ public:
                     }
                 }
                 
-                m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
-                
+                                
                 start = end+1;
                 end = msg->get_payload().find(",",start);
             }
@@ -172,18 +186,35 @@ public:
                 }
             }
             
+            struct msg& m(m_msgs[msg->get_payload().substr(start+2,32)]);
+            
+            m.acked += count;
+            
+            if (m.acked == m.sent) {
+                m.time = get_ms(m.time_sent);
+            }
+            
             m_ack_stats[msg->get_payload().substr(start+2,32)] = count;
             m_messages_acked += count;
         } else {
+            std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
+            struct msg& new_msg(m_msgs[hash]);
+            
+            new_msg.id = m_nextid++;
+            new_msg.hash = hash;
+            new_msg.size = msg->get_payload().size();
+            new_msg.time_sent = boost::posix_time::microsec_clock::local_time();
+            new_msg.time = 0;
+            
             // broadcast to clients
             for (it = m_connections.begin(); it != m_connections.end(); it++) {
-                std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
-                
                 //std::cout   << "sending message: (" << hash.size() << ") " << hash << std::endl;
                 m_messages++;
                 m_data += msg->get_payload().size();
                 (*it)->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
             }
+            new_msg.sent = m_connections.size();
+            new_msg.acked = 0;
             
             // broadcast to admins
             std::stringstream foo;
@@ -202,16 +233,12 @@ public:
             foo << "\"}";
             
             for (it = m_admin_connections.begin(); it != m_admin_connections.end(); it++) {
-                //m_messages++;
-                //m_data += msg->get_payload().size();
                 (*it)->send(foo.str(),false);
             }
         }
 		
 		connection->recycle(msg);
 	}
-    
-    
 	
 	void http(connection_ptr connection) {
 		std::stringstream foo;
@@ -221,9 +248,9 @@ public:
 		connection->set_body(foo.str());
 	}
 	
-    long get_ms() {
+    long get_ms(boost::posix_time::ptime s) {
         boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-        boost::posix_time::time_period period(m_epoch,now);
+        boost::posix_time::time_period period(s,now);
         return period.length().total_milliseconds();
     }
     
@@ -235,32 +262,72 @@ public:
 			//boost::posix_time::time_period period(m_last_time,now);
 			//m_last_time = now;
             
+            
+            
+            /*{
+                type: stats
+                connections: int
+                admin_connections: int
+                messages:   [
+                                {
+                                    id: int
+                                    hash: string
+                                    sent: int
+                                    acked: int
+                                    
+                                }
+                            ]
+            }*/
+            
 			
-			long milli_seconds = get_ms();
+			long milli_seconds = get_ms(m_epoch);
 			
 			//double seconds = milli_seconds/1000.0;
 			
-			m_messages_cache = m_messages;
-			m_data_cache = m_data;
+			//m_messages_cache = m_messages;
+			//m_data_cache = m_data;
 			
-			m_messages_sent += m_messages;
-			m_data_sent += m_data;
+			//m_messages_sent += m_messages;
+			//m_data_sent += m_data;
 			
 			//std::cout << "m: " << m_messages 
 			//		  << " milli: " << milli_seconds 
 			//		  << std::endl;
 			
+            /*
+             << ",\"messages\":" << m_messages
+             << ",\"bytes\":" << m_data
+             << ",\"messages_sent\":" << m_messages_sent
+             << ",\"messages_acked\":" << m_messages_acked
+             << ",\"bytes_sent\":" << m_data_sent
+            */
+            
 			std::stringstream foo;
 			foo << "{\"type\":\"stats\""
                 << ",\"timestamp\":" << milli_seconds
-                << ",\"messages\":" << m_messages
-                << ",\"bytes\":" << m_data
-                << ",\"messages_sent\":" << m_messages_sent
-                << ",\"messages_acked\":" << m_messages_acked
-                << ",\"bytes_sent\":" << m_data_sent
                 << ",\"connections\":" << m_connections.size()
                 << ",\"admin_connections\":" << m_admin_connections.size()
-                << "}";
+                << ",\"messages\":[";
+            
+            std::map<std::string,struct msg>::iterator msg_it;
+            std::map<std::string,struct msg>::iterator last = m_msgs.end();
+            if (m_msgs.size() > 0) {
+                last--;
+            }
+            
+            for (msg_it = m_msgs.begin(); msg_it != m_msgs.end(); msg_it++) {
+                foo << "{\"id\":" << (*msg_it).second.id
+                    << ",\"hash\":\"" << (*msg_it).second.hash << "\""
+                    << ",\"sent\":" << (*msg_it).second.sent
+                    << ",\"acked\":" << (*msg_it).second.acked
+                    << ",\"size\":" << (*msg_it).second.size
+                    << ",\"time\":" << (*msg_it).second.time
+                    << "}";
+            }
+            
+            foo << "]}";
+            
+            m_msgs.clear();
             
 				//<< ((m_messages_cache * seconds)*1000) << ",\"data\":" 
 				//<< ((m_data_cache * seconds)*1000) << ",\"messages_sent\":" 
@@ -272,8 +339,8 @@ public:
 				(*it)->send(foo.str(),false);
 			}
 			
-			m_messages = 0;
-			m_data = 0;
+			//m_messages = 0;
+			//m_data = 0;
 		//}
 		
 		m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
@@ -296,6 +363,9 @@ private:
 	
     size_t                          m_messages_acked;
     std::map<std::string,size_t>    m_ack_stats;
+    
+    int m_nextid;
+    std::map<std::string,struct msg>    m_msgs;
     
 	std::set<connection_ptr>	m_connections;
 	std::set<connection_ptr>	m_admin_connections;

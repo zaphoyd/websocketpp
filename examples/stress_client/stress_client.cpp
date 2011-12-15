@@ -47,34 +47,16 @@ public:
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
     void on_open(connection_ptr connection) {
-        //std::cout << "on_open: " << std::endl;
         if (!m_timer) {
 			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
-			m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+			m_timer->expires_from_now(boost::posix_time::milliseconds(250));
 			m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
 		}
     }
     
-	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {		
-		// SHA1 or MD5 the message and 
-        
-        //std::cout << "got message: " << websocketpp::md5_hash_hex(msg->get_payload()) << std::endl;
-        
-        m_total++;
+	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {
         m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
-        
-        /*if (connection->get_resource() == "/getCaseCount") {
-			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
-			m_case_count = atoi(msg->get_payload().c_str());
-		} else {
-			connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
-		}*/
-		
 		connection->recycle(msg);
-	}
-	
-	void http(connection_ptr connection) {
-		//connection->set_body("HTTP Response!!");
 	}
 	
 	void on_fail(connection_ptr connection) {
@@ -87,9 +69,23 @@ public:
             return;
         }
         
-        //std::cout << "on_timer: " << m_total << std::endl;
-        std::stringstream foo;
-        foo << "{\"type\":\"acks\",\"messages\":[";
+        send_stats_update(connection);
+                
+        m_timer->expires_from_now(boost::posix_time::milliseconds(250));
+		m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+    }
+    
+    void on_close(connection_ptr connection) {
+        m_timer->cancel();
+    }
+private:    
+    void send_stats_update(connection_ptr connection) {
+        if (m_msg_stats.empty()) {
+            return;
+        }
+        
+        std::stringstream msg;
+        msg << "{\"type\":\"acks\",\"messages\":[";
         
         std::map<std::string,size_t>::iterator it;
         std::map<std::string,size_t>::iterator last = m_msg_stats.end();
@@ -98,25 +94,16 @@ public:
         }
         
         for (it = m_msg_stats.begin(); it != m_msg_stats.end(); it++) {
-            foo << "{\"" << (*it).first << "\":" << (*it).second << "}" << (it != last ? "," : "");
+            msg << "{\"" << (*it).first << "\":" << (*it).second << "}" << (it != last ? "," : "");
         }
-        foo << "]}";
+        msg << "]}";
         
-        //std::cout << "Sending " << foo.str() << std::endl;
-        
-        connection->send(foo.str(),false);
-                
-        m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
-		m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+        connection->send(msg.str(),false);
+        m_msg_stats.clear();
     }
     
-    void on_close(connection_ptr connection) {
-        m_timer->cancel();
-    }
-    
-    size_t                          m_total;
-    std::map<std::string,size_t>    m_msg_stats;
-    boost::shared_ptr<boost::asio::deadline_timer> m_timer;
+    std::map<std::string,size_t>                    m_msg_stats;
+    boost::shared_ptr<boost::asio::deadline_timer>  m_timer;
 };
 
 
@@ -179,7 +166,6 @@ int main(int argc, char* argv[]) {
 		
 		std::set<connection_ptr> connections;
 		
-		
 		connections.insert(endpoint.connect(uri));
 		
 		boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
@@ -195,17 +181,7 @@ int main(int argc, char* argv[]) {
 		
 		std::cout << "complete" << std::endl;
 		
-		//endpoint.run();
-		
-		/*char line[512];
-		while (std::cin.getline(line, 512)) {
-			std::iterator
-			
-			c->send(line);
-		}*/
-		
 		t.join();
-		
 		
 		std::cout << "done" << std::endl;
 		
