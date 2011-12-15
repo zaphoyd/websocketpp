@@ -36,6 +36,21 @@
 // PLATFORM SPECIFIC STUFF
 #include <unistd.h>
 #include <sys/resource.h>
+#include <time.h>
+
+int msleep(unsigned long milisec)
+{
+    struct timespec req={0};
+    time_t sec=(int)(milisec/1000);
+    milisec=milisec-(sec*1000);
+    req.tv_sec=sec;
+    req.tv_nsec=milisec*1000000L;
+    while(nanosleep(&req,&req)==-1)
+        continue;
+    return 1;
+}
+// END PLATFORM SPECIFIC STUFF
+
 
 typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> plain_endpoint_type;
 typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
@@ -119,19 +134,19 @@ private:
 
 int main(int argc, char* argv[]) {
 	std::string uri = "ws://localhost:9002/";
-	int num_batches = 1;
+	int num_connections = 1;
 	int batch_size = 1;
+    int delay_ms = 500;
 	
-	if (argc != 4) {
-		std::cout << "Usage: `echo_client test_url num_batches batch_size`" << std::endl;
+	if (argc != 5) {
+		std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
 	} else {
 		uri = argv[1];
-		num_batches = atoi(argv[2]);
+		num_connections = atoi(argv[2]);
 		batch_size = atoi(argv[3]);
+        delay_ms = atoi(argv[4]);
 	}
-	
-	int num_connections = num_batches*batch_size;
-	
+		
 	// 12288 is max OS X limit without changing kernal settings
     const rlim_t ideal_size = 200+num_connections;
     rlim_t old_size;
@@ -184,7 +199,8 @@ int main(int argc, char* argv[]) {
 		
 		for (int i = 0; i < num_connections-1; i++) {
 			if (i % batch_size == 0) {
-				sleep(1);
+				//sleep(1);
+                msleep(delay_ms);
 			}
 			connections.insert(endpoint.connect(uri));
 		}
