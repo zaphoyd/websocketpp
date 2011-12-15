@@ -61,7 +61,9 @@ public:
 	typedef stress_client_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
-    stress_client_handler(int num_connections) : m_connections(num_connections) {
+    stress_client_handler(int num_connections) 
+     : m_connections_max(num_connections),
+       m_connections_cur(0) {
         
     }
     
@@ -71,12 +73,22 @@ public:
 			m_timer->expires_from_now(boost::posix_time::milliseconds(250));
 			m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
 		}
+        
+        m_connections_cur++;
+        
+        if (m_connections_cur == m_connections_max) {
+            boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+            boost::posix_time::time_period period(m_start_time,now);
+            int ms = period.length().total_milliseconds();
+            
+            std::cout << "Started " << m_connections_cur << " in " << ms << "ms" << " (" << m_connections_cur/(ms/1000.0) << "/s)" << std::endl;
+        }
     }
     
 	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {
         m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
         
-        if (m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())] == m_connections) {
+        if (m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())] == m_connections_max) {
             send_stats_update(connection);
         }
         
@@ -102,6 +114,8 @@ public:
     void on_close(connection_ptr connection) {
         m_timer->cancel();
     }
+    
+    boost::posix_time::ptime	m_start_time;
 private:    
     void send_stats_update(connection_ptr connection) {
         if (m_msg_stats.empty()) {
@@ -126,7 +140,8 @@ private:
         m_msg_stats.clear();
     }
     
-    int m_connections;
+    int m_connections_max;
+    int m_connections_cur;
     std::map<std::string,size_t>                    m_msg_stats;
     boost::shared_ptr<boost::asio::deadline_timer>  m_timer;
 };
@@ -197,6 +212,7 @@ int main(int argc, char* argv[]) {
 		
 		std::cout << "launching " << num_connections << " connections to " << uri << " in batches of " << batch_size << std::endl;
 		
+        boost::dynamic_pointer_cast<stress_client_handler>(handler)->m_start_time = boost::posix_time::microsec_clock::local_time();
 		for (int i = 0; i < num_connections-1; i++) {
 			if (i % batch_size == 0) {
 				//sleep(1);

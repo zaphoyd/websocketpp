@@ -97,7 +97,7 @@ public:
 	void on_open(connection_ptr connection) {
         if (!m_timer) {
 			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
-			m_timer->expires_from_now(boost::posix_time::milliseconds(500));
+			m_timer->expires_from_now(boost::posix_time::milliseconds(250));
 			m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
 			m_last_time = boost::posix_time::microsec_clock::local_time();
 		}
@@ -369,7 +369,7 @@ public:
 			//m_data = 0;
 		//}
 		
-		m_timer->expires_from_now(boost::posix_time::milliseconds(500));
+		m_timer->expires_from_now(boost::posix_time::milliseconds(250));
 		m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
 	}
 	
