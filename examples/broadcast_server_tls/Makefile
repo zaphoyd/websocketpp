@@ -10,7 +10,7 @@ SHARED  ?= "1"
 ifeq ($(SHARED), 1)
 	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lcrypto -lssl -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a -lcrypto -lssl ../../libwebsocketpp.a
+	LDFLAGS := $(LDFLAGS) ../../libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a -lcrypto -lssl -lpthread
 endif
 
 broadcast_server: broadcast_server_tls.o
