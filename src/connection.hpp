@@ -166,8 +166,8 @@ public:
 				type::shared_from_this(),
 				msg));
 	}
-	void close(close::status::value code, const utf8_string& reason) {
-		// TODO:
+	void close(close::status::value code, const utf8_string& reason = "") {
+		// TODO: overloads without code or reason?
 		send_close(code, reason);
 	}
 	void ping(const binary_string& payload) {

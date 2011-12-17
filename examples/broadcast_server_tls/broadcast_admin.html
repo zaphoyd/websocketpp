@@ -60,13 +60,23 @@ function connect() {
 			if (options.console_enabled) {
                 document.getElementById("messages").innerHTML += "Broadcasted Message: "+foo.value+"<br />";
             }
+		} else if (foo.type == "error") {
+			if (options.console_enabled) {
+                document.getElementById("messages").innerHTML += "Command Error: "+foo.value+"<br />";
+            }
 		} else if (foo.type == "con") {
 			document.getElementById("connected_clients").innerHTML = foo.value;
 		} else if (foo.type == "stats") {
+            var msg_delta = 0;
+            var data_delta = 0;
+            
             for (var i in foo.messages) {
                 var hash = foo.messages[i].hash;
                 
                 if (hash in msgs) {
+                    msg_delta += foo.messages[i].acked-msgs[hash]["acked"];
+                    data_delta += msg_delta*foo.messages[i].size;
+                    
                     msgs[hash]["sent"] = foo.messages[i].sent;
                     msgs[hash]["acked"] = foo.messages[i].acked;
                     msgs[hash]["time"] = foo.messages[i].time;
@@ -76,6 +86,8 @@ function connect() {
                                   "acked":foo.messages[i].acked,
                                   "size":foo.messages[i].size,
                                   "time":foo.messages[i].time}
+                    msg_delta += foo.messages[i].acked;
+                    data_delta += msg_delta*foo.messages[i].size;
                 }
             }
             
@@ -103,20 +115,15 @@ function connect() {
             }
             
             
-            /*data2.push([foo.timestamp,foo.bytes]);
+            data2.push([foo.timestamp,data_delta]);
             if (data2.length > total_points) {
                 data2 = data2.slice(data2.length-total_points);
             }
             
-            message_history.push([foo.timestamp,foo.messages]);
+            message_history.push([foo.timestamp,msg_delta]);
             if (message_history.length > total_points) {
                 message_history = message_history.slice(message_history.length-total_points);
-            }*/
-            
-            /*ack_history.push([foo.timestamp,foo.messages_acked]);
-            if (message_history.length > total_points) {
-                message_history = message_history.slice(message_history.length-total_points);
-            }*/
+            }
 		} else {
 			document.getElementById("messages").innerHTML += "Unrecognized Server Command.<br />";
 		}
@@ -155,6 +162,16 @@ function send() {
 	
 	ws.send(document.getElementById("msg").value);
 	document.getElementById("msg").value = "";
+}
+
+function send_command(command,args) {
+    var cmd = command+":";
+    
+    ws.send(cmd);
+}
+
+function send_test_message(size,type) {
+    ws.send((new Array(size)).join("*"));
 }
 
 function format_data(val) {

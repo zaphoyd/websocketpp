@@ -143,6 +143,69 @@ public:
 	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
 		typename std::set<connection_ptr>::iterator it;
 		
+        
+        // command structure
+        // command:arg1=val1;arg2=val2;arg3=val3;
+        
+        // commands
+        // ack: messages to ack
+        // example: `ack:e3458d0aceff8b70a3e5c0afec632881=38;e3458d0aceff8b70a3e5c0afec632881=42;`
+        
+        // send: [vals]
+        //       message; opcode=X; payload="X"
+        //       frame; [fuzzer stuff]
+        
+        // close:code=1000;reason=msg;
+        // (instructs the opposite end to close with given optional code/msg)
+        
+        const std::string &m(msg->get_payload());
+        
+        std::string::size_type start;
+        std::string::size_type end;
+        
+        start = m.find(":",0);
+        
+        if (start != std::string::npos) {
+            std::string command = m.substr(0,start);
+            
+            // parse args
+            std::map<std::string,std::string> args;
+            
+            start++; // skip the colon
+            end = m.find(";",start);
+            
+            // find all semicolons
+            while (end != std::string::npos) {
+                std::string arg;
+                std::string val;
+                
+                std::string::size_type sep = m.find("=",start);
+                
+                if (sep != std::string::npos) {
+                    arg = m.substr(start,sep-start);
+                    val = m.substr(sep+1,end-sep-1);
+                } else {
+                    arg = m.substr(start,end-start);
+                    val = "";
+                }
+                
+                args[arg] = val;
+                
+                start = end+1;
+                end = m.find(";",start);
+            }
+            
+            if (command == "close") {
+                handle_close(connection,args);
+            } else if (command == "send") {
+                handle_send(connection,args);
+            } else {
+                command_error(connection,"Unrecognized command: "+command);
+            }
+        } else {
+            command_error(connection,"Invalid command syntax");
+        }
+        
 		if (msg->get_payload().substr(0,27) == "{\"type\":\"acks\",\"messages\":[") {
             //std::cout << "got ack" << std::endl;
             //std::cout << msg->get_payload() << std::endl;
@@ -265,7 +328,38 @@ public:
 		
 		connection->recycle(msg);
 	}
+    
+    void command_error(connection_ptr connection,const std::string msg) {
+        connection->send("{\"type\":\"error\",\"value\":\""+msg+"\"}");
+    }
 	
+    // in order to keep parsing this command language as simple as possible
+    // the following values must be escaped (with \) if they are to appear 
+    // literally in string arguments: :,;=\
+    
+    // close: [reason; code=1000; msg=X], [all]
+    // (instructs the opposite end to close with given optional code/msg)
+    void handle_close(connection_ptr connection,
+                      const std::map<std::string,std::string> args)
+    {
+        if (args.size() == 0) {
+            typename std::set<connection_ptr>::iterator it;
+            
+            for (it = m_connections.begin(); it != m_connections.end(); it++) {
+                
+                (*it)->close(websocketpp::close::status::NORMAL);
+            }
+        } else {
+            command_error(connection,"close arguments not supported");
+        }
+    }
+    
+    void handle_send(connection_ptr connection,
+                      const std::map<std::string,std::string> args)
+    {
+        
+    }
+    
 	void http(connection_ptr connection) {
 		std::stringstream foo;
 		
@@ -450,7 +544,7 @@ int main(int argc, char* argv[]) {
 			plain_handler_ptr h(new broadcast_server_handler<plain_endpoint_type>());
 			plain_endpoint_type e(h);
 			
-			e.alog().unset_level(websocketpp::log::alevel::ALL);
+			e.alog().set_level(websocketpp::log::alevel::ALL);
 			e.elog().set_level(websocketpp::log::elevel::ALL);
 			
 			std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
