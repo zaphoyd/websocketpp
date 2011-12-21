@@ -199,6 +199,31 @@ size_t hybi_header::get_payload_size() const {
 	return m_payload_size;
 }
 
+void hybi_header::set_payload_size(size_t size) {
+    if (size <= frame::limits::PAYLOAD_SIZE_BASIC) {
+        // encode in byte 2
+        m_header[1] &= (size & BPB1_PAYLOAD);
+    } else if (size <= frame::limits::PAYLOAD_SIZE_EXTENDED) {
+        // encode two byte
+        m_header[1] &= (BASIC_PAYLOAD_16BIT_CODE & BPB1_PAYLOAD);
+        
+        if (get_masked()) {
+            
+        }
+        
+        *(reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])) = htons(size);
+        
+        
+
+        
+    } else if (size <= frame::limits::PAYLOAD_SIZE_EXTENDED) {
+        // encode two byte
+        m_header[1] &= (BASIC_PAYLOAD_64BIT_CODE & BPB1_PAYLOAD);
+    } else {
+        throw processor::exception("Client attempted to send a message that was too big",processor::error::MESSAGE_TOO_BIG);
+    }
+}
+
 bool hybi_header::is_control() const {
 	return (frame::opcode::is_control(get_opcode()));
 }

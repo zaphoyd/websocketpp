@@ -28,6 +28,7 @@
 #include "data.hpp"
 
 #include "../processors/processor.hpp"
+#include "../processors/hybi_header.hpp"
 
 using websocketpp::message::data;
 
@@ -97,7 +98,7 @@ void data::process_character(unsigned char c) {
     
 void data::reset(frame::opcode::value opcode) {
     m_opcode = opcode;
-    m_masking_index = 0;
+    m_masking_index = M_NOT_MASKED; // -1 indicates do not mask/unmask
     m_payload.resize(0);
     m_validator.reset();
 }
@@ -112,5 +113,30 @@ void data::complete() {
 	
 void data::set_masking_key(int32_t key) {
     *reinterpret_cast<int32_t*>(m_masking_key) = key;
-    m_masking_index = (key == 0 ? -1 : 0);
+    // -2 indicates a masked frame whose key is zero.
+    m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
 }
+
+
+// This could be further optimized using methods that write directly into the
+// m_payload buffer
+void data::set_payload(const std::string& payload) {
+    m_payload.reserve(payload.size());
+    std::copy(payload.begin(), payload.end(), m_payload.begin());
+}
+void data::process() {
+    websocketpp::processor::hybi_header header;
+    header.set_fin(true);
+    header.set_opcode(m_opcode);
+    
+    // set opcode
+    // set 
+    
+    // mask
+    if (m_masking_index >= 0) {
+        for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
+            (*it) = *it ^ m_masking_key[(m_masking_index++)%4];
+        }
+    }
+}
+

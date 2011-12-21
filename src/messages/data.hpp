@@ -41,17 +41,43 @@ class data {
 public:
     data();
 	
+    void reset(frame::opcode::value opcode);
+    
     frame::opcode::value get_opcode() const;
 	const std::string& get_payload() const;
     
+    // ##reading##
+    // sets the masking key to be used to unmask as bytes are read.
+    void set_masking_key(int32_t key);
+    
+    // read at most size bytes from a payload stream and perform unmasking/utf8
+    // validation. Returns number of bytes read.
+    // throws a processor::exception if the message is too big, there is a fatal
+    // istream read error, or invalid UTF8 data is read for a text message
     uint64_t process_payload(std::istream& input,uint64_t size);
 	void process_character(unsigned char c);
-    void reset(frame::opcode::value opcode);
 	void complete();
-	void set_masking_key(int32_t key);
+    
+    // ##writing##
+    // sets the payload to payload. Performs max size and UTF8 validation 
+    // immediately and throws processor::exception if it fails
+    void set_payload(const std::string& payload);
+    
+    // Performs masking and header generation if it has not been done already.
+    void process();
+	
 private:
     static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
+    
+    enum index_value {
+        M_MASK_KEY_ZERO = -2,
+        M_NOT_MASKED = -1,
+        M_BYTE_0 = 0,
+        M_BYTE_1 = 1,
+        M_BYTE_2 = 2,
+        M_BYTE_3 = 3
+    };
     
 	// Message state
 	frame::opcode::value		m_opcode;
@@ -61,9 +87,11 @@ private:
 	
 	// Masking state
 	unsigned char				m_masking_key[4];
-    int                         m_masking_index;
+    // m_masking_index can take on
+    index_value                 m_masking_index;
 	
 	// Message buffers
+    std::string                 m_header;
     std::string					m_payload;
 };
 

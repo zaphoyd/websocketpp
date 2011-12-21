@@ -72,6 +72,8 @@ public:
 	uint8_t get_basic_size() const;
 	size_t get_payload_size() const;
 	
+    void set_payload_size(size_t size);
+    
 	bool is_control() const;
 	
 	void process_basic_header();
