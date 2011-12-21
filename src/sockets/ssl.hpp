@@ -94,7 +94,12 @@ public:
 		
 		void init() {
 			m_context_ptr = m_connection.get_handler()->on_tls_init();
-			m_socket_ptr = ssl_socket_ptr(new ssl_socket(m_endpoint.get_io_service(),*m_context_ptr));
+			
+            if (!m_context_ptr) {
+                throw "handler was unable to init tls, connection error";
+            }
+            
+            m_socket_ptr = ssl_socket_ptr(new ssl_socket(m_endpoint.get_io_service(),*m_context_ptr));
 		}
 		
 		void async_init(boost::function<void(const boost::system::error_code&)> callback)

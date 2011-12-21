@@ -42,7 +42,6 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <iostream> // temporary?
 #include <vector>
@@ -258,10 +257,12 @@ public:
 	// stuff about switching handlers on the fly
 	// TODO: organize more	
 	void set_handler(handler_ptr new_handler) {
-		m_endpoint.elog().at(log::elevel::FATAL) 
-			<< "Tried to switch to a NULL handler." << log::endl;
+		
 		if (!new_handler) {
-			throw "TODO";
+            m_endpoint.elog().at(log::elevel::FATAL) 
+                << "Tried to switch to a NULL handler." << log::endl;
+			terminate(true);
+            return;
 		}
 		
 		handler_ptr old_handler = get_handler();

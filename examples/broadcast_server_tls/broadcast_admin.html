@@ -12,7 +12,8 @@
 <script type="text/javascript">
 var options = {"console_enabled": true};
 
-var ws;
+var ws_client;
+var ws_admin;
 var url;
 
 var data2 = [], total_points = 240;
@@ -26,34 +27,58 @@ var msgs = {};
 
 function connect() {
 	url = document.getElementById("server_url").value;
-	console.log(url);
 	
 	if ("WebSocket" in window) {
-		ws = new WebSocket(url);
+		ws_client = new WebSocket(url);
+        ws_admin = new WebSocket(url+"/admin");
 	} else if ("MozWebSocket" in window) {
-		ws = new MozWebSocket(url);
+		ws_client = new MozWebSocket(url);
+        ws_admin = new MozWebSocket(url+"/admin");
 	} else {
-		document.getElementById("messages").innerHTML += "This Browser does not support WebSockets<br />";
+		$("#messages").innerHTML += "This Browser does not support WebSockets<br />";
 		return;
 	}
-	ws.onopen = function(e) {
-		document.getElementById("messages").innerHTML += "Client: A connection to "+ws.URL+" has been opened.<br />";
+    
+	ws_client.onopen = function(e) {
+		$("#messages").append("Client: A client connection to "+url+" has been opened.<br />");
 		
-		document.getElementById("server_url").disabled = true;
-		document.getElementById("toggle_connect").innerHTML = "Disconnect";
+		$("#server_url").disabled = true;
+		$("#toggle_connect").html("Disconnect");
+	};
+    
+    ws_admin.onopen = function(e) {
+		$("#messages").append("Client: An admin connection to "+url+"/admin has been opened.<br />");
+		
+		$("#server_url").disabled = true;
+		$("#toggle_connect").html("Disconnect");
 	};
 	
-	ws.onerror = function(e) {
-		document.getElementById("messages").innerHTML += "Client: An error occured, see console log for more details.<br />";
+	ws_client.onerror = function(e) {
+		$("#messages").append("Client: An error occured on the client channel, see console log for more details.<br />");
+		console.log(e);
+	};
+    ws_admin.onerror = function(e) {
+		$("#messages").append("Client: An error occured on the admin channel, see console log for more details.<br />");
 		console.log(e);
 	};
 	
-	ws.onclose = function(e) {
-		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed.<br />";
+	ws_client.onclose = function(e) {
+		$("#messages").append("Client: The client connection to "+url+" was closed.<br />");
+		clear_hud();
+	};
+    
+    ws_admin.onclose = function(e) {
+		$("#messages").append("Client: The admin connection to "+url+"/admin was closed.<br />");
 		clear_hud();
 	};
 	
-	ws.onmessage = function(e) {
+    ws_client.onmessage = function(e) {
+        if (options.console_enabled) {
+            $("#messages").append("Broadcasted Message: "+e.data+"<br />");
+        }
+    }
+    
+	ws_admin.onmessage = function(e) {
         foo = JSON.parse(e.data);
 		
 		if (foo.type == "message") {
@@ -143,7 +168,8 @@ function clear_hud() {
 }
 	
 function disconnect() {
-	ws.close();
+	ws_client.close();
+    ws_admin.close();
 }
 
 function toggle_connect() {
@@ -154,20 +180,20 @@ function toggle_connect() {
 	}
 }
 
-function send() {
-	if (ws === undefined || ws.readyState != 1) {
-		document.getElementById("messages").innerHTML += "Client: Websocket is not avaliable for writing<br />";
+function broadcast() {
+	if (ws_client === undefined || ws_client.readyState != 1) {
+		$("#messages").append("Client: Client websocket is not avaliable for writing<br />");
 		return;
 	}
 	
-	ws.send(document.getElementById("msg").value);
+	ws_client.send(document.getElementById("msg").value);
 	document.getElementById("msg").value = "";
 }
 
 function send_command(command,args) {
     var cmd = command+":";
     
-    ws.send(cmd);
+    ws_admin.send(cmd);
 }
 
 function send_test_message(size,type) {
@@ -277,12 +303,12 @@ body,html {
 
 <div id="controls">
 	<div id="server">
-	<input type="text" name="server_url" id="server_url" value="ws://thor-websocket.zaphoyd.net:9002/admin" />
+	<input type="text" name="server_url" id="server_url" value="ws://thor-websocket.zaphoyd.net:9002" />
 	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
 	</div>
 
 	<div id="message_input"><input type="text" name="msg" id="msg" value="Hello World!" />
-	<button onclick="send();">Broadcast</button></div>
+	<button onclick="broadcast();">Broadcast</button></div>
 	
 	<h2>Stats</h2>
 	<h3>Server</h3>

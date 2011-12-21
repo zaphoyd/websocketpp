@@ -31,8 +31,6 @@
 #include "md5.h"
 #include <string>
 
-#include <iostream>
-
 namespace websocketpp {
 
 // could be compiled separately

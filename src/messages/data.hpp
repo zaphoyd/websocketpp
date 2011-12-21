@@ -28,100 +28,27 @@
 #ifndef WEBSOCKET_DATA_MESSAGE_HPP
 #define WEBSOCKET_DATA_MESSAGE_HPP
 
-#include "../processors/processor.hpp"
-#include "../websocket_frame.hpp"
+#include "../common.hpp"
 #include "../utf8_validator/utf8_validator.hpp"
 
 #include <algorithm>
+#include <istream>
 
 namespace websocketpp {
 namespace message {
 
 class data {
 public:
-    data() {
-        m_payload.reserve(PAYLOAD_SIZE_INIT);
-    }
+    data();
+	
+    frame::opcode::value get_opcode() const;
+	const std::string& get_payload() const;
     
-	frame::opcode::value get_opcode() const {
-        return m_opcode;
-    };
-	
-	const std::string& get_payload() const {
-        return m_payload;
-    };
-	
-    uint64_t process_payload(std::istream& input,uint64_t size) {
-		unsigned char c;
-        const uint64_t new_size = m_payload.size() + size;
-        uint64_t i;
-		
-        if (new_size > PAYLOAD_SIZE_MAX) {
-            // TODO: real exception
-			throw processor::exception("Message too big",processor::error::MESSAGE_TOO_BIG);
-        }
-        
-        if (new_size > m_payload.capacity()) {
-            m_payload.reserve(std::max(new_size,static_cast<uint64_t>(2*m_payload.capacity())));
-        }
-        
-        for (i = 0; i < size; ++i) {
-            if (input.good()) {
-				c = input.get();
-            } else if (input.eof()) {
-                break;
-            } else {
-                // istream read error? throw?
-				throw processor::exception("istream read error",
-										   processor::error::FATAL_ERROR);
-            }
-            if (input.good()) {
-                process_character(c);
-            } else if (input.eof()) {
-                break;
-            } else {
-                // istream read error? throw?
-                throw processor::exception("istream read error",
-										   processor::error::FATAL_ERROR);
-            }
-        }
-        
-        // successfully read all bytes
-        return i;
-    }
-	
-	void process_character(unsigned char c) {
-		if (m_masking_index >= 0) {
-			c = c ^ m_masking_key[(m_masking_index++)%4];
-		}
-		
-		if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>((unsigned char)(c)))) {
-			throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
-		}
-		
-		// add c to payload 
-		m_payload.push_back(c);
-	}
-    
-    void reset(frame::opcode::value opcode) {
-        m_opcode = opcode;
-        m_masking_index = 0;
-        m_payload.resize(0);
-		m_validator.reset();
-    }
-		
-	void complete() {
-		if (m_opcode == frame::opcode::TEXT) {
-			if (!m_validator.complete()) {
-				throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
-			}
-		}
-	}
-	
-	void set_masking_key(int32_t key) {
-		*reinterpret_cast<int32_t*>(m_masking_key) = key;
-		m_masking_index = (key == 0 ? -1 : 0);
-	}
+    uint64_t process_payload(std::istream& input,uint64_t size);
+	void process_character(unsigned char c);
+    void reset(frame::opcode::value opcode);
+	void complete();
+	void set_masking_key(int32_t key);
 private:
     static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB

@@ -58,6 +58,8 @@
 		B67324B01491A81600FC2B04 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
 		B67324B11491A81600FC2B04 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
 		B67324B21491A84000FC2B04 /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
+		B6826CBC14A0D75A006DD3F3 /* data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6826CBB14A0D75A006DD3F3 /* data.cpp */; };
+		B6826CBD14A0D75A006DD3F3 /* data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6826CBB14A0D75A006DD3F3 /* data.cpp */; };
 		B68288871437460E002BA48B /* chat_client_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828875143745DA002BA48B /* chat_client_handler.cpp */; };
 		B68288881437460E002BA48B /* chat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6828877143745DA002BA48B /* chat_client.cpp */; };
 		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -268,6 +270,11 @@
 		B673249C1491A50000FC2B04 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B673249D1491A51E00FC2B04 /* stress_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stress_client.cpp; sourceTree = "<group>"; };
 		B67324A21491A7F100FC2B04 /* stress_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = stress_client; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6826CB6149F7037006DD3F3 /* broadcast_server_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = broadcast_server_handler.hpp; sourceTree = "<group>"; };
+		B6826CB814A0C483006DD3F3 /* broadcast_admin_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = broadcast_admin_handler.hpp; sourceTree = "<group>"; };
+		B6826CB914A0C483006DD3F3 /* broadcast_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = broadcast_handler.hpp; sourceTree = "<group>"; };
+		B6826CBA14A0C49B006DD3F3 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = wscmd.hpp; sourceTree = "<group>"; };
+		B6826CBB14A0D75A006DD3F3 /* data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = data.cpp; path = src/messages/data.cpp; sourceTree = "<group>"; };
 		B6828875143745DA002BA48B /* chat_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client_handler.cpp; path = examples/chat_client/chat_client_handler.cpp; sourceTree = "<group>"; };
 		B6828876143745DA002BA48B /* chat_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = chat_client_handler.hpp; path = examples/chat_client/chat_client_handler.hpp; sourceTree = "<group>"; };
 		B6828877143745DA002BA48B /* chat_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_client.cpp; path = examples/chat_client/chat_client.cpp; sourceTree = "<group>"; };
@@ -501,6 +508,7 @@
 			isa = PBXGroup;
 			children = (
 				B663885F1487FE6C00DDAE13 /* data.hpp */,
+				B6826CBB14A0D75A006DD3F3 /* data.cpp */,
 				B66388601487FE6C00DDAE13 /* control.hpp */,
 			);
 			name = messages;
@@ -565,7 +573,11 @@
 			isa = PBXGroup;
 			children = (
 				B673248214919D6600FC2B04 /* broadcast_admin.html */,
+				B6826CBA14A0C49B006DD3F3 /* wscmd.hpp */,
 				B673248314919D6600FC2B04 /* broadcast_server_tls.cpp */,
+				B6826CB814A0C483006DD3F3 /* broadcast_admin_handler.hpp */,
+				B6826CB914A0C483006DD3F3 /* broadcast_handler.hpp */,
+				B6826CB6149F7037006DD3F3 /* broadcast_server_handler.hpp */,
 				B673248414919D6600FC2B04 /* Makefile */,
 			);
 			name = broadcast_server_tls;
@@ -1111,6 +1123,7 @@
 				B6DF1C8A1434AC330029A1B1 /* sha1.cpp in Sources */,
 				B6727429148517180029CF3E /* uri.cpp in Sources */,
 				B653A719148AB555004D7BD9 /* hybi_header.cpp in Sources */,
+				B6826CBC14A0D75A006DD3F3 /* data.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1124,6 +1137,7 @@
 				B6DF1C8B1434AC330029A1B1 /* sha1.cpp in Sources */,
 				B672742A148517180029CF3E /* uri.cpp in Sources */,
 				B653A71A148AB555004D7BD9 /* hybi_header.cpp in Sources */,
+				B6826CBD14A0D75A006DD3F3 /* data.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1631,6 +1645,7 @@
 				B6732461148FAEEC00FC2B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6732478148FB0FC00FC2B04 /* Build configuration list for PBXNativeTarget "fuzzing_client" */ = {
 			isa = XCConfigurationList;
@@ -1639,6 +1654,7 @@
 				B673247A148FB0FC00FC2B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B67324901491A16500FC2B04 /* Build configuration list for PBXNativeTarget "broadcast_server" */ = {
 			isa = XCConfigurationList;
@@ -1647,6 +1663,7 @@
 				B67324921491A16500FC2B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B67324A91491A7F200FC2B04 /* Build configuration list for PBXNativeTarget "stress_client" */ = {
 			isa = XCConfigurationList;
@@ -1655,6 +1672,7 @@
 				B67324AB1491A7F200FC2B04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6828884143745F2002BA48B /* Build configuration list for PBXNativeTarget "chat_client" */ = {
 			isa = XCConfigurationList;

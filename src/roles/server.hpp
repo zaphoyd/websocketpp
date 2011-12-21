@@ -158,9 +158,9 @@ public:
 	// handler interface callback base class
     class handler_interface {
 	public:
-		virtual void validate(connection_ptr connection) {};
-		virtual void on_open(connection_ptr connection) {};
-		virtual void on_close(connection_ptr connection) {};
+		virtual void validate(connection_ptr connection) {}
+		virtual void on_open(connection_ptr connection) {}
+		virtual void on_close(connection_ptr connection) {}
 		virtual void on_fail(connection_ptr connection) {}
 		
 		virtual void on_message(connection_ptr connection,message::data_ptr) {};

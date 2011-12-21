@@ -30,7 +30,6 @@
 
 #include "processor.hpp"
 
-#include "../md5/md5.h"
 #include "../md5/md5.hpp"
 #include "../network_utilities.hpp"
 
@@ -74,7 +73,8 @@ public:
 		memcpy(&key_final[8],request.header("Sec-WebSocket-Key3").c_str(),8);
 		
 		// md5
-		m_key3 = md5_hash_string(key_final);
+        m_key3 = key_final;
+		m_key3 = md5_hash_string(m_key3);
 		
 		response.add_header("Upgrade","websocket");
 		response.add_header("Connection","Upgrade");

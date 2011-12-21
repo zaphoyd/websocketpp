@@ -28,11 +28,9 @@
 #ifndef WEBSOCKETPP_URI_HPP
 #define WEBSOCKETPP_URI_HPP
 
-#include <exception>
-#include <stdint.h>
-#include <string>
+#include "common.hpp"
 
-#include <boost/shared_ptr.hpp>
+#include <exception>
 
 namespace websocketpp {
 

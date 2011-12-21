@@ -102,6 +102,50 @@ namespace websocketpp {
 	}
 	}
 	
+    namespace frame {
+    // Opcodes are 4 bits
+    // See spec section 5.2
+    namespace opcode {
+        enum value {
+            CONTINUATION = 0x0,
+            TEXT = 0x1,
+            BINARY = 0x2,
+            RSV3 = 0x3,
+            RSV4 = 0x4,
+            RSV5 = 0x5,
+            RSV6 = 0x6,
+            RSV7 = 0x7,
+            CLOSE = 0x8,
+            PING = 0x9,
+            PONG = 0xA,
+            CONTROL_RSVB = 0xB,
+            CONTROL_RSVC = 0xC,
+            CONTROL_RSVD = 0xD,
+            CONTROL_RSVE = 0xE,
+            CONTROL_RSVF = 0xF,
+        };
+        
+        inline bool reserved(value v) {
+            return (v >= RSV3 && v <= RSV7) || 
+            (v >= CONTROL_RSVB && v <= CONTROL_RSVF);
+        }
+        
+        inline bool invalid(value v) {
+            return (v > 0xF || v < 0);
+        }
+        
+        inline bool is_control(value v) {
+            return v >= 0x8;
+        }
+    }
+    
+    namespace limits {
+        static const uint8_t PAYLOAD_SIZE_BASIC = 125;
+        static const uint16_t PAYLOAD_SIZE_EXTENDED = 0xFFFF; // 2^16, 65535
+        static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
+    }
+    } // namespace frame
+    
 }
 
 #endif // WEBSOCKET_CONSTANTS_HPP
