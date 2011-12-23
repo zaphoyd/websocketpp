@@ -34,45 +34,91 @@
 namespace websocketpp {
 namespace processor {
 
+class hybi_header_writer {
+public:
+    hybi_header_writer();
+    void reset();
+    
+    void set_fin(bool fin);
+    void set_rsv1(bool b);
+    void set_rsv2(bool b);
+    void set_rsv3(bool b);
+    void set_opcode(frame::opcode::value op);
+    void set_masked(bool masked,int32_t key);
+    void set_payload_size(size_t size);
+    
+    std::string get_header_bytes() const;
+private:
+    // basic payload byte flags
+	static const uint8_t BPB0_OPCODE = 0x0F;
+	static const uint8_t BPB0_RSV3 = 0x10;
+	static const uint8_t BPB0_RSV2 = 0x20;
+	static const uint8_t BPB0_RSV1 = 0x40;
+	static const uint8_t BPB0_FIN = 0x80;
+	static const uint8_t BPB1_PAYLOAD = 0x7F;
+	static const uint8_t BPB1_MASK = 0x80;
+	
+	static const uint8_t BASIC_PAYLOAD_16BIT_CODE = 0x7E; // 126
+	static const uint8_t BASIC_PAYLOAD_64BIT_CODE = 0x7F; // 127
+	
+	static const unsigned int BASIC_HEADER_LENGTH = 2;		
+	static const unsigned int MAX_HEADER_LENGTH = 15;
+    
+    char m_header[MAX_HEADER_LENGTH];
+};
+
+
+// hybi header can be used for the following two tasks:
+// - parse a sequence of bytes into a complete header and read fields
+// - set fields and then generate a sequence of header bytes
+
 class hybi_header {
 public:
-	hybi_header();
+    // constructs/resets a hybi_header for the purpose of either reading or writing
+	hybi_header(bool reading = true);
+	void reset(bool reading = true);
 	
-	uint64_t get_bytes_needed() const;
-	
-	void reset();
-	
-	bool ready() const;
-	
+	// Reading interface (Parse a byte stream)
 	void consume(std::istream& input);
-	
+	uint64_t get_bytes_needed() const;
+    bool ready() const;
+    
+    bool get_fin() const;
+    bool get_rsv1() const;
+    bool get_rsv2() const;
+    bool get_rsv3() const;
+    frame::opcode::value get_opcode() const;
+    bool get_masked() const;
+    
+    // Writing interface (Set fields directly)
+    void set_fin(bool fin);
+    void set_rsv1(bool b);
+    void set_rsv2(bool b);
+    void set_rsv3(bool b);
+    void set_opcode(frame::opcode::value op);
+    void set_masked(bool masked,int32_t key);
+    void set_payload_size(size_t size);
+    
+    std::string get_header_bytes() const;
+    
+    
 	unsigned int get_header_len() const;
 	
 	int32_t get_masking_key();
 	
 	// get and set header bits
-	bool get_fin() const;
-	void set_fin(bool fin);
 	
-	bool get_rsv1() const;
-	void set_rsv1(bool b);
 	
-	bool get_rsv2() const;
-	void set_rsv2(bool b);
 	
-	bool get_rsv3() const;
-	void set_rsv3(bool b);
 	
-	frame::opcode::value get_opcode() const;
-	void set_opcode(frame::opcode::value op);
 	
-	bool get_masked() const;
-	void set_masked(bool masked,int32_t key);
+	
+	
 	
 	uint8_t get_basic_size() const;
 	size_t get_payload_size() const;
 	
-    void set_payload_size(size_t size);
+    
     
 	bool is_control() const;
 	
@@ -103,6 +149,7 @@ private:
 	static const uint8_t STATE_BASIC_HEADER = 1;
 	static const uint8_t STATE_EXTENDED_HEADER = 2;
 	static const uint8_t STATE_READY = 3;
+    static const uint8_t STATE_WRITE = 4;
 	
 	uint8_t		m_state;
 	uint64_t	m_bytes_needed;

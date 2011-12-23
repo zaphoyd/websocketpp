@@ -390,7 +390,7 @@ public:
 				throw "shouldn't be here";
 		}
 	}
-	
+    
 	// TODO: replace all this to remove all lingering dependencies on 
 	// websocket_frame
 	binary_string_ptr prepare_frame(frame::opcode::value opcode,

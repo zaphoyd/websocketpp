@@ -27,19 +27,45 @@
 
 #include "hybi_header.hpp"
 
+#include <cstring>
+
+using websocketpp::processor::hybi_header_writer;
+
+hybi_header_writer::hybi_header_writer() {
+    reset();
+}
+
+void hybi_header_writer::reset() {
+    memset(m_header, 0x00, MAX_HEADER_LENGTH);
+}
+
+std::string hybi_header_writer::get_header_bytes() const {
+    return std::string(m_header);
+}
+
+
+
+
+
+
+
 using websocketpp::processor::hybi_header;
 
-hybi_header::hybi_header() {
-	reset();
+hybi_header::hybi_header(bool reading) {
+	reset(reading);
 }
 	
 uint64_t hybi_header::get_bytes_needed() const {
 	return m_bytes_needed;
 }
 
-void hybi_header::reset() {
-	m_state = STATE_BASIC_HEADER;
-	m_bytes_needed = BASIC_HEADER_LENGTH;
+void hybi_header::reset(bool reading) {
+	if (reading) {
+        m_state = STATE_BASIC_HEADER;
+        m_bytes_needed = BASIC_HEADER_LENGTH;
+    } else {
+        m_state = STATE_WRITE;
+    }
 }
 
 bool hybi_header::ready() const {
