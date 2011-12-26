@@ -29,108 +29,92 @@
 #define WEBSOCKET_PROCESSOR_HYBI_HEADER_HPP
 
 #include "processor.hpp"
-#include "../websocket_frame.hpp" // TODO: remove this dependency
 
 namespace websocketpp {
 namespace processor {
 
-class hybi_header_writer {
+/// Describes a processor for reading and writing WebSocket frame headers
+/**
+ * The hybi_header class provides a processor capable of reading and writing
+ * WebSocket frame headers. It has two writing modes and two reading modes.
+ * 
+ * Writing method 1: call consume() until ready()
+ * Writing method 2: call set_* methods followed by complete()
+ * 
+ * Writing methods are valid only when ready() returns false. Use reset() to 
+ * reset the header for writing again. Mixing writing methods between calls to
+ * reset() may behave unpredictably.
+ * 
+ * Reading method 1: call get_header_bytes() to return a string of bytes
+ * Reading method 2: call get_* methods to read individual values
+ * 
+ * Reading methods are valid only when ready() is true.
+ * 
+ * @par Thread Safety
+ * @e Distinct @e objects: Safe.@n
+ * @e Shared @e objects: Unsafe
+ */
+class hybi_header {
 public:
-    hybi_header_writer();
-    void reset();
+    /// Construct a header processor and initialize for writing
+	hybi_header();
+    /// Reset a header processor for writing
+	void reset();
+	
+	// Writing interface (parse a byte stream)
+    // valid only if ready() returns false
+    // Consume will throw a processor::exception in the case that the bytes it
+    // read do not form a valid WebSocket frame header.
+    void consume(std::istream& input);
+	uint64_t get_bytes_needed() const;
+    bool ready() const;
     
+    // Writing interface (set fields directly)
+    // valid only if ready() returns false
+    // set_* may allow invalid values. Call complete() once values are set to
+    // check for header validity.
     void set_fin(bool fin);
     void set_rsv1(bool b);
     void set_rsv2(bool b);
     void set_rsv3(bool b);
     void set_opcode(frame::opcode::value op);
     void set_masked(bool masked,int32_t key);
-    void set_payload_size(size_t size);
+    void set_payload_size(uint64_t size);
+    // Complete will throw a processor::exception in the case that the 
+    // combination of values set do not form a valid WebSocket frame header.
+    void complete();
     
+    // Reading interface (get string of bytes)
+    // valid only if ready() returns true
     std::string get_header_bytes() const;
-private:
-    // basic payload byte flags
-	static const uint8_t BPB0_OPCODE = 0x0F;
-	static const uint8_t BPB0_RSV3 = 0x10;
-	static const uint8_t BPB0_RSV2 = 0x20;
-	static const uint8_t BPB0_RSV1 = 0x40;
-	static const uint8_t BPB0_FIN = 0x80;
-	static const uint8_t BPB1_PAYLOAD = 0x7F;
-	static const uint8_t BPB1_MASK = 0x80;
-	
-	static const uint8_t BASIC_PAYLOAD_16BIT_CODE = 0x7E; // 126
-	static const uint8_t BASIC_PAYLOAD_64BIT_CODE = 0x7F; // 127
-	
-	static const unsigned int BASIC_HEADER_LENGTH = 2;		
-	static const unsigned int MAX_HEADER_LENGTH = 15;
     
-    char m_header[MAX_HEADER_LENGTH];
-};
-
-
-// hybi header can be used for the following two tasks:
-// - parse a sequence of bytes into a complete header and read fields
-// - set fields and then generate a sequence of header bytes
-
-class hybi_header {
-public:
-    // constructs/resets a hybi_header for the purpose of either reading or writing
-	hybi_header(bool reading = true);
-	void reset(bool reading = true);
-	
-	// Reading interface (Parse a byte stream)
-	void consume(std::istream& input);
-	uint64_t get_bytes_needed() const;
-    bool ready() const;
-    
+    // Reading interface (get fields directly)
+    // valid only if ready() returns true
     bool get_fin() const;
     bool get_rsv1() const;
     bool get_rsv2() const;
     bool get_rsv3() const;
     frame::opcode::value get_opcode() const;
     bool get_masked() const;
+    // will return zero in the case where get_masked() is false. Note:
+    // a masking key of zero is slightly different than no mask at all.
+    int32_t get_masking_key() const;
+    uint64_t get_payload_size() const;
     
-    // Writing interface (Set fields directly)
-    void set_fin(bool fin);
-    void set_rsv1(bool b);
-    void set_rsv2(bool b);
-    void set_rsv3(bool b);
-    void set_opcode(frame::opcode::value op);
-    void set_masked(bool masked,int32_t key);
-    void set_payload_size(size_t size);
-    
-    std::string get_header_bytes() const;
-    
-    
-	unsigned int get_header_len() const;
-	
-	int32_t get_masking_key();
-	
-	// get and set header bits
-	
-	
-	
-	
-	
-	
-	
-	
-	uint8_t get_basic_size() const;
-	size_t get_payload_size() const;
-	
-    
-    
-	bool is_control() const;
-	
-	void process_basic_header();
-	void process_extended_header();
-	
-	void validate_basic_header() const;
-	
-	void set_masking_key(int32_t key);
-	void clear_masking_key();
-	
+    bool is_control() const;
 private:
+    // general helper functions
+    unsigned int get_header_len() const;
+    uint8_t get_basic_size() const;
+    void validate_basic_header() const;
+    
+    // helper functions for writing
+    void process_basic_header();
+	void process_extended_header();
+    void set_header_bit(uint8_t bit,int byte,bool value);
+    void set_masking_key(int32_t key);
+	void clear_masking_key();
+    
 	// basic payload byte flags
 	static const uint8_t BPB0_OPCODE = 0x0F;
 	static const uint8_t BPB0_RSV3 = 0x10;

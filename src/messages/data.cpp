@@ -140,3 +140,6 @@ void data::process() {
     }
 }
 
+void data::set_header(const std::string& header) {
+    m_header = header;
+}

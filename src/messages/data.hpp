@@ -63,6 +63,8 @@ public:
     // immediately and throws processor::exception if it fails
     void set_payload(const std::string& payload);
     
+    void set_header(const std::string& header);
+    
     // Performs masking and header generation if it has not been done already.
     void process();
 	

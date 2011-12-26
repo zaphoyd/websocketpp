@@ -104,7 +104,10 @@ private:
 template <class connection_type>
 class hybi : public processor_base {
 public:
-	hybi(connection_type &connection) : m_connection(connection),m_write_frame(connection) {
+	hybi(connection_type &connection) 
+     : m_connection(connection),
+       m_write_frame(connection)
+    {
 		reset();
 	}		
 	
@@ -276,7 +279,8 @@ public:
 		m_control_message = m_connection.get_control_message();
 		
 		if (!m_control_message) {
-			throw processor::exception("Out of control messages",processor::error::OUT_OF_MESSAGES);
+			throw processor::exception("Out of control messages",
+                                       processor::error::OUT_OF_MESSAGES);
 		}
 		
 		m_control_message->reset(m_header.get_opcode(),m_header.get_masking_key());
@@ -300,7 +304,8 @@ public:
 			m_data_message = m_connection.get_data_message();
 			
 			if (!m_data_message) {
-				throw processor::exception("Out of data messages",processor::error::OUT_OF_MESSAGES);
+				throw processor::exception("Out of data messages",
+                                           processor::error::OUT_OF_MESSAGES);
 			}
 			
 			m_data_message->reset(m_header.get_opcode());
@@ -488,6 +493,19 @@ public:
 		return response;
 	}
 	
+    // new prepare frame stuff
+    void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+        m_write_header.reset();
+        m_write_header.set_fin(true);
+        m_write_header.set_opcode(msg->get_opcode());
+        m_write_header.set_masked(masked,mask);
+        m_write_header.set_payload_size(msg->get_payload().size());
+        m_write_header.complete();
+        
+        msg->set_header(m_write_header.get_header_bytes());
+    }
+    
+    
 private:
 	connection_type&		m_connection;
 	int						m_state;
@@ -495,8 +513,10 @@ private:
 	message::data_ptr		m_data_message;
 	message::control_ptr	m_control_message;
 	hybi_header				m_header;
+    hybi_header				m_write_header;
 	uint64_t				m_payload_left;
 	
+    
 	frame::parser<connection_type>	m_write_frame; // TODO: refactor this out
 };	
 
