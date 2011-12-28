@@ -44,7 +44,7 @@ namespace websocketpp {
 /// before endpoint policy classes are constructed.
 class endpoint_base {
 protected:
-    boost::asio::io_service	m_io_service;
+    boost::asio::io_service m_io_service;
 };
 
 /// Describes a configurable WebSocket endpoint.
@@ -59,9 +59,9 @@ protected:
  * @e Shared @e objects: Will be safe when complete.
  */
 template <
-	template <class> class role,
-	template <class> class socket = socket::plain,
-	template <class> class logger = log::logger>
+    template <class> class role,
+    template <class> class socket = socket::plain,
+    template <class> class logger = log::logger>
 class endpoint 
  : public endpoint_base,
    public role< endpoint<role,socket> >,
@@ -69,42 +69,42 @@ class endpoint
 {
 public:
     /// Type of the traits class that stores endpoint related types.
-	typedef endpoint_traits< endpoint<role,socket,logger> > traits;
-	
-	/// The type of the endpoint itself.
-	typedef typename traits::type type;
+    typedef endpoint_traits< endpoint<role,socket,logger> > traits;
+    
+    /// The type of the endpoint itself.
+    typedef typename traits::type type;
     /// The type of the role policy.
-	typedef typename traits::role_type role_type;
+    typedef typename traits::role_type role_type;
     /// The type of the socket policy.
-	typedef typename traits::socket_type socket_type;
+    typedef typename traits::socket_type socket_type;
     /// The type of the access logger based on the logger policy.
-	typedef typename traits::alogger_type alogger_type;
+    typedef typename traits::alogger_type alogger_type;
     /// The type of the error logger based on the logger policy.
-	typedef typename traits::elogger_type elogger_type;
+    typedef typename traits::elogger_type elogger_type;
     /// The type of the connection that this endpoint creates.
-	typedef typename traits::connection_type connection_type;
+    typedef typename traits::connection_type connection_type;
     /// A shared pointer to the type of connection that this endpoint creates.
-	typedef typename traits::connection_ptr connection_ptr;
+    typedef typename traits::connection_ptr connection_ptr;
     /// Interface (ABC) that handlers for this type of endpoint must impliment
     /// role policy and socket policy both may add methods to this interface
     typedef typename traits::handler handler;
     /// A shared pointer to the base class that all handlers for this endpoint
     /// must derive from.
-	typedef typename traits::handler_ptr handler_ptr;
+    typedef typename traits::handler_ptr handler_ptr;
     
-	// Friend is used here to allow the CRTP base classes to access member 
-	// functions in the derived endpoint. This is done to limit the use of 
-	// public methods in endpoint and its CRTP bases to only those methods 
-	// intended for end-application use.
-	friend class role< endpoint<role,socket> >;
-	friend class socket< endpoint<role,socket> >;
-	friend class connection<type,role< type >::template connection,socket< type >::template connection>;
-	
-	// Highly simplified and preferred C++11 version:
-	// friend role_type; 
-	// friend socket_type;
-	// friend connection_type;
-	
+    // Friend is used here to allow the CRTP base classes to access member 
+    // functions in the derived endpoint. This is done to limit the use of 
+    // public methods in endpoint and its CRTP bases to only those methods 
+    // intended for end-application use.
+    friend class role< endpoint<role,socket> >;
+    friend class socket< endpoint<role,socket> >;
+    friend class connection<type,role< type >::template connection,socket< type >::template connection>;
+    
+    // Highly simplified and preferred C++11 version:
+    // friend role_type; 
+    // friend socket_type;
+    // friend connection_type;
+    
     /// Construct an endpoint.
     /**
      * This constructor creates an endpoint and registers the default connection
@@ -113,11 +113,11 @@ public:
      * @param handler A shared_ptr to the handler to use as the default handler
      * when creating new connections.
      */
-	explicit endpoint(handler_ptr handler) 
-	 : role_type(m_io_service),
-	   socket_type(m_io_service),
-	   m_handler(handler) {}
-	
+    explicit endpoint(handler_ptr handler) 
+     : role_type(m_io_service),
+       socket_type(m_io_service),
+       m_handler(handler) {}
+    
     /// Returns a reference to the endpoint's access logger.
     /**
      * @returns A reference to the endpoint's access logger. See @ref logger
@@ -129,10 +129,10 @@ public:
      * e.alog().at(log::alevel::DEVEL) << "message" << log::endl;
      * @endcode
      */
-	alogger_type& alog() {
-		return m_alog;
-	}
-	
+    alogger_type& alog() {
+        return m_alog;
+    }
+    
     /// Returns a reference to the endpoint's error logger.
     /**
      * @returns A reference to the endpoint's error logger. See @ref logger
@@ -144,26 +144,26 @@ public:
      * e.elog().at(log::elevel::DEVEL) << "message" << log::endl;
      * @endcode
      */
-	elogger_type& elog() {
-		return m_elog;
-	}
-	
-	/// Updates the default handler to be used for future connections
+    elogger_type& elog() {
+        return m_elog;
+    }
+    
+    /// Updates the default handler to be used for future connections
     /**
      * @param new_handler A shared pointer to the new default handler. Must not
-	 * be NULL.
+     * be NULL.
      */
-	void set_handler(handler_ptr new_handler) {
-		if (!new_handler) {
-			elog().at(log::elevel::FATAL) 
-				<< "Tried to switch to a NULL handler." << log::endl;
-			throw "TODO: handlers can't be null";
-		}
-		
-		m_handler = new_handler;
-	}
+    void set_handler(handler_ptr new_handler) {
+        if (!new_handler) {
+            elog().at(log::elevel::FATAL) 
+                << "Tried to switch to a NULL handler." << log::endl;
+            throw "TODO: handlers can't be null";
+        }
+        
+        m_handler = new_handler;
+    }
 protected:
-	/// Creates and returns a new connection
+    /// Creates and returns a new connection
     /**
      * This function creates a new connection of the type and passes it a 
      * reference to this as well as a shared pointer to the default connection
@@ -174,14 +174,14 @@ protected:
      * @returns A shared pointer to the newly created connection.
      */
     connection_ptr create_connection() {
-		connection_ptr new_connection(new connection_type(*this,get_handler()));
-		m_connections.insert(new_connection);
-		
-		alog().at(log::alevel::DEVEL) << "Connection created: count is now: " << m_connections.size() << log::endl;
-		
-		return new_connection;
-	}
-	
+        connection_ptr new_connection(new connection_type(*this,get_handler()));
+        m_connections.insert(new_connection);
+        
+        alog().at(log::alevel::DEVEL) << "Connection created: count is now: " << m_connections.size() << log::endl;
+        
+        return new_connection;
+    }
+    
     /// Removes a connection from the list managed by this endpoint.
     /**
      * This function erases a connection from the list managed by the endpoint.
@@ -193,77 +193,77 @@ protected:
      * 
      * @param con A shared pointer to a connection created by this endpoint.
      */
-	void remove_connection(connection_ptr con) {
-		m_connections.erase(con);
-		
-		alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " << m_connections.size() << log::endl;
-	}
-	
+    void remove_connection(connection_ptr con) {
+        m_connections.erase(con);
+        
+        alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " << m_connections.size() << log::endl;
+    }
+    
     /// Gets a shared pointer to this endpoint's default connection handler
-	handler_ptr get_handler() {
-		return m_handler;
-	}
+    handler_ptr get_handler() {
+        return m_handler;
+    }
 private:
-	handler_ptr					m_handler;
-	std::set<connection_ptr>	m_connections;
-	alogger_type				m_alog;
-	elogger_type				m_elog;
+    handler_ptr                 m_handler;
+    std::set<connection_ptr>    m_connections;
+    alogger_type                m_alog;
+    elogger_type                m_elog;
 };
 
 /// traits class that allows looking up relevant endpoint types by the fully 
 /// defined endpoint type.
 template <
-	template <class> class role,
-	template <class> class socket,
-	template <class> class logger>
+    template <class> class role,
+    template <class> class socket,
+    template <class> class logger>
 struct endpoint_traits< endpoint<role, socket, logger> > {
-	/// The type of the endpoint itself.
-	typedef endpoint<role,socket,logger> type;
-	
-	/// The type of the role policy.
-	typedef role< type > role_type;
-	/// The type of the socket policy.
+    /// The type of the endpoint itself.
+    typedef endpoint<role,socket,logger> type;
+    
+    /// The type of the role policy.
+    typedef role< type > role_type;
+    /// The type of the socket policy.
     typedef socket< type > socket_type;
-	
+    
     /// The type of the access logger based on the logger policy.
-	typedef logger<log::alevel::value> alogger_type;
+    typedef logger<log::alevel::value> alogger_type;
     /// The type of the error logger based on the logger policy.
-	typedef logger<log::elevel::value> elogger_type;
-	
-	/// The type of the connection that this endpoint creates.
-	typedef connection<type,
+    typedef logger<log::elevel::value> elogger_type;
+    
+    /// The type of the connection that this endpoint creates.
+    typedef connection<type,
                        role< type >::template connection,
                        socket< type >::template connection> connection_type;
     /// A shared pointer to the type of connection that this endpoint creates.
-	typedef boost::shared_ptr<connection_type> connection_ptr;
-	
-	class handler;
-	
-	/// A shared pointer to the base class that all handlers for this endpoint
+    typedef boost::shared_ptr<connection_type> connection_ptr;
+    
+    class handler;
+    
+    /// A shared pointer to the base class that all handlers for this endpoint
     /// must derive from.
-	typedef boost::shared_ptr<handler> handler_ptr;
-	
-	/// Interface (ABC) that handlers for this type of endpoint may impliment.
+    typedef boost::shared_ptr<handler> handler_ptr;
+    
+    /// Interface (ABC) that handlers for this type of endpoint may impliment.
     /// role policy and socket policy both may add methods to this interface
-	class handler : public role_type::handler_interface,
+    class handler : public role_type::handler_interface,
                     public socket_type::handler_interface
-	{
-	public:
-		/// on_load is the first callback called for a handler after a new
-		/// connection has been transferred to it mid flight.
-		/**
-		 * @param connection A shared pointer to the connection that was transferred
-		 * @param old_handler A shared pointer to the previous handler
-		 */
-		virtual void on_load(connection_ptr connection, handler_ptr old_handler) {}
-		/// on_unload is the last callback called for a handler before control
-		/// of a connection is handed over to a new handler mid flight.
-		/**
-		 * @param connection A shared pointer to the connection being transferred
-		 * @param old_handler A shared pointer to the new handler
-		 */
-		virtual void on_unload(connection_ptr connection, handler_ptr new_handler) {}
-	};
+    {
+    public:
+        /// on_load is the first callback called for a handler after a new
+        /// connection has been transferred to it mid flight.
+        /**
+         * @param connection A shared pointer to the connection that was transferred
+         * @param old_handler A shared pointer to the previous handler
+         */
+        virtual void on_load(connection_ptr connection, handler_ptr old_handler) {}
+        /// on_unload is the last callback called for a handler before control
+        /// of a connection is handed over to a new handler mid flight.
+        /**
+         * @param connection A shared pointer to the connection being transferred
+         * @param old_handler A shared pointer to the new handler
+         */
+        virtual void on_unload(connection_ptr connection, handler_ptr new_handler) {}
+    };
     
 };
 
