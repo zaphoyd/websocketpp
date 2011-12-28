@@ -121,20 +121,15 @@ private:
         if (m_msg_stats.empty()) {
             return;
         }
-        
+        // example: `ack:e3458d0aceff8b70a3e5c0afec632881=38;e3458d0aceff8b70a3e5c0afec632881=42;`
         std::stringstream msg;
-        msg << "{\"type\":\"acks\",\"messages\":[";
+        msg << "ack:";
         
         std::map<std::string,size_t>::iterator it;
-        std::map<std::string,size_t>::iterator last = m_msg_stats.end();
-        if (m_msg_stats.size() > 0) {
-            last--;
-        }
         
         for (it = m_msg_stats.begin(); it != m_msg_stats.end(); it++) {
-            msg << "{\"" << (*it).first << "\":" << (*it).second << "}" << (it != last ? "," : "");
+            msg << (*it).first << "=" << (*it).second << ";";
         }
-        msg << "]}";
         
         connection->send(msg.str(),false);
         m_msg_stats.clear();
