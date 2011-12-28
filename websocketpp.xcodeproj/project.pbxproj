@@ -237,6 +237,7 @@
 		B663884B1487D73200DDAE13 /* echo_server_tls */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server_tls; sourceTree = BUILT_PRODUCTS_DIR; };
 		B663885F1487FE6C00DDAE13 /* data.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = data.hpp; path = src/messages/data.hpp; sourceTree = "<group>"; };
 		B66388601487FE6C00DDAE13 /* control.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = control.hpp; path = src/messages/control.hpp; sourceTree = "<group>"; };
+		B66DE75A14AB5C71004312EC /* md5.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = md5.js; sourceTree = "<group>"; };
 		B6727428148517180029CF3E /* uri.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uri.cpp; path = src/uri.cpp; sourceTree = "<group>"; };
 		B6732435148E543000FC2B04 /* connection_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = connection_handler.hpp; sourceTree = "<group>"; };
 		B6732436148E543000FC2B04 /* frame_parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = frame_parser.hpp; sourceTree = "<group>"; };
@@ -573,6 +574,7 @@
 			isa = PBXGroup;
 			children = (
 				B673248214919D6600FC2B04 /* broadcast_admin.html */,
+				B66DE75A14AB5C71004312EC /* md5.js */,
 				B6826CBA14A0C49B006DD3F3 /* wscmd.hpp */,
 				B673248314919D6600FC2B04 /* broadcast_server_tls.cpp */,
 				B6826CB814A0C483006DD3F3 /* broadcast_admin_handler.hpp */,

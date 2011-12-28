@@ -6,6 +6,7 @@
 	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
 	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
 	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="md5.js"></script>
 </head>
 <body>
 
@@ -74,8 +75,13 @@ function connect() {
 	
     ws_client.onmessage = function(e) {
         if (options.console_enabled) {
-            $("#messages").append("Broadcasted Message: "+e.data+"<br />");
+            if (e.data.length <= 126) {
+                $("#messages").append("Broadcasted Message: "+e.data+"<br />");
+            } else {
+                $("#messages").append("Broadcasted Message: [message of size: "+e.data.length+"]<br />");
+            }
         }
+        ws_client.send("ack:"+hex_md5(e.data)+"=1;");
     }
     
 	ws_admin.onmessage = function(e) {
@@ -197,7 +203,7 @@ function send_command(command,args) {
 }
 
 function send_test_message(size,type) {
-    ws.send((new Array(size)).join("*"));
+    ws_client.send((new Array(size+1)).join("*"));
 }
 
 function format_data(val) {
@@ -303,7 +309,7 @@ body,html {
 
 <div id="controls">
 	<div id="server">
-	<input type="text" name="server_url" id="server_url" value="ws://thor-websocket.zaphoyd.net:9002" />
+	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002" />
 	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
 	</div>
 
