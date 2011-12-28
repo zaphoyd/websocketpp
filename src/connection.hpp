@@ -552,9 +552,13 @@ protected:
 				m_write_state = WRITING;
 			}
 			
+            std::vector<boost::asio::mutable_buffer> data;
+            
+            data.push_back(boost::asio::buffer(*m_write_queue.front()));
+            
 			boost::asio::async_write(
 				socket_type::get_socket(),
-				boost::asio::buffer(*m_write_queue.front()),
+				data,
 				boost::bind(
 					&type::handle_write,
 					type::shared_from_this(),
