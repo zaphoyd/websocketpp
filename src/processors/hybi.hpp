@@ -495,6 +495,9 @@ public:
 	
     // new prepare frame stuff
     void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+        if (msg->get_prepared()) {
+            return;
+        }
         m_write_header.reset();
         m_write_header.set_fin(true);
         m_write_header.set_opcode(msg->get_opcode());
@@ -503,6 +506,11 @@ public:
         m_write_header.complete();
         
         msg->set_header(m_write_header.get_header_bytes());
+        if (masked) {
+            msg->mask();
+        }
+        
+        msg->set_prepared(true);
     }
     
     

@@ -256,6 +256,16 @@ public:
 		return response;
 	}
 	
+    void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+        if (msg->get_prepared()) {
+            return;
+        }
+        
+        msg->set_header(std::string(0x00));
+        // TODO: append 0xFF
+        msg->set_prepared(true);
+    }
+    
 private:
 	uint32_t decode_client_key(const std::string& key) {
 		int spaces = 0;

@@ -32,7 +32,7 @@
 
 using websocketpp::message::data;
 
-data::data() {
+data::data() : m_refcount(-1) {
     m_payload.reserve(PAYLOAD_SIZE_INIT);
 }
     
@@ -42,6 +42,9 @@ websocketpp::frame::opcode::value data::get_opcode() const {
 	
 const std::string& data::get_payload() const {
     return m_payload;
+}
+const std::string& data::get_header() const {
+    return m_header;
 }
 	
 uint64_t data::process_payload(std::istream& input,uint64_t size) {
@@ -101,6 +104,8 @@ void data::reset(frame::opcode::value opcode) {
     m_masking_index = M_NOT_MASKED; // -1 indicates do not mask/unmask
     m_payload.resize(0);
     m_validator.reset();
+    m_refcount = -1;
+    m_max_refcount = 0;
 }
 		
 void data::complete() {
@@ -117,22 +122,36 @@ void data::set_masking_key(int32_t key) {
     m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
 }
 
+void data::set_prepared(bool b) {
+    m_refcount = 0;
+}
+
+bool data::get_prepared() const {
+    return m_refcount >= 0;
+}
+
+void data::acquire() {
+    assert(m_refcount >= 0);
+    m_refcount++;
+    if (m_refcount > m_max_refcount) {
+        m_max_refcount = m_refcount;
+    }
+}
+void data::release() {
+    assert(m_refcount > 0);
+    m_refcount--;
+}
+bool data::done() const {
+    return m_refcount == 0;
+}
 
 // This could be further optimized using methods that write directly into the
 // m_payload buffer
 void data::set_payload(const std::string& payload) {
     m_payload.reserve(payload.size());
-    std::copy(payload.begin(), payload.end(), m_payload.begin());
+    m_payload = payload;
 }
-void data::process() {
-    websocketpp::processor::hybi_header header;
-    header.set_fin(true);
-    header.set_opcode(m_opcode);
-    
-    // set opcode
-    // set 
-    
-    // mask
+void data::mask() {
     if (m_masking_index >= 0) {
         for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
             (*it) = *it ^ m_masking_key[(m_masking_index++)%4];

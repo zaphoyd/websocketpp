@@ -102,7 +102,15 @@ public:
     }
     
     void command_error(connection_ptr connection,const std::string msg) {
-        connection->send("{\"type\":\"error\",\"value\":\""+msg+"\"}");
+        websocketpp::message::data_ptr m = connection->get_data_message();
+        
+        if (m) {
+            m->reset(frame::opcode::TEXT);
+            m->set_payload("{\"type\":\"error\",\"value\":\""+msg+"\"}");
+            connection->send(m);
+        } else {
+            // error no avaliable message buffers
+        }
     }
     
     // close: - close this connection
@@ -128,41 +136,53 @@ public:
             return;
         }
         
-        long milli_seconds = get_ms(m_epoch);
-        
-        std::stringstream update;
-        update << "{\"type\":\"stats\""
-               << ",\"timestamp\":" << milli_seconds
-               << ",\"connections\":" << m_broadcast_handler->get_connection_count()
-               << ",\"admin_connections\":" << m_connections.size()
-               << ",\"messages\":[";
-        
-        const msg_map& m = m_broadcast_handler->get_message_stats();
-        
-        msg_map::const_iterator msg_it;
-        msg_map::const_iterator last = m.end();
-        if (m.size() > 0) {
-            last--;
-        }
-        
-        for (msg_it = m.begin(); msg_it != m.end(); msg_it++) {
-            update << "{\"id\":" << (*msg_it).second.id
-                   << ",\"hash\":\"" << (*msg_it).second.hash << "\""
-                   << ",\"sent\":" << (*msg_it).second.sent
-                   << ",\"acked\":" << (*msg_it).second.acked
-                   << ",\"size\":" << (*msg_it).second.size
-                   << ",\"time\":" << (*msg_it).second.time
-                   << "}" << (msg_it == last ? "" : ",");
-        }
-        
-        update << "]}";
-        
-        m_broadcast_handler->clear_message_stats();
-        
-        typename std::set<connection_ptr>::iterator it;
-        
-        for (it = m_connections.begin(); it != m_connections.end(); it++) {
-            (*it)->send(update.str(),false);
+        if (m_connections.size() > 0) {
+            long milli_seconds = get_ms(m_epoch);
+            
+            std::stringstream update;
+            update << "{\"type\":\"stats\""
+                   << ",\"timestamp\":" << milli_seconds
+                   << ",\"connections\":" << m_broadcast_handler->get_connection_count()
+                   << ",\"admin_connections\":" << m_connections.size()
+                   << ",\"messages\":[";
+            
+            const msg_map& m = m_broadcast_handler->get_message_stats();
+            
+            msg_map::const_iterator msg_it;
+            msg_map::const_iterator last = m.end();
+            if (m.size() > 0) {
+                last--;
+            }
+            
+            for (msg_it = m.begin(); msg_it != m.end(); msg_it++) {
+                update << "{\"id\":" << (*msg_it).second.id
+                       << ",\"hash\":\"" << (*msg_it).second.hash << "\""
+                       << ",\"sent\":" << (*msg_it).second.sent
+                       << ",\"acked\":" << (*msg_it).second.acked
+                       << ",\"size\":" << (*msg_it).second.size
+                       << ",\"time\":" << (*msg_it).second.time
+                       << "}" << (msg_it == last ? "" : ",");
+            }
+            
+            update << "]}";
+            
+            m_broadcast_handler->clear_message_stats();
+            
+            typename std::set<connection_ptr>::iterator it;
+            
+            websocketpp::message::data_ptr msg = (*m_connections.begin())->get_data_message();
+            
+            if (msg) {
+                msg->reset(frame::opcode::TEXT);
+                
+                msg->set_payload(update.str());
+                
+                for (it = m_connections.begin(); it != m_connections.end(); it++) {
+                    (*it)->send(msg);
+                }
+            } else {
+                // error no avaliable message buffers
+            }
         }
         
         m_timer->expires_from_now(boost::posix_time::milliseconds(250));

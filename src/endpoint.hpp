@@ -203,11 +203,80 @@ protected:
     handler_ptr get_handler() {
         return m_handler;
     }
+    
+    message::data_ptr get_data_message() {
+		// if we have one of this type free
+		if (!m_read_queue_avaliable.empty()) {
+			message::data_ptr p = m_read_queue_avaliable.front();
+			m_read_queue_avaliable.pop();
+			m_read_queue_used.insert(p);
+			return p;
+		} else {
+            if (m_read_queue_used.size() > 10) {
+                return message::data_ptr();
+            } else {
+                m_read_queue_avaliable.push(message::data_ptr(new message::data()));
+                alog().at(log::alevel::DEVEL) 
+                << "Allocating new data message. Count is now: " 
+                << m_read_queue_used.size() + 1 
+                << log::endl;
+                return get_data_message();
+            }
+		}
+	}
+    
+    void recycle(message::data_ptr p) {
+		if (m_read_queue_used.erase(p) == 0) {
+			// tried to recycle a pointer we don't control.
+		} else {
+			m_read_queue_avaliable.push(p);
+			
+            // wake next
+            if (!m_read_waiting.empty()) {
+                connection_ptr next = m_read_waiting.front();
+            
+                /*endpoint_base::m_io_service.post(
+					boost::bind(
+					    &connection_type::handle_read_frame,
+					    next,
+					    boost::system::error_code()
+				    )
+			    );*/
+                (*next).handle_read_frame(boost::system::error_code());
+                
+                m_read_waiting.pop();
+            }
+            // wake all
+            /*std::list<connection_ptr>::iterator it;
+            
+            for (it = m_read_waiting.begin(); it != m_read_waiting.end(); it++) {
+                endpoint_base::m_io_service.post(
+					boost::bind(
+					    &connection_type::handle_read_frame,
+					    *it,
+					    boost::system::error_code()
+				    )
+			    );
+            }
+            
+            m_read_waiting.empty();*/
+		}
+	}
+    
+    void wait(connection_ptr con) {
+        m_read_waiting.push(con);
+    }
+    
 private:
     handler_ptr                 m_handler;
     std::set<connection_ptr>    m_connections;
     alogger_type                m_alog;
     elogger_type                m_elog;
+    
+    // mssage buffers
+    std::queue<message::data_ptr>	m_read_queue_avaliable;
+	std::set<message::data_ptr>		m_read_queue_used;
+    std::queue<connection_ptr>      m_read_waiting;
 };
 
 /// traits class that allows looking up relevant endpoint types by the fully 

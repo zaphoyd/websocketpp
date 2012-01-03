@@ -352,7 +352,7 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
         }
         
         // TODO: is there a way to short circuit this or something?
-        m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
+        //m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
         
         std::string h = m_request.header("Upgrade");
         if (boost::ifind_first(h,"websocket")) {

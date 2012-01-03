@@ -132,7 +132,7 @@ public:
 												  bool mask,
 												  const std::string& reason) = 0;
 	
-	
+	virtual void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) = 0;
 	
 };
 

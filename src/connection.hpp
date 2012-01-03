@@ -136,7 +136,7 @@ public:
 	
 	// Valid for OPEN state
 	void send(const utf8_string& payload,bool binary = false) {
-		binary_string_ptr msg;
+		/*binary_string_ptr msg;
 		if (binary) {
 			msg = m_processor->prepare_frame(frame::opcode::BINARY,!m_endpoint.is_server(),payload);
 		} else {
@@ -154,23 +154,30 @@ public:
 			boost::bind(
 				&type::write_message,
 				type::shared_from_this(),
-				msg));
+				msg));*/
 	}
 	void send(const binary_string& data) {
-		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,
+		/*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,
 														 !m_endpoint.is_server(),data));
 		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
 				&type::write_message,
 				type::shared_from_this(),
-				msg));
+				msg));*/
 	}
+    void send(message::data_ptr msg) {
+        m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
+        write_message(msg);
+    }
+    
+    
 	void close(close::status::value code, const utf8_string& reason = "") {
 		// TODO: overloads without code or reason?
 		send_close(code, reason);
 	}
 	void ping(const binary_string& payload) {
-		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,
+		// TODO:
+        /*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,
 														 !m_endpoint.is_server(),
 														 payload));
 		
@@ -178,16 +185,17 @@ public:
 			boost::bind(
 				&type::write_message,
 				type::shared_from_this(),
-				msg));	
+				msg));	*/
 	}
 	void pong(const binary_string& payload) {
-		binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,
+		// TODO:
+        /*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,
 														 !m_endpoint.is_server(),payload));
 		m_endpoint.endpoint_base::m_io_service.post(
 			boost::bind(
 				&type::write_message,
 				type::shared_from_this(),
-				msg));
+				msg));*/
 	}
 	
 	uint64_t buffered_amount() const {
@@ -219,19 +227,12 @@ public:
 	
 	// flow control interface
 	message::data_ptr get_data_message() {
-		// if we have one of this type free
-		if (!m_read_queue_avaliable.empty()) {
-			message::data_ptr p = m_read_queue_avaliable.front();
-			m_read_queue_avaliable.pop();
-			m_read_queue_used.insert(p);
-			return p;
-		} else {
-			return message::data_ptr();
-		}
+		return m_endpoint.get_data_message();
 	}
 	
 	void recycle(message::data_ptr p) {
-		if (m_read_queue_used.erase(p) == 0) {
+		m_endpoint.recycle(p);
+        /*if (m_read_queue_used.erase(p) == 0) {
 			// tried to recycle a pointer we don't control.
 		} else {
 			m_read_queue_avaliable.push(p);
@@ -246,7 +247,7 @@ public:
 			    );
 				m_read_state = READING;
 			}
-		}
+		}*/
 	}
 	
 	message::control_ptr get_control_message() {
@@ -290,7 +291,7 @@ protected:
 		
 		role_type::async_init();
 	}
-	
+public:	
 	void handle_read_frame(const boost::system::error_code& error) {
 		// check if state changed while we were waiting for a read.
 		if (m_state == session::state::CLOSED) { return; }
@@ -353,7 +354,8 @@ protected:
 						// we need to wait for a message to be returned by the
 						// client. We exit the read loop. handle_read_frame
 						// will be restarted by recycle()
-						m_read_state = WAITING;
+						//m_read_state = WAITING;
+                        m_endpoint.wait(type::shared_from_this());
 						return;
 					default:
 						// Fatal error, forcibly end connection immediately.
@@ -384,7 +386,7 @@ protected:
 			);
 		}
 	}
-	
+protected:	
 	void process_data(message::data_ptr msg) {
 		get_handler()->on_message(type::shared_from_this(),msg);
 	}
@@ -396,10 +398,10 @@ protected:
 				response = get_handler()->on_ping(type::shared_from_this(),
 												  msg->get_payload());
 				if (response) {
-					// send response ping
-					write_message(m_processor->prepare_frame(frame::opcode::PONG,
-															 !m_endpoint.is_server(),
-															 msg->get_payload()));
+					// TODO: send response ping
+					//write_message(m_processor->prepare_frame(frame::opcode::PONG,
+					//										 !m_endpoint.is_server(),
+					//										 msg->get_payload()));
 				}
 				break;
 			case frame::opcode::PONG:
@@ -473,10 +475,13 @@ protected:
 		m_local_close_code = code;
 		m_local_close_reason = reason;
 		
-		
-		write_message(m_processor->prepare_close_frame(m_local_close_code,
-													   !m_endpoint.is_server(),
-													   m_local_close_reason));
+        // TODO: fix
+        message::data_ptr msg = get_data_message();
+        msg->reset(frame::opcode::CLOSE);
+        // TODO: msg payload set_status
+		m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
+		write_message(msg);
+        
 		m_write_state = INTURRUPT;
 	}
 	
@@ -511,24 +516,33 @@ protected:
 		//       current write completes.
 		
 		
-		write_message(m_processor->prepare_close_frame(m_local_close_code,
-													   !m_endpoint.is_server(),
-													   m_local_close_reason));
+        // TODO: fix
+        message::data_ptr msg = get_data_message();
+        msg->reset(frame::opcode::CLOSE);
+        // TODO: msg payload set_status
+		m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
+		write_message(msg);
+        
+		//write_message(m_processor->prepare_close_frame(m_local_close_code,
+		//											   !m_endpoint.is_server(),
+		//											   m_local_close_reason));
 		m_write_state = INTURRUPT;
 	}
 	
-	void write_message(binary_string_ptr msg) {
+	void write_message(message::data_ptr msg) {
 		if (m_write_state == INTURRUPT) {
 			return;
 		}
 		
-		m_write_buffer += msg->size();
+		m_write_buffer += msg->get_payload().size();
+        msg->acquire();
 		m_write_queue.push(msg);
+        
 		write();
 	}
 	
 	void write() {
-		switch (m_write_state) {
+        switch (m_write_state) {
 			case IDLE:
 				break;
 			case WRITING:
@@ -538,7 +552,11 @@ protected:
 			case INTURRUPT:
 				// clear the queue except for the last message
 				while (m_write_queue.size() > 1) {
-					m_write_buffer -= m_write_queue.front()->size();
+					m_write_buffer -= m_write_queue.front()->get_payload().size();
+                    m_write_queue.front()->release();
+                    if (m_write_queue.front()->done()) {
+                        recycle(m_write_queue.front());
+                    }
 					m_write_queue.pop();
 				}
 				break;
@@ -552,9 +570,10 @@ protected:
 				m_write_state = WRITING;
 			}
 			
-            std::vector<boost::asio::mutable_buffer> data;
+            std::vector<boost::asio::const_buffer> data;
             
-            data.push_back(boost::asio::buffer(*m_write_queue.front()));
+            data.push_back(boost::asio::buffer(m_write_queue.front()->get_header()));
+            data.push_back(boost::asio::buffer(m_write_queue.front()->get_payload()));
             
 			boost::asio::async_write(
 				socket_type::get_socket(),
@@ -575,7 +594,7 @@ protected:
 	}
 	
 	void handle_write(const boost::system::error_code& error) {
-		if (error) {
+        if (error) {
 			if (error == boost::asio::error::operation_aborted) {
 				// previous write was aborted
                 m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "handle_write was called with operation_aborted error" << log::endl;
@@ -591,9 +610,18 @@ protected:
 			return;
 		}
         
-		m_write_buffer -= m_write_queue.front()->size();
+		m_write_buffer -= m_write_queue.front()->get_payload().size();
+        m_write_queue.front()->release();
+        if (m_write_queue.front()->done()) {
+            if (m_write_queue.front()->get_payload().size() > 0 &&
+                (m_write_queue.front()->get_payload())[0] != '{') {
+                m_endpoint.alog().at(log::alevel::DEVEL) << "Recycling message, maxcount: " << m_write_queue.front()->m_max_refcount << log::endl;
+            }
+            
+            recycle(m_write_queue.front());
+        }
 		m_write_queue.pop();
-		
+        
 		if (m_write_state == WRITING) {
 			m_write_state = IDLE;
 		}
@@ -697,7 +725,7 @@ protected:
 	processor::ptr				m_processor;
 	
 	// Write queue
-	std::queue<binary_string_ptr>	m_write_queue;
+	std::queue<message::data_ptr>	m_write_queue;
 	uint64_t						m_write_buffer;
 	write_state						m_write_state;
 	

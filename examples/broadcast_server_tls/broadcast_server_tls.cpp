@@ -49,26 +49,37 @@ int main(int argc, char* argv[]) {
 	bool tls = false;
     
     // 12288 is max OS X limit without changing kernal settings
-    const rlim_t ideal_size = 100000;
+    const rlim_t ideal_size = 10000;
     rlim_t old_size;
+	rlim_t old_max;
     
     struct rlimit rl;
     int result;
     
     result = getrlimit(RLIMIT_NOFILE, &rl);
     if (result == 0) {
-        std::cout << "cur: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
+        //std::cout << "System FD limits: " << rl.rlim_cur << " max: " << rl.rlim_max << std::endl;
         
         old_size = rl.rlim_cur;
-        
+        old_max = rl.rlim_max;
+		
         if (rl.rlim_cur < ideal_size) {
-            rl.rlim_cur = ideal_size;
-            //rl.rlim_cur = rl.rlim_max;
-            result = setrlimit(RLIMIT_NOFILE, &rl);
+            std::cout << "Attempting to raise system file descriptor limit from " << rl.rlim_cur << " to " << ideal_size << std::endl;
+			rl.rlim_cur = ideal_size;
             
-            if (result != 0) {
-                std::cout << "Unable to request an increase in the file descripter limit. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << std::endl;
-            }
+			if (rl.rlim_max < ideal_size) {
+				rl.rlim_max = ideal_size;
+			}
+			
+			result = setrlimit(RLIMIT_NOFILE, &rl);
+            
+            if (result == 0) {
+                std::cout << "Success" << std::endl;
+			} else if (result == EPERM) {
+				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
+			} else {
+				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
+			}
         }
     }
     
@@ -97,9 +108,11 @@ int main(int argc, char* argv[]) {
 			plain_handler_ptr h(new websocketpp::broadcast::server_handler<plain_endpoint_type>());
 			plain_endpoint_type e(h);
 			
-			e.alog().set_level(websocketpp::log::alevel::ALL);
-			e.elog().set_level(websocketpp::log::elevel::ALL);
+			e.alog().unset_level(websocketpp::log::alevel::ALL);
+			e.elog().unset_level(websocketpp::log::elevel::ALL);
 			
+            e.alog().set_level(websocketpp::log::alevel::DEVEL);
+            
 			std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
 			e.listen(port);
 		}

@@ -90,17 +90,14 @@ public:
 	}
 	
 	void on_message(connection_ptr connection,message::data_ptr msg) {
-		typename std::set<connection_ptr>::iterator it;
-        
-        wscmd::cmd command = wscmd::parse(msg->get_payload());
+		wscmd::cmd command = wscmd::parse(msg->get_payload());
         
         if (command.command == "ack") {
             handle_ack(connection,command);
+            connection->recycle(msg);
         } else {
             broadcast_message(msg);
         }
-        
-        connection->recycle(msg);
     }
     
     void command_error(connection_ptr connection,const std::string msg) {
@@ -160,11 +157,15 @@ public:
         
         typename std::set<connection_ptr>::iterator it;
         
-        // broadcast to clients
+        // broadcast to clients        
         for (it = m_connections.begin(); it != m_connections.end(); it++) {
-            (*it)->send(msg->get_payload(),(msg->get_opcode() == frame::opcode::BINARY));
+            //(*it)->send(msg->get_payload(),(msg->get_opcode() == frame::opcode::BINARY));
+            for (int i = 0; i < 100; i++) {
+                (*it)->send(msg);
+            }
+            
         }
-        new_msg.sent = m_connections.size();
+        new_msg.sent = m_connections.size()*100;
         new_msg.acked = 0;
     }
     

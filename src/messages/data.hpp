@@ -45,6 +45,7 @@ public:
     
     frame::opcode::value get_opcode() const;
 	const std::string& get_payload() const;
+    const std::string& get_header() const;
     
     // ##reading##
     // sets the masking key to be used to unmask as bytes are read.
@@ -66,8 +67,14 @@ public:
     void set_header(const std::string& header);
     
     // Performs masking and header generation if it has not been done already.
-    void process();
+    void set_prepared(bool b);
+    bool get_prepared() const;
+    void acquire();
+    void release();
+    bool done() const;
+    void mask();
 	
+    int m_max_refcount;
 private:
     static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
@@ -93,6 +100,8 @@ private:
     index_value                 m_masking_index;
 	
 	// Message buffers
+    int                         m_refcount;
+    
     std::string                 m_header;
     std::string					m_payload;
 };
