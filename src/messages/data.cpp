@@ -32,7 +32,7 @@
 
 using websocketpp::message::data;
 
-data::data(data::pool_ptr p, size_t s) : m_refcount(-1),m_index(s),m_ref_count(0),m_pool(p) {
+data::data(data::pool_ptr p, size_t s) : m_prepared(false),m_index(s),m_ref_count(0),m_pool(p),m_live(false) {
     m_payload.reserve(PAYLOAD_SIZE_INIT);
 }
     
@@ -53,7 +53,6 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
     uint64_t i;
     
     if (new_size > PAYLOAD_SIZE_MAX) {
-        // TODO: real exception
         throw processor::exception("Message too big",processor::error::MESSAGE_TOO_BIG);
     }
     
@@ -104,8 +103,7 @@ void data::reset(frame::opcode::value opcode) {
     m_masking_index = M_NOT_MASKED; // -1 indicates do not mask/unmask
     m_payload.resize(0);
     m_validator.reset();
-    m_refcount = -1;
-    m_max_refcount = 0;
+    m_prepared = false;
 }
 		
 void data::complete() {
@@ -123,26 +121,11 @@ void data::set_masking_key(int32_t key) {
 }
 
 void data::set_prepared(bool b) {
-    m_refcount = 0;
+    m_prepared = b;
 }
 
 bool data::get_prepared() const {
-    return m_refcount >= 0;
-}
-
-void data::acquire() {
-    assert(m_refcount >= 0);
-    m_refcount++;
-    if (m_refcount > m_max_refcount) {
-        m_max_refcount = m_refcount;
-    }
-}
-void data::release() {
-    assert(m_refcount > 0);
-    m_refcount--;
-}
-bool data::done() const {
-    return m_refcount == 0;
+    return m_prepared;
 }
 
 // This could be further optimized using methods that write directly into the

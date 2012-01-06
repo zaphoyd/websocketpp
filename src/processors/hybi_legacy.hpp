@@ -188,9 +188,6 @@ public:
 	
 	void reset() {
 		m_state = hybi_legacy_state::INIT;
-		if (m_data_message) {
-			m_connection.recycle(m_data_message);
-		}
 		m_data_message.reset();
 	}
 	

@@ -220,86 +220,19 @@ protected:
         return m_handler;
     }
     
+    /// Gets a shared pointer to a read/write data message.
     message::data::ptr get_data_message() {
-		// if we have one of this type free
-        
-        /*alog().at(log::alevel::DEVEL) 
-        << "message requested (" 
-        << m_read_queue_used.size()
-        << "/"
-        << m_read_queue_avaliable.size()+m_read_queue_used.size()
-        << ") with "
-        << m_read_waiting.size()
-        << " waiting"
-        << log::endl;
-        
-		if (!m_read_queue_avaliable.empty()) {
-			message::data_ptr p = m_read_queue_avaliable.front();
-			m_read_queue_avaliable.pop();
-			m_read_queue_used.insert(p);
-			return p;
-		} else {
-            if (m_read_queue_used.size() > 10) {
-                return message::data_ptr();
-            } else {
-                m_read_queue_avaliable.push(message::data_ptr(new message::data()));
-                alog().at(log::alevel::DEVEL) 
-                << "Allocating new data message. Count is now: " 
-                << m_read_queue_used.size() + 1 
-                << log::endl;
-                return get_data_message();
-            }
-		}*/
-        return m_pool->get();
+		return m_pool->get();
 	}
     
-    void recycle(message::data::ptr p) {
-		m_pool->recycle(p);
-        /*if (m_read_queue_used.erase(p) == 0) {
-			// tried to recycle a pointer we don't control.
-		} else {
-			m_read_queue_avaliable.push(p);
-			
-            
-            
-            // wake next
-            if (!m_read_waiting.empty()) {
-                connection_ptr next = m_read_waiting.front();
-            
-                endpoint_base::m_io_service.post(
-					boost::bind(
-					    &connection_type::handle_read_frame,
-					    next,
-					    boost::system::error_code()
-				    )
-			    );
-                (*next).handle_read_frame(boost::system::error_code());
-                
-                m_read_waiting.pop();
-            }
-            // wake all
-            std::list<connection_ptr>::iterator it;
-            
-            for (it = m_read_waiting.begin(); it != m_read_waiting.end(); it++) {
-                endpoint_base::m_io_service.post(
-					boost::bind(
-					    &connection_type::handle_read_frame,
-					    *it,
-					    boost::system::error_code()
-				    )
-			    ); 
-            }
-            
-            m_read_waiting.empty();
-		}*/
-        
-
-	}
-    
+    /// Asks the endpoint to restart this connection's handle_read_frame loop
+    /// when there are avaliable data messages.
     void wait(connection_ptr con) {
         m_read_waiting.push(con);
     }
     
+    /// Message pool callback indicating that there is a free data message
+    /// avaliable. Causes one waiting connection to get restarted.
     void on_new_message() {
         if (!m_read_waiting.empty()) {
             connection_ptr next = m_read_waiting.front();
@@ -313,10 +246,7 @@ private:
     alogger_type                m_alog;
     elogger_type                m_elog;
     
-    // mssage buffers
-    //std::queue<message::data_ptr>	m_read_queue_avaliable;
-	//std::set<message::data_ptr>		m_read_queue_used;
-    
+    // resource pools for read/write message buffers
     message::pool<message::data>::ptr   m_pool;
     std::queue<connection_ptr>          m_read_waiting;
 };

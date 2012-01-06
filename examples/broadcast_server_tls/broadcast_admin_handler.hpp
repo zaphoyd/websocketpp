@@ -97,8 +97,6 @@ public:
         } else {
             command_error(connection,"Invalid Command");
         }
-        
-        connection->recycle(msg);
     }
     
     void command_error(connection_ptr connection,const std::string msg) {

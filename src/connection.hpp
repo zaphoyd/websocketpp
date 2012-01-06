@@ -113,7 +113,6 @@ public:
 		socket_type::init();
 		
 		m_control_message = message::control_ptr(new message::control());
-		//m_read_queue_avaliable.push(message::data_ptr(new message::data()));
 	}
 	
 	// SHOULD BE PROTECTED
@@ -156,46 +155,21 @@ public:
 				type::shared_from_this(),
 				msg));*/
 	}
-	void send(const binary_string& data) {
-		/*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::BINARY,
-														 !m_endpoint.is_server(),data));
-		m_endpoint.endpoint_base::m_io_service.post(
-			boost::bind(
-				&type::write_message,
-				type::shared_from_this(),
-				msg));*/
-	}
     void send(message::data_ptr msg) {
         m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
         write_message(msg);
     }
     
     
-	void close(close::status::value code, const utf8_string& reason = "") {
+	void close(close::status::value code, const std::string& reason = "") {
 		// TODO: overloads without code or reason?
 		send_close(code, reason);
 	}
-	void ping(const binary_string& payload) {
-		// TODO:
-        /*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PING,
-														 !m_endpoint.is_server(),
-														 payload));
-		
-		m_endpoint.endpoint_base::m_io_service.post(
-			boost::bind(
-				&type::write_message,
-				type::shared_from_this(),
-				msg));	*/
+	void ping(const std::string& payload) {
+		send_ping(payload);
 	}
-	void pong(const binary_string& payload) {
-		// TODO:
-        /*binary_string_ptr msg(m_processor->prepare_frame(frame::opcode::PONG,
-														 !m_endpoint.is_server(),payload));
-		m_endpoint.endpoint_base::m_io_service.post(
-			boost::bind(
-				&type::write_message,
-				type::shared_from_this(),
-				msg));*/
+	void pong(const std::string& payload) {
+        send_pong(payload);
 	}
 	
 	uint64_t buffered_amount() const {
@@ -228,26 +202,6 @@ public:
 	// flow control interface
 	message::data_ptr get_data_message() {
 		return m_endpoint.get_data_message();
-	}
-	
-	void recycle(message::data_ptr p) {
-		m_endpoint.recycle(p);
-        /*if (m_read_queue_used.erase(p) == 0) {
-			// tried to recycle a pointer we don't control.
-		} else {
-			m_read_queue_avaliable.push(p);
-			
-			if (m_read_state == WAITING) {
-				m_endpoint.endpoint_base::m_io_service.post(
-					boost::bind(
-					    &type::handle_read_frame,
-					    type::shared_from_this(),
-					    boost::system::error_code()
-				    )
-			    );
-				m_read_state = READING;
-			}
-		}*/
 	}
 	
 	message::control_ptr get_control_message() {
@@ -398,11 +352,7 @@ protected:
 				response = get_handler()->on_ping(type::shared_from_this(),
 												  msg->get_payload());
 				if (response) {
-                    message::data_ptr pong = get_data_message();
-                    pong->reset(frame::opcode::PONG);
-                    pong->set_payload(msg->get_payload());
-                    m_processor->prepare_frame(pong,!m_endpoint.is_server(),rand());
-                    write_message(pong);
+                    send_pong(msg->get_payload());
 				}
 				break;
 			case frame::opcode::PONG:
@@ -476,7 +426,8 @@ protected:
 		m_local_close_code = code;
 		m_local_close_reason = reason;
 		
-        // TODO: fix
+        // TODO: optimize control messages and handle case where endpoint is
+        // out of messages
         message::data_ptr msg = get_data_message();
         
         if (!msg) {
@@ -489,7 +440,6 @@ protected:
         }
         
         msg->reset(frame::opcode::CLOSE);
-        // TODO: msg payload set_status
 		m_processor->prepare_close_frame(msg,!m_endpoint.is_server(),rand(),code,reason);
 		write_message(msg);
         
@@ -527,30 +477,45 @@ protected:
 		//       current write completes.
 		
 		
-        // TODO: fix
+        // TODO: optimize control messages and handle case where endpoint is
+        // out of messages
         message::data_ptr msg = get_data_message();
         msg->reset(frame::opcode::CLOSE);
-        // TODO: msg payload set_status
 		m_processor->prepare_close_frame(msg,
                                         !m_endpoint.is_server(),
                                         rand(),
                                         m_local_close_code,
                                         m_local_close_reason);
 		write_message(msg);
-        
-		//write_message(m_processor->prepare_close_frame(m_local_close_code,
-		//											   !m_endpoint.is_server(),
-		//											   m_local_close_reason));
 		m_write_state = INTURRUPT;
 	}
 	
+    void send_ping(const std::string& payload) {
+        // TODO: optimize control messages and handle case where 
+        // endpoint is out of messages
+        message::data_ptr control = get_data_message();
+        control->reset(frame::opcode::PING);
+        control->set_payload(payload);
+        m_processor->prepare_frame(control,!m_endpoint.is_server(),rand());
+        write_message(control);
+    }
+    
+    void send_pong(const std::string& payload) {
+        // TODO: optimize control messages and handle case where 
+        // endpoint is out of messages
+        message::data_ptr control = get_data_message();
+        control->reset(frame::opcode::PONG);
+        control->set_payload(payload);
+        m_processor->prepare_frame(control,!m_endpoint.is_server(),rand());
+        write_message(control);
+    }
+    
 	void write_message(message::data_ptr msg) {
 		if (m_write_state == INTURRUPT) {
 			return;
 		}
 		
 		m_write_buffer += msg->get_payload().size();
-        msg->acquire();
 		m_write_queue.push(msg);
         
 		write();
@@ -568,10 +533,6 @@ protected:
 				// clear the queue except for the last message
 				while (m_write_queue.size() > 1) {
 					m_write_buffer -= m_write_queue.front()->get_payload().size();
-                    m_write_queue.front()->release();
-                    if (m_write_queue.front()->done()) {
-                        //recycle(m_write_queue.front());
-                    }
 					m_write_queue.pop();
 				}
 				break;
@@ -626,15 +587,6 @@ protected:
 		}
         
 		m_write_buffer -= m_write_queue.front()->get_payload().size();
-        /*m_write_queue.front()->release();
-        if (m_write_queue.front()->done()) {
-            if (m_write_queue.front()->get_payload().size() > 0 &&
-                (m_write_queue.front()->get_payload())[0] != '{') {
-                m_endpoint.alog().at(log::alevel::DEVEL) << "Recycling message, maxcount: " << m_write_queue.front()->m_max_refcount << log::endl;
-            }
-            
-            recycle(m_write_queue.front());
-        }*/
 		m_write_queue.pop();
         
 		if (m_write_state == WRITING) {
@@ -754,10 +706,8 @@ protected:
 	bool						m_dropped_by_me;
 	
 	// Read queue
-	read_state							m_read_state;
-	message::control_ptr				m_control_message;
-	std::queue<message::data_ptr>		m_read_queue_avaliable;
-	std::set<message::data_ptr>			m_read_queue_used;
+	read_state                  m_read_state;
+	message::control_ptr        m_control_message;
 };
 
 // connection related types that it and its policy classes need.

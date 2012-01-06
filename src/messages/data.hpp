@@ -32,9 +32,10 @@
 #include "../utf8_validator/utf8_validator.hpp"
 
 #include <boost/detail/atomic_count.hpp>
-#include <boost/intrusive_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
+#include <boost/intrusive_ptr.hpp>
+#include <boost/utility.hpp>
 
 #include <algorithm>
 #include <istream>
@@ -44,8 +45,10 @@
 namespace websocketpp {
 namespace message {
 
+/// message::pool impliments a reference counted pool of elements.
+
 // element_type interface:
-// constructor:
+// constructor(ptr p, size_t index)
 // - shared pointer to the managing pool
 // - integer index
 
@@ -53,7 +56,8 @@ namespace message {
 // set_live()
 
 template <class element_type>
-    class pool : public boost::enable_shared_from_this< pool<element_type> > {
+    class pool : public boost::enable_shared_from_this< pool<element_type> >,
+                 boost::noncopyable {
 public:
     typedef pool<element_type> type;
     typedef boost::shared_ptr<type> ptr;
@@ -61,16 +65,27 @@ public:
     typedef boost::function<void()> callback_type;
     
     pool(size_t max_elements) : m_cur_elements(0),m_max_elements(max_elements) {}
+    ~pool() {}
     
+    // copy/assignment constructors require C++11
+    // boost::noncopyable is being used in the meantime.
+    // pool(pool const&) = delete;
+    // pool& operator=(pool const&) = delete
+    
+    /// Requests a pointer to the next free element in the resource pool.
+    /* If there isn't a free element a new one is created. If the maximum number
+     * of elements has been created then it returns an empty/null element 
+     * pointer.
+     */
     element_ptr get() {
         element_ptr p;
         
-        std::cout << "message requested (" 
+        /*std::cout << "message requested (" 
                   << m_cur_elements-m_avaliable.size()
                   << "/"
                   << m_cur_elements
                   << ")"
-                  << std::endl;
+                  << std::endl;*/
         
         if (!m_avaliable.empty()) {
             p = m_avaliable.front();
@@ -85,16 +100,17 @@ public:
             m_cur_elements++;
             m_used.push_back(p);
             
-            std::cout << "Allocated new data message. Count is now " 
+            /*std::cout << "Allocated new data message. Count is now " 
                       << m_cur_elements
-                      << std::endl;
+                      << std::endl;*/
         }
         
         p->set_live();
         return p;
     }
     void recycle(element_ptr p) {
-        if (m_used[p->get_index()] != p) {
+        if (p->get_index()+1 > m_used.size() || m_used[p->get_index()] != p) {
+            std::cout << "error tried to recycle a pointer we don't control" << std::endl;
             // error tried to recycle a pointer we don't control
             return;
         }
@@ -158,14 +174,9 @@ public:
     // Performs masking and header generation if it has not been done already.
     void set_prepared(bool b);
     bool get_prepared() const;
-    void acquire();
-    void release();
-    bool done() const;
     void mask();
-	
-    int m_max_refcount;
-    
-    // RC
+	    
+    // pool management interface
     void set_live();
     size_t get_index() const;
 private:
@@ -207,12 +218,11 @@ private:
 	unsigned char				m_masking_key[4];
     // m_masking_index can take on
     index_value                 m_masking_index;
-	
-	// Message buffers
-    int                         m_refcount;
     
     std::string                 m_header;
     std::string					m_payload;
+    
+    bool                        m_prepared;
     
     // reference counting
     size_t                              m_index;
