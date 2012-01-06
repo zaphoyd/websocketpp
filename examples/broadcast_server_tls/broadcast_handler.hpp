@@ -160,12 +160,12 @@ public:
         // broadcast to clients        
         for (it = m_connections.begin(); it != m_connections.end(); it++) {
             //(*it)->send(msg->get_payload(),(msg->get_opcode() == frame::opcode::BINARY));
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 1; i++) {
                 (*it)->send(msg);
             }
             
         }
-        new_msg.sent = m_connections.size()*100;
+        new_msg.sent = m_connections.size()*1;
         new_msg.acked = 0;
     }
     

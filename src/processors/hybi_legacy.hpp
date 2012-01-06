@@ -257,12 +257,36 @@ public:
 	}
 	
     void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+        assert(msg);
         if (msg->get_prepared()) {
             return;
         }
         
         msg->set_header(std::string(0x00));
-        // TODO: append 0xFF
+        
+        msg->append_payload(std::string(1,0xFF));
+        
+        msg->set_prepared(true);
+    }
+    
+    void prepare_close_frame(message::data_ptr msg, 
+                             bool masked, 
+                             int32_t mask,
+                             close::status::value code,
+                             const std::string& reason)
+    {
+        assert(msg);
+        if (msg->get_prepared()) {
+            return;
+        }
+        
+        msg->set_header(std::string());
+        
+        std::string val;
+        val.append(1,0xFF);
+        val.append(1,0x00);
+        msg->set_payload(val);
+        
         msg->set_prepared(true);
     }
     

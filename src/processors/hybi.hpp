@@ -468,7 +468,7 @@ public:
 		return response;
 	}
 	
-	binary_string_ptr prepare_close_frame(close::status::value code,
+	/*binary_string_ptr prepare_close_frame(close::status::value code,
 										  bool mask,
 										  const std::string& reason) {
 		binary_string_ptr response(new binary_string(0));
@@ -491,10 +491,11 @@ public:
 		std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
 		
 		return response;
-	}
+	}*/
 	
     // new prepare frame stuff
     void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+        assert(msg);
         if (msg->get_prepared()) {
             return;
         }
@@ -513,7 +514,28 @@ public:
         msg->set_prepared(true);
     }
     
-    
+    void prepare_close_frame(message::data_ptr msg, 
+                             bool masked, 
+                             int32_t mask,
+                             close::status::value code,
+                             const std::string& reason)
+    {
+        assert(msg);
+        if (msg->get_prepared()) {
+            return;
+        }
+        
+        // set close payload
+        char val[3];
+        *reinterpret_cast<uint16_t*>(&val[0]) = htons(code);
+        val[2] = 0x00;
+        
+        msg->set_payload(std::string(val));
+        msg->append_payload(reason);
+        
+        // prepare rest of frame
+        prepare_frame(msg,masked,mask);
+    }
 private:
 	connection_type&		m_connection;
 	int						m_state;

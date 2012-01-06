@@ -121,18 +121,25 @@ public:
 	//virtual utf8_string get_close_reason() const = 0;
 	
 	// TODO: prepare a frame
-	virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
-											bool mask,
-											const utf8_string& payload)  = 0;
-	virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
-											bool mask,
-											const binary_string& payload)  = 0;
+	//virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
+	//										bool mask,
+	//										const utf8_string& payload)  = 0;
+	//virtual binary_string_ptr prepare_frame(frame::opcode::value opcode,
+	//										bool mask,
+	//										const binary_string& payload)  = 0;
+	//
+	//virtual binary_string_ptr prepare_close_frame(close::status::value code,
+	//											  bool mask,
+	//											  const std::string& reason) = 0;
 	
-	virtual binary_string_ptr prepare_close_frame(close::status::value code,
-												  bool mask,
-												  const std::string& reason) = 0;
-	
-	virtual void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) = 0;
+	virtual void prepare_frame(message::data_ptr msg, 
+                               bool masked, 
+                               int32_t mask) = 0;
+    virtual void prepare_close_frame(message::data_ptr msg, 
+                                     bool masked, 
+                                     int32_t mask,
+                                     close::status::value code,
+                                     const std::string& reason) = 0;
 	
 };
 

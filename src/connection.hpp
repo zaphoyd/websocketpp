@@ -398,10 +398,11 @@ protected:
 				response = get_handler()->on_ping(type::shared_from_this(),
 												  msg->get_payload());
 				if (response) {
-					// TODO: send response ping
-					//write_message(m_processor->prepare_frame(frame::opcode::PONG,
-					//										 !m_endpoint.is_server(),
-					//										 msg->get_payload()));
+                    message::data_ptr pong = get_data_message();
+                    pong->reset(frame::opcode::PONG);
+                    pong->set_payload(msg->get_payload());
+                    m_processor->prepare_frame(pong,!m_endpoint.is_server(),rand());
+                    write_message(pong);
 				}
 				break;
 			case frame::opcode::PONG:
@@ -477,9 +478,19 @@ protected:
 		
         // TODO: fix
         message::data_ptr msg = get_data_message();
+        
+        if (!msg) {
+            // server is out of resources, close connection.
+            m_endpoint.elog().at(log::elevel::ERROR) 
+            << "Server has run out of message buffers." 
+            << log::endl;
+            terminate(true);
+            return;
+        }
+        
         msg->reset(frame::opcode::CLOSE);
         // TODO: msg payload set_status
-		m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
+		m_processor->prepare_close_frame(msg,!m_endpoint.is_server(),rand(),code,reason);
 		write_message(msg);
         
 		m_write_state = INTURRUPT;
@@ -520,7 +531,11 @@ protected:
         message::data_ptr msg = get_data_message();
         msg->reset(frame::opcode::CLOSE);
         // TODO: msg payload set_status
-		m_processor->prepare_frame(msg,!m_endpoint.is_server(),rand());
+		m_processor->prepare_close_frame(msg,
+                                        !m_endpoint.is_server(),
+                                        rand(),
+                                        m_local_close_code,
+                                        m_local_close_reason);
 		write_message(msg);
         
 		//write_message(m_processor->prepare_close_frame(m_local_close_code,

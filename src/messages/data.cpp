@@ -151,6 +151,10 @@ void data::set_payload(const std::string& payload) {
     m_payload.reserve(payload.size());
     m_payload = payload;
 }
+void data::append_payload(const std::string& payload) {
+    m_payload.reserve(m_payload.size()+payload.size());
+    m_payload.append(payload);
+}
 void data::mask() {
     if (m_masking_index >= 0) {
         for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {

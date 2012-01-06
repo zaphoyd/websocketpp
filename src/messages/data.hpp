@@ -39,7 +39,7 @@
 namespace websocketpp {
 namespace message {
 
-class intrusive_ptr_base {
+/*class intrusive_ptr_base {
 public:
     intrusive_ptr_base() : ref_count(0) {}
     intrusive_ptr_base(intrusive_ptr_base const&) : ref_count(0) {}
@@ -57,15 +57,21 @@ public:
         
         // TODO: thread safety
         long count = --s->ref_count;
-        if (count == 1) {
+        if (count == 1 && endpoint != NULL) {
             // recycle if endpoint exists
+            endpoint->recycle();
         } else if (count == 0) {
-            // delete
+            boost::checked_delete(static_cast<intrusive_ptr_base const*>(s));
         }
     }
+    
+    detach() {
+        endpoint = NULL;
+    }
 private:
+    websocketpp::endpoint_base* endpoint;
     mutable boost::detail::atomic_count ref_count;
-};
+};*/
 
 
 class data {
@@ -94,6 +100,7 @@ public:
     // sets the payload to payload. Performs max size and UTF8 validation 
     // immediately and throws processor::exception if it fails
     void set_payload(const std::string& payload);
+    void append_payload(const std::string& payload);
     
     void set_header(const std::string& header);
     

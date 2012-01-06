@@ -206,6 +206,17 @@ protected:
     
     message::data_ptr get_data_message() {
 		// if we have one of this type free
+        
+        alog().at(log::alevel::DEVEL) 
+        << "message requested (" 
+        << m_read_queue_used.size()
+        << "/"
+        << m_read_queue_avaliable.size()+m_read_queue_used.size()
+        << ") with "
+        << m_read_waiting.size()
+        << " waiting"
+        << log::endl;
+        
 		if (!m_read_queue_avaliable.empty()) {
 			message::data_ptr p = m_read_queue_avaliable.front();
 			m_read_queue_avaliable.pop();
@@ -231,6 +242,8 @@ protected:
 		} else {
 			m_read_queue_avaliable.push(p);
 			
+            
+            
             // wake next
             if (!m_read_waiting.empty()) {
                 connection_ptr next = m_read_waiting.front();
@@ -261,6 +274,8 @@ protected:
             
             m_read_waiting.empty();*/
 		}
+        
+
 	}
     
     void wait(connection_ptr con) {
