@@ -31,11 +31,42 @@
 #include "../common.hpp"
 #include "../utf8_validator/utf8_validator.hpp"
 
+#include <boost/detail/atomic_count.hpp>
+
 #include <algorithm>
 #include <istream>
 
 namespace websocketpp {
 namespace message {
+
+class intrusive_ptr_base {
+public:
+    intrusive_ptr_base() : ref_count(0) {}
+    intrusive_ptr_base(intrusive_ptr_base const&) : ref_count(0) {}
+    intrusive_ptr_base& operator=(intrusive_ptr_base const& rhs) {
+        return *this;
+    }
+    friend void intrusive_ptr_add_ref(intrusive_ptr_base const* s) {
+        assert(s->ref_count >= 0);
+        assert(s != 0);
+        ++s->ref_count;
+    }
+    friend void intrusive_ptr_release(intrusive_ptr_base const* s) {
+        assert(s->ref_count > 0);
+        assert(s != 0);
+        
+        // TODO: thread safety
+        long count = --s->ref_count;
+        if (count == 1) {
+            // recycle if endpoint exists
+        } else if (count == 0) {
+            // delete
+        }
+    }
+private:
+    mutable boost::detail::atomic_count ref_count;
+};
+
 
 class data {
 public:

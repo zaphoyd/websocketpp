@@ -256,7 +256,7 @@ protected:
 					    *it,
 					    boost::system::error_code()
 				    )
-			    );
+			    ); 
             }
             
             m_read_waiting.empty();*/
