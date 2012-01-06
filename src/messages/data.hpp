@@ -32,51 +32,102 @@
 #include "../utf8_validator/utf8_validator.hpp"
 
 #include <boost/detail/atomic_count.hpp>
+#include <boost/intrusive_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
 
 #include <algorithm>
 #include <istream>
+#include <queue>
+#include <vector>
 
 namespace websocketpp {
 namespace message {
 
-/*class intrusive_ptr_base {
+// element_type interface:
+// constructor:
+// - shared pointer to the managing pool
+// - integer index
+
+// get_index();
+// set_live()
+
+template <class element_type>
+    class pool : public boost::enable_shared_from_this< pool<element_type> > {
 public:
-    intrusive_ptr_base() : ref_count(0) {}
-    intrusive_ptr_base(intrusive_ptr_base const&) : ref_count(0) {}
-    intrusive_ptr_base& operator=(intrusive_ptr_base const& rhs) {
-        return *this;
-    }
-    friend void intrusive_ptr_add_ref(intrusive_ptr_base const* s) {
-        assert(s->ref_count >= 0);
-        assert(s != 0);
-        ++s->ref_count;
-    }
-    friend void intrusive_ptr_release(intrusive_ptr_base const* s) {
-        assert(s->ref_count > 0);
-        assert(s != 0);
+    typedef pool<element_type> type;
+    typedef boost::shared_ptr<type> ptr;
+    typedef typename element_type::ptr element_ptr;
+    typedef boost::function<void()> callback_type;
+    
+    pool(size_t max_elements) : m_cur_elements(0),m_max_elements(max_elements) {}
+    
+    element_ptr get() {
+        element_ptr p;
         
-        // TODO: thread safety
-        long count = --s->ref_count;
-        if (count == 1 && endpoint != NULL) {
-            // recycle if endpoint exists
-            endpoint->recycle();
-        } else if (count == 0) {
-            boost::checked_delete(static_cast<intrusive_ptr_base const*>(s));
+        std::cout << "message requested (" 
+                  << m_cur_elements-m_avaliable.size()
+                  << "/"
+                  << m_cur_elements
+                  << ")"
+                  << std::endl;
+        
+        if (!m_avaliable.empty()) {
+            p = m_avaliable.front();
+            m_avaliable.pop();
+            m_used[p->get_index()] = p;
+        } else {
+            if (m_cur_elements == m_max_elements) {
+                return element_ptr();
+            }
+            
+            p = element_ptr(new element_type(type::shared_from_this(),m_cur_elements));
+            m_cur_elements++;
+            m_used.push_back(p);
+            
+            std::cout << "Allocated new data message. Count is now " 
+                      << m_cur_elements
+                      << std::endl;
+        }
+        
+        p->set_live();
+        return p;
+    }
+    void recycle(element_ptr p) {
+        if (m_used[p->get_index()] != p) {
+            // error tried to recycle a pointer we don't control
+            return;
+        }
+        
+        m_avaliable.push(p);
+        m_used[p->get_index()] = element_ptr();
+        
+        if (m_callback && m_avaliable.size() == 1) {
+            m_callback();
         }
     }
     
-    detach() {
-        endpoint = NULL;
+    // set a function that will be called when new elements are avaliable.
+    void set_callback(callback_type fn) {
+        m_callback = fn;
     }
+    
 private:
-    websocketpp::endpoint_base* endpoint;
-    mutable boost::detail::atomic_count ref_count;
-};*/
-
+    size_t          m_cur_elements;
+    size_t          m_max_elements;
+    
+    std::queue<element_ptr> m_avaliable;
+    std::vector<element_ptr> m_used;
+    
+    callback_type   m_callback;
+};
 
 class data {
 public:
-    data();
+    typedef boost::intrusive_ptr<data> ptr;
+    typedef pool<data>::ptr pool_ptr;
+    
+    data(pool_ptr p, size_t s);
 	
     void reset(frame::opcode::value opcode);
     
@@ -113,6 +164,10 @@ public:
     void mask();
 	
     int m_max_refcount;
+    
+    // RC
+    void set_live();
+    size_t get_index() const;
 private:
     static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
@@ -125,6 +180,22 @@ private:
         M_BYTE_2 = 2,
         M_BYTE_3 = 3
     };
+    
+    friend void intrusive_ptr_add_ref(const data * s) {
+        ++s->m_ref_count;
+    }
+    
+    friend void intrusive_ptr_release(const data * s) {
+        // TODO: thread safety
+        long count = --s->m_ref_count;
+        if (count == 1 && s->m_live) {
+            // recycle if endpoint exists
+            s->m_live = false;
+            s->m_pool->recycle(ptr(const_cast<data *>(s)));
+        } else if (count == 0) {
+            boost::checked_delete(static_cast<data const *>(s));
+        }
+    }
     
 	// Message state
 	frame::opcode::value		m_opcode;
@@ -142,9 +213,15 @@ private:
     
     std::string                 m_header;
     std::string					m_payload;
+    
+    // reference counting
+    size_t                              m_index;
+    mutable boost::detail::atomic_count m_ref_count;
+    mutable pool_ptr                    m_pool;
+    mutable bool                        m_live;
 };
 
-typedef boost::shared_ptr<data> data_ptr;
+typedef boost::intrusive_ptr<data> data_ptr;
 	
 } // namespace message
 } // namespace websocketpp

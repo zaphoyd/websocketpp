@@ -94,7 +94,7 @@ public:
         
         if (command.command == "ack") {
             handle_ack(connection,command);
-            connection->recycle(msg);
+            //connection->recycle(msg);
         } else {
             broadcast_message(msg);
         }

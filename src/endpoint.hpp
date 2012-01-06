@@ -34,6 +34,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 #include <iostream>
 #include <set>
@@ -65,7 +66,8 @@ template <
 class endpoint 
  : public endpoint_base,
    public role< endpoint<role,socket> >,
-   public socket< endpoint<role,socket> > 
+   public socket< endpoint<role,socket> >,
+   boost::noncopyable 
 {
 public:
     /// Type of the traits class that stores endpoint related types.
@@ -116,7 +118,21 @@ public:
     explicit endpoint(handler_ptr handler) 
      : role_type(m_io_service),
        socket_type(m_io_service),
-       m_handler(handler) {}
+       m_handler(handler),
+       m_pool(new message::pool<message::data>(10))
+    {
+        m_pool->set_callback(boost::bind(&type::on_new_message,this));
+    }
+    
+    /// Destroy and endpoint
+    ~endpoint() {
+        m_pool->set_callback(NULL);
+    }
+    
+    // copy/assignment constructors require C++11
+    // boost::noncopyable is being used in the meantime.
+    // endpoint(endpoint const&) = delete;
+    // endpoint& operator=(endpoint const&) = delete
     
     /// Returns a reference to the endpoint's access logger.
     /**
@@ -204,10 +220,10 @@ protected:
         return m_handler;
     }
     
-    message::data_ptr get_data_message() {
+    message::data::ptr get_data_message() {
 		// if we have one of this type free
         
-        alog().at(log::alevel::DEVEL) 
+        /*alog().at(log::alevel::DEVEL) 
         << "message requested (" 
         << m_read_queue_used.size()
         << "/"
@@ -233,11 +249,13 @@ protected:
                 << log::endl;
                 return get_data_message();
             }
-		}
+		}*/
+        return m_pool->get();
 	}
     
-    void recycle(message::data_ptr p) {
-		if (m_read_queue_used.erase(p) == 0) {
+    void recycle(message::data::ptr p) {
+		m_pool->recycle(p);
+        /*if (m_read_queue_used.erase(p) == 0) {
 			// tried to recycle a pointer we don't control.
 		} else {
 			m_read_queue_avaliable.push(p);
@@ -248,19 +266,19 @@ protected:
             if (!m_read_waiting.empty()) {
                 connection_ptr next = m_read_waiting.front();
             
-                /*endpoint_base::m_io_service.post(
+                endpoint_base::m_io_service.post(
 					boost::bind(
 					    &connection_type::handle_read_frame,
 					    next,
 					    boost::system::error_code()
 				    )
-			    );*/
+			    );
                 (*next).handle_read_frame(boost::system::error_code());
                 
                 m_read_waiting.pop();
             }
             // wake all
-            /*std::list<connection_ptr>::iterator it;
+            std::list<connection_ptr>::iterator it;
             
             for (it = m_read_waiting.begin(); it != m_read_waiting.end(); it++) {
                 endpoint_base::m_io_service.post(
@@ -272,8 +290,8 @@ protected:
 			    ); 
             }
             
-            m_read_waiting.empty();*/
-		}
+            m_read_waiting.empty();
+		}*/
         
 
 	}
@@ -282,6 +300,13 @@ protected:
         m_read_waiting.push(con);
     }
     
+    void on_new_message() {
+        if (!m_read_waiting.empty()) {
+            connection_ptr next = m_read_waiting.front();
+            (*next).handle_read_frame(boost::system::error_code());
+            m_read_waiting.pop();
+        }
+    }
 private:
     handler_ptr                 m_handler;
     std::set<connection_ptr>    m_connections;
@@ -289,9 +314,11 @@ private:
     elogger_type                m_elog;
     
     // mssage buffers
-    std::queue<message::data_ptr>	m_read_queue_avaliable;
-	std::set<message::data_ptr>		m_read_queue_used;
-    std::queue<connection_ptr>      m_read_waiting;
+    //std::queue<message::data_ptr>	m_read_queue_avaliable;
+	//std::set<message::data_ptr>		m_read_queue_used;
+    
+    message::pool<message::data>::ptr   m_pool;
+    std::queue<connection_ptr>          m_read_waiting;
 };
 
 /// traits class that allows looking up relevant endpoint types by the fully 

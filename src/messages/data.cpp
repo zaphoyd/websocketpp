@@ -32,7 +32,7 @@
 
 using websocketpp::message::data;
 
-data::data() : m_refcount(-1) {
+data::data(data::pool_ptr p, size_t s) : m_refcount(-1),m_index(s),m_ref_count(0),m_pool(p) {
     m_payload.reserve(PAYLOAD_SIZE_INIT);
 }
     
@@ -166,3 +166,16 @@ void data::mask() {
 void data::set_header(const std::string& header) {
     m_header = header;
 }
+
+
+
+
+
+//
+void data::set_live() {
+    m_live = true;
+}
+size_t data::get_index() const {
+    return m_index;
+}
+

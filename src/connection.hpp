@@ -113,7 +113,7 @@ public:
 		socket_type::init();
 		
 		m_control_message = message::control_ptr(new message::control());
-		m_read_queue_avaliable.push(message::data_ptr(new message::data()));
+		//m_read_queue_avaliable.push(message::data_ptr(new message::data()));
 	}
 	
 	// SHOULD BE PROTECTED
@@ -570,7 +570,7 @@ protected:
 					m_write_buffer -= m_write_queue.front()->get_payload().size();
                     m_write_queue.front()->release();
                     if (m_write_queue.front()->done()) {
-                        recycle(m_write_queue.front());
+                        //recycle(m_write_queue.front());
                     }
 					m_write_queue.pop();
 				}
@@ -626,7 +626,7 @@ protected:
 		}
         
 		m_write_buffer -= m_write_queue.front()->get_payload().size();
-        m_write_queue.front()->release();
+        /*m_write_queue.front()->release();
         if (m_write_queue.front()->done()) {
             if (m_write_queue.front()->get_payload().size() > 0 &&
                 (m_write_queue.front()->get_payload())[0] != '{') {
@@ -634,7 +634,7 @@ protected:
             }
             
             recycle(m_write_queue.front());
-        }
+        }*/
 		m_write_queue.pop();
         
 		if (m_write_state == WRITING) {
