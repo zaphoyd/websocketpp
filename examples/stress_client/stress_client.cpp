@@ -38,6 +38,8 @@
 #include <sys/resource.h>
 #include <time.h>
 
+int msleep(unsigned long milisec);
+
 int msleep(unsigned long milisec)
 {
     struct timespec req={0};
@@ -85,14 +87,13 @@ public:
         }
     }
     
-	void on_message(connection_ptr connection, websocketpp::message::data_ptr msg) {
+	void on_message(connection_ptr connection, websocketpp::message::data::ptr msg) {
+        //std::cout << "got message of size: " << msg->get_payload().size() << std::endl;
         m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
         
         if (m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())] == m_connections_max) {
             send_stats_update(connection);
         }
-        
-		connection->recycle(msg);
 	}
 	
 	void on_fail(connection_ptr connection) {
@@ -131,7 +132,9 @@ private:
             msg << (*it).first << "=" << (*it).second << ";";
         }
         
-        connection->send(msg.str(),false);
+        std::cout << "sending " << msg.str() << std::endl;
+        connection->send(msg.str());
+        
         m_msg_stats.clear();
     }
     
@@ -144,9 +147,9 @@ private:
 
 int main(int argc, char* argv[]) {
 	std::string uri = "ws://localhost:9002/";
-	int num_connections = 1;
-	int batch_size = 1;
-    int delay_ms = 500;
+	int num_connections = 100;
+	int batch_size = 25;
+    int delay_ms = 16;
 	
 	if (argc != 5) {
 		std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
@@ -199,6 +202,9 @@ int main(int argc, char* argv[]) {
 		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
 		endpoint.elog().set_level(websocketpp::log::elevel::ALL);
 		
+        //endpoint.alog().set_level(websocketpp::log::alevel::DEVEL);
+        //endpoint.alog().set_level(websocketpp::log::alevel::DEBUG_CLOSE);
+        
 		std::set<connection_ptr> connections;
 		
 		connections.insert(endpoint.connect(uri));
