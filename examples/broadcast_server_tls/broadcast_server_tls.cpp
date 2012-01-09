@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) {
 			plain_endpoint_type e(h);
 			
 			e.alog().unset_level(websocketpp::log::alevel::ALL);
-			e.elog().unset_level(websocketpp::log::elevel::ALL);
+			e.elog().set_level(websocketpp::log::elevel::ALL);
 			
-            e.alog().set_level(websocketpp::log::alevel::DEVEL);
+            //e.alog().set_level(websocketpp::log::alevel::DEVEL);
             
 			std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
 			e.listen(port);

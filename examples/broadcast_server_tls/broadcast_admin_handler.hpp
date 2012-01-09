@@ -100,15 +100,8 @@ public:
     }
     
     void command_error(connection_ptr connection,const std::string msg) {
-        websocketpp::message::data_ptr m = connection->get_data_message();
-        
-        if (m) {
-            m->reset(frame::opcode::TEXT);
-            m->set_payload("{\"type\":\"error\",\"value\":\""+msg+"\"}");
-            connection->send(m);
-        } else {
-            // error no avaliable message buffers
-        }
+        std::string str = "{\"type\":\"error\",\"value\":\""+msg+"\"}";
+        connection->send(str);
     }
     
     // close: - close this connection

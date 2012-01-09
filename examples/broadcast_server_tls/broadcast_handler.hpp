@@ -92,9 +92,10 @@ public:
 	void on_message(connection_ptr connection,message::data_ptr msg) {
 		wscmd::cmd command = wscmd::parse(msg->get_payload());
         
+        std::cout << "msg: " << msg->get_payload() << std::endl;
+        
         if (command.command == "ack") {
             handle_ack(connection,command);
-            //connection->recycle(msg);
         } else {
             broadcast_message(msg);
         }
@@ -160,12 +161,12 @@ public:
         // broadcast to clients        
         for (it = m_connections.begin(); it != m_connections.end(); it++) {
             //(*it)->send(msg->get_payload(),(msg->get_opcode() == frame::opcode::BINARY));
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 10; i++) {
                 (*it)->send(msg);
             }
             
         }
-        new_msg.sent = m_connections.size()*1;
+        new_msg.sent = m_connections.size()*10;
         new_msg.acked = 0;
     }
     
