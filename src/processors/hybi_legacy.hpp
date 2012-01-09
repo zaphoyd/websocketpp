@@ -253,7 +253,7 @@ public:
 		return response;
 	}
 	
-    void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+    void prepare_frame(message::data_ptr msg) {
         assert(msg);
         if (msg->get_prepared()) {
             return;
@@ -266,9 +266,7 @@ public:
         msg->set_prepared(true);
     }
     
-    void prepare_close_frame(message::data_ptr msg, 
-                             bool masked, 
-                             int32_t mask,
+    void prepare_close_frame(message::data_ptr msg,
                              close::status::value code,
                              const std::string& reason)
     {

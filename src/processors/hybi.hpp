@@ -252,9 +252,16 @@ public:
 						break;
 				}
 			} catch (const processor::exception& e) {
-				if (m_header.ready()) {
-					m_header.reset();
-				}
+				if (e.code() != processor::error::OUT_OF_MESSAGES) {
+                    // The out of messages exception acts as an inturrupt rather
+                    // than an error. In that case we don't want to reset 
+                    // processor state. In all other cases we are aborting 
+                    // processing of the message in flight and want to reset the
+                    // processor for a new message.
+                    if (m_header.ready()) {
+                        m_header.reset();
+                    }
+                }
 				
 				throw e;
 			}
@@ -494,20 +501,28 @@ public:
 	}*/
 	
     // new prepare frame stuff
-    void prepare_frame(message::data_ptr msg, bool masked, int32_t mask) {
+    void prepare_frame(message::data_ptr msg) {
         assert(msg);
         if (msg->get_prepared()) {
             return;
         }
+        
+        msg->validate_payload();
+        
+        bool masked = !m_connection.is_server();
+        int32_t key = m_connection.rand();
+        
         m_write_header.reset();
         m_write_header.set_fin(true);
         m_write_header.set_opcode(msg->get_opcode());
-        m_write_header.set_masked(masked,mask);
+        m_write_header.set_masked(masked,key);
         m_write_header.set_payload_size(msg->get_payload().size());
         m_write_header.complete();
         
         msg->set_header(m_write_header.get_header_bytes());
+        
         if (masked) {
+            msg->set_masking_key(key);
             msg->mask();
         }
         
@@ -515,8 +530,6 @@ public:
     }
     
     void prepare_close_frame(message::data_ptr msg, 
-                             bool masked, 
-                             int32_t mask,
                              close::status::value code,
                              const std::string& reason)
     {
@@ -534,7 +547,7 @@ public:
         msg->append_payload(reason);
         
         // prepare rest of frame
-        prepare_frame(msg,masked,mask);
+        prepare_frame(msg);
     }
 private:
 	connection_type&		m_connection;

@@ -132,12 +132,8 @@ public:
 	//											  bool mask,
 	//											  const std::string& reason) = 0;
 	
-	virtual void prepare_frame(message::data_ptr msg, 
-                               bool masked, 
-                               int32_t mask) = 0;
-    virtual void prepare_close_frame(message::data_ptr msg, 
-                                     bool masked, 
-                                     int32_t mask,
+	virtual void prepare_frame(message::data_ptr msg) = 0;
+    virtual void prepare_close_frame(message::data_ptr msg,
                                      close::status::value code,
                                      const std::string& reason) = 0;
 	
