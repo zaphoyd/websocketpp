@@ -80,3 +80,16 @@ std::string lookup_ws_close_status_string(uint16_t code) {
 			return "Unknown";
 	}
 }
+
+std::string to_hex(const std::string& input) {
+    std::string output;
+    std::string hex = "0123456789ABCDEF";
+    
+    for (size_t i = 0; i < input.size(); i++) {
+        output += hex[(input[i] & 0xF0) >> 4];
+        output += hex[input[i] & 0x0F];
+        output += " ";
+    }
+    
+    return output;
+}
