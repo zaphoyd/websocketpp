@@ -112,6 +112,10 @@ public:
             return 0;
         }
 		
+        bool is_server() const {
+            return true;
+        }
+        
 		// should this exist?
 		boost::asio::io_service& get_io_service() {
 			return m_endpoint.get_io_service();

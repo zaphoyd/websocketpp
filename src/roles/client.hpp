@@ -114,6 +114,10 @@ public:
 		int32_t rand() {
             return m_endpoint.rand();
         }
+        
+        bool is_server() const {
+            return false;
+        }
 		
 		// should this exist?
 		boost::asio::io_service& get_io_service() {
