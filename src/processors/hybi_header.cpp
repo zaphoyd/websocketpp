@@ -205,8 +205,8 @@ uint8_t hybi_header::get_basic_size() const {
 	return m_header[1] & BPB1_PAYLOAD;
 }
 
-void hybi_header::validate_basic_header() const {
-	// check for control frame size
+void hybi_header::validate_basic_header() const {    
+    // check for control frame size
 	if (is_control() && get_basic_size() > frame::limits::PAYLOAD_SIZE_BASIC) {
 		throw processor::exception("Control Frame is too large",processor::error::PROTOCOL_VIOLATION);
 	}
