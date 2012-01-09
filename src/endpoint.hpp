@@ -119,7 +119,8 @@ public:
      : role_type(m_io_service),
        socket_type(m_io_service),
        m_handler(handler),
-       m_pool(new message::pool<message::data>(10))
+       m_pool(new message::pool<message::data>(1000)),
+       m_pool_control(new message::pool<message::data>(SIZE_MAX))
     {
         m_pool->set_callback(boost::bind(&type::on_new_message,this));
     }
@@ -225,10 +226,16 @@ protected:
 		return m_pool->get();
 	}
     
+    /// Gets a shared pointer to a read/write control message.
+    message::data::ptr get_control_message() {
+		return m_pool_control->get();
+	}
+    
     /// Asks the endpoint to restart this connection's handle_read_frame loop
     /// when there are avaliable data messages.
     void wait(connection_ptr con) {
         m_read_waiting.push(con);
+        alog().at(log::alevel::DEVEL) << "connection " << con << " is waiting. " << m_read_waiting.size() << log::endl;
     }
     
     /// Message pool callback indicating that there is a free data message
@@ -236,8 +243,13 @@ protected:
     void on_new_message() {
         if (!m_read_waiting.empty()) {
             connection_ptr next = m_read_waiting.front();
+            
+            alog().at(log::alevel::DEVEL) << "Waking connection " << next << ". " << m_read_waiting.size()-1 << log::endl;
+            
             (*next).handle_read_frame(boost::system::error_code());
             m_read_waiting.pop();
+            
+            
         }
     }
 private:
@@ -248,6 +260,7 @@ private:
     
     // resource pools for read/write message buffers
     message::pool<message::data>::ptr   m_pool;
+    message::pool<message::data>::ptr   m_pool_control;
     std::queue<connection_ptr>          m_read_waiting;
 };
 
