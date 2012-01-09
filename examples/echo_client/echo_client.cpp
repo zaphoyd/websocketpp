@@ -39,15 +39,13 @@ public:
 	typedef echo_client_handler type;
 	typedef plain_endpoint_type::connection_ptr connection_ptr;
 	
-	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {		
+	void on_message(connection_ptr connection,websocketpp::message::data::ptr msg) {		
 		if (connection->get_resource() == "/getCaseCount") {
 			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
 			m_case_count = atoi(msg->get_payload().c_str());
 		} else {
-			connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
+			connection->send(msg->get_payload(),msg->get_opcode());
 		}
-		
-		connection->recycle(msg);
 	}
 	
 	void http(connection_ptr connection) {
