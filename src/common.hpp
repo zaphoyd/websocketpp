@@ -33,6 +33,7 @@
 #endif
 #include <stdint.h>
 
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -145,6 +146,35 @@ namespace websocketpp {
             static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
         }
     } // namespace frame
+    
+    // exception class for errors that should be propogated back to the user.
+    namespace error {
+        enum value {
+            GENERIC = 0,
+            // send attempted when endpoint write queue was full
+            SEND_QUEUE_FULL = 1,
+            PAYLOAD_VIOLATION = 2
+        };
+    }
+    
+    class exception : public std::exception {
+    public:	
+        exception(const std::string& msg,
+                  error::value code = error::GENERIC) 
+        : m_msg(msg),m_code(code) {}
+        ~exception() throw() {}
+        
+        virtual const char* what() const throw() {
+            return m_msg.c_str();
+        }
+        
+        error::value code() const throw() {
+            return m_code;
+        }
+        
+        std::string m_msg;
+        error::value m_code;
+    };
 }
 
 #endif // WEBSOCKET_CONSTANTS_HPP
