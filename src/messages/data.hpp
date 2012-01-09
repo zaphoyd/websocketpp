@@ -38,7 +38,7 @@
 #include <boost/utility.hpp>
 
 #include <algorithm>
-#include <istream>
+#include <iostream>
 #include <queue>
 #include <vector>
 
@@ -110,13 +110,20 @@ public:
     }
     void recycle(element_ptr p) {
         if (p->get_index()+1 > m_used.size() || m_used[p->get_index()] != p) {
-            std::cout << "error tried to recycle a pointer we don't control" << std::endl;
+            //std::cout << "error tried to recycle a pointer we don't control" << std::endl;
             // error tried to recycle a pointer we don't control
             return;
         }
         
         m_avaliable.push(p);
         m_used[p->get_index()] = element_ptr();
+        
+        /*std::cout << "message recycled (" 
+                  << m_cur_elements-m_avaliable.size()
+                  << "/"
+                  << m_cur_elements
+                  << ")"
+                  << std::endl;*/
         
         if (m_callback && m_avaliable.size() == 1) {
             m_callback();
@@ -162,6 +169,7 @@ public:
     uint64_t process_payload(std::istream& input,uint64_t size);
 	void process_character(unsigned char c);
 	void complete();
+    void validate_payload();
     
     // ##writing##
     // sets the payload to payload. Performs max size and UTF8 validation 

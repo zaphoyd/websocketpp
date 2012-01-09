@@ -87,10 +87,13 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
 	
 void data::process_character(unsigned char c) {
     if (m_masking_index >= 0) {
-        c = c ^ m_masking_key[(m_masking_index++)%4];
+        c = c ^ m_masking_key[m_masking_index];
+        m_masking_index = index_value((m_masking_index+1)%4);
     }
     
-    if (m_opcode == frame::opcode::TEXT && !m_validator.consume(static_cast<uint32_t>((unsigned char)(c)))) {
+    if (m_opcode == frame::opcode::TEXT && 
+        !m_validator.consume(static_cast<uint32_t>((unsigned char)(c))))
+    {
         throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
     }
     
@@ -113,7 +116,19 @@ void data::complete() {
         }
     }
 }
-	
+
+void data::validate_payload() {
+    if (m_opcode == frame::opcode::TEXT) {
+        if (!m_validator.decode(m_payload.begin(), m_payload.end())) {
+            throw exception("Invalid UTF8 data",error::PAYLOAD_VIOLATION);
+        }
+        
+        if (!m_validator.complete()) {
+            throw exception("Invalid UTF8 data",error::PAYLOAD_VIOLATION);
+        }
+    }
+}
+
 void data::set_masking_key(int32_t key) {
     *reinterpret_cast<int32_t*>(m_masking_key) = key;
     // -2 indicates a masked frame whose key is zero.
@@ -141,7 +156,8 @@ void data::append_payload(const std::string& payload) {
 void data::mask() {
     if (m_masking_index >= 0) {
         for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
-            (*it) = *it ^ m_masking_key[(m_masking_index++)%4];
+            (*it) = *it ^ m_masking_key[m_masking_index];
+            m_masking_index = index_value((m_masking_index+1)%4);
         }
     }
 }
