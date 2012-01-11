@@ -103,8 +103,8 @@ void data::process_character(unsigned char c) {
     
 void data::reset(frame::opcode::value opcode) {
     m_opcode = opcode;
-    m_masking_index = M_NOT_MASKED; // -1 indicates do not mask/unmask
-    m_payload.resize(0);
+    m_masking_index = M_NOT_MASKED;
+    m_payload.clear();
     m_validator.reset();
     m_prepared = false;
 }
@@ -131,7 +131,6 @@ void data::validate_payload() {
 
 void data::set_masking_key(int32_t key) {
     *reinterpret_cast<int32_t*>(m_masking_key) = key;
-    // -2 indicates a masked frame whose key is zero.
     m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
 }
 
