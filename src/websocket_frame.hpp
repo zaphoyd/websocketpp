@@ -105,7 +105,7 @@ public:
 		m_state = STATE_BASIC_HEADER;
 		m_bytes_needed = BASIC_HEADER_LENGTH;
 		m_degraded = false;
-		m_payload.empty();
+		m_payload.clear();
 		memset(m_header,0,MAX_HEADER_LENGTH);
 	}
 	
@@ -376,7 +376,7 @@ public:
 	}
 	void set_payload_helper(size_t s) {
 		if (s > max_payload_size) {
-			throw processor::exception("requested payload is over implimentation defined limit",processor::error::MESSAGE_TOO_BIG);
+			throw processor::exception("requested payload is over implementation defined limit",processor::error::MESSAGE_TOO_BIG);
 		}
 		
 		// limits imposed by the websocket spec
