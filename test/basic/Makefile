@@ -16,6 +16,9 @@ endif
 tests: parsing.cpp 
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+perf: uri_perf.cpp
+	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 %.o: %.cpp
 	$(CXX) -c $(CFLAGS) -o $@ $^
 
