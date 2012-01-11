@@ -30,27 +30,15 @@
 
 #include <cstring>
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
-typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> endpoint_type;
+typedef endpoint_type::handler_ptr handler_ptr;
 
-class echo_server_handler : public plain_endpoint_type::handler {
+class echo_server_handler : public endpoint_type::handler {
 public:
-	typedef echo_server_handler type;
-	typedef plain_endpoint_type::connection_ptr connection_ptr;
+	typedef endpoint_type::connection_ptr connection_ptr;
 	
 	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
-		//std::cout << "got message: " << *msg << std::endl;
-		connection->send(msg->get_payload(),(msg->get_opcode() == websocketpp::frame::opcode::BINARY));
-		
-		connection->recycle(msg);
-	}
-	
-	void http(connection_ptr connection) {
-		connection->set_body("HTTP Response!!");
-	}
-	
-	void on_fail(connection_ptr connection) {
-		std::cout << "connection failed" << std::endl;
+		connection->send(msg->get_payload(),msg->get_opcode());
 	}
 };
 
@@ -58,28 +46,20 @@ int main(int argc, char* argv[]) {
 	unsigned short port = 9002;
 		
 	if (argc == 2) {
-		// TODO: input validation?
 		port = atoi(argv[1]);
+        
+        if (port == 0) {
+            std::cout << "Unable to parse port input " << argv[1] << std::endl;
+            return 1;
+        }
 	}
 	
 	try {		
-		plain_handler_ptr h(new echo_server_handler());
-		plain_endpoint_type e(h);
+		handler_ptr h(new echo_server_handler());
+		endpoint_type e(h);
 		
 		e.alog().unset_level(websocketpp::log::alevel::ALL);
-		//e.alog().unset_level(websocketpp::log::alevel::ALL);
-		//e.alog().set_level(websocketpp::log::alevel::CONNECT);
-		//e.alog().set_level(websocketpp::log::alevel::DISCONNECT);
-		//e.alog().unset_level(websocketpp::log::alevel::DEBUG_HANDSHAKE);
-		
 		e.elog().unset_level(websocketpp::log::elevel::ALL);
-		//e.elog().unset_level(websocketpp::log::elevel::ALL);
-		//e.elog().set_level(websocketpp::log::elevel::ERROR);
-		//e.elog().set_level(websocketpp::log::elevel::FATAL);
-		
-		// TODO: fix
-		//e.alog().set_level(websocketpp::log::alevel::CONNECT & websocketpp::log::alevel::DISCONNECT);
-		//e.elog().set_levels(websocketpp::log::elevel::ERROR,websocketpp::log::elevel::FATAL);
 		
 		std::cout << "Starting WebSocket echo server on port " << port << std::endl;
 		e.listen(port);

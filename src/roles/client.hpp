@@ -48,18 +48,6 @@ using boost::asio::ip::tcp;
 
 namespace websocketpp {
 namespace role {
-
-/*class client_exception : public std::exception {
-public:	
-	client_exception(const std::string& msg) : m_msg(msg {}
-	~client_exception() throw() {}
-	
-	virtual const char* what() const throw() {
-		return m_msg.c_str();
-	}
-	
-	std::string m_msg;
-};*/
 	
 template <class endpoint>
 class client {
@@ -91,6 +79,16 @@ public:
 			return m_response.header(key);
 		}
 		
+        // Valid before connect is called
+        void add_request_header(const std::string& key, const std::string& value) {
+			m_request.add_header(key,value);
+		}
+		void replace_request_header(const std::string& key, const std::string& value) {
+			m_request.replace_header(key,value);
+		}
+		void remove_request_header(const std::string& key) {
+			m_request.remove_header(key);
+		}
 		
         // Information about the requested URI
 		// valid only after URIs are loaded

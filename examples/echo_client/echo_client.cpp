@@ -61,13 +61,13 @@ public:
 
 
 int main(int argc, char* argv[]) {
-	std::string uri;
+	std::string uri = "ws://localhost:9001/";
 	
-	/*if (argc != 2) {
+	if (argc > 2) {
 		std::cout << "Usage: `echo_client test_url`" << std::endl;
 	} else {
 		uri = argv[1];
-	}*/
+	}
 	
 	try {
 		plain_handler_ptr handler(new echo_client_handler());
@@ -75,23 +75,13 @@ int main(int argc, char* argv[]) {
 		plain_endpoint_type endpoint(handler);
 		
 		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-		
 		endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
 		
-		connection = endpoint.connect("ws://localhost:9001/getCaseCount");
+		connection = endpoint.connect(uri+"getCaseCount");
 		
+        connection->add_request_header("User Agent","WebSocket++/0.2.0");
+        
         endpoint.run();
-        
-        
-		/*boost::asio::io_service io_service;
-		
-		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
-		
-		client->init();
-		client->set_header("User Agent","WebSocket++/2011-10-27");
-		
-		client->connect("ws://localhost:9001/getCaseCount");
-		io_service.run();*/
 		
 		std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
 		
@@ -100,7 +90,7 @@ int main(int argc, char* argv[]) {
 			
 			std::stringstream url;
 			
-			url << "ws://localhost:9001/runCase?case=" << i << "&agent=\"WebSocket++Snapshot/2011-12-06\"";
+			url << uri << "/runCase?case=" << i << "&agent=\"WebSocket++/0.2.0\"";
 						
             connection = endpoint.connect(url.str());
 			
