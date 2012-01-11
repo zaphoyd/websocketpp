@@ -116,8 +116,8 @@ int main(int argc, char* argv[]) {
 			std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
 			e.listen(port);
 		}
-	} catch (std::string e) {
-		//std::cerr << "Exception: " << e.what() << std::endl;
+	} catch (std::exception& e) {
+		std::cerr << "Exception: " << e.what() << std::endl;
 		
 	}
 	

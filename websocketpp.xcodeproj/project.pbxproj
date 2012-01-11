@@ -230,6 +230,10 @@
 		B62A5A6F14774CD5005F9EB0 /* uri.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = src/uri.hpp; sourceTree = "<group>"; };
 		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
+		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
+		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
+		B64E12D514BDE132006F20F0 /* tests */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = tests; sourceTree = "<group>"; };
 		B653A714148A607D004D7BD9 /* hybi_header.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hybi_header.hpp; sourceTree = "<group>"; };
 		B653A718148AB555004D7BD9 /* hybi_header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hybi_header.cpp; sourceTree = "<group>"; };
 		B66388451487D71800DDAE13 /* echo_server_tls.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = echo_server_tls.cpp; path = examples/echo_server_tls/echo_server_tls.cpp; sourceTree = "<group>"; };
@@ -496,6 +500,25 @@
 			path = src/processors;
 			sourceTree = "<group>";
 		};
+		B64E12D014BDE132006F20F0 /* test */ = {
+			isa = PBXGroup;
+			children = (
+				B64E12D114BDE132006F20F0 /* basic */,
+			);
+			path = test;
+			sourceTree = "<group>";
+		};
+		B64E12D114BDE132006F20F0 /* basic */ = {
+			isa = PBXGroup;
+			children = (
+				B64E12D214BDE132006F20F0 /* logging.cpp */,
+				B64E12D314BDE132006F20F0 /* Makefile */,
+				B64E12D414BDE132006F20F0 /* parsing.cpp */,
+				B64E12D514BDE132006F20F0 /* tests */,
+			);
+			path = basic;
+			sourceTree = "<group>";
+		};
 		B66388431487D70000DDAE13 /* echo_server_tls */ = {
 			isa = PBXGroup;
 			children = (
@@ -623,6 +646,7 @@
 				B6DF1CC61435ED380029A1B1 /* examples */,
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
 				B6138791145CA6F700ED9B19 /* Makefile */,
+				B64E12D014BDE132006F20F0 /* test */,
 				B6DF1C7F1434ABB70029A1B1 /* src */,
 				B6DF1C6A1434A7A30029A1B1 /* Products */,
 			);

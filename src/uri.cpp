@@ -28,14 +28,140 @@
 #include "uri.hpp"
 
 #include <sstream>
+#include <iostream>
 
 #include <boost/regex.hpp>
 
 using websocketpp::uri;
 
 uri::uri(const std::string& uri) {
-	boost::cmatch matches;
-	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9:]+\\])(:\\d{1,5})?(/[^#]*)?");
+    /*enum state {
+        BEGIN = 0,
+        HOST_BEGIN = 1,
+        READ_IPV6_LITERAL = 2,
+        READ_HOSTNAME = 3,
+        BEGIN_PORT = 4,
+        READ_PORT = 5,
+        READ_RESOURCE = 6,
+    };
+    
+    state the_state = BEGIN;
+    std::string temp;
+    
+    for (std::string::const_iterator it = uri.begin(); it != uri.end(); it++) {
+        switch (the_state) {
+            case BEGIN:
+                // we are looking for a ws:// or wss://
+                if (temp.size() < 5) {
+                    temp.append(1,*it);
+                } else {
+                    throw websocketpp::uri_exception("Scheme is too long");
+                }
+                                
+                if (temp == "ws://") {
+                    m_secure = false;
+                    the_state = HOST_BEGIN;
+                    temp.clear();
+                } else if (temp == "wss://") {
+                    m_secure = true;
+                    the_state = HOST_BEGIN;
+                    temp.clear();
+                }
+                break;
+            case HOST_BEGIN:
+                // if character is [ go into IPv6 literal state
+                // otherwise go into read hostname state
+                if (*it == '[') {
+                    the_state = READ_IPV6_LITERAL;
+                } else {
+                    *it--;
+                    the_state = READ_HOSTNAME;
+                }
+                break;
+            case READ_IPV6_LITERAL:
+                // read 0-9a-fA-F:. until ] or 45 characters have been read
+                if (*it == ']') {
+                    the_state = BEGIN_PORT;
+                    break;
+                }
+                
+                if (m_host.size() > 45) {
+                    throw websocketpp::uri_exception("IPv6 literal is too long");
+                }
+                
+                if (*it == '.' ||
+                    *it == ':' ||
+                    (*it >= '0' && *it <= '9') ||
+                    (*it >= 'a' && *it <= 'f') ||
+                    (*it >= 'A' && *it <= 'F'))
+                {
+                    m_host.append(1,*it);
+                }
+                break;
+            case READ_HOSTNAME:
+                //
+                if (*it == ':') {
+                    it--;
+                    the_state = BEGIN_PORT;
+                    break;
+                }
+                
+                if (*it == '/') {
+                    it--;
+                    the_state = BEGIN_PORT;
+                    break;
+                }
+                
+                // TODO: max url length?
+                
+                // TODO: check valid characters?
+                if (1) {
+                    m_host.append(1,*it);
+                }
+                break;
+            case BEGIN_PORT:
+                if (*it == ':') {
+                    the_state = READ_PORT;
+                } else if (*it == '/') {
+                    m_port = get_port_from_string("");
+                     *it--;
+                    the_state = READ_RESOURCE;
+                } else {
+                    throw websocketpp::uri_exception("Error parsing WebSocket URI");
+                }
+                break;
+            case READ_PORT:
+                if (*it >= '0' && *it <= '9') {
+                    if (temp.size() < 5) {
+                        temp.append(1,*it);
+                    } else {
+                        throw websocketpp::uri_exception("Port is too long");
+                    }
+                } else if (*it == '/') {
+                    m_port = get_port_from_string(temp);
+                    temp.clear();
+                     *it--;
+                    the_state = READ_RESOURCE;
+                    
+                } else {
+                    throw websocketpp::uri_exception("Error parsing WebSocket URI");
+                }
+                break;
+            case READ_RESOURCE:
+                // max length check?
+                
+                if (*it == '#') {
+                    throw websocketpp::uri_exception("WebSocket URIs cannot have fragments");
+                } else {
+                    m_resource.append(1,*it);
+                }
+                break;
+        }
+    }*/
+    
+    
+    boost::cmatch matches;
+	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:]+\\])(:\\d{1,5})?(/[^#]*)?");
 	
 	// TODO: should this split resource into path/query?
 	
@@ -43,6 +169,10 @@ uri::uri(const std::string& uri) {
 		m_secure = (matches[1] == "wss");
 		m_host = matches[2];
 		
+        if (m_host[0] == '[') {
+            m_host = m_host.substr(1,m_host.size()-2);
+        }
+        
 		std::string port(matches[3]);
 		
 		if (port != "") {
@@ -168,7 +298,7 @@ uint16_t uri::get_port_from_string(const std::string& port) const {
 	}
 	
 	if (t_port == 0) {
-		throw websocketpp::uri_exception("Error parsing port string");
+		throw websocketpp::uri_exception("Error parsing port string: "+port);
 	}
 	
 	return t_port;

@@ -186,13 +186,21 @@ public:
 	uri_ptr get_uri(const http::parser::request& request) const {
 		std::string h = request.header("Host");
 		
-		size_t found = h.find(":");
-		if (found == std::string::npos) {
+		size_t last_colon = h.rfind(":");
+        size_t last_sbrace = h.rfind("]");
+                
+        // no : = hostname with no port
+        // last : before ] = ipv6 literal with no port
+        // : with no ] = hostname with port
+        // : after ] = ipv6 literal with port
+		if (last_colon == std::string::npos || 
+            (last_sbrace != std::string::npos && last_sbrace > last_colon))
+        {
 			return uri_ptr(new uri(m_connection.is_secure(),h,request.uri()));
 		} else {
 			return uri_ptr(new uri(m_connection.is_secure(),
-								   h.substr(0,found),
-								   h.substr(found+1),
+								   h.substr(0,last_colon),
+								   h.substr(last_colon+1),
 								   request.uri()));
 		}
 		

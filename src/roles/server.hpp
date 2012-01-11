@@ -177,7 +177,10 @@ public:
 	server(boost::asio::io_service& m) 
 	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
 	   m_io_service(m),
-	   m_endpoint(),
+       // the only way to set an endpoint address family appears to be using
+       // this constructor, which also requires a port. This port number can be
+       // ignored, as it is always overwriten later by the listen() member func
+	   m_endpoint(boost::asio::ip::tcp::v6(),9000),
 	   m_acceptor(m),
        m_timer(m,boost::posix_time::seconds(0)) {}
 	
@@ -415,15 +418,19 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             // Set URI
             std::string h = m_request.header("Host");
             
-            size_t found = h.find(":");
-            if (found == std::string::npos) {
+            size_t last_colon = h.rfind(":");
+            size_t last_sbrace = h.rfind("]");
+            
+            if (last_colon == std::string::npos || 
+                (last_sbrace != std::string::npos && last_sbrace > last_colon))
+            {
                 // TODO: this makes the assumption that WS and HTTP
                 // default ports are the same.
                 m_uri.reset(new uri(m_endpoint.is_secure(),h,m_request.uri()));
             } else {
                 m_uri.reset(new uri(m_endpoint.is_secure(),
-                                    h.substr(0,found),
-                                    h.substr(found+1),
+                                    h.substr(0,last_colon),
+                                    h.substr(last_colon+1),
                                     m_request.uri()));
             }
             

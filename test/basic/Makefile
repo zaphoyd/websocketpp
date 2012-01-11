@@ -1,5 +1,5 @@
-BOOST_LIB_PATH		?= /Users/zaphoyd/Documents/boost_1_48_0/stage/lib
-BOOST_INCLUDE_PATH ?= /Users/zaphoyd/Documents/boost_1_48_0
+BOOST_LIB_PATH		?= /usr/local/lib
+BOOST_INCLUDE_PATH ?= /usr/local/include
 
 CFLAGS = -O2 -I$(BOOST_INCLUDE_PATH)
 LDFLAGS = -L$(BOOST_LIB_PATH)
