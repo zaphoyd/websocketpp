@@ -35,6 +35,7 @@
 using websocketpp::uri;
 
 uri::uri(const std::string& uri) {
+    // temporary testing non-regex implimentation.
     /*enum state {
         BEGIN = 0,
         HOST_BEGIN = 1,
@@ -52,7 +53,7 @@ uri::uri(const std::string& uri) {
         switch (the_state) {
             case BEGIN:
                 // we are looking for a ws:// or wss://
-                if (temp.size() < 5) {
+                if (temp.size() < 6) {
                     temp.append(1,*it);
                 } else {
                     throw websocketpp::uri_exception("Scheme is too long");
@@ -157,11 +158,23 @@ uri::uri(const std::string& uri) {
                 }
                 break;
         }
+    }
+    
+    switch (the_state) {
+        case READ_PORT:
+            m_port = get_port_from_string(temp);
+            break;
+        default:
+            break;
+    }
+    
+    if (m_resource == "") {
+        m_resource = "/";
     }*/
     
     
     boost::cmatch matches;
-	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:]+\\])(:\\d{1,5})?(/[^#]*)?");
+	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
 	
 	// TODO: should this split resource into path/query?
 	
@@ -169,6 +182,7 @@ uri::uri(const std::string& uri) {
 		m_secure = (matches[1] == "wss");
 		m_host = matches[2];
 		
+        // strip brackets from IPv6 literal URIs
         if (m_host[0] == '[') {
             m_host = m_host.substr(1,m_host.size()-2);
         }
@@ -193,6 +207,7 @@ uri::uri(const std::string& uri) {
 	}
 	
     throw websocketpp::uri_exception("Error parsing WebSocket URI");
+    
 }
 
 uri::uri(bool secure, const std::string& host, uint16_t port, const std::string& resource) 
