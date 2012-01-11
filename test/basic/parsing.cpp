@@ -80,6 +80,7 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_port_secure ) {
 		BOOST_CHECK( uri.get_resource() == "/chat" );
 	} catch (websocketpp::uri_exception& e) {
 		exception = true;
+        std::cout << e.what() << std::endl;
 	}
 
 	BOOST_CHECK( exception == false);
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal ) {
 		websocketpp::uri uri("wss://[::1]:9000/chat");
 		
 		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "[::1]");
+		BOOST_CHECK( uri.get_host() == "::1");
 		BOOST_CHECK( uri.get_port() == 9000 );
 		BOOST_CHECK( uri.get_resource() == "/chat" );		
 	} catch (websocketpp::uri_exception& e) {
@@ -233,6 +234,30 @@ BOOST_AUTO_TEST_CASE( uri_invalid_fragment ) {
 	BOOST_CHECK( exception == true);
 }
 
+// Invalid URI with no brackets around IPv6 literal
+BOOST_AUTO_TEST_CASE( uri_invalid_bad_v6_literal_1 ) {
+	bool exception = false;
+	try {
+		websocketpp::uri uri("wss://::1/chat");		
+	} catch (websocketpp::uri_exception& e) {
+		exception = true;
+	}
+    
+	BOOST_CHECK( exception == true);
+}
+
+// Invalid URI with port and no brackets around IPv6 literal 
+BOOST_AUTO_TEST_CASE( uri_invalid_bad_v6_literal_2 ) {
+	bool exception = false;
+	try {
+		websocketpp::uri uri("wss://::1:2009/chat");		
+	} catch (websocketpp::uri_exception& e) {
+		exception = true;
+	}
+    
+	BOOST_CHECK( exception == true);
+}
+
 // Valid URI complicated resource path with query
 BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
 	bool exception = false;
@@ -247,6 +272,40 @@ BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
 		exception = true;
 	}
 
+	BOOST_CHECK( exception == false);
+}
+
+// Valid URI with a mapped v4 ipv6 literal
+BOOST_AUTO_TEST_CASE( uri_valid_v4_mapped ) {
+	bool exception = false;
+	try {
+		websocketpp::uri uri("wss://[0000:0000:0000:0000:0000:0000:192.168.1.1]:9000/");
+		
+		BOOST_CHECK( uri.get_secure() == true );
+		BOOST_CHECK( uri.get_host() == "0000:0000:0000:0000:0000:0000:192.168.1.1");
+		BOOST_CHECK( uri.get_port() == 9000 );
+		BOOST_CHECK( uri.get_resource() == "/" );		
+	} catch (websocketpp::uri_exception& e) {
+		exception = true;
+	}
+    
+	BOOST_CHECK( exception == false);
+}
+
+// Valid URI with a v6 address with mixed case
+BOOST_AUTO_TEST_CASE( uri_valid_v6_mixed_case ) {
+	bool exception = false;
+	try {
+		websocketpp::uri uri("wss://[::10aB]:9000/");
+		
+		BOOST_CHECK( uri.get_secure() == true );
+		BOOST_CHECK( uri.get_host() == "::10aB");
+		BOOST_CHECK( uri.get_port() == 9000 );
+		BOOST_CHECK( uri.get_resource() == "/" );		
+	} catch (websocketpp::uri_exception& e) {
+		exception = true;
+	}
+    
 	BOOST_CHECK( exception == false);
 }
 
