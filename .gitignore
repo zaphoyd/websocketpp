@@ -30,3 +30,5 @@ examples/fuzzing_client/fuzzing_client
 examples/stress_client/stress_client
 
 examples/broadcast_server_tls/broadcast_server
+
+test/basic/perf
