@@ -53,39 +53,39 @@ namespace websocketchat {
 
 class chat_client_handler : public websocketpp::connection_handler {
 public:
-	chat_client_handler() {}
-	virtual ~chat_client_handler() {}
-	
-	// ignored for clients?
-	void validate(session_ptr s) {} 
-	
-	// connection to chat room complete
-	void on_open(session_ptr s);
+    chat_client_handler() {}
+    virtual ~chat_client_handler() {}
+    
+    // ignored for clients?
+    void validate(session_ptr s) {} 
+    
+    // connection to chat room complete
+    void on_open(session_ptr s);
 
-	// connection to chat room closed
-	void on_close(session_ptr s);
-	
-	// got a new message from server
-	void on_message(session_ptr s,const std::string &msg);
-	
-	// ignore messages
-	void on_message(session_ptr s,const std::vector<unsigned char> &data) {}
-	
-	// CLIENT API
-	void send(const std::string &msg);
-	void close();
+    // connection to chat room closed
+    void on_close(session_ptr s);
+    
+    // got a new message from server
+    void on_message(session_ptr s,const std::string &msg);
+    
+    // ignore messages
+    void on_message(session_ptr s,const std::vector<unsigned char> &data) {}
+    
+    // CLIENT API
+    void send(const std::string &msg);
+    void close();
 
 private:
-	// Client API internal
-	void do_send(const std::string &msg);
-	void do_close();
+    // Client API internal
+    void do_send(const std::string &msg);
+    void do_close();
 
-	void decode_server_msg(const std::string &msg);
-	
-	// list of other chat participants
-	std::set<std::string> m_participants;
-	std::queue<std::string> m_msg_queue;
-	session_ptr m_session;
+    void decode_server_msg(const std::string &msg);
+    
+    // list of other chat participants
+    std::set<std::string> m_participants;
+    std::queue<std::string> m_msg_queue;
+    session_ptr m_session;
 };
 
 typedef boost::shared_ptr<chat_client_handler> chat_client_handler_ptr;

@@ -28,14 +28,8 @@
 #ifndef WEBSOCKETPP_HPP
 #define WEBSOCKETPP_HPP
 
-#include <stdint.h>
-
+#include "common.hpp"
 #include "endpoint.hpp"
 #include "sockets/plain.hpp"
-
-//#include "websocket_constants.hpp"
-
-//#include "websocket_server.hpp"
-//#include "websocket_client.hpp"
 
 #endif // WEBSOCKETPP_HPP

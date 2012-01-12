@@ -34,23 +34,23 @@ using websocketecho::echo_client_handler;
 using websocketpp::client_session_ptr;
 
 void echo_client_handler::on_open(session_ptr s) {
-	std::cout << " Successfully connected (handshake complete): " << s->get_resource() << std::endl;
+    std::cout << " Successfully connected (handshake complete): " << s->get_resource() << std::endl;
 }
 
 void echo_client_handler::on_close(session_ptr s) {
-	std::cout << " client was disconnected (WS state is now CLOSED)" << std::endl;
+    std::cout << " client was disconnected (WS state is now CLOSED)" << std::endl;
 }
 
 void echo_client_handler::on_message(session_ptr s,const std::string &msg) {
-	if (s->get_resource() == "/getCaseCount") {
-		std::cout << "Detected " << msg << " test cases." << std::endl;
-		m_case_count = atoi(msg.c_str());
-	} else {
-		s->send(msg);
-	}
+    if (s->get_resource() == "/getCaseCount") {
+        std::cout << "Detected " << msg << " test cases." << std::endl;
+        m_case_count = atoi(msg.c_str());
+    } else {
+        s->send(msg);
+    }
 }
 
 void echo_client_handler::on_message(session_ptr s,
-									 const std::vector<unsigned char> &data) {
-	s->send(data);
+                                     const std::vector<unsigned char> &data) {
+    s->send(data);
 }

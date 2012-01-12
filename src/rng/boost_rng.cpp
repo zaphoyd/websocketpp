@@ -32,8 +32,8 @@
 using websocketpp::boost_rng;
 
 boost_rng::boost_rng() : m_gen(m_rng, 
-	boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)); {}
+    boost::random::uniform_int_distribution<>(INT32_MIN,INT32_MAX)); {}
 
 int32_t boost_rng::gen() {
-	return m_gen();
+    return m_gen();
 }

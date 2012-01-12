@@ -57,16 +57,16 @@ namespace processor {
 class hybi_header {
 public:
     /// Construct a header processor and initialize for writing
-	hybi_header();
+    hybi_header();
     /// Reset a header processor for writing
-	void reset();
-	
-	// Writing interface (parse a byte stream)
+    void reset();
+    
+    // Writing interface (parse a byte stream)
     // valid only if ready() returns false
     // Consume will throw a processor::exception in the case that the bytes it
     // read do not form a valid WebSocket frame header.
     void consume(std::istream& input);
-	uint64_t get_bytes_needed() const;
+    uint64_t get_bytes_needed() const;
     bool ready() const;
     
     // Writing interface (set fields directly)
@@ -110,37 +110,37 @@ private:
     
     // helper functions for writing
     void process_basic_header();
-	void process_extended_header();
+    void process_extended_header();
     void set_header_bit(uint8_t bit,int byte,bool value);
     void set_masking_key(int32_t key);
-	void clear_masking_key();
+    void clear_masking_key();
     
-	// basic payload byte flags
-	static const uint8_t BPB0_OPCODE = 0x0F;
-	static const uint8_t BPB0_RSV3 = 0x10;
-	static const uint8_t BPB0_RSV2 = 0x20;
-	static const uint8_t BPB0_RSV1 = 0x40;
-	static const uint8_t BPB0_FIN = 0x80;
-	static const uint8_t BPB1_PAYLOAD = 0x7F;
-	static const uint8_t BPB1_MASK = 0x80;
-	
-	static const uint8_t BASIC_PAYLOAD_16BIT_CODE = 0x7E; // 126
-	static const uint8_t BASIC_PAYLOAD_64BIT_CODE = 0x7F; // 127
-	
-	static const unsigned int BASIC_HEADER_LENGTH = 2;		
-	static const unsigned int MAX_HEADER_LENGTH = 14;
-	
-	static const uint8_t STATE_BASIC_HEADER = 1;
-	static const uint8_t STATE_EXTENDED_HEADER = 2;
-	static const uint8_t STATE_READY = 3;
+    // basic payload byte flags
+    static const uint8_t BPB0_OPCODE = 0x0F;
+    static const uint8_t BPB0_RSV3 = 0x10;
+    static const uint8_t BPB0_RSV2 = 0x20;
+    static const uint8_t BPB0_RSV1 = 0x40;
+    static const uint8_t BPB0_FIN = 0x80;
+    static const uint8_t BPB1_PAYLOAD = 0x7F;
+    static const uint8_t BPB1_MASK = 0x80;
+    
+    static const uint8_t BASIC_PAYLOAD_16BIT_CODE = 0x7E; // 126
+    static const uint8_t BASIC_PAYLOAD_64BIT_CODE = 0x7F; // 127
+    
+    static const unsigned int BASIC_HEADER_LENGTH = 2;      
+    static const unsigned int MAX_HEADER_LENGTH = 14;
+    
+    static const uint8_t STATE_BASIC_HEADER = 1;
+    static const uint8_t STATE_EXTENDED_HEADER = 2;
+    static const uint8_t STATE_READY = 3;
     static const uint8_t STATE_WRITE = 4;
-	
-	uint8_t		m_state;
-	uint64_t	m_bytes_needed;
-	uint64_t	m_payload_size;
-	char m_header[MAX_HEADER_LENGTH];
+    
+    uint8_t     m_state;
+    uint64_t    m_bytes_needed;
+    uint64_t    m_payload_size;
+    char m_header[MAX_HEADER_LENGTH];
 };
-	
+    
 } // namespace processor
 } // namespace websocketpp
 

@@ -51,158 +51,158 @@ namespace role {
 template <class endpoint>
 class server {
 public:
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		typedef connection<connection_type> type;
-		typedef endpoint endpoint_type;
-		
-		// Valid always
+    // Connection specific details
+    template <typename connection_type>
+    class connection {
+    public:
+        typedef connection<connection_type> type;
+        typedef endpoint endpoint_type;
+        
+        // Valid always
         int get_version() const {
-			return m_version;
-		}
-		std::string get_request_header(const std::string& key) const {
-			return m_request.header(key);
-		}
-		std::string get_origin() const {
-			return m_origin;
-		}
-		
-		// Information about the requested URI
-		// valid only after URIs are loaded
-		// TODO: check m_uri for NULLness
-		bool get_secure() const {
-			return m_uri->get_secure();
-		}
-		std::string get_host() const {
-			return m_uri->get_host();
-		}
-		std::string get_resource() const {
-			return m_uri->get_resource();
-		}
-		uint16_t get_port() const {
-			return m_uri->get_port();
-		}
-		
-		// Valid for CONNECTING state
-		void add_response_header(const std::string& key, const std::string& value) {
-			m_response.add_header(key,value);
-		}
-		void replace_response_header(const std::string& key, const std::string& value) {
-			m_response.replace_header(key,value);
-		}
-		void remove_response_header(const std::string& key) {
-			m_response.remove_header(key);
-		}
-		
-		const std::vector<std::string>& get_subprotocols() const {
-			return m_requested_subprotocols;
-		}
-		const std::vector<std::string>& get_extensions() const {
-			return m_requested_extensions;
-		}
-		void select_subprotocol(const std::string& value);
-		void select_extension(const std::string& value);
-		
-		// Valid if get_version() returns -1 (ie this is an http connection)
-		void set_body(const std::string& value);
-		
-		int32_t rand() {
+            return m_version;
+        }
+        std::string get_request_header(const std::string& key) const {
+            return m_request.header(key);
+        }
+        std::string get_origin() const {
+            return m_origin;
+        }
+        
+        // Information about the requested URI
+        // valid only after URIs are loaded
+        // TODO: check m_uri for NULLness
+        bool get_secure() const {
+            return m_uri->get_secure();
+        }
+        std::string get_host() const {
+            return m_uri->get_host();
+        }
+        std::string get_resource() const {
+            return m_uri->get_resource();
+        }
+        uint16_t get_port() const {
+            return m_uri->get_port();
+        }
+        
+        // Valid for CONNECTING state
+        void add_response_header(const std::string& key, const std::string& value) {
+            m_response.add_header(key,value);
+        }
+        void replace_response_header(const std::string& key, const std::string& value) {
+            m_response.replace_header(key,value);
+        }
+        void remove_response_header(const std::string& key) {
+            m_response.remove_header(key);
+        }
+        
+        const std::vector<std::string>& get_subprotocols() const {
+            return m_requested_subprotocols;
+        }
+        const std::vector<std::string>& get_extensions() const {
+            return m_requested_extensions;
+        }
+        void select_subprotocol(const std::string& value);
+        void select_extension(const std::string& value);
+        
+        // Valid if get_version() returns -1 (ie this is an http connection)
+        void set_body(const std::string& value);
+        
+        int32_t rand() {
             return 0;
         }
-		
+        
         bool is_server() const {
             return true;
         }
         
-		// should this exist?
-		boost::asio::io_service& get_io_service() {
-			return m_endpoint.get_io_service();
-		}
-	protected:
-		connection(endpoint& e)
+        // should this exist?
+        boost::asio::io_service& get_io_service() {
+            return m_endpoint.get_io_service();
+        }
+    protected:
+        connection(endpoint& e)
         : m_endpoint(e),
           m_connection(static_cast< connection_type& >(*this)),
           m_version(-1),
           m_uri() {}
-		
-		// initializes the websocket connection
-		void async_init();
-		void handle_read_request(const boost::system::error_code& error,
-								 std::size_t bytes_transferred);
-		void write_response();
-		void handle_write_response(const boost::system::error_code& error);
-		
-		void log_open_result();
-	private:
-		endpoint&					m_endpoint;
-		connection_type&			m_connection;
-		
-		int							m_version;
-		uri_ptr						m_uri;
-		std::string					m_origin;
-		std::vector<std::string>	m_requested_subprotocols;
-		std::vector<std::string>	m_requested_extensions;
-		std::string					m_subprotocol;
-		std::vector<std::string>	m_extensions;
-		
-		http::parser::request		m_request;
-		http::parser::response		m_response;
-		blank_rng					m_rng;
-	};
-	
-	// types
-	typedef server<endpoint> type;
-	typedef endpoint endpoint_type;
-	
-	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
-	typedef typename endpoint_traits<endpoint>::handler_ptr handler_ptr;
+        
+        // initializes the websocket connection
+        void async_init();
+        void handle_read_request(const boost::system::error_code& error,
+                                 std::size_t bytes_transferred);
+        void write_response();
+        void handle_write_response(const boost::system::error_code& error);
+        
+        void log_open_result();
+    private:
+        endpoint&                   m_endpoint;
+        connection_type&            m_connection;
+        
+        int                         m_version;
+        uri_ptr                     m_uri;
+        std::string                 m_origin;
+        std::vector<std::string>    m_requested_subprotocols;
+        std::vector<std::string>    m_requested_extensions;
+        std::string                 m_subprotocol;
+        std::vector<std::string>    m_extensions;
+        
+        http::parser::request       m_request;
+        http::parser::response      m_response;
+        blank_rng                   m_rng;
+    };
     
-	// handler interface callback base class
+    // types
+    typedef server<endpoint> type;
+    typedef endpoint endpoint_type;
+    
+    typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
+    typedef typename endpoint_traits<endpoint>::handler_ptr handler_ptr;
+    
+    // handler interface callback base class
     class handler_interface {
-	public:
-		virtual void validate(connection_ptr connection) {}
-		virtual void on_open(connection_ptr connection) {}
-		virtual void on_close(connection_ptr connection) {}
-		virtual void on_fail(connection_ptr connection) {}
-		
-		virtual void on_message(connection_ptr connection,message::data_ptr) {};
-		
-		virtual bool on_ping(connection_ptr connection,std::string) {return true;}
-		virtual void on_pong(connection_ptr connection,std::string) {}
-		virtual void http(connection_ptr connection) {}
-	};
-	
-	server(boost::asio::io_service& m) 
-	 : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
-	   m_io_service(m),
+    public:
+        virtual void validate(connection_ptr connection) {}
+        virtual void on_open(connection_ptr connection) {}
+        virtual void on_close(connection_ptr connection) {}
+        virtual void on_fail(connection_ptr connection) {}
+        
+        virtual void on_message(connection_ptr connection,message::data_ptr) {};
+        
+        virtual bool on_ping(connection_ptr connection,std::string) {return true;}
+        virtual void on_pong(connection_ptr connection,std::string) {}
+        virtual void http(connection_ptr connection) {}
+    };
+    
+    server(boost::asio::io_service& m) 
+     : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
+       m_io_service(m),
        // the only way to set an endpoint address family appears to be using
        // this constructor, which also requires a port. This port number can be
        // ignored, as it is always overwriten later by the listen() member func
-	   m_endpoint(boost::asio::ip::tcp::v6(),9000),
-	   m_acceptor(m),
+       m_endpoint(boost::asio::ip::tcp::v6(),9000),
+       m_acceptor(m),
        m_timer(m,boost::posix_time::seconds(0)) {}
-	
+    
     void listen(uint16_t port);
 protected:
-	bool is_server() {
-		return true;
-	}
+    bool is_server() {
+        return true;
+    }
 private:
-	// start_accept creates a new connection and begins an async_accept on it
-	void start_accept();
-	
-	// handle_accept will begin the connection's read/write loop and then reset
-	// the server to accept a new connection. Errors returned by async_accept
-	// are logged and ingored.
-	void handle_accept(connection_ptr con, 
+    // start_accept creates a new connection and begins an async_accept on it
+    void start_accept();
+    
+    // handle_accept will begin the connection's read/write loop and then reset
+    // the server to accept a new connection. Errors returned by async_accept
+    // are logged and ingored.
+    void handle_accept(connection_ptr con, 
                        const boost::system::error_code& error);
-	
-	endpoint_type&					m_ws_endpoint;
-	boost::asio::io_service&		m_io_service;
-	boost::asio::ip::tcp::endpoint	m_endpoint;
-	boost::asio::ip::tcp::acceptor	m_acceptor;
+    
+    endpoint_type&                  m_ws_endpoint;
+    boost::asio::io_service&        m_io_service;
+    boost::asio::ip::tcp::endpoint  m_endpoint;
+    boost::asio::ip::tcp::acceptor  m_acceptor;
     
     boost::asio::deadline_timer     m_timer;
 };
@@ -246,18 +246,18 @@ void server<endpoint>::handle_accept(connection_ptr con,
                                      const boost::system::error_code& error)
 {
     if (error) {
-		if (error == boost::system::errc::too_many_files_open) {
-			m_ws_endpoint.elog().at(log::elevel::ERROR) 
-				<< "async_accept returned error: " << error 
-				<< " (too many files open)" << log::endl;
+        if (error == boost::system::errc::too_many_files_open) {
+            m_ws_endpoint.elog().at(log::elevel::ERROR) 
+                << "async_accept returned error: " << error 
+                << " (too many files open)" << log::endl;
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
             m_timer.async_wait(boost::bind(&type::start_accept,this));
             return;
-		} else {
-			m_ws_endpoint.elog().at(log::elevel::ERROR) 
-				<< "async_accept returned error: " << error 
-				<< " (unknown)" << log::endl;
-		}
+        } else {
+            m_ws_endpoint.elog().at(log::elevel::ERROR) 
+                << "async_accept returned error: " << error 
+                << " (unknown)" << log::endl;
+        }
     } else {
         con->start();
     }
@@ -533,19 +533,19 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     std::stringstream version;
     version << "v" << m_version << " ";
     
-	std::string remote;
-	boost::system::error_code ec;
-	boost::asio::ip::tcp::endpoint ep = m_connection.get_raw_socket().remote_endpoint(ec);
-	if (ec) {
-		// An error occurred.
-		//remote = "Unknown";
-		//ignore?
-		m_endpoint.elog().at(log::elevel::WARN) << "Error getting remote endpoint. code: " << ec << log::endl;
-	} else {
-		
-	}
-	
-	
+    std::string remote;
+    boost::system::error_code ec;
+    boost::asio::ip::tcp::endpoint ep = m_connection.get_raw_socket().remote_endpoint(ec);
+    if (ec) {
+        // An error occurred.
+        //remote = "Unknown";
+        //ignore?
+        m_endpoint.elog().at(log::elevel::WARN) << "Error getting remote endpoint. code: " << ec << log::endl;
+    } else {
+        
+    }
+    
+    
     m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
     << ep << " "
     << (m_version == -1 ? "" : version.str())
@@ -554,7 +554,7 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     << log::endl;
 }
     
-} // namespace role	
+} // namespace role 
 } // namespace websocketpp
 
 #endif // WEBSOCKETPP_ROLE_SERVER_HPP

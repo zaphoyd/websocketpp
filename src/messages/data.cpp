@@ -39,14 +39,14 @@ data::data(data::pool_ptr p, size_t s) : m_prepared(false),m_index(s),m_ref_coun
 websocketpp::frame::opcode::value data::get_opcode() const {
     return m_opcode;
 }
-	
+
 const std::string& data::get_payload() const {
     return m_payload;
 }
 const std::string& data::get_header() const {
     return m_header;
 }
-	
+
 uint64_t data::process_payload(std::istream& input,uint64_t size) {
     unsigned char c;
     const uint64_t new_size = m_payload.size() + size;
@@ -84,7 +84,7 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
     // successfully read all bytes
     return i;
 }
-	
+
 void data::process_character(unsigned char c) {
     if (m_masking_index >= 0) {
         c = c ^ m_masking_key[m_masking_index];
@@ -108,7 +108,7 @@ void data::reset(frame::opcode::value opcode) {
     m_validator.reset();
     m_prepared = false;
 }
-		
+
 void data::complete() {
     if (m_opcode == frame::opcode::TEXT) {
         if (!m_validator.complete()) {

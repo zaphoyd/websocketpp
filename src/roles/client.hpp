@@ -48,105 +48,105 @@ using boost::asio::ip::tcp;
 
 namespace websocketpp {
 namespace role {
-	
+    
 template <class endpoint>
 class client {
 public:
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		typedef connection<connection_type> type;
-		typedef endpoint endpoint_type;
+    // Connection specific details
+    template <typename connection_type>
+    class connection {
+    public:
+        typedef connection<connection_type> type;
+        typedef endpoint endpoint_type;
         
         // client connections are friends with their respective client endpoint
         friend class client<endpoint>;
         
         // Valid always
         int get_version() const {
-			return m_version;
-		}
-		
-		std::string get_origin() const {
-			return m_origin;
-		}
+            return m_version;
+        }
         
-		// not sure when valid
-		std::string get_request_header(const std::string& key) const {
-			return m_request.header(key);
-		}
-		std::string get_response_header(const std::string& key) const {
-			return m_response.header(key);
-		}
-		
+        std::string get_origin() const {
+            return m_origin;
+        }
+        
+        // not sure when valid
+        std::string get_request_header(const std::string& key) const {
+            return m_request.header(key);
+        }
+        std::string get_response_header(const std::string& key) const {
+            return m_response.header(key);
+        }
+        
         // Valid before connect is called
         void add_request_header(const std::string& key, const std::string& value) {
-			m_request.add_header(key,value);
-		}
-		void replace_request_header(const std::string& key, const std::string& value) {
-			m_request.replace_header(key,value);
-		}
-		void remove_request_header(const std::string& key) {
-			m_request.remove_header(key);
-		}
-		
+            m_request.add_header(key,value);
+        }
+        void replace_request_header(const std::string& key, const std::string& value) {
+            m_request.replace_header(key,value);
+        }
+        void remove_request_header(const std::string& key) {
+            m_request.remove_header(key);
+        }
+        
         // Information about the requested URI
-		// valid only after URIs are loaded
-		// TODO: check m_uri for NULLness
-		bool get_secure() const {
-			return m_uri->get_secure();
-		}
-		std::string get_host() const {
-			return m_uri->get_host();
-		}
-		std::string get_resource() const {
-			return m_uri->get_resource();
-		}
-		uint16_t get_port() const {
-			return m_uri->get_port();
-		}
+        // valid only after URIs are loaded
+        // TODO: check m_uri for NULLness
+        bool get_secure() const {
+            return m_uri->get_secure();
+        }
+        std::string get_host() const {
+            return m_uri->get_host();
+        }
+        std::string get_resource() const {
+            return m_uri->get_resource();
+        }
+        uint16_t get_port() const {
+            return m_uri->get_port();
+        }
         std::string get_uri() const {
-			return m_uri->str();
-		}
-		
-		int32_t rand() {
+            return m_uri->str();
+        }
+        
+        int32_t rand() {
             return m_endpoint.rand();
         }
         
         bool is_server() const {
             return false;
         }
-		
-		// should this exist?
-		boost::asio::io_service& get_io_service() {
-			return m_endpoint.get_io_service();
-		}
-	protected:
+        
+        // should this exist?
+        boost::asio::io_service& get_io_service() {
+            return m_endpoint.get_io_service();
+        }
+    protected:
         connection(endpoint& e) 
          : m_endpoint(e),
            m_connection(static_cast< connection_type& >(*this)),
            // TODO: version shouldn't be hardcoded
            m_version(13) {}
-		
+        
         void set_uri(uri_ptr u) {
             m_uri = u;
         }
         
-		void async_init() {
-			m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
-			
-			write_request();
-		}
-		
+        void async_init() {
+            m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
+            
+            write_request();
+        }
         
         
-		void write_request();
-		void handle_write_request(const boost::system::error_code& error);
-		void read_response();
-		void handle_read_response(const boost::system::error_code& error,
-								 std::size_t bytes_transferred);
-		
-		void log_open_result();
+        
+        void write_request();
+        void handle_write_request(const boost::system::error_code& error);
+        void read_response();
+        void handle_read_response(const boost::system::error_code& error,
+                                 std::size_t bytes_transferred);
+        
+        void log_open_result();
         
         // retry once
         bool retry() {
@@ -157,92 +157,92 @@ public:
                 return true;
             }
         }
-	private:
-		endpoint&           m_endpoint;
+    private:
+        endpoint&           m_endpoint;
         connection_type&    m_connection;
         
-        int							m_version;
-		uri_ptr						m_uri;
-		std::string					m_origin;
-		std::vector<std::string>	m_requested_subprotocols;
-		std::vector<std::string>	m_requested_extensions;
-		std::string					m_subprotocol;
-		std::vector<std::string>	m_extensions;
-		
+        int                         m_version;
+        uri_ptr                     m_uri;
+        std::string                 m_origin;
+        std::vector<std::string>    m_requested_subprotocols;
+        std::vector<std::string>    m_requested_extensions;
+        std::string                 m_subprotocol;
+        std::vector<std::string>    m_extensions;
+        
         std::string                 m_handshake_key;
-		http::parser::request		m_request;
-		http::parser::response		m_response;
+        http::parser::request       m_request;
+        http::parser::response      m_response;
         
         int                         m_retry;
-	};
+    };
     
-	// types
-	typedef client<endpoint> type;
-	typedef endpoint endpoint_type;
-	
-	typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
-	typedef typename endpoint_traits<endpoint>::handler_ptr handler_ptr;
-	
+    // types
+    typedef client<endpoint> type;
+    typedef endpoint endpoint_type;
+    
+    typedef typename endpoint_traits<endpoint>::connection_ptr connection_ptr;
+    typedef typename endpoint_traits<endpoint>::handler_ptr handler_ptr;
+    
     // handler interface callback class
-	class handler_interface {
-	public:
-		// Required
-		virtual void on_open(connection_ptr connection) {};
-		virtual void on_close(connection_ptr connection) {};
-		virtual void on_fail(connection_ptr connection) {}
-		
-		virtual void on_message(connection_ptr connection,message::data_ptr) {};
-		
-		// Optional
-		virtual bool on_ping(connection_ptr connection,std::string) {return true;}
-		virtual void on_pong(connection_ptr connection,std::string) {}
-		
-	};
-	
-	client (boost::asio::io_service& m) 
-	 : m_state(UNINITIALIZED),
-	   m_endpoint(static_cast< endpoint_type& >(*this)),
-	   m_io_service(m),
-	   m_resolver(m),
+    class handler_interface {
+    public:
+        // Required
+        virtual void on_open(connection_ptr connection) {};
+        virtual void on_close(connection_ptr connection) {};
+        virtual void on_fail(connection_ptr connection) {}
+        
+        virtual void on_message(connection_ptr connection,message::data_ptr) {};
+        
+        // Optional
+        virtual bool on_ping(connection_ptr connection,std::string) {return true;}
+        virtual void on_pong(connection_ptr connection,std::string) {}
+        
+    };
+    
+    client (boost::asio::io_service& m) 
+     : m_state(UNINITIALIZED),
+       m_endpoint(static_cast< endpoint_type& >(*this)),
+       m_io_service(m),
+       m_resolver(m),
        m_gen(m_rng,boost::random::uniform_int_distribution<>(INT32_MIN,
                                                              INT32_MAX)) {}
-	
-	connection_ptr connect(const std::string& u);
-	
-	// TODO: add a `perpetual` option
-	void run() {
-		m_io_service.run();
-	}
-	
-	void reset() {
-		m_io_service.reset();
-	}
-	
+    
+    connection_ptr connect(const std::string& u);
+    
+    // TODO: add a `perpetual` option
+    void run() {
+        m_io_service.run();
+    }
+    
+    void reset() {
+        m_io_service.reset();
+    }
+    
 protected:
-	bool is_server() {
-		return false;
-	}
+    bool is_server() {
+        return false;
+    }
     int32_t rand() {
         return m_gen();
     }
 private:
-	enum state {
-		UNINITIALIZED = 0,
-		INITIALIZED = 1,
-		CONNECTING = 2,
-		CONNECTED = 3
-	};
-	
-	void handle_connect(connection_ptr con, 
+    enum state {
+        UNINITIALIZED = 0,
+        INITIALIZED = 1,
+        CONNECTING = 2,
+        CONNECTED = 3
+    };
+    
+    void handle_connect(connection_ptr con, 
                         const boost::system::error_code& error);
-	
-	state						m_state;
-	endpoint_type&				m_endpoint;
-	boost::asio::io_service&	m_io_service;
-	tcp::resolver				m_resolver;
+    
+    state                       m_state;
+    endpoint_type&              m_endpoint;
+    boost::asio::io_service&    m_io_service;
+    tcp::resolver               m_resolver;
     
     boost::random::random_device    m_rng;
-	boost::random::variate_generator<
+    boost::random::variate_generator<
         boost::random::random_device&,
         boost::random::uniform_int_distribution<>
     > m_gen;
@@ -296,17 +296,17 @@ void client<endpoint>::handle_connect(connection_ptr con,
         con->start();
     } else {
         if (error == boost::system::errc::connection_refused) {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (connection refused)" << log::endl;
-		} else if (error == boost::system::errc::operation_canceled) {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (operation canceled)" << log::endl;
-		} else if (error == boost::system::errc::connection_reset) {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (connection reset)" << log::endl;
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (connection refused)" << log::endl;
+        } else if (error == boost::system::errc::operation_canceled) {
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (operation canceled)" << log::endl;
+        } else if (error == boost::system::errc::connection_reset) {
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (connection reset)" << log::endl;
             
             if (con->retry()) {
                 m_endpoint.elog().at(log::elevel::ERROR) 
@@ -314,20 +314,20 @@ void client<endpoint>::handle_connect(connection_ptr con,
                 connect(con->get_uri());
                 m_endpoint.remove_connection(con);
             }
-		} else if (error == boost::system::errc::timed_out) {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (operation timed out)" << log::endl;
-		} else if (error == boost::system::errc::broken_pipe) {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (broken pipe)" << log::endl;
-		} else {
-			m_endpoint.elog().at(log::elevel::ERROR) 
-				<< "An error occurred while establishing a connection: " 
-				<< error << " (unknown)" << log::endl;
-			throw "client error";
-		}
+        } else if (error == boost::system::errc::timed_out) {
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (operation timed out)" << log::endl;
+        } else if (error == boost::system::errc::broken_pipe) {
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (broken pipe)" << log::endl;
+        } else {
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (unknown)" << log::endl;
+            throw "client error";
+        }
     }
 }
 
@@ -349,15 +349,15 @@ void client<endpoint>::connection<connection_type>::write_request() {
     m_request.replace_header("Host",m_uri->get_host_port());
     
     if (m_origin != "") {
-		 m_request.replace_header("Origin",m_origin);
-	}
+         m_request.replace_header("Origin",m_origin);
+    }
     
     // Generate client key
     int32_t raw_key[4];
     
     for (int i = 0; i < 4; i++) {
-		raw_key[i] = this->rand();
-	}
+        raw_key[i] = this->rand();
+    }
     
     m_handshake_key = base64_encode(reinterpret_cast<unsigned char const*>(raw_key), 16);
     
@@ -386,8 +386,8 @@ void client<endpoint>::connection<connection_type>::handle_write_request(
 {
     if (error) {
         
-		
-		m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
+        
+        m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
 
@@ -462,33 +462,33 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
                                   m_response.get_status_msg());
         } else {
             std::string server_key = m_handshake_key;
-			server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+            server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
             
-            SHA1		sha;
-			uint32_t	message_digest[5];
-			
-			sha.Reset();
-			sha << server_key.c_str();
+            SHA1        sha;
+            uint32_t    message_digest[5];
+            
+            sha.Reset();
+            sha << server_key.c_str();
             
             if (!sha.Result(message_digest)) {
-				m_endpoint.elog().at(log::elevel::ERROR) << "Error computing handshake sha1 hash." << log::endl;
-				// TODO: close behavior
-				return;
-			}
+                m_endpoint.elog().at(log::elevel::ERROR) << "Error computing handshake sha1 hash." << log::endl;
+                // TODO: close behavior
+                return;
+            }
             
             // convert sha1 hash bytes to network byte order because this sha1
-			//  library works on ints rather than bytes
-			for (int i = 0; i < 5; i++) {
-				message_digest[i] = htonl(message_digest[i]);
-			}
+            //  library works on ints rather than bytes
+            for (int i = 0; i < 5; i++) {
+                message_digest[i] = htonl(message_digest[i]);
+            }
             
             server_key = base64_encode(
                 reinterpret_cast<const unsigned char*>(message_digest),20);
             if (server_key != h) {
-				m_endpoint.elog().at(log::elevel::ERROR) << "Server returned incorrect handshake key." << log::endl;
-				// TODO: close behavior
-				return;
-			}
+                m_endpoint.elog().at(log::elevel::ERROR) << "Server returned incorrect handshake key." << log::endl;
+                // TODO: close behavior
+                return;
+            }
         }
         
         log_open_result();
@@ -513,17 +513,17 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
 template <class endpoint>
 template <class connection_type>
 void client<endpoint>::connection<connection_type>::log_open_result() {
-	/*std::stringstream version;
-	version << "v" << m_version << " ";
-	
-	m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
-	<< m_connection.get_raw_socket().remote_endpoint() << " "
-	<< (m_version == -1 ? "" : version.str())
-	<< (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
-	<< " " << m_uri->get_resource() << " " << m_response.get_status_code() 
-	<< log::endl;*/
+    /*std::stringstream version;
+    version << "v" << m_version << " ";
+    
+    m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
+    << m_connection.get_raw_socket().remote_endpoint() << " "
+    << (m_version == -1 ? "" : version.str())
+    << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+    << " " << m_uri->get_resource() << " " << m_response.get_status_code() 
+    << log::endl;*/
 }
-	
+    
 } // namespace role
 } // namespace websocketpp
 

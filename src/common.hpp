@@ -41,68 +41,68 @@
 
 // Defaults
 namespace websocketpp {
-	typedef std::vector<unsigned char> binary_string;
-	typedef boost::shared_ptr<binary_string> binary_string_ptr;
-	
-	typedef std::string utf8_string;
-	typedef boost::shared_ptr<utf8_string> utf8_string_ptr;
-	
-	const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
-	
-	const uint16_t DEFAULT_PORT = 80;
-	const uint16_t DEFAULT_SECURE_PORT = 443;
-	
-	inline uint16_t default_port(bool secure) {
-		return (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
-	}	
-	
-	namespace session {
-		namespace state {
-			enum value {
-				CONNECTING = 0,
-				OPEN = 1,
-				CLOSING = 2,
-				CLOSED = 3
-			};
-		}
-	}
-	
-	namespace close {
-	namespace status {
-		enum value {
-			INVALID_END = 999,
-			NORMAL = 1000,
-			GOING_AWAY = 1001,
-			PROTOCOL_ERROR = 1002,
-			UNSUPPORTED_DATA = 1003,
-			RSV_ADHOC_1 = 1004,
-			NO_STATUS = 1005,
-			ABNORMAL_CLOSE = 1006,
-			INVALID_PAYLOAD = 1007,
-			POLICY_VIOLATION = 1008,
-			MESSAGE_TOO_BIG = 1009,
-			EXTENSION_REQUIRE = 1010,
-			INTERNAL_ENDPOINT_ERROR = 1011,
-			RSV_START = 1012,
-			RSV_END = 2999,
-			INVALID_START = 5000
-		};
-		
-		inline bool reserved(value s) {
-			return ((s >= RSV_START && s <= RSV_END) || 
-					s == RSV_ADHOC_1);
-		}
-		
-		inline bool invalid(value s) {
-			return ((s <= INVALID_END || s >= INVALID_START) || 
-					s == NO_STATUS || 
-					s == ABNORMAL_CLOSE);
-		}
-		
-		// TODO functions for application ranges?
-	} // namespace status
-	} // namespace close
-	
+    typedef std::vector<unsigned char> binary_string;
+    typedef boost::shared_ptr<binary_string> binary_string_ptr;
+    
+    typedef std::string utf8_string;
+    typedef boost::shared_ptr<utf8_string> utf8_string_ptr;
+    
+    const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
+    
+    const uint16_t DEFAULT_PORT = 80;
+    const uint16_t DEFAULT_SECURE_PORT = 443;
+    
+    inline uint16_t default_port(bool secure) {
+        return (secure ? DEFAULT_SECURE_PORT : DEFAULT_PORT);
+    }   
+    
+    namespace session {
+        namespace state {
+            enum value {
+                CONNECTING = 0,
+                OPEN = 1,
+                CLOSING = 2,
+                CLOSED = 3
+            };
+        }
+    }
+    
+    namespace close {
+    namespace status {
+        enum value {
+            INVALID_END = 999,
+            NORMAL = 1000,
+            GOING_AWAY = 1001,
+            PROTOCOL_ERROR = 1002,
+            UNSUPPORTED_DATA = 1003,
+            RSV_ADHOC_1 = 1004,
+            NO_STATUS = 1005,
+            ABNORMAL_CLOSE = 1006,
+            INVALID_PAYLOAD = 1007,
+            POLICY_VIOLATION = 1008,
+            MESSAGE_TOO_BIG = 1009,
+            EXTENSION_REQUIRE = 1010,
+            INTERNAL_ENDPOINT_ERROR = 1011,
+            RSV_START = 1012,
+            RSV_END = 2999,
+            INVALID_START = 5000
+        };
+        
+        inline bool reserved(value s) {
+            return ((s >= RSV_START && s <= RSV_END) || 
+                    s == RSV_ADHOC_1);
+        }
+        
+        inline bool invalid(value s) {
+            return ((s <= INVALID_END || s >= INVALID_START) || 
+                    s == NO_STATUS || 
+                    s == ABNORMAL_CLOSE);
+        }
+        
+        // TODO functions for application ranges?
+    } // namespace status
+    } // namespace close
+    
     namespace frame {
         // Opcodes are 4 bits
         // See spec section 5.2
@@ -158,7 +158,7 @@ namespace websocketpp {
     }
     
     class exception : public std::exception {
-    public:	
+    public: 
         exception(const std::string& msg,
                   error::value code = error::GENERIC) 
         : m_msg(msg),m_code(code) {}

@@ -41,11 +41,11 @@ namespace websocketpp {
 namespace processor {
 
 namespace hybi_state {
-	enum value {
-		READ_HEADER = 0,
-		READ_PAYLOAD = 1,
-		READY = 2
-	};
+    enum value {
+        READ_HEADER = 0,
+        READ_PAYLOAD = 1,
+        READY = 2
+    };
 }
 
 /*
@@ -104,163 +104,163 @@ private:
 template <class connection_type>
 class hybi : public processor_base {
 public:
-	hybi(connection_type &connection) 
+    hybi(connection_type &connection) 
      : m_connection(connection),
        m_write_frame(connection)
     {
-		reset();
-	}		
-	
-	void validate_handshake(const http::parser::request& request) const {
-		std::stringstream err;
-		std::string h;
-		
-		if (request.method() != "GET") {
-			err << "Websocket handshake has invalid method: " 
-			<< request.method();
-			
-			throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		// TODO: allow versions greater than 1.1
-		if (request.version() != "HTTP/1.1") {
-			err << "Websocket handshake has invalid HTTP version: " 
-			<< request.method();
-			
-			throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		// verify the presence of required headers
-		if (request.header("Host") == "") {
-			throw(http::exception("Required Host header is missing",http::status_code::BAD_REQUEST));
-		}
-		
-		h = request.header("Upgrade");
-		if (h == "") {
-			throw(http::exception("Required Upgrade header is missing",http::status_code::BAD_REQUEST));
-		} else if (!boost::ifind_first(h,"websocket")) {
-			err << "Upgrade header \"" << h << "\", does not contain required token \"websocket\"";
-			throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		h = request.header("Connection");
-		if (h == "") {
-			throw(http::exception("Required Connection header is missing",http::status_code::BAD_REQUEST));
-		} else if (!boost::ifind_first(h,"upgrade")) {
-			err << "Connection header, \"" << h 
-			<< "\", does not contain required token \"upgrade\"";
-			throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
-		}
-		
-		if (request.header("Sec-WebSocket-Key") == "") {
-			throw(http::exception("Required Sec-WebSocket-Key header is missing",http::status_code::BAD_REQUEST));
-		}
-		
-		h = request.header("Sec-WebSocket-Version");
-		if (h == "") {
-			throw(http::exception("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
-		} else {
-			int version = atoi(h.c_str());
-			
-			if (version != 7 && version != 8 && version != 13) {
-				err << "This processor doesn't support WebSocket protocol version "
-				<< version;
-				throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
-			}
-		}
-	}
-	
-	std::string get_origin(const http::parser::request& request) const {
-		std::string h = request.header("Sec-WebSocket-Version");
-		int version = atoi(h.c_str());
-		
-		if (version == 13) {
-			return request.header("Origin");
-		} else if (version == 7 || version == 8) {
-			return request.header("Sec-WebSocket-Origin");
-		} else {
-			throw(http::exception("Could not determine origin header. Check Sec-WebSocket-Version header",http::status_code::BAD_REQUEST));
-		}
-	}
-	
-	uri_ptr get_uri(const http::parser::request& request) const {
-		std::string h = request.header("Host");
-		
-		size_t last_colon = h.rfind(":");
+        reset();
+    }       
+    
+    void validate_handshake(const http::parser::request& request) const {
+        std::stringstream err;
+        std::string h;
+        
+        if (request.method() != "GET") {
+            err << "Websocket handshake has invalid method: " 
+            << request.method();
+            
+            throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
+        }
+        
+        // TODO: allow versions greater than 1.1
+        if (request.version() != "HTTP/1.1") {
+            err << "Websocket handshake has invalid HTTP version: " 
+            << request.method();
+            
+            throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
+        }
+        
+        // verify the presence of required headers
+        if (request.header("Host") == "") {
+            throw(http::exception("Required Host header is missing",http::status_code::BAD_REQUEST));
+        }
+        
+        h = request.header("Upgrade");
+        if (h == "") {
+            throw(http::exception("Required Upgrade header is missing",http::status_code::BAD_REQUEST));
+        } else if (!boost::ifind_first(h,"websocket")) {
+            err << "Upgrade header \"" << h << "\", does not contain required token \"websocket\"";
+            throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
+        }
+        
+        h = request.header("Connection");
+        if (h == "") {
+            throw(http::exception("Required Connection header is missing",http::status_code::BAD_REQUEST));
+        } else if (!boost::ifind_first(h,"upgrade")) {
+            err << "Connection header, \"" << h 
+            << "\", does not contain required token \"upgrade\"";
+            throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
+        }
+        
+        if (request.header("Sec-WebSocket-Key") == "") {
+            throw(http::exception("Required Sec-WebSocket-Key header is missing",http::status_code::BAD_REQUEST));
+        }
+        
+        h = request.header("Sec-WebSocket-Version");
+        if (h == "") {
+            throw(http::exception("Required Sec-WebSocket-Version header is missing",http::status_code::BAD_REQUEST));
+        } else {
+            int version = atoi(h.c_str());
+            
+            if (version != 7 && version != 8 && version != 13) {
+                err << "This processor doesn't support WebSocket protocol version "
+                << version;
+                throw(http::exception(err.str(),http::status_code::BAD_REQUEST));
+            }
+        }
+    }
+    
+    std::string get_origin(const http::parser::request& request) const {
+        std::string h = request.header("Sec-WebSocket-Version");
+        int version = atoi(h.c_str());
+        
+        if (version == 13) {
+            return request.header("Origin");
+        } else if (version == 7 || version == 8) {
+            return request.header("Sec-WebSocket-Origin");
+        } else {
+            throw(http::exception("Could not determine origin header. Check Sec-WebSocket-Version header",http::status_code::BAD_REQUEST));
+        }
+    }
+    
+    uri_ptr get_uri(const http::parser::request& request) const {
+        std::string h = request.header("Host");
+        
+        size_t last_colon = h.rfind(":");
         size_t last_sbrace = h.rfind("]");
                 
         // no : = hostname with no port
         // last : before ] = ipv6 literal with no port
         // : with no ] = hostname with port
         // : after ] = ipv6 literal with port
-		if (last_colon == std::string::npos || 
+        if (last_colon == std::string::npos || 
             (last_sbrace != std::string::npos && last_sbrace > last_colon))
         {
-			return uri_ptr(new uri(m_connection.is_secure(),h,request.uri()));
-		} else {
-			return uri_ptr(new uri(m_connection.is_secure(),
-								   h.substr(0,last_colon),
-								   h.substr(last_colon+1),
-								   request.uri()));
-		}
-		
-		// TODO: check if get_uri is a full uri
-	}
-	
-	void handshake_response(const http::parser::request& request,
-							http::parser::response& response) 
-	{
-		std::string server_key = request.header("Sec-WebSocket-Key");
-		server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-		
-		SHA1		sha;
-		uint32_t	message_digest[5];
-		
-		sha.Reset();
-		sha << server_key.c_str();
-		
-		if (sha.Result(message_digest)){
-			// convert sha1 hash bytes to network byte order because this sha1
-			//  library works on ints rather than bytes
-			for (int i = 0; i < 5; i++) {
-				message_digest[i] = htonl(message_digest[i]);
-			}
-			
-			server_key = base64_encode(
-									   reinterpret_cast<const unsigned char*>
-									   (message_digest),20
-									   );
-			
-			// set handshake accept headers
-			response.replace_header("Sec-WebSocket-Accept",server_key);
-			response.add_header("Upgrade","websocket");
-			response.add_header("Connection","Upgrade");
-		} else {
-			//m_endpoint->elog().at(log::elevel::ERROR) 
-			//<< "Error computing handshake sha1 hash" << log::endl;
-			// TODO: make sure this error path works
-			response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
-		}
-	}
-	
-	void consume(std::istream& s) {
-		while (s.good() && m_state != hybi_state::READY) {
-			try {
-				switch (m_state) {
-					case hybi_state::READ_HEADER:
-						process_header(s);
-						break;
-					case hybi_state::READ_PAYLOAD:
-						process_payload(s);
-						break;
-					case hybi_state::READY:
-						// shouldn't be here..
-						break;
-					default:
-						break;
-				}
-			} catch (const processor::exception& e) {
-				if (e.code() != processor::error::OUT_OF_MESSAGES) {
+            return uri_ptr(new uri(m_connection.is_secure(),h,request.uri()));
+        } else {
+            return uri_ptr(new uri(m_connection.is_secure(),
+                                   h.substr(0,last_colon),
+                                   h.substr(last_colon+1),
+                                   request.uri()));
+        }
+        
+        // TODO: check if get_uri is a full uri
+    }
+    
+    void handshake_response(const http::parser::request& request,
+                            http::parser::response& response) 
+    {
+        std::string server_key = request.header("Sec-WebSocket-Key");
+        server_key += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+        
+        SHA1        sha;
+        uint32_t    message_digest[5];
+        
+        sha.Reset();
+        sha << server_key.c_str();
+        
+        if (sha.Result(message_digest)){
+            // convert sha1 hash bytes to network byte order because this sha1
+            //  library works on ints rather than bytes
+            for (int i = 0; i < 5; i++) {
+                message_digest[i] = htonl(message_digest[i]);
+            }
+            
+            server_key = base64_encode(
+                                       reinterpret_cast<const unsigned char*>
+                                       (message_digest),20
+                                       );
+            
+            // set handshake accept headers
+            response.replace_header("Sec-WebSocket-Accept",server_key);
+            response.add_header("Upgrade","websocket");
+            response.add_header("Connection","Upgrade");
+        } else {
+            //m_endpoint->elog().at(log::elevel::ERROR) 
+            //<< "Error computing handshake sha1 hash" << log::endl;
+            // TODO: make sure this error path works
+            response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    void consume(std::istream& s) {
+        while (s.good() && m_state != hybi_state::READY) {
+            try {
+                switch (m_state) {
+                    case hybi_state::READ_HEADER:
+                        process_header(s);
+                        break;
+                    case hybi_state::READ_PAYLOAD:
+                        process_payload(s);
+                        break;
+                    case hybi_state::READY:
+                        // shouldn't be here..
+                        break;
+                    default:
+                        break;
+                }
+            } catch (const processor::exception& e) {
+                if (e.code() != processor::error::OUT_OF_MESSAGES) {
                     // The out of messages exception acts as an inturrupt rather
                     // than an error. In that case we don't want to reset 
                     // processor state. In all other cases we are aborting 
@@ -270,244 +270,244 @@ public:
                         m_header.reset();
                     }
                 }
-				
-				throw e;
-			}
-		}
-	}
-	
-	void process_header(std::istream& s) {
-		m_header.consume(s);
-		
-		if (m_header.ready()) {
-			// Get a free message from the read queue for the type of the 
-			// current message
-			if (m_header.is_control()) {
-				process_control_header();
-			} else {
-				process_data_header();
-			}
-		}
-	}
-	
-	void process_control_header() {
-		m_control_message = m_connection.get_control_message();
-		
-		if (!m_control_message) {
-			throw processor::exception("Out of control messages",
-                                       processor::error::OUT_OF_MESSAGES);
-		}
-		
-		m_control_message->reset(m_header.get_opcode(),m_header.get_masking_key());
-		
-		m_payload_left = m_header.get_payload_size();
-		
-		if (m_payload_left == 0) {
-			process_frame();
-		} else {
-			m_state = hybi_state::READ_PAYLOAD;
-		}
-	}
-	
-	void process_data_header() {
-		if (!m_data_message) {
-			// This is a new message. No continuation frames allowed.
-			if (m_header.get_opcode() == frame::opcode::CONTINUATION) {
-				throw processor::exception("Received continuation frame without an outstanding message.",processor::error::PROTOCOL_VIOLATION);
-			}
-			
-			m_data_message = m_connection.get_data_message();
-			
-			if (!m_data_message) {
-				throw processor::exception("Out of data messages",
-                                           processor::error::OUT_OF_MESSAGES);
-			}
-			
-			m_data_message->reset(m_header.get_opcode());
-		} else {
-			// A message has already been started. Continuation frames only!
-			if (m_header.get_opcode() != frame::opcode::CONTINUATION) {
-				throw processor::exception("Received new message before the completion of the existing one.",processor::error::PROTOCOL_VIOLATION);
-			}
-		}
-		
-		m_payload_left = m_header.get_payload_size();
-		
-		if (m_payload_left == 0) {
-			process_frame();
-		} else {
-			// each frame has a new masking key
-			m_data_message->set_masking_key(m_header.get_masking_key());
-			m_state = hybi_state::READ_PAYLOAD;
-		}
-	}
-	
-	void process_payload(std::istream& input) {
-		uint64_t written;
-		if (m_header.is_control()) {
-			written = m_control_message->process_payload(input,m_payload_left);
-		} else {
-			//m_connection.alog().at(log::alevel::DEVEL) << "process_payload. Size:  " << m_payload_left << log::endl;
-			written = m_data_message->process_payload(input,m_payload_left);
-		}
-		m_payload_left -= written;
-		
-		if (m_payload_left == 0) {
-			process_frame();
-		}
-		
-	}
-	
-	void process_frame() {
-		if (m_header.get_fin()) {
-			if (m_header.is_control()) {
-				m_control_message->complete();
-			} else {
-				m_data_message->complete();
-			}
-			m_state = hybi_state::READY;
-		} else {
-			reset();
-		}
-	}
-	
-	bool ready() const {
-		return m_state == hybi_state::READY;
-	}
-	
-	bool is_control() const {
-		return m_header.is_control();
-	}
-	
-	// note this can only be called once
-	message::data_ptr get_data_message() {
-		message::data_ptr p = m_data_message;
-		m_data_message.reset();
-		return p;
-	}
-	
-	// note this can only be called once
-	message::control_ptr get_control_message() {
-		message::control_ptr p = m_control_message;
-		m_control_message.reset();
-		return p;
-	}
-	
-	void reset() {
-		m_state = m_state = hybi_state::READ_HEADER;
-		m_header.reset();
-	}
-	
-	uint64_t get_bytes_needed() const {
-		switch (m_state) {
-			case hybi_state::READ_HEADER:
-				return m_header.get_bytes_needed();
-			case hybi_state::READ_PAYLOAD:
-				return m_payload_left;
-			case hybi_state::READY:
-				return 0;
-			default:
-				throw "shouldn't be here";
-		}
-	}
+                
+                throw e;
+            }
+        }
+    }
     
-	// TODO: replace all this to remove all lingering dependencies on 
-	// websocket_frame
-	binary_string_ptr prepare_frame(frame::opcode::value opcode,
-									bool mask,
-									const utf8_string& payload) {
-		/*if (opcode != frame::opcode::TEXT) {
-		 // TODO: hybi_legacy doesn't allow non-text frames.
-		 throw;
-		 }*/
-		
-		// TODO: utf8 validation on payload.
-		
-		
-		
-		binary_string_ptr response(new binary_string(0));
-		
-		
-		m_write_frame.reset();
-		m_write_frame.set_opcode(opcode);
-		m_write_frame.set_masked(mask);
-		
-		m_write_frame.set_fin(true);
-		m_write_frame.set_payload(payload);
-		
-		
-		m_write_frame.process_payload();
-		
-		// TODO
-		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
-		
-		// copy header
-		std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
-		
-		// copy payload
-		std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
-		
-		
-		return response;
-	}
-	
-	binary_string_ptr prepare_frame(frame::opcode::value opcode,
-									bool mask,
-									const binary_string& payload) {
-		/*if (opcode != frame::opcode::TEXT) {
-		 // TODO: hybi_legacy doesn't allow non-text frames.
-		 throw;
-		 }*/
-		
-		// TODO: utf8 validation on payload.
-		
-		binary_string_ptr response(new binary_string(0));
-		
-		m_write_frame.reset();
-		m_write_frame.set_opcode(opcode);
-		m_write_frame.set_masked(mask);
-		m_write_frame.set_fin(true);
-		m_write_frame.set_payload(payload);
-		
-		m_write_frame.process_payload();
-		
-		// TODO
-		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
-		
-		// copy header
-		std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
-		
-		// copy payload
-		std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
-		
-		return response;
-	}
-	
-	/*binary_string_ptr prepare_close_frame(close::status::value code,
-										  bool mask,
-										  const std::string& reason) {
-		binary_string_ptr response(new binary_string(0));
-		
-		m_write_frame.reset();
-		m_write_frame.set_opcode(frame::opcode::CLOSE);
-		m_write_frame.set_masked(mask);
-		m_write_frame.set_fin(true);
-		m_write_frame.set_status(code,reason);
-		
-		m_write_frame.process_payload();
-		
-		// TODO
-		response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
-		
-		// copy header
-		std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
-		
-		// copy payload
-		std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
-		
-		return response;
-	}*/
-	
+    void process_header(std::istream& s) {
+        m_header.consume(s);
+        
+        if (m_header.ready()) {
+            // Get a free message from the read queue for the type of the 
+            // current message
+            if (m_header.is_control()) {
+                process_control_header();
+            } else {
+                process_data_header();
+            }
+        }
+    }
+    
+    void process_control_header() {
+        m_control_message = m_connection.get_control_message();
+        
+        if (!m_control_message) {
+            throw processor::exception("Out of control messages",
+                                       processor::error::OUT_OF_MESSAGES);
+        }
+        
+        m_control_message->reset(m_header.get_opcode(),m_header.get_masking_key());
+        
+        m_payload_left = m_header.get_payload_size();
+        
+        if (m_payload_left == 0) {
+            process_frame();
+        } else {
+            m_state = hybi_state::READ_PAYLOAD;
+        }
+    }
+    
+    void process_data_header() {
+        if (!m_data_message) {
+            // This is a new message. No continuation frames allowed.
+            if (m_header.get_opcode() == frame::opcode::CONTINUATION) {
+                throw processor::exception("Received continuation frame without an outstanding message.",processor::error::PROTOCOL_VIOLATION);
+            }
+            
+            m_data_message = m_connection.get_data_message();
+            
+            if (!m_data_message) {
+                throw processor::exception("Out of data messages",
+                                           processor::error::OUT_OF_MESSAGES);
+            }
+            
+            m_data_message->reset(m_header.get_opcode());
+        } else {
+            // A message has already been started. Continuation frames only!
+            if (m_header.get_opcode() != frame::opcode::CONTINUATION) {
+                throw processor::exception("Received new message before the completion of the existing one.",processor::error::PROTOCOL_VIOLATION);
+            }
+        }
+        
+        m_payload_left = m_header.get_payload_size();
+        
+        if (m_payload_left == 0) {
+            process_frame();
+        } else {
+            // each frame has a new masking key
+            m_data_message->set_masking_key(m_header.get_masking_key());
+            m_state = hybi_state::READ_PAYLOAD;
+        }
+    }
+    
+    void process_payload(std::istream& input) {
+        uint64_t written;
+        if (m_header.is_control()) {
+            written = m_control_message->process_payload(input,m_payload_left);
+        } else {
+            //m_connection.alog().at(log::alevel::DEVEL) << "process_payload. Size:  " << m_payload_left << log::endl;
+            written = m_data_message->process_payload(input,m_payload_left);
+        }
+        m_payload_left -= written;
+        
+        if (m_payload_left == 0) {
+            process_frame();
+        }
+        
+    }
+    
+    void process_frame() {
+        if (m_header.get_fin()) {
+            if (m_header.is_control()) {
+                m_control_message->complete();
+            } else {
+                m_data_message->complete();
+            }
+            m_state = hybi_state::READY;
+        } else {
+            reset();
+        }
+    }
+    
+    bool ready() const {
+        return m_state == hybi_state::READY;
+    }
+    
+    bool is_control() const {
+        return m_header.is_control();
+    }
+    
+    // note this can only be called once
+    message::data_ptr get_data_message() {
+        message::data_ptr p = m_data_message;
+        m_data_message.reset();
+        return p;
+    }
+    
+    // note this can only be called once
+    message::control_ptr get_control_message() {
+        message::control_ptr p = m_control_message;
+        m_control_message.reset();
+        return p;
+    }
+    
+    void reset() {
+        m_state = m_state = hybi_state::READ_HEADER;
+        m_header.reset();
+    }
+    
+    uint64_t get_bytes_needed() const {
+        switch (m_state) {
+            case hybi_state::READ_HEADER:
+                return m_header.get_bytes_needed();
+            case hybi_state::READ_PAYLOAD:
+                return m_payload_left;
+            case hybi_state::READY:
+                return 0;
+            default:
+                throw "shouldn't be here";
+        }
+    }
+    
+    // TODO: replace all this to remove all lingering dependencies on 
+    // websocket_frame
+    binary_string_ptr prepare_frame(frame::opcode::value opcode,
+                                    bool mask,
+                                    const utf8_string& payload) {
+        /*if (opcode != frame::opcode::TEXT) {
+         // TODO: hybi_legacy doesn't allow non-text frames.
+         throw;
+         }*/
+        
+        // TODO: utf8 validation on payload.
+        
+        
+        
+        binary_string_ptr response(new binary_string(0));
+        
+        
+        m_write_frame.reset();
+        m_write_frame.set_opcode(opcode);
+        m_write_frame.set_masked(mask);
+        
+        m_write_frame.set_fin(true);
+        m_write_frame.set_payload(payload);
+        
+        
+        m_write_frame.process_payload();
+        
+        // TODO
+        response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
+        
+        // copy header
+        std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
+        
+        // copy payload
+        std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
+        
+        
+        return response;
+    }
+    
+    binary_string_ptr prepare_frame(frame::opcode::value opcode,
+                                    bool mask,
+                                    const binary_string& payload) {
+        /*if (opcode != frame::opcode::TEXT) {
+         // TODO: hybi_legacy doesn't allow non-text frames.
+         throw;
+         }*/
+        
+        // TODO: utf8 validation on payload.
+        
+        binary_string_ptr response(new binary_string(0));
+        
+        m_write_frame.reset();
+        m_write_frame.set_opcode(opcode);
+        m_write_frame.set_masked(mask);
+        m_write_frame.set_fin(true);
+        m_write_frame.set_payload(payload);
+        
+        m_write_frame.process_payload();
+        
+        // TODO
+        response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
+        
+        // copy header
+        std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
+        
+        // copy payload
+        std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
+        
+        return response;
+    }
+    
+    /*binary_string_ptr prepare_close_frame(close::status::value code,
+                                          bool mask,
+                                          const std::string& reason) {
+        binary_string_ptr response(new binary_string(0));
+        
+        m_write_frame.reset();
+        m_write_frame.set_opcode(frame::opcode::CLOSE);
+        m_write_frame.set_masked(mask);
+        m_write_frame.set_fin(true);
+        m_write_frame.set_status(code,reason);
+        
+        m_write_frame.process_payload();
+        
+        // TODO
+        response->resize(m_write_frame.get_header_len()+m_write_frame.get_payload().size());
+        
+        // copy header
+        std::copy(m_write_frame.get_header(),m_write_frame.get_header()+m_write_frame.get_header_len(),response->begin());
+        
+        // copy payload
+        std::copy(m_write_frame.get_payload().begin(),m_write_frame.get_payload().end(),response->begin()+m_write_frame.get_header_len());
+        
+        return response;
+    }*/
+    
     // new prepare frame stuff
     void prepare_frame(message::data_ptr msg) {
         assert(msg);
@@ -558,18 +558,18 @@ public:
         prepare_frame(msg);
     }
 private:
-	connection_type&		m_connection;
-	int						m_state;
-	
-	message::data_ptr		m_data_message;
-	message::control_ptr	m_control_message;
-	hybi_header				m_header;
-    hybi_header				m_write_header;
-	uint64_t				m_payload_left;
-	
+    connection_type&        m_connection;
+    int                     m_state;
     
-	frame::parser<connection_type>	m_write_frame; // TODO: refactor this out
-};	
+    message::data_ptr       m_data_message;
+    message::control_ptr    m_control_message;
+    hybi_header             m_header;
+    hybi_header             m_write_header;
+    uint64_t                m_payload_left;
+    
+    
+    frame::parser<connection_type>  m_write_frame; // TODO: refactor this out
+};  
 
 } // namespace processor
 } // namespace websocketpp

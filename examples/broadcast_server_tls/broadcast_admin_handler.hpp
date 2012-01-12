@@ -58,10 +58,10 @@ public:
     
     void on_open(connection_ptr connection) {
         if (!m_timer) {
-			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
-			m_timer->expires_from_now(boost::posix_time::milliseconds(250));
-			m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
-		}
+            m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
+            m_timer->expires_from_now(boost::posix_time::milliseconds(250));
+            m_timer->async_wait(boost::bind(&type::on_timer,this,boost::asio::placeholders::error));
+        }
     
         m_connections.insert(connection);
     }
@@ -177,7 +177,7 @@ public:
         }
         
         m_timer->expires_from_now(boost::posix_time::milliseconds(250));
-		m_timer->async_wait(
+        m_timer->async_wait(
             boost::bind(
                 &type::on_timer,
                 this,
@@ -190,7 +190,7 @@ private:
     broadcast_handler_ptr   m_broadcast_handler;
     
     std::set<connection_ptr>    m_connections;
-    boost::posix_time::ptime	m_epoch;
+    boost::posix_time::ptime    m_epoch;
     
     boost::shared_ptr<boost::asio::deadline_timer> m_timer;
 };

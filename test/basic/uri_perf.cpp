@@ -32,20 +32,20 @@
 #include "../../src/uri.hpp"
 
 int main() {
-	boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
-	
-	long m = 100000;
-	long n = 3;
-	
-	for (long i = 0; i < m; i++) {
-		websocketpp::uri uri1("wss://thor-websocket.zaphoyd.net:9002/foo/bar/baz?a=b&c=d");
-		websocketpp::uri uri2("ws://[::1]");
-		websocketpp::uri uri3("ws://localhost:9000/chat");
-	}
-	boost::posix_time::ptime end = boost::posix_time::microsec_clock::local_time();
-	boost::posix_time::time_period period(start,end);
-	int ms = period.length().total_milliseconds();
-	
-	std::cout << "Created " << m*n << " URIs in " << ms << "ms" << " (" << (m*n)/(ms/1000.0) << "/s)" << std::endl;
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
+    
+    long m = 100000;
+    long n = 3;
+    
+    for (long i = 0; i < m; i++) {
+        websocketpp::uri uri1("wss://thor-websocket.zaphoyd.net:9002/foo/bar/baz?a=b&c=d");
+        websocketpp::uri uri2("ws://[::1]");
+        websocketpp::uri uri3("ws://localhost:9000/chat");
+    }
+    boost::posix_time::ptime end = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_period period(start,end);
+    int ms = period.length().total_milliseconds();
+    
+    std::cout << "Created " << m*n << " URIs in " << ms << "ms" << " (" << (m*n)/(ms/1000.0) << "/s)" << std::endl;
 }
 

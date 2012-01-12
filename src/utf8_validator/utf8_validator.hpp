@@ -39,52 +39,52 @@ decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
   *state = utf8d[256 + *state*16 + type];
   return *state;
 }
-	
+    
 class validator {
 public:
-	validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}
-	
-	bool consume (uint32_t byte) {
-		if (utf8_validator::decode(&m_state,&m_codepoint,byte) == UTF8_REJECT) {
-			return false;
-		}
-		return true;
-	}
-	
-	template <typename iterator_type>
-	bool decode (iterator_type b, iterator_type e) {
-		for (iterator_type i = b; i != e; i++) {
-			if (utf8_validator::decode(&m_state,&m_codepoint,*i) == UTF8_REJECT) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	bool complete() {
-		return m_state == UTF8_ACCEPT;
-	}
-	
-	void reset() {
-		m_state = UTF8_ACCEPT;
-		m_codepoint = 0;
-	}
+    validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}
+    
+    bool consume (uint32_t byte) {
+        if (utf8_validator::decode(&m_state,&m_codepoint,byte) == UTF8_REJECT) {
+            return false;
+        }
+        return true;
+    }
+    
+    template <typename iterator_type>
+    bool decode (iterator_type b, iterator_type e) {
+        for (iterator_type i = b; i != e; i++) {
+            if (utf8_validator::decode(&m_state,&m_codepoint,*i) == UTF8_REJECT) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    bool complete() {
+        return m_state == UTF8_ACCEPT;
+    }
+    
+    void reset() {
+        m_state = UTF8_ACCEPT;
+        m_codepoint = 0;
+    }
 private:
-	uint32_t	m_state;
-	uint32_t	m_codepoint;
+    uint32_t    m_state;
+    uint32_t    m_codepoint;
 };
 
 // convenience function that creates a validator, validates a complete string 
 // and returns the result.
 // TODO: should this be inline?
 inline bool validate(const std::string& s) {
-	validator v;
-	if (!v.decode(s.begin(),s.end())) {
-		return false;
-	}
-	return v.complete();
+    validator v;
+    if (!v.decode(s.begin(),s.end())) {
+        return false;
+    }
+    return v.complete();
 }
-	
+    
 } // namespace utf8_validator
 
 #endif // UTF8_VALIDATOR_HPP

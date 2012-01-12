@@ -39,83 +39,83 @@ typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
 template <typename endpoint_type>
 class echo_server_handler : public endpoint_type::handler {
 public:
-	typedef echo_server_handler<endpoint_type> type;
-	typedef typename endpoint_type::connection_ptr connection_ptr;
-	
-	std::string get_password() const {
-		return "test";
-	}
-	
-	boost::shared_ptr<boost::asio::ssl::context> on_tls_init() {
-		// create a tls context, init, and return.
-		boost::shared_ptr<boost::asio::ssl::context> context(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
-		try {
-			context->set_options(boost::asio::ssl::context::default_workarounds |
-								 boost::asio::ssl::context::no_sslv2 |
-								 boost::asio::ssl::context::single_dh_use);
-			context->set_password_callback(boost::bind(&type::get_password, this));
-			context->use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
-			context->use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-			context->use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
-		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
-		}
-		return context;
-	}
-	
-	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
-		connection->send(msg->get_payload(),msg->get_opcode());
-	}
-	
-	void http(connection_ptr connection) {
-		connection->set_body("HTTP Response!!");
-	}
+    typedef echo_server_handler<endpoint_type> type;
+    typedef typename endpoint_type::connection_ptr connection_ptr;
+    
+    std::string get_password() const {
+        return "test";
+    }
+    
+    boost::shared_ptr<boost::asio::ssl::context> on_tls_init() {
+        // create a tls context, init, and return.
+        boost::shared_ptr<boost::asio::ssl::context> context(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+        try {
+            context->set_options(boost::asio::ssl::context::default_workarounds |
+                                 boost::asio::ssl::context::no_sslv2 |
+                                 boost::asio::ssl::context::single_dh_use);
+            context->set_password_callback(boost::bind(&type::get_password, this));
+            context->use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
+            context->use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
+            context->use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
+        } catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+        }
+        return context;
+    }
+    
+    void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
+        connection->send(msg->get_payload(),msg->get_opcode());
+    }
+    
+    void http(connection_ptr connection) {
+        connection->set_body("HTTP Response!!");
+    }
 };
 
 int main(int argc, char* argv[]) {
-	unsigned short port = 9002;
-	bool tls = false;
-		
-	if (argc >= 2) {
-		port = atoi(argv[1]);
+    unsigned short port = 9002;
+    bool tls = false;
+        
+    if (argc >= 2) {
+        port = atoi(argv[1]);
         
         if (port == 0) {
             std::cout << "Unable to parse port input " << argv[1] << std::endl;
             return 1;
         }
-	}
-	
-	if (argc == 3) {
-		tls = !strcmp(argv[2],"-tls");
-	}
-	
-	try {
-		if (tls) {
-			tls_handler_ptr h(new echo_server_handler<tls_endpoint_type>());
-			tls_endpoint_type e(h);
-			
-			e.alog().unset_level(websocketpp::log::alevel::ALL);
-			e.elog().unset_level(websocketpp::log::elevel::ALL);
-			
-			std::cout << "Starting Secure WebSocket echo server on port " 
+    }
+    
+    if (argc == 3) {
+        tls = !strcmp(argv[2],"-tls");
+    }
+    
+    try {
+        if (tls) {
+            tls_handler_ptr h(new echo_server_handler<tls_endpoint_type>());
+            tls_endpoint_type e(h);
+            
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            
+            std::cout << "Starting Secure WebSocket echo server on port " 
                       << port << std::endl;
-			e.listen(port);
-		} else {
-			plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
-			plain_endpoint_type e(h);
-			
-			e.alog().unset_level(websocketpp::log::alevel::ALL);
-			e.elog().unset_level(websocketpp::log::elevel::ALL);
-			
-			std::cout << "Starting WebSocket echo server on port " 
+            e.listen(port);
+        } else {
+            plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
+            plain_endpoint_type e(h);
+            
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            
+            std::cout << "Starting WebSocket echo server on port " 
                       << port << std::endl;
-			e.listen(port);
-		}
-		
-		
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+            e.listen(port);
+        }
+        
+        
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

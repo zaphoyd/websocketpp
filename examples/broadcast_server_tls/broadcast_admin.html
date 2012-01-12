@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>WebSocket++ Broadcast Admin</title>
-	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
-	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
-	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>WebSocket++ Broadcast Admin</title>
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script language="javascript" type="text/javascript" src="md5.js"></script>
 </head>
 <body>
@@ -27,52 +27,52 @@ var client_history = [];
 var msgs = {};
 
 function connect() {
-	url = document.getElementById("server_url").value;
-	
-	if ("WebSocket" in window) {
-		ws_client = new WebSocket(url);
-        ws_admin = new WebSocket(url+"/admin");
-	} else if ("MozWebSocket" in window) {
-		ws_client = new MozWebSocket(url);
-        ws_admin = new MozWebSocket(url+"/admin");
-	} else {
-		$("#messages").innerHTML += "This Browser does not support WebSockets<br />";
-		return;
-	}
+    url = document.getElementById("server_url").value;
     
-	ws_client.onopen = function(e) {
-		$("#messages").append("Client: A client connection to "+url+" has been opened.<br />");
-		
-		$("#server_url").disabled = true;
-		$("#toggle_connect").html("Disconnect");
-	};
+    if ("WebSocket" in window) {
+        ws_client = new WebSocket(url);
+        ws_admin = new WebSocket(url+"/admin");
+    } else if ("MozWebSocket" in window) {
+        ws_client = new MozWebSocket(url);
+        ws_admin = new MozWebSocket(url+"/admin");
+    } else {
+        $("#messages").innerHTML += "This Browser does not support WebSockets<br />";
+        return;
+    }
+    
+    ws_client.onopen = function(e) {
+        $("#messages").append("Client: A client connection to "+url+" has been opened.<br />");
+        
+        $("#server_url").disabled = true;
+        $("#toggle_connect").html("Disconnect");
+    };
     
     ws_admin.onopen = function(e) {
-		$("#messages").append("Client: An admin connection to "+url+"/admin has been opened.<br />");
-		
-		$("#server_url").disabled = true;
-		$("#toggle_connect").html("Disconnect");
-	};
-	
-	ws_client.onerror = function(e) {
-		$("#messages").append("Client: An error occured on the client channel, see console log for more details.<br />");
-		console.log(e);
-	};
+        $("#messages").append("Client: An admin connection to "+url+"/admin has been opened.<br />");
+        
+        $("#server_url").disabled = true;
+        $("#toggle_connect").html("Disconnect");
+    };
+    
+    ws_client.onerror = function(e) {
+        $("#messages").append("Client: An error occured on the client channel, see console log for more details.<br />");
+        console.log(e);
+    };
     ws_admin.onerror = function(e) {
-		$("#messages").append("Client: An error occured on the admin channel, see console log for more details.<br />");
-		console.log(e);
-	};
-	
-	ws_client.onclose = function(e) {
-		$("#messages").append("Client: The client connection to "+url+" was closed.<br />");
-		clear_hud();
-	};
+        $("#messages").append("Client: An error occured on the admin channel, see console log for more details.<br />");
+        console.log(e);
+    };
+    
+    ws_client.onclose = function(e) {
+        $("#messages").append("Client: The client connection to "+url+" was closed.<br />");
+        clear_hud();
+    };
     
     ws_admin.onclose = function(e) {
-		$("#messages").append("Client: The admin connection to "+url+"/admin was closed.<br />");
-		clear_hud();
-	};
-	
+        $("#messages").append("Client: The admin connection to "+url+"/admin was closed.<br />");
+        clear_hud();
+    };
+    
     ws_client.onmessage = function(e) {
         if (options.console_enabled) {
             if (e.data.length <= 126) {
@@ -84,20 +84,20 @@ function connect() {
         ws_client.send("ack:"+hex_md5(e.data)+"=1;");
     }
     
-	ws_admin.onmessage = function(e) {
+    ws_admin.onmessage = function(e) {
         foo = JSON.parse(e.data);
-		
-		if (foo.type == "message") {
-			if (options.console_enabled) {
+        
+        if (foo.type == "message") {
+            if (options.console_enabled) {
                 document.getElementById("messages").innerHTML += "Broadcasted Message: "+foo.value+"<br />";
             }
-		} else if (foo.type == "error") {
-			if (options.console_enabled) {
+        } else if (foo.type == "error") {
+            if (options.console_enabled) {
                 document.getElementById("messages").innerHTML += "Command Error: "+foo.value+"<br />";
             }
-		} else if (foo.type == "con") {
-			document.getElementById("connected_clients").innerHTML = foo.value;
-		} else if (foo.type == "stats") {
+        } else if (foo.type == "con") {
+            document.getElementById("connected_clients").innerHTML = foo.value;
+        } else if (foo.type == "stats") {
             var msg_delta = 0;
             var data_delta = 0;
             
@@ -131,10 +131,10 @@ function connect() {
             $("#sent_messages").html(o);
             
             /*document.getElementById("messages_per_sec").innerHTML = foo.messages+"/s";
-			document.getElementById("bytes_per_sec").innerHTML = format_data(foo.bytes)+"/s";
-			document.getElementById("messages_sent").innerHTML = foo.messages_sent;
+            document.getElementById("bytes_per_sec").innerHTML = format_data(foo.bytes)+"/s";
+            document.getElementById("messages_sent").innerHTML = foo.messages_sent;
             document.getElementById("messages_acked").innerHTML = foo.messages_acked;
-			document.getElementById("bytes_sent").innerHTML = format_data(foo.bytes_sent);*/
+            document.getElementById("bytes_sent").innerHTML = format_data(foo.bytes_sent);*/
             
             
             document.getElementById("admin_connections").innerHTML = foo.admin_connections;
@@ -155,45 +155,45 @@ function connect() {
             if (message_history.length > total_points) {
                 message_history = message_history.slice(message_history.length-total_points);
             }
-		} else {
-			document.getElementById("messages").innerHTML += "Unrecognized Server Command.<br />";
-		}
-	}
+        } else {
+            document.getElementById("messages").innerHTML += "Unrecognized Server Command.<br />";
+        }
+    }
 }
 
 function clear_hud() {
-	document.getElementById("server_url").disabled = false;
-	document.getElementById("toggle_connect").innerHTML = "Connect";
-	document.getElementById("connected_clients").innerHTML = "N/A";
+    document.getElementById("server_url").disabled = false;
+    document.getElementById("toggle_connect").innerHTML = "Connect";
+    document.getElementById("connected_clients").innerHTML = "N/A";
     document.getElementById("admin_connections").innerHTML = "N/A";
-	document.getElementById("messages_per_sec").innerHTML = "N/A";
-	document.getElementById("bytes_per_sec").innerHTML = "N/A";
-	document.getElementById("messages_sent").innerHTML = "N/A";
-	document.getElementById("bytes_sent").innerHTML = "N/A";
+    document.getElementById("messages_per_sec").innerHTML = "N/A";
+    document.getElementById("bytes_per_sec").innerHTML = "N/A";
+    document.getElementById("messages_sent").innerHTML = "N/A";
+    document.getElementById("bytes_sent").innerHTML = "N/A";
     document.getElementById("messages_acked").innerHTML = "N/A";
 }
-	
+    
 function disconnect() {
-	ws_client.close();
+    ws_client.close();
     ws_admin.close();
 }
 
 function toggle_connect() {
-	if (document.getElementById("server_url").disabled === false) {
-		connect();
-	} else {
-		disconnect();
-	}
+    if (document.getElementById("server_url").disabled === false) {
+        connect();
+    } else {
+        disconnect();
+    }
 }
 
 function broadcast() {
-	if (ws_client === undefined || ws_client.readyState != 1) {
-		$("#messages").append("Client: Client websocket is not avaliable for writing<br />");
-		return;
-	}
-	
-	ws_client.send(document.getElementById("msg").value);
-	document.getElementById("msg").value = "";
+    if (ws_client === undefined || ws_client.readyState != 1) {
+        $("#messages").append("Client: Client websocket is not avaliable for writing<br />");
+        return;
+    }
+    
+    ws_client.send(document.getElementById("msg").value);
+    document.getElementById("msg").value = "";
 }
 
 function send_command(command,args) {
@@ -278,21 +278,21 @@ $(function () {
 
 <style>
 body,html {
-	margin: 0px;
-	padding: 0px;
+    margin: 0px;
+    padding: 0px;
     height:100%; 
     font-family: sans-serif;
     font-size: 12px;
 }
 #controls {
-	float:right;
-	background-color: #333;
-	color: #fff;
-	padding: 5px;
+    float:right;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
 }
 #controls h2 {
-	font-family: sans-serif;
-	font-size: 16px;
+    font-family: sans-serif;
+    font-size: 16px;
     margin-bottom: 4px;
 }
 #controls h3 {
@@ -308,16 +308,16 @@ body,html {
 </style>
 
 <div id="controls">
-	<div id="server">
-	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002" />
-	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
-	</div>
+    <div id="server">
+    <input type="text" name="server_url" id="server_url" value="ws://localhost:9002" />
+    <button id="toggle_connect" onclick="toggle_connect();">Connect</button>
+    </div>
 
-	<div id="message_input"><input type="text" name="msg" id="msg" value="Hello World!" />
-	<button onclick="broadcast();">Broadcast</button></div>
-	
-	<h2>Stats</h2>
-	<h3>Server</h3>
+    <div id="message_input"><input type="text" name="msg" id="msg" value="Hello World!" />
+    <button onclick="broadcast();">Broadcast</button></div>
+    
+    <h2>Stats</h2>
+    <h3>Server</h3>
     <div>Connected Clients: <span id="connected_clients">N/A</span><br /></div>
     <div>Admin Clients: <span id="admin_connections">N/A</span><br /></div>
     <div id="client_history" style="width:320px;height:200px;"></div>
@@ -325,7 +325,7 @@ body,html {
     <div>Messages Sent: <span id="messages_sent">N/A</span><br /></div>
     <div>Messages Acked: <span id="messages_acked">N/A</span><br /></div>
     <div>Messages Rate: <span id="messages_per_sec">N/A</span><br /></div>
-	<div id="message_history" style="width:320px;height:200px;"></div>
+    <div id="message_history" style="width:320px;height:200px;"></div>
     
     <div>
         <table>

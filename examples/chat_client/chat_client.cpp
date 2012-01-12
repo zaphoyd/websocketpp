@@ -38,41 +38,41 @@ using boost::asio::ip::tcp;
 using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
-	std::string uri;
-	
-	if (argc != 2) {
-		std::cout << "Usage: `chat_client ws_uri`" << std::endl;
-	} else {
-		uri = argv[1];
-	}
-	
-	chat_client_handler_ptr c(new chat_client_handler());
-	
-	try {
-		boost::asio::io_service io_service;
-		
-		websocketpp::client_ptr client(new websocketpp::client(io_service,c));
-		
-		client->init();
+    std::string uri;
+    
+    if (argc != 2) {
+        std::cout << "Usage: `chat_client ws_uri`" << std::endl;
+    } else {
+        uri = argv[1];
+    }
+    
+    chat_client_handler_ptr c(new chat_client_handler());
+    
+    try {
+        boost::asio::io_service io_service;
+        
+        websocketpp::client_ptr client(new websocketpp::client(io_service,c));
+        
+        client->init();
 
-		client->set_header("User Agent","WebSocket++/2011-09-25");
-		client->add_subprotocol("com.zaphoyd.websocketpp.chat");
-		
-		client->set_origin("http://zaphoyd.com");
+        client->set_header("User Agent","WebSocket++/2011-09-25");
+        client->add_subprotocol("com.zaphoyd.websocketpp.chat");
+        
+        client->set_origin("http://zaphoyd.com");
 
-		client->connect(uri);
-		
-		boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
-		
-		char line[512];
-		while (std::cin.getline(line, 512)) {
-			c->send(line);
-		}
-		
-		t.join();
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+        client->connect(uri);
+        
+        boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+        
+        char line[512];
+        while (std::cin.getline(line, 512)) {
+            c->send(line);
+        }
+        
+        t.join();
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

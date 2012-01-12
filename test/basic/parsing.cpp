@@ -34,279 +34,279 @@
 
 // Test a regular valid ws URI
 BOOST_AUTO_TEST_CASE( uri_valid ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("ws://localhost:9000/chat");
-		
-		BOOST_CHECK( uri.get_secure() == false );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/chat" );
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("ws://localhost:9000/chat");
+        
+        BOOST_CHECK( uri.get_secure() == false );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Test a regular valid ws URI
 BOOST_AUTO_TEST_CASE( uri_valid_no_port_unsecure ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("ws://localhost/chat");
-		
-		BOOST_CHECK( uri.get_secure() == false );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 80 );
-		BOOST_CHECK( uri.get_resource() == "/chat" );
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("ws://localhost/chat");
+        
+        BOOST_CHECK( uri.get_secure() == false );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 80 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 
 
 // Valid URI with no port (secure)
 BOOST_AUTO_TEST_CASE( uri_valid_no_port_secure ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://localhost/chat");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 443 );
-		BOOST_CHECK( uri.get_resource() == "/chat" );
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://localhost/chat");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 443 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
         std::cout << e.what() << std::endl;
-	}
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI with no resource
 BOOST_AUTO_TEST_CASE( uri_valid_no_resource ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://localhost:9000");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://localhost:9000");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI IPv6 Literal
 BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://[::1]:9000/chat");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "::1");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/chat" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://[::1]:9000/chat");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "::1");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 
 
 // Valid URI with more complicated host
 BOOST_AUTO_TEST_CASE( uri_valid_2 ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://thor-websocket.zaphoyd.net:88/");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "thor-websocket.zaphoyd.net");
-		BOOST_CHECK( uri.get_port() == 88 );
-		BOOST_CHECK( uri.get_resource() == "/" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://thor-websocket.zaphoyd.net:88/");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "thor-websocket.zaphoyd.net");
+        BOOST_CHECK( uri.get_port() == 88 );
+        BOOST_CHECK( uri.get_resource() == "/" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 
 // Invalid URI (port too long)
 BOOST_AUTO_TEST_CASE( uri_invalid_long_port ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://localhost:900000/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://localhost:900000/chat");        
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Invalid URI (http method)
 BOOST_AUTO_TEST_CASE( uri_invalid_http ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("http://localhost:9000/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("http://localhost:9000/chat");     
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Valid URI IPv4 literal
 BOOST_AUTO_TEST_CASE( uri_valid_ipv4_literal ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://127.0.0.1:9000/chat");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "127.0.0.1");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/chat" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://127.0.0.1:9000/chat");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "127.0.0.1");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI complicated resource path
 BOOST_AUTO_TEST_CASE( uri_valid_3 ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://localhost:9000/chat/foo/bar");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/chat/foo/bar" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://localhost:9000/chat/foo/bar");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat/foo/bar" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Invalid URI broken method separator
 BOOST_AUTO_TEST_CASE( uri_invalid_method_separator ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss:/localhost:9000/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss:/localhost:9000/chat");       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Invalid URI port > 65535
 BOOST_AUTO_TEST_CASE( uri_invalid_gt_16_bit_port ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss:/localhost:70000/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss:/localhost:70000/chat");      
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Invalid URI includes uri fragment
 BOOST_AUTO_TEST_CASE( uri_invalid_fragment ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss:/localhost:70000/chat#foo");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss:/localhost:70000/chat#foo");      
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Invalid URI with no brackets around IPv6 literal
 BOOST_AUTO_TEST_CASE( uri_invalid_bad_v6_literal_1 ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://::1/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://::1/chat");     
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
     
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Invalid URI with port and no brackets around IPv6 literal 
 BOOST_AUTO_TEST_CASE( uri_invalid_bad_v6_literal_2 ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://::1:2009/chat");		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://::1:2009/chat");        
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
     
-	BOOST_CHECK( exception == true);
+    BOOST_CHECK( exception == true);
 }
 
 // Valid URI complicated resource path with query
 BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://localhost:9000/chat/foo/bar?foo=bar");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "localhost");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/chat/foo/bar?foo=bar" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://localhost:9000/chat/foo/bar?foo=bar");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat/foo/bar?foo=bar" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
 
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI with a mapped v4 ipv6 literal
 BOOST_AUTO_TEST_CASE( uri_valid_v4_mapped ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://[0000:0000:0000:0000:0000:0000:192.168.1.1]:9000/");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "0000:0000:0000:0000:0000:0000:192.168.1.1");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://[0000:0000:0000:0000:0000:0000:192.168.1.1]:9000/");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "0000:0000:0000:0000:0000:0000:192.168.1.1");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
     
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI with a v6 address with mixed case
 BOOST_AUTO_TEST_CASE( uri_valid_v6_mixed_case ) {
-	bool exception = false;
-	try {
-		websocketpp::uri uri("wss://[::10aB]:9000/");
-		
-		BOOST_CHECK( uri.get_secure() == true );
-		BOOST_CHECK( uri.get_host() == "::10aB");
-		BOOST_CHECK( uri.get_port() == 9000 );
-		BOOST_CHECK( uri.get_resource() == "/" );		
-	} catch (websocketpp::uri_exception& e) {
-		exception = true;
-	}
+    bool exception = false;
+    try {
+        websocketpp::uri uri("wss://[::10aB]:9000/");
+        
+        BOOST_CHECK( uri.get_secure() == true );
+        BOOST_CHECK( uri.get_host() == "::10aB");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/" );       
+    } catch (websocketpp::uri_exception& e) {
+        exception = true;
+    }
     
-	BOOST_CHECK( exception == false);
+    BOOST_CHECK( exception == false);
 }
 
 // TODO: tests for the other two constructors

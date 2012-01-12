@@ -37,127 +37,125 @@ namespace websocketpp {
 namespace log {
 
 namespace alevel {
-	typedef uint16_t value;
-	
-	static const value OFF = 0x0;
-	
-	// A single line on connect with connecting ip, websocket version, 
-	// request resource, user agent, and the response code.
-	static const value CONNECT = 0x1;
-	// A single line on disconnect with wasClean status and local and remote
-	// close codes and reasons.
-	static const value DISCONNECT = 0x2;
-	// A single line on incoming and outgoing control messages.
-	static const value CONTROL = 0x4;
-	// A single line on incoming and outgoing frames with full frame headers
-	static const value FRAME_HEADER = 0x10;
-	// Adds payloads to frame logs. Note these can be long!
-	static const value FRAME_PAYLOAD = 0x20;
-	// A single line on incoming and outgoing messages with metadata about type,
-	// length, etc
-	static const value MESSAGE_HEADER = 0x40;
-	// Adds payloads to message logs. Note these can be long!
-	static const value MESSAGE_PAYLOAD = 0x80;
-	
-	
-	// DEBUG values
-	static const value DEBUG_HANDSHAKE = 0x8000;
-	static const value DEBUG_CLOSE = 0x4000;
-	static const value DEVEL = 0x2000;
-	
-	static const value ALL = 0xFFFF;
+    typedef uint16_t value;
+    
+    static const value OFF = 0x0;
+    
+    // A single line on connect with connecting ip, websocket version, 
+    // request resource, user agent, and the response code.
+    static const value CONNECT = 0x1;
+    // A single line on disconnect with wasClean status and local and remote
+    // close codes and reasons.
+    static const value DISCONNECT = 0x2;
+    // A single line on incoming and outgoing control messages.
+    static const value CONTROL = 0x4;
+    // A single line on incoming and outgoing frames with full frame headers
+    static const value FRAME_HEADER = 0x10;
+    // Adds payloads to frame logs. Note these can be long!
+    static const value FRAME_PAYLOAD = 0x20;
+    // A single line on incoming and outgoing messages with metadata about type,
+    // length, etc
+    static const value MESSAGE_HEADER = 0x40;
+    // Adds payloads to message logs. Note these can be long!
+    static const value MESSAGE_PAYLOAD = 0x80;
+    
+    
+    // DEBUG values
+    static const value DEBUG_HANDSHAKE = 0x8000;
+    static const value DEBUG_CLOSE = 0x4000;
+    static const value DEVEL = 0x2000;
+    
+    static const value ALL = 0xFFFF;
 }
 
 namespace elevel {
-	typedef uint16_t value;
-	
-	static const value OFF = 0x0;
-	
-	static const value DEVEL = 0x1;		// debugging
-	static const value LIBRARY = 0x2;	// library usage exceptions
-	static const value INFO = 0x4;
-	static const value WARN = 0x8;
-	static const value ERROR = 0x10;
-	static const value FATAL = 0x20;
-	
-	static const value ALL = 0xFFFF;
+    typedef uint16_t value;
+    
+    static const value OFF = 0x0;
+    
+    static const value DEVEL = 0x1;     // debugging
+    static const value LIBRARY = 0x2;   // library usage exceptions
+    static const value INFO = 0x4;
+    static const value WARN = 0x8;
+    static const value ERROR = 0x10;
+    static const value FATAL = 0x20;
+    
+    static const value ALL = 0xFFFF;
 }
-	
+    
 template <typename level_type>
 class logger {
 public:
-	template <typename T>
-	logger<level_type>& operator<<(T a) {
-		if (test_level(m_write_level)) {
-			m_oss << a;
-		}
-		return *this;
-	}
-	
-	logger<level_type>& operator<<(logger<level_type>& (*f)(logger<level_type>&)) {
-		return f(*this);
-	}
-	
-	bool test_level(level_type l) {
-		return (m_level & l) != 0;
-	}
-	
-	void set_level(level_type l) {
-		m_level |= l;
-	}
-	
-	void set_levels(level_type l1, level_type l2) {
-		level_type i = l1;
-		
-		while (i <= l2) {
-			set_level(i);
-			i *= 2;
-		}
-	}
-	
-	void unset_level(level_type l) {
-		m_level &= ~l;
-	}
-	
-	void set_prefix(const std::string& prefix) {
-		if (prefix == "") {
-			m_prefix = prefix;
-		} else {
-			m_prefix = prefix + " ";
-		}
-	}
-	
-	logger<level_type>& print() {
-		if (test_level(m_write_level)) {
-			std::cout << m_prefix << 
-			    boost::posix_time::to_iso_extended_string(
-			        boost::posix_time::second_clock::local_time()
-			    ) << " [" << m_write_level << "] " << m_oss.str() << std::endl;
-			m_oss.str("");
-		}
-		
-		return *this;
-	}
-	
-	logger<level_type>& at(level_type l) {
-		m_write_level = l;
-		return *this;
-	}
+    template <typename T>
+    logger<level_type>& operator<<(T a) {
+        if (test_level(m_write_level)) {
+            m_oss << a;
+        }
+        return *this;
+    }
+    
+    logger<level_type>& operator<<(logger<level_type>& (*f)(logger<level_type>&)) {
+        return f(*this);
+    }
+    
+    bool test_level(level_type l) {
+        return (m_level & l) != 0;
+    }
+    
+    void set_level(level_type l) {
+        m_level |= l;
+    }
+    
+    void set_levels(level_type l1, level_type l2) {
+        level_type i = l1;
+        
+        while (i <= l2) {
+            set_level(i);
+            i *= 2;
+        }
+    }
+    
+    void unset_level(level_type l) {
+        m_level &= ~l;
+    }
+    
+    void set_prefix(const std::string& prefix) {
+        if (prefix == "") {
+            m_prefix = prefix;
+        } else {
+            m_prefix = prefix + " ";
+        }
+    }
+    
+    logger<level_type>& print() {
+        if (test_level(m_write_level)) {
+            std::cout << m_prefix << 
+                boost::posix_time::to_iso_extended_string(
+                    boost::posix_time::second_clock::local_time()
+                ) << " [" << m_write_level << "] " << m_oss.str() << std::endl;
+            m_oss.str("");
+        }
+        
+        return *this;
+    }
+    
+    logger<level_type>& at(level_type l) {
+        m_write_level = l;
+        return *this;
+    }
 private:
-	std::ostringstream m_oss;
-	level_type m_write_level;
-	level_type m_level;
-	std::string m_prefix;
+    std::ostringstream m_oss;
+    level_type m_write_level;
+    level_type m_level;
+    std::string m_prefix;
 };
 
 template <typename level_type>
 logger<level_type>& endl(logger<level_type>& out)
 {
-	return out.print();
+    return out.print();
 }
 
-	
-	
 }
 }
 

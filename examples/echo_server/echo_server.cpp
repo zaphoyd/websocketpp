@@ -35,37 +35,37 @@ typedef endpoint_type::handler_ptr handler_ptr;
 
 class echo_server_handler : public endpoint_type::handler {
 public:
-	typedef endpoint_type::connection_ptr connection_ptr;
-	
-	void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
-		connection->send(msg->get_payload(),msg->get_opcode());
-	}
+    typedef endpoint_type::connection_ptr connection_ptr;
+    
+    void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
+        connection->send(msg->get_payload(),msg->get_opcode());
+    }
 };
 
 int main(int argc, char* argv[]) {
-	unsigned short port = 9002;
-		
-	if (argc == 2) {
-		port = atoi(argv[1]);
+    unsigned short port = 9002;
+        
+    if (argc == 2) {
+        port = atoi(argv[1]);
         
         if (port == 0) {
             std::cout << "Unable to parse port input " << argv[1] << std::endl;
             return 1;
         }
-	}
-	
-	try {		
-		handler_ptr h(new echo_server_handler());
-		endpoint_type e(h);
-		
-		e.alog().unset_level(websocketpp::log::alevel::ALL);
-		e.elog().unset_level(websocketpp::log::elevel::ALL);
-		
-		std::cout << "Starting WebSocket echo server on port " << port << std::endl;
-		e.listen(port);
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+    }
+    
+    try {       
+        handler_ptr h(new echo_server_handler());
+        endpoint_type e(h);
+        
+        e.alog().unset_level(websocketpp::log::alevel::ALL);
+        e.elog().unset_level(websocketpp::log::elevel::ALL);
+        
+        std::cout << "Starting WebSocket echo server on port " << port << std::endl;
+        e.listen(port);
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

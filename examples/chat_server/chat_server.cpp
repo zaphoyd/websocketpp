@@ -36,36 +36,36 @@ using boost::asio::ip::tcp;
 using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
-	short port = 9003;
-	
-	if (argc == 2) {
-		// TODO: input validation?
-		port = atoi(argv[2]);
-	}
-	
-	try {
-		// create an instance of our handler
-		server_handler_ptr default_handler(new chat_server_handler());
-		
-		// create a server that listens on port `port` and uses our handler
-		websocketpp::basic_server_ptr server(new websocketpp::basic_server(port,default_handler));
-		
-		server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
-		
-		server->alog().set_level(websocketpp::log::alevel::ALL);
-		
-		// setup server settings
-		// Chat server should only be receiving small text messages, reduce max
-		// message size limit slightly to save memory, improve performance, and 
-		// guard against DoS attacks.
-		//server->set_max_message_size(0xFFFF); // 64KiB
-		
-		std::cout << "Starting chat server on port " << port << std::endl;
-		
-		server->run();
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+    short port = 9003;
+    
+    if (argc == 2) {
+        // TODO: input validation?
+        port = atoi(argv[2]);
+    }
+    
+    try {
+        // create an instance of our handler
+        server_handler_ptr default_handler(new chat_server_handler());
+        
+        // create a server that listens on port `port` and uses our handler
+        websocketpp::basic_server_ptr server(new websocketpp::basic_server(port,default_handler));
+        
+        server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
+        
+        server->alog().set_level(websocketpp::log::alevel::ALL);
+        
+        // setup server settings
+        // Chat server should only be receiving small text messages, reduce max
+        // message size limit slightly to save memory, improve performance, and 
+        // guard against DoS attacks.
+        //server->set_max_message_size(0xFFFF); // 64KiB
+        
+        std::cout << "Starting chat server on port " << port << std::endl;
+        
+        server->run();
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

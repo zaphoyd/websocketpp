@@ -174,38 +174,38 @@ uri::uri(const std::string& uri) {
     
     
     boost::cmatch matches;
-	static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
-	
-	// TODO: should this split resource into path/query?
-	
-	if (boost::regex_match(uri.c_str(), matches, expression)) {
-		m_secure = (matches[1] == "wss");
-		m_host = matches[2];
-		
+    static const boost::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
+    
+    // TODO: should this split resource into path/query?
+    
+    if (boost::regex_match(uri.c_str(), matches, expression)) {
+        m_secure = (matches[1] == "wss");
+        m_host = matches[2];
+        
         // strip brackets from IPv6 literal URIs
         if (m_host[0] == '[') {
             m_host = m_host.substr(1,m_host.size()-2);
         }
         
-		std::string port(matches[3]);
-		
-		if (port != "") {
-		    // strip off the :
-		    // this could probably be done with a better regex.
-		    port = port.substr(1);
-		}
-		
-		m_port = get_port_from_string(port);
-		
-		m_resource = matches[4];
-		
-		if (m_resource == "") {
-		    m_resource = "/";
-		}
-		
-		return;
-	}
-	
+        std::string port(matches[3]);
+        
+        if (port != "") {
+            // strip off the :
+            // this could probably be done with a better regex.
+            port = port.substr(1);
+        }
+        
+        m_port = get_port_from_string(port);
+        
+        m_resource = matches[4];
+        
+        if (m_resource == "") {
+            m_resource = "/";
+        }
+        
+        return;
+    }
+    
     throw websocketpp::uri_exception("Error parsing WebSocket URI");
     
 }
@@ -243,8 +243,8 @@ uri::uri(bool secure,
    m_resource(resource == "" ? "/" : resource)
 {
     if (m_port > 65535) {
-		throw websocketpp::uri_exception("Port must be less than 65535");
-	}
+        throw websocketpp::uri_exception("Port must be less than 65535");
+    }
 }
 
 uri::uri(bool secure, 
@@ -256,65 +256,65 @@ uri::uri(bool secure,
 */
 
 bool uri::get_secure() const {
-	return m_secure;
+    return m_secure;
 }
 
 std::string uri::get_host() const {
-	return m_host;
+    return m_host;
 }
 
 std::string uri::get_host_port() const {
-	if (m_port == (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT)) {
-		 return m_host;
-	} else {
-		std::stringstream p;
-		p << m_host << ":" << m_port;
-		return p.str();
-	}
-	
+    if (m_port == (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT)) {
+         return m_host;
+    } else {
+        std::stringstream p;
+        p << m_host << ":" << m_port;
+        return p.str();
+    }
+    
 }
 
 uint16_t uri::get_port() const {
-	return m_port;
+    return m_port;
 }
 
 std::string uri::get_port_str() const {
-	std::stringstream p;
-	p << m_port;
-	return p.str();
+    std::stringstream p;
+    p << m_port;
+    return p.str();
 }
 
 std::string uri::get_resource() const {
-	return m_resource;
+    return m_resource;
 }
 
 std::string uri::str() const {
-	std::stringstream s;
-	
-	s << "ws" << (m_secure ? "s" : "") << "://" << m_host;
-	
-	if (m_port != (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT)) {
-		s << ":" << m_port;
-	}
-	
-	s << m_resource;
-	return s.str();
+    std::stringstream s;
+    
+    s << "ws" << (m_secure ? "s" : "") << "://" << m_host;
+    
+    if (m_port != (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT)) {
+        s << ":" << m_port;
+    }
+    
+    s << m_resource;
+    return s.str();
 }
 
 uint16_t uri::get_port_from_string(const std::string& port) const {
-	if (port == "") {
-	    return (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT);
-	}
-	
-	unsigned int t_port = atoi(port.c_str());
-			
-	if (t_port > 65535) {
-		throw websocketpp::uri_exception("Port must be less than 65535");
-	}
-	
-	if (t_port == 0) {
-		throw websocketpp::uri_exception("Error parsing port string: "+port);
-	}
-	
-	return t_port;
+    if (port == "") {
+        return (m_secure ? URI_DEFAULT_SECURE_PORT : URI_DEFAULT_PORT);
+    }
+    
+    unsigned int t_port = atoi(port.c_str());
+            
+    if (t_port > 65535) {
+        throw websocketpp::uri_exception("Port must be less than 65535");
+    }
+    
+    if (t_port == 0) {
+        throw websocketpp::uri_exception("Error parsing port string: "+port);
+    }
+    
+    return t_port;
 }

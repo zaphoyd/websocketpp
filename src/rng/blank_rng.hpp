@@ -33,14 +33,14 @@
 #include <stdint.h>
 
 namespace websocketpp {
-	
+    
 class blank_rng {
 public:
-	int32_t gen() {
-		throw "Random Number generation not supported";
-	}
+    int32_t gen() {
+        throw "Random Number generation not supported";
+    }
 };
-	
+    
 }
 
 #endif // BLANK_RNG_HPP

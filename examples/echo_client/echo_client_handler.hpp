@@ -51,22 +51,22 @@ namespace websocketecho {
 
 class echo_client_handler : public websocketpp::connection_handler {
 public:
-	echo_client_handler() : m_case_count(0) {}
-	virtual ~echo_client_handler() {}
-	
-	// connection to chat room complete
-	void on_open(session_ptr s);
+    echo_client_handler() : m_case_count(0) {}
+    virtual ~echo_client_handler() {}
+    
+    // connection to chat room complete
+    void on_open(session_ptr s);
 
-	// connection to chat room closed
-	void on_close(session_ptr sn);
-	
-	// got a new message from server
-	void on_message(session_ptr s,const std::string &msg);
-	
-	// ignore messages
-	void on_message(session_ptr s,const std::vector<unsigned char> &data);
-	
-	int m_case_count;
+    // connection to chat room closed
+    void on_close(session_ptr sn);
+    
+    // got a new message from server
+    void on_message(session_ptr s,const std::string &msg);
+    
+    // ignore messages
+    void on_message(session_ptr s,const std::vector<unsigned char> &data);
+    
+    int m_case_count;
 };
 
 typedef boost::shared_ptr<echo_client_handler> echo_client_handler_ptr;

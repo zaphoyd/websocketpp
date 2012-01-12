@@ -41,67 +41,67 @@ namespace socket {
 template <typename endpoint_type>
 class plain {
 public:
-	boost::asio::io_service& get_io_service() {
-		return m_io_service;
-	}
-	
-	bool is_secure() {
-		return false;
-	}
-	
-	// plain sockets do not add anything to the handler interface
-	class handler_interface {};
-	
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		// should these two be public or protected. If protected, how?
-		boost::asio::ip::tcp::socket& get_raw_socket() {
-			return m_socket;
-		}
-		
-		boost::asio::ip::tcp::socket& get_socket() {
-			return m_socket;
-		}
-		
-		bool is_secure() {
-			return false;
-		}
-	protected:
-		connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
-		
-		void init() {
-			
-		}
-		
-		void async_init(socket_init_callback callback) {
-			// TODO: should this use post()?
-			//m_socket.set_option(boost::asio::ip::tcp::no_delay(true));
-			
-			callback(boost::system::error_code());
-		}
-		
-		bool shutdown() {
-			boost::system::error_code ignored_ec;
-			m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both,ignored_ec);
-			
-			if (ignored_ec) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-	private:
-		boost::asio::ip::tcp::socket m_socket;
-	};
+    boost::asio::io_service& get_io_service() {
+        return m_io_service;
+    }
+    
+    bool is_secure() {
+        return false;
+    }
+    
+    // plain sockets do not add anything to the handler interface
+    class handler_interface {};
+    
+    // Connection specific details
+    template <typename connection_type>
+    class connection {
+    public:
+        // should these two be public or protected. If protected, how?
+        boost::asio::ip::tcp::socket& get_raw_socket() {
+            return m_socket;
+        }
+        
+        boost::asio::ip::tcp::socket& get_socket() {
+            return m_socket;
+        }
+        
+        bool is_secure() {
+            return false;
+        }
+    protected:
+        connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
+        
+        void init() {
+            
+        }
+        
+        void async_init(socket_init_callback callback) {
+            // TODO: should this use post()?
+            //m_socket.set_option(boost::asio::ip::tcp::no_delay(true));
+            
+            callback(boost::system::error_code());
+        }
+        
+        bool shutdown() {
+            boost::system::error_code ignored_ec;
+            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both,ignored_ec);
+            
+            if (ignored_ec) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    private:
+        boost::asio::ip::tcp::socket m_socket;
+    };
 protected:
-	plain (boost::asio::io_service& m) : m_io_service(m) {}
+    plain (boost::asio::io_service& m) : m_io_service(m) {}
 private:
-	boost::asio::io_service& m_io_service;
+    boost::asio::io_service& m_io_service;
 };
 
-	
+    
 } // namespace socket
 } // namespace websocketpp
 

@@ -60,9 +60,9 @@ typedef plain_endpoint_type::connection_ptr connection_ptr;
 
 class stress_client_handler : public plain_endpoint_type::handler {
 public:
-	typedef stress_client_handler type;
-	typedef plain_endpoint_type::connection_ptr connection_ptr;
-	
+    typedef stress_client_handler type;
+    typedef plain_endpoint_type::connection_ptr connection_ptr;
+    
     stress_client_handler(int num_connections) 
      : m_connections_max(num_connections),
        m_connections_cur(0) {
@@ -71,10 +71,10 @@ public:
     
     void on_open(connection_ptr connection) {
         if (!m_timer) {
-			m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
-			m_timer->expires_from_now(boost::posix_time::milliseconds(250));
-			m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
-		}
+            m_timer.reset(new boost::asio::deadline_timer(connection->get_io_service(),boost::posix_time::seconds(0)));
+            m_timer->expires_from_now(boost::posix_time::milliseconds(250));
+            m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+        }
         
         m_connections_cur++;
         
@@ -87,19 +87,19 @@ public:
         }
     }
     
-	void on_message(connection_ptr connection, websocketpp::message::data::ptr msg) {
+    void on_message(connection_ptr connection, websocketpp::message::data::ptr msg) {
         //std::cout << "got message of size: " << msg->get_payload().size() << std::endl;
         m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())]++;
         
         if (m_msg_stats[websocketpp::md5_hash_hex(msg->get_payload())] == m_connections_max) {
             send_stats_update(connection);
         }
-	}
-	
-	void on_fail(connection_ptr connection) {
-		std::cout << "connection failed" << std::endl;
-	}
-	
+    }
+    
+    void on_fail(connection_ptr connection) {
+        std::cout << "connection failed" << std::endl;
+    }
+    
     void on_timer(connection_ptr connection,const boost::system::error_code& error) {
         if (error) {
             std::cout << "on_timer error" << std::endl;
@@ -109,14 +109,14 @@ public:
         send_stats_update(connection);
                 
         m_timer->expires_from_now(boost::posix_time::milliseconds(250));
-		m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
+        m_timer->async_wait(boost::bind(&type::on_timer,this,connection,boost::asio::placeholders::error));
     }
     
     void on_close(connection_ptr connection) {
         m_timer->cancel();
     }
     
-    boost::posix_time::ptime	m_start_time;
+    boost::posix_time::ptime    m_start_time;
 private:    
     void send_stats_update(connection_ptr connection) {
         if (m_msg_stats.empty()) {
@@ -146,24 +146,24 @@ private:
 
 
 int main(int argc, char* argv[]) {
-	std::string uri = "ws://localhost:9002/";
-	int num_connections = 100;
-	int batch_size = 25;
+    std::string uri = "ws://localhost:9002/";
+    int num_connections = 100;
+    int batch_size = 25;
     int delay_ms = 16;
-	
-	if (argc != 5) {
-		std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
-	} else {
-		uri = argv[1];
-		num_connections = atoi(argv[2]);
-		batch_size = atoi(argv[3]);
+    
+    if (argc != 5) {
+        std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
+    } else {
+        uri = argv[1];
+        num_connections = atoi(argv[2]);
+        batch_size = atoi(argv[3]);
         delay_ms = atoi(argv[4]);
-	}
-		
-	// 12288 is max OS X limit without changing kernal settings
+    }
+        
+    // 12288 is max OS X limit without changing kernal settings
     const rlim_t ideal_size = 200+num_connections;
     rlim_t old_size;
-	rlim_t old_max;
+    rlim_t old_max;
     
     struct rlimit rl;
     int result;
@@ -174,63 +174,63 @@ int main(int argc, char* argv[]) {
         
         old_size = rl.rlim_cur;
         old_max = rl.rlim_max;
-		
+        
         if (rl.rlim_cur < ideal_size) {
             std::cout << "Attempting to raise system file descriptor limit from " << rl.rlim_cur << " to " << ideal_size << std::endl;
-			rl.rlim_cur = ideal_size;
+            rl.rlim_cur = ideal_size;
             
-			if (rl.rlim_max < ideal_size) {
-				rl.rlim_max = ideal_size;
-			}
-			
-			result = setrlimit(RLIMIT_NOFILE, &rl);
+            if (rl.rlim_max < ideal_size) {
+                rl.rlim_max = ideal_size;
+            }
+            
+            result = setrlimit(RLIMIT_NOFILE, &rl);
             
             if (result == 0) {
                 std::cout << "Success" << std::endl;
-			} else if (result == EPERM) {
-				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
-			} else {
-				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
-			}
+            } else if (result == EPERM) {
+                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
+            } else {
+                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
+            }
         }
     }
-	
-	try {
-		plain_handler_ptr handler(new stress_client_handler(num_connections));
-		plain_endpoint_type endpoint(handler);
-		
-		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-		endpoint.elog().set_level(websocketpp::log::elevel::ALL);
-		
+    
+    try {
+        plain_handler_ptr handler(new stress_client_handler(num_connections));
+        plain_endpoint_type endpoint(handler);
+        
+        endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        endpoint.elog().set_level(websocketpp::log::elevel::ALL);
+        
         //endpoint.alog().set_level(websocketpp::log::alevel::DEVEL);
         //endpoint.alog().set_level(websocketpp::log::alevel::DEBUG_CLOSE);
         
-		std::set<connection_ptr> connections;
-		
-		connections.insert(endpoint.connect(uri));
-		
-		boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
-		
-		std::cout << "launching " << num_connections << " connections to " << uri << " in batches of " << batch_size << std::endl;
-		
+        std::set<connection_ptr> connections;
+        
+        connections.insert(endpoint.connect(uri));
+        
+        boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
+        
+        std::cout << "launching " << num_connections << " connections to " << uri << " in batches of " << batch_size << std::endl;
+        
         boost::dynamic_pointer_cast<stress_client_handler>(handler)->m_start_time = boost::posix_time::microsec_clock::local_time();
-		for (int i = 0; i < num_connections-1; i++) {
-			if (i % batch_size == 0) {
-				//sleep(1);
+        for (int i = 0; i < num_connections-1; i++) {
+            if (i % batch_size == 0) {
+                //sleep(1);
                 msleep(delay_ms);
-			}
-			connections.insert(endpoint.connect(uri));
-		}
-		
-		std::cout << "complete" << std::endl;
-		
-		t.join();
-		
-		std::cout << "done" << std::endl;
-		
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+            }
+            connections.insert(endpoint.connect(uri));
+        }
+        
+        std::cout << "complete" << std::endl;
+        
+        t.join();
+        
+        std::cout << "done" << std::endl;
+        
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

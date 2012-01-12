@@ -53,27 +53,27 @@ namespace websocketchat {
 
 class chat_server_handler : public server_handler {
 public:
-	void validate(server_session_ptr session); 
-	
-	// add new connection to the lobby
-	void on_open(server_session_ptr session);
-		
-	// someone disconnected from the lobby, remove them
-	void on_close(server_session_ptr session);
-	
-	void on_message(server_session_ptr session,websocketpp::utf8_string_ptr msg);
-	
-	// lobby will ignore binary messages
-	void on_message(server_session_ptr session,websocketpp::binary_string_ptr data) {}
+    void validate(server_session_ptr session); 
+    
+    // add new connection to the lobby
+    void on_open(server_session_ptr session);
+        
+    // someone disconnected from the lobby, remove them
+    void on_close(server_session_ptr session);
+    
+    void on_message(server_session_ptr session,websocketpp::utf8_string_ptr msg);
+    
+    // lobby will ignore binary messages
+    void on_message(server_session_ptr session,websocketpp::binary_string_ptr data) {}
 private:
-	std::string serialize_state();
-	std::string encode_message(std::string sender,std::string msg,bool escape = true);
-	std::string get_con_id(server_session_ptr s);
-	
-	void send_to_all(std::string data);
-	
-	// list of outstanding connections
-	std::map<server_session_ptr,std::string> m_connections;
+    std::string serialize_state();
+    std::string encode_message(std::string sender,std::string msg,bool escape = true);
+    std::string get_con_id(server_session_ptr s);
+    
+    void send_to_all(std::string data);
+    
+    // list of outstanding connections
+    std::map<server_session_ptr,std::string> m_connections;
 };
 
 typedef boost::shared_ptr<chat_server_handler> chat_server_handler_ptr;

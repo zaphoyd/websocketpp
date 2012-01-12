@@ -42,115 +42,115 @@ namespace socket {
 template <typename endpoint_type>
 class ssl {
 public:
-	typedef ssl<endpoint_type> type;
-	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
-	typedef boost::shared_ptr<ssl_socket> ssl_socket_ptr;
-	
-	// should be private friended
-	boost::asio::io_service& get_io_service() {
-		return m_io_service;
-	}
-	
-	// should be private friended?
-	ssl_socket::handshake_type get_handshake_type() {
-		if (static_cast< endpoint_type* >(this)->is_server()) {
-			return boost::asio::ssl::stream_base::server;
-		} else {
-			return boost::asio::ssl::stream_base::client;
-		}
-	}
-	
-	bool is_secure() {
-		return true;
-	}
-	
-	// TLS policy adds the on_tls_init method to the handler to allow the user
-	// to set up their asio TLS context.
-	class handler_interface {
-	public:
-		virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
-	};
-	
-	// Connection specific details
-	template <typename connection_type>
-	class connection {
-	public:
-		// should these two be public or protected. If protected, how?
-		ssl_socket::lowest_layer_type& get_raw_socket() {
-			return m_socket_ptr->lowest_layer();
-		}
-		
-		ssl_socket& get_socket() {
-			return *m_socket_ptr;
-		}
-		
-		bool is_secure() {
-			return true;
-		}
-	protected:
-		connection(ssl<endpoint_type>& e)
-		 : m_endpoint(e),
-		   m_connection(static_cast< connection_type& >(*this)) {}
-		
-		void init() {
-			m_context_ptr = m_connection.get_handler()->on_tls_init();
-			
+    typedef ssl<endpoint_type> type;
+    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+    typedef boost::shared_ptr<ssl_socket> ssl_socket_ptr;
+    
+    // should be private friended
+    boost::asio::io_service& get_io_service() {
+        return m_io_service;
+    }
+    
+    // should be private friended?
+    ssl_socket::handshake_type get_handshake_type() {
+        if (static_cast< endpoint_type* >(this)->is_server()) {
+            return boost::asio::ssl::stream_base::server;
+        } else {
+            return boost::asio::ssl::stream_base::client;
+        }
+    }
+    
+    bool is_secure() {
+        return true;
+    }
+    
+    // TLS policy adds the on_tls_init method to the handler to allow the user
+    // to set up their asio TLS context.
+    class handler_interface {
+    public:
+        virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
+    };
+    
+    // Connection specific details
+    template <typename connection_type>
+    class connection {
+    public:
+        // should these two be public or protected. If protected, how?
+        ssl_socket::lowest_layer_type& get_raw_socket() {
+            return m_socket_ptr->lowest_layer();
+        }
+        
+        ssl_socket& get_socket() {
+            return *m_socket_ptr;
+        }
+        
+        bool is_secure() {
+            return true;
+        }
+    protected:
+        connection(ssl<endpoint_type>& e)
+         : m_endpoint(e),
+           m_connection(static_cast< connection_type& >(*this)) {}
+        
+        void init() {
+            m_context_ptr = m_connection.get_handler()->on_tls_init();
+            
             if (!m_context_ptr) {
                 throw "handler was unable to init tls, connection error";
             }
             
             m_socket_ptr = ssl_socket_ptr(new ssl_socket(m_endpoint.get_io_service(),*m_context_ptr));
-		}
-		
-		void async_init(boost::function<void(const boost::system::error_code&)> callback)
-		{
-			m_socket_ptr->async_handshake(
-				m_endpoint.get_handshake_type(),
-				boost::bind(
-					&connection<connection_type>::handle_init,
-					this,
-					callback,
-					boost::asio::placeholders::error
-				)
-			);
-		}
-		
-		void handle_init(socket_init_callback callback,const boost::system::error_code& error) {
-			/*if (error) {
-				std::cout << "SSL handshake error" << std::endl;
-			} else {
-				//static_cast< connection_type* >(this)->websocket_handshake();
-				
-			}*/
-			callback(error);
-		}
-		
+        }
+        
+        void async_init(boost::function<void(const boost::system::error_code&)> callback)
+        {
+            m_socket_ptr->async_handshake(
+                m_endpoint.get_handshake_type(),
+                boost::bind(
+                    &connection<connection_type>::handle_init,
+                    this,
+                    callback,
+                    boost::asio::placeholders::error
+                )
+            );
+        }
+        
+        void handle_init(socket_init_callback callback,const boost::system::error_code& error) {
+            /*if (error) {
+                std::cout << "SSL handshake error" << std::endl;
+            } else {
+                //static_cast< connection_type* >(this)->websocket_handshake();
+                
+            }*/
+            callback(error);
+        }
+        
         // note, this function for some reason shouldn't/doesn't need to be 
         // called for plain HTTP connections. not sure why.
-		bool shutdown() {
-			boost::system::error_code ignored_ec;
-			
-			m_socket_ptr->shutdown(ignored_ec);
-			
-			if (ignored_ec) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-	private:
-		boost::shared_ptr<boost::asio::ssl::context>	m_context_ptr;
-		ssl_socket_ptr									m_socket_ptr;
-		ssl<endpoint_type>&								m_endpoint;
-		connection_type&								m_connection;
-	};
+        bool shutdown() {
+            boost::system::error_code ignored_ec;
+            
+            m_socket_ptr->shutdown(ignored_ec);
+            
+            if (ignored_ec) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    private:
+        boost::shared_ptr<boost::asio::ssl::context>    m_context_ptr;
+        ssl_socket_ptr                                  m_socket_ptr;
+        ssl<endpoint_type>&                             m_endpoint;
+        connection_type&                                m_connection;
+    };
 protected:
-	ssl (boost::asio::io_service& m) : m_io_service(m) {}
+    ssl (boost::asio::io_service& m) : m_io_service(m) {}
 private:
-	boost::asio::io_service&	m_io_service;
-	ssl_socket::handshake_type	m_handshake_type;
+    boost::asio::io_service&    m_io_service;
+    ssl_socket::handshake_type  m_handshake_type;
 };
-	
+    
 } // namespace socket
 } // namespace websocketpp
 

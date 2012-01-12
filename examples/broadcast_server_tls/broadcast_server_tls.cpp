@@ -45,13 +45,13 @@ typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl
 typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
 
 int main(int argc, char* argv[]) {
-	unsigned short port = 9002;
-	bool tls = false;
+    unsigned short port = 9002;
+    bool tls = false;
     
     // 12288 is max OS X limit without changing kernal settings
     const rlim_t ideal_size = 10000;
     rlim_t old_size;
-	rlim_t old_max;
+    rlim_t old_max;
     
     struct rlimit rl;
     int result;
@@ -62,64 +62,64 @@ int main(int argc, char* argv[]) {
         
         old_size = rl.rlim_cur;
         old_max = rl.rlim_max;
-		
+        
         if (rl.rlim_cur < ideal_size) {
             std::cout << "Attempting to raise system file descriptor limit from " << rl.rlim_cur << " to " << ideal_size << std::endl;
-			rl.rlim_cur = ideal_size;
+            rl.rlim_cur = ideal_size;
             
-			if (rl.rlim_max < ideal_size) {
-				rl.rlim_max = ideal_size;
-			}
-			
-			result = setrlimit(RLIMIT_NOFILE, &rl);
+            if (rl.rlim_max < ideal_size) {
+                rl.rlim_max = ideal_size;
+            }
+            
+            result = setrlimit(RLIMIT_NOFILE, &rl);
             
             if (result == 0) {
                 std::cout << "Success" << std::endl;
-			} else if (result == EPERM) {
-				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
-			} else {
-				std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
-			}
+            } else if (result == EPERM) {
+                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: Insufficient permissions. Try running process as root. system max: " << old_max << std::endl;
+            } else {
+                std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
+            }
         }
     }
     
-	if (argc == 2) {
-		// TODO: input validation?
-		port = atoi(argv[1]);
-	}
-	
-	if (argc == 3) {
-		// TODO: input validation?
-		port = atoi(argv[1]);
-		tls = !strcmp(argv[2],"-tls");
-	}
-	
-	try {
-		if (tls) {
-			tls_handler_ptr h(new websocketpp::broadcast::server_handler<tls_endpoint_type>());
-			tls_endpoint_type e(h);
-			
-			e.alog().unset_level(websocketpp::log::alevel::ALL);
-			e.elog().set_level(websocketpp::log::elevel::ALL);
-			
-			std::cout << "Starting Secure WebSocket broadcast server on port " << port << std::endl;
-			e.listen(port);
-		} else {
-			plain_handler_ptr h(new websocketpp::broadcast::server_handler<plain_endpoint_type>());
-			plain_endpoint_type e(h);
-			
-			e.alog().unset_level(websocketpp::log::alevel::ALL);
-			e.elog().set_level(websocketpp::log::elevel::ALL);
-			
+    if (argc == 2) {
+        // TODO: input validation?
+        port = atoi(argv[1]);
+    }
+    
+    if (argc == 3) {
+        // TODO: input validation?
+        port = atoi(argv[1]);
+        tls = !strcmp(argv[2],"-tls");
+    }
+    
+    try {
+        if (tls) {
+            tls_handler_ptr h(new websocketpp::broadcast::server_handler<tls_endpoint_type>());
+            tls_endpoint_type e(h);
+            
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().set_level(websocketpp::log::elevel::ALL);
+            
+            std::cout << "Starting Secure WebSocket broadcast server on port " << port << std::endl;
+            e.listen(port);
+        } else {
+            plain_handler_ptr h(new websocketpp::broadcast::server_handler<plain_endpoint_type>());
+            plain_endpoint_type e(h);
+            
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().set_level(websocketpp::log::elevel::ALL);
+            
             //e.alog().set_level(websocketpp::log::alevel::DEVEL);
             
-			std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
-			e.listen(port);
-		}
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-		
-	}
-	
-	return 0;
+            std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
+            e.listen(port);
+        }
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        
+    }
+    
+    return 0;
 }

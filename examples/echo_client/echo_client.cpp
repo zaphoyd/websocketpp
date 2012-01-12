@@ -36,72 +36,72 @@ typedef plain_endpoint_type::connection_ptr connection_ptr;
 
 class echo_client_handler : public plain_endpoint_type::handler {
 public:
-	typedef echo_client_handler type;
-	typedef plain_endpoint_type::connection_ptr connection_ptr;
-	
-	void on_message(connection_ptr connection,websocketpp::message::data::ptr msg) {		
-		if (connection->get_resource() == "/getCaseCount") {
-			std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
-			m_case_count = atoi(msg->get_payload().c_str());
-		} else {
-			connection->send(msg->get_payload(),msg->get_opcode());
-		}
-	}
-	
-	void http(connection_ptr connection) {
-		//connection->set_body("HTTP Response!!");
-	}
-	
-	void on_fail(connection_ptr connection) {
-		std::cout << "connection failed" << std::endl;
-	}
-	
-	int m_case_count;
+    typedef echo_client_handler type;
+    typedef plain_endpoint_type::connection_ptr connection_ptr;
+    
+    void on_message(connection_ptr connection,websocketpp::message::data::ptr msg) {        
+        if (connection->get_resource() == "/getCaseCount") {
+            std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
+            m_case_count = atoi(msg->get_payload().c_str());
+        } else {
+            connection->send(msg->get_payload(),msg->get_opcode());
+        }
+    }
+    
+    void http(connection_ptr connection) {
+        //connection->set_body("HTTP Response!!");
+    }
+    
+    void on_fail(connection_ptr connection) {
+        std::cout << "connection failed" << std::endl;
+    }
+    
+    int m_case_count;
 };
 
 
 int main(int argc, char* argv[]) {
-	std::string uri = "ws://localhost:9001/";
-	
-	if (argc > 2) {
-		std::cout << "Usage: `echo_client test_url`" << std::endl;
-	} else {
-		uri = argv[1];
-	}
-	
-	try {
-		plain_handler_ptr handler(new echo_client_handler());
+    std::string uri = "ws://localhost:9001/";
+    
+    if (argc > 2) {
+        std::cout << "Usage: `echo_client test_url`" << std::endl;
+    } else {
+        uri = argv[1];
+    }
+    
+    try {
+        plain_handler_ptr handler(new echo_client_handler());
         connection_ptr connection;
-		plain_endpoint_type endpoint(handler);
-		
-		endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-		endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
-		
-		connection = endpoint.connect(uri+"getCaseCount");
-		
+        plain_endpoint_type endpoint(handler);
+        
+        endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
+        
+        connection = endpoint.connect(uri+"getCaseCount");
+        
         connection->add_request_header("User Agent","WebSocket++/0.2.0");
         
         endpoint.run();
-		
-		std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
-		
-		for (int i = 1; i <= boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count; i++) {
-			endpoint.reset();
-			
-			std::stringstream url;
-			
-			url << uri << "/runCase?case=" << i << "&agent=\"WebSocket++/0.2.0\"";
-						
+        
+        std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
+        
+        for (int i = 1; i <= boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count; i++) {
+            endpoint.reset();
+            
+            std::stringstream url;
+            
+            url << uri << "/runCase?case=" << i << "&agent=\"WebSocket++/0.2.0\"";
+                        
             connection = endpoint.connect(url.str());
-			
-			endpoint.run();
-		}
-		
-		std::cout << "done" << std::endl;
-		
-	} catch (std::exception& e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	}
-	
-	return 0;
+            
+            endpoint.run();
+        }
+        
+        std::cout << "done" << std::endl;
+        
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    
+    return 0;
 }

@@ -35,18 +35,18 @@
 #include <boost/random/random_device.hpp>
 
 namespace websocketpp {
-	class boost_rng {
-	public:
-		boost_rng();
-		int32_t gen();
-	private:
-		boost::random::random_device m_rng;
-		boost::random::variate_generator
-		<
-			boost::random::random_device&,
-			boost::random::uniform_int_distribution<>
-		> m_gen;
-	};
+    class boost_rng {
+    public:
+        boost_rng();
+        int32_t gen();
+    private:
+        boost::random::random_device m_rng;
+        boost::random::variate_generator
+        <
+            boost::random::random_device&,
+            boost::random::uniform_int_distribution<>
+        > m_gen;
+    };
 }
 
 #endif // BOOST_RNG_HPP

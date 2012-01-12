@@ -42,23 +42,23 @@ namespace websocketecho {
 
 class echo_server_handler : public server_handler {
 public:
-	// The echo server allows all domains is protocol free.
-	void validate(server_ptr session) {}
-	
-	// an echo server is stateless. 
-	// The handler has no need to keep track of connected clients.
-	void on_fail(server_ptr session) {}
-	void on_open(server_ptr session) {}
-	void on_close(server_ptr session) {}
-	
-	// both text and binary messages are echoed back to the sending client.
-		void on_message(server_ptr session,websocketpp::utf8_string_ptr msg) {
-		std::cout << *msg << std::endl;
-		session->send(*msg);
-	}
-	void on_message(server_ptr session,websocketpp::binary_string_ptr data) {
-		session->send(*data);
-	}
+    // The echo server allows all domains is protocol free.
+    void validate(server_ptr session) {}
+    
+    // an echo server is stateless. 
+    // The handler has no need to keep track of connected clients.
+    void on_fail(server_ptr session) {}
+    void on_open(server_ptr session) {}
+    void on_close(server_ptr session) {}
+    
+    // both text and binary messages are echoed back to the sending client.
+        void on_message(server_ptr session,websocketpp::utf8_string_ptr msg) {
+        std::cout << *msg << std::endl;
+        session->send(*msg);
+    }
+    void on_message(server_ptr session,websocketpp::binary_string_ptr data) {
+        session->send(*data);
+    }
 };
 
 }

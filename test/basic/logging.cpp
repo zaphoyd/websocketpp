@@ -28,13 +28,13 @@
 #include "../../src/logger/logger.hpp"
 
 int main () {
-	websocketpp::log::logger<websocketpp::log::elevel::value> log;
-	
-	log.set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::ERROR);
-	log.at(websocketpp::log::elevel::DEVEL) << "devel: " << 5 << websocketpp::log::endl;
-	log.at(websocketpp::log::elevel::INFO) << "info: " << 5 << websocketpp::log::endl;
-	log.at(websocketpp::log::elevel::WARN) << "warn: " << 5 << websocketpp::log::endl;
-	log.at(websocketpp::log::elevel::ERROR) << "error: " << 5 << websocketpp::log::endl;
-	log.at(websocketpp::log::elevel::FATAL) << "fatal: " << 5 << websocketpp::log::endl;
+    websocketpp::log::logger<websocketpp::log::elevel::value> log;
+    
+    log.set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::ERROR);
+    log.at(websocketpp::log::elevel::DEVEL) << "devel: " << 5 << websocketpp::log::endl;
+    log.at(websocketpp::log::elevel::INFO) << "info: " << 5 << websocketpp::log::endl;
+    log.at(websocketpp::log::elevel::WARN) << "warn: " << 5 << websocketpp::log::endl;
+    log.at(websocketpp::log::elevel::ERROR) << "error: " << 5 << websocketpp::log::endl;
+    log.at(websocketpp::log::elevel::FATAL) << "fatal: " << 5 << websocketpp::log::endl;
 
 }

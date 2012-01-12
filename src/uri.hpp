@@ -37,7 +37,7 @@ namespace websocketpp {
 // WebSocket URI only (not http/etc) 
 
 class uri_exception : public std::exception {
-public:	
+public: 
     uri_exception(const std::string& msg) : m_msg(msg) {}
     ~uri_exception() throw() {}
 
@@ -51,21 +51,19 @@ private:
 // TODO: figure out why this fixes horrible linking errors.
 static const uint16_t URI_DEFAULT_PORT = 80;
 static const uint16_t URI_DEFAULT_SECURE_PORT = 443;
-	
+
 class uri {
 public:
-	
-	
     explicit uri(const std::string& uri);
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource);
-	uri(bool secure, const std::string& host, const std::string& resource);
+    uri(bool secure, const std::string& host, const std::string& resource);
     uri(bool secure, const std::string& host, const std::string& port, const std::string& resource);
     
     bool get_secure() const;
     std::string get_host() const;
-	std::string get_host_port() const;
+    std::string get_host_port() const;
     uint16_t get_port() const;
-	std::string get_port_str() const;
+    std::string get_port_str() const;
     std::string get_resource() const;
     std::string str() const;
     
@@ -97,7 +95,7 @@ private:
 };
 
 typedef boost::shared_ptr<uri> uri_ptr;
-	
+
 } // namespace websocketpp
 
 #endif // WEBSOCKETPP_URI_HPP

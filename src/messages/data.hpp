@@ -151,11 +151,11 @@ public:
     typedef pool<data>::ptr pool_ptr;
     
     data(pool_ptr p, size_t s);
-	
+    
     void reset(frame::opcode::value opcode);
     
     frame::opcode::value get_opcode() const;
-	const std::string& get_payload() const;
+    const std::string& get_payload() const;
     const std::string& get_header() const;
     
     // ##reading##
@@ -167,8 +167,8 @@ public:
     // throws a processor::exception if the message is too big, there is a fatal
     // istream read error, or invalid UTF8 data is read for a text message
     uint64_t process_payload(std::istream& input,uint64_t size);
-	void process_character(unsigned char c);
-	void complete();
+    void process_character(unsigned char c);
+    void complete();
     void validate_payload();
     
     // ##writing##
@@ -183,7 +183,7 @@ public:
     void set_prepared(bool b);
     bool get_prepared() const;
     void mask();
-	    
+        
     // pool management interface
     void set_live();
     size_t get_index() const;
@@ -216,19 +216,19 @@ private:
         }
     }
     
-	// Message state
-	frame::opcode::value		m_opcode;
-	
-	// UTF8 validation state
-    utf8_validator::validator	m_validator;
-	
-	// Masking state
-	unsigned char				m_masking_key[4];
+    // Message state
+    frame::opcode::value        m_opcode;
+    
+    // UTF8 validation state
+    utf8_validator::validator   m_validator;
+    
+    // Masking state
+    unsigned char               m_masking_key[4];
     // m_masking_index can take on
     index_value                 m_masking_index;
     
     std::string                 m_header;
-    std::string					m_payload;
+    std::string                 m_payload;
     
     bool                        m_prepared;
     
@@ -240,7 +240,7 @@ private:
 };
 
 typedef boost::intrusive_ptr<data> data_ptr;
-	
+    
 } // namespace message
 } // namespace websocketpp
 

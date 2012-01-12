@@ -53,7 +53,7 @@ struct msg {
     uint64_t    time;
     
     std::string hash;
-    boost::posix_time::ptime	time_sent;
+    boost::posix_time::ptime    time_sent;
 };
 
 typedef std::map<std::string,struct msg> msg_map;
@@ -61,16 +61,16 @@ typedef std::map<std::string,struct msg> msg_map;
 template <typename endpoint_type>
 class handler : public endpoint_type::handler {
 public:
-	typedef handler<endpoint_type> type;
+    typedef handler<endpoint_type> type;
     typedef boost::shared_ptr<type> ptr;
-	typedef typename endpoint_type::handler_ptr handler_ptr;
+    typedef typename endpoint_type::handler_ptr handler_ptr;
     typedef typename endpoint_type::connection_ptr connection_ptr;
     
-	handler() : m_nextid(0) {}
-	
-	void on_open(connection_ptr connection) {
+    handler() : m_nextid(0) {}
+    
+    void on_open(connection_ptr connection) {
         m_connections.insert(connection);
-	}
+    }
     
     // this dummy tls init function will cause all TLS connections to fail.
     // TLS handling for broadcast::handler is usually done by a lobby handler.
@@ -83,14 +83,14 @@ public:
     void on_load(connection_ptr connection, handler_ptr old_handler) {
         this->on_open(connection);
         m_lobby = old_handler;
-	}
-	
-	void on_close(connection_ptr connection) {
-		m_connections.erase(connection);
-	}
-	
-	void on_message(connection_ptr connection,message::data_ptr msg) {
-		wscmd::cmd command = wscmd::parse(msg->get_payload());
+    }
+    
+    void on_close(connection_ptr connection) {
+        m_connections.erase(connection);
+    }
+    
+    void on_message(connection_ptr connection,message::data_ptr msg) {
+        wscmd::cmd command = wscmd::parse(msg->get_payload());
         
         std::cout << "msg: " << msg->get_payload() << std::endl;
         
@@ -189,7 +189,7 @@ public:
         m_msgs.empty();
     }
 private:
-	handler_ptr     m_lobby;
+    handler_ptr     m_lobby;
     
     int             m_nextid;
     msg_map         m_msgs;
