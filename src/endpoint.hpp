@@ -45,6 +45,11 @@ namespace websocketpp {
 /// before endpoint policy classes are constructed.
 class endpoint_base {
 protected:
+    /// Start the run method of the endpoint's io_service object.
+    void run() {
+        m_io_service.run();
+    }
+    
     boost::asio::io_service m_io_service;
 };
 
@@ -118,6 +123,7 @@ public:
     explicit endpoint(handler_ptr handler) 
      : role_type(m_io_service),
        socket_type(m_io_service),
+       m_state(IDLE),
        m_handler(handler),
        m_pool(new message::pool<message::data>(1000)),
        m_pool_control(new message::pool<message::data>(SIZE_MAX))
@@ -128,6 +134,7 @@ public:
     /// Destroy and endpoint
     ~endpoint() {
         m_pool->set_callback(NULL);
+        // TODO: destroy all connections associated with this endpoint?
     }
     
     // copy/assignment constructors require C++11
@@ -137,7 +144,7 @@ public:
     
     /// Returns a reference to the endpoint's access logger.
     /**
-     * @returns A reference to the endpoint's access logger. See @ref logger
+     * @return A reference to the endpoint's access logger. See @ref logger
      * for more details about WebSocket++ logging policy classes.
      *
      * @par Example
@@ -174,10 +181,73 @@ public:
         if (!new_handler) {
             elog().at(log::elevel::FATAL) 
                 << "Tried to switch to a NULL handler." << log::endl;
-            throw "TODO: handlers can't be null";
+            throw websocketpp::exception("TODO: handlers can't be null");
         }
         
         m_handler = new_handler;
+    }
+    
+    /// Cleanly closes all websocket connections
+    /**
+     * Sends a close signal to every connection with the specified code and 
+     * reason. The default code is 1001/Going Away and the default reason is
+     * blank. 
+     * 
+     * @param code The WebSocket close code to send to remote clients as the
+     * reason that the connection is being closed.
+     * @param reason The WebSocket close reason to send to remote clients as the
+     * text reason that the connection is being closed. Must be valid UTF-8.
+     */
+    void close_all(close::status::value code = close::status::GOING_AWAY, 
+                   const std::string& reason = "")
+    {
+        alog().at(log::alevel::ENDPOINT) 
+        << "Endpoint recieved signal to close all connections cleanly with code " 
+        << code << " and reason " << reason << log::endl;
+        
+        typename std::set<connection_ptr>::iterator it;
+        
+        for (it = m_connections.begin(); it != m_connections.end(); it++) {
+            (*it)->close(code,reason);
+        }
+    }
+    
+    /// Stop the endpoint's ASIO loop
+    /**
+     * Signals the endpoint to call the io_service stop member function. If 
+     * clean is true the endpoint will be put into an intermediate state where
+     * it signals all connections to close cleanly and only calls stop once that
+     * process is complete. Otherwise stop is called immediately and all 
+     * io_service operations will be aborted.
+     * 
+     * If clean is true stop will use code and reason for the close code and 
+     * close reason when it closes open connections. The default code is 
+     * 1001/Going Away and the default reason is blank.
+     *
+     * @param clean Whether or not to wait until all connections have been
+     * cleanly closed to stop io_service operations.
+     * @param code The WebSocket close code to send to remote clients as the
+     * reason that the connection is being closed.
+     * @param reason The WebSocket close reason to send to remote clients as the
+     * text reason that the connection is being closed. Must be valid UTF-8.
+     */
+    void stop(bool clean = true, 
+              close::status::value code = close::status::GOING_AWAY, 
+              const std::string& reason = "")
+    {
+        if (clean) {
+            alog().at(log::alevel::ENDPOINT) 
+            << "Endpoint is stopping cleanly" << log::endl;
+            
+            m_state = STOPPING;
+            close_all(code,reason);
+        } else {
+            alog().at(log::alevel::ENDPOINT) 
+            << "Endpoint is stopping immediately" << log::endl;
+            
+            m_io_service.stop();
+            m_state = STOPPED;
+        }
     }
 protected:
     /// Creates and returns a new connection
@@ -187,14 +257,23 @@ protected:
      * handler. The newly created connection is added to the endpoint's 
      * management list. The endpoint will retain this pointer until 
      * remove_connection is called to remove it.
+     *
+     * If the endpoint is in a state where it is trying to stop or has already
+     * stopped an empty shared pointer is returned.
      * 
-     * @returns A shared pointer to the newly created connection.
+     * @return A shared pointer to the newly created connection or an empty
+     * shared pointer if one could not be created.
      */
     connection_ptr create_connection() {
+        if (m_state == STOPPING || m_state == STOPPED) {
+            return connection_ptr();
+        }
+        
         connection_ptr new_connection(new connection_type(*this,get_handler()));
         m_connections.insert(new_connection);
         
-        alog().at(log::alevel::DEVEL) << "Connection created: count is now: " << m_connections.size() << log::endl;
+        alog().at(log::alevel::DEVEL) << "Connection created: count is now: " 
+                                      << m_connections.size() << log::endl;
         
         return new_connection;
     }
@@ -213,7 +292,17 @@ protected:
     void remove_connection(connection_ptr con) {
         m_connections.erase(con);
         
-        alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " << m_connections.size() << log::endl;
+        alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " 
+                                      << m_connections.size() << log::endl;
+        
+        if (m_state == STOPPING && m_connections.empty()) {
+            // If we are in the process of stopping and have reached zero
+            // connections stop the io_service.
+            stop(false);
+            alog().at(log::alevel::ENDPOINT) 
+                << "Endpoint has reached zero connections in STOPPING state. Stopping io_service now." 
+                << log::endl;
+        }
     }
     
     /// Gets a shared pointer to this endpoint's default connection handler
@@ -253,6 +342,14 @@ protected:
         }
     }
 private:
+    enum state {
+        IDLE = 0,
+        RUNNING = 1,
+        STOPPING = 2,
+        STOPPED = 3
+    };
+    
+    state                       m_state;
     handler_ptr                 m_handler;
     std::set<connection_ptr>    m_connections;
     alogger_type                m_alog;
