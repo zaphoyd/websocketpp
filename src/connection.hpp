@@ -154,10 +154,13 @@ public:
         write_message(msg);
     }
     
-    
+    // TODO: overloads without code or reason?
     void close(close::status::value code, const std::string& reason = "") {
-        // TODO: overloads without code or reason?
-        send_close(code, reason);
+        if (m_state == session::state::CONNECTING) {
+            terminate(true);
+        } else {
+            send_close(code, reason);
+        }
     }
     void ping(const std::string& payload) {
         send_ping(payload);
