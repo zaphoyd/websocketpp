@@ -59,6 +59,8 @@ namespace alevel {
     // Adds payloads to message logs. Note these can be long!
     static const value MESSAGE_PAYLOAD = 0x80;
     
+    // Notices about internal endpoint operations
+    static const value ENDPOINT = 0x100;
     
     // DEBUG values
     static const value DEBUG_HANDSHAKE = 0x8000;
