@@ -46,7 +46,7 @@ namespace websocketpp {
 class endpoint_base {
 protected:
     /// Start the run method of the endpoint's io_service object.
-    void run() {
+    void run_internal() {
         m_io_service.run();
     }
     

@@ -220,7 +220,7 @@ void server<endpoint>::listen(uint16_t port) {
     
     m_ws_endpoint.alog().at(log::alevel::DEVEL) << "role::server listening on port " << port << log::endl;
     
-    m_ws_endpoint.run();
+    m_ws_endpoint.run_internal();
 }
 
 template <class endpoint>
