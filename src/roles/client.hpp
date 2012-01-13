@@ -260,9 +260,7 @@ client<endpoint>::connect(const std::string& u) {
         // TODO: what kind of exception does client throw?
         throw "";
     }
-    
-    std::cout << "host: " << location->get_host() << std::endl;
-    
+        
     tcp::resolver::query query(location->get_host(),location->get_port_str());
     tcp::resolver::iterator iterator = m_resolver.resolve(query);
     
