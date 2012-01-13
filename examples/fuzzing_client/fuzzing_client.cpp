@@ -81,11 +81,11 @@ public:
         if (m_minor == 1) {
             fill_utf8(connection,true);
             m_start_time = boost::posix_time::microsec_clock::local_time();
-            connection->send(m_data,false);
+            connection->send(m_data,websocketpp::frame::opcode::TEXT);
         } else if (m_minor == 2) {
             fill_binary(connection,true);
             m_start_time = boost::posix_time::microsec_clock::local_time();
-            connection->send(m_data,true);
+            connection->send(m_data,websocketpp::frame::opcode::BINARY);
         } else {
             std::cout << " has unknown definition." << std::endl;
         }
@@ -129,7 +129,6 @@ public:
         // Check whether the echoed data matches exactly
         m_pass = (msg->get_payload() == m_data);
         
-        connection->recycle(msg);
         this->end(connection);
     }
 private:

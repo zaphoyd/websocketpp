@@ -79,7 +79,7 @@ public:
         // start timer
         start_time = boost::posix_time::microsec_clock::local_time();
         // send message
-        connection->send("abcd",true);
+        connection->send("abcd");
         // stop
     }
     
@@ -103,8 +103,6 @@ public:
         
         // stop timer
         // check if message was valid
-        
-        connection->recycle(msg);
     }
     
     void http(connection_ptr connection) {
