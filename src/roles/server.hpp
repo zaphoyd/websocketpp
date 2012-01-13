@@ -227,6 +227,11 @@ template <class endpoint>
 void server<endpoint>::start_accept() {
     connection_ptr con = m_ws_endpoint.create_connection();
     
+    if (con == connection_ptr()) {
+        // the endpoint is no longer capable of accepting new connections.
+        return;
+    }
+    
     m_acceptor.async_accept(
         con->get_raw_socket(),
         boost::bind(
@@ -253,6 +258,9 @@ void server<endpoint>::handle_accept(connection_ptr con,
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
             m_timer.async_wait(boost::bind(&type::start_accept,this));
             return;
+        } else if (error == boost::asio::error::operation_aborted) {
+            // the operation was canceled. This was probably due to the 
+            // io_service being stopped.
         } else {
             m_ws_endpoint.elog().at(log::elevel::ERROR) 
                 << "async_accept returned error: " << error 
