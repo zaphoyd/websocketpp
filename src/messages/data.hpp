@@ -152,7 +152,7 @@ public:
     
     data(pool_ptr p, size_t s);
     
-    void reset(frame::opcode::value opcode);
+    void reset(websocketpp::frame::opcode::value opcode);
     
     frame::opcode::value get_opcode() const;
     const std::string& get_payload() const;

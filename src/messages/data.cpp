@@ -57,7 +57,9 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
     }
     
     if (new_size > m_payload.capacity()) {
-        m_payload.reserve(std::max(new_size,static_cast<uint64_t>(2*m_payload.capacity())));
+        m_payload.reserve(
+            std::max(new_size, static_cast<uint64_t>(2*m_payload.capacity()))
+        );
     }
     
     for (i = 0; i < size; ++i) {
@@ -101,7 +103,7 @@ void data::process_character(unsigned char c) {
     m_payload.push_back(c);
 }
     
-void data::reset(frame::opcode::value opcode) {
+void data::reset(websocketpp::frame::opcode::value opcode) {
     m_opcode = opcode;
     m_masking_index = M_NOT_MASKED;
     m_payload.clear();

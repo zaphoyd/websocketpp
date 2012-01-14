@@ -77,7 +77,7 @@ public:
     void set_rsv1(bool b);
     void set_rsv2(bool b);
     void set_rsv3(bool b);
-    void set_opcode(frame::opcode::value op);
+    void set_opcode(websocketpp::frame::opcode::value op);
     void set_masked(bool masked,int32_t key);
     void set_payload_size(uint64_t size);
     // Complete will throw a processor::exception in the case that the 

@@ -97,7 +97,7 @@ void hybi_header::set_rsv2(bool b) {
 void hybi_header::set_rsv3(bool b) {
     set_header_bit(BPB0_RSV3,0,b);
 }
-void hybi_header::set_opcode(frame::opcode::value op) {
+void hybi_header::set_opcode(websocketpp::frame::opcode::value op) {
     m_header[0] &= (0xFF ^ BPB0_OPCODE); // clear op bits
     m_header[0] |= op; // set op bits
 }
