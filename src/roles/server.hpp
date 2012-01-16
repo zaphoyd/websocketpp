@@ -214,7 +214,7 @@ void server<endpoint>::listen(uint16_t port) {
     m_acceptor.open(m_endpoint.protocol());
     m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     m_acceptor.bind(m_endpoint);
-    m_acceptor.listen(200000);
+    m_acceptor.listen();
     
     this->start_accept();
     
