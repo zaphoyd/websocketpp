@@ -367,15 +367,17 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             throw http::exception("Recieved invalid HTTP Request",http::status_code::BAD_REQUEST);
         }
         
-        // TODO: is there a way to short circuit this or something?
+        // TODO: is there a way to short circuit this or something? 
+        // This is often useful but slow to generate.
         //m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
         
         std::string h = m_request.header("Upgrade");
         if (boost::ifind_first(h,"websocket")) {
+            // Version is stored in the Sec-WebSocket-Version header for all 
+            // versions after draft Hybi 00/Hixie 76. The absense of a version 
+            // header is assumed to mean Hybi 00.
             h = m_request.header("Sec-WebSocket-Version");
             if (h == "") {
-                // websocket upgrade is present but version is not.
-                // assume hybi00
                 m_version = 0;
             } else {
                 m_version = atoi(h.c_str());
@@ -384,27 +386,33 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
                 }
             }
             
-            // create a websocket processor
+            // Choose an appropriate websocket processor based on the version
             if (m_version == 0) {
-                //m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
+                m_connection.m_processor = processor::ptr(
+                    new processor::hybi_legacy<connection_type>(m_connection)
+                );
                 
+                // Hybi legacy requires some extra out of band bookkeeping that 
+                // future versions wont. We need to pull off an additional eight
+                // bytes after the /r/n/r/n and store them somewhere that the
+                // processor can find them.
                 char foo[9];
-                foo[8] = 0;
                 
                 request.get(foo,9);
                 
                 if (request.gcount() != 8) {
-                    throw http::exception("Missing Key3",http::status_code::BAD_REQUEST);
+                    throw http::exception("Missing Key3",
+                                          http::status_code::BAD_REQUEST);
                 }
                 m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
-                
-                //throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
-                m_connection.m_processor = processor::ptr(new processor::hybi_legacy<connection_type>(m_connection));
-            } else if (m_version == 7 ||
-                       m_version == 8 ||
-                       m_version == 13) {
-                m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
+            } else if (m_version == 7 || m_version == 8 || m_version == 13) {
+                m_connection.m_processor = processor::ptr(
+                    new processor::hybi<connection_type>(m_connection)
+                );
             } else {
+                // version does not match any processor we have avaliable. Send 
+                // an HTTP error and return the versions we do support in a the
+                // appropriate response header.
                 m_response.add_header("Sec-WebSocket-Version","13, 8, 7");
                 
                 throw(http::exception("Unsupported WebSocket version",http::status_code::BAD_REQUEST));
