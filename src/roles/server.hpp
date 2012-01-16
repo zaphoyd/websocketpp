@@ -339,7 +339,7 @@ void server<endpoint>::connection<connection_type>::async_init() {
         "\r\n\r\n",
         boost::bind(
             &type::handle_read_request,
-            m_connection.shared_from_this(), // shared from this?
+            m_connection.shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
         )
@@ -353,7 +353,8 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
 {
     if (error) {
         // log error
-        m_endpoint.elog().at(log::elevel::ERROR) << "Error reading HTTP request. code: " << error << log::endl;
+        m_endpoint.elog().at(log::elevel::ERROR) 
+            << "Error reading HTTP request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
     }
@@ -475,7 +476,7 @@ void server<endpoint>::connection<connection_type>::write_response() {
         // TODO: HTTP response
     }
     
-    m_response.replace_header("Server","WebSocket++/2011-11-18");
+    m_response.replace_header("Server","WebSocket++/0.2.0");
     
     std::string raw = m_response.raw();
     

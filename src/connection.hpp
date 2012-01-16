@@ -239,7 +239,9 @@ public:
 protected:  
     void handle_socket_init(const boost::system::error_code& error) {
         if (error) {
-            m_endpoint.elog().at(log::elevel::ERROR) << "Connection initialization failed, error code: " << error << log::endl;
+            m_endpoint.elog().at(log::elevel::ERROR) 
+                << "Socket initialization failed, error code: " << error 
+                << log::endl;
             this->terminate(false);
             return;
         }
@@ -255,20 +257,24 @@ public:
             if (error == boost::asio::error::eof) {         
                 // got unexpected EOF
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) << "Remote connection dropped unexpectedly" << log::endl;
+                m_endpoint.elog().at(log::elevel::ERROR) 
+                    << "Remote connection dropped unexpectedly" << log::endl;
                 terminate(false);
             } else if (error == boost::asio::error::operation_aborted) {
                 // got unexpected abort (likely our server issued an abort on
                 // all connections on this io_service)
                 
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) << "Terminating due to abort: " << error << log::endl;
+                m_endpoint.elog().at(log::elevel::ERROR) 
+                    << "Terminating due to abort: " << error << log::endl;
                 terminate(true);
             } else {
                 // Other unexpected error
                 
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) << "Terminating due to unknown error: " << error << log::endl;
+                m_endpoint.elog().at(log::elevel::ERROR) 
+                    << "Terminating due to unknown error: " << error 
+                    << log::endl;
                 terminate(false);
             }
         }
@@ -578,7 +584,8 @@ protected:
             // if we are in an inturrupted state and had nothing else to write
             // it is safe to terminate the connection.
             if (m_write_state == INTURRUPT) {
-                m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "Exit after inturrupt" << log::endl;
+                m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) 
+                    << "Exit after inturrupt" << log::endl;
                 terminate(false);
             }
         }
@@ -588,7 +595,9 @@ protected:
         if (error) {
             if (error == boost::asio::error::operation_aborted) {
                 // previous write was aborted
-                m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "handle_write was called with operation_aborted error" << log::endl;
+                m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) 
+                    << "handle_write was called with operation_aborted error" 
+                    << log::endl;
             } else {
                 log_error("Error writing frame data",error);
                 terminate(false);
@@ -597,7 +606,8 @@ protected:
         }
         
         if (m_write_queue.size() == 0) {
-            m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "handle_write called with empty queue" << log::endl;
+            m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) 
+                << "handle_write called with empty queue" << log::endl;
             return;
         }
         
@@ -614,7 +624,8 @@ protected:
     // terminate cleans up a connection and removes it from the endpoint's 
     // connection list.
     void terminate(bool failed_by_me) {
-        m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) << "terminate called" << log::endl;
+        m_endpoint.alog().at(log::alevel::DEBUG_CLOSE) 
+            << "terminate called" << log::endl;
         
         if (m_state == session::state::CLOSED) {
             // shouldn't be here
