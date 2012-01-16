@@ -59,23 +59,22 @@ public:
     }
     
     void handshake_response(const http::parser::request& request,http::parser::response& response) {
-        char key_final[16];
+        char key_final[17];
+        key_final[16] = 0;
         
-        // key1
+        // copy key1 into final key
         *reinterpret_cast<uint32_t*>(&key_final[0]) = 
             decode_client_key(request.header("Sec-WebSocket-Key1"));
-        
-        // key2
+                
+        // copy key2 into final key
         *reinterpret_cast<uint32_t*>(&key_final[4]) = 
             decode_client_key(request.header("Sec-WebSocket-Key2"));
-        
-        // key3
+                
+        // copy key3 into final key
         memcpy(&key_final[8],request.header("Sec-WebSocket-Key3").c_str(),8);
-        
-        // md5
-        m_key3 = key_final;
-        m_key3 = md5_hash_string(m_key3);
-        
+                
+        m_key3 = md5_hash_string(key_final);
+                
         response.add_header("Upgrade","websocket");
         response.add_header("Connection","Upgrade");
         
