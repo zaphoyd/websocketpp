@@ -59,8 +59,7 @@ public:
     }
     
     void handshake_response(const http::parser::request& request,http::parser::response& response) {
-        char key_final[17];
-        key_final[16] = 0;
+        char key_final[16];
         
         // copy key1 into final key
         *reinterpret_cast<uint32_t*>(&key_final[0]) = 
@@ -73,7 +72,7 @@ public:
         // copy key3 into final key
         memcpy(&key_final[8],request.header("Sec-WebSocket-Key3").c_str(),8);
                 
-        m_key3 = md5_hash_string(key_final);
+        m_key3 = md5_hash_string(std::string(key_final,16));
                 
         response.add_header("Upgrade","websocket");
         response.add_header("Connection","Upgrade");
