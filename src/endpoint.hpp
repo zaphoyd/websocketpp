@@ -121,8 +121,8 @@ public:
      * when creating new connections.
      */
     explicit endpoint(handler_ptr handler) 
-     : role_type(m_io_service),
-       socket_type(m_io_service),
+     : role_type(endpoint_base::m_io_service),
+       socket_type(endpoint_base::m_io_service),
        m_state(IDLE),
        m_handler(handler),
        m_pool(new message::pool<message::data>(1000)),
@@ -202,7 +202,7 @@ public:
                    const std::string& reason = "")
     {
         alog().at(log::alevel::ENDPOINT) 
-        << "Endpoint recieved signal to close all connections cleanly with code " 
+        << "Endpoint received signal to close all connections cleanly with code " 
         << code << " and reason " << reason << log::endl;
         
         typename std::set<connection_ptr>::iterator it;
@@ -245,7 +245,7 @@ public:
             alog().at(log::alevel::ENDPOINT) 
             << "Endpoint is stopping immediately" << log::endl;
             
-            m_io_service.stop();
+            endpoint_base::m_io_service.stop();
             m_state = STOPPED;
         }
     }
