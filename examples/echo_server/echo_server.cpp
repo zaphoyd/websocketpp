@@ -25,19 +25,15 @@
  * 
  */
 
-#include "../../src/endpoint.hpp"
-#include "../../src/roles/server.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include <cstring>
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> endpoint_type;
-typedef endpoint_type::handler_ptr handler_ptr;
+using websocketpp::server;
 
-class echo_server_handler : public endpoint_type::handler {
+class echo_server_handler : public server::handler {
 public:
-    typedef endpoint_type::connection_ptr connection_ptr;
-    
-    void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
+    void on_message(connection_ptr connection,message_ptr msg) {
         connection->send(msg->get_payload(),msg->get_opcode());
     }
 };
@@ -55,14 +51,14 @@ int main(int argc, char* argv[]) {
     }
     
     try {       
-        handler_ptr h(new echo_server_handler());
-        endpoint_type e(h);
+        server::handler::ptr h(new echo_server_handler());
+        server echo_endpoint(h);
         
-        e.alog().unset_level(websocketpp::log::alevel::ALL);
-        e.elog().unset_level(websocketpp::log::elevel::ALL);
+        echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
         std::cout << "Starting WebSocket echo server on port " << port << std::endl;
-        e.listen(port);
+        echo_endpoint.listen(port);
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }

@@ -25,22 +25,25 @@
  * 
  */
 
-#include "../../src/endpoint.hpp"
-#include "../../src/roles/server.hpp"
-#include "../../src/sockets/ssl.hpp"
+#include "../../src/sockets/tls.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include <cstring>
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
-typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
-typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
+//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
+//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
+//typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+//typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
+
+using websocketpp::server;
+using websocketpp::server_tls;
 
 template <typename endpoint_type>
 class echo_server_handler : public endpoint_type::handler {
 public:
     typedef echo_server_handler<endpoint_type> type;
-    typedef typename endpoint_type::connection_ptr connection_ptr;
+    typedef typename endpoint_type::handler::connection_ptr connection_ptr;
+    typedef typename endpoint_type::handler::message_ptr message_ptr;
     
     std::string get_password() const {
         return "test";
@@ -54,21 +57,21 @@ public:
                                  boost::asio::ssl::context::no_sslv2 |
                                  boost::asio::ssl::context::single_dh_use);
             context->set_password_callback(boost::bind(&type::get_password, this));
-            context->use_certificate_chain_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem");
-            context->use_private_key_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/server.pem", boost::asio::ssl::context::pem);
-            context->use_tmp_dh_file("/Users/zaphoyd/Documents/ZS/websocketpp/src/ssl/dh512.pem");
+            context->use_certificate_chain_file("../../src/ssl/server.pem");
+            context->use_private_key_file("../../src/ssl/server.pem", boost::asio::ssl::context::pem);
+            context->use_tmp_dh_file("../../src/ssl/dh512.pem");
         } catch (std::exception& e) {
             std::cout << e.what() << std::endl;
         }
         return context;
     }
     
-    void on_message(connection_ptr connection,websocketpp::message::data_ptr msg) {
-        connection->send(msg->get_payload(),msg->get_opcode());
+    void on_message(connection_ptr con,message_ptr msg) {
+        con->send(msg->get_payload(),msg->get_opcode());
     }
     
-    void http(connection_ptr connection) {
-        connection->set_body("HTTP Response!!");
+    void http(connection_ptr con) {
+        con->set_body("<!DOCTYPE html><html><head><title>WebSocket++ TLS certificate test</title></head><body><h1>WebSocket++ TLS certificate test</h1><p>This is an HTTP(S) page served by a WebSocket++ server for the purposes of confirming that certificates are working since browsers normally silently ignore certificate issues.</p></body></html>");
     }
 };
 
@@ -91,25 +94,25 @@ int main(int argc, char* argv[]) {
     
     try {
         if (tls) {
-            tls_handler_ptr h(new echo_server_handler<tls_endpoint_type>());
-            tls_endpoint_type e(h);
+            server_tls::handler::ptr handler(new echo_server_handler<server_tls>());
+            server_tls endpoint(handler);
             
-            e.alog().unset_level(websocketpp::log::alevel::ALL);
-            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+            endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
             
             std::cout << "Starting Secure WebSocket echo server on port " 
                       << port << std::endl;
-            e.listen(port);
+            endpoint.listen(port);
         } else {
-            plain_handler_ptr h(new echo_server_handler<plain_endpoint_type>());
-            plain_endpoint_type e(h);
+            server::handler::ptr handler(new echo_server_handler<server>());
+            server endpoint(handler);
             
-            e.alog().unset_level(websocketpp::log::alevel::ALL);
-            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+            endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
             
             std::cout << "Starting WebSocket echo server on port " 
                       << port << std::endl;
-            e.listen(port);
+            endpoint.listen(port);
         }
         
         

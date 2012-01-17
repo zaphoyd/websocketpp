@@ -36,3 +36,5 @@ examples/stress_client/stress_client
 examples/broadcast_server_tls/broadcast_server
 
 test/basic/perf
+
+examples/echo_server_tls/echo_server_tls

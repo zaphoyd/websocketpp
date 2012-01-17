@@ -25,34 +25,25 @@
  * 
  */
 
-#include "../../src/endpoint.hpp"
 #include "../../src/roles/client.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include <iostream>
 
-typedef websocketpp::endpoint<websocketpp::role::client,websocketpp::socket::plain> plain_endpoint_type;
-typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
-typedef plain_endpoint_type::connection_ptr connection_ptr;
+using websocketpp::client;
 
-class echo_client_handler : public plain_endpoint_type::handler {
+class echo_client_handler : public client::handler {
 public:
-    typedef echo_client_handler type;
-    typedef plain_endpoint_type::connection_ptr connection_ptr;
-    
-    void on_message(connection_ptr connection,websocketpp::message::data::ptr msg) {        
-        if (connection->get_resource() == "/getCaseCount") {
+    void on_message(connection_ptr con, message_ptr msg) {        
+        if (con->get_resource() == "/getCaseCount") {
             std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
             m_case_count = atoi(msg->get_payload().c_str());
         } else {
-            connection->send(msg->get_payload(),msg->get_opcode());
+            con->send(msg->get_payload(),msg->get_opcode());
         }
     }
     
-    void http(connection_ptr connection) {
-        //connection->set_body("HTTP Response!!");
-    }
-    
-    void on_fail(connection_ptr connection) {
+    void on_fail(connection_ptr con) {
         std::cout << "connection failed" << std::endl;
     }
     
@@ -63,23 +54,24 @@ public:
 int main(int argc, char* argv[]) {
     std::string uri = "ws://localhost:9001/";
     
-    if (argc > 2) {
-        std::cout << "Usage: `echo_client test_url`" << std::endl;
-    } else {
+    if (argc == 2) {
         uri = argv[1];
+        
+    } else if (argc > 2) {
+        std::cout << "Usage: `echo_client test_url`" << std::endl;
     }
     
     try {
-        plain_handler_ptr handler(new echo_client_handler());
-        connection_ptr connection;
-        plain_endpoint_type endpoint(handler);
+        client::handler::ptr handler(new echo_client_handler());
+        client::connection_ptr con;
+        client endpoint(handler);
         
         endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        connection = endpoint.connect(uri+"getCaseCount");
+        con = endpoint.connect(uri+"getCaseCount");
         
-        connection->add_request_header("User Agent","WebSocket++/0.2.0");
+        con->add_request_header("User Agent","WebSocket++/0.2.0");
         
         endpoint.run();
         
@@ -92,7 +84,7 @@ int main(int argc, char* argv[]) {
             
             url << uri << "/runCase?case=" << i << "&agent=\"WebSocket++/0.2.0\"";
                         
-            connection = endpoint.connect(url.str());
+            con = endpoint.connect(url.str());
             
             endpoint.run();
         }
