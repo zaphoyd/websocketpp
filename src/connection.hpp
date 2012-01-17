@@ -70,12 +70,14 @@ public:
     
     // get types that we need from our traits class
     typedef typename traits::type type;
+    typedef typename traits::ptr ptr;
     typedef typename traits::role_type role_type;
     typedef typename traits::socket_type socket_type;
     
     typedef endpoint endpoint_type;
     
     typedef typename endpoint_type::handler_ptr handler_ptr;
+    typedef typename endpoint_type::handler handler;
     
     // friends (would require C++11) this would enable connection::start to be 
     // protected instead of public.
@@ -744,6 +746,7 @@ template <
 struct connection_traits< connection<endpoint,role,socket> > {
     // type of the connection itself
     typedef connection<endpoint,role,socket> type;
+    typedef boost::shared_ptr<type> ptr;
     
     // types of the connection policies
     typedef endpoint endpoint_type;

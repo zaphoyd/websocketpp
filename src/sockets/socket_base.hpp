@@ -43,6 +43,7 @@
  
  */
 
+#include <boost/system/error_code.hpp>
 #include <boost/function.hpp>
 
 namespace websocketpp {

@@ -30,6 +30,30 @@
 
 #include "common.hpp"
 #include "endpoint.hpp"
-#include "sockets/plain.hpp"
+
+namespace websocketpp {
+#ifdef WEBSOCKETPP_ROLE_SERVER_HPP
+    #ifdef WEBSOCKETPP_SOCKET_PLAIN_HPP
+        typedef websocketpp::endpoint<websocketpp::role::server,
+                                      websocketpp::socket::plain> server;
+    #endif
+    #ifdef WEBSOCKETPP_SOCKET_TLS_HPP
+        typedef websocketpp::endpoint<websocketpp::role::server,
+                                      websocketpp::socket::tls> server_tls;
+    #endif
+#endif
+
+
+#ifdef WEBSOCKETPP_ROLE_CLIENT_HPP
+    #ifdef WEBSOCKETPP_SOCKET_PLAIN_HPP
+        typedef websocketpp::endpoint<websocketpp::role::client,
+                                      websocketpp::socket::plain> client;
+    #endif
+    #ifdef WEBSOCKETPP_SOCKET_TLS_HPP
+        typedef websocketpp::endpoint<websocketpp::role::client,
+                                      websocketpp::socket::tls> client_tls;
+    #endif
+#endif
+} // namespace websocketpp
 
 #endif // WEBSOCKETPP_HPP

@@ -80,6 +80,8 @@ public:
     
     /// The type of the endpoint itself.
     typedef typename traits::type type;
+    /// The type of a shared pointer to the endpoint.
+    typedef typename traits::ptr ptr;
     /// The type of the role policy.
     typedef typename traits::role_type role_type;
     /// The type of the socket policy.
@@ -370,6 +372,7 @@ template <
 struct endpoint_traits< endpoint<role, socket, logger> > {
     /// The type of the endpoint itself.
     typedef endpoint<role,socket,logger> type;
+    typedef boost::shared_ptr<type> ptr;
     
     /// The type of the role policy.
     typedef role< type > role_type;
@@ -400,6 +403,13 @@ struct endpoint_traits< endpoint<role, socket, logger> > {
                     public socket_type::handler_interface
     {
     public:
+        // convenience typedefs for use in end application handlers.
+        // TODO: figure out how to not duplicate the definition of connection_ptr
+        typedef boost::shared_ptr<handler> ptr;
+        typedef typename connection_type::ptr connection_ptr;
+        typedef typename message::data::ptr message_ptr;
+        
+        
         /// on_load is the first callback called for a handler after a new
         /// connection has been transferred to it mid flight.
         /**
