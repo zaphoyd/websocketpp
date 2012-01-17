@@ -222,7 +222,6 @@
 		B62A5A561473EBE8005F9EB0 /* client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = client.hpp; path = src/roles/client.hpp; sourceTree = "<group>"; };
 		B62A5A571473EBE8005F9EB0 /* server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = server.hpp; path = src/roles/server.hpp; sourceTree = "<group>"; };
 		B62A5A581473EBF1005F9EB0 /* plain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = plain.hpp; path = src/sockets/plain.hpp; sourceTree = "<group>"; };
-		B62A5A591473EBF1005F9EB0 /* ssl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = ssl.hpp; path = src/sockets/ssl.hpp; sourceTree = "<group>"; };
 		B62A5A6114755443005F9EB0 /* socket_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = socket_base.hpp; path = src/sockets/socket_base.hpp; sourceTree = "<group>"; };
 		B62A5A6B147748B2005F9EB0 /* hybi.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi.hpp; sourceTree = "<group>"; };
 		B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = hybi_legacy.hpp; sourceTree = "<group>"; };
@@ -293,6 +292,8 @@
 		B6CF18161437C370009295BE /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B6CF181C1437C397009295BE /* echo_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6CF182B1437C3CA009295BE /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
+		B6DE901314C4D875009A1591 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		B6DE901514C5BED0009A1591 /* tls.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = tls.hpp; path = src/sockets/tls.hpp; sourceTree = "<group>"; };
 		B6DF1C691434A7A30029A1B1 /* libwebsocketpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libwebsocketpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libwebsocketpp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1C791434AB740029A1B1 /* network_utilities.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = network_utilities.cpp; path = src/network_utilities.cpp; sourceTree = "<group>"; };
@@ -482,7 +483,7 @@
 			children = (
 				B62A5A6114755443005F9EB0 /* socket_base.hpp */,
 				B62A5A581473EBF1005F9EB0 /* plain.hpp */,
-				B62A5A591473EBF1005F9EB0 /* ssl.hpp */,
+				B6DE901514C5BED0009A1591 /* tls.hpp */,
 			);
 			name = sockets;
 			sourceTree = "<group>";
@@ -646,6 +647,7 @@
 				B6DF1CC61435ED380029A1B1 /* examples */,
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
 				B6138791145CA6F700ED9B19 /* Makefile */,
+				B6DE901314C4D875009A1591 /* readme.txt */,
 				B64E12D014BDE132006F20F0 /* test */,
 				B6DF1C7F1434ABB70029A1B1 /* src */,
 				B6DF1C6A1434A7A30029A1B1 /* Products */,

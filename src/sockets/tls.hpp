@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_SOCKET_SSL_HPP
-#define WEBSOCKETPP_SOCKET_SSL_HPP
+#ifndef WEBSOCKETPP_SOCKET_TLS_HPP
+#define WEBSOCKETPP_SOCKET_TLS_HPP
 
 #include "socket_base.hpp"
 
@@ -40,11 +40,11 @@ namespace websocketpp {
 namespace socket {
 
 template <typename endpoint_type>
-class ssl {
+class tls {
 public:
-    typedef ssl<endpoint_type> type;
-    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
-    typedef boost::shared_ptr<ssl_socket> ssl_socket_ptr;
+    typedef tls<endpoint_type> type;
+    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> tls_socket;
+    typedef boost::shared_ptr<tls_socket> tls_socket_ptr;
     
     // should be private friended
     boost::asio::io_service& get_io_service() {
@@ -52,7 +52,7 @@ public:
     }
     
     // should be private friended?
-    ssl_socket::handshake_type get_handshake_type() {
+    tls_socket::handshake_type get_handshake_type() {
         if (static_cast< endpoint_type* >(this)->is_server()) {
             return boost::asio::ssl::stream_base::server;
         } else {
@@ -76,11 +76,11 @@ public:
     class connection {
     public:
         // should these two be public or protected. If protected, how?
-        ssl_socket::lowest_layer_type& get_raw_socket() {
+        tls_socket::lowest_layer_type& get_raw_socket() {
             return m_socket_ptr->lowest_layer();
         }
         
-        ssl_socket& get_socket() {
+        tls_socket& get_socket() {
             return *m_socket_ptr;
         }
         
@@ -88,7 +88,7 @@ public:
             return true;
         }
     protected:
-        connection(ssl<endpoint_type>& e)
+        connection(tls<endpoint_type>& e)
          : m_endpoint(e),
            m_connection(static_cast< connection_type& >(*this)) {}
         
@@ -99,7 +99,7 @@ public:
                 throw "handler was unable to init tls, connection error";
             }
             
-            m_socket_ptr = ssl_socket_ptr(new ssl_socket(m_endpoint.get_io_service(),*m_context_ptr));
+            m_socket_ptr = tls_socket_ptr(new tls_socket(m_endpoint.get_io_service(),*m_context_ptr));
         }
         
         void async_init(boost::function<void(const boost::system::error_code&)> callback)
@@ -140,18 +140,18 @@ public:
         }
     private:
         boost::shared_ptr<boost::asio::ssl::context>    m_context_ptr;
-        ssl_socket_ptr                                  m_socket_ptr;
-        ssl<endpoint_type>&                             m_endpoint;
+        tls_socket_ptr                                  m_socket_ptr;
+        tls<endpoint_type>&                             m_endpoint;
         connection_type&                                m_connection;
     };
 protected:
-    ssl (boost::asio::io_service& m) : m_io_service(m) {}
+    tls (boost::asio::io_service& m) : m_io_service(m) {}
 private:
     boost::asio::io_service&    m_io_service;
-    ssl_socket::handshake_type  m_handshake_type;
+    tls_socket::handshake_type  m_handshake_type;
 };
     
 } // namespace socket
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_SOCKET_SSL_HPP
+#endif // WEBSOCKETPP_SOCKET_TLS_HPP
