@@ -211,7 +211,7 @@ public:
         // close can call terminate immediately which removes the connection
         // from m_connections, invalidating the iterator.
         while(!m_connections.empty()) {
-            (m_connections->begin())->close(code,reason);
+            (*m_connections.begin())->close(code,reason);
         }
     }
     
