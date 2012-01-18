@@ -207,10 +207,11 @@ public:
         << "Endpoint received signal to close all connections cleanly with code " 
         << code << " and reason " << reason << log::endl;
         
-        typename std::set<connection_ptr>::iterator it;
-        
-        for (it = m_connections.begin(); it != m_connections.end(); it++) {
-            (*it)->close(code,reason);
+        // TODO: is there a more elegant way to do this? In some code paths 
+        // close can call terminate immediately which removes the connection
+        // from m_connections, invalidating the iterator.
+        while(!m_connections.empty()) {
+            (m_connections->begin())->close(code,reason);
         }
     }
     
