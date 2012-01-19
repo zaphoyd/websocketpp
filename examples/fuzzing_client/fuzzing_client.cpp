@@ -232,7 +232,7 @@ public:
         std::cout << "Test 9." << m_minor << "." << m_subtest;
         
         // Get a message buffer from the connection
-        message_ptr msg = con->get_data_message();
+        m_msg = con->get_data_message();
         
         // reserve space in our local data buffer
         m_data.reserve(m_test_sizes[m_subtest-1]);
@@ -241,36 +241,46 @@ public:
         // appropriate types of random data.
         if (m_minor == 7) {
             fill_utf8(m_data,m_test_sizes[m_subtest-1],true);
-            msg->reset(websocketpp::frame::opcode::TEXT);
+            m_msg->reset(websocketpp::frame::opcode::TEXT);
         } else if (m_minor == 8) {
             fill_binary(m_data,m_test_sizes[m_subtest-1],true);
-            msg->reset(websocketpp::frame::opcode::BINARY);
+            m_msg->reset(websocketpp::frame::opcode::BINARY);
         } else {
             std::cout << " has unknown definition." << std::endl;
             return;
         }
         
-        msg->set_payload(m_data);
+        m_msg->set_payload(m_data);
         
         // start test timer with 60-480 second timeout based on test length
         start(con,m_test_timeouts[m_subtest-1]);
         
+        con->send(m_msg);
+        
         // send 1000 copies of prepared message
-        for (int i = 0; i < m_iterations; i++) {
+        /*for (int i = 0; i < m_iterations; i++) {
             con->send(msg);
-        }
+        }*/
     }
     
     void on_message(connection_ptr con, message_ptr msg) {
         if (msg->get_payload() == m_data) {
             m_acks++;
+        } else {
+            m_end_time = boost::posix_time::microsec_clock::local_time();
+            m_timer->cancel();
+            m_msg.reset();
+            this->end(con);
         }
         
         if (m_acks == m_iterations) {
             m_pass = PASS;
             m_end_time = boost::posix_time::microsec_clock::local_time();
             m_timer->cancel();
+            m_msg.reset();
             this->end(con);
+        } else {
+            con->send(m_msg);
         }
     }
 private:
@@ -280,6 +290,7 @@ private:
     size_t      m_test_sizes[6];
     std::string m_data;
     int         m_acks;
+    message_ptr m_msg;
     
 };
 
