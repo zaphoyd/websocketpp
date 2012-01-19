@@ -8,9 +8,9 @@ CXX		?= c++
 SHARED  ?= "1"
 
 ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lwebsocketpp
+	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_date_time -lboost_program_options -lpthread -lwebsocketpp
 else
-	LDFLAGS := $(LDFLAGS) ../../libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a 
+	LDFLAGS := $(LDFLAGS) ../../libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a -lpthread
 endif
 
 echo_server: echo_server.o
