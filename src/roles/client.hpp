@@ -187,15 +187,15 @@ public:
     class handler_interface {
     public:
         // Required
-        virtual void on_open(connection_ptr connection) {};
-        virtual void on_close(connection_ptr connection) {};
-        virtual void on_fail(connection_ptr connection) {}
+        virtual void on_open(connection_ptr con) {}
+        virtual void on_close(connection_ptr con) {}
+        virtual void on_fail(connection_ptr con) {}
         
-        virtual void on_message(connection_ptr connection,message::data_ptr) {};
+        virtual void on_message(connection_ptr con,message::data_ptr) {}
         
         // Optional
-        virtual bool on_ping(connection_ptr connection,std::string) {return true;}
-        virtual void on_pong(connection_ptr connection,std::string) {}
+        virtual bool on_ping(connection_ptr con,std::string) {return true;}
+        virtual void on_pong(connection_ptr con,std::string) {}
         
     };
     

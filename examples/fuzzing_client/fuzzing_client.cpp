@@ -62,7 +62,16 @@ public:
                 std::cout << " fails in " << len.length() << std::endl;
                 break;
             case PASS:
-                std::cout << " passes in " << len.length() << std::endl;
+                std::cout << " passes in " << len.length();
+                
+                if (m_iterations > 1) {
+                    std::cout << " (avg: " 
+                        << (len.length().total_milliseconds())/m_iterations 
+                        << "ms)";
+                }
+                
+                std::cout << std::endl;
+                
                 break;
             case TIME_OUT:
                 std::cout << " times out in " << len.length() << std::endl;
@@ -114,6 +123,13 @@ public:
         m_pass = TIME_OUT;
         this->end(con);
     }
+    
+    void on_close(connection_ptr con) {
+        //std::cout << " fails in " << len.length() << std::endl;
+    }
+    void on_fail(connection_ptr con) {
+        std::cout << " fails to connect." << std::endl;
+    }
 protected:
     enum status {
         FAIL = 0,
@@ -122,6 +138,7 @@ protected:
     };
     
     status                      m_pass;
+    int                         m_iterations;
     boost::posix_time::ptime    m_start_time;
     boost::posix_time::ptime    m_end_time;
     boost::shared_ptr<boost::asio::deadline_timer> m_timer;
@@ -130,7 +147,10 @@ protected:
 // test class for 9.1.* and 9.2.*
 class test_9_1_X : public test_case_handler {
 public: 
-    test_9_1_X(int minor, int subtest) : m_minor(minor),m_subtest(subtest){
+    test_9_1_X(int minor, int subtest) 
+     : m_minor(minor),
+       m_subtest(subtest)
+    {
         // needs more C++11 intializer lists =(
         m_test_sizes[0] = 65536;
         m_test_sizes[1] = 262144;
@@ -138,6 +158,8 @@ public:
         m_test_sizes[3] = 4194304;
         m_test_sizes[4] = 8388608;
         m_test_sizes[5] = 16777216;
+        
+        m_iterations = 1;
     }
     
     void on_open(connection_ptr con) {
@@ -186,7 +208,6 @@ public:
     test_9_7_X(int minor, int subtest) 
      : m_minor(minor),
        m_subtest(subtest),
-       m_iterations(1000),
        m_acks(0)
     {
         // needs more C++11 intializer lists =(
@@ -203,6 +224,8 @@ public:
         m_test_timeouts[3] = 120000;
         m_test_timeouts[4] = 240000;
         m_test_timeouts[5] = 480000;
+        
+        m_iterations = 1000;
     }
     
     void on_open(connection_ptr con) {
@@ -256,7 +279,6 @@ private:
     int         m_test_timeouts[6];
     size_t      m_test_sizes[6];
     std::string m_data;
-    int         m_iterations;
     int         m_acks;
     
 };
@@ -275,11 +297,11 @@ int main(int argc, char* argv[]) {
     std::vector<client::handler_ptr>  tests;
     
     // 9.1.x and 9.2.x tests
-    for (int i = 1; i <= 2; i++) {
+    /*for (int i = 1; i <= 2; i++) {
         for (int j = 1; j <= 6; j++) {
             tests.push_back(client::handler_ptr(new test_9_1_X(i,j)));
         }
-    }
+    }*/
     
     // 9.7.x and 9.8.x tests
     for (int i = 7; i <= 8; i++) {

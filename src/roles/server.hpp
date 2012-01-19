@@ -162,16 +162,16 @@ public:
     // handler interface callback base class
     class handler_interface {
     public:
-        virtual void validate(connection_ptr connection) {}
-        virtual void on_open(connection_ptr connection) {}
-        virtual void on_close(connection_ptr connection) {}
-        virtual void on_fail(connection_ptr connection) {}
+        virtual void validate(connection_ptr con) {}
+        virtual void on_open(connection_ptr con) {}
+        virtual void on_close(connection_ptr con) {}
+        virtual void on_fail(connection_ptr con) {}
         
-        virtual void on_message(connection_ptr connection,message::data_ptr) {};
+        virtual void on_message(connection_ptr con,message::data_ptr) {}
         
-        virtual bool on_ping(connection_ptr connection,std::string) {return true;}
-        virtual void on_pong(connection_ptr connection,std::string) {}
-        virtual void http(connection_ptr connection) {}
+        virtual bool on_ping(connection_ptr con,std::string) {return true;}
+        virtual void on_pong(connection_ptr con,std::string) {}
+        virtual void http(connection_ptr con) {}
     };
     
     server(boost::asio::io_service& m) 
