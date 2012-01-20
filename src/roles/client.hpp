@@ -510,15 +510,15 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
 template <class endpoint>
 template <class connection_type>
 void client<endpoint>::connection<connection_type>::log_open_result() {
-    /*std::stringstream version;
+    std::stringstream version;
     version << "v" << m_version << " ";
-    
+        
     m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
     << m_connection.get_raw_socket().remote_endpoint() << " "
     << (m_version == -1 ? "" : version.str())
-    << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+    << (get_request_header("Server") == "" ? "NULL" : get_request_header("Server")) 
     << " " << m_uri->get_resource() << " " << m_response.get_status_code() 
-    << log::endl;*/
+    << log::endl;
 }
     
 } // namespace role
