@@ -208,6 +208,8 @@ private:
 };
 
 // server<endpoint> Implimentation
+// TODO: protect listen from being called twice or in the wrong state.
+// TODO: provide a way to stop/reset the server endpoint
 template <class endpoint>
 void server<endpoint>::listen(uint16_t port) {
     m_endpoint.port(port);
@@ -229,6 +231,9 @@ void server<endpoint>::start_accept() {
     
     if (con == connection_ptr()) {
         // the endpoint is no longer capable of accepting new connections.
+        m_ws_endpoint.alog().at(log::alevel::CONNECT) 
+        << "Connection refused because endpoint is out of resources or closing." 
+        << log::endl;
         return;
     }
     
@@ -554,21 +559,23 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     boost::system::error_code ec;
     boost::asio::ip::tcp::endpoint ep = m_connection.get_raw_socket().remote_endpoint(ec);
     if (ec) {
-        // An error occurred.
-        //remote = "Unknown";
-        //ignore?
-        m_endpoint.elog().at(log::elevel::WARN) << "Error getting remote endpoint. code: " << ec << log::endl;
-    } else {
-        
+        m_endpoint.elog().at(log::elevel::WARN) 
+            << "Error getting remote endpoint. code: " << ec << log::endl;
     }
     
+    m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection ";
     
-    m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection "
-    << ep << " "
-    << (m_version == -1 ? "" : version.str())
-    << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
-    << " " << (m_uri ? m_uri->get_resource() : "uri is NULL") << " " << m_response.get_status_code() 
-    << log::endl;
+    if (ec) {
+        m_endpoint.alog().at(log::alevel::CONNECT) << "Unknown";
+    } else {
+        m_endpoint.alog().at(log::alevel::CONNECT) << ep;
+    }
+    
+    m_endpoint.alog().at(log::alevel::CONNECT) << " "
+        << (m_version == -1 ? "" : version.str())
+        << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
+        << " " << (m_uri ? m_uri->get_resource() : "uri is NULL") << " " 
+        << m_response.get_status_code() << log::endl;
 }
     
 } // namespace role 
