@@ -30,6 +30,7 @@
 
 #include "../endpoint.hpp"
 #include "../uri.hpp"
+#include "../shared_const_buffer.hpp"
 
 #ifndef __STDC_LIMIT_MACROS
   #define __STDC_LIMIT_MACROS
@@ -361,13 +362,18 @@ void client<endpoint>::connection<connection_type>::write_request() {
     m_request.replace_header("Sec-WebSocket-Key",m_handshake_key);
     m_request.replace_header("User Agent","WebSocket++/2011-12-06");
     
-    std::string raw = m_request.raw();
+    // TODO: generating this raw request involves way too much copying in cases
+    //       without string/vector move semantics.
+    shared_const_buffer buffer(m_request.raw());
     
-    m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
+    //std::string raw = m_request.raw();
+    
+    //m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
     
     boost::asio::async_write(
         m_connection.get_socket(),
-        boost::asio::buffer(raw),
+        //boost::asio::buffer(raw),
+        buffer,
         boost::bind(
             &type::handle_write_request,
             m_connection.shared_from_this(),

@@ -229,6 +229,7 @@
 		B62A5A6F14774CD5005F9EB0 /* uri.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = src/uri.hpp; sourceTree = "<group>"; };
 		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
+		B63E51A814C9A5790006BF9A /* shared_const_buffer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = shared_const_buffer.hpp; path = src/shared_const_buffer.hpp; sourceTree = "<group>"; };
 		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
@@ -685,17 +686,18 @@
 				B62A5A6A147748B2005F9EB0 /* processors */,
 				B62A5A71147759EA005F9EB0 /* common.hpp */,
 				B62A5A511473EBB0005F9EB0 /* connection.hpp */,
+				B62A5A521473EBB0005F9EB0 /* endpoint.hpp */,
+				B6DF1C7B1434AB920029A1B1 /* network_utilities.hpp */,
+				B6DF1C791434AB740029A1B1 /* network_utilities.cpp */,
+				B63E51A814C9A5790006BF9A /* shared_const_buffer.hpp */,
 				B62A5A6F14774CD5005F9EB0 /* uri.hpp */,
 				B6727428148517180029CF3E /* uri.cpp */,
-				B62A5A521473EBB0005F9EB0 /* endpoint.hpp */,
 				B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */,
 				B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */,
 				B6FE8D1414686A6D00B32547 /* md5 */,
 				B6DF1C8E1434AC3E0029A1B1 /* utf8_validator */,
 				B6DF1C871434ABF30029A1B1 /* sha1 */,
 				B6DF1C801434ABE20029A1B1 /* base64 */,
-				B6DF1C791434AB740029A1B1 /* network_utilities.cpp */,
-				B6DF1C7B1434AB920029A1B1 /* network_utilities.hpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
