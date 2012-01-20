@@ -369,7 +369,7 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
         
         if (!m_request.parse_complete(request)) {
             // not a valid HTTP request/response
-            throw http::exception("Recieved invalid HTTP Request",http::status_code::BAD_REQUEST);
+            throw http::exception("Received invalid HTTP Request",http::status_code::BAD_REQUEST);
         }
         
         // TODO: is there a way to short circuit this or something? 
