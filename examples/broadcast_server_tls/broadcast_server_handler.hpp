@@ -28,9 +28,8 @@
 #ifndef WEBSOCKETPP_BROADCAST_SERVER_HANDLER_HPP
 #define WEBSOCKETPP_BROADCAST_SERVER_HANDLER_HPP
 
-#include "../../src/endpoint.hpp"
-#include "../../src/roles/server.hpp"
-#include "../../src/sockets/ssl.hpp"
+#include "../../src/sockets/tls.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include "broadcast_handler.hpp"
 #include "broadcast_admin_handler.hpp"

@@ -30,9 +30,8 @@
 
 #include "wscmd.hpp"
 
-#include "../../src/endpoint.hpp"
-#include "../../src/roles/server.hpp"
-#include "../../src/sockets/ssl.hpp"
+#include "../../src/sockets/tls.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include "../../src/md5/md5.hpp"
 

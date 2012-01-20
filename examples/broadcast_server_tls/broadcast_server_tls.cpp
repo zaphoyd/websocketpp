@@ -25,9 +25,9 @@
  * 
  */
 
-#include "../../src/endpoint.hpp"
-#include "../../src/roles/server.hpp"
-#include "../../src/sockets/ssl.hpp"
+
+#include "../../src/sockets/tls.hpp"
+#include "../../src/websocketpp.hpp"
 
 #include "broadcast_server_handler.hpp"
 
@@ -38,11 +38,14 @@
 
 #include <sys/resource.h>
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
-typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
+//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
+//typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
 
-typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
-typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
+//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
+//typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
+
+using websocketpp::server;
+using websocketpp::server_tls;
 
 int main(int argc, char* argv[]) {
     unsigned short port = 9002;
@@ -96,25 +99,25 @@ int main(int argc, char* argv[]) {
     
     try {
         if (tls) {
-            tls_handler_ptr h(new websocketpp::broadcast::server_handler<tls_endpoint_type>());
-            tls_endpoint_type e(h);
+            server_tls::handler_ptr handler(new websocketpp::broadcast::server_handler<server_tls>());
+            server_tls endpoint(handler);
             
-            e.alog().unset_level(websocketpp::log::alevel::ALL);
-            e.elog().set_level(websocketpp::log::elevel::ALL);
+            endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+            endpoint.elog().set_level(websocketpp::log::elevel::ALL);
             
             std::cout << "Starting Secure WebSocket broadcast server on port " << port << std::endl;
-            e.listen(port);
+            endpoint.listen(port);
         } else {
-            plain_handler_ptr h(new websocketpp::broadcast::server_handler<plain_endpoint_type>());
-            plain_endpoint_type e(h);
+            server::handler_ptr handler(new websocketpp::broadcast::server_handler<server>());
+            server endpoint(handler);
             
-            e.alog().unset_level(websocketpp::log::alevel::ALL);
-            e.elog().set_level(websocketpp::log::elevel::ALL);
+            endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+            endpoint.elog().set_level(websocketpp::log::elevel::ALL);
             
-            //e.alog().set_level(websocketpp::log::alevel::DEVEL);
+            //endpoint.alog().set_level(websocketpp::log::alevel::DEVEL);
             
             std::cout << "Starting WebSocket broadcast server on port " << port << std::endl;
-            e.listen(port);
+            endpoint.listen(port);
         }
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
