@@ -200,8 +200,7 @@ public:
     };
     
     client (boost::asio::io_service& m) 
-     : m_state(UNINITIALIZED),
-       m_endpoint(static_cast< endpoint_type& >(*this)),
+     : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
        m_resolver(m),
        m_gen(m_rng,boost::random::uniform_int_distribution<>(INT32_MIN,
@@ -210,33 +209,30 @@ public:
     connection_ptr connect(const std::string& u);
     
     // TODO: add a `perpetual` option
+    // TODO: error handling for being called in alternate states
+    // TODO: run should only be callable from `STOPPED` state
     void run() {
         m_io_service.run();
     }
     
+    // TODO: error handling for being called in alternate states
+    // TODO: reset should only be callable from `RUNNING` state and should
+    //       clean up existing connections.
     void reset() {
         m_io_service.reset();
     }
     
 protected:
-    bool is_server() {
+    bool is_server() const {
         return false;
     }
     int32_t rand() {
         return m_gen();
     }
 private:
-    enum state {
-        UNINITIALIZED = 0,
-        INITIALIZED = 1,
-        CONNECTING = 2,
-        CONNECTED = 3
-    };
-    
     void handle_connect(connection_ptr con, 
                         const boost::system::error_code& error);
     
-    state                       m_state;
     endpoint_type&              m_endpoint;
     boost::asio::io_service&    m_io_service;
     tcp::resolver               m_resolver;
@@ -282,7 +278,6 @@ client<endpoint>::connect(const std::string& u) {
             boost::asio::placeholders::error
         )
     ); 
-    m_state = CONNECTING;
     
     return con;
 }
@@ -295,7 +290,6 @@ void client<endpoint>::handle_connect(connection_ptr con,
         m_endpoint.alog().at(log::alevel::CONNECT)
             << "Successful connection" << log::endl;
         
-        m_state = CONNECTED;
         con->start();
     } else {
         if (error == boost::system::errc::connection_refused) {
