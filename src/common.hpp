@@ -153,7 +153,9 @@ namespace websocketpp {
             GENERIC = 0,
             // send attempted when endpoint write queue was full
             SEND_QUEUE_FULL = 1,
-            PAYLOAD_VIOLATION = 2
+            PAYLOAD_VIOLATION = 2,
+            ENDPOINT_UNSECURE = 3,
+            ENDPOINT_UNAVAILABLE = 4
         };
     }
     

@@ -253,18 +253,23 @@ private:
 template <class endpoint>
 typename endpoint_traits<endpoint>::connection_ptr
 client<endpoint>::connect(const std::string& u) {
-    // TODO: will throw, should we catch and wrap?
+    // TODO: uri constructor will throw, should we catch and wrap?
     uri_ptr location(new uri(u));
     
     if (location->get_secure() && !m_endpoint.is_secure()) {
-        // TODO: what kind of exception does client throw?
-        throw "";
+        throw websocketpp::exception("Endpoint doesn't support secure connections.",websocketpp::error::ENDPOINT_UNSECURE);
     }
         
     tcp::resolver::query query(location->get_host(),location->get_port_str());
     tcp::resolver::iterator iterator = m_resolver.resolve(query);
     
     connection_ptr con = m_endpoint.create_connection();
+    
+    if (!con) {
+        throw websocketpp::exception("Endpoint is unavailable.",
+                                     websocketpp::error::ENDPOINT_UNAVAILABLE);
+    }
+    
     con->set_uri(location);
     
     boost::asio::async_connect(
