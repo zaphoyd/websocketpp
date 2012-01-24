@@ -410,6 +410,7 @@ struct endpoint_traits< endpoint<role, socket, logger> > {
         typedef typename connection_type::ptr connection_ptr;
         typedef typename message::data::ptr message_ptr;
         
+        virtual ~handler() {}
         
         /// on_load is the first callback called for a handler after a new
         /// connection has been transferred to it mid flight.

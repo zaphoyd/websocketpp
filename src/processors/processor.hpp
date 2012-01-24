@@ -84,6 +84,7 @@ namespace processor {
     
 class processor_base {
 public:
+    virtual ~processor_base() {}
     // validate client handshake
     // validate server handshake
     
