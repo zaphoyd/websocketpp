@@ -65,19 +65,15 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
     for (i = 0; i < size; ++i) {
         if (input.good()) {
             c = input.get();
-        } else if (input.eof()) {
-            break;
-        } else {
-            // istream read error? throw?
-            throw processor::exception("istream read error",
-                                       processor::error::FATAL_ERROR);
-        }
-        if (input.good()) {
+            
+            if (input.fail()) {
+                throw processor::exception("istream read error",
+                                           processor::error::FATAL_ERROR);
+            }
             process_character(c);
         } else if (input.eof()) {
             break;
         } else {
-            // istream read error? throw?
             throw processor::exception("istream read error",
                                        processor::error::FATAL_ERROR);
         }
@@ -117,6 +113,7 @@ void data::complete() {
             throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
         }
     }
+    
 }
 
 void data::validate_payload() {

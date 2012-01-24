@@ -76,6 +76,7 @@ void hybi_header::consume(std::istream& input) {
         default:
             break;
     }
+    //std::cout << "header so far: " << to_hex(std::string(m_header,MAX_HEADER_LENGTH)) << std::endl;
 }
 uint64_t hybi_header::get_bytes_needed() const {
     return m_bytes_needed;

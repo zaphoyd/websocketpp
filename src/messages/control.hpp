@@ -63,26 +63,23 @@ public:
         
         for (i = 0; i < size; ++i) {
             if (input.good()) {
-               c = input.get(); 
-            } else if (input.eof()) {
-                break;
-            } else {
-                // istream read error? throw?
-                 throw processor::exception("istream read error",processor::error::FATAL_ERROR);
-            }
-            if (input.good()) {
-                // process c
+                c = input.get();
+               
+                if (input.fail()) {
+                    throw processor::exception("istream read error",
+                                               processor::error::FATAL_ERROR);
+                }
+                
                 if (m_masking_index >= 0) {
                     c = c ^ m_masking_key[(m_masking_index++)%4];
                 }
                 
-                // add c to payload 
                 m_payload.push_back(c);
+               
             } else if (input.eof()) {
                 break;
             } else {
-                // istream read error? throw?
-                throw processor::exception("istream read error",processor::error::FATAL_ERROR);
+                 throw processor::exception("istream read error",processor::error::FATAL_ERROR);
             }
         }
         
