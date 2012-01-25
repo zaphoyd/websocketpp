@@ -343,6 +343,7 @@ public:
     }
     
     void process_payload(std::istream& input) {
+        //std::cout << "payload left 1: " << m_payload_left << std::endl;
         uint64_t written;
         if (m_header.is_control()) {
             written = m_control_message->process_payload(input,m_payload_left);
@@ -351,6 +352,8 @@ public:
             written = m_data_message->process_payload(input,m_payload_left);
         }
         m_payload_left -= written;
+        
+        //std::cout << "payload left 2: " << m_payload_left << std::endl;
         
         if (m_payload_left == 0) {
             process_frame();
