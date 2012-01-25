@@ -326,7 +326,11 @@ public:
                     default:
                         // Fatal error, forcibly end connection immediately.
                         m_endpoint.elog().at(log::elevel::DEVEL) 
-                        << "Dropping TCP due to unrecoverable exception" 
+                        << "Dropping TCP due to unrecoverable exception: "
+                        << e.code()
+                        << " ("
+                        << e.what()
+                        << ")" 
                         << log::endl;
                         terminate(true);
                 }
@@ -566,16 +570,18 @@ protected:
                 m_write_state = WRITING;
             }
             
-            std::vector<boost::asio::const_buffer> data;
+            //std::vector<boost::asio::const_buffer> data;
             
-            data.push_back(boost::asio::buffer(m_write_queue.front()->get_header()));
-            data.push_back(boost::asio::buffer(m_write_queue.front()->get_payload()));
+            
+            m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_header()));
+            m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_payload()));
             
             m_endpoint.alog().at(log::alevel::DEVEL) << "write header: " << to_hex(m_write_queue.front()->get_header()) << log::endl;
             
             boost::asio::async_write(
                 socket_type::get_socket(),
-                data,
+                m_write_buf,
+                //m_write_queue.front()->get_buffer(),
                 boost::bind(
                     &type::handle_write,
                     type::shared_from_this(),
@@ -614,6 +620,7 @@ protected:
         }
         
         m_write_buffer -= m_write_queue.front()->get_payload().size();
+        m_write_buf.clear();
         m_write_queue.pop();
         
         if (m_write_state == WRITING) {
@@ -711,6 +718,7 @@ protected:
     
     // Network resources
     boost::asio::streambuf      m_buf;
+    
     boost::asio::deadline_timer m_timer;
     
     // WebSocket connection state
@@ -720,6 +728,7 @@ protected:
     processor::ptr              m_processor;
     
     // Write queue
+    std::vector<boost::asio::const_buffer> m_write_buf;
     std::queue<message::data_ptr>   m_write_queue;
     uint64_t                        m_write_buffer;
     write_state                     m_write_state;
