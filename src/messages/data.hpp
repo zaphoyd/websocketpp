@@ -61,6 +61,7 @@ template <class element_type>
 public:
     typedef pool<element_type> type;
     typedef boost::shared_ptr<type> ptr;
+    typedef boost::weak_ptr<type> weak_ptr;
     typedef typename element_type::ptr element_ptr;
     typedef boost::function<void()> callback_type;
     
@@ -149,6 +150,7 @@ class data {
 public:
     typedef boost::intrusive_ptr<data> ptr;
     typedef pool<data>::ptr pool_ptr;
+    typedef pool<data>::weak_ptr pool_weak_ptr;
     
     data(pool_ptr p, size_t s);
     
@@ -210,7 +212,14 @@ private:
         if (count == 1 && s->m_live) {
             // recycle if endpoint exists
             s->m_live = false;
-            s->m_pool->recycle(ptr(const_cast<data *>(s)));
+            
+            
+            pool_ptr pp = s->m_pool.lock();
+            if (pp) {
+                pp->recycle(ptr(const_cast<data *>(s)));
+            }
+            
+            //s->m_pool->recycle(ptr(const_cast<data *>(s)));
         } else if (count == 0) {
             boost::checked_delete(static_cast<data const *>(s));
         }
@@ -235,7 +244,7 @@ private:
     // reference counting
     size_t                              m_index;
     mutable boost::detail::atomic_count m_ref_count;
-    mutable pool_ptr                    m_pool;
+    mutable pool_weak_ptr               m_pool;
     mutable bool                        m_live;
 };
 
