@@ -265,7 +265,7 @@ public:
             return;
         }
         
-        msg->set_header(std::string(0x00));
+        msg->set_header(std::string(1,0x00));
         
         msg->append_payload(std::string(1,0xFF));
         
