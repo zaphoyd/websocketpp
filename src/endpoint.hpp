@@ -28,6 +28,16 @@
 #ifndef WEBSOCKETPP_ENDPOINT_HPP
 #define WEBSOCKETPP_ENDPOINT_HPP
 
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t)(-1))
+#endif
+#ifndef INT32_MIN
+#define INT32_MIN INT_MIN
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX INT_MAX
+#endif
+
 #include "connection.hpp"
 #include "sockets/plain.hpp" // should this be here?
 #include "logger/logger.hpp"
