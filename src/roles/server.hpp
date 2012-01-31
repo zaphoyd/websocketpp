@@ -32,6 +32,8 @@
 #include "../processors/hybi_legacy.hpp"
 #include "../rng/blank_rng.hpp"
 
+#include "../shared_const_buffer.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -498,11 +500,14 @@ void server<endpoint>::connection<connection_type>::write_response() {
         raw += boost::dynamic_pointer_cast<processor::hybi_legacy<connection_type> >(m_connection.m_processor)->get_key3();
     }
     
+    shared_const_buffer buffer(raw);
+    
     m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
     
     boost::asio::async_write(
         m_connection.get_socket(),
-        boost::asio::buffer(raw),
+        //boost::asio::buffer(raw),
+        buffer,
         boost::bind(
             &type::handle_write_response,
             m_connection.shared_from_this(),
