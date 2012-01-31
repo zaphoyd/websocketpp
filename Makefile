@@ -32,7 +32,6 @@ objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o data.o
 
 BOOST_LIB_PATH		?= /usr/local/lib
 BOOST_INCLUDE_PATH  ?= /usr/local/include
-CPP11               ?= 
 
 libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
 
@@ -40,9 +39,16 @@ libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_pro
 
 OS=$(shell uname)
 
+# CPP11 build
+ifeq ($(CPP11), 1)
+	CPP11_    = -std=c++0x -stdlib=libc++
+else
+	CPP11_    ?=
+endif
+
 # Defaults
 ifeq ($(OS), Darwin)
-	cxxflags_default = -c $(CPP11) -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
+	cxxflags_default = -c $(CPP11_) -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
 else
 	cxxflags_default = -c -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
 endif
@@ -83,6 +89,8 @@ ifeq ($(BUILD_TYPE), debug)
 else
 	CXXFLAGS    ?= $(cxxflags_default)
 endif
+
+
 
 # SHARED specific settings
 ifeq ($(SHARED), 1)
