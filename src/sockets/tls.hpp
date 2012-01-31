@@ -68,7 +68,7 @@ public:
     // to set up their asio TLS context.
     class handler_interface {
     public:
-        virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
+        virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init(boost::asio::io_service &io_service) = 0;
     };
     
     // Connection specific details
@@ -93,7 +93,7 @@ public:
            m_connection(static_cast< connection_type& >(*this)) {}
         
         void init() {
-            m_context_ptr = m_connection.get_handler()->on_tls_init();
+            m_context_ptr = m_connection.get_handler()->on_tls_init(m_endpoint.get_io_service());
             
             if (!m_context_ptr) {
                 throw "handler was unable to init tls, connection error";
