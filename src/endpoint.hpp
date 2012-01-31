@@ -70,8 +70,8 @@ template <
     template <class> class logger = log::logger>
 class endpoint 
  : public endpoint_base,
-   public role< endpoint<role,socket> >,
-   public socket< endpoint<role,socket> >,
+   public role< endpoint<role,socket,logger> >,
+   public socket< endpoint<role,socket,logger> >,
    boost::noncopyable 
 {
 public:
