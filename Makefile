@@ -33,7 +33,7 @@ objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o data.o
 BOOST_LIB_PATH		?= /usr/local/lib
 BOOST_INCLUDE_PATH  ?= /usr/local/include
 
-libs = -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
+libs = -L$(BOOST_LIB_PATH) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options
 
 //libs_static = $(BOOST_PATH)/boost_system.a $(BOOST_PATH)/boost_regex.a
 
@@ -62,7 +62,7 @@ suffix_shared    = so
 suffix_shared_darwin = dylib
 suffix_static    = a
 major_version    = 0
-minor_version    = 1.0
+minor_version    = 2.0
 objdir           = objs
 
 # Variables
