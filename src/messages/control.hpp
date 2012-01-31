@@ -65,42 +65,20 @@ public:
         while(input.good() && i < size) {
             c = input.get();
             
-            if (input.good()) {
+            if (!input.fail()) {
                 if (m_masking_index >= 0) {
                     c = c ^ m_masking_key[(m_masking_index++)%4];
                 }
                 
                 m_payload.push_back(c);
                 i++;
-            } else if (input.eof()) {
-                break;
-            } else {
+            }
+            
+            if (input.bad()) {
                 throw processor::exception("istream read error 2",
                                            processor::error::FATAL_ERROR);
             }
         }
-        
-        /*for (i = 0; i < size; ++i) {
-            if (input.good()) {
-                c = input.get();
-               
-                if (input.fail()) {
-                    throw processor::exception("istream read error",
-                                               processor::error::FATAL_ERROR);
-                }
-                
-                if (m_masking_index >= 0) {
-                    c = c ^ m_masking_key[(m_masking_index++)%4];
-                }
-                
-                m_payload.push_back(c);
-               
-            } else if (input.eof()) {
-                break;
-            } else {
-                 throw processor::exception("istream read error",processor::error::FATAL_ERROR);
-            }
-        }*/
         
         // successfully read all bytes
         return i;
