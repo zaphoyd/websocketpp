@@ -202,6 +202,13 @@ protected:
         return true;
     }
 private:
+    enum state {
+        IDLE = 0,
+        LISTENING = 1,
+        STOPPING = 2,
+        STOPPED = 3
+    };
+    
     // start_accept creates a new connection and begins an async_accept on it
     void start_accept();
     
@@ -213,7 +220,6 @@ private:
     
     endpoint_type&                  m_endpoint;
     boost::asio::io_service&        m_io_service;
-    //boost::asio::ip::tcp::endpoint  m_endpoint;
     boost::asio::ip::tcp::acceptor  m_acceptor;
     
     boost::asio::deadline_timer     m_timer;
