@@ -8,6 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		B613878F145CA61300ED9B19 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B61A51C914DC273F00456432 /* concurrent_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B61A51B814DC207600456432 /* concurrent_server.cpp */; };
+		B61A51CA14DC274F00456432 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B61A51CB14DC276300456432 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B61A51CC14DC276300456432 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
+		B61A51CD14DC276300456432 /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
+		B61A51CE14DC276300456432 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
+		B61A51CF14DC276300456432 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
+		B61A51D014DC276300456432 /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B653A715148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
 		B653A716148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
@@ -118,6 +126,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		B61A51BD14DC271900456432 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		B66388491487D73200DDAE13 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -217,6 +234,10 @@
 		B61387A5145D849E00ED9B19 /* constants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = constants.hpp; path = src/http/constants.hpp; sourceTree = "<group>"; };
 		B61387A6145D849E00ED9B19 /* parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = parser.hpp; path = src/http/parser.hpp; sourceTree = "<group>"; };
 		B61387B61462B35700ED9B19 /* logger.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = logger.hpp; path = src/logger/logger.hpp; sourceTree = "<group>"; };
+		B61A51B714DC207600456432 /* concurrent_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = concurrent_client.html; sourceTree = "<group>"; };
+		B61A51B814DC207600456432 /* concurrent_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = concurrent_server.cpp; sourceTree = "<group>"; };
+		B61A51B914DC207600456432 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B61A51BF14DC271900456432 /* concurrent_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = concurrent_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		B62A5A511473EBB0005F9EB0 /* connection.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = connection.hpp; path = src/connection.hpp; sourceTree = "<group>"; };
 		B62A5A521473EBB0005F9EB0 /* endpoint.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = endpoint.hpp; path = src/endpoint.hpp; sourceTree = "<group>"; };
 		B62A5A561473EBE8005F9EB0 /* client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = client.hpp; path = src/roles/client.hpp; sourceTree = "<group>"; };
@@ -326,6 +347,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B61A51BC14DC271900456432 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B61A51CB14DC276300456432 /* libboost_date_time.dylib in Frameworks */,
+				B61A51CC14DC276300456432 /* libboost_program_options.dylib in Frameworks */,
+				B61A51CD14DC276300456432 /* libboost_random.dylib in Frameworks */,
+				B61A51CE14DC276300456432 /* libboost_regex.dylib in Frameworks */,
+				B61A51CF14DC276300456432 /* libboost_system.dylib in Frameworks */,
+				B61A51D014DC276300456432 /* libboost_thread.dylib in Frameworks */,
+				B61A51CA14DC274F00456432 /* libwebsocketpp.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B66388481487D73200DDAE13 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -468,6 +503,17 @@
 				B61387B61462B35700ED9B19 /* logger.hpp */,
 			);
 			name = logger;
+			sourceTree = "<group>";
+		};
+		B61A51B614DC207600456432 /* concurrent_server */ = {
+			isa = PBXGroup;
+			children = (
+				B61A51B714DC207600456432 /* concurrent_client.html */,
+				B61A51B814DC207600456432 /* concurrent_server.cpp */,
+				B61A51B914DC207600456432 /* Makefile */,
+			);
+			name = concurrent_server;
+			path = examples/concurrent_server;
 			sourceTree = "<group>";
 		};
 		B62A5A541473EBB9005F9EB0 /* roles */ = {
@@ -669,6 +715,7 @@
 				B6732471148FB0FC00FC2B04 /* fuzzing_client */,
 				B67324891491A16500FC2B04 /* broadcast_server */,
 				B67324A21491A7F100FC2B04 /* stress_client */,
+				B61A51BF14DC271900456432 /* concurrent_server */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -745,6 +792,7 @@
 		B6DF1CC61435ED380029A1B1 /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				B61A51B614DC207600456432 /* concurrent_server */,
 				B673249A1491A50000FC2B04 /* stress_client */,
 				B673248114919D6600FC2B04 /* broadcast_server_tls */,
 				B6732469148FB0C400FC2B04 /* fuzzing_client */,
@@ -861,6 +909,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		B61A51BE14DC271900456432 /* concurrent_server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B61A51C614DC271900456432 /* Build configuration list for PBXNativeTarget "concurrent_server" */;
+			buildPhases = (
+				B61A51BB14DC271900456432 /* Sources */,
+				B61A51BC14DC271900456432 /* Frameworks */,
+				B61A51BD14DC271900456432 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = concurrent_server;
+			productName = concurrent_server;
+			productReference = B61A51BF14DC271900456432 /* concurrent_server */;
+			productType = "com.apple.product-type.tool";
+		};
 		B663884A1487D73200DDAE13 /* echo_server_tls */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B66388521487D73300DDAE13 /* Build configuration list for PBXNativeTarget "echo_server_tls" */;
@@ -1081,11 +1146,20 @@
 				B6732470148FB0FC00FC2B04 /* fuzzing_client */,
 				B67324881491A16500FC2B04 /* broadcast_server */,
 				B67324A11491A7F100FC2B04 /* stress_client */,
+				B61A51BE14DC271900456432 /* concurrent_server */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B61A51BB14DC271900456432 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B61A51C914DC273F00456432 /* concurrent_server.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B66388471487D73200DDAE13 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1203,6 +1277,44 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		B61A51C714DC271900456432 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B61A51C814DC271900456432 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		B66388531487D73300DDAE13 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1659,6 +1771,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B61A51C614DC271900456432 /* Build configuration list for PBXNativeTarget "concurrent_server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B61A51C714DC271900456432 /* Debug */,
+				B61A51C814DC271900456432 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		B66388521487D73300DDAE13 /* Build configuration list for PBXNativeTarget "echo_server_tls" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
