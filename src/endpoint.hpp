@@ -34,6 +34,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <boost/utility.hpp>
 
 #include <iostream>
@@ -180,6 +181,8 @@ public:
      * be NULL.
      */
     void set_handler(handler_ptr new_handler) {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         if (!new_handler) {
             elog().at(log::elevel::FATAL) 
                 << "Tried to switch to a NULL handler." << log::endl;
@@ -203,6 +206,8 @@ public:
     void close_all(close::status::value code = close::status::GOING_AWAY, 
                    const std::string& reason = "")
     {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         alog().at(log::alevel::ENDPOINT) 
         << "Endpoint received signal to close all connections cleanly with code " 
         << code << " and reason " << reason << log::endl;
@@ -237,7 +242,9 @@ public:
     void stop(bool clean = true, 
               close::status::value code = close::status::GOING_AWAY, 
               const std::string& reason = "")
-    {
+    {        
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         if (clean) {
             alog().at(log::alevel::ENDPOINT) 
             << "Endpoint is stopping cleanly" << log::endl;
@@ -268,6 +275,8 @@ protected:
      * shared pointer if one could not be created.
      */
     connection_ptr create_connection() {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         if (m_state == STOPPING || m_state == STOPPED) {
             return connection_ptr();
         }
@@ -293,6 +302,8 @@ protected:
      * @param con A shared pointer to a connection created by this endpoint.
      */
     void remove_connection(connection_ptr con) {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         m_connections.erase(con);
         
         alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " 
@@ -314,11 +325,13 @@ protected:
     }
     
     /// Gets a shared pointer to a read/write data message.
+    // TODO: thread safety
     message::data::ptr get_data_message() {
 		return m_pool->get();
 	}
     
     /// Gets a shared pointer to a read/write control message.
+    // TODO: thread safety
     message::data::ptr get_control_message() {
 		return m_pool_control->get();
 	}
@@ -326,6 +339,8 @@ protected:
     /// Asks the endpoint to restart this connection's handle_read_frame loop
     /// when there are avaliable data messages.
     void wait(connection_ptr con) {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         m_read_waiting.push(con);
         alog().at(log::alevel::DEVEL) << "connection " << con << " is waiting. " << m_read_waiting.size() << log::endl;
     }
@@ -333,6 +348,8 @@ protected:
     /// Message pool callback indicating that there is a free data message
     /// avaliable. Causes one waiting connection to get restarted.
     void on_new_message() {
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
         if (!m_read_waiting.empty()) {
             connection_ptr next = m_read_waiting.front();
             
@@ -343,6 +360,10 @@ protected:
             
             
         }
+    }
+    
+    boost::recursive_mutex& get_lock() {
+        return m_lock;
     }
 private:
     enum state {
@@ -362,6 +383,9 @@ private:
     message::pool<message::data>::ptr   m_pool;
     message::pool<message::data>::ptr   m_pool_control;
     std::queue<connection_ptr>          m_read_waiting;
+    
+    // concurrency support
+    boost::recursive_mutex      m_lock;
 };
 
 /// traits class that allows looking up relevant endpoint types by the fully 

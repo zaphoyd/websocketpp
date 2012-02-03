@@ -745,6 +745,9 @@ protected:
     // Read queue
     read_state                  m_read_state;
     message::control_ptr        m_control_message;
+    
+    // concurrency support
+    boost::recursive_mutex      m_lock;
 };
 
 // connection related types that it and its policy classes need.

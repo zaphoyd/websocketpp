@@ -39,6 +39,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 #include <iostream>
 #include <stdexcept>
@@ -183,6 +184,7 @@ public:
        // this constructor, which also requires a port. This port number can be
        // ignored, as it is always overwriten later by the listen() member func
        m_acceptor(m),
+       m_state(IDLE),
        m_timer(m,boost::posix_time::seconds(0)) {}
     
     void listen(uint16_t port);
@@ -221,13 +223,20 @@ private:
     endpoint_type&                  m_endpoint;
     boost::asio::io_service&        m_io_service;
     boost::asio::ip::tcp::acceptor  m_acceptor;
+    state                           m_state;
     
     boost::asio::deadline_timer     m_timer;
 };
 
 template <class endpoint>
 void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
-	m_acceptor.open(e.protocol());
+	boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    
+    if (m_state != IDLE) {
+        throw exception("listen called from invalid state.");
+    }
+    
+    m_acceptor.open(e.protocol());
 	m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
 	m_acceptor.bind(e);
 	m_acceptor.listen();
@@ -237,7 +246,6 @@ void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
 }
 
 // server<endpoint> Implimentation
-// TODO: protect listen from being called twice or in the wrong state.
 // TODO: provide a way to stop/reset the server endpoint
 template <class endpoint>
 void server<endpoint>::listen(uint16_t port) {
@@ -258,6 +266,8 @@ void server<endpoint>::listen(const std::string &host, const std::string &servic
 
 template <class endpoint>
 void server<endpoint>::start_accept() {
+    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    
     connection_ptr con = m_endpoint.create_connection();
     
     if (con == connection_ptr()) {
@@ -267,7 +277,7 @@ void server<endpoint>::start_accept() {
         << log::endl;
         return;
     }
-    
+        
     m_acceptor.async_accept(
         con->get_raw_socket(),
         boost::bind(
@@ -286,6 +296,8 @@ template <class endpoint>
 void server<endpoint>::handle_accept(connection_ptr con, 
                                      const boost::system::error_code& error)
 {
+    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    
     if (error) {
         if (error == boost::system::errc::too_many_files_open) {
             m_endpoint.elog().at(log::elevel::ERROR) 
@@ -316,6 +328,8 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::select_subprotocol(
                                                     const std::string& value)
 {
+    // TODO: should this be locked?
+    
     std::vector<std::string>::iterator it;
     
     it = std::find(m_requested_subprotocols.begin(),
@@ -334,6 +348,8 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::select_extension(
                                                     const std::string& value)
 {
+    // TODO: should this be locked?
+    
     if (value == "") {
         return;
     }
@@ -357,6 +373,8 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::set_body(
                                                     const std::string& value)
 {
+    // TODO: should this be locked?
+    
     if (m_connection.m_version != -1) {
         // TODO: throw exception
         throw std::invalid_argument("set_body called from invalid state");
@@ -365,10 +383,15 @@ void server<endpoint>::connection<connection_type>::set_body(
     m_response.set_body(value);
 }
     
-    
+/// initiates an async read for an HTTP header
+/**
+ * Thread Safety: locks connection
+ */
 template <class endpoint>
 template <class connection_type>
 void server<endpoint>::connection<connection_type>::async_init() {
+    boost::lock_guard<boost::recursive_mutex> lock(m_connection.m_lock);
+    
     boost::asio::async_read_until(
         m_connection.get_socket(),
         m_connection.buffer(),
@@ -382,6 +405,10 @@ void server<endpoint>::connection<connection_type>::async_init() {
     );
 }
 
+/// processes the response from an async read for an HTTP header
+/**
+ * Thread Safety: async asio calls are not thread safe
+ */
 template <class endpoint>
 template <class connection_type>
 void server<endpoint>::connection<connection_type>::handle_read_request(
