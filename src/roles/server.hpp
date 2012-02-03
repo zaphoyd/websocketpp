@@ -177,16 +177,26 @@ public:
     };
     
     server(boost::asio::io_service& m) 
-     : m_ws_endpoint(static_cast< endpoint_type& >(*this)),
+     : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
        // the only way to set an endpoint address family appears to be using
        // this constructor, which also requires a port. This port number can be
        // ignored, as it is always overwriten later by the listen() member func
-       m_endpoint(boost::asio::ip::tcp::v6(),9000),
        m_acceptor(m),
        m_timer(m,boost::posix_time::seconds(0)) {}
     
     void listen(uint16_t port);
+    void listen(const boost::asio::ip::tcp::endpoint& e);
+    // uses internal resolver
+    void listen(const std::string &host, const std::string &service);
+    
+    template <typename InternetProtocol> 
+    void listen(const InternetProtocol &internet_protocol, uint16_t port) {
+        m_endpoint.alog().at(log::alevel::DEVEL) 
+            << "role::server listening on port " << port << log::endl;
+        boost::asio::ip::tcp::endpoint e(internet_protocol, port);
+        listen(e);
+    }
 protected:
     bool is_server() {
         return true;
@@ -201,39 +211,52 @@ private:
     void handle_accept(connection_ptr con, 
                        const boost::system::error_code& error);
     
-    endpoint_type&                  m_ws_endpoint;
+    endpoint_type&                  m_endpoint;
     boost::asio::io_service&        m_io_service;
-    boost::asio::ip::tcp::endpoint  m_endpoint;
+    //boost::asio::ip::tcp::endpoint  m_endpoint;
     boost::asio::ip::tcp::acceptor  m_acceptor;
     
     boost::asio::deadline_timer     m_timer;
 };
+
+template <class endpoint>
+void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
+	m_acceptor.open(e.protocol());
+	m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+	m_acceptor.bind(e);
+	m_acceptor.listen();
+
+	this->start_accept();
+	m_endpoint.run_internal();
+}
 
 // server<endpoint> Implimentation
 // TODO: protect listen from being called twice or in the wrong state.
 // TODO: provide a way to stop/reset the server endpoint
 template <class endpoint>
 void server<endpoint>::listen(uint16_t port) {
-    m_endpoint.port(port);
-    m_acceptor.open(m_endpoint.protocol());
-    m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-    m_acceptor.bind(m_endpoint);
-    m_acceptor.listen();
-    
-    this->start_accept();
-    
-    m_ws_endpoint.alog().at(log::alevel::DEVEL) << "role::server listening on port " << port << log::endl;
-    
-    m_ws_endpoint.run_internal();
+    listen(boost::asio::ip::tcp::v6(), port);
+}
+
+template <class endpoint>
+void server<endpoint>::listen(const std::string &host, const std::string &service) {
+    boost::asio::ip::tcp::resolver resolver(m_io_service);
+    boost::asio::ip::tcp::resolver::query query(host, service);
+    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    boost::asio::ip::tcp::resolver::iterator end;
+    if (endpoint_iterator == end) {
+        throw std::invalid_argument("Can't resolve host/service to listen");
+    }
+    listen(*endpoint_iterator);
 }
 
 template <class endpoint>
 void server<endpoint>::start_accept() {
-    connection_ptr con = m_ws_endpoint.create_connection();
+    connection_ptr con = m_endpoint.create_connection();
     
     if (con == connection_ptr()) {
         // the endpoint is no longer capable of accepting new connections.
-        m_ws_endpoint.alog().at(log::alevel::CONNECT) 
+        m_endpoint.alog().at(log::alevel::CONNECT) 
         << "Connection refused because endpoint is out of resources or closing." 
         << log::endl;
         return;
@@ -259,7 +282,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
 {
     if (error) {
         if (error == boost::system::errc::too_many_files_open) {
-            m_ws_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::ERROR) 
                 << "async_accept returned error: " << error 
                 << " (too many files open)" << log::endl;
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
@@ -269,7 +292,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
             // the operation was canceled. This was probably due to the 
             // io_service being stopped.
         } else {
-            m_ws_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::ERROR) 
                 << "async_accept returned error: " << error 
                 << " (unknown)" << log::endl;
         }
