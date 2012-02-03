@@ -203,7 +203,6 @@ public:
     client (boost::asio::io_service& m) 
      : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
-       m_resolver(m),
        m_gen(m_rng,boost::random::uniform_int_distribution<>(INT32_MIN,
                                                              INT32_MAX)) {}
     
@@ -236,7 +235,6 @@ private:
     
     endpoint_type&              m_endpoint;
     boost::asio::io_service&    m_io_service;
-    tcp::resolver               m_resolver;
     
     boost::random::random_device    m_rng;
     boost::random::variate_generator<
@@ -256,9 +254,11 @@ client<endpoint>::connect(const std::string& u) {
     if (location->get_secure() && !m_endpoint.is_secure()) {
         throw websocketpp::exception("Endpoint doesn't support secure connections.",websocketpp::error::ENDPOINT_UNSECURE);
     }
-        
+    
+    tcp::resolver resolver(m_io_service);
+    
     tcp::resolver::query query(location->get_host(),location->get_port_str());
-    tcp::resolver::iterator iterator = m_resolver.resolve(query);
+    tcp::resolver::iterator iterator = resolver.resolve(query);
     
     connection_ptr con = m_endpoint.create_connection();
     
