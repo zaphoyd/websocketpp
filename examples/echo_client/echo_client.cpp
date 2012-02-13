@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
         
         con = endpoint.connect(uri+"getCaseCount");
         
-        con->add_request_header("User Agent","WebSocket++/0.2.0");
+        con->add_request_header("User Agent","WebSocket++/0.2.0-dev");
         
         endpoint.run();
         
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
             
             std::stringstream url;
             
-            url << uri << "/runCase?case=" << i << "&agent=\"WebSocket++/0.2.0\"";
+            url << uri << "runCase?case=" << i << "&agent=WebSocket++/0.2.0-dev";
                         
             con = endpoint.connect(url.str());
             
