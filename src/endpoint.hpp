@@ -215,8 +215,11 @@ public:
         // TODO: is there a more elegant way to do this? In some code paths 
         // close can call terminate immediately which removes the connection
         // from m_connections, invalidating the iterator.
-        while(!m_connections.empty()) {
-            (*m_connections.begin())->close(code,reason);
+        typename std::set<connection_ptr>::iterator it;
+        
+        for (it = m_connections.begin(); it != m_connections.end();) {
+            const connection_ptr con = *it++;
+            con->close(code,reason);
         }
     }
     
@@ -442,14 +445,14 @@ struct endpoint_traits< endpoint<role, socket, logger> > {
          * @param connection A shared pointer to the connection that was transferred
          * @param old_handler A shared pointer to the previous handler
          */
-        virtual void on_load(connection_ptr connection, handler_ptr old_handler) {}
+        virtual void on_load(connection_ptr con, handler_ptr old_handler) {}
         /// on_unload is the last callback called for a handler before control
         /// of a connection is handed over to a new handler mid flight.
         /**
          * @param connection A shared pointer to the connection being transferred
          * @param old_handler A shared pointer to the new handler
          */
-        virtual void on_unload(connection_ptr connection, handler_ptr new_handler) {}
+        virtual void on_unload(connection_ptr con, handler_ptr new_handler) {}
     };
     
 };
