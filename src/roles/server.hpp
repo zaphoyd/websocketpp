@@ -230,7 +230,7 @@ private:
 
 template <class endpoint>
 void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
-	boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.get_lock());
     
     if (m_state != IDLE) {
         throw exception("listen called from invalid state.");
@@ -242,6 +242,8 @@ void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
 	m_acceptor.listen();
 
 	this->start_accept();
+    
+    lock.unlock();
 	m_endpoint.run_internal();
 }
 
