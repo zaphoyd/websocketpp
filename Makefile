@@ -193,6 +193,25 @@ install_headers: banner
 	cp -f ./$(srcdir)/base64/base64.h $(include_path)/$(libname_hdr)/base64
 	mkdir -p $(include_path)/$(libname_hdr)/sha1
 	cp -f ./$(srcdir)/sha1/sha1.h $(include_path)/$(libname_hdr)/sha1
+	mkdir -p $(include_path)/$(libname_hdr)/http
+	cp -f ./$(srcdir)/http/*.hpp $(include_path)/$(libname_hdr)/http
+	mkdir -p $(include_path)/$(libname_hdr)/logger
+	cp -f ./$(srcdir)/logger/*.hpp $(include_path)/$(libname_hdr)/logger
+	mkdir -p $(include_path)/$(libname_hdr)/md5
+	cp -f ./$(srcdir)/md5/md5.h $(include_path)/$(libname_hdr)/md5
+	cp -f ./$(srcdir)/md5/md5.hpp $(include_path)/$(libname_hdr)/md5
+	mkdir -p $(include_path)/$(libname_hdr)/messages
+	cp -f ./$(srcdir)/messages/*.hpp $(include_path)/$(libname_hdr)/messages
+	mkdir -p $(include_path)/$(libname_hdr)/processors
+	cp -f ./$(srcdir)/processors/*.hpp $(include_path)/$(libname_hdr)/processors
+	mkdir -p $(include_path)/$(libname_hdr)/rng
+	cp -f ./$(srcdir)/rng/*.hpp $(include_path)/$(libname_hdr)/rng
+	mkdir -p $(include_path)/$(libname_hdr)/roles
+	cp -f ./$(srcdir)/roles/*.hpp $(include_path)/$(libname_hdr)/roles
+	mkdir -p $(include_path)/$(libname_hdr)/sockets
+	cp -f ./$(srcdir)/sockets/*.hpp $(include_path)/$(libname_hdr)/sockets
+	mkdir -p $(include_path)/$(libname_hdr)/utf8_validator
+	cp -f ./$(srcdir)/utf8_validator/*.hpp $(include_path)/$(libname_hdr)/utf8_validator
 	chmod -R a+r $(include_path)/$(libname_hdr)
 	find  $(include_path)/$(libname_hdr) -type d -exec chmod a+x {} \;
 	@echo "Install header files: Done."
