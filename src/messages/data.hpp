@@ -202,6 +202,11 @@ private:
         M_BYTE_3 = 3
     };
     
+    union masking_key {
+        int32_t i;
+        char    c[4];
+    };
+    
     friend void intrusive_ptr_add_ref(const data * s) {
         ++s->m_ref_count;
     }
@@ -232,7 +237,8 @@ private:
     utf8_validator::validator   m_validator;
     
     // Masking state
-    unsigned char               m_masking_key[4];
+    masking_key                 m_masking_key;
+    //unsigned char               m_masking_key[4];
     // m_masking_index can take on
     index_value                 m_masking_index;
     

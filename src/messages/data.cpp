@@ -83,7 +83,7 @@ uint64_t data::process_payload(std::istream& input,uint64_t size) {
 
 void data::process_character(unsigned char c) {
     if (m_masking_index >= 0) {
-        c = c ^ m_masking_key[m_masking_index];
+        c = c ^ m_masking_key.c[m_masking_index];
         m_masking_index = index_value((m_masking_index+1)%4);
     }
     
@@ -127,7 +127,8 @@ void data::validate_payload() {
 }
 
 void data::set_masking_key(int32_t key) {
-    *reinterpret_cast<int32_t*>(m_masking_key) = key;
+    m_masking_key.i = key;
+    //*reinterpret_cast<int32_t*>(m_masking_key) = key;
     m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
 }
 
@@ -152,7 +153,7 @@ void data::append_payload(const std::string& payload) {
 void data::mask() {
     if (m_masking_index >= 0) {
         for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
-            (*it) = *it ^ m_masking_key[m_masking_index];
+            (*it) = *it ^ m_masking_key.c[m_masking_index];
             m_masking_index = index_value((m_masking_index+1)%4);
         }
     }

@@ -67,7 +67,7 @@ public:
             
             if (!input.fail()) {
                 if (m_masking_index >= 0) {
-                    c = c ^ m_masking_key[(m_masking_index++)%4];
+                    c = c ^ m_masking_key.c[(m_masking_index++)%4];
                 }
                 
                 m_payload.push_back(c);
@@ -133,7 +133,8 @@ public:
     }
     
     void set_masking_key(int32_t key) {
-        *reinterpret_cast<int32_t*>(m_masking_key) = key;
+        //*reinterpret_cast<int32_t*>(m_masking_key) = key;
+        m_masking_key.i = key;
         m_masking_index = (key == 0 ? -1 : 0);
     }
 private:
@@ -153,6 +154,11 @@ private:
     static const uint64_t PAYLOAD_SIZE_INIT = 128; // 128B
     static const uint64_t PAYLOAD_SIZE_MAX = 128; // 128B
     
+    union masking_key {
+        int32_t i;
+        char    c[4];
+    };
+    
     // Message state
     frame::opcode::value        m_opcode;
     
@@ -160,7 +166,8 @@ private:
     utf8_validator::validator   m_validator;
     
     // Masking state
-    unsigned char               m_masking_key[4];
+    masking_key                 m_masking_key;
+    //unsigned char               m_masking_key[4];
     int                         m_masking_index;
     
     // Message payload
