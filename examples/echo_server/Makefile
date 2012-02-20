@@ -2,7 +2,7 @@ BOOST_LIB_PATH		?= /usr/local/lib
 BOOST_INCLUDE_PATH ?= /usr/local/include
 CPP11               ?= 
 
-CFLAGS = -O2 $(CPP11) -I$(BOOST_INCLUDE_PATH)
+CFLAGS = -Wall -O2 $(CPP11) -I$(BOOST_INCLUDE_PATH)
 LDFLAGS = -L$(BOOST_LIB_PATH)
 
 CXX		?= c++
