@@ -143,12 +143,12 @@ private:
             throw processor::exception("get_raw_close_code called with invalid size",processor::error::FATAL_ERROR);
         }
         
-        char val[2];
-        
-        val[0] = m_payload[0];
-        val[1] = m_payload[1];
-        
-        return ntohs(*(reinterpret_cast<uint16_t*>(&val[0])));
+        union {uint16_t i;char c[2];} val;
+         
+        val.c[0] = m_payload[0];
+        val.c[1] = m_payload[1];
+         
+        return ntohs(val.i);
     }
     
     static const uint64_t PAYLOAD_SIZE_INIT = 128; // 128B
