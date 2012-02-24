@@ -32,8 +32,8 @@
 
 #include <iostream>
 
-using boost::asio::ip::tcp;
 using namespace websocketchat;
+using websocketpp::server;
 
 int main(int argc, char* argv[]) {
     short port = 9003;
@@ -45,14 +45,14 @@ int main(int argc, char* argv[]) {
     
     try {
         // create an instance of our handler
-        server_handler_ptr default_handler(new chat_server_handler());
+        server::handler::ptr handler(new chat_server_handler());
         
         // create a server that listens on port `port` and uses our handler
-        websocketpp::basic_server_ptr server(new websocketpp::basic_server(port,default_handler));
+        server endpoint(handler);
         
-        server->elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
+        endpoint.elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
         
-        server->alog().set_level(websocketpp::log::alevel::ALL);
+        endpoint.alog().set_level(websocketpp::log::alevel::ALL);
         
         // setup server settings
         // Chat server should only be receiving small text messages, reduce max
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
         
         std::cout << "Starting chat server on port " << port << std::endl;
         
-        server->run();
+        endpoint.listen(port);
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }
