@@ -28,39 +28,5 @@
 #ifndef ECHO_SERVER_HANDLER_HPP
 #define ECHO_SERVER_HANDLER_HPP
 
-#include "../../src/websocketpp.hpp"
-#include "../../src/interfaces/session.hpp"
-#include <boost/shared_ptr.hpp>
-
-#include <string>
-#include <vector>
-
-using websocketpp::session::server_ptr;
-using websocketpp::session::server_handler;
-
-namespace websocketecho {
-
-class echo_server_handler : public server_handler {
-public:
-    // The echo server allows all domains is protocol free.
-    void validate(server_ptr session) {}
-    
-    // an echo server is stateless. 
-    // The handler has no need to keep track of connected clients.
-    void on_fail(server_ptr session) {}
-    void on_open(server_ptr session) {}
-    void on_close(server_ptr session) {}
-    
-    // both text and binary messages are echoed back to the sending client.
-        void on_message(server_ptr session,websocketpp::utf8_string_ptr msg) {
-        std::cout << *msg << std::endl;
-        session->send(*msg);
-    }
-    void on_message(server_ptr session,websocketpp::binary_string_ptr data) {
-        session->send(*data);
-    }
-};
-
-}
 
 #endif // ECHO_SERVER_HANDLER_HPP

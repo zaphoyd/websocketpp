@@ -33,8 +33,8 @@ using websocketpp::server;
 
 class echo_server_handler : public server::handler {
 public:
-    void on_message(connection_ptr connection,message_ptr msg) {
-        connection->send(msg->get_payload(),msg->get_opcode());
+    void on_message(connection_ptr con, message_ptr msg) {
+        con->send(msg->get_payload(),msg->get_opcode());
     }
 };
 
