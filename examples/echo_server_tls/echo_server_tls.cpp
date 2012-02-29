@@ -30,11 +30,6 @@
 
 #include <cstring>
 
-//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::plain> plain_endpoint_type;
-//typedef websocketpp::endpoint<websocketpp::role::server,websocketpp::socket::ssl> tls_endpoint_type;
-//typedef plain_endpoint_type::handler_ptr plain_handler_ptr;
-//typedef tls_endpoint_type::handler_ptr tls_handler_ptr;
-
 using websocketpp::server;
 using websocketpp::server_tls;
 
