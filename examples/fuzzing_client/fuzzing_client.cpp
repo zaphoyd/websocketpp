@@ -86,7 +86,7 @@ public:
     void fill_utf8(std::string& data,size_t size,bool random = true) {
         if (random) {
             uint32_t val;
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 if (i%4 == 0) {
                     val = uint32_t(rand());
                 }
@@ -101,7 +101,7 @@ public:
     void fill_binary(std::string& data,size_t size,bool random = true) {
         if (random) {
             int32_t val;
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 if (i%4 == 0) {
                     val = rand();
                 }
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
         endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        for (int i = 0; i < tests.size(); i++) {
+        for (size_t i = 0; i < tests.size(); i++) {
             if (i > 0) {
                 endpoint.reset();
                 endpoint.set_handler(tests[i]);
