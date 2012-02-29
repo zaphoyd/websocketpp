@@ -308,11 +308,11 @@ int main(int argc, char* argv[]) {
     std::vector<client::handler_ptr>  tests;
     
     // 9.1.x and 9.2.x tests
-    /*for (int i = 1; i <= 2; i++) {
+    for (int i = 1; i <= 2; i++) {
         for (int j = 1; j <= 6; j++) {
             tests.push_back(client::handler_ptr(new test_9_1_X(i,j)));
         }
-    }*/
+    }
     
     // 9.7.x and 9.8.x tests
     for (int i = 7; i <= 8; i++) {
