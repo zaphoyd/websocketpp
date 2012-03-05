@@ -42,3 +42,5 @@ examples/echo_server_tls/echo_server_tls
 examples/concurrent_server/concurrent_server
 
 examples/fuzzing_server_tls/fuzzing_server
+
+examples/wsperf/wsperf

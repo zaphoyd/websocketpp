@@ -140,7 +140,7 @@ struct request {
             
             json.str("");*/
             
-            json << "{\"type\":\"test_data\",\"target\":\"" << uri << "\",\"data\":" << tests[i]->get_data() << "}";
+            json << "{\"type\":\"test_data\",\"uri\":\"" << uri << "\",\"token\":\"" << token << "\",\"data\":" << tests[i]->get_data() << "}";
             
             con->send(json.str());
         }
