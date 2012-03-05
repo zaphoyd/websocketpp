@@ -95,9 +95,7 @@ struct request {
             return;
         }
         
-        std::stringstream response;
-        response << "{\"type\":\"message\",\"data\":\"Starting test " << token << "\"}";
-        con->send(response.str());
+        con->send("{\"type\":\"test_start\",\"token\":\"" + token + "\"}");
         
         // 9.1.x and 9.2.x tests
         /*for (int i = 1; i <= 2; i++) {
@@ -134,21 +132,12 @@ struct request {
             
             std::stringstream json;
             
-            /*json << "{\"type\":\"message\",\"data\":\"" << tests[i]->get_result() << "\"}";
-            
-            con->send(json.str());
-            
-            json.str("");*/
-            
             json << "{\"type\":\"test_data\",\"uri\":\"" << uri << "\",\"token\":\"" << token << "\",\"data\":" << tests[i]->get_data() << "}";
             
             con->send(json.str());
         }
 
-        
-        response.str("");
-        response << "{\"type\":\"message\",\"data\":\"Test " << token << " complete.\"}";
-        con->send(response.str());
+        con->send("{\"type\":\"test_complete\",\"token\":\"" + token + "\"}");
     }
     
     bool extract_string(wscmd::cmd command,std::string key,std::string &val) {
@@ -159,7 +148,7 @@ struct request {
             //std::stringstream response;
             //response << "{\"type\":\"message\",\"data\":\"" << key << " parameter is required.\"}";
             //con->send(response.str());
-            con->send("{\"type\":\"message\",\"data\":\"Invalid " + key + " parameter.\"}");
+            con->send("{\"type\":\"error\",\"data\":\"Invalid " + key + " parameter.\"}");
             return false;
         }
     }
@@ -175,7 +164,7 @@ struct request {
         //std::stringstream response;
         //response << "{\"type\":\"message\",\"data\":\"" << key << " parameter is required.\"}";
         //con->send(response.str());
-        con->send("{\"type\":\"message\",\"data\":\"Invalid " + key + " parameter.\"}");
+        con->send("{\"type\":\"error\",\"data\":\"Invalid " + key + " parameter.\"}");
         return false;
     }
     
@@ -191,13 +180,13 @@ struct request {
         }
         //std::stringstream response;
         //response << ;
-        con->send("{\"type\":\"message\",\"data\":\"Invalid " + key + " parameter.\"}");
+        con->send("{\"type\":\"error\",\"data\":\"Invalid " + key + " parameter.\"}");
         return false;
     }
     
     void send_error(std::string msg) {
         std::stringstream response;
-        response << "{\"type\":\"message\",\"data\":\"" << msg << "\"}";
+        response << "{\"type\":\"error\",\"data\":\"" << msg << "\"}";
         con->send(response.str());
     }
 };
