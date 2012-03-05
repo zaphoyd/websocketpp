@@ -82,7 +82,7 @@ public:
     }
     
     void on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
-        if ((m_mode == EXACT && msg->get_payload() == m_data) || (m_mode == LENGTH && msg->get_payload().size() == m_data.size())) {
+        if ((m_mode == LENGTH && msg->get_payload().size() == m_data.size()) || (m_mode == EXACT && msg->get_payload() == m_data)) {
             m_acks++;
             m_bytes += m_message_size;
             mark();
