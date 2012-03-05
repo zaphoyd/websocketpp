@@ -306,12 +306,12 @@ void client<endpoint>::handle_connect(connection_ptr con,
                 << "An error occurred while establishing a connection: " 
                 << error << " (connection reset)" << log::endl;
             
-            if (con->retry()) {
+            /*if (con->retry()) {
                 m_endpoint.elog().at(log::elevel::ERROR) 
                     << "Retrying connection" << log::endl;
                 connect(con->get_uri());
                 m_endpoint.remove_connection(con);
-            }
+            }*/
         } else if (error == boost::system::errc::timed_out) {
             m_endpoint.elog().at(log::elevel::ERROR) 
                 << "An error occurred while establishing a connection: " 
@@ -326,6 +326,7 @@ void client<endpoint>::handle_connect(connection_ptr con,
                 << error << " (unknown)" << log::endl;
             throw "client error";
         }
+        m_endpoint.get_handler()->on_fail(con->shared_from_this());
     }
 }
 
