@@ -57,6 +57,7 @@ public:
         );
         
         m_start = boost::chrono::steady_clock::now();
+        m_bytes = 0;
     }
     
     void mark() {
@@ -64,7 +65,7 @@ public:
     }
     
     void end(connection_ptr con) {
-        uint64_t avg;
+        uint64_t avg = 0;
         std::vector<uint64_t> avgs(10);
         double squaresum = 0;
         uint64_t stddev = 0;
