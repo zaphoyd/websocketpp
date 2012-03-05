@@ -337,6 +337,16 @@
 		B6DF1CD11435ED910029A1B1 /* echo_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		B6E56D6614FEFC54007E1707 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/wsperf/Makefile; sourceTree = "<group>"; };
+		B6E56D6714FEFC54007E1707 /* wsperf_commander.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = wsperf_commander.html; path = examples/wsperf/wsperf_commander.html; sourceTree = "<group>"; };
+		B6E56D6814FEFC54007E1707 /* wsperf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = wsperf.cpp; path = examples/wsperf/wsperf.cpp; sourceTree = "<group>"; };
+		B6E56D6914FEFE95007E1707 /* case.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = case.cpp; path = examples/wsperf/case.cpp; sourceTree = "<group>"; };
+		B6E56D6A14FEFE95007E1707 /* case.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = case.hpp; path = examples/wsperf/case.hpp; sourceTree = "<group>"; };
+		B6E56D6B14FF0183007E1707 /* autobahn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = autobahn.cpp; path = examples/wsperf/autobahn.cpp; sourceTree = "<group>"; };
+		B6E56D6C14FF0184007E1707 /* autobahn.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = autobahn.hpp; path = examples/wsperf/autobahn.hpp; sourceTree = "<group>"; };
+		B6E56D6D1503DF2C007E1707 /* generic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = generic.cpp; path = examples/wsperf/generic.cpp; sourceTree = "<group>"; };
+		B6E56D6E1503DF2C007E1707 /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = generic.hpp; path = examples/wsperf/generic.hpp; sourceTree = "<group>"; };
+		B6E56D6F150457B8007E1707 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = wscmd.hpp; path = examples/wsperf/wscmd.hpp; sourceTree = "<group>"; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 		B6FE8D1614686A8500B32547 /* md5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = md5.c; path = src/md5/md5.c; sourceTree = "<group>"; };
@@ -792,6 +802,7 @@
 		B6DF1CC61435ED380029A1B1 /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				B6E56D6414FEFC43007E1707 /* wsperf */,
 				B61A51B614DC207600456432 /* concurrent_server */,
 				B673249A1491A50000FC2B04 /* stress_client */,
 				B673248114919D6600FC2B04 /* broadcast_server_tls */,
@@ -838,6 +849,23 @@
 				B6138767145AD1F700ED9B19 /* Makefile */,
 			);
 			name = chat_server;
+			sourceTree = "<group>";
+		};
+		B6E56D6414FEFC43007E1707 /* wsperf */ = {
+			isa = PBXGroup;
+			children = (
+				B6E56D6614FEFC54007E1707 /* Makefile */,
+				B6E56D6714FEFC54007E1707 /* wsperf_commander.html */,
+				B6E56D6814FEFC54007E1707 /* wsperf.cpp */,
+				B6E56D6B14FF0183007E1707 /* autobahn.cpp */,
+				B6E56D6C14FF0184007E1707 /* autobahn.hpp */,
+				B6E56D6914FEFE95007E1707 /* case.cpp */,
+				B6E56D6A14FEFE95007E1707 /* case.hpp */,
+				B6E56D6D1503DF2C007E1707 /* generic.cpp */,
+				B6E56D6E1503DF2C007E1707 /* generic.hpp */,
+				B6E56D6F150457B8007E1707 /* wscmd.hpp */,
+			);
+			name = wsperf;
 			sourceTree = "<group>";
 		};
 		B6FE8CE4144DE18900B32547 /* documentation */ = {
@@ -1778,6 +1806,7 @@
 				B61A51C814DC271900456432 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B66388521487D73300DDAE13 /* Build configuration list for PBXNativeTarget "echo_server_tls" */ = {
 			isa = XCConfigurationList;

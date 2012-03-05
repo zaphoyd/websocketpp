@@ -305,6 +305,8 @@ int main(int argc, char* argv[]) {
         uri = argv[1];
     }
     
+    
+    
     std::vector<client::handler_ptr>  tests;
     
     // 9.1.x and 9.2.x tests
