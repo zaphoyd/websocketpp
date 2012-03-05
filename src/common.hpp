@@ -31,7 +31,8 @@
 #ifndef __STDC_LIMIT_MACROS
   #define __STDC_LIMIT_MACROS
 #endif
-#include <stdint.h>
+//#include <stdint.h>
+#include <boost/cstdint.hpp>
 
 // SIZE_MAX appears to be a compiler thing not an OS header thing.
 // make sure it is defined.
@@ -149,7 +150,7 @@ namespace websocketpp {
         namespace limits {
             static const uint8_t PAYLOAD_SIZE_BASIC = 125;
             static const uint16_t PAYLOAD_SIZE_EXTENDED = 0xFFFF; // 2^16, 65535
-            static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFF;//2^63
+            static const uint64_t PAYLOAD_SIZE_JUMBO = 0x7FFFFFFFFFFFFFFFLL;//2^63
         }
     } // namespace frame
     
