@@ -199,7 +199,7 @@ public:
         //std::cout << " fails in " << len.length() << std::endl;
     }
     void on_fail(connection_ptr con) {
-        std::cout << " fails to connect." << std::endl;
+        m_data = "{\"result\":\"connection_failed\"}";
     }
     
     const std::string& get_result() const {

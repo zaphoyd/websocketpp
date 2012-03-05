@@ -52,7 +52,7 @@ struct request {
     std::string req;
     std::string token;
     
-    // test_message:uri=ws://localhost:9000;size=4096;count=1000;timeout=10000;binary=true;sync=true;correctness=exact;
+    // message_test:uri=ws://localhost:9000;size=4096;count=1000;timeout=10000;binary=true;sync=true;correctness=exact;token=foo;
     
     void process() {
         std::vector<wsperf::case_handler_ptr>  tests;
