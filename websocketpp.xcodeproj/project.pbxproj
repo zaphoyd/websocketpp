@@ -98,6 +98,7 @@
 		B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCB1435ED760029A1B1 /* echo.cpp */; };
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
+		B6E56D80150644A3007E1707 /* request.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D7E150644A3007E1707 /* request.cpp */; };
 		B6E7E77E1505536500394909 /* wsperf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6814FEFC54007E1707 /* wsperf.cpp */; };
 		B6E7E77F1505536500394909 /* autobahn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6B14FF0183007E1707 /* autobahn.cpp */; };
 		B6E7E7801505536500394909 /* case.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6914FEFE95007E1707 /* case.cpp */; };
@@ -369,6 +370,8 @@
 		B6E56D6D1503DF2C007E1707 /* generic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = generic.cpp; path = examples/wsperf/generic.cpp; sourceTree = "<group>"; };
 		B6E56D6E1503DF2C007E1707 /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = generic.hpp; path = examples/wsperf/generic.hpp; sourceTree = "<group>"; };
 		B6E56D6F150457B8007E1707 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = wscmd.hpp; path = examples/wsperf/wscmd.hpp; sourceTree = "<group>"; };
+		B6E56D7E150644A3007E1707 /* request.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = request.cpp; path = examples/wsperf/request.cpp; sourceTree = "<group>"; };
+		B6E56D7F150644A3007E1707 /* request.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = request.hpp; path = examples/wsperf/request.hpp; sourceTree = "<group>"; };
 		B6E7E7731505532E00394909 /* wsperf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wsperf; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6E7E78A150553D000394909 /* libboost_chrono.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_chrono.dylib; path = usr/local/lib/libboost_chrono.dylib; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
@@ -899,6 +902,8 @@
 				B6E56D6614FEFC54007E1707 /* Makefile */,
 				B6E56D6714FEFC54007E1707 /* wsperf_commander.html */,
 				B6E56D6814FEFC54007E1707 /* wsperf.cpp */,
+				B6E56D7E150644A3007E1707 /* request.cpp */,
+				B6E56D7F150644A3007E1707 /* request.hpp */,
 				B6E56D6B14FF0183007E1707 /* autobahn.cpp */,
 				B6E56D6C14FF0184007E1707 /* autobahn.hpp */,
 				B6E56D6914FEFE95007E1707 /* case.cpp */,
@@ -1350,6 +1355,7 @@
 				B6E7E77F1505536500394909 /* autobahn.cpp in Sources */,
 				B6E7E7801505536500394909 /* case.cpp in Sources */,
 				B6E7E7811505536500394909 /* generic.cpp in Sources */,
+				B6E56D80150644A3007E1707 /* request.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2023,6 +2029,7 @@
 				B6E7E77B1505532E00394909 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B6FE8D5614730AEA00B32547 /* Build configuration list for PBXNativeTarget "policy_test" */ = {
 			isa = XCConfigurationList;

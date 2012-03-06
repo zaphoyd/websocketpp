@@ -29,6 +29,7 @@
 #define WSPERF_CASE_GENERIC_HPP
 
 #include "case.hpp"
+#include "wscmd.hpp"
 
 namespace wsperf {
 
@@ -54,6 +55,35 @@ public:
        m_mode(mode),
        m_acks(0)
     {}
+    
+    explicit message_test(wscmd::cmd& cmd) {
+        // message_test:uri=[string];           ws://localhost:9000
+        //              size=[interger];        4096
+        //              count=[integer];        1000
+        //              timeout=[integer];      10000
+        //              binary=[bool];          true/false
+        //              sync=[bool];            true/false
+        //              correctness=[string];   exact/length
+        //              token=[string];         foo
+        
+        m_uri = extract_string(cmd,"uri");
+        m_token = extract_string(cmd,"token");
+        
+        m_message_count = extract_number<uint64_t>(cmd,"size");
+        m_message_size = extract_number<uint64_t>(cmd,"count");
+        m_timeout = extract_number<uint64_t>(cmd,"timeout");
+        
+        m_binary = extract_bool(cmd,"binary");
+        m_sync = extract_bool(cmd,"sync");
+        
+        if (cmd.args["correctness"] == "exact") {
+            m_mode = EXACT;
+        } else if (cmd.args["correctness"] == "length") {
+            m_mode = LENGTH;
+        } else {
+            throw case_exception("Invalid correctness parameter.");
+        }
+    }
     
     void on_open(connection_ptr con) {
         m_msg = con->get_data_message();
@@ -105,16 +135,18 @@ public:
         }
     }
 private:
-    uint64_t    m_message_size;
-    uint64_t    m_message_count;
-    int         m_timeout;
-    bool        m_binary;
-    bool        m_sync;
-    correctness_mode m_mode;
+    // Simulation Parameters
+    uint64_t            m_message_size;
+    uint64_t            m_message_count;
+    uint64_t            m_timeout;
+    bool                m_binary;
+    bool                m_sync;
+    correctness_mode    m_mode;
     
-    std::string m_data;
-    message_ptr m_msg;
-    uint64_t    m_acks;
+    // Simulation temporaries
+    std::string         m_data;
+    message_ptr         m_msg;
+    uint64_t            m_acks;
 };
 
 } // namespace wsperf

@@ -28,20 +28,36 @@
 #ifndef WSPERF_CASE_HPP
 #define WSPERF_CASE_HPP
 
+#include "wscmd.hpp"
+
 #include "../../src/roles/client.hpp"
 #include "../../src/websocketpp.hpp"
 
 #include <boost/chrono.hpp>
 
+#include <exception>
+
 using websocketpp::client;
 
 namespace wsperf {
+
+class case_exception : public std::exception {
+public: 
+    case_exception(const std::string& msg) : m_msg(msg) {}
+    ~case_exception() throw() {}
+    
+    virtual const char* what() const throw() {
+        return m_msg.c_str();
+    }
+    
+    std::string m_msg;
+};
 
 class case_handler : public client::handler {
 public:
     typedef case_handler type;
     
-    void start(connection_ptr con, int timeout) {
+    void start(connection_ptr con, uint64_t timeout) {
         m_timer.reset(new boost::asio::deadline_timer(
             con->get_io_service(),
             boost::posix_time::seconds(0))
@@ -110,12 +126,10 @@ public:
         
         double kbps = (double(m_bytes)/1000.0)/seconds;
         
-        std::stringstream o;
         std::stringstream s;
         
         switch (m_pass) {
             case FAIL:
-                o << m_name << " fails in " << seconds << "s";
                 s << "{\"name\":\"" << m_name << "\",\"result\":\"fail\",\"min\":" << m_times[0] << ",\"max\":" << m_times[m_times.size()-1] << ",\"median\":" << m_times[(m_times.size()-1)/2] << ",\"avg\":" << avg << ",\"stddev\":" << stddev << ",\"sqsum\":" << squaresum << ",\"total\":" << total << ",\"KBps\":" << kbps << ",\"quantiles\":[";
                 
                 for (int i = 0; i < 10; i++) {
@@ -124,9 +138,7 @@ public:
                  
                 s << "]}";
                 break;
-            case PASS:
-                o << m_name << " passes in " << seconds << "s";
-                
+            case PASS:                
                 s << "{\"name\":\"" << m_name << "\",\"result\":\"pass\",\"min\":" << m_times[0] << ",\"max\":" << m_times[m_times.size()-1] << ",\"median\":" << m_times[(m_times.size()-1)/2] << ",\"avg\":" << avg << ",\"stddev\":" << stddev << ",\"sqsum\":" << squaresum << ",\"total\":" << total << ",\"KBps\":" << kbps << ",\"quantiles\":[";
                 
                 for (int i = 0; i < 10; i++) {
@@ -136,7 +148,6 @@ public:
                 s << "]}";
                 break;
             case TIME_OUT:
-                o << m_name << " times out in " << seconds << "s";
                 s << "{\"name\":\"" << m_name << "\",\"result\":\"time_out\",\"min\":" << m_times[0] << ",\"max\":" << m_times[m_times.size()-1] << ",\"median\":" << m_times[(m_times.size()-1)/2] << ",\"avg\":" << avg << ",\"stddev\":" << stddev << ",\"sqsum\":" << squaresum << ",\"total\":" << total << ",\"KBps\":" << kbps << ",\"quantiles\":[";
                 
                 for (int i = 0; i < 10; i++) {
@@ -145,9 +156,11 @@ public:
                  
                 s << "]}";
                 break;
+            case RUNNING:
+                throw case_exception("end() called from RUNNING state");
+                break;
         }
         
-        m_result = o.str();
         m_data = s.str();
         
         con->close(websocketpp::close::status::NORMAL,"");
@@ -185,6 +198,38 @@ public:
         }
     }
     
+    std::string extract_string(wscmd::cmd command,std::string key) {
+        if (command.args[key] != "") {
+           return command.args[key];
+        } else {
+            throw case_exception("Invalid " + key + " parameter.");
+        }
+    }
+    
+    template <typename T>
+    T extract_number(wscmd::cmd command,std::string key) {
+        if (command.args[key] != "") {
+            std::istringstream buf(command.args[key]);
+            T val;
+            
+            buf >> val;
+            
+            if (buf) {return val;}
+        }
+        throw case_exception("Invalid " + key + " parameter.");
+    }
+    
+    bool extract_bool(wscmd::cmd command,std::string key) {
+        if (command.args[key] != "") {
+            if (command.args[key] == "true") {
+                return true;
+            } else if (command.args[key] == "false") {
+                return false;
+            }
+        }
+        throw case_exception("Invalid " + key + " parameter.");
+    }
+    
     void on_timer(connection_ptr con,const boost::system::error_code& error) {
         if (error == boost::system::errc::operation_canceled) {
             return; // timer was canceled because test finished
@@ -196,18 +241,16 @@ public:
         this->end(con);
     }
     
-    void on_close(connection_ptr con) {
-        //std::cout << " fails in " << len.length() << std::endl;
-    }
+    void on_close(connection_ptr con) {}
     void on_fail(connection_ptr con) {
         m_data = "{\"result\":\"connection_failed\"}";
     }
     
-    const std::string& get_result() const {
-        return m_result;
-    }
     const std::string& get_data() const {
         return m_data;
+    }
+    const std::string& get_token() const {
+        return m_token;
     }
 protected:
     enum status {
@@ -218,7 +261,8 @@ protected:
     };
     
     std::string                 m_name;
-    std::string                 m_result;
+    std::string                 m_uri;
+    std::string                 m_token;
     std::string                 m_data;
     
     status                      m_pass;
