@@ -154,8 +154,22 @@ void data::mask() {
     if (m_masking_index >= 0) {
         for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
             (*it) = *it ^ m_masking_key.c[m_masking_index];
-            m_masking_index = index_value((m_masking_index+1)%4);
+            m_masking_index = index_value((m_masking_index+1)&3);
         }
+        /*size_t s = m_payload.size();
+        size_t s2 = s/4;
+        size_t i;
+        
+        uint32_t mask = m_masking_key.i;
+        uint32_t* data = reinterpret_cast<uint32_t*>(const_cast<char*>(m_payload.c_str()));
+        
+        for (i = 0; i < s2; i++) {
+            data[i] ^= mask;
+        }
+        for (i = i*4; i < s; i++) {
+            m_payload[i] ^= m_masking_key.c[m_masking_index];
+            m_masking_index = index_value((m_masking_index+1)&3);
+        }*/
     }
 }
 

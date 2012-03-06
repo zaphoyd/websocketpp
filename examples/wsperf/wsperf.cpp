@@ -270,6 +270,9 @@ int main(int argc, char* argv[]) {
     unsigned short port = 9002;
     unsigned short num_threads = 2;
     
+    std::list<boost::shared_ptr<boost::thread> > threads;
+    std::list<boost::shared_ptr<boost::thread> >::iterator thit;
+    
     try {
         if (argc == 2) {
             std::stringstream buffer(argv[1]);
@@ -298,8 +301,6 @@ int main(int argc, char* argv[]) {
         
         echo_endpoint.elog().set_level(websocketpp::log::elevel::ERROR);
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
-        
-        std::list<boost::shared_ptr<boost::thread> > threads;
         
         for (int i = 0; i < num_threads; i++) {
             threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&process_requests, &rc))));

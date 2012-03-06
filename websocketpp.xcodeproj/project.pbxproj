@@ -98,6 +98,19 @@
 		B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCB1435ED760029A1B1 /* echo.cpp */; };
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
+		B6E7E77E1505536500394909 /* wsperf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6814FEFC54007E1707 /* wsperf.cpp */; };
+		B6E7E77F1505536500394909 /* autobahn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6B14FF0183007E1707 /* autobahn.cpp */; };
+		B6E7E7801505536500394909 /* case.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6914FEFE95007E1707 /* case.cpp */; };
+		B6E7E7811505536500394909 /* generic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6D1503DF2C007E1707 /* generic.cpp */; };
+		B6E7E7821505537200394909 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B6E7E7831505538C00394909 /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */; };
+		B6E7E7841505538C00394909 /* libboost_random.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888C1437464A002BA48B /* libboost_random.dylib */; };
+		B6E7E7851505538C00394909 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */; };
+		B6E7E7861505538C00394909 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
+		B6E7E7871505538C00394909 /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
+		B6E7E7881505539E00394909 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
+		B6E7E789150553A500394909 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
+		B6E7E78B150553D000394909 /* libboost_chrono.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6E7E78A150553D000394909 /* libboost_chrono.dylib */; };
 		B6FE8D181468707200B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
 		B6FE8D191468708200B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
 		B6FE8D1A1468709300B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
@@ -199,6 +212,15 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		B6DF1CCF1435ED910029A1B1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		B6E7E7711505532E00394909 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -347,6 +369,8 @@
 		B6E56D6D1503DF2C007E1707 /* generic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = generic.cpp; path = examples/wsperf/generic.cpp; sourceTree = "<group>"; };
 		B6E56D6E1503DF2C007E1707 /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = generic.hpp; path = examples/wsperf/generic.hpp; sourceTree = "<group>"; };
 		B6E56D6F150457B8007E1707 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = wscmd.hpp; path = examples/wsperf/wscmd.hpp; sourceTree = "<group>"; };
+		B6E7E7731505532E00394909 /* wsperf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wsperf; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6E7E78A150553D000394909 /* libboost_chrono.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_chrono.dylib; path = usr/local/lib/libboost_chrono.dylib; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_program_options.dylib; path = usr/local/lib/libboost_program_options.dylib; sourceTree = SDKROOT; };
 		B6FE8D1614686A8500B32547 /* md5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = md5.c; path = src/md5/md5.c; sourceTree = "<group>"; };
@@ -480,6 +504,22 @@
 				B613878F145CA61300ED9B19 /* libboost_date_time.dylib in Frameworks */,
 				B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */,
 				B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6E7E7701505532E00394909 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6E7E78B150553D000394909 /* libboost_chrono.dylib in Frameworks */,
+				B6E7E789150553A500394909 /* libcrypto.dylib in Frameworks */,
+				B6E7E7881505539E00394909 /* libssl.dylib in Frameworks */,
+				B6E7E7831505538C00394909 /* libboost_date_time.dylib in Frameworks */,
+				B6E7E7841505538C00394909 /* libboost_random.dylib in Frameworks */,
+				B6E7E7851505538C00394909 /* libboost_regex.dylib in Frameworks */,
+				B6E7E7861505538C00394909 /* libboost_system.dylib in Frameworks */,
+				B6E7E7871505538C00394909 /* libboost_thread.dylib in Frameworks */,
+				B6E7E7821505537200394909 /* libwebsocketpp.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -692,6 +732,7 @@
 		B6DF1C451434A5940029A1B1 = {
 			isa = PBXGroup;
 			children = (
+				B6E7E78A150553D000394909 /* libboost_chrono.dylib */,
 				B6FE8D5D14730B2200B32547 /* libssl.dylib */,
 				B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */,
 				B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */,
@@ -726,6 +767,7 @@
 				B67324891491A16500FC2B04 /* broadcast_server */,
 				B67324A21491A7F100FC2B04 /* stress_client */,
 				B61A51BF14DC271900456432 /* concurrent_server */,
+				B6E7E7731505532E00394909 /* wsperf */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1126,6 +1168,23 @@
 			productReference = B6DF1CD11435ED910029A1B1 /* echo_server */;
 			productType = "com.apple.product-type.tool";
 		};
+		B6E7E7721505532E00394909 /* wsperf */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6E7E77C1505532E00394909 /* Build configuration list for PBXNativeTarget "wsperf" */;
+			buildPhases = (
+				B6E7E76F1505532E00394909 /* Sources */,
+				B6E7E7701505532E00394909 /* Frameworks */,
+				B6E7E7711505532E00394909 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = wsperf;
+			productName = wsperf;
+			productReference = B6E7E7731505532E00394909 /* wsperf */;
+			productType = "com.apple.product-type.tool";
+		};
 		B6FE8D4E14730AE900B32547 /* policy_test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B6FE8D5614730AEA00B32547 /* Build configuration list for PBXNativeTarget "policy_test" */;
@@ -1175,6 +1234,7 @@
 				B67324881491A16500FC2B04 /* broadcast_server */,
 				B67324A11491A7F100FC2B04 /* stress_client */,
 				B61A51BE14DC271900456432 /* concurrent_server */,
+				B6E7E7721505532E00394909 /* wsperf */,
 			);
 		};
 /* End PBXProject section */
@@ -1279,6 +1339,17 @@
 			files = (
 				B6DF1CDB1435EDCE0029A1B1 /* echo_server.cpp in Sources */,
 				B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6E7E76F1505532E00394909 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6E7E77E1505536500394909 /* wsperf.cpp in Sources */,
+				B6E7E77F1505536500394909 /* autobahn.cpp in Sources */,
+				B6E7E7801505536500394909 /* case.cpp in Sources */,
+				B6E7E7811505536500394909 /* generic.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1758,6 +1829,44 @@
 			};
 			name = Release;
 		};
+		B6E7E77A1505532E00394909 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B6E7E77B1505532E00394909 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		B6FE8D5714730AEA00B32547 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1906,6 +2015,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		B6E7E77C1505532E00394909 /* Build configuration list for PBXNativeTarget "wsperf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6E7E77A1505532E00394909 /* Debug */,
+				B6E7E77B1505532E00394909 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		B6FE8D5614730AEA00B32547 /* Build configuration list for PBXNativeTarget "policy_test" */ = {
 			isa = XCConfigurationList;

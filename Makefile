@@ -53,7 +53,7 @@ else
 	cxxflags_default = -c -Wall -O2 -DNDEBUG -I$(BOOST_INCLUDE_PATH)
 endif
 cxxflags_small   = -c 
-cxxflags_debug   = -c -g
+cxxflags_debug   = -c -g -O0
 cxxflags_shared  = -f$(PIC)
 libname          = libwebsocketpp
 libname_hdr      = websocketpp

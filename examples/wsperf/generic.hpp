@@ -90,6 +90,8 @@ public:
             mark();
             m_timer->cancel();
             m_msg.reset();
+            m_pass = FAIL;
+            std::cout << "foo" << std::endl;
             this->end(con);
         }
         
@@ -98,7 +100,7 @@ public:
             m_timer->cancel();
             m_msg.reset();
             this->end(con);
-        } else if (m_sync) {
+        } else if (m_sync && m_pass == RUNNING) {
             con->send(m_msg);
         }
     }

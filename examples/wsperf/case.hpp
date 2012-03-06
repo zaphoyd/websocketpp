@@ -58,6 +58,7 @@ public:
         
         m_start = boost::chrono::steady_clock::now();
         m_bytes = 0;
+        m_pass = RUNNING;
     }
     
     void mark() {
@@ -212,7 +213,8 @@ protected:
     enum status {
         FAIL = 0,
         PASS = 1,
-        TIME_OUT = 2
+        TIME_OUT = 2,
+        RUNNING = 3
     };
     
     std::string                 m_name;
