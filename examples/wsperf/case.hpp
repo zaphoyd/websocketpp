@@ -93,10 +93,10 @@ public:
             avg /= m_times.size();
             
             for (uint64_t i = 0; i < m_times.size(); i++) {
-                stddev += pow(m_times[i]-avg,2);
+                stddev += std::pow(m_times[i]-avg,2.);
             }
             stddev /= m_times.size();
-            stddev = sqrt(stddev);
+            stddev = std::sqrt(static_cast<double>(stddev));
             
             for (int i = 0; i < 10; i++) {
                 avgs[i] /= (m_times.size()/10);
