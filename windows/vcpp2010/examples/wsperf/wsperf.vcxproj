@@ -13,6 +13,12 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\examples\wsperf\wsperf.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\examples\wsperf\autobahn.hpp" />
+    <ClInclude Include="..\..\..\..\examples\wsperf\case.hpp" />
+    <ClInclude Include="..\..\..\..\examples\wsperf\generic.hpp" />
+    <ClInclude Include="..\..\..\..\examples\wsperf\wscmd.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
