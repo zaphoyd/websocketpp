@@ -606,7 +606,7 @@ public:
 			
 			m_endpoint->alog().at(log::alevel::DEBUG_HANDSHAKE) << e.what() << log::endl;
 			
-			m_endpoint->elog().at(log::elevel::ERROR) 
+			m_endpoint->elog().at(log::elevel::RERROR) 
 			    << "Caught handshake exception: " << e.what() << log::endl;
 			
 			m_response.set_status(e.m_http_error_code,e.m_http_error_msg);
@@ -684,7 +684,7 @@ public:
 					m_response.set_header("Upgrade","websocket");
 					m_response.set_header("Connection","Upgrade");
 				} else {
-					m_endpoint->elog().at(log::elevel::ERROR) 
+					m_endpoint->elog().at(log::elevel::RERROR) 
 						<< "Error computing handshake sha1 hash" << log::endl;
 					
 					m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
@@ -734,7 +734,7 @@ public:
 		log_open_result();
 		
 		if (m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
-			m_endpoint->elog().at(log::elevel::ERROR) 
+			m_endpoint->elog().at(log::elevel::RERROR) 
 			    << "Handshake ended with HTTP error: " 
 			    << m_response.status_code() << " " << m_response.status_msg() 
 			    << log::endl;
@@ -852,7 +852,7 @@ public:
 	// itself as the callback. The connection is over when this method returns.
 	void handle_read_frame (const boost::system::error_code& error) {
 		if (m_state != state::OPEN && m_state != state::CLOSING) {
-			m_endpoint->elog().at(log::elevel::ERROR) 
+			m_endpoint->elog().at(log::elevel::RERROR) 
 			    << "handle_read_frame called in invalid state" << log::endl;
 			return;
 		}
@@ -907,7 +907,7 @@ public:
 					process_frame();
 				}
 			} catch (const frame::exception& e) {
-				m_endpoint->elog().at(log::elevel::ERROR) 
+				m_endpoint->elog().at(log::elevel::RERROR) 
 			        << "Caught frame exception: " << e.what() << log::endl;
 				
 				// if the exception happened while processing.
@@ -975,7 +975,7 @@ public:
 			
 			m_timer.cancel();
 		} else {
-			m_endpoint->elog().at(log::elevel::ERROR) 
+			m_endpoint->elog().at(log::elevel::RERROR) 
 			    << "handle_read_frame ended in an invalid state" << log::endl;
 		}
 	}
@@ -1307,7 +1307,7 @@ public:
 	}
 	// this is called when an async asio call encounters an error
 	void log_error(std::string msg,const boost::system::error_code& e) {
-		m_endpoint->elog().at(log::elevel::ERROR) 
+		m_endpoint->elog().at(log::elevel::RERROR) 
 		    << msg << "(" << e << ")" << log::endl;
 	}
 	

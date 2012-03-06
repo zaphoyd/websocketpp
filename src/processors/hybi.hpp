@@ -236,7 +236,7 @@ public:
             response.add_header("Upgrade","websocket");
             response.add_header("Connection","Upgrade");
         } else {
-            //m_endpoint->elog().at(log::elevel::ERROR) 
+            //m_endpoint->elog().at(log::elevel::RERROR) 
             //<< "Error computing handshake sha1 hash" << log::endl;
             // TODO: make sure this error path works
             response.set_status(http::status_code::INTERNAL_SERVER_ERROR);

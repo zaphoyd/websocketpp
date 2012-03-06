@@ -241,7 +241,7 @@ public:
 protected:  
     void handle_socket_init(const boost::system::error_code& error) {
         if (error) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "Socket initialization failed, error code: " << error 
                 << log::endl;
             this->terminate(false);
@@ -259,7 +259,7 @@ public:
             if (error == boost::asio::error::eof) {         
                 // got unexpected EOF
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) 
+                m_endpoint.elog().at(log::elevel::RERROR) 
                     << "Remote connection dropped unexpectedly" << log::endl;
                 terminate(false);
             } else if (error == boost::asio::error::operation_aborted) {
@@ -267,14 +267,14 @@ public:
                 // all connections on this io_service)
                 
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) 
+                m_endpoint.elog().at(log::elevel::RERROR) 
                     << "Terminating due to abort: " << error << log::endl;
                 terminate(true);
             } else {
                 // Other unexpected error
                 
                 // TODO: log error
-                m_endpoint.elog().at(log::elevel::ERROR) 
+                m_endpoint.elog().at(log::elevel::RERROR) 
                     << "Terminating due to unknown error: " << error 
                     << log::endl;
                 terminate(false);
@@ -448,7 +448,7 @@ protected:
         
         if (!msg) {
             // server is out of resources, close connection.
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
             << "Server has run out of message buffers." 
             << log::endl;
             terminate(true);
@@ -499,7 +499,7 @@ protected:
         
         if (!msg) {
             // server is out of resources, close connection.
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
             << "Server has run out of message buffers." 
             << log::endl;
             terminate(true);
@@ -676,7 +676,7 @@ protected:
     
     // this is called when an async asio call encounters an error
     void log_error(std::string msg,const boost::system::error_code& e) {
-        m_endpoint.elog().at(log::elevel::ERROR) 
+        m_endpoint.elog().at(log::elevel::RERROR) 
         << msg << "(" << e << ")" << log::endl;
     }
     

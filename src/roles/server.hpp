@@ -302,7 +302,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
     
     if (error) {
         if (error == boost::system::errc::too_many_files_open) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "async_accept returned error: " << error 
                 << " (too many files open)" << log::endl;
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
@@ -312,7 +312,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
             // the operation was canceled. This was probably due to the 
             // io_service being stopped.
         } else {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "async_accept returned error: " << error 
                 << " (unknown)" << log::endl;
         }
@@ -418,7 +418,7 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
 {
     if (error) {
         // log error
-        m_endpoint.elog().at(log::elevel::ERROR) 
+        m_endpoint.elog().at(log::elevel::RERROR) 
             << "Error reading HTTP request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
@@ -519,12 +519,12 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             m_response.set_status(http::status_code::OK);
         }
     } catch (const http::exception& e) {
-        m_endpoint.elog().at(log::elevel::ERROR) << e.what() << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) << e.what() << log::endl;
         m_response.set_status(e.m_error_code,e.m_error_msg);
         m_response.set_body(e.m_body);
     } catch (const uri_exception& e) {
         // there was some error building the uri
-        m_endpoint.elog().at(log::elevel::ERROR) << e.what() << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) << e.what() << log::endl;
         m_response.set_status(http::status_code::BAD_REQUEST);
     }
     
@@ -582,7 +582,7 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
     // TODO: handshake timer
     
     if (error) {
-        m_endpoint.elog().at(log::elevel::ERROR) << "Network error writing handshake respons. code: " << error << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) << "Network error writing handshake respons. code: " << error << log::endl;
         
         m_connection.terminate(false);
         return;
@@ -596,7 +596,7 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
             // the expected response and the connection can be closed.
         } else {
             // this was a websocket connection that ended in an error
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
             << "Handshake ended with HTTP error: " 
             << m_response.get_status_code() << " " 
             << m_response.get_status_msg() << log::endl;
