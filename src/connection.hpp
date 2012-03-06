@@ -238,7 +238,7 @@ public:
     typename endpoint::alogger_type& alog() {
         return m_endpoint.alog();
     }
-protected:  
+public: //protected:  
     void handle_socket_init(const boost::system::error_code& error) {
         if (error) {
             m_endpoint.elog().at(log::elevel::RERROR) 
@@ -356,7 +356,7 @@ public:
             );
         }
     }
-protected:  
+public: //protected:  
     void process_data(message::data_ptr msg) {
         get_handler()->on_message(type::shared_from_this(),msg);
     }
@@ -712,7 +712,7 @@ protected:
     handler_ptr get_handler() {
         return m_handler;
     }
-protected:
+public: //protected:
     endpoint_type&              m_endpoint;
     handler_ptr                 m_handler;
     
