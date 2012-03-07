@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
         
         echo_endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
         
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::ERROR);
+        echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         std::cout << "Starting WebSocket echo server on port " << port << std::endl;
