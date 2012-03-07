@@ -14,6 +14,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "echoclient", "examples\echo
 		{1C0FD04E-5ACA-4031-B3D1-320A5360C9D0} = {1C0FD04E-5ACA-4031-B3D1-320A5360C9D0}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wsperf", "examples\wsperf\wsperf.vcxproj", "{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C0FD04E-5ACA-4031-B3D1-320A5360C9D0} = {1C0FD04E-5ACA-4031-B3D1-320A5360C9D0}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -40,6 +45,10 @@ Global
 		{D7C36001-002F-4B8E-B4C0-A04E2F9522D0}.Debug|Win32.Build.0 = Debug|Win32
 		{D7C36001-002F-4B8E-B4C0-A04E2F9522D0}.Release|Win32.ActiveCfg = Release|Win32
 		{D7C36001-002F-4B8E-B4C0-A04E2F9522D0}.Release|Win32.Build.0 = Release|Win32
+		{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}.Debug|Win32.Build.0 = Debug|Win32
+		{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}.Release|Win32.ActiveCfg = Release|Win32
+		{7FFF2CBA-7B06-48FD-817A-E666D80A53DB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

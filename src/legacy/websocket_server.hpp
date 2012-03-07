@@ -374,7 +374,7 @@ public:
 		} catch (const http::exception& e) {
 			m_server->alog().at(log::alevel::DEBUG_HANDSHAKE) << e.what() << log::endl;
 			
-			m_server->elog().at(log::elevel::ERROR) 
+			m_server->elog().at(log::elevel::RERROR) 
 			<< "Caught handshake exception: " << e.what() << log::endl;
 			
 			m_response.set_status(e.m_error_code,e.m_error_msg);
@@ -440,7 +440,7 @@ public:
 		
 		// log error if this was 
 		if (m_version != -1 && m_response.status_code() != http::status_code::SWITCHING_PROTOCOLS) {
-			m_server->elog().at(log::elevel::ERROR) 
+			m_server->elog().at(log::elevel::RERROR) 
 			<< "Handshake ended with HTTP error: " 
 			<< m_response.status_code() << " " << m_response.status_msg() 
 			<< log::endl;
@@ -555,7 +555,7 @@ public:
 					m_processor->reset();
 				}
 			} catch (const session::exception& e) {
-				m_server->elog().at(log::elevel::ERROR) 
+				m_server->elog().at(log::elevel::RERROR) 
 				    << "Caught session exception: " << e.what() << log::endl;
 				
 				// if the exception happened while processing.
@@ -802,7 +802,7 @@ public:
 	
 	// this is called when an async asio call encounters an error
 	void log_error(std::string msg,const boost::system::error_code& e) {
-		m_server->elog().at(log::elevel::ERROR) 
+		m_server->elog().at(log::elevel::RERROR) 
 		<< msg << "(" << e << ")" << log::endl;
 	}
 	void log_close_result() {
@@ -1133,7 +1133,7 @@ private:
 			std::stringstream err;
 			err << "Error accepting socket connection: " << error;
 			
-			elog().at(log::elevel::ERROR) << err.str() << log::endl;
+			elog().at(log::elevel::RERROR) << err.str() << log::endl;
 			throw server_error(err.str());
 		}
 		

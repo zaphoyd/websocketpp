@@ -294,34 +294,34 @@ void client<endpoint>::handle_connect(connection_ptr con,
         con->start();
     } else {
         if (error == boost::system::errc::connection_refused) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (connection refused)" << log::endl;
         } else if (error == boost::system::errc::operation_canceled) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (operation canceled)" << log::endl;
         } else if (error == boost::system::errc::connection_reset) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (connection reset)" << log::endl;
             
             /*if (con->retry()) {
-                m_endpoint.elog().at(log::elevel::ERROR) 
+                m_endpoint.elog().at(log::elevel::RERROR) 
                     << "Retrying connection" << log::endl;
                 connect(con->get_uri());
                 m_endpoint.remove_connection(con);
             }*/
         } else if (error == boost::system::errc::timed_out) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (operation timed out)" << log::endl;
         } else if (error == boost::system::errc::broken_pipe) {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (broken pipe)" << log::endl;
         } else {
-            m_endpoint.elog().at(log::elevel::ERROR) 
+            m_endpoint.elog().at(log::elevel::RERROR) 
                 << "An error occurred while establishing a connection: " 
                 << error << " (unknown)" << log::endl;
             throw "client error";
@@ -391,7 +391,7 @@ void client<endpoint>::connection<connection_type>::handle_write_request(
     if (error) {
         
         
-        m_endpoint.elog().at(log::elevel::ERROR) << "Error writing WebSocket request. code: " << error << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) << "Error writing WebSocket request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
 
@@ -422,7 +422,7 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
         const boost::system::error_code& error, std::size_t bytes_transferred)
 {
     if (error) {
-        m_endpoint.elog().at(log::elevel::ERROR) << "Error reading HTTP request. code: " << error << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) << "Error reading HTTP request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
     }
@@ -475,7 +475,7 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
             sha << server_key.c_str();
             
             if (!sha.Result(message_digest)) {
-                m_endpoint.elog().at(log::elevel::ERROR) << "Error computing handshake sha1 hash." << log::endl;
+                m_endpoint.elog().at(log::elevel::RERROR) << "Error computing handshake sha1 hash." << log::endl;
                 // TODO: close behavior
                 return;
             }
@@ -489,7 +489,7 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
             server_key = base64_encode(
                 reinterpret_cast<const unsigned char*>(message_digest),20);
             if (server_key != h) {
-                m_endpoint.elog().at(log::elevel::ERROR) << "Server returned incorrect handshake key." << log::endl;
+                m_endpoint.elog().at(log::elevel::RERROR) << "Server returned incorrect handshake key." << log::endl;
                 // TODO: close behavior
                 return;
             }
@@ -503,7 +503,7 @@ void client<endpoint>::connection<connection_type>::handle_read_response (
         
         m_connection.handle_read_frame(boost::system::error_code());
     } catch (const http::exception& e) {
-        m_endpoint.elog().at(log::elevel::ERROR) 
+        m_endpoint.elog().at(log::elevel::RERROR) 
             << "Error processing server handshake. Server HTTP response: " 
             << e.m_error_msg << " (" << e.m_error_code 
             << ") Local error: " << e.what() << log::endl;

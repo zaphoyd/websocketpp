@@ -42,15 +42,19 @@ class message_test : public case_handler {
 public: 
     message_test(uint64_t message_size,
                  uint64_t message_count,
+				 uint64_t quantile_count,
                  int timeout,
                  bool binary,
                  bool sync,
+				 bool rtts,
                  correctness_mode mode) 
      : m_message_size(message_size),
        m_message_count(message_count),
+	   m_quantile_count(quantile_count),
        m_timeout(timeout),
        m_binary(binary),
        m_sync(sync),
+       m_rtts(rtts),
        m_mode(mode),
        m_acks(0)
     {}
@@ -91,15 +95,14 @@ public:
             m_timer->cancel();
             m_msg.reset();
             m_pass = FAIL;
-            std::cout << "foo" << std::endl;
-            this->end(con);
+            this->end(con, m_quantile_count, m_rtts);
         }
         
         if (m_acks == m_message_count) {
             m_pass = PASS;
             m_timer->cancel();
             m_msg.reset();
-            this->end(con);
+            this->end(con, m_quantile_count, m_rtts);
         } else if (m_sync && m_pass == RUNNING) {
             con->send(m_msg);
         }
@@ -107,9 +110,11 @@ public:
 private:
     uint64_t    m_message_size;
     uint64_t    m_message_count;
+	uint64_t    m_quantile_count;
     int         m_timeout;
     bool        m_binary;
     bool        m_sync;
+    bool        m_rtts;
     correctness_mode m_mode;
     
     std::string m_data;

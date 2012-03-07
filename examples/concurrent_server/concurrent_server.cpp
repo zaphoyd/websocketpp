@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
         echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::ERROR);
+        echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         std::list<boost::shared_ptr<boost::thread> > threads;

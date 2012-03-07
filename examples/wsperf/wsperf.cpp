@@ -27,7 +27,6 @@
 
 #include "wscmd.hpp"
 #include "case.hpp"
-#include "autobahn.hpp"
 #include "generic.hpp"
 
 #include "../../src/roles/client.hpp"
@@ -64,9 +63,11 @@ struct request {
             uint64_t message_size;
             uint64_t message_count;
             uint64_t timeout;
+			uint64_t quantile_count;
             
             bool binary;
             bool sync;
+			bool rtts;
             
             wsperf::correctness_mode mode;
             
@@ -76,9 +77,11 @@ struct request {
             if (!extract_number(command,"size",message_size)) {return;}
             if (!extract_number(command,"count",message_count)) {return;}
             if (!extract_number(command,"timeout",timeout)) {return;}
+			if (!extract_number(command,"quantiles",quantile_count)) {return;}
             
             if (!extract_bool(command,"binary",binary)) {return;}
             if (!extract_bool(command,"sync",sync)) {return;}
+            if (!extract_bool(command,"rtts",rtts)) {return;}
             
             if (command.args["correctness"] == "exact") {
                 mode = wsperf::EXACT;
@@ -88,8 +91,8 @@ struct request {
                 send_error("Invalid correctness parameter");
                 return;
             }
-            
-            tests.push_back(wsperf::case_handler_ptr(new wsperf::message_test(message_size,message_count,timeout,binary,sync,mode)));
+
+            tests.push_back(wsperf::case_handler_ptr(new wsperf::message_test(message_size,message_count,quantile_count,timeout,binary,sync,rtts,mode)));
         } else {
             send_error("Invalid Command");
             return;
@@ -118,7 +121,7 @@ struct request {
         e.alog().unset_level(websocketpp::log::alevel::ALL);
         e.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        e.elog().set_level(websocketpp::log::elevel::ERROR);
+        e.elog().set_level(websocketpp::log::elevel::RERROR);
         e.elog().set_level(websocketpp::log::elevel::FATAL);
         
         for (size_t i = 0; i < tests.size(); i++) {
@@ -267,8 +270,8 @@ void process_requests(request_coordinator* coordinator) {
 //               based on hardware concurrency available and expected load and
 //               job length.
 int main(int argc, char* argv[]) {
-    unsigned short port = 9002;
-    unsigned short num_threads = 2;
+    unsigned short port = 9100;
+    unsigned short num_threads = 1;
     
     std::list<boost::shared_ptr<boost::thread> > threads;
     std::list<boost::shared_ptr<boost::thread> >::iterator thit;
@@ -299,7 +302,7 @@ int main(int argc, char* argv[]) {
         echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::ERROR);
+        echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         for (int i = 0; i < num_threads; i++) {
