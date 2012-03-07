@@ -79,7 +79,7 @@ namespace elevel {
     static const value LIBRARY = 0x2;   // library usage exceptions
     static const value INFO = 0x4;      // 
     static const value WARN = 0x8;      //
-    static const value ERROR = 0x10;    // recoverable error
+    static const value RERROR = 0x10;    // recoverable error
     static const value FATAL = 0x20;    // unrecoverable error
     
     static const value ALL = 0xFFFF;

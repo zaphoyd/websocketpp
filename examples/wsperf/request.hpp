@@ -99,7 +99,7 @@ struct request {
         e.alog().unset_level(websocketpp::log::alevel::ALL);
         e.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        e.elog().set_level(websocketpp::log::elevel::ERROR);
+        e.elog().set_level(websocketpp::log::elevel::RERROR);
         e.elog().set_level(websocketpp::log::elevel::FATAL);
         
         e.connect(uri);
