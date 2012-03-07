@@ -125,7 +125,7 @@ void hybi_header::set_payload_size(uint64_t size) {
             m_header[1] |= BASIC_PAYLOAD_16BIT_CODE;
         }
         m_payload_size = size;
-        *(reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])) = htons(size);
+        *(reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])) = htons(static_cast<uint16_t>(size));
     } else if (size <= frame::limits::PAYLOAD_SIZE_JUMBO) {
         if (get_masked()) {
             // shift mask bytes to the correct position given the new size
