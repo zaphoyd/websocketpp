@@ -54,7 +54,7 @@ using websocketpp::server;
 //               based on hardware concurrency available and expected load and
 //               job length.
 int main(int argc, char* argv[]) {
-    unsigned short port = 9003;
+    unsigned short port = 9050;
     unsigned short num_threads = 2;
     
     try {

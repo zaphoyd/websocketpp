@@ -83,35 +83,46 @@ struct request {
             if (command.command == "message_test") {
                 test = case_handler_ptr(new message_test(command));
                 token = test->get_token();
+                uri = test->get_uri();
             } else {
                 writer->write(prepare_response("error","Invalid Command"));
                 return;
             }
+            
+            writer->write(prepare_response("test_start",""));
+        
+            client e(test);
+            
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            
+            e.elog().set_level(websocketpp::log::elevel::RERROR);
+            e.elog().set_level(websocketpp::log::elevel::FATAL);
+                        
+            e.connect(uri);
+            e.run();
+            
+            writer->write(prepare_response_object("test_data",test->get_data()));
+
+            writer->write(prepare_response("test_complete",""));
         } catch (case_exception& e) {
             writer->write(prepare_response("error",e.what()));
             return;
+        } catch (websocketpp::exception& e) {
+            writer->write(prepare_response("error",e.what()));
+            return;
+        } catch (websocketpp::uri_exception& e) {
+            writer->write(prepare_response("error",e.what()));
+            return;
         }
-        
-        writer->write(prepare_response("test_start",""));
-        
-        client e(test);
-        
-        e.alog().unset_level(websocketpp::log::alevel::ALL);
-        e.elog().unset_level(websocketpp::log::elevel::ALL);
-        
-        e.elog().set_level(websocketpp::log::elevel::RERROR);
-        e.elog().set_level(websocketpp::log::elevel::FATAL);
-        
-        e.connect(uri);
-        e.run();
-        
-        writer->write(prepare_response("test_start",test->get_data()));
-
-        writer->write(prepare_response("test_complete",""));
     }
     
     std::string prepare_response(std::string type,std::string data) {
         return "{\"type\":\"" + type + "\",\"token\":\"" + token + "\",\"data\":\"" + data + "\"}";
+    }
+    
+    std::string prepare_response_object(std::string type,std::string data) {
+        return "{\"type\":\"" + type + "\",\"token\":\"" + token + "\",\"data\":" + data + "}";
     }
 };
 

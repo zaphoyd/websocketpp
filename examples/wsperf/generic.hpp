@@ -57,18 +57,24 @@ public:
     {}
     
     explicit message_test(wscmd::cmd& cmd) {
-        // message_test:uri=[string];           ws://localhost:9000
-        //              size=[interger];        4096
-        //              count=[integer];        1000
-        //              timeout=[integer];      10000
-        //              binary=[bool];          true/false
-        //              sync=[bool];            true/false
-        //              correctness=[string];   exact/length
-        //              token=[string];         foo
+        // message_test:uri=[string];               ws://localhost:9000
+        //              token=[string];             foo
+        //              quantile_count=[integer];   10
+        //              rtts=[bool];                true/false
+        //              size=[interger];            4096
+        //              count=[integer];            1000
+        //              timeout=[integer];          10000
+        //              binary=[bool];              true/false
+        //              sync=[bool];                true/false
+        //              correctness=[string];       exact/length
         
+        // generic stuff
         m_uri = extract_string(cmd,"uri");
         m_token = extract_string(cmd,"token");
+        m_quantile_count = extract_number<size_t>(cmd,"quantile_count");
+        m_rtts = extract_bool(cmd,"rtts");
         
+        // specific to message_test
         m_message_count = extract_number<uint64_t>(cmd,"size");
         m_message_size = extract_number<uint64_t>(cmd,"count");
         m_timeout = extract_number<uint64_t>(cmd,"timeout");
@@ -121,7 +127,7 @@ public:
             m_timer->cancel();
             m_msg.reset();
             m_pass = FAIL;
-            std::cout << "foo" << std::endl;
+            
             this->end(con);
         }
         
