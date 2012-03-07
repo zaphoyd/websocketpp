@@ -106,14 +106,17 @@ public:
     // functions in the derived endpoint. This is done to limit the use of 
     // public methods in endpoint and its CRTP bases to only those methods 
     // intended for end-application use.
+#ifdef _WEBSOCKETPP_CPP11_FRIEND_
+    // Highly simplified and preferred C++11 version:
+    friend role_type;
+    friend socket_type;
+    friend connection_type;
+#else
     friend class role< endpoint<role,socket> >;
     friend class socket< endpoint<role,socket> >;
     friend class connection<type,role< type >::template connection,socket< type >::template connection>;
+#endif
     
-    // Highly simplified and preferred C++11 version:
-    // friend role_type; 
-    // friend socket_type;
-    // friend connection_type;
     
     /// Construct an endpoint.
     /**

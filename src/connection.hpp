@@ -238,7 +238,8 @@ public:
     typename endpoint::alogger_type& alog() {
         return m_endpoint.alog();
     }
-protected:  
+public:
+//protected:  TODO: figure out why VCPP2010 doesn't like protected here
     void handle_socket_init(const boost::system::error_code& error) {
         if (error) {
             m_endpoint.elog().at(log::elevel::RERROR) 
@@ -356,7 +357,8 @@ public:
             );
         }
     }
-protected:  
+public:
+//protected:  TODO: figure out why VCPP2010 doesn't like protected here 
     void process_data(message::data_ptr msg) {
         get_handler()->on_message(type::shared_from_this(),msg);
     }
@@ -712,7 +714,8 @@ protected:
     handler_ptr get_handler() {
         return m_handler;
     }
-protected:
+public:
+//protected:  TODO: figure out why VCPP2010 doesn't like protected here
     endpoint_type&              m_endpoint;
     handler_ptr                 m_handler;
     
