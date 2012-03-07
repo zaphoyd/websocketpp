@@ -94,13 +94,13 @@ public:
     void on_open(connection_ptr con) {
         m_msg = con->get_data_message();
         
-        m_data.reserve(m_message_size);
+        m_data.reserve(static_cast<size_t>(m_message_size));
         
         if (!m_binary) {
-            fill_utf8(m_data,m_message_size,true);
+            fill_utf8(m_data,static_cast<size_t>(m_message_size),true);
             m_msg->reset(websocketpp::frame::opcode::TEXT);
         } else {
-            fill_binary(m_data,m_message_size,true);
+            fill_binary(m_data,static_cast<size_t>(m_message_size),true);
             m_msg->reset(websocketpp::frame::opcode::BINARY);
         }
         
@@ -142,7 +142,7 @@ public:
     }
 private:
     // Simulation Parameters
-    size_t              m_message_size;
+    uint64_t            m_message_size;
     uint64_t            m_message_count;
     uint64_t            m_timeout;
     bool                m_binary;

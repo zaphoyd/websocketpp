@@ -44,6 +44,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+#   pragma warning(push)
+#   pragma warning(disable:4355)
+#endif
+
 namespace websocketpp {
 
 // Forward declarations
@@ -643,5 +649,9 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     
 } // namespace role 
 } // namespace websocketpp
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 #endif // WEBSOCKETPP_ROLE_SERVER_HPP
