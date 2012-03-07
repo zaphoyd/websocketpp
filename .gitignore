@@ -44,3 +44,7 @@ examples/concurrent_server/concurrent_server
 examples/fuzzing_server_tls/fuzzing_server
 
 examples/wsperf/wsperf
+
+.sconsign.dblite
+
+release/
