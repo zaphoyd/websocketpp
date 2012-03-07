@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         for (int i = 0; i < num_threads; i++) {
-            threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&process_requests, &rc))));
+            threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc))));
         }
         
         std::cout << "Starting wsperf server on port " << port << " with " << num_threads << " processing threads." << std::endl;

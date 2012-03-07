@@ -35,24 +35,28 @@
 #include "../../src/roles/client.hpp"
 #include "../../src/websocketpp.hpp"
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
+
 using websocketpp::client;
+using websocketpp::server;
 
 namespace wsperf {
 
 class writer {
 public:
-    virtual void write(std::string& msg) = 0;
+    virtual void write(std::string msg) = 0;
 };
 
 typedef boost::shared_ptr<writer> writer_ptr;
 
 template <typename T>
-class ws_writer : writer {
+class ws_writer : public writer {
 public:
     ws_writer(typename T::handler::connection_ptr con) : m_con(con) {}
     
-    void write(std::string& msg) {
-        m_con->write;
+    void write(std::string msg) {
+        m_con->send(msg);
     }
 private:
     typename T::handler::connection_ptr m_con;
@@ -78,17 +82,17 @@ struct request {
         try {
             if (command.command == "message_test") {
                 test = case_handler_ptr(new message_test(command));
-                token = test.get_token();
+                token = test->get_token();
             } else {
-                writer.write(prepare_response("error","Invalid Command"));
+                writer->write(prepare_response("error","Invalid Command"));
                 return;
             }
         } catch (case_exception& e) {
-            writer.write(prepare_response("error",e.what()));
+            writer->write(prepare_response("error",e.what()));
             return;
         }
         
-        writer.write(prepare_response("test_start",""));
+        writer->write(prepare_response("test_start",""));
         
         client e(test);
         
@@ -98,16 +102,16 @@ struct request {
         e.elog().set_level(websocketpp::log::elevel::ERROR);
         e.elog().set_level(websocketpp::log::elevel::FATAL);
         
-        e.connect();
+        e.connect(uri);
         e.run();
         
-        writer.write(prepare_response("test_start",tests[i]->get_data()));
+        writer->write(prepare_response("test_start",test->get_data()));
 
-        writer.write(prepare_response("test_complete",""));
+        writer->write(prepare_response("test_complete",""));
     }
     
     std::string prepare_response(std::string type,std::string data) {
-        return "{\"type\":\"" + type + "\",\"token\":\"" + m_token + "\",\"data\":\"" + data + "\"}";
+        return "{\"type\":\"" + type + "\",\"token\":\"" + token + "\",\"data\":\"" + data + "\"}";
     }
 };
 
