@@ -176,7 +176,7 @@ public:
           << ",\"bytes\":" << m_bytes 
           << ",\"quantiles\":[";
           
-        for (int i = 0; i < m_quantile_count; i++) {
+        for (size_t i = 0; i < m_quantile_count; i++) {
             s << (i > 0 ? "," : "");
             s << "[";
             s << avgs[i] << "," << quantiles[i];

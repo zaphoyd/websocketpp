@@ -75,7 +75,7 @@ public:
         m_rtts = extract_bool(cmd,"rtts");
         
         // specific to message_test
-        m_message_count = extract_number<uint64_t>(cmd,"size");
+        m_message_count = extract_number<size_t>(cmd,"size");
         m_message_size = extract_number<uint64_t>(cmd,"count");
         m_timeout = extract_number<uint64_t>(cmd,"timeout");
         
@@ -142,7 +142,7 @@ public:
     }
 private:
     // Simulation Parameters
-    uint64_t            m_message_size;
+    size_t              m_message_size;
     uint64_t            m_message_count;
     uint64_t            m_timeout;
     bool                m_binary;
