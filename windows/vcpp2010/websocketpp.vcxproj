@@ -75,17 +75,17 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\network_utilities.cpp" />
-    <ClCompile Include="..\..\src\websocket_client.cpp" />
-    <ClCompile Include="..\..\src\websocket_client_session.cpp" />
-    <ClCompile Include="..\..\src\websocket_frame.cpp" />
-    <ClCompile Include="..\..\src\websocket_server.cpp" />
-    <ClCompile Include="..\..\src\websocket_server_session.cpp" />
-    <ClCompile Include="..\..\src\websocket_session.cpp" />
     <ClCompile Include="..\..\src\base64\base64.cpp" />
+    <ClCompile Include="..\..\src\md5\md5.c" />
+    <ClCompile Include="..\..\src\messages\data.cpp" />
+    <ClCompile Include="..\..\src\network_utilities.cpp" />
+    <ClCompile Include="..\..\src\processors\hybi_header.cpp" />
     <ClCompile Include="..\..\src\sha1\sha1.cpp" />
+    <ClCompile Include="..\..\src\uri.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\endpoint.hpp" />
+    <ClInclude Include="..\..\src\logger\logger.hpp" />
     <ClInclude Include="..\..\src\network_utilities.hpp" />
     <ClInclude Include="..\..\src\websocket_client.hpp" />
     <ClInclude Include="..\..\src\websocket_client_session.hpp" />
