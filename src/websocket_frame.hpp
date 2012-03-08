@@ -397,7 +397,7 @@ public:
             *reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH]) = htons(s);
         } else if (s <= limits::PAYLOAD_SIZE_JUMBO) {
             m_header[1] = BASIC_PAYLOAD_64BIT_CODE;
-            *reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = htonll(s);
+            *reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = zsutil::htonll(s);
         } else {
             throw processor::exception("payload size limit is 63 bits",processor::error::PROTOCOL_VIOLATION);
         }
@@ -498,7 +498,7 @@ public:
         } else if (s == BASIC_PAYLOAD_64BIT_CODE) {
             // reinterpret the second eight bytes as a 64 bit integer in 
             // network byte order. Convert to host byte order and store.
-            payload_size = ntohll(*(
+            payload_size = zsutil::ntohll(*(
                 reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
             ));
             

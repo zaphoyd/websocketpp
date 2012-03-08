@@ -38,7 +38,6 @@ enum correctness_mode {
     LENGTH = 1
 };
 
-// test class for 9.1.* and 9.2.*
 class message_test : public case_handler {
 public: 
     message_test(uint64_t message_size,
@@ -75,7 +74,7 @@ public:
         m_rtts = extract_bool(cmd,"rtts");
         
         // specific to message_test
-        m_message_count = extract_number<size_t>(cmd,"size");
+        m_message_count = extract_number<uint64_t>(cmd,"size");
         m_message_size = extract_number<uint64_t>(cmd,"count");
         m_timeout = extract_number<uint64_t>(cmd,"timeout");
         
@@ -118,7 +117,9 @@ public:
     }
     
     void on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
-        if ((m_mode == LENGTH && msg->get_payload().size() == m_data.size()) || (m_mode == EXACT && msg->get_payload() == m_data)) {
+        if ((m_mode == LENGTH && msg->get_payload().size() == m_data.size()) || 
+            (m_mode == EXACT && msg->get_payload() == m_data))
+        {
             m_acks++;
             m_bytes += m_message_size;
             mark();

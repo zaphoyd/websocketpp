@@ -37,8 +37,8 @@ def boostlibs(libnames):
       return []
    else:
       libs = []
-      prefix = 'SHLIBPREFIX' if boost_linkshared else 'LIBPREFIX'
-      suffix = 'SHLIBSUFFIX' if boost_linkshared else 'LIBSUFFIX'
+      prefix = env['SHLIBPREFIX'] if boost_linkshared else env['LIBPREFIX']
+      suffix = env['SHLIBSUFFIX'] if boost_linkshared else env['LIBSUFFIX']
       for name in libnames:
          lib = File(os.path.join(env['BOOST_LIBS'], '%sboost_%s%s' % (prefix, name, suffix)))
          libs.append(lib)
@@ -66,7 +66,7 @@ else:
 
 platform_libs = []
 if env['PLATFORM'] == 'posix':
-	platform_libs = ['pthread', 'rt']
+   platform_libs = ['pthread', 'rt']
 elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass

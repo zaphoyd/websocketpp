@@ -27,7 +27,9 @@
 
 #include "network_utilities.hpp"
 
-uint64_t htonll(uint64_t src) { 
+
+
+uint64_t zsutil::htonll(uint64_t src) { 
     static int typ = TYP_INIT; 
     unsigned char c; 
     union { 
@@ -48,11 +50,11 @@ uint64_t htonll(uint64_t src) {
     return x.ull; 
 }
 
-uint64_t ntohll(uint64_t src) { 
+uint64_t zsutil::ntohll(uint64_t src) { 
     return htonll(src);
 }
 
-std::string lookup_ws_close_status_string(uint16_t code) {
+std::string zsutil::lookup_ws_close_status_string(uint16_t code) {
     switch (code) {
         case 1000: 
             return "Normal closure";
@@ -76,12 +78,14 @@ std::string lookup_ws_close_status_string(uint16_t code) {
             return "Message too large";
         case 1010: 
             return "Missing required extensions";
+        case 1011: 
+            return "Internal server error";
         default:
             return "Unknown";
     }
 }
 
-std::string to_hex(const std::string& input) {
+std::string zsutil::to_hex(const std::string& input) {
     std::string output;
     std::string hex = "0123456789ABCDEF";
     
