@@ -44,9 +44,13 @@ def boostlibs(libnames):
          libs.append(lib)
       return libs
 
-
 if env['PLATFORM'].startswith('win'):
-   env.Append(CPPDEFINES = ['WIN32', 'NDEBUG', '_CONSOLE', '_WEBSOCKETPP_CPP11_FRIEND_'])
+   env.Append(CPPDEFINES = ['WIN32',
+                            'NDEBUG',
+                            'WIN32_LEAN_AND_MEAN',
+                            '_WIN32_WINNT=0x0600',
+                            '_CONSOLE',
+                            '_WEBSOCKETPP_CPP11_FRIEND_'])
    arch_flags  = '/arch:SSE2'
    opt_flags   = '/Ox /Oi /fp:fast'
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
