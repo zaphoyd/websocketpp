@@ -35,6 +35,8 @@
 // TODO: impliment stuff from here: 
 // http://stackoverflow.com/questions/809902/64-bit-ntohl-in-c
 
+namespace zsutil {
+
 #define TYP_INIT 0 
 #define TYP_SMLE 1 
 #define TYP_BIGE 2 
@@ -45,5 +47,7 @@ uint64_t ntohll(uint64_t src);
 std::string lookup_ws_close_status_string(uint16_t code);
 
 std::string to_hex(const std::string& input);
+
+} // namespace zsutil
 
 #endif // NETWORK_UTILITIES_HPP

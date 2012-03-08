@@ -76,7 +76,7 @@ void hybi_header::consume(std::istream& input) {
         default:
             break;
     }
-    //std::cout << "header so far: " << to_hex(std::string(m_header,MAX_HEADER_LENGTH)) << std::endl;
+    //std::cout << "header so far: " << zsutil::to_hex(std::string(m_header,MAX_HEADER_LENGTH)) << std::endl;
 }
 uint64_t hybi_header::get_bytes_needed() const {
     return m_bytes_needed;
@@ -136,7 +136,7 @@ void hybi_header::set_payload_size(uint64_t size) {
             m_header[1] |= BASIC_PAYLOAD_64BIT_CODE;
         }
         m_payload_size = size;
-        *(reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])) = htonll(size);
+        *(reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])) = zsutil::htonll(size);
     } else {
         throw processor::exception("set_payload_size called with value that was too large (>2^63)",processor::error::MESSAGE_TOO_BIG);
     }
@@ -245,8 +245,8 @@ void hybi_header::process_extended_header() {
         // reinterpret the second two bytes as a 16 bit integer in network
         // byte order. Convert to host byte order and store locally.
         m_payload_size = ntohs(*(
-                                 reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
-                                 ));
+            reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
+        ));
         
         if (m_payload_size < s) {
             std::stringstream err;
@@ -257,9 +257,9 @@ void hybi_header::process_extended_header() {
     } else if (s == BASIC_PAYLOAD_64BIT_CODE) {
         // reinterpret the second eight bytes as a 64 bit integer in 
         // network byte order. Convert to host byte order and store.
-        m_payload_size = ntohll(*(
-                                  reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
-                                  ));
+        m_payload_size = zsutil::ntohll(*(
+            reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
+        ));
         
         if (m_payload_size <= frame::limits::PAYLOAD_SIZE_EXTENDED) {
             throw processor::exception("payload length not minimally encoded",

@@ -578,7 +578,7 @@ public:
             m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_header()));
             m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_payload()));
             
-            m_endpoint.alog().at(log::alevel::DEVEL) << "write header: " << to_hex(m_write_queue.front()->get_header()) << log::endl;
+            m_endpoint.alog().at(log::alevel::DEVEL) << "write header: " << zsutil::to_hex(m_write_queue.front()->get_header()) << log::endl;
             
             boost::asio::async_write(
                 socket_type::get_socket(),
