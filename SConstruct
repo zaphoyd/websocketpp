@@ -54,10 +54,8 @@ if env['PLATFORM'].startswith('win'):
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
 elif env['PLATFORM'] == 'posix':
    env.Append(CPPDEFINES = ['NDEBUG'])
-   arch_flags  = ''
-   opt_flags   = '-O2'
-   warn_flags  = '-Wall'
-   env['CCFLAGS'] = '%s %s %s' % (warn_flags, arch_flags, opt_flags)
+   env.Append(CCFLAGS = ['-Wall', '-fno-strict-aliasing'])
+   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer', '-march=core2'])
    #env['LINKFLAGS'] = ''
 
 

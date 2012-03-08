@@ -188,11 +188,4 @@ void process_requests(request_coordinator* coordinator) {
 
 } // namespace wsperf
 
-
-
-
-
-
-
-
 #endif // WSPERF_REQUEST_HPP
