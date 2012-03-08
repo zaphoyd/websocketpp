@@ -1,0 +1,26 @@
+## wsperf
+##
+
+Import('env')
+Import('boostlibs')
+Import('wslib')
+Import('platform_libs')
+
+localenv = env.Clone ()
+
+sources = ["wsperf.cpp",
+           "request.cpp",
+           "case.cpp",
+           "generic.cpp"]
+
+LIBS = [wslib, platform_libs] + boostlibs(['system',
+                                           'date_time',
+                                           'regex',
+                                           'thread',
+                                           'random',
+                                           'chrono',
+                                           'program_options'])
+
+prg = localenv.Program('wsperf', sources, LIBS = LIBS)
+
+Return('prg')

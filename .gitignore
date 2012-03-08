@@ -47,4 +47,4 @@ examples/wsperf/wsperf
 
 .sconsign.dblite
 
-release/
+build/
