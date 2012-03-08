@@ -372,6 +372,7 @@
 		B6E56D6F150457B8007E1707 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = wscmd.hpp; path = examples/wsperf/wscmd.hpp; sourceTree = "<group>"; };
 		B6E56D7E150644A3007E1707 /* request.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = request.cpp; path = examples/wsperf/request.cpp; sourceTree = "<group>"; };
 		B6E56D7F150644A3007E1707 /* request.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = request.hpp; path = examples/wsperf/request.hpp; sourceTree = "<group>"; };
+		B6E56D821508EACA007E1707 /* SConstruct */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConstruct; sourceTree = "<group>"; };
 		B6E7E7731505532E00394909 /* wsperf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wsperf; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6E7E78A150553D000394909 /* libboost_chrono.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_chrono.dylib; path = usr/local/lib/libboost_chrono.dylib; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
@@ -749,6 +750,7 @@
 				B6DF1CC51435ECE40029A1B1 /* libraries */,
 				B6138791145CA6F700ED9B19 /* Makefile */,
 				B6DE901314C4D875009A1591 /* readme.txt */,
+				B6E56D821508EACA007E1707 /* SConstruct */,
 				B64E12D014BDE132006F20F0 /* test */,
 				B6DF1C7F1434ABB70029A1B1 /* src */,
 				B6DF1C6A1434A7A30029A1B1 /* Products */,
