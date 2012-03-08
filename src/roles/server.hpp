@@ -650,4 +650,8 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
 } // namespace role 
 } // namespace websocketpp
 
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
+
 #endif // WEBSOCKETPP_ROLE_SERVER_HPP

@@ -44,78 +44,63 @@ def boostlibs(libnames):
          libs.append(lib)
       return libs
 
-
 if env['PLATFORM'].startswith('win'):
-   env.Append(CPPDEFINES = ['WIN32', 'NDEBUG', '_CONSOLE', '_WEBSOCKETPP_CPP11_FRIEND_'])
+   env.Append(CPPDEFINES = ['WIN32',
+                            'NDEBUG',
+                            'WIN32_LEAN_AND_MEAN',
+                            '_WIN32_WINNT=0x0600',
+                            '_CONSOLE',
+                            '_WEBSOCKETPP_CPP11_FRIEND_'])
    arch_flags  = '/arch:SSE2'
    opt_flags   = '/Ox /Oi /fp:fast'
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
+elif env['PLATFORM'] == 'posix':
+   env.Append(CPPDEFINES = ['NDEBUG'])
+   env.Append(CCFLAGS = ['-Wall', '-fno-strict-aliasing'])
+   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer', '-march=core2'])
+   #env['LINKFLAGS'] = ''
 
-
-env.VariantDir("release/", "src/");
 
 if env['PLATFORM'].startswith('win'):
-   lib_path = env['BOOST_LIBS']
+   env['LIBPATH'] = env['BOOST_LIBS']
 else:
-   lib_path = ['/usr/lib',
-               '/usr/local/lib',
-               env['BOOST_LIBS'],
-               '#/release']
+   env['LIBPATH'] = ['/usr/lib',
+                     '/usr/local/lib',
+                     env['BOOST_LIBS']]
 
 platform_libs = []
 if env['PLATFORM'] == 'posix':
-	platform_libs = ['pthread', 'rt']
+   platform_libs = ['pthread', 'rt']
 elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass
 
-#### END OF GLOBAL CONF ########################################################
 
-## WebSocket++ library
-##
-lib_sources = ["base64/base64.cpp",
-               "md5/md5.c",
-               "messages/data.cpp",
-               "network_utilities.cpp",
-               "processors/hybi_header.cpp",
-               "sha1/sha1.cpp",
-               "uri.cpp"]
+releasedir = 'build/release/'
+debugdir = 'build/debug/'
+builddir = releasedir
 
-static_lib = env.StaticLibrary(target = 'release/websocketpp',
-                               source = lib_sources,
-                               srcdir = "release")
-#shared_lib=env.SharedLibrary(target = 'release/websocketpp', source = lib_sources, srcdir="release",LIBS=['boost_regex'],LIBPATH=lib_path)
+Export('env')
+Export('platform_libs')
+Export('boostlibs')
+
+## END OF CONFIG !!
+
+## TARGETS:
+
+static_lib, shared_lib = SConscript('src/SConscript',
+                                    variant_dir = builddir + 'websocketpp',
+                                    duplicate = 0)
 
 wslib = static_lib
+Export('wslib')
 
-## Echo Server
-##
-env.VariantDir("#/release/echo_server", "examples/echo_server")
-env.Program(target = "#/release/echo_server/echo_server",
-            srcdir = "#/release/echo_server/",
-            source = ["echo_server.cpp"],
-            LIBS = [wslib, platform_libs] + boostlibs(['system',
-                                                       'date_time',
-                                                       'regex',
-                                                       'thread']),
-            LIBPATH = lib_path)
+wsperf = SConscript('#/examples/wsperf/SConscript',
+                    variant_dir = builddir + 'wsperf',
+                    duplicate = 0)
 
-## wsperf
-##
-env.VariantDir("#/release/wsperf", "examples/wsperf")
-env.Program(target = "#/release/wsperf/wsperf",
-            srcdir = "#/release/wsperf/",
-            source = ["wsperf.cpp",
-                      "request.cpp",
-                      "case.cpp",
-                      "generic.cpp"],
-            LIBS = [wslib, platform_libs] + boostlibs(['system',
-                                                       'date_time',
-                                                       'regex',
-                                                       'thread',
-                                                       'random',
-                                                       'chrono',
-                                                       'program_options']),
-            LIBPATH = lib_path)
+echo_server = SConscript('#/examples/echo_server/SConscript',
+                         variant_dir = builddir + 'echo_server',
+                         duplicate = 0)

@@ -348,7 +348,7 @@ public:
             boost::asio::async_read(
                 socket_type::get_socket(),
                 m_buf,
-                boost::asio::transfer_at_least(m_processor->get_bytes_needed()),
+                boost::asio::transfer_at_least(static_cast<size_t>(m_processor->get_bytes_needed())),
                 boost::bind(
                     &type::handle_read_frame,
                     type::shared_from_this(),

@@ -28,22 +28,19 @@
 #ifndef WEBSOCKETPP_ROLE_CLIENT_HPP
 #define WEBSOCKETPP_ROLE_CLIENT_HPP
 
-#include "../endpoint.hpp"
-#include "../uri.hpp"
-#include "../shared_const_buffer.hpp"
+#include <limits>
+#include <iostream>
 
-#ifndef __STDC_LIMIT_MACROS
-  #define __STDC_LIMIT_MACROS
-#endif
-#include <stdint.h>
-
+#include <boost/cstdint.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
-#include <iostream>
+#include "../endpoint.hpp"
+#include "../uri.hpp"
+#include "../shared_const_buffer.hpp"
 
 #ifdef _MSC_VER
 // Disable "warning C4355: 'this' : used in base member initializer list".
@@ -209,8 +206,8 @@ public:
     client (boost::asio::io_service& m) 
      : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
-       m_gen(m_rng,boost::random::uniform_int_distribution<>(INT32_MIN,
-                                                             INT32_MAX)) {}
+       m_gen(m_rng,boost::random::uniform_int_distribution<>(std::numeric_limits<int32_t>::min(),
+                                                             std::numeric_limits<int32_t>::max())) {}
     
     connection_ptr connect(const std::string& u);
     
@@ -536,5 +533,9 @@ void client<endpoint>::connection<connection_type>::log_open_result() {
     
 } // namespace role
 } // namespace websocketpp
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 #endif // WEBSOCKETPP_ROLE_CLIENT_HPP
