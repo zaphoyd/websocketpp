@@ -52,6 +52,13 @@ if env['PLATFORM'].startswith('win'):
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
+elif env['PLATFORM'] == 'posix':
+   env.Append(CPPDEFINES = ['NDEBUG'])
+   arch_flags  = ''
+   opt_flags   = '-O2'
+   warn_flags  = '-Wall'
+   env['CCFLAGS'] = '%s %s %s' % (warn_flags, arch_flags, opt_flags)
+   #env['LINKFLAGS'] = ''
 
 
 env.VariantDir("release/", "src/");
