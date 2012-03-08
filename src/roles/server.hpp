@@ -44,6 +44,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+#   pragma warning(push)
+#   pragma warning(disable:4355)
+#endif
+
 namespace websocketpp {
 
 // Forward declarations

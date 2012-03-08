@@ -45,6 +45,12 @@
 
 #include <iostream>
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+#   pragma warning(push)
+#   pragma warning(disable:4355)
+#endif
+
 using boost::asio::ip::tcp;
 
 namespace websocketpp {
