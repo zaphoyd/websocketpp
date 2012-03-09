@@ -162,7 +162,8 @@ namespace websocketpp {
             SEND_QUEUE_FULL = 1,
             PAYLOAD_VIOLATION = 2,
             ENDPOINT_UNSECURE = 3,
-            ENDPOINT_UNAVAILABLE = 4
+            ENDPOINT_UNAVAILABLE = 4,
+            INVALID_URI = 5
         };
     }
     

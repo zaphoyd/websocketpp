@@ -97,6 +97,14 @@ public:
             m_request.remove_header(key);
         }
         
+        void add_subprotocol(const std::string& value) {
+            m_requested_subprotocols.push_back(value);
+        }
+        
+        void set_origin(const std::string& value) {
+            m_origin = value;
+        }
+        
         // Information about the requested URI
         // valid only after URIs are loaded
         // TODO: check m_uri for NULLness
@@ -214,6 +222,9 @@ public:
     
     connection_ptr connect(const std::string& u);
     
+    connection_ptr get_connection(const std::string& u);
+    connection_ptr connect(connection_ptr con);
+    
     // TODO: add a `perpetual` option
     // TODO: error handling for being called in alternate states
     // TODO: run should only be callable from `STOPPED` state
@@ -254,26 +265,47 @@ private:
 template <class endpoint>
 typename endpoint_traits<endpoint>::connection_ptr
 client<endpoint>::connect(const std::string& u) {
-    // TODO: uri constructor will throw, should we catch and wrap?
-    uri_ptr location(new uri(u));
-    
-    if (location->get_secure() && !m_endpoint.is_secure()) {
-        throw websocketpp::exception("Endpoint doesn't support secure connections.",websocketpp::error::ENDPOINT_UNSECURE);
+    connection_ptr con = get_connection(u);
+    connect(con);
+    return con;
+}
+
+template <class endpoint>
+typename endpoint_traits<endpoint>::connection_ptr
+client<endpoint>::get_connection(const std::string& u) {
+    try {
+        uri_ptr location(new uri(u));
+        
+        if (location->get_secure() && !m_endpoint.is_secure()) {
+            throw websocketpp::exception("Endpoint doesn't support secure connections.",
+                websocketpp::error::ENDPOINT_UNSECURE);
+        }
+        
+        connection_ptr con = m_endpoint.create_connection();
+        
+        if (!con) {
+            throw websocketpp::exception("Endpoint is unavailable.",
+                websocketpp::error::ENDPOINT_UNAVAILABLE);
+        }
+        
+        con->set_uri(location);
+        
+        return con;
+    } catch (uri_exception& e) {
+        throw websocketpp::exception(e.what(),websocketpp::error::INVALID_URI);
     }
-    
+}
+
+template <class endpoint>
+typename endpoint_traits<endpoint>::connection_ptr
+client<endpoint>::connect(connection_ptr con) {
     tcp::resolver resolver(m_io_service);
     
-    tcp::resolver::query query(location->get_host(),location->get_port_str());
+    std::stringstream p;
+    p << con->get_port();
+    
+    tcp::resolver::query query(con->get_host(),p.str());
     tcp::resolver::iterator iterator = resolver.resolve(query);
-    
-    connection_ptr con = m_endpoint.create_connection();
-    
-    if (!con) {
-        throw websocketpp::exception("Endpoint is unavailable.",
-                                     websocketpp::error::ENDPOINT_UNAVAILABLE);
-    }
-    
-    con->set_uri(location);
     
     boost::asio::async_connect(
         con->get_raw_socket(),
@@ -357,6 +389,19 @@ void client<endpoint>::connection<connection_type>::write_request() {
          m_request.replace_header("Origin",m_origin);
     }
     
+    if (m_requested_subprotocols.size() > 0) {
+        std::string vals;
+        std::string sep = "";
+        
+        std::vector<std::string>::iterator it;
+        for (it = m_requested_subprotocols.begin(); it != m_requested_subprotocols.end(); ++it) {
+            vals += sep + *it;
+            sep = ",";
+        }
+        
+        m_request.replace_header("Sec-WebSocket-Protocol",vals);
+    }
+    
     // Generate client key
     int32_t raw_key[4];
     
@@ -367,7 +412,13 @@ void client<endpoint>::connection<connection_type>::write_request() {
     m_handshake_key = base64_encode(reinterpret_cast<unsigned char const*>(raw_key), 16);
     
     m_request.replace_header("Sec-WebSocket-Key",m_handshake_key);
-    m_request.replace_header("User Agent","WebSocket++/2011-12-06");
+    
+    // Unless the user has overridden the user agent, send generic WS++
+    if (m_request.header("User Agent") == "") {
+        m_request.replace_header("User Agent","WebSocket++/2012-03-09");
+    }
+    
+    
     
     // TODO: generating this raw request involves way too much copying in cases
     //       without string/vector move semantics.
