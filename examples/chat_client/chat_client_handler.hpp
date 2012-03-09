@@ -40,52 +40,44 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "../../src/roles/client.hpp"
 #include "../../src/websocketpp.hpp"
-#include "../../src/websocket_connection_handler.hpp"
 
 #include <map>
 #include <string>
 #include <queue>
 
-using websocketpp::session_ptr;
+using websocketpp::client;
 
 namespace websocketchat {
 
-class chat_client_handler : public websocketpp::connection_handler {
+class chat_client_handler : public client::handler {
 public:
     chat_client_handler() {}
     virtual ~chat_client_handler() {}
     
-    // ignored for clients?
-    void validate(session_ptr s) {} 
+    void on_fail(connection_ptr con);
     
     // connection to chat room complete
-    void on_open(session_ptr s);
+    void on_open(connection_ptr con);
 
     // connection to chat room closed
-    void on_close(session_ptr s);
+    void on_close(connection_ptr con);
     
     // got a new message from server
-    void on_message(session_ptr s,const std::string &msg);
-    
-    // ignore messages
-    void on_message(session_ptr s,const std::vector<unsigned char> &data) {}
+    void on_message(connection_ptr con, message_ptr msg);
     
     // CLIENT API
     void send(const std::string &msg);
     void close();
 
 private:
-    // Client API internal
-    void do_send(const std::string &msg);
-    void do_close();
-
     void decode_server_msg(const std::string &msg);
     
     // list of other chat participants
     std::set<std::string> m_participants;
     std::queue<std::string> m_msg_queue;
-    session_ptr m_session;
+    connection_ptr m_con;
 };
 
 typedef boost::shared_ptr<chat_client_handler> chat_client_handler_ptr;

@@ -27,7 +27,9 @@
 
 #include "chat_client_handler.hpp"
 
+#include "../../src/roles/client.hpp"
 #include "../../src/websocketpp.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -35,6 +37,8 @@
 #include <iostream>
 
 using boost::asio::ip::tcp;
+using websocketpp::client;
+
 using namespace websocketchat;
 
 int main(int argc, char* argv[]) {
@@ -45,28 +49,32 @@ int main(int argc, char* argv[]) {
     } else {
         uri = argv[1];
     }
-    
-    chat_client_handler_ptr c(new chat_client_handler());
-    
+        
     try {
-        boost::asio::io_service io_service;
+        chat_client_handler_ptr handler(new chat_client_handler());
+        client::connection_ptr con;
+        client endpoint(handler);
         
-        websocketpp::client_ptr client(new websocketpp::client(io_service,c));
+        endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        client->init();
+        endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
+        endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
+        
+        con = endpoint.get_connection(uri);
+        
+        con->add_request_header("User Agent","WebSocket++/0.2.0 WebSocket++Chat/0.2.0");
+        con->add_subprotocol("com.zaphoyd.websocketpp.chat");
+        
+        con->set_origin("http://zaphoyd.com");
 
-        client->set_header("User Agent","WebSocket++/2011-09-25");
-        client->add_subprotocol("com.zaphoyd.websocketpp.chat");
+        endpoint.connect(con);
         
-        client->set_origin("http://zaphoyd.com");
-
-        client->connect(uri);
-        
-        boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+        boost::thread t(boost::bind(&client::run, &endpoint));
         
         char line[512];
         while (std::cin.getline(line, 512)) {
-            c->send(line);
+            handler->send(line);
         }
         
         t.join();

@@ -30,27 +30,26 @@
 #include <boost/algorithm/string/replace.hpp>
 
 using websocketchat::chat_client_handler;
-using websocketpp::client_session_ptr;
+using websocketpp::client;
 
-void chat_client_handler::on_open(session_ptr s) {
-    // not sure if anything needs to happen here.
-    m_session = s;
+void chat_client_handler::on_fail(connection_ptr con) {
+    std::cout << "Connection failed" << std::endl;
+}
+
+void chat_client_handler::on_open(connection_ptr con) {
+    m_con = con;
 
     std::cout << "Successfully connected" << std::endl;
 }
 
-void chat_client_handler::on_close(session_ptr s) {
-    // not sure if anything needs to happen here either.
-    
-    m_session = client_session_ptr();
+void chat_client_handler::on_close(connection_ptr con) {
+    m_con = connection_ptr();
 
     std::cout << "client was disconnected" << std::endl;
 }
 
-void chat_client_handler::on_message(session_ptr s,const std::string &msg) {
-    //std::cout << "message from server: " << msg << std::endl;
-
-    decode_server_msg(msg);
+void chat_client_handler::on_message(connection_ptr con,message_ptr msg) {
+    decode_server_msg(msg->get_payload());
 }
 
 // CLIENT API
@@ -58,46 +57,30 @@ void chat_client_handler::on_message(session_ptr s,const std::string &msg) {
 //  they need to be careful to not touch unsyncronized member variables.
 
 void chat_client_handler::send(const std::string &msg) {
-    if (!m_session) {
-        std::cerr << "Error: no connected session" << std::endl;
-        return;
-    }
-    m_session->io_service().post(boost::bind(&chat_client_handler::do_send, this, msg));
-}
-
-void chat_client_handler::close() {
-    if (!m_session) {
-        std::cerr << "Error: no connected session" << std::endl;
-        return;
-    }
-    m_session->io_service().post(boost::bind(&chat_client_handler::do_close,this));
-}
-
-// END CLIENT API
-
-void chat_client_handler::do_send(const std::string &msg) {
-    if (!m_session) {
+    if (!m_con) {
         std::cerr << "Error: no connected session" << std::endl;
         return;
     }
     
-    // check for local commands
     if (msg == "/list") {
         std::cout << "list all participants" << std::endl;
     } else if (msg == "/close") {
-        do_close();
+        close();
     } else {
-        m_session->send(msg);
+        m_con->send(msg);
     }
 }
 
-void chat_client_handler::do_close() {
-    if (!m_session) {
+void chat_client_handler::close() {
+    if (!m_con) {
         std::cerr << "Error: no connected session" << std::endl;
         return;
     }
-    m_session->close(websocketpp::session::CLOSE_STATUS_GOING_AWAY,"");
+    m_con->close(websocketpp::close::status::GOING_AWAY,"");
 }
+
+// END CLIENT API
+
 
 // {"type":"participants","value":[<participant>,...]}
 // {"type":"msg","sender":"<sender>","value":"<msg>" }
