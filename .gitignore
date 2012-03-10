@@ -48,3 +48,4 @@ examples/wsperf/wsperf
 .sconsign.dblite
 
 build/
+examples/wsperf/wsperf_client

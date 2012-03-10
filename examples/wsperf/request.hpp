@@ -43,6 +43,11 @@ using websocketpp::server;
 
 namespace wsperf {
 
+enum request_type {
+    PERF_TEST = 0,
+    END_WORKER = 1
+};
+
 class writer {
 public:
     virtual void write(std::string msg) = 0;
@@ -69,6 +74,7 @@ private:
 struct request {
     writer_ptr  writer;
     
+    request_type type;
     std::string req;                // The raw request
     std::string token;              // Parsed test token. Return in all results    
     
@@ -163,9 +169,36 @@ public:
     
     void on_message(connection_ptr con,message_ptr msg) {
         request r;
+        r.type = PERF_TEST;
         r.writer = writer_ptr(new ws_writer<server>(con));
         r.req = msg->get_payload();
         m_coordinator.add_request(r);
+    }
+    
+    void on_fail(connection_ptr con) {
+        std::cout << "A connection from a command client failed." << std::endl;
+    }
+private:
+    request_coordinator& m_coordinator;
+};
+
+// The WebSocket++ handler in this case reads numbers from connections and packs
+// connection pointer + number into a request struct and passes it off to the
+// coordinator.
+class concurrent_client_handler : public client::handler {
+public:
+    concurrent_client_handler(request_coordinator& c) : m_coordinator(c) {}
+    
+    void on_message(connection_ptr con,message_ptr msg) {
+        request r;
+        r.type = PERF_TEST;
+        r.writer = writer_ptr(new ws_writer<client>(con));
+        r.req = msg->get_payload();
+        m_coordinator.add_request(r);
+    }
+    
+    void on_fail(connection_ptr con) {
+        std::cout << "The connection to the commanding server failed." << std::endl;
     }
 private:
     request_coordinator& m_coordinator;
@@ -182,7 +215,11 @@ void process_requests(request_coordinator* coordinator) {
     while (1) {
         coordinator->get_request(r);
         
-        r.process();
+        if (r.type == PERF_TEST) {
+            r.process();
+        } else {
+            break;
+        }
     }
 }
 

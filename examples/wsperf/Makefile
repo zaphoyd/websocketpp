@@ -18,12 +18,15 @@ else
 endif
 
 ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lwebsocketpp $(darwinlibs) -lboost_system -lboost_thread -lboost_random -lboost_regex -lboost_date_time -boost_chrono
+	LDFLAGS := $(LDFLAGS) -lwebsocketpp $(darwinlibs) -lboost_system -lboost_thread -lboost_random -lboost_regex -lboost_date_time -boost_chrono -lboost_program_options
 else
-	LDFLAGS := $(LDFLAGS) $(WEBSOCKETPP_PATH)/libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_thread.a $(BOOST_LIB_PATH)/libboost_random.a $(BOOST_LIB_PATH)/libboost_chrono.a $(darwinlibs)
+	LDFLAGS := $(LDFLAGS) $(WEBSOCKETPP_PATH)/libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_thread.a $(BOOST_LIB_PATH)/libboost_random.a $(BOOST_LIB_PATH)/libboost_chrono.a $(BOOST_LIB_PATH)/libboost_program_options.a $(darwinlibs)
 endif
 
 wsperf: wsperf.o
+	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+    
+wsperf_client: wsperf_client.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp
@@ -33,4 +36,4 @@ wsperf: wsperf.o
 #
 .PHONY:		clean
 clean:
-		rm -f *.o wsperf
+		rm -f *.o wsperf wsperf_client
