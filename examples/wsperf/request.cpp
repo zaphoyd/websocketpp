@@ -24,3 +24,75 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+
+#include "request.hpp"
+
+using wsperf::request;
+
+void request::process() {
+    case_handler_ptr test;
+    std::string uri;
+    
+    wscmd::cmd command = wscmd::parse(req);
+    
+    try {
+        if (command.command == "message_test") {
+            test = case_handler_ptr(new message_test(command));
+            token = test->get_token();
+            uri = test->get_uri();
+        } else {
+            writer->write(prepare_response("error","Invalid Command"));
+            return;
+        }
+        
+        writer->write(prepare_response("test_start",""));
+    
+        client e(test);
+        
+        e.alog().unset_level(websocketpp::log::alevel::ALL);
+        e.elog().unset_level(websocketpp::log::elevel::ALL);
+        
+        e.elog().set_level(websocketpp::log::elevel::RERROR);
+        e.elog().set_level(websocketpp::log::elevel::FATAL);
+                    
+        e.connect(uri);
+        e.run();
+        
+        writer->write(prepare_response_object("test_data",test->get_data()));
+
+        writer->write(prepare_response("test_complete",""));
+    } catch (case_exception& e) {
+        writer->write(prepare_response("error",e.what()));
+        return;
+    } catch (websocketpp::exception& e) {
+        writer->write(prepare_response("error",e.what()));
+        return;
+    } catch (websocketpp::uri_exception& e) {
+        writer->write(prepare_response("error",e.what()));
+        return;
+    }
+}
+
+std::string request::prepare_response(std::string type,std::string data) {
+    return "{\"type\":\"" + type 
+            + "\",\"token\":\"" + token + "\",\"data\":\"" + data + "\"}";
+}
+    
+std::string request::prepare_response_object(std::string type,std::string data){
+    return "{\"type\":\"" + type 
+            + "\",\"token\":\"" + token + "\",\"data\":" + data + "}";
+}
+
+void wsperf::process_requests(request_coordinator* coordinator) {
+    request r;
+    
+    while (1) {
+        coordinator->get_request(r);
+        
+        if (r.type == PERF_TEST) {
+            r.process();
+        } else {
+            break;
+        }
+    }
+}

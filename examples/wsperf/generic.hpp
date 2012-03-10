@@ -40,107 +40,11 @@ enum correctness_mode {
 
 class message_test : public case_handler {
 public: 
-    message_test(uint64_t message_size,
-                 uint64_t message_count,
-                 int timeout,
-                 bool binary,
-                 bool sync,
-                 correctness_mode mode) 
-     : m_message_size(message_size),
-       m_message_count(message_count),
-       m_timeout(timeout),
-       m_binary(binary),
-       m_sync(sync),
-       m_mode(mode),
-       m_acks(0)
-    {}
+    /// Construct a message test from a wscmd command
+    explicit message_test(wscmd::cmd& cmd);
     
-    explicit message_test(wscmd::cmd& cmd) {
-        // message_test:uri=[string];               ws://localhost:9000
-        //              token=[string];             foo
-        //              quantile_count=[integer];   10
-        //              rtts=[bool];                true/false
-        //              size=[interger];            4096
-        //              count=[integer];            1000
-        //              timeout=[integer];          10000
-        //              binary=[bool];              true/false
-        //              sync=[bool];                true/false
-        //              correctness=[string];       exact/length
-        
-        // generic stuff
-        m_uri = extract_string(cmd,"uri");
-        m_token = extract_string(cmd,"token");
-        m_quantile_count = extract_number<size_t>(cmd,"quantile_count");
-        m_rtts = extract_bool(cmd,"rtts");
-        
-        // specific to message_test
-        m_message_count = extract_number<uint64_t>(cmd,"size");
-        m_message_size = extract_number<uint64_t>(cmd,"count");
-        m_timeout = extract_number<uint64_t>(cmd,"timeout");
-        
-        m_binary = extract_bool(cmd,"binary");
-        m_sync = extract_bool(cmd,"sync");
-        
-        if (cmd.args["correctness"] == "exact") {
-            m_mode = EXACT;
-        } else if (cmd.args["correctness"] == "length") {
-            m_mode = LENGTH;
-        } else {
-            throw case_exception("Invalid correctness parameter.");
-        }
-    }
-    
-    void on_open(connection_ptr con) {
-        m_msg = con->get_data_message();
-        
-        m_data.reserve(static_cast<size_t>(m_message_size));
-        
-        if (!m_binary) {
-            fill_utf8(m_data,static_cast<size_t>(m_message_size),true);
-            m_msg->reset(websocketpp::frame::opcode::TEXT);
-        } else {
-            fill_binary(m_data,static_cast<size_t>(m_message_size),true);
-            m_msg->reset(websocketpp::frame::opcode::BINARY);
-        }
-        
-        m_msg->set_payload(m_data);
-        
-        start(con,m_timeout);
-        
-        if (m_sync) {
-            con->send(m_msg);
-        } else {
-            for (uint64_t i = 0; i < m_message_count; i++) {
-                con->send(m_msg);
-            }
-        }
-    }
-    
-    void on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
-        if ((m_mode == LENGTH && msg->get_payload().size() == m_data.size()) || 
-            (m_mode == EXACT && msg->get_payload() == m_data))
-        {
-            m_acks++;
-            m_bytes += m_message_size;
-            mark();
-        } else {
-            mark();
-            m_timer->cancel();
-            m_msg.reset();
-            m_pass = FAIL;
-            
-            this->end(con);
-        }
-        
-        if (m_acks == m_message_count) {
-            m_pass = PASS;
-            m_timer->cancel();
-            m_msg.reset();
-            this->end(con);
-        } else if (m_sync && m_pass == RUNNING) {
-            con->send(m_msg);
-        }
-    }
+    void on_open(connection_ptr con);
+    void on_message(connection_ptr con,websocketpp::message::data_ptr msg);
 private:
     // Simulation Parameters
     uint64_t            m_message_size;

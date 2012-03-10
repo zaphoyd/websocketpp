@@ -24,3 +24,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+
+#include "wscmd.hpp"
+
+#include <map>
+#include <string>
+
+wscmd::cmd wscmd::parse(const std::string& m) {
+    cmd command;
+    std::string::size_type start;
+    std::string::size_type end;
+    
+    start = m.find(":",0);
+    
+    if (start != std::string::npos) {
+        command.command = m.substr(0,start);
+        
+        start++; // skip the colon
+        end = m.find(";",start);
+        
+        // find all semicolons
+        while (end != std::string::npos) {
+            std::string arg;
+            std::string val;
+            
+            std::string::size_type sep = m.find("=",start);
+            
+            if (sep != std::string::npos) {
+                arg = m.substr(start,sep-start);
+                val = m.substr(sep+1,end-sep-1);
+            } else {
+                arg = m.substr(start,end-start);
+                val = "";
+            }
+            
+            command.args[arg] = val;
+            
+            start = end+1;
+            end = m.find(";",start);
+        }
+    }
+    
+    return command;
+}
+

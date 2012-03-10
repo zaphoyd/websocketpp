@@ -79,57 +79,11 @@ struct request {
     std::string token;              // Parsed test token. Return in all results    
     
     /// Run a test and return JSON result
-    void process() {
-        case_handler_ptr test;
-        std::string uri;
-        
-        wscmd::cmd command = wscmd::parse(req);
-        
-        try {
-            if (command.command == "message_test") {
-                test = case_handler_ptr(new message_test(command));
-                token = test->get_token();
-                uri = test->get_uri();
-            } else {
-                writer->write(prepare_response("error","Invalid Command"));
-                return;
-            }
-            
-            writer->write(prepare_response("test_start",""));
-        
-            client e(test);
-            
-            e.alog().unset_level(websocketpp::log::alevel::ALL);
-            e.elog().unset_level(websocketpp::log::elevel::ALL);
-            
-            e.elog().set_level(websocketpp::log::elevel::RERROR);
-            e.elog().set_level(websocketpp::log::elevel::FATAL);
-                        
-            e.connect(uri);
-            e.run();
-            
-            writer->write(prepare_response_object("test_data",test->get_data()));
-
-            writer->write(prepare_response("test_complete",""));
-        } catch (case_exception& e) {
-            writer->write(prepare_response("error",e.what()));
-            return;
-        } catch (websocketpp::exception& e) {
-            writer->write(prepare_response("error",e.what()));
-            return;
-        } catch (websocketpp::uri_exception& e) {
-            writer->write(prepare_response("error",e.what()));
-            return;
-        }
-    }
+    void process();
     
-    std::string prepare_response(std::string type,std::string data) {
-        return "{\"type\":\"" + type + "\",\"token\":\"" + token + "\",\"data\":\"" + data + "\"}";
-    }
-    
-    std::string prepare_response_object(std::string type,std::string data) {
-        return "{\"type\":\"" + type + "\",\"token\":\"" + token + "\",\"data\":" + data + "}";
-    }
+    // Simple json generation
+    std::string prepare_response(std::string type,std::string data);
+    std::string prepare_response_object(std::string type,std::string data);
 };
 
 // The coordinator is a simple wrapper around an STL queue. add_request inserts
@@ -165,7 +119,14 @@ private:
 // coordinator.
 class concurrent_server_handler : public server::handler {
 public:
-    concurrent_server_handler(request_coordinator& c) : m_coordinator(c) {}
+    concurrent_server_handler(request_coordinator& c,
+                              std::string ident, 
+                              std::string ua)
+     : m_coordinator(c), m_ident(ident), m_ua(ua) {}
+    
+    void on_open(connection_ptr con) {
+        con->send("{\"type\":\"test_welcome\",\"version\":\""+m_ua+"\",\"ident\":\""+m_ident+"\"}");
+    }
     
     void on_message(connection_ptr con,message_ptr msg) {
         request r;
@@ -180,6 +141,8 @@ public:
     }
 private:
     request_coordinator& m_coordinator;
+    std::string m_ident;
+    std::string m_ua;
 };
 
 // The WebSocket++ handler in this case reads numbers from connections and packs
@@ -187,7 +150,14 @@ private:
 // coordinator.
 class concurrent_client_handler : public client::handler {
 public:
-    concurrent_client_handler(request_coordinator& c) : m_coordinator(c) {}
+    concurrent_client_handler(request_coordinator& c,
+                              std::string ident, 
+                              std::string ua)
+     : m_coordinator(c), m_ident(ident), m_ua(ua) {}
+    
+    void on_open(connection_ptr con) {
+        con->send("{\"type\":\"test_welcome\",\"version\":\""+m_ua+"\",\"ident\":\""+m_ident+"\"}");
+    }
     
     void on_message(connection_ptr con,message_ptr msg) {
         request r;
@@ -202,26 +172,14 @@ public:
     }
 private:
     request_coordinator& m_coordinator;
+    std::string m_ident;
+    std::string m_ua;
 };
 
 // process_requests is the body function for a processing thread. It loops 
 // forever reading requests, processing them serially, then reading another 
 // request. 
 void process_requests(request_coordinator* coordinator);
-
-void process_requests(request_coordinator* coordinator) {
-    request r;
-    
-    while (1) {
-        coordinator->get_request(r);
-        
-        if (r.type == PERF_TEST) {
-            r.process();
-        } else {
-            break;
-        }
-    }
-}
 
 } // namespace wsperf
 

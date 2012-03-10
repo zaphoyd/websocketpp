@@ -100,7 +100,6 @@
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6E56D80150644A3007E1707 /* request.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D7E150644A3007E1707 /* request.cpp */; };
 		B6E7E77E1505536500394909 /* wsperf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6814FEFC54007E1707 /* wsperf.cpp */; };
-		B6E7E77F1505536500394909 /* autobahn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6B14FF0183007E1707 /* autobahn.cpp */; };
 		B6E7E7801505536500394909 /* case.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6914FEFE95007E1707 /* case.cpp */; };
 		B6E7E7811505536500394909 /* generic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D6D1503DF2C007E1707 /* generic.cpp */; };
 		B6E7E7821505537200394909 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
@@ -274,6 +273,7 @@
 		B62A5A7014774F08005F9EB0 /* md5.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = md5.hpp; path = src/md5/md5.hpp; sourceTree = "<group>"; };
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
 		B63E51A814C9A5790006BF9A /* shared_const_buffer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = shared_const_buffer.hpp; path = src/shared_const_buffer.hpp; sourceTree = "<group>"; };
+		B649759D150BA96100BE17D1 /* wscmd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = wscmd.cpp; path = examples/wsperf/wscmd.cpp; sourceTree = "<group>"; };
 		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
@@ -365,8 +365,6 @@
 		B6E56D6814FEFC54007E1707 /* wsperf.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = wsperf.cpp; path = examples/wsperf/wsperf.cpp; sourceTree = "<group>"; };
 		B6E56D6914FEFE95007E1707 /* case.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = case.cpp; path = examples/wsperf/case.cpp; sourceTree = "<group>"; };
 		B6E56D6A14FEFE95007E1707 /* case.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = case.hpp; path = examples/wsperf/case.hpp; sourceTree = "<group>"; };
-		B6E56D6B14FF0183007E1707 /* autobahn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = autobahn.cpp; path = examples/wsperf/autobahn.cpp; sourceTree = "<group>"; };
-		B6E56D6C14FF0184007E1707 /* autobahn.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = autobahn.hpp; path = examples/wsperf/autobahn.hpp; sourceTree = "<group>"; };
 		B6E56D6D1503DF2C007E1707 /* generic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = generic.cpp; path = examples/wsperf/generic.cpp; sourceTree = "<group>"; };
 		B6E56D6E1503DF2C007E1707 /* generic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = generic.hpp; path = examples/wsperf/generic.hpp; sourceTree = "<group>"; };
 		B6E56D6F150457B8007E1707 /* wscmd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = wscmd.hpp; path = examples/wsperf/wscmd.hpp; sourceTree = "<group>"; };
@@ -910,12 +908,11 @@
 				B6E56D6814FEFC54007E1707 /* wsperf.cpp */,
 				B6E56D7E150644A3007E1707 /* request.cpp */,
 				B6E56D7F150644A3007E1707 /* request.hpp */,
-				B6E56D6B14FF0183007E1707 /* autobahn.cpp */,
-				B6E56D6C14FF0184007E1707 /* autobahn.hpp */,
 				B6E56D6914FEFE95007E1707 /* case.cpp */,
 				B6E56D6A14FEFE95007E1707 /* case.hpp */,
 				B6E56D6D1503DF2C007E1707 /* generic.cpp */,
 				B6E56D6E1503DF2C007E1707 /* generic.hpp */,
+				B649759D150BA96100BE17D1 /* wscmd.cpp */,
 				B6E56D6F150457B8007E1707 /* wscmd.hpp */,
 			);
 			name = wsperf;
@@ -1358,7 +1355,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6E7E77E1505536500394909 /* wsperf.cpp in Sources */,
-				B6E7E77F1505536500394909 /* autobahn.cpp in Sources */,
 				B6E7E7801505536500394909 /* case.cpp in Sources */,
 				B6E7E7811505536500394909 /* generic.cpp in Sources */,
 				B6E56D80150644A3007E1707 /* request.cpp in Sources */,

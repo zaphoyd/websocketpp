@@ -50,9 +50,13 @@ static const std::string user_agent = "wsperf/0.2.0dev WebSocket++/0.2.0dev";
 using websocketpp::client;
 namespace po = boost::program_options;
 
+int start_server(po::variables_map& vm);
+int start_client(po::variables_map& vm);
+
 int start_server(po::variables_map& vm) {
     unsigned short port = vm["port"].as<unsigned short>();
     unsigned int num_threads = vm["num_threads"].as<unsigned int>();
+    std::string ident = vm["ident"].as<std::string>();
     
     std::list< boost::shared_ptr<boost::thread> > threads;
     
@@ -63,7 +67,7 @@ int start_server(po::variables_map& vm) {
         std::cout << "bad thread number" << std::endl;
         return 1;
     } else {
-        h = server::handler::ptr(new wsperf::concurrent_server_handler(rc));
+        h = server::handler::ptr(new wsperf::concurrent_server_handler(rc,ident,user_agent));
     }
     
     server endpoint(h);
@@ -92,6 +96,7 @@ int start_client(po::variables_map& vm) {
     
     std::string uri = vm["uri"].as<std::string>();
     unsigned int num_threads = vm["num_threads"].as<unsigned int>();
+    std::string ident = vm["ident"].as<std::string>();
     
     // Start wsperf
     std::list< boost::shared_ptr<boost::thread> > threads;
@@ -104,16 +109,14 @@ int start_client(po::variables_map& vm) {
         std::cout << "bad thread number" << std::endl;
         return 1;
     } else {
-        h = client::handler::ptr(new wsperf::concurrent_client_handler(rc));
+        h = client::handler::ptr(new wsperf::concurrent_client_handler(rc,ident,user_agent));
     }
     
     client endpoint(h);
     
     endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
     endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
-    
-    endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
-    
+        
     endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
     endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
     
@@ -147,13 +150,6 @@ int start_client(po::variables_map& vm) {
     return 0;
 }
 
-std::string env_mapper(std::string input) {
-    if (input == "WSPERF_CONFIG") {
-        return "config";
-    }
-    return "";
-}
-
 int main(int argc, char* argv[]) {
     try {
         std::string config_file;
@@ -174,13 +170,8 @@ int main(int argc, char* argv[]) {
             ("port,p", po::value<unsigned short>()->default_value(9050), "Port to listen on in server mode")
             ("uri,u", po::value<std::string>(), "URI to connect to in client mode")
             ("num_threads", po::value<unsigned int>()->default_value(2), "Number of worker threads to use")
+            ("ident,i", po::value<std::string>()->default_value("Unspecified"), "Implimentation identification string reported by this agent.")
         ;
-        
-        /*po::options_description environment("Environment");
-        environment.add_options()
-            ("config", po::value<std::string>(&config_file)->default_value("~/.wsperf"),
-                  "Configuration file to use.")
-        ;*/
         
         po::options_description cmdline_options;
         cmdline_options.add(generic).add(config);
@@ -194,7 +185,6 @@ int main(int argc, char* argv[]) {
         
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
-        //po::store(po::parse_environment(environment,env_mapper), vm);
         po::notify(vm);
         
         std::ifstream ifs(config_file.c_str());
