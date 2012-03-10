@@ -555,7 +555,7 @@ void server<endpoint>::connection<connection_type>::write_response() {
         // TODO: HTTP response
     }
     
-    m_response.replace_header("Server","WebSocket++/0.2.0");
+    m_response.replace_header("Server",USER_AGENT);
     
     std::string raw = m_response.raw();
     

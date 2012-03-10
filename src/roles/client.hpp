@@ -412,7 +412,7 @@ void client<endpoint>::connection<connection_type>::write_request() {
     
     // Unless the user has overridden the user agent, send generic WS++
     if (m_request.header("User Agent") == "") {
-        m_request.replace_header("User Agent","WebSocket++/2012-03-09");
+        m_request.replace_header("User Agent",USER_AGENT);
     }
     
     
