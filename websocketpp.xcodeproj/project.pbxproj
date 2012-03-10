@@ -17,6 +17,8 @@
 		B61A51CF14DC276300456432 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */; };
 		B61A51D014DC276300456432 /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B62A5A7214775ECF005F9EB0 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
+		B649759E150BF6C700BE17D1 /* wscmd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B649759D150BA96100BE17D1 /* wscmd.cpp */; };
+		B649759F150BF6D200BE17D1 /* libboost_program_options.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8CEB145A0F1900B32547 /* libboost_program_options.dylib */; };
 		B653A715148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
 		B653A716148A607D004D7BD9 /* hybi_header.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B653A714148A607D004D7BD9 /* hybi_header.hpp */; };
 		B653A719148AB555004D7BD9 /* hybi_header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B653A718148AB555004D7BD9 /* hybi_header.cpp */; };
@@ -515,6 +517,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B649759F150BF6D200BE17D1 /* libboost_program_options.dylib in Frameworks */,
 				B6E7E78B150553D000394909 /* libboost_chrono.dylib in Frameworks */,
 				B6E7E789150553A500394909 /* libcrypto.dylib in Frameworks */,
 				B6E7E7881505539E00394909 /* libssl.dylib in Frameworks */,
@@ -1354,6 +1357,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B649759E150BF6C700BE17D1 /* wscmd.cpp in Sources */,
 				B6E7E77E1505536500394909 /* wsperf.cpp in Sources */,
 				B6E7E7801505536500394909 /* case.cpp in Sources */,
 				B6E7E7811505536500394909 /* generic.cpp in Sources */,

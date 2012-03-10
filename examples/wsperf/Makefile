@@ -3,7 +3,7 @@ BOOST_INCLUDE_PATH ?= /usr/local/include
 WEBSOCKETPP_PATH    ?= ../../
 CPP11               ?= 
 
-CFLAGS = -Wall -O2 $(CPP11) -I$(BOOST_INCLUDE_PATH)
+CFLAGS = -Wall -O3 $(CPP11) -I$(BOOST_INCLUDE_PATH)
 LDFLAGS = -L$(BOOST_LIB_PATH)
 
 CXX		?= c++
@@ -23,10 +23,7 @@ else
 	LDFLAGS := $(LDFLAGS) $(WEBSOCKETPP_PATH)/libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_thread.a $(BOOST_LIB_PATH)/libboost_random.a $(BOOST_LIB_PATH)/libboost_chrono.a $(BOOST_LIB_PATH)/libboost_program_options.a $(darwinlibs)
 endif
 
-wsperf: wsperf.o
-	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-    
-wsperf_client: wsperf_client.o
+wsperf: wsperf.o request.o case.o generic.o wscmd.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp

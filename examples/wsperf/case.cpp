@@ -68,19 +68,22 @@ case_handler::case_handler(wscmd::cmd& cmd) {
 
 /// Starts a test by starting the timeout timer and marking the start time
 void case_handler::start(connection_ptr con, uint64_t timeout) {
-    m_timer.reset(new boost::asio::deadline_timer(
-        con->get_io_service(),
-        boost::posix_time::seconds(0))
-    );
-    m_timer->expires_from_now(boost::posix_time::milliseconds(timeout));
-    m_timer->async_wait(
-        boost::bind(
-            &type::on_timer,
-            this,
-            con,
-            boost::asio::placeholders::error
-        )
-    );
+    if (timeout > 0) {
+        m_timer.reset(new boost::asio::deadline_timer(
+            con->get_io_service(),
+            boost::posix_time::seconds(0))
+        );
+        
+        m_timer->expires_from_now(boost::posix_time::milliseconds(timeout));
+        m_timer->async_wait(
+            boost::bind(
+                &type::on_timer,
+                this,
+                con,
+                boost::asio::placeholders::error
+            )
+        );
+    }
     
     m_start = boost::chrono::steady_clock::now();
 }
@@ -105,6 +108,8 @@ void case_handler::end(connection_ptr con) {
     double stddev = 0;
     double total = 0;
     double seconds = 0;
+    
+    m_timer->cancel();
     
     // TODO: handle weird sizes and error conditions better
     if (m_end.size() > m_quantile_count) {

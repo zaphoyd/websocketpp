@@ -122,7 +122,6 @@ void message_test::on_message(connection_ptr con,websocketpp::message::data_ptr 
         mark();
     } else {
         mark();
-        m_timer->cancel();
         m_msg.reset();
         m_pass = FAIL;
         
@@ -131,7 +130,6 @@ void message_test::on_message(connection_ptr con,websocketpp::message::data_ptr 
     
     if (m_acks == m_message_count) {
         m_pass = PASS;
-        m_timer->cancel();
         m_msg.reset();
         this->end(con);
     } else if (m_sync && m_pass == RUNNING) {
