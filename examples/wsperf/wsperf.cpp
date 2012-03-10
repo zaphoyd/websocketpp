@@ -45,7 +45,7 @@
     #define WSPERF_CONFIG "~/.wsperf"
 #endif
 
-static const std::string user_agent = "wsperf/0.2.0dev WebSocket++/0.2.0dev";
+static const std::string user_agent = "wsperf/0.2.0dev "+websocketpp::USER_AGENT;
 
 using websocketpp::client;
 namespace po = boost::program_options;
