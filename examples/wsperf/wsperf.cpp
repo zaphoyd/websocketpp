@@ -58,13 +58,15 @@ int start_server(po::variables_map& vm) {
     unsigned int num_threads = vm["num_threads"].as<unsigned int>();
     std::string ident = vm["ident"].as<std::string>();
     
+    bool silent = (vm.count("silent") && vm["silent"].as<int>() == 1);
+    
     std::list< boost::shared_ptr<boost::thread> > threads;
     
     wsperf::request_coordinator rc;
     
     server::handler::ptr h;
     if (num_threads == 0) {
-        std::cout << "bad thread number" << std::endl;
+        std::cerr << "bad thread number" << std::endl;
         return 1;
     } else {
         h = server::handler::ptr(
@@ -77,19 +79,28 @@ int start_server(po::variables_map& vm) {
         );
     }
     
+    if (!silent) {
+        std::cout << "Starting wsperf server on port " << port << " with " << num_threads << " processing threads." << std::endl;
+    }
+    
+    // Start worker threads
+    for (unsigned int i = 0; i < num_threads; i++) {
+        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc, i))));
+    }
+    
+    // Start WebSocket++
     server endpoint(h);
     
     endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
     endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
     
-    endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
-    endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
-    
-    for (unsigned int i = 0; i < num_threads; i++) {
-        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc, i))));
+    if (!silent) {
+        endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+        
+        endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
+        endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
     }
     
-    std::cout << "Starting wsperf server on port " << port << " with " << num_threads << " processing threads." << std::endl;
     endpoint.listen(port);
     
     return 0;
@@ -97,9 +108,13 @@ int start_server(po::variables_map& vm) {
 
 int start_client(po::variables_map& vm) {
     if (!vm.count("uri")) {
-        std::cout << "client mode requires uri" << std::endl;
+        std::cerr << "client mode requires uri" << std::endl;
         return 1;
     }
+    
+    bool silent = (vm.count("silent") && vm["silent"].as<int>() == 1);
+    
+    unsigned int reconnect = vm["reconnect"].as<unsigned int>();
     
     std::string uri = vm["uri"].as<std::string>();
     unsigned int num_threads = vm["num_threads"].as<unsigned int>();
@@ -113,7 +128,7 @@ int start_client(po::variables_map& vm) {
     
     client::handler::ptr h;
     if (num_threads == 0) {
-        std::cout << "bad thread number" << std::endl;
+        std::cerr << "bad thread number" << std::endl;
         return 1;
     } else {
         h = client::handler::ptr(
@@ -126,28 +141,43 @@ int start_client(po::variables_map& vm) {
         );;
     }
     
-    client endpoint(h);
-    
-    endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-    endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
-        
-    endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
-    endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
+    if (!silent) {
+        std::cout << "Starting wsperf client connecting to " << uri << " with " << num_threads << " processing threads." << std::endl;
+    }
     
     for (unsigned int i = 0; i < num_threads; i++) {
         threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc, i))));
     }
     
-    std::cout << "Starting wsperf client connecting to " << uri << " with " << num_threads << " processing threads." << std::endl;
-    client::connection_ptr con = endpoint.get_connection(uri);
-    
-    con->add_request_header("User Agent",user_agent);
-    con->add_subprotocol("wsperf");
-    
-    endpoint.connect(con);
-    
-    // This will block until there is an error or the websocket closes
-    endpoint.run();
+    while(1) {
+        client endpoint(h);
+        
+        endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
+        
+        if (!silent) {
+            endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+            
+            endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
+            endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
+        }
+        
+        client::connection_ptr con = endpoint.get_connection(uri);
+        
+        con->add_request_header("User Agent",user_agent);
+        con->add_subprotocol("wsperf");
+        
+        endpoint.connect(con);
+        
+        // This will block until there is an error or the websocket closes
+        endpoint.run();
+        
+        if (!reconnect) {
+            break;
+        } else {
+            boost::this_thread::sleep(boost::posix_time::seconds(reconnect));
+        }
+    }
     
     // Add a "stop work" request for each outstanding worker thread
     for (thread_it = threads.begin(); thread_it != threads.end(); ++thread_it) {
@@ -183,7 +213,9 @@ int main(int argc, char* argv[]) {
             ("client,c", po::value<int>()->implicit_value(1), "Run in client mode")
             ("port,p", po::value<unsigned short>()->default_value(9050), "Port to listen on in server mode")
             ("uri,u", po::value<std::string>(), "URI to connect to in client mode")
+            ("reconnect,r", po::value<unsigned int>()->default_value(0), "Auto-reconnect delay (in seconds) after a connection ends or fails in client mode. Zero indicates do not reconnect.")
             ("num_threads", po::value<unsigned int>()->default_value(2), "Number of worker threads to use")
+            ("silent", po::value<int>()->implicit_value(1), "Silent mode. Will not print errors to stdout")
             ("ident,i", po::value<std::string>()->default_value("Unspecified"), "Implimentation identification string reported by this agent.")
         ;
         
@@ -222,7 +254,7 @@ int main(int argc, char* argv[]) {
         } else if (vm.count("client") && vm["client"].as<int>() == 1) {
             return start_client(vm);
         } else {
-            std::cout << cmdline_options << std::endl;
+            std::cerr << "You must choose either client or server mode. See wsperf --help for more information" << std::endl;
             return 1;
         }
     } catch (std::exception& e) {
