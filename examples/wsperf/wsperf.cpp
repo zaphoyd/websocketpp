@@ -65,19 +65,14 @@ int start_server(po::variables_map& vm) {
     wsperf::request_coordinator rc;
     
     server::handler::ptr h;
-    if (num_threads == 0) {
-        std::cerr << "bad thread number" << std::endl;
-        return 1;
-    } else {
-        h = server::handler::ptr(
-            new wsperf::concurrent_handler<server>(
-                rc,
-                ident,
-                user_agent,
-                num_threads
-            )
-        );
-    }
+    h = server::handler::ptr(
+        new wsperf::concurrent_handler<server>(
+            rc,
+            ident,
+            user_agent,
+            num_threads
+        )
+    );
     
     if (!silent) {
         std::cout << "Starting wsperf server on port " << port << " with " << num_threads << " processing threads." << std::endl;
@@ -128,19 +123,14 @@ int start_client(po::variables_map& vm) {
     wsperf::request_coordinator rc;
     
     client::handler::ptr h;
-    if (num_threads == 0) {
-        std::cerr << "bad thread number" << std::endl;
-        return 1;
-    } else {
-        h = client::handler::ptr(
-            new wsperf::concurrent_handler<client>(
-                rc,
-                ident,
-                user_agent,
-                num_threads
-            )
-        );;
-    }
+    h = client::handler::ptr(
+        new wsperf::concurrent_handler<client>(
+            rc,
+            ident,
+            user_agent,
+            num_threads
+        )
+    );
     
     if (!silent) {
         std::cout << "Starting wsperf client connecting to " << uri << " with " << num_threads << " processing threads." << std::endl;

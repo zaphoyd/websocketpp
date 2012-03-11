@@ -138,7 +138,8 @@ public:
      : m_coordinator(c), 
        m_ident(ident), 
        m_ua(ua),
-       m_num_workers(num_workers) {}
+       m_num_workers(num_workers),
+       m_blocking(num_workers == 0) {}
     
     void on_open(connection_ptr con) {
         std::stringstream o;
@@ -158,7 +159,12 @@ public:
         r.type = PERF_TEST;
         r.writer = writer_ptr(new ws_writer<endpoint_type>(con));
         r.req = msg->get_payload();
-        m_coordinator.add_request(r);
+        
+        if (m_blocking) {
+            r.process(0);
+        } else {
+            m_coordinator.add_request(r);
+        }
     }
     
     void on_fail(connection_ptr con) {
@@ -173,6 +179,7 @@ private:
     std::string             m_ident;
     std::string             m_ua;
     unsigned int            m_num_workers;
+    bool                    m_blocking;
 };
 
 // process_requests is the body function for a processing thread. It loops 
