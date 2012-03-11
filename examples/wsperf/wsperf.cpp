@@ -96,6 +96,7 @@ int start_server(po::variables_map& vm) {
     
     if (!silent) {
         endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+        endpoint.alog().set_level(websocketpp::log::alevel::DISCONNECT);
         
         endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
         endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
@@ -157,6 +158,7 @@ int start_client(po::variables_map& vm) {
         
         if (!silent) {
             endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+            endpoint.alog().set_level(websocketpp::log::alevel::DISCONNECT);
             
             endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
             endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
