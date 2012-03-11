@@ -86,7 +86,7 @@ int start_server(po::variables_map& vm) {
     endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
     
     for (unsigned int i = 0; i < num_threads; i++) {
-        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc))));
+        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc, i))));
     }
     
     std::cout << "Starting wsperf server on port " << port << " with " << num_threads << " processing threads." << std::endl;
@@ -135,7 +135,7 @@ int start_client(po::variables_map& vm) {
     endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
     
     for (unsigned int i = 0; i < num_threads; i++) {
-        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc))));
+        threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&wsperf::process_requests, &rc, i))));
     }
     
     std::cout << "Starting wsperf client connecting to " << uri << " with " << num_threads << " processing threads." << std::endl;

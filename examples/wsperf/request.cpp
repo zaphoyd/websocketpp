@@ -27,9 +27,11 @@
 
 #include "request.hpp"
 
+#include <sstream>
+
 using wsperf::request;
 
-void request::process() {
+void request::process(unsigned int id) {
     case_handler_ptr test;
     std::string uri;
     
@@ -45,7 +47,10 @@ void request::process() {
             return;
         }
         
-        writer->write(prepare_response("test_start",""));
+        std::stringstream o;
+        o << "{\"worker_id\":" << id << "}";
+        
+        writer->write(prepare_response_object("test_start",o.str()));
     
         client e(test);
         
@@ -83,14 +88,14 @@ std::string request::prepare_response_object(std::string type,std::string data){
             + "\",\"token\":\"" + token + "\",\"data\":" + data + "}";
 }
 
-void wsperf::process_requests(request_coordinator* coordinator) {
+void wsperf::process_requests(request_coordinator* coordinator,unsigned int id) {
     request r;
     
     while (1) {
         coordinator->get_request(r);
         
         if (r.type == PERF_TEST) {
-            r.process();
+            r.process(id);
         } else {
             break;
         }

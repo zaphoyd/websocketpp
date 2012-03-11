@@ -80,7 +80,7 @@ struct request {
     std::string token;              // Parsed test token. Return in all results    
     
     /// Run a test and return JSON result
-    void process();
+    void process(unsigned int id);
     
     // Simple json generation
     std::string prepare_response(std::string type,std::string data);
@@ -165,7 +165,7 @@ private:
 // process_requests is the body function for a processing thread. It loops 
 // forever reading requests, processing them serially, then reading another 
 // request. A request with type END_WORKER will stop the processing loop.
-void process_requests(request_coordinator* coordinator);
+void process_requests(request_coordinator* coordinator, unsigned int id);
 
 } // namespace wsperf
 
