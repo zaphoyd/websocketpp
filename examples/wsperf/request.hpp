@@ -93,9 +93,10 @@ struct request {
 class request_coordinator {
 public:
     void add_request(const request& r) {
-        boost::unique_lock<boost::mutex> lock(m_lock);
-        m_requests.push(r);
-        lock.unlock();
+        {
+            boost::unique_lock<boost::mutex> lock(m_lock);
+            m_requests.push(r);
+        }
         m_cond.notify_one();
     }
     
@@ -162,6 +163,10 @@ public:
     
     void on_fail(connection_ptr con) {
         std::cout << "A command connection failed." << std::endl;
+    }
+    
+    void on_close(connection_ptr con) {
+        std::cout << "A command connection closed." << std::endl;
     }
 private:
     request_coordinator&    m_coordinator;

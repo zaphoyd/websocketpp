@@ -138,6 +138,11 @@ public:
     // Valid for OPEN state
     /// convenience overload for sending a one off text message.
     void send(const std::string& payload, frame::opcode::value op = frame::opcode::TEXT) {
+        // TODO: do we need a lock?
+        if (m_state != session::state::OPEN) {
+            return;
+        }
+        
         websocketpp::message::data::ptr msg = get_control_message2();
         
         if (!msg) {
@@ -152,6 +157,11 @@ public:
         send(msg);
     }
     void send(message::data_ptr msg) {
+        // TODO: do we need a lock?
+        if (m_state != session::state::OPEN) {
+            return;
+        }
+        
         m_processor->prepare_frame(msg);
         write_message(msg);
     }
@@ -165,9 +175,19 @@ public:
         }
     }
     void ping(const std::string& payload) {
+        // TODO: do we need a lock?
+        if (m_state != session::state::OPEN) {
+            return;
+        }
+        
         send_ping(payload);
     }
     void pong(const std::string& payload) {
+        // TODO: do we need a lock?
+        if (m_state != session::state::OPEN) {
+            return;
+        }
+        
         send_pong(payload);
     }
     
