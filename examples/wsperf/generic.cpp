@@ -70,14 +70,15 @@ using wsperf::message_test;
  * mode can be used to test situations where you deliberately return incorrect
  * bytes in order to compare performance (ex: performance with/without masking)
  */
-message_test::message_test(wscmd::cmd& cmd) : case_handler(cmd) {
-    m_message_count = extract_number<uint64_t>(cmd,"size");
-    m_message_size = extract_number<uint64_t>(cmd,"count");
-    m_timeout = extract_number<uint64_t>(cmd,"timeout");
-    
-    m_binary = extract_bool(cmd,"binary");
-    m_sync = extract_bool(cmd,"sync");
-    
+message_test::message_test(wscmd::cmd& cmd) 
+ : case_handler(cmd), 
+   m_message_size(extract_number<uint64_t>(cmd,"size")),
+   m_message_count(extract_number<uint64_t>(cmd,"count")),
+   m_timeout(extract_number<uint64_t>(cmd,"timeout")),
+   m_binary(extract_bool(cmd,"binary")),
+   m_sync(extract_bool(cmd,"sync")),
+   m_acks(0)
+{
     if (cmd.args["correctness"] == "exact") {
         m_mode = EXACT;
     } else if (cmd.args["correctness"] == "length") {

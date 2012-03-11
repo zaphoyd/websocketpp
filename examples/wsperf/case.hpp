@@ -119,7 +119,6 @@ protected:
         RUNNING = 3
     };
     
-    std::string                 m_name;
     std::string                 m_uri;
     std::string                 m_token;
     size_t                      m_quantile_count;
@@ -127,7 +126,9 @@ protected:
     std::string                 m_data;
     
     status                      m_pass;
-    boost::shared_ptr<boost::asio::deadline_timer> m_timer;
+    
+    uint64_t                                                m_timeout;
+    boost::shared_ptr<boost::asio::deadline_timer>          m_timer;
     
     boost::chrono::steady_clock::time_point                 m_start;
     std::vector<boost::chrono::steady_clock::time_point>    m_end;

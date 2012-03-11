@@ -57,14 +57,14 @@ using wsperf::case_handler;
  * Whether or not to return the full list of round trip times for each message
  * primarily useful for debugging.
  */
-case_handler::case_handler(wscmd::cmd& cmd) {
-    m_uri = extract_string(cmd,"uri");
-    m_token = extract_string(cmd,"token");
-    m_quantile_count = extract_number<size_t>(cmd,"quantile_count");
-    m_rtts = extract_bool(cmd,"rtts");
-    m_bytes = 0;
-    m_pass = RUNNING;
-}
+case_handler::case_handler(wscmd::cmd& cmd)
+ : m_uri(extract_string(cmd,"uri")),
+   m_token(extract_string(cmd,"token")),
+   m_quantile_count(extract_number<size_t>(cmd,"quantile_count")),
+   m_rtts(extract_bool(cmd,"rtts")),
+   m_pass(RUNNING),
+   m_timeout(0),
+   m_bytes(0) {}
 
 /// Starts a test by starting the timeout timer and marking the start time
 void case_handler::start(connection_ptr con, uint64_t timeout) {
@@ -74,7 +74,9 @@ void case_handler::start(connection_ptr con, uint64_t timeout) {
             boost::posix_time::seconds(0))
         );
         
-        m_timer->expires_from_now(boost::posix_time::milliseconds(timeout));
+        m_timeout = timeout;
+        
+        m_timer->expires_from_now(boost::posix_time::milliseconds(m_timeout));
         m_timer->async_wait(
             boost::bind(
                 &type::on_timer,
@@ -109,7 +111,9 @@ void case_handler::end(connection_ptr con) {
     double total = 0;
     double seconds = 0;
     
-    m_timer->cancel();
+    if (m_timeout > 0) {
+        m_timer->cancel();
+    }
     
     // TODO: handle weird sizes and error conditions better
     if (m_end.size() > m_quantile_count) {
