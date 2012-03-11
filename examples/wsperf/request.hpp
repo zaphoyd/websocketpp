@@ -109,6 +109,14 @@ public:
         value = m_requests.front();
         m_requests.pop();
     }
+    
+    void reset() {
+        boost::unique_lock<boost::mutex> lock(m_lock);
+        
+        while (!m_requests.empty()) {
+            m_requests.pop();
+        }
+    }
 private:
     std::queue<request>         m_requests;
     boost::mutex                m_lock;

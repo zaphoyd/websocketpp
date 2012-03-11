@@ -174,6 +174,8 @@ int start_client(po::variables_map& vm) {
         // This will block until there is an error or the websocket closes
         endpoint.run();
         
+        rc.reset();
+        
         if (!reconnect) {
             break;
         } else {
