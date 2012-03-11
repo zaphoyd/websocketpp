@@ -67,7 +67,14 @@ int start_server(po::variables_map& vm) {
         std::cout << "bad thread number" << std::endl;
         return 1;
     } else {
-        h = server::handler::ptr(new wsperf::concurrent_server_handler(rc,ident,user_agent));
+        h = server::handler::ptr(
+            new wsperf::concurrent_handler<server>(
+                rc,
+                ident,
+                user_agent,
+                num_threads
+            )
+        );
     }
     
     server endpoint(h);
@@ -109,7 +116,14 @@ int start_client(po::variables_map& vm) {
         std::cout << "bad thread number" << std::endl;
         return 1;
     } else {
-        h = client::handler::ptr(new wsperf::concurrent_client_handler(rc,ident,user_agent));
+        h = client::handler::ptr(
+            new wsperf::concurrent_handler<client>(
+                rc,
+                ident,
+                user_agent,
+                num_threads
+            )
+        );;
     }
     
     client endpoint(h);
