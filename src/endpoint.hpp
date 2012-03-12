@@ -139,8 +139,16 @@ public:
     
     /// Destroy and endpoint
     ~endpoint() {
+        // Tell the memory pool we don't want to be notified about newly freed
+        // messages any more (because we wont be here)
         m_pool->set_callback(NULL);
-        // TODO: destroy all connections associated with this endpoint?
+        
+        // Detach any connections that are still alive at this point
+        boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
+        while (!m_connections.empty()) {
+            remove_connection(*m_connections.begin());
+        }
     }
     
     // copy/assignment constructors require C++11
@@ -309,6 +317,9 @@ protected:
      */
     void remove_connection(connection_ptr con) {
         boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
+        // TODO: is this safe to use?
+        //con->detach();
         
         m_connections.erase(con);
         

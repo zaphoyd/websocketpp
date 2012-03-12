@@ -362,6 +362,7 @@ void client<endpoint>::handle_connect(connection_ptr con,
             throw "client error";
         }
         m_endpoint.get_handler()->on_fail(con->shared_from_this());
+        m_endpoint.remove_connection(con);
     }
 }
 

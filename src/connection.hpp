@@ -135,6 +135,14 @@ public:
         return m_state;
     }
     
+    /// Signals to the connection that its endpoint is going away.
+    /* The connection should not use any references to the endpoint after this
+     */
+    void detach() {
+        // TODO: lock connection state
+        m_state = session::state::DETACHED;
+    }
+    
     // Valid for OPEN state
     /// convenience overload for sending a one off text message.
     void send(const std::string& payload, frame::opcode::value op = frame::opcode::TEXT) {
