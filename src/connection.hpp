@@ -122,10 +122,12 @@ public:
     }
     
     /// Destroy the connection
-    connection() {
-        if (m_state != session::state::CLOSED) {
-            terminate(true);
-        }
+    ~connection() {
+        try {
+            if (m_state != session::state::CLOSED) {
+                terminate(true);
+            }
+        } catch (...) {}
     }
     
     // copy/assignment constructors require C++11
