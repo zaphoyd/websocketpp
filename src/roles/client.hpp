@@ -208,14 +208,18 @@ public:
         // Optional
         virtual bool on_ping(connection_ptr con,std::string) {return true;}
         virtual void on_pong(connection_ptr con,std::string) {}
+        virtual void on_pong_timeout(connection_ptr con,std::string) {}
         
     };
     
     client (boost::asio::io_service& m) 
      : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
-       m_gen(m_rng,boost::random::uniform_int_distribution<>(std::numeric_limits<int32_t>::min(),
-                                                             std::numeric_limits<int32_t>::max())) {}
+       m_gen(m_rng,
+             boost::random::uniform_int_distribution<>(
+                std::numeric_limits<int32_t>::min(),
+                std::numeric_limits<int32_t>::max()
+             )) {}
     
     connection_ptr connect(const std::string& u);
     

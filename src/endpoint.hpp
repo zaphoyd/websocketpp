@@ -73,7 +73,7 @@ class endpoint
  : public endpoint_base,
    public role< endpoint<role,socket,logger> >,
    public socket< endpoint<role,socket,logger> >,
-   boost::noncopyable 
+   boost::noncopyable
 {
 public:
     /// Type of the traits class that stores endpoint related types.
@@ -137,7 +137,7 @@ public:
         m_pool->set_callback(boost::bind(&type::on_new_message,this));
     }
     
-    /// Destroy and endpoint
+    /// Destroy an endpoint
     ~endpoint() {
         // Tell the memory pool we don't want to be notified about newly freed
         // messages any more (because we wont be here)
@@ -145,6 +145,8 @@ public:
         
         // Detach any connections that are still alive at this point
         boost::lock_guard<boost::recursive_mutex> lock(get_lock());
+        
+        typename std::set<connection_ptr>::iterator it;
         
         while (!m_connections.empty()) {
             remove_connection(*m_connections.begin());
@@ -319,7 +321,7 @@ protected:
         boost::lock_guard<boost::recursive_mutex> lock(get_lock());
         
         // TODO: is this safe to use?
-        //con->detach();
+        con->detach();
         
         m_connections.erase(con);
         

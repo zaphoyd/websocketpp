@@ -180,6 +180,7 @@ public:
         
         virtual bool on_ping(connection_ptr con,std::string) {return true;}
         virtual void on_pong(connection_ptr con,std::string) {}
+        virtual void on_pong_timeout(connection_ptr con,std::string) {}
         virtual void http(connection_ptr con) {}
     };
     
