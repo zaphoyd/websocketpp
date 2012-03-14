@@ -6,8 +6,10 @@
 
 *.o
 *.so
+*.so.?.?.?
 *.a
 *.dylib
+*.dylib.?.?.?
 
 objs_shared/
 objs_static/
@@ -16,8 +18,8 @@ examples/chat_server/chat_server
 examples/echo_server/echo_server
 examples/chat_client/chat_client
 examples/echo_client/echo_client
+
 test/basic/tests
-libwebsocketpp.dylib.0.1.0
 
 websocketpp.xcodeproj/xcuserdata/*
 websocketpp.xcodeproj/project.xcworkspace/xcuserdata/*
