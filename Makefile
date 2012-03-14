@@ -63,8 +63,14 @@ srcdir          ?= src
 CXX             ?= c++
 AR              ?= ar
 PIC             ?= PIC
-BUILD_TYPE      ?= "default"
-SHARED          ?= "1"
+BUILD_TYPE      ?= default
+SHARED          ?= 1
+
+ifneq ($(OS),Darwin)
+	ldconfig = ldconfig
+else
+	ldconfig = 
+endif
 
 # Internal Variables
 inst_path        = $(exec_prefix)/$(libdir)
@@ -72,10 +78,10 @@ include_path     = $(prefix)/$(includedir)
 
 # BUILD_TYPE specific settings
 ifeq ($(BUILD_TYPE), debug)
-	CXXFLAGS     = $(cxxflags_debug)
+	CXXFLAGS     := $(cxxflags_debug) $(CXXFLAGS_EXTRA)
 	libname     := $(libname_debug)
 else
-	CXXFLAGS    ?= $(cxxflags_default)
+	CXXFLAGS    := $(cxxflags_default) $(CXXFLAGS_EXTRA)
 endif
 
 # SHARED specific settings
@@ -99,7 +105,7 @@ endif
         uninstall_headers
 
 # Targets
-all: $(lib_target)
+all: banner $(lib_target)
 	@echo "============================================================"
 	@echo "Done"
 	@echo "============================================================"
@@ -118,9 +124,9 @@ $(lib_target): banner installdirs $(addprefix $(objdir)/, $(objects))
 	@echo "Link "
 	cd $(objdir) ; \
 	if test "$(OS)" = "Darwin" ; then \
-		$(CXX) -dynamiclib $(libs) -Wl,-dylib_install_name -Wl,$(libname_shared_major_version) -o $@ $(objects) ; \
+		$(CXX) -dynamiclib $(libs) $(LDFLAGS) -Wl,-dylib_install_name -Wl,$(libname_shared_major_version) -o $@ $(objects) ; \
 	else \
-		$(CXX) -shared $(libs) -Wl,-soname,$(libname_shared_major_version) -o $@ $(objects) ; \
+		$(CXX) -shared $(libs) $(LDFLAGS) -Wl,-soname,$(libname_shared_major_version) -o $@ $(objects) ; \
 	fi ; \
 	mv -f $@ ../
 	@echo "Link: Done"
@@ -134,13 +140,13 @@ $(lib_target): banner installdirs $(addprefix $(objdir)/, $(objects))
 endif
 
 # Compile object files
-$(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp
+$(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 	
-$(objdir)/base64.o: $(srcdir)/base64/base64.cpp
+$(objdir)/base64.o: $(srcdir)/base64/base64.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
-$(objdir)/%.o: $(srcdir)/%.cpp
+$(objdir)/%.o: $(srcdir)/%.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 ifeq ($(SHARED),1)
@@ -150,9 +156,7 @@ install: banner install_headers $(lib_target)
 	cd $(inst_path) ; \
 	ln -sf $(lib_target) $(libname_shared_major_version) ; \
 	ln -sf $(libname_shared_major_version) $(libname_shared)
-	ifneq ($(OS),Darwin)
-		ldconfig
-	endif
+	$(ldconfig)
 	@echo "Install shared library: Done."
 else
 install: banner install_headers $(lib_target)
