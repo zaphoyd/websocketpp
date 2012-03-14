@@ -175,9 +175,9 @@ install: banner install_headers $(lib_target)
 	cd $(inst_path) ; \
 	ln -sf $(lib_target) $(libname_shared_major_version) ; \
 	ln -sf $(libname_shared_major_version) $(libname_shared)
-	ifneq ($(OS),Darwin)
-		ldconfig
-	endif
+	if test "$(OS)" != "Darwin" ; then \
+		ldconfig ; \
+	fi
 	@echo "Install shared library: Done."
 else
 install: banner install_headers $(lib_target)
