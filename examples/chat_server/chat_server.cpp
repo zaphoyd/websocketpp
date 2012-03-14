@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     
     if (argc == 2) {
         // TODO: input validation?
-        port = atoi(argv[2]);
+        port = atoi(argv[1]);
     }
     
     try {
@@ -50,9 +50,11 @@ int main(int argc, char* argv[]) {
         // create a server that listens on port `port` and uses our handler
         server endpoint(handler);
         
-        endpoint.elog().set_levels(websocketpp::log::elevel::DEVEL,websocketpp::log::elevel::FATAL);
+        endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+        endpoint.alog().set_level(websocketpp::log::alevel::DISCONNECT);
         
-        endpoint.alog().set_level(websocketpp::log::alevel::ALL);
+        endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
+        endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         // setup server settings
         // Chat server should only be receiving small text messages, reduce max

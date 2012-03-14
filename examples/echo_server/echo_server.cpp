@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
         echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
         echo_endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
+        echo_endpoint.alog().set_level(websocketpp::log::alevel::DISCONNECT);
         
         echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
