@@ -104,3 +104,15 @@ wsperf = SConscript('#/examples/wsperf/SConscript',
 echo_server = SConscript('#/examples/echo_server/SConscript',
                          variant_dir = builddir + 'echo_server',
                          duplicate = 0)
+
+echo_client = SConscript('#/examples/echo_client/SConscript',
+                         variant_dir = builddir + 'echo_client',
+                         duplicate = 0)
+
+chat_client = SConscript('#/examples/chat_client/SConscript',
+                         variant_dir = builddir + 'chat_client',
+                         duplicate = 0)
+
+chat_server = SConscript('#/examples/chat_server/SConscript',
+                         variant_dir = builddir + 'chat_server',
+                         duplicate = 0)
