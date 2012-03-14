@@ -280,6 +280,8 @@
 		B64975A21510B54900BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/chat_server/SConscript; sourceTree = "<group>"; };
 		B64975A31510B55600BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/chat_client/SConscript; sourceTree = "<group>"; };
 		B64975A41510B62700BE17D1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_client/Makefile; sourceTree = "<group>"; };
+		B64975A51510B86B00BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
+		B64975A61510B8D900BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/echo_server_tls/SConscript; sourceTree = "<group>"; };
 		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
@@ -572,6 +574,7 @@
 				B61A51B714DC207600456432 /* concurrent_client.html */,
 				B61A51B814DC207600456432 /* concurrent_server.cpp */,
 				B61A51B914DC207600456432 /* Makefile */,
+				B64975A51510B86B00BE17D1 /* SConscript */,
 			);
 			name = concurrent_server;
 			path = examples/concurrent_server;
@@ -633,6 +636,7 @@
 			children = (
 				B66388451487D71800DDAE13 /* echo_server_tls.cpp */,
 				B66388461487D71800DDAE13 /* Makefile */,
+				B64975A61510B8D900BE17D1 /* SConscript */,
 			);
 			name = echo_server_tls;
 			sourceTree = "<group>";
