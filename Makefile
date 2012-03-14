@@ -75,8 +75,8 @@ srcdir          ?= src
 CXX             ?= c++
 AR              ?= ar
 PIC             ?= PIC
-BUILD_TYPE      ?= "default"
-SHARED          ?= "1"
+BUILD_TYPE      ?= default
+SHARED          ?= 1
 
 
 # Internal Variables
