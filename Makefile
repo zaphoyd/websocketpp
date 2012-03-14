@@ -66,7 +66,7 @@ PIC             ?= PIC
 BUILD_TYPE      ?= default
 SHARED          ?= 1
 
-ifeq ($(OS),Linux)
+ifneq ($(OS),Darwin)
 	ldconfig = ldconfig
 else
 	ldconfig = 
