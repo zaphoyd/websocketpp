@@ -1,14 +1,8 @@
-CFLAGS = -O2
-LDFLAGS = 
+BOOST_LIBS=boost_system boost_date_time boost_program_options boost_thread boost_regex boost_random
 
-CXX		?= c++
-SHARED  ?= "1"
+include ../common.mk
 
-ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_thread -lpthread -lwebsocketpp
-else
-	LDFLAGS := $(LDFLAGS) ../../libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_random.a $(BOOST_LIB_PATH)/libboost_thread.a -lpthread
-endif
+LDFLAGS := $(LDFLAGS) -lpthread
 
 echo_client: echo_client.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
