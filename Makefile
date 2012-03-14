@@ -30,8 +30,9 @@
 
 objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o data.o
 
-BOOST_LIB_PATH		?= /usr/local/lib
-BOOST_INCLUDE_PATH  ?= /usr/local/include
+BOOST_PREFIX ?= /usr/local
+BOOST_LIB_PATH		?= $(BOOST_PREFIX)/lib
+BOOST_INCLUDE_PATH  ?= $(BOOST_PREFIX)/include
 
 libs = -L$(BOOST_LIB_PATH) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options -lboost_thread
 
@@ -74,8 +75,8 @@ srcdir          ?= src
 CXX             ?= c++
 AR              ?= ar
 PIC             ?= PIC
-BUILD_TYPE      ?= "default"
-SHARED          ?= "1"
+BUILD_TYPE      ?= default
+SHARED          ?= 1
 
 
 # Internal Variables
@@ -169,17 +170,19 @@ $(objdir)/%.o: $(srcdir)/%.cpp
 ifeq ($(SHARED),1)
 install: banner install_headers $(lib_target)
 	@echo "Install shared library"
+	mkdir -p $(inst_path)
 	cp -f ./$(lib_target) $(inst_path)
 	cd $(inst_path) ; \
 	ln -sf $(lib_target) $(libname_shared_major_version) ; \
 	ln -sf $(libname_shared_major_version) $(libname_shared)
-	ifneq ($(OS),Darwin)
-		ldconfig
-	endif
+	if test "$(OS)" != "Darwin" ; then \
+		ldconfig ; \
+	fi
 	@echo "Install shared library: Done."
 else
 install: banner install_headers $(lib_target)
 	@echo "Install static library"
+	mkdir -p $(inst_path)
 	cp -f ./$(lib_target) $(inst_path)
 	@echo "Install static library: Done."
 endif
