@@ -66,6 +66,12 @@ PIC             ?= PIC
 BUILD_TYPE      ?= default
 SHARED          ?= 1
 
+ifeq ($(OS),Linux)
+	ldconfig = ldconfig
+else
+	ldconfig = 
+endif
+
 # Internal Variables
 inst_path        = $(exec_prefix)/$(libdir)
 include_path     = $(prefix)/$(includedir)
@@ -150,9 +156,7 @@ install: banner install_headers $(lib_target)
 	cd $(inst_path) ; \
 	ln -sf $(lib_target) $(libname_shared_major_version) ; \
 	ln -sf $(libname_shared_major_version) $(libname_shared)
-	ifneq ($(OS),Darwin)
-		ldconfig
-	endif
+	$(ldconfig)
 	@echo "Install shared library: Done."
 else
 install: banner install_headers $(lib_target)
