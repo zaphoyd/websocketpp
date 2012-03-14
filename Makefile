@@ -99,7 +99,7 @@ endif
         uninstall_headers
 
 # Targets
-all: $(lib_target)
+all: banner $(lib_target)
 	@echo "============================================================"
 	@echo "Done"
 	@echo "============================================================"
@@ -134,13 +134,13 @@ $(lib_target): banner installdirs $(addprefix $(objdir)/, $(objects))
 endif
 
 # Compile object files
-$(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp
+$(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 	
-$(objdir)/base64.o: $(srcdir)/base64/base64.cpp
+$(objdir)/base64.o: $(srcdir)/base64/base64.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
-$(objdir)/%.o: $(srcdir)/%.cpp
+$(objdir)/%.o: $(srcdir)/%.cpp installdirs
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 ifeq ($(SHARED),1)
