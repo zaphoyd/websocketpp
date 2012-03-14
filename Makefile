@@ -74,8 +74,8 @@ srcdir          ?= src
 CXX             ?= c++
 AR              ?= ar
 PIC             ?= PIC
-BUILD_TYPE      ?= "default"
-SHARED          ?= "1"
+BUILD_TYPE      ?= default
+SHARED          ?= 1
 
 
 # Internal Variables
@@ -84,7 +84,7 @@ include_path     = $(prefix)/$(includedir)
 
 # BUILD_TYPE specific settings
 ifeq ($(BUILD_TYPE), debug)
-	CXXFLAGS     = $(cxxflags_debug)
+	CXXFLAGS    : = $(cxxflags_debug) $(CXXFLANGS_EXTRA)
 	libname     := $(libname_debug)
 else
 	CXXFLAGS    ?= $(cxxflags_default)
