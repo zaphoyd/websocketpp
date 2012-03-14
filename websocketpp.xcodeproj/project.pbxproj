@@ -97,7 +97,6 @@
 		B6DF1CBB1434AC470029A1B1 /* websocketpp.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6DF1CC41434AF9E0029A1B1 /* network_utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1C791434AB740029A1B1 /* network_utilities.cpp */; };
 		B6DF1CDB1435EDCE0029A1B1 /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */; };
-		B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6DF1CCB1435ED760029A1B1 /* echo.cpp */; };
 		B6DF1CDE1435EDF00029A1B1 /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */; };
 		B6E56D80150644A3007E1707 /* request.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6E56D7E150644A3007E1707 /* request.cpp */; };
@@ -282,6 +281,8 @@
 		B64975A41510B62700BE17D1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_client/Makefile; sourceTree = "<group>"; };
 		B64975A51510B86B00BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
 		B64975A61510B8D900BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/echo_server_tls/SConscript; sourceTree = "<group>"; };
+		B64975A71510C69600BE17D1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/Makefile; sourceTree = "<group>"; };
+		B64975A81510C6EA00BE17D1 /* common.mk */ = {isa = PBXFileReference; lastKnownFileType = text; name = common.mk; path = examples/common.mk; sourceTree = "<group>"; };
 		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
@@ -295,24 +296,6 @@
 		B66388601487FE6C00DDAE13 /* control.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = control.hpp; path = src/messages/control.hpp; sourceTree = "<group>"; };
 		B66DE75A14AB5C71004312EC /* md5.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = md5.js; sourceTree = "<group>"; };
 		B6727428148517180029CF3E /* uri.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uri.cpp; path = src/uri.cpp; sourceTree = "<group>"; };
-		B6732435148E543000FC2B04 /* connection_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = connection_handler.hpp; sourceTree = "<group>"; };
-		B6732436148E543000FC2B04 /* frame_parser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = frame_parser.hpp; sourceTree = "<group>"; };
-		B6732437148E543000FC2B04 /* session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = session.hpp; sourceTree = "<group>"; };
-		B6732438148E543000FC2B04 /* policy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = policy.cpp; sourceTree = "<group>"; };
-		B6732439148E543000FC2B04 /* session_handler_interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = session_handler_interface.hpp; sourceTree = "<group>"; };
-		B673243A148E543000FC2B04 /* websocket_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_client.cpp; sourceTree = "<group>"; };
-		B673243B148E543000FC2B04 /* websocket_client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_client.hpp; sourceTree = "<group>"; };
-		B673243C148E543000FC2B04 /* websocket_client_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_client_session.cpp; sourceTree = "<group>"; };
-		B673243D148E543000FC2B04 /* websocket_client_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_client_session.hpp; sourceTree = "<group>"; };
-		B673243E148E543000FC2B04 /* websocket_connection_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_connection_handler.hpp; sourceTree = "<group>"; };
-		B673243F148E543000FC2B04 /* websocket_endpoint.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_endpoint.hpp; sourceTree = "<group>"; };
-		B6732440148E543000FC2B04 /* websocket_frame.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_frame.cpp; sourceTree = "<group>"; };
-		B6732441148E543000FC2B04 /* websocket_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_server.cpp; sourceTree = "<group>"; };
-		B6732442148E543000FC2B04 /* websocket_server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_server.hpp; sourceTree = "<group>"; };
-		B6732443148E543000FC2B04 /* websocket_server_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_server_session.cpp; sourceTree = "<group>"; };
-		B6732444148E543000FC2B04 /* websocket_server_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_server_session.hpp; sourceTree = "<group>"; };
-		B6732445148E543000FC2B04 /* websocket_session.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = websocket_session.cpp; sourceTree = "<group>"; };
-		B6732446148E543000FC2B04 /* websocket_session.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = websocket_session.hpp; sourceTree = "<group>"; };
 		B6732450148F973D00FC2B04 /* echo_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = echo_client.html; sourceTree = "<group>"; };
 		B6732451148F973D00FC2B04 /* fuzzing_server_tls.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fuzzing_server_tls.cpp; sourceTree = "<group>"; };
 		B6732452148F973D00FC2B04 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -340,8 +323,6 @@
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
-		B6CF18141437C370009295BE /* echo_client_handler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client_handler.cpp; sourceTree = "<group>"; };
-		B6CF18151437C370009295BE /* echo_client_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = echo_client_handler.hpp; sourceTree = "<group>"; };
 		B6CF18161437C370009295BE /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B6CF181C1437C397009295BE /* echo_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6CF182B1437C3CA009295BE /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
@@ -363,8 +344,6 @@
 		B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_regex.dylib; path = usr/local/lib/libboost_regex.dylib; sourceTree = SDKROOT; };
 		B6DF1CC01434AF6A0029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = echo_server.cpp; path = examples/echo_server/echo_server.cpp; sourceTree = "<group>"; };
-		B6DF1CCB1435ED760029A1B1 /* echo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = echo.cpp; path = examples/echo_server/echo.cpp; sourceTree = "<group>"; };
-		B6DF1CCC1435ED760029A1B1 /* echo.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = echo.hpp; path = examples/echo_server/echo.hpp; sourceTree = "<group>"; };
 		B6DF1CD11435ED910029A1B1 /* echo_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -651,40 +630,6 @@
 			name = messages;
 			sourceTree = "<group>";
 		};
-		B6732433148E543000FC2B04 /* legacy */ = {
-			isa = PBXGroup;
-			children = (
-				B6732434148E543000FC2B04 /* interfaces */,
-				B6732438148E543000FC2B04 /* policy.cpp */,
-				B6732439148E543000FC2B04 /* session_handler_interface.hpp */,
-				B673243A148E543000FC2B04 /* websocket_client.cpp */,
-				B673243B148E543000FC2B04 /* websocket_client.hpp */,
-				B673243C148E543000FC2B04 /* websocket_client_session.cpp */,
-				B673243D148E543000FC2B04 /* websocket_client_session.hpp */,
-				B673243E148E543000FC2B04 /* websocket_connection_handler.hpp */,
-				B673243F148E543000FC2B04 /* websocket_endpoint.hpp */,
-				B6732440148E543000FC2B04 /* websocket_frame.cpp */,
-				B6732441148E543000FC2B04 /* websocket_server.cpp */,
-				B6732442148E543000FC2B04 /* websocket_server.hpp */,
-				B6732443148E543000FC2B04 /* websocket_server_session.cpp */,
-				B6732444148E543000FC2B04 /* websocket_server_session.hpp */,
-				B6732445148E543000FC2B04 /* websocket_session.cpp */,
-				B6732446148E543000FC2B04 /* websocket_session.hpp */,
-			);
-			name = legacy;
-			path = src/legacy;
-			sourceTree = "<group>";
-		};
-		B6732434148E543000FC2B04 /* interfaces */ = {
-			isa = PBXGroup;
-			children = (
-				B6732435148E543000FC2B04 /* connection_handler.hpp */,
-				B6732436148E543000FC2B04 /* frame_parser.hpp */,
-				B6732437148E543000FC2B04 /* session.hpp */,
-			);
-			path = interfaces;
-			sourceTree = "<group>";
-		};
 		B673244F148F973D00FC2B04 /* fuzzing_server_tls */ = {
 			isa = PBXGroup;
 			children = (
@@ -737,8 +682,6 @@
 			children = (
 				B64975A11510B41400BE17D1 /* SConscript */,
 				B6CF18131437C370009295BE /* echo_client.cpp */,
-				B6CF18141437C370009295BE /* echo_client_handler.cpp */,
-				B6CF18151437C370009295BE /* echo_client_handler.hpp */,
 				B6CF18161437C370009295BE /* Makefile */,
 			);
 			name = echo_client;
@@ -792,7 +735,6 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				B6732433148E543000FC2B04 /* legacy */,
 				B62A5A541473EBB9005F9EB0 /* roles */,
 				B62A5A551473EBC4005F9EB0 /* sockets */,
 				B61387B51462B34400ED9B19 /* logger */,
@@ -861,6 +803,8 @@
 		B6DF1CC61435ED380029A1B1 /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				B64975A71510C69600BE17D1 /* Makefile */,
+				B64975A81510C6EA00BE17D1 /* common.mk */,
 				B6E56D6414FEFC43007E1707 /* wsperf */,
 				B61A51B614DC207600456432 /* concurrent_server */,
 				B673249A1491A50000FC2B04 /* stress_client */,
@@ -881,8 +825,6 @@
 			children = (
 				B64975A01510B3FD00BE17D1 /* SConscript */,
 				B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */,
-				B6DF1CCB1435ED760029A1B1 /* echo.cpp */,
-				B6DF1CCC1435ED760029A1B1 /* echo.hpp */,
 				B6138760145AD09700ED9B19 /* Makefile */,
 			);
 			name = echo_server;
@@ -1361,7 +1303,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6DF1CDB1435EDCE0029A1B1 /* echo_server.cpp in Sources */,
-				B6DF1CDC1435EDCE0029A1B1 /* echo.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
