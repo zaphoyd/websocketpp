@@ -244,7 +244,6 @@
 
 /* Begin PBXFileReference section */
 		B6138760145AD09700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server/Makefile; sourceTree = "<group>"; };
-		B6138762145AD0A500ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_client/Makefile; sourceTree = "<group>"; };
 		B6138763145AD1F700ED9B19 /* chat_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = chat_client.html; path = examples/chat_server/chat_client.html; sourceTree = "<group>"; };
 		B6138764145AD1F700ED9B19 /* chat_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_server.cpp; path = examples/chat_server/chat_server.cpp; sourceTree = "<group>"; };
 		B6138765145AD1F700ED9B19 /* chat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat.cpp; path = examples/chat_server/chat.cpp; sourceTree = "<group>"; };
@@ -276,6 +275,13 @@
 		B62A5A71147759EA005F9EB0 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = src/common.hpp; sourceTree = "<group>"; };
 		B63E51A814C9A5790006BF9A /* shared_const_buffer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = shared_const_buffer.hpp; path = src/shared_const_buffer.hpp; sourceTree = "<group>"; };
 		B649759D150BA96100BE17D1 /* wscmd.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = wscmd.cpp; path = examples/wsperf/wscmd.cpp; sourceTree = "<group>"; };
+		B64975A01510B3FD00BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/echo_server/SConscript; sourceTree = "<group>"; };
+		B64975A11510B41400BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
+		B64975A21510B54900BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/chat_server/SConscript; sourceTree = "<group>"; };
+		B64975A31510B55600BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/chat_client/SConscript; sourceTree = "<group>"; };
+		B64975A41510B62700BE17D1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/chat_client/Makefile; sourceTree = "<group>"; };
+		B64975A51510B86B00BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
+		B64975A61510B8D900BE17D1 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/echo_server_tls/SConscript; sourceTree = "<group>"; };
 		B64E12D214BDE132006F20F0 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
 		B64E12D314BDE132006F20F0 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B64E12D414BDE132006F20F0 /* parsing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parsing.cpp; sourceTree = "<group>"; };
@@ -568,6 +574,7 @@
 				B61A51B714DC207600456432 /* concurrent_client.html */,
 				B61A51B814DC207600456432 /* concurrent_server.cpp */,
 				B61A51B914DC207600456432 /* Makefile */,
+				B64975A51510B86B00BE17D1 /* SConscript */,
 			);
 			name = concurrent_server;
 			path = examples/concurrent_server;
@@ -629,6 +636,7 @@
 			children = (
 				B66388451487D71800DDAE13 /* echo_server_tls.cpp */,
 				B66388461487D71800DDAE13 /* Makefile */,
+				B64975A61510B8D900BE17D1 /* SConscript */,
 			);
 			name = echo_server_tls;
 			sourceTree = "<group>";
@@ -727,6 +735,7 @@
 		B6CF18121437C370009295BE /* echo_client */ = {
 			isa = PBXGroup;
 			children = (
+				B64975A11510B41400BE17D1 /* SConscript */,
 				B6CF18131437C370009295BE /* echo_client.cpp */,
 				B6CF18141437C370009295BE /* echo_client_handler.cpp */,
 				B6CF18151437C370009295BE /* echo_client_handler.hpp */,
@@ -870,6 +879,7 @@
 		B6DF1CC71435ED420029A1B1 /* echo_server */ = {
 			isa = PBXGroup;
 			children = (
+				B64975A01510B3FD00BE17D1 /* SConscript */,
 				B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */,
 				B6DF1CCB1435ED760029A1B1 /* echo.cpp */,
 				B6DF1CCC1435ED760029A1B1 /* echo.hpp */,
@@ -884,7 +894,8 @@
 				B6828875143745DA002BA48B /* chat_client_handler.cpp */,
 				B6828876143745DA002BA48B /* chat_client_handler.hpp */,
 				B6828877143745DA002BA48B /* chat_client.cpp */,
-				B6138762145AD0A500ED9B19 /* Makefile */,
+				B64975A31510B55600BE17D1 /* SConscript */,
+				B64975A41510B62700BE17D1 /* Makefile */,
 			);
 			name = chat_client;
 			sourceTree = "<group>";
@@ -896,6 +907,7 @@
 				B6138764145AD1F700ED9B19 /* chat_server.cpp */,
 				B6138765145AD1F700ED9B19 /* chat.cpp */,
 				B6138766145AD1F700ED9B19 /* chat.hpp */,
+				B64975A21510B54900BE17D1 /* SConscript */,
 				B6138767145AD1F700ED9B19 /* Makefile */,
 			);
 			name = chat_server;

@@ -71,8 +71,12 @@ else:
                      env['BOOST_LIBS']]
 
 platform_libs = []
+tls_libs = []
 if env['PLATFORM'] == 'posix':
    platform_libs = ['pthread', 'rt']
+   tls_libs = ['ssl', 'crypto']
+elif env['PLATFORM'] == 'darwin':
+   tls_libs = ['ssl', 'crypto']
 elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass
@@ -85,6 +89,7 @@ builddir = releasedir
 Export('env')
 Export('platform_libs')
 Export('boostlibs')
+Export('tls_libs')
 
 ## END OF CONFIG !!
 
@@ -104,3 +109,25 @@ wsperf = SConscript('#/examples/wsperf/SConscript',
 echo_server = SConscript('#/examples/echo_server/SConscript',
                          variant_dir = builddir + 'echo_server',
                          duplicate = 0)
+
+echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',
+                         variant_dir = builddir + 'echo_server_tls',
+                         duplicate = 0)
+
+echo_client = SConscript('#/examples/echo_client/SConscript',
+                         variant_dir = builddir + 'echo_client',
+                         duplicate = 0)
+
+chat_client = SConscript('#/examples/chat_client/SConscript',
+                         variant_dir = builddir + 'chat_client',
+                         duplicate = 0)
+
+chat_server = SConscript('#/examples/chat_server/SConscript',
+                         variant_dir = builddir + 'chat_server',
+                         duplicate = 0)
+
+concurrent_server = SConscript('#/examples/concurrent_server/SConscript',
+                         variant_dir = builddir + 'concurrent_server',
+                         duplicate = 0)
+
+

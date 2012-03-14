@@ -1,5 +1,4 @@
-DIRS=broadcast_server_tls chat_client chat_server echo_client echo_server echo_server_tls fuzzing_client fuzzing_server_tls stress_client wsperf
-# Broken: concurrent_server
+DIRS=broadcast_server_tls chat_client chat_server concurrent_server echo_client echo_server echo_server_tls fuzzing_client fuzzing_server_tls stress_client wsperf
 
 .PHONY:
 all: build
