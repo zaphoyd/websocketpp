@@ -1,14 +1,6 @@
-CFLAGS = -O2
-LDFLAGS = 
+BOOST_LIBS=boost_system boost_thread boost_regex boost_random
 
-CXX		?= c++
-SHARED  ?= "1"
-
-ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_thread -lwebsocketpp
-else
-	LDFLAGS := $(LDFLAGS) -lboost_system -lboost_thread -lboost_date_time -lboost_regex -lboost_random ../../libwebsocketpp.a
-endif
+include ../common.mk
 
 chat_client: chat_client.o chat_client_handler.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)

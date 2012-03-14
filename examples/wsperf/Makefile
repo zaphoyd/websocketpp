@@ -1,26 +1,14 @@
-BOOST_LIB_PATH		?= /usr/local/lib
-BOOST_INCLUDE_PATH ?= /usr/local/include
-WEBSOCKETPP_PATH    ?= ../../
-CPP11               ?= 
+BOOST_LIBS=boost_system boost_date_time boost_regex boost_thread boost_random boost_chrono boost_program_options
 
-CFLAGS = -Wall -O3 $(CPP11) -I$(BOOST_INCLUDE_PATH)
-LDFLAGS = -L$(BOOST_LIB_PATH)
+include ../common.mk
 
-CXX		?= c++
-SHARED  ?= "1"
+LDFLAGS := $(LDFLAGS) -lcrypto -lssl -lpthread
+CFLAGS := -Wall -O3 $(CFLAGS)
 
 OS=$(shell uname)
 
-ifeq ($(OS), Darwin)
-	darwinlibs = 
-else
-	darwinlibs = -lrt -lpthread
-endif
-
-ifeq ($(SHARED), 1)
-	LDFLAGS := $(LDFLAGS) -lwebsocketpp $(darwinlibs) -lboost_system -lboost_thread -lboost_random -lboost_regex -lboost_date_time -boost_chrono -lboost_program_options
-else
-	LDFLAGS := $(LDFLAGS) $(WEBSOCKETPP_PATH)/libwebsocketpp.a $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_thread.a $(BOOST_LIB_PATH)/libboost_random.a $(BOOST_LIB_PATH)/libboost_chrono.a $(BOOST_LIB_PATH)/libboost_program_options.a $(darwinlibs)
+ifneq ($(OS), Darwin)
+	LDFLAGS := $(LDFLAGS) -lrt -lpthread
 endif
 
 wsperf: wsperf.o request.o case.o generic.o wscmd.o
