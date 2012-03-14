@@ -170,6 +170,7 @@ $(objdir)/%.o: $(srcdir)/%.cpp
 ifeq ($(SHARED),1)
 install: banner install_headers $(lib_target)
 	@echo "Install shared library"
+	mkdir -p $(inst_path)
 	cp -f ./$(lib_target) $(inst_path)
 	cd $(inst_path) ; \
 	ln -sf $(lib_target) $(libname_shared_major_version) ; \
@@ -181,6 +182,7 @@ install: banner install_headers $(lib_target)
 else
 install: banner install_headers $(lib_target)
 	@echo "Install static library"
+	mkdir -p $(inst_path)
 	cp -f ./$(lib_target) $(inst_path)
 	@echo "Install static library: Done."
 endif
