@@ -397,7 +397,7 @@ public:
     }
     
     void reset() {
-        m_state = m_state = hybi_state::READ_HEADER;
+        m_state = hybi_state::READ_HEADER;
         m_header.reset();
     }
     
