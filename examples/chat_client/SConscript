@@ -8,7 +8,7 @@ Import('platform_libs')
 
 localenv = env.Clone ()
 
-sources = ["chat_client","chat_client_handler.cpp"]
+sources = ["chat_client.cpp","chat_client_handler.cpp"]
 
 LIBS = [wslib, platform_libs] + boostlibs(['system',
                                            'date_time',
