@@ -132,7 +132,7 @@ namespace websocketpp {
                 CONTROL_RSVC = 0xC,
                 CONTROL_RSVD = 0xD,
                 CONTROL_RSVE = 0xE,
-                CONTROL_RSVF = 0xF,
+                CONTROL_RSVF = 0xF
             };
             
             inline bool reserved(value v) {
