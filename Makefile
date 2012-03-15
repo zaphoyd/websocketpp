@@ -76,7 +76,7 @@ CXX             ?= c++
 AR              ?= ar
 PIC             ?= PIC
 BUILD_TYPE      ?= default
-SHARED          ?= 1
+SHARED          ?= 0
 
 
 # Internal Variables
