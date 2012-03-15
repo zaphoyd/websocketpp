@@ -550,11 +550,9 @@ public:
         }
         
         // set close payload
-        char val[3];
-        *reinterpret_cast<uint16_t*>(&val[0]) = htons(code);
-        val[2] = 0x00;
+        const uint16_t payload = htons(code);
         
-        msg->set_payload(std::string(val));
+        msg->set_payload(std::string(reinterpret_cast<const char*>(&payload), 2));
         msg->append_payload(reason);
         
         // prepare rest of frame
