@@ -334,12 +334,7 @@ public:
         if (get_payload_size() == 0) {
             return close::status::NO_STATUS;
         } else if (get_payload_size() >= 2) {
-            char val[2];
-            
-            val[0] = m_payload[0];
-            val[1] = m_payload[1];
-            
-            uint16_t code = ntohs(*(reinterpret_cast<uint16_t*>(&val[0])));
+            uint16_t code = ntohs(reinterpret_cast<uint16_t>(m_payload[1]) | reinterpret_cast<uint16_t>(m_payload[0]) << 8);
             
             return close::status::value(code);
         } else {
