@@ -125,7 +125,8 @@ void hybi_header::set_payload_size(uint64_t size) {
             m_header[1] |= BASIC_PAYLOAD_16BIT_CODE;
         }
         m_payload_size = size;
-        *(reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])) = htons(static_cast<uint16_t>(size));
+        const uint16_t nsize = htons(static_cast<uint16_t>(size));
+        memcpy(&m_header[BASIC_HEADER_LENGTH], &nsize, sizeof(nsize));
     } else if (size <= frame::limits::PAYLOAD_SIZE_JUMBO) {
         if (get_masked()) {
             // shift mask bytes to the correct position given the new size
@@ -136,7 +137,8 @@ void hybi_header::set_payload_size(uint64_t size) {
             m_header[1] |= BASIC_PAYLOAD_64BIT_CODE;
         }
         m_payload_size = size;
-        *(reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])) = zsutil::htonll(size);
+        uint64_t nsize = zsutil::htonll(size);
+        memcpy(&m_header[BASIC_HEADER_LENGTH], &nsize, sizeof(nsize));
     } else {
         throw processor::exception("set_payload_size called with value that was too large (>2^63)",processor::error::MESSAGE_TOO_BIG);
     }
@@ -175,7 +177,11 @@ int32_t hybi_header::get_masking_key() const {
     if (!get_masked()) {
         return 0;
     }
-    return *reinterpret_cast<const int32_t*>(&m_header[get_header_len()-4]);
+    int32_t key;
+
+    memcpy(reinterpret_cast<char*>(&key), &m_header[get_header_len()-4], sizeof(key));
+
+    return key;
 }
 uint64_t hybi_header::get_payload_size() const {
     return m_payload_size;
@@ -244,9 +250,9 @@ void hybi_header::process_extended_header() {
     } else if (s == BASIC_PAYLOAD_16BIT_CODE) {         
         // reinterpret the second two bytes as a 16 bit integer in network
         // byte order. Convert to host byte order and store locally.
-        m_payload_size = ntohs(*(
-            reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
-        ));
+        uint16_t tmp; // Need tmp variable since m_payload_size has wrong size (could use it, but this is easier)
+        memcpy(reinterpret_cast<char*>(&tmp), &m_header[BASIC_HEADER_LENGTH], sizeof(tmp));
+        m_payload_size = ntohs(tmp);
         
         if (m_payload_size < s) {
             std::stringstream err;
@@ -257,9 +263,9 @@ void hybi_header::process_extended_header() {
     } else if (s == BASIC_PAYLOAD_64BIT_CODE) {
         // reinterpret the second eight bytes as a 64 bit integer in 
         // network byte order. Convert to host byte order and store.
-        m_payload_size = zsutil::ntohll(*(
-            reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
-        ));
+        uint64_t tmp; // could use m_payload_size instead of tmp, but this is the same approach as 16bit version
+        memcpy(reinterpret_cast<char*>(&tmp), &m_header[BASIC_HEADER_LENGTH], sizeof(tmp));
+        m_payload_size = zsutil::ntohll(tmp);
         
         if (m_payload_size <= frame::limits::PAYLOAD_SIZE_EXTENDED) {
             throw processor::exception("payload length not minimally encoded",
@@ -281,7 +287,7 @@ void hybi_header::set_header_bit(uint8_t bit,int byte,bool value) {
 }
 
 void hybi_header::set_masking_key(int32_t key) {
-    *(reinterpret_cast<int32_t *>(&m_header[get_header_len()-4])) = key;
+    memcpy(&m_header[get_header_len()-4], reinterpret_cast<const char*>(key), sizeof(key));
 }
 void hybi_header::clear_masking_key() {
     // this is a no-op as clearing the mask bit also changes the get_header_len
