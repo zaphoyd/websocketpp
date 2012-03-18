@@ -62,12 +62,10 @@ public:
         char key_final[16];
         
         // copy key1 into final key
-        *reinterpret_cast<uint32_t*>(&key_final[0]) = 
-            decode_client_key(request.header("Sec-WebSocket-Key1"));
+        decode_client_key(request.header("Sec-WebSocket-Key1"), &key_final[0]);
                 
         // copy key2 into final key
-        *reinterpret_cast<uint32_t*>(&key_final[4]) = 
-            decode_client_key(request.header("Sec-WebSocket-Key2"));
+        decode_client_key(request.header("Sec-WebSocket-Key2"), &key_final[4]);
                 
         // copy key3 into final key
         memcpy(&key_final[8],request.header("Sec-WebSocket-Key3").c_str(),8);
@@ -292,7 +290,7 @@ public:
     }
     
 private:
-    uint32_t decode_client_key(const std::string& key) {
+    void decode_client_key(const std::string& key, char* result) {
         int spaces = 0;
         std::string digits = "";
         uint32_t num;
@@ -308,9 +306,10 @@ private:
         
         num = atoi(digits.c_str());
         if (spaces > 0 && num > 0) {
-            return htonl(num/spaces);
+            num = htonl(num/spaces);
+            memcpy(result, reinterpret_cast<char*>(&num), 4);
         } else {
-            return 0;
+            memset(result, 0, 4);
         }
     }
     
