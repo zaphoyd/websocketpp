@@ -106,7 +106,7 @@ public:
         m_bytes_needed = BASIC_HEADER_LENGTH;
         m_degraded = false;
         m_payload.clear();
-        memset(m_header,0,MAX_HEADER_LENGTH);
+        std::fill(m_header,m_header+MAX_HEADER_LENGTH,0);
     }
     
     // Method invariant: One of the following must always be true even in the case 
@@ -337,7 +337,7 @@ public:
             char val[2] = { m_payload[0], m_payload[1] };
             uint16_t code;
 
-            memcpy(&code, val, sizeof(code));
+            std::copy(val,val+sizeof(code),&code);            
             code = ntohs(code);
             
             return close::status::value(code);
