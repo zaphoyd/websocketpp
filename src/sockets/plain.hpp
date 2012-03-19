@@ -76,9 +76,10 @@ public:
         }
         
         void async_init(socket_init_callback callback) {
-            // TODO: should this use post()?
+            // TODO: make configuration option for NO_DELAY
             m_socket.set_option(boost::asio::ip::tcp::no_delay(true));
             
+            // TODO: should this use post()?
             callback(boost::system::error_code());
         }
         
