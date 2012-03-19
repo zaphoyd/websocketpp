@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
         endpoint.connect(con);
         
-        boost::thread t(boost::bind(&client::run, &endpoint));
+        boost::thread t(boost::bind(&client::run, &endpoint, false));
         
         char line[512];
         while (std::cin.getline(line, 512)) {
