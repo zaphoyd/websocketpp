@@ -237,7 +237,7 @@ private:
 
 template <class endpoint>
 void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e) {
-    boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
     
     if (m_state != IDLE) {
         throw exception("listen called from invalid state.");
@@ -275,7 +275,7 @@ void server<endpoint>::listen(const std::string &host, const std::string &servic
 
 template <class endpoint>
 void server<endpoint>::start_accept() {
-    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.m_lock);
     
     connection_ptr con = m_endpoint.create_connection();
     
@@ -305,7 +305,7 @@ template <class endpoint>
 void server<endpoint>::handle_accept(connection_ptr con, 
                                      const boost::system::error_code& error)
 {
-    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.get_lock());
+    boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.m_lock);
     
     if (error) {
         if (error == boost::system::errc::too_many_files_open) {
@@ -405,12 +405,12 @@ void server<endpoint>::connection<connection_type>::async_init() {
         m_connection.get_socket(),
         m_connection.buffer(),
         "\r\n\r\n",
-        boost::bind(
+        m_connection.get_strand().wrap(boost::bind(
             &type::handle_read_request,
             m_connection.shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
-        )
+        ))
     );
 }
 
