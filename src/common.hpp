@@ -58,6 +58,8 @@ namespace websocketpp {
     
     const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
     
+    const size_t DEFAULT_READ_THRESHOLD = 512;
+    
     const uint16_t DEFAULT_PORT = 80;
     const uint16_t DEFAULT_SECURE_PORT = 443;
     
@@ -92,20 +94,26 @@ namespace websocketpp {
             MESSAGE_TOO_BIG = 1009,
             EXTENSION_REQUIRE = 1010,
             INTERNAL_ENDPOINT_ERROR = 1011,
-            RSV_START = 1012,
+            RSV_ADHOC_2 = 1012,
+            RSV_ADHOC_3 = 1013,
+            RSV_ADHOC_4 = 1014,
+            TLS_HANDSHAKE = 1015,
+            RSV_START = 1016,
             RSV_END = 2999,
             INVALID_START = 5000
         };
         
         inline bool reserved(value s) {
-            return ((s >= RSV_START && s <= RSV_END) || 
-                    s == RSV_ADHOC_1);
+            return ((s >= RSV_START && s <= RSV_END) || s == RSV_ADHOC_1 
+                    || s == RSV_ADHOC_2 || s == RSV_ADHOC_3 || s == RSV_ADHOC_4);
         }
         
+        // Codes invalid on the wire
         inline bool invalid(value s) {
             return ((s <= INVALID_END || s >= INVALID_START) || 
                     s == NO_STATUS || 
-                    s == ABNORMAL_CLOSE);
+                    s == ABNORMAL_CLOSE || 
+                    s == TLS_HANDSHAKE);
         }
         
         // TODO functions for application ranges?
@@ -165,7 +173,9 @@ namespace websocketpp {
             PAYLOAD_VIOLATION = 2,
             ENDPOINT_UNSECURE = 3,
             ENDPOINT_UNAVAILABLE = 4,
-            INVALID_URI = 5
+            INVALID_URI = 5,
+            NO_OUTGOING_MESSAGES = 6,
+            INVALID_STATE = 7
         };
     }
     
