@@ -139,40 +139,53 @@ void process_requests(request_coordinator* coordinator) {
     }
 }
 
-// concurrent server takes two arguments. A port to bind to and a number of 
-// worker threads to create. The thread count must be an integer greater than
-// or equal to zero.
+// usage: <port> <thread_pool_threads> <worker_threads>
 // 
-// num_threads=0 Standard non-threaded WebSocket++ mode. Handlers will block
-//               i/o operations and other handlers.
-// num_threads=1 One thread processes requests serially the other handles i/o
-//               This allows new connections and requests to be made while the
-//               processing thread is busy, but does allow long jobs to 
-//               monopolize the processor increasing request latency.
-// num_threads>1 Multiple processing threads will work on the single queue of
-//               requests provided by the i/o thread. This enables out of order
-//               completion of requests. The number of threads can be tuned 
-//               based on hardware concurrency available and expected load and
-//               job length.
+// port = port to listen on
+// thread_pool_threads = number of threads in the pool running io_service.run()
+// worker_threads = number of threads in the sleep work pool.
+//
+// thread_pool_threads determines the number of threads that process i/o handlers. This 
+// must be at least one. Handlers and callbacks for individual connections are always 
+// serially executed within that connection. An i/o thread pool will not improve 
+// performance in cases where number of connections < number of threads in pool.
+// 
+// worker_threads=0 Standard non-threaded WebSocket++ mode. Handlers will block
+//                  i/o operations within their own connection.
+// worker_threads=1 A single work thread processes requests serially separate from the i/o 
+//                  thread(s). This allows new connections and requests to be made while the
+//                  processing thread is busy, but does allow long jobs to 
+//                  monopolize the processor increasing request latency.
+// worker_threads>1 Multiple work threads will work on the single queue of
+//                  requests provided by the i/o thread(s). This enables out of order
+//                  completion of requests. The number of threads can be tuned 
+//                  based on hardware concurrency available and expected load and
+//                  job length.
 int main(int argc, char* argv[]) {
     unsigned short port = 9002;
-    unsigned short num_threads = 2;
+    size_t worker_threads = 2;
+    size_t pool_threads = 2;
     
     try {
-        if (argc == 2) {
+        if (argc >= 2) {
             std::stringstream buffer(argv[1]);
             buffer >> port;
         }
         
-        if (argc == 3) {
+        if (argc >= 3) {
             std::stringstream buffer(argv[2]);
-            buffer >> num_threads;
+            buffer >> pool_threads;
         }
-            
+        
+        if (argc >= 4) {
+            std::stringstream buffer(argv[3]);
+            buffer >> worker_threads;
+        }
+           
         request_coordinator rc;
         
         server::handler::ptr h;
-        if (num_threads == 0) {
+        if (worker_threads == 0) {
             h = server::handler::ptr(new server_handler());
         } else {
             h = server::handler::ptr(new concurrent_server_handler(rc));
@@ -187,13 +200,20 @@ int main(int argc, char* argv[]) {
         echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
         
         std::list<boost::shared_ptr<boost::thread> > threads;
-        
-        for (int i = 0; i < num_threads; i++) {
-            threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&process_requests, &rc))));
+        if (worker_threads > 0) {
+            for (size_t i = 0; i < worker_threads; i++) {
+                threads.push_back(
+                    boost::shared_ptr<boost::thread>(
+                        new boost::thread(boost::bind(&process_requests, &rc))
+                    )
+                );
+            }
         }
         
-        std::cout << "Starting WebSocket sleep server on port " << port << " with " << num_threads << " processing threads." << std::endl;
-        echo_endpoint.listen(port);
+        std::cout << "Starting WebSocket sleep server on port " << port 
+                  << " with thread pool size " << pool_threads << " and " 
+                  << worker_threads << " worker threads." << std::endl;
+        echo_endpoint.listen(port,pool_threads);
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }
