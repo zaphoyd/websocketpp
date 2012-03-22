@@ -59,8 +59,9 @@ namespace websocketpp {
     const uint64_t DEFAULT_MAX_MESSAGE_SIZE = 0xFFFFFF; // ~16MB
     
     const size_t DEFAULT_READ_THRESHOLD = 1; // 512 would be a more sane value for this
-    
     const bool DEFAULT_SILENT_CLOSE = false; // true
+    
+    const size_t MAX_THREAD_POOL_SIZE = 64;
     
     const uint16_t DEFAULT_PORT = 80;
     const uint16_t DEFAULT_SECURE_PORT = 443;
