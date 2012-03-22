@@ -616,7 +616,15 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
     
     m_endpoint.get_handler()->on_open(m_connection.shared_from_this());
     
-    m_connection.handle_read_frame(boost::system::error_code());
+    get_io_service().post(
+        m_connection.m_strand.wrap(boost::bind(
+            &connection_type::handle_read_frame,
+            m_connection.shared_from_this(),
+            boost::system::error_code()
+        ))
+    );
+    
+    //m_connection.handle_read_frame(boost::system::error_code());
 }
 
 template <class endpoint>
