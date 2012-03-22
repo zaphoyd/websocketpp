@@ -550,10 +550,12 @@ public:
         }
         
         // set close payload
-        const uint16_t payload = htons(code);
+        if (code != close::status::NO_STATUS) {
+            const uint16_t payload = htons(code);
         
-        msg->set_payload(std::string(reinterpret_cast<const char*>(&payload), 2));
-        msg->append_payload(reason);
+            msg->set_payload(std::string(reinterpret_cast<const char*>(&payload), 2));
+            msg->append_payload(reason);
+        }
         
         // prepare rest of frame
         prepare_frame(msg);
