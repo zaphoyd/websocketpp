@@ -131,6 +131,7 @@ public:
        socket_type(endpoint_base::m_io_service),
        m_handler(handler),
        m_read_threshold(DEFAULT_READ_THRESHOLD),
+       m_silent_close(DEFAULT_SILENT_CLOSE),
        m_state(IDLE),
        m_pool(new message::pool<message::data>(1000)),
        m_pool_control(new message::pool<message::data>(SIZE_MAX))
@@ -264,6 +265,41 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         return m_read_threshold;
+    }
+    
+    /// Set connection silent close setting
+    /**
+     * Silent close suppresses the return of detailed connection close information during
+     * the closing handshake. This information is critically useful for debugging but may
+     * be undesirable for security reasons for some production environments. Close reasons
+     * could be used to by an attacker to confirm that the implementation is out of 
+     * resources or be used to identify the WebSocket library in use.
+     * 
+     * Visibility: public
+     * State: valid always
+     * Concurrency: callable from anywhere
+     * 
+     * @param val New silent close value
+     */
+    void set_silent_close(bool val) {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        m_silent_close = val;
+    }
+    
+    /// Get connection silent close setting
+    /**
+     * Visibility: public
+     * State: valid always
+     * Concurrency: callable from anywhere
+     * 
+     * @return Current silent close value
+     * @see set_silent_close()
+     */
+    bool get_silent_close() const {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        return m_silent_close;
     }
     
     /// Cleanly closes all websocket connections
@@ -461,6 +497,7 @@ private:
     // default settings to pass to connections
     handler_ptr                 m_handler;
     size_t                      m_read_threshold;
+    bool                        m_silent_close;
     
     // other stuff
     state                       m_state;
