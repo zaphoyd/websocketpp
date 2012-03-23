@@ -238,8 +238,6 @@ private:
     
     // Masking state
     masking_key                 m_masking_key;
-    //unsigned char               m_masking_key[4];
-    // m_masking_index can take on
     index_value                 m_masking_index;
     
     std::string                 m_header;
