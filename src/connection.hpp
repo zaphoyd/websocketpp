@@ -492,7 +492,7 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (m_detached) {
-            throw exception("Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
+            throw exception("get_data_message: Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
         }
         
         if (m_state != session::state::OPEN) {
@@ -633,7 +633,7 @@ public:
      */
     typename endpoint::alogger_type& alog() {
         if (m_detached) {
-            throw exception("Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
+            throw exception("alog(): Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
         }
         
         return m_endpoint.alog();
@@ -649,7 +649,7 @@ public:
      */
     typename endpoint::elogger_type& elog() {
         if (m_detached) {
-            throw exception("Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
+            throw exception("elog(): Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
         }
         
         return m_endpoint.elog();
@@ -1142,9 +1142,11 @@ public:
         if (error) {
             if (error == boost::asio::error::operation_aborted) {
                 // previous write was aborted
-                alog().at(log::alevel::DEBUG_CLOSE) 
-                    << "handle_write was called with operation_aborted error" 
-                    << log::endl;
+                if (!m_detached) {
+                    alog().at(log::alevel::DEBUG_CLOSE) 
+                        << "handle_write was called with operation_aborted error" 
+                        << log::endl;
+                }
             } else {
                 log_error("Error writing frame data",error);
                 terminate(false);
@@ -1155,8 +1157,10 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (m_write_queue.size() == 0) {
-            alog().at(log::alevel::DEBUG_CLOSE) 
-                << "handle_write called with empty queue" << log::endl;
+            if (!m_detached) {
+                alog().at(log::alevel::DEBUG_CLOSE) 
+                    << "handle_write called with empty queue" << log::endl;
+            }
             return;
         }
         
@@ -1177,8 +1181,10 @@ public:
                 write();
             }
         } else {
-            alog().at(log::alevel::DEBUG_CLOSE) 
-                    << "Exit after writing close frame" << log::endl;
+            if (!m_detached) {
+                alog().at(log::alevel::DEBUG_CLOSE) 
+                        << "Exit after writing close frame" << log::endl;
+            }
             terminate(false);
         }
     }
@@ -1227,9 +1233,7 @@ public:
                 m_handler->on_close(type::shared_from_this());
             }
             
-            if (!m_detached) {
-                log_close_result();
-            } 
+            log_close_result(); 
         }
         
         // finally remove this connection from the endpoint's list. This will
@@ -1242,10 +1246,12 @@ public:
     
     // this is called when an async asio call encounters an error
     void log_error(std::string msg,const boost::system::error_code& e) {
+        if (!m_detached) {return;}
         elog().at(log::elevel::RERROR) << msg << "(" << e << ")" << log::endl;
     }
     
     void log_close_result() {
+        if (!m_detached) {return;}
         alog().at(log::alevel::DISCONNECT) 
             //<< "Disconnect " << (m_was_clean ? "Clean" : "Unclean")
             << "Disconnect " 
@@ -1259,14 +1265,18 @@ public:
     void fail_on_expire(const boost::system::error_code& error) {
         if (error) {
             if (error != boost::asio::error::operation_aborted) {
-                elog().at(log::elevel::DEVEL) 
-                    << "fail_on_expire timer ended in unknown error" << log::endl;
+                if (!m_detached) {
+                    elog().at(log::elevel::DEVEL) 
+                        << "fail_on_expire timer ended in unknown error" << log::endl;
+                }
                 terminate(false);
             }
             return;
         }
-        elog().at(log::elevel::DEVEL) 
-            << "fail_on_expire timer expired" << log::endl;
+        if (!m_detached) {
+            elog().at(log::elevel::DEVEL) 
+                << "fail_on_expire timer expired" << log::endl;
+        }
         terminate(true);
     }
     
