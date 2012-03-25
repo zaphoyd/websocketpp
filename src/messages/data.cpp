@@ -162,7 +162,7 @@ void data::mask() {
         // To disable this optimization (for use with alternative STL implementations or
         // processors) define WEBSOCKETPP_STRICT_MASKING when compiling the library. This
         // will force the library to perform masking in single byte chunks.
-        //#define WEBSOCKETPP_STRICT_MASKING
+        #define WEBSOCKETPP_STRICT_MASKING
         
         #ifndef WEBSOCKETPP_STRICT_MASKING
             size_t size = m_payload.size()/sizeof(size_t);
@@ -179,14 +179,14 @@ void data::mask() {
                 m_payload[i] ^= m_masking_key.c[i%4];
             }
         #else
-            /*size_t len = m_payload.size();
+            size_t len = m_payload.size();
             for (size_t i = 0; i < len; i++) {
                 m_payload[i] ^= m_masking_key.c[i%4];
-            }*/
-            for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
+            }
+            /*for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
                 (*it) = *it ^ m_masking_key.c[m_masking_index];
                 m_masking_index = index_value((m_masking_index+1)&3);
-            }
+            }*/
         #endif
     }
 }
