@@ -1324,7 +1324,7 @@ public:
     message::control_ptr        m_control_message;
     
     // concurrency support
-    boost::recursive_mutex      m_lock;
+    mutable boost::recursive_mutex      m_lock;
     boost::asio::strand         m_strand;
     bool                        m_detached; // TODO: this should be atomic
 };
