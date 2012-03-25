@@ -128,7 +128,6 @@ void data::validate_payload() {
 
 void data::set_masking_key(int32_t key) {
     m_masking_key.i = key;
-    //*reinterpret_cast<int32_t*>(m_masking_key) = key;
     m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
 }
 
@@ -152,24 +151,43 @@ void data::append_payload(const std::string& payload) {
 }
 void data::mask() {
     if (m_masking_index >= 0) {
-        for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
-            (*it) = *it ^ m_masking_key.c[m_masking_index];
-            m_masking_index = index_value((m_masking_index+1)&3);
-        }
-        /*size_t s = m_payload.size();
-        size_t s2 = s/4;
-        size_t i;
+        // By default WebSocket++ performs block masking/unmasking in a mannor that makes
+        // some assumptions about the nature of the machine and STL library used. In 
+        // particular the assumption is either a 32 or 64 bit word size and an STL with
+        // std::string::data returning a contiguous char array.
+        //
+        // This method improves performance by 3-8x depending on the ratio of small to 
+        // large messages and the availability of a 64 bit processor.
+        //
+        // To disable this optimization (for use with alternative STL implementations or
+        // processors) define WEBSOCKETPP_STRICT_MASKING when compiling the library. This
+        // will force the library to perform masking in single byte chunks.
+        //#define WEBSOCKETPP_STRICT_MASKING
         
-        uint32_t mask = m_masking_key.i;
-        uint32_t* data = reinterpret_cast<uint32_t*>(const_cast<char*>(m_payload.c_str()));
-        
-        for (i = 0; i < s2; i++) {
-            data[i] ^= mask;
-        }
-        for (i = i*4; i < s; i++) {
-            m_payload[i] ^= m_masking_key.c[m_masking_index];
-            m_masking_index = index_value((m_masking_index+1)&3);
-        }*/
+        #ifndef WEBSOCKETPP_STRICT_MASKING
+            size_t size = m_payload.size()/sizeof(size_t);
+            size_t key = m_masking_key.i;
+            if (sizeof(size_t) == 8) {
+                key <<= 32;
+                key |= (static_cast<size_t>(m_masking_key.i) & 0x00000000FFFFFFFFLL);
+            }
+            size_t* data = reinterpret_cast<size_t*>(const_cast<char*>(m_payload.data()));
+            for (size_t i = 0; i < size; i++) {
+                data[i] ^= key;
+            }
+            for (size_t i = size*sizeof(size_t); i < m_payload.size(); i++) {
+                m_payload[i] ^= m_masking_key.c[i%4];
+            }
+        #else
+            /*size_t len = m_payload.size();
+            for (size_t i = 0; i < len; i++) {
+                m_payload[i] ^= m_masking_key.c[i%4];
+            }*/
+            for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
+                (*it) = *it ^ m_masking_key.c[m_masking_index];
+                m_masking_index = index_value((m_masking_index+1)&3);
+            }
+        #endif
     }
 }
 
