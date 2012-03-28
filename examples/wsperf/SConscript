@@ -14,13 +14,13 @@ sources = ["wsperf.cpp",
            "generic.cpp",
            "wscmd.cpp"]
 
-LIBS = [wslib, platform_libs] + boostlibs(['system',
-                                           'date_time',
-                                           'regex',
-                                           'thread',
-                                           'random',
-                                           'chrono',
-                                           'program_options'])
+LIBS = [wslib] + boostlibs(['system',
+                            'date_time',
+                            'regex',
+                            'thread',
+                            'random',
+                            'chrono',
+                            'program_options']) + [platform_libs]
 
 prg = localenv.Program('wsperf', sources, LIBS = LIBS)
 
