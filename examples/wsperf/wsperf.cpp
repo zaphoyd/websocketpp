@@ -156,7 +156,7 @@ int start_client(po::variables_map& vm) {
         
         client::connection_ptr con = endpoint.get_connection(uri);
         
-        con->add_request_header("User Agent",user_agent);
+        con->add_request_header("User-Agent",user_agent);
         con->add_subprotocol("wsperf");
         
         endpoint.connect(con);

@@ -70,9 +70,7 @@ int main(int argc, char* argv[]) {
         endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
         con = endpoint.connect(uri+"getCaseCount");
-        
-        con->add_request_header("User Agent","WebSocket++/0.2.0-dev");
-        
+                
         endpoint.run();
         
         std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;

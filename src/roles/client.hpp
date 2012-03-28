@@ -496,8 +496,8 @@ void client<endpoint>::connection<connection_type>::write_request() {
     m_request.replace_header("Sec-WebSocket-Key",m_handshake_key);
     
     // Unless the user has overridden the user agent, send generic WS++
-    if (m_request.header("User Agent") == "") {
-        m_request.replace_header("User Agent",USER_AGENT);
+    if (m_request.header("User-Agent") == "") {
+        m_request.replace_header("User-Agent",USER_AGENT);
     }
     
     

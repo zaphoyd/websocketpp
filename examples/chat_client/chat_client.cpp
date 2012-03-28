@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         
         con = endpoint.get_connection(uri);
         
-        con->add_request_header("User Agent","WebSocket++/0.2.0 WebSocket++Chat/0.2.0");
+        con->add_request_header("User-Agent","WebSocket++/0.2.0 WebSocket++Chat/0.2.0");
         con->add_subprotocol("com.zaphoyd.websocketpp.chat");
         
         con->set_origin("http://zaphoyd.com");
