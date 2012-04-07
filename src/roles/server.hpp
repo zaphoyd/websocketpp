@@ -495,8 +495,14 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
                 request.get(foo,9);
                 
                 if (request.gcount() != 8) {
-                    throw http::exception("Missing Key3",
-                                          http::status_code::BAD_REQUEST);
+                    // This likely occurs because the full key3 wasn't included
+                    // in the asio read. It is likely that the extra bytes are
+                    // actually on the wire and another asio read would get them
+                    // Fixing this will require a way of restarting the 
+                    // handshake read and storing the existing bytes until that
+                    // comes back. Issue #101
+                    throw http::exception("Full Key3 not found in first chop",
+                                          http::status_code::INTERNAL_SERVER_ERROR);
                 }
                 m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
             } else if (m_version == 7 || m_version == 8 || m_version == 13) {
@@ -563,6 +569,8 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
 template <class endpoint>
 template <class connection_type>
 void server<endpoint>::connection<connection_type>::write_response() {
+    bool ws_response = true;
+    
     m_response.set_version("HTTP/1.1");
     
     if (m_response.get_status_code() == http::status_code::SWITCHING_PROTOCOLS) {
@@ -576,6 +584,7 @@ void server<endpoint>::connection<connection_type>::write_response() {
         // TODO: return negotiated extensions
     } else {
         // TODO: HTTP response
+        ws_response = false;
     }
     
     m_response.replace_header("Server",USER_AGENT);
@@ -583,7 +592,7 @@ void server<endpoint>::connection<connection_type>::write_response() {
     std::string raw = m_response.raw();
     
     // Hack for legacy HyBi
-    if (m_version == 0) {
+    if (ws_response && m_version == 0) {
         raw += boost::dynamic_pointer_cast<processor::hybi_legacy<connection_type> >(m_connection.m_processor)->get_key3();
     }
     
@@ -611,13 +620,13 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
     // TODO: handshake timer
     
     if (error) {
-        m_endpoint.elog().at(log::elevel::RERROR) << "Network error writing handshake respons. code: " << error << log::endl;
+        m_endpoint.elog().at(log::elevel::RERROR) 
+            << "Network error writing handshake respons. code: " << error 
+            << log::endl;
         
         m_connection.terminate(false);
         return;
     }
-    
-    log_open_result();
     
     if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) {
         if (m_version == -1) {
@@ -626,13 +635,15 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
         } else {
             // this was a websocket connection that ended in an error
             m_endpoint.elog().at(log::elevel::RERROR) 
-            << "Handshake ended with HTTP error: " 
-            << m_response.get_status_code() << " " 
-            << m_response.get_status_msg() << log::endl;
+                << "Handshake ended with HTTP error: " 
+                << m_response.get_status_code() << " " 
+                << m_response.get_status_msg() << log::endl;
         }
         m_connection.terminate(true);
         return;
     }
+    
+    log_open_result();
     
     m_connection.m_state = session::state::OPEN;
     
@@ -663,7 +674,8 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
             << "Error getting remote endpoint. code: " << ec << log::endl;
     }
     
-    m_endpoint.alog().at(log::alevel::CONNECT) << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection ";
+    m_endpoint.alog().at(log::alevel::CONNECT) 
+        << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection ";
     
     if (ec) {
         m_endpoint.alog().at(log::alevel::CONNECT) << "Unknown";
