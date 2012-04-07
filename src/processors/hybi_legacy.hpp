@@ -33,6 +33,8 @@
 #include "../md5/md5.hpp"
 #include "../network_utilities.hpp"
 
+#include <cassert>
+
 namespace websocketpp {
 namespace processor {
 
@@ -68,12 +70,17 @@ public:
         decode_client_key(request.header("Sec-WebSocket-Key2"), &key_final[4]);
                 
         // copy key3 into final key
-        std::copy(request.header("Sec-WebSocket-Key3").c_str(),
-                  request.header("Sec-WebSocket-Key3").c_str()+8,
+        // key3 should be exactly 8 bytes. If it is more it will be truncated
+        // if it is less the final key will almost certainly be wrong.
+        // TODO: decide if it is best to silently fail here or produce some sort
+        //       of warning or exception.
+        const std::string& key3 = request.header("Sec-WebSocket-Key3");
+        std::copy(key3.c_str(),
+                  key3.c_str()+std::min(static_cast<size_t>(8), key3.size()),
                   &key_final[8]);
         
         m_key3 = md5_hash_string(std::string(key_final,16));
-                
+        
         response.add_header("Upgrade","websocket");
         response.add_header("Connection","Upgrade");
         
