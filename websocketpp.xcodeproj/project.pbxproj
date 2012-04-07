@@ -112,6 +112,7 @@
 		B6E7E7881505539E00394909 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5D14730B2200B32547 /* libssl.dylib */; };
 		B6E7E789150553A500394909 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6FE8D5B14730B1A00B32547 /* libcrypto.dylib */; };
 		B6E7E78B150553D000394909 /* libboost_chrono.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6E7E78A150553D000394909 /* libboost_chrono.dylib */; };
+		B6F8E527152697E800BE7A4C /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
 		B6FE8D181468707200B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
 		B6FE8D191468708200B32547 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = B6FE8D1714686A8500B32547 /* md5.h */; };
 		B6FE8D1A1468709300B32547 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = B6FE8D1614686A8500B32547 /* md5.c */; };
@@ -491,6 +492,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6F8E527152697E800BE7A4C /* libboost_thread.dylib in Frameworks */,
 				B663885C1487D7AA00DDAE13 /* libboost_regex.dylib in Frameworks */,
 				B613878F145CA61300ED9B19 /* libboost_date_time.dylib in Frameworks */,
 				B6DF1CE21435F1860029A1B1 /* libboost_system.dylib in Frameworks */,
