@@ -126,9 +126,6 @@ void message_test::on_message(connection_ptr con,websocketpp::message::data_ptr 
         m_msg.reset();
         m_pass = FAIL;
         
-        //std::cout << "sent: " << zsutil::to_hex(m_data) << std::endl;
-        //std::cout << "recieved: " << zsutil::to_hex(msg->get_payload()) << std::endl;
-        
         this->end(con);
     }
     
