@@ -97,3 +97,16 @@ std::string zsutil::to_hex(const std::string& input) {
     
     return output;
 }
+
+std::string zsutil::to_hex(const char* input,size_t length) {
+    std::string output;
+    std::string hex = "0123456789ABCDEF";
+    
+    for (size_t i = 0; i < length; i++) {
+        output += hex[(input[i] & 0xF0) >> 4];
+        output += hex[input[i] & 0x0F];
+        output += " ";
+    }
+    
+    return output;
+}

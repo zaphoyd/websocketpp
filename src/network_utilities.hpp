@@ -47,6 +47,7 @@ uint64_t ntohll(uint64_t src);
 std::string lookup_ws_close_status_string(uint16_t code);
 
 std::string to_hex(const std::string& input);
+std::string to_hex(const char* input,size_t length);
 
 } // namespace zsutil
 
