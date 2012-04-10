@@ -13,7 +13,7 @@ else
 	LDFLAGS := $(LDFLAGS) $(BOOST_LIB_PATH)/libboost_system.a $(BOOST_LIB_PATH)/libboost_date_time.a $(BOOST_LIB_PATH)/libboost_regex.a $(BOOST_LIB_PATH)/libboost_unit_test_framework.a ../../libwebsocketpp.a
 endif
 
-tests: parsing.cpp 
+tests: hybi_util.cpp
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 perf: uri_perf.cpp

@@ -28,7 +28,7 @@
 #  It's authors were Jonathan Wallace and Bernhard Fluehmann.
 
 
-objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o data.o
+objects = network_utilities.o sha1.o base64.o md5.o uri.o hybi_header.o hybi_util.o data.o
 
 BOOST_PREFIX ?= /usr/local
 BOOST_LIB_PATH		?= $(BOOST_PREFIX)/lib
@@ -156,6 +156,9 @@ $(objdir)/base64.o: $(srcdir)/base64/base64.cpp
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 $(objdir)/hybi_header.o: $(srcdir)/processors/hybi_header.cpp
+	$(CXX) $< -o $@ $(CXXFLAGS)
+
+$(objdir)/hybi_util.o: $(srcdir)/processors/hybi_util.cpp
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
 $(objdir)/data.o: $(srcdir)/messages/data.cpp

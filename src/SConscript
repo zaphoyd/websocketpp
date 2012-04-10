@@ -10,6 +10,7 @@ sources = ["base64/base64.cpp",
            "messages/data.cpp",
            "network_utilities.cpp",
            "processors/hybi_header.cpp",
+           "processors/hybi_util.cpp",
            "sha1/sha1.cpp",
            "uri.cpp"]
 

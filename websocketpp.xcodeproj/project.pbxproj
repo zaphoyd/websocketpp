@@ -75,6 +75,12 @@
 		B682888914374617002BA48B /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B682888B14374623002BA48B /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888A14374623002BA48B /* libboost_system.dylib */; };
 		B682888F14374689002BA48B /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B682888E14374689002BA48B /* libboost_thread.dylib */; };
+		B69BA1B61530F1A700E36526 /* stress_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BA1B41530F1A600E36526 /* stress_handler.cpp */; };
+		B69BA1B91530F55500E36526 /* stress_aggregate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BA1B71530F55400E36526 /* stress_aggregate.cpp */; };
+		B69BA1BC15322F1C00E36526 /* hybi_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BA1BA15322F1C00E36526 /* hybi_util.cpp */; };
+		B69BA1BD15322F1C00E36526 /* hybi_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BA1BA15322F1C00E36526 /* hybi_util.cpp */; };
+		B69BA1BE15322F1C00E36526 /* hybi_util.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B69BA1BB15322F1C00E36526 /* hybi_util.hpp */; };
+		B69BA1BF15322F1C00E36526 /* hybi_util.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B69BA1BB15322F1C00E36526 /* hybi_util.hpp */; };
 		B6CF18281437C3B1009295BE /* echo_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6CF18131437C370009295BE /* echo_client.cpp */; };
 		B6CF182A1437C3BD009295BE /* libwebsocketpp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DF1C721434A8280029A1B1 /* libwebsocketpp.dylib */; };
 		B6CF182C1437C3CA009295BE /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B6CF182B1437C3CA009295BE /* libboost_system.dylib */; };
@@ -323,6 +329,14 @@
 		B682888A14374623002BA48B /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
 		B682888C1437464A002BA48B /* libboost_random.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_random.dylib; path = usr/local/lib/libboost_random.dylib; sourceTree = SDKROOT; };
 		B682888E14374689002BA48B /* libboost_thread.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_thread.dylib; path = usr/local/lib/libboost_thread.dylib; sourceTree = SDKROOT; };
+		B68772181533C0B50060AAF6 /* hybi_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hybi_util.cpp; sourceTree = "<group>"; };
+		B69BA1B41530F1A600E36526 /* stress_handler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stress_handler.cpp; path = examples/wsperf/stress_handler.cpp; sourceTree = "<group>"; };
+		B69BA1B51530F1A600E36526 /* stress_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stress_handler.hpp; path = examples/wsperf/stress_handler.hpp; sourceTree = "<group>"; };
+		B69BA1B71530F55400E36526 /* stress_aggregate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stress_aggregate.cpp; path = examples/wsperf/stress_aggregate.cpp; sourceTree = "<group>"; };
+		B69BA1B81530F55500E36526 /* stress_aggregate.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stress_aggregate.hpp; path = examples/wsperf/stress_aggregate.hpp; sourceTree = "<group>"; };
+		B69BA1BA15322F1C00E36526 /* hybi_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hybi_util.cpp; sourceTree = "<group>"; };
+		B69BA1BB15322F1C00E36526 /* hybi_util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hybi_util.hpp; sourceTree = "<group>"; };
+		B69BA1C0153241EA00E36526 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = src/SConscript; sourceTree = "<group>"; };
 		B6CF18131437C370009295BE /* echo_client.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = echo_client.cpp; sourceTree = "<group>"; };
 		B6CF18161437C370009295BE /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		B6CF181C1437C397009295BE /* echo_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_client; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -585,6 +599,8 @@
 			children = (
 				B653A714148A607D004D7BD9 /* hybi_header.hpp */,
 				B653A718148AB555004D7BD9 /* hybi_header.cpp */,
+				B69BA1BA15322F1C00E36526 /* hybi_util.cpp */,
+				B69BA1BB15322F1C00E36526 /* hybi_util.hpp */,
 				B62A5A6B147748B2005F9EB0 /* hybi.hpp */,
 				B62A5A6C147748B2005F9EB0 /* hybi_legacy.hpp */,
 				B62A5A6D147748B2005F9EB0 /* processor.hpp */,
@@ -607,6 +623,7 @@
 				B64E12D214BDE132006F20F0 /* logging.cpp */,
 				B64E12D314BDE132006F20F0 /* Makefile */,
 				B64E12D414BDE132006F20F0 /* parsing.cpp */,
+				B68772181533C0B50060AAF6 /* hybi_util.cpp */,
 				B64E12D514BDE132006F20F0 /* tests */,
 			);
 			path = basic;
@@ -737,6 +754,7 @@
 		B6DF1C7F1434ABB70029A1B1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				B69BA1C0153241EA00E36526 /* SConscript */,
 				B62A5A541473EBB9005F9EB0 /* roles */,
 				B62A5A551473EBC4005F9EB0 /* sockets */,
 				B61387B51462B34400ED9B19 /* logger */,
@@ -867,6 +885,10 @@
 				B6E56D6814FEFC54007E1707 /* wsperf.cpp */,
 				B6E56D7E150644A3007E1707 /* request.cpp */,
 				B6E56D7F150644A3007E1707 /* request.hpp */,
+				B69BA1B71530F55400E36526 /* stress_aggregate.cpp */,
+				B69BA1B81530F55500E36526 /* stress_aggregate.hpp */,
+				B69BA1B41530F1A600E36526 /* stress_handler.cpp */,
+				B69BA1B51530F1A600E36526 /* stress_handler.hpp */,
 				B6E56D6914FEFE95007E1707 /* case.cpp */,
 				B6E56D6A14FEFE95007E1707 /* case.hpp */,
 				B6E56D6D1503DF2C007E1707 /* generic.cpp */,
@@ -923,6 +945,7 @@
 				B66388641487FE6C00DDAE13 /* data.hpp in Headers */,
 				B66388661487FE6C00DDAE13 /* control.hpp in Headers */,
 				B653A715148A607D004D7BD9 /* hybi_header.hpp in Headers */,
+				B69BA1BE15322F1C00E36526 /* hybi_util.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -940,6 +963,7 @@
 				B66388651487FE6C00DDAE13 /* data.hpp in Headers */,
 				B66388671487FE6C00DDAE13 /* control.hpp in Headers */,
 				B653A716148A607D004D7BD9 /* hybi_header.hpp in Headers */,
+				B69BA1BF15322F1C00E36526 /* hybi_util.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1175,7 +1199,7 @@
 		B6DF1C471434A5940029A1B1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = B6DF1C4A1434A5940029A1B1 /* Build configuration list for PBXProject "websocketpp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1283,6 +1307,7 @@
 				B6727429148517180029CF3E /* uri.cpp in Sources */,
 				B653A719148AB555004D7BD9 /* hybi_header.cpp in Sources */,
 				B6826CBC14A0D75A006DD3F3 /* data.cpp in Sources */,
+				B69BA1BC15322F1C00E36526 /* hybi_util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1297,6 +1322,7 @@
 				B672742A148517180029CF3E /* uri.cpp in Sources */,
 				B653A71A148AB555004D7BD9 /* hybi_header.cpp in Sources */,
 				B6826CBD14A0D75A006DD3F3 /* data.cpp in Sources */,
+				B69BA1BD15322F1C00E36526 /* hybi_util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1317,6 +1343,8 @@
 				B6E7E7801505536500394909 /* case.cpp in Sources */,
 				B6E7E7811505536500394909 /* generic.cpp in Sources */,
 				B6E56D80150644A3007E1707 /* request.cpp in Sources */,
+				B69BA1B61530F1A700E36526 /* stress_handler.cpp in Sources */,
+				B69BA1B91530F55500E36526 /* stress_aggregate.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
