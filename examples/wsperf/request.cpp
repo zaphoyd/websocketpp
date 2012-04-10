@@ -26,6 +26,7 @@
  */
 
 #include "request.hpp"
+#include "stress_aggregate.hpp"
 
 #include <sstream>
 
@@ -33,7 +34,9 @@ using wsperf::request;
 
 void request::process(unsigned int id) {
     case_handler_ptr test;
+    stress_handler_ptr shandler;
     std::string uri;
+    size_t connection_count;
     
     wscmd::cmd command = wscmd::parse(req);
     
@@ -42,6 +45,24 @@ void request::process(unsigned int id) {
             test = case_handler_ptr(new message_test(command));
             token = test->get_token();
             uri = test->get_uri();
+        } else if (command.command == "stress_test") {
+            shandler = stress_handler_ptr(new stress_aggregate(command));
+            
+            if(!wscmd::extract_number<size_t>(command, "connection_count",connection_count)) {
+                connection_count = 1;
+            }
+            
+            if (command.args["token"] != "") {
+                token = command.args["token"];
+            } else {
+                throw case_exception("Invalid token parameter.");
+            }
+            
+            if (command.args["uri"] != "") {
+                uri = command.args["uri"];
+            } else {
+                throw case_exception("Invalid uri parameter.");
+            }
         } else {
             writer->write(prepare_response("error","Invalid Command"));
             return;
@@ -51,28 +72,54 @@ void request::process(unsigned int id) {
         o << "{\"worker_id\":" << id << "}";
         
         writer->write(prepare_response_object("test_start",o.str()));
-    
-        client e(test);
         
-        e.alog().unset_level(websocketpp::log::alevel::ALL);
-        e.elog().unset_level(websocketpp::log::elevel::ALL);
-        
-        e.elog().set_level(websocketpp::log::elevel::RERROR);
-        e.elog().set_level(websocketpp::log::elevel::FATAL);
-                    
-        e.connect(uri);
-        e.run();
-        
-        writer->write(prepare_response_object("test_data",test->get_data()));
+        if (command.command == "message_test") {
+            client e(test);
+            
+            e.alog().set_level(websocketpp::log::alevel::ALL);
+            e.elog().set_level(websocketpp::log::elevel::ALL);
+            
+            //e.alog().unset_level(websocketpp::log::alevel::ALL);
+            //e.elog().unset_level(websocketpp::log::elevel::ALL);
+            
+            //e.elog().set_level(websocketpp::log::elevel::RERROR);
+            //e.elog().set_level(websocketpp::log::elevel::FATAL);
+                        
+            e.connect(uri);
+            e.run();
+            
+            writer->write(prepare_response_object("test_data",test->get_data()));
+        } else if (command.command == "stress_test") {
+            client e(shandler);
+            
+            boost::thread t(boost::bind(&client::run, &e, true));
+            
+            // create connections
+            for (size_t i = 0; i < connection_count; i++) {
+                e.connect(uri);
+            }
+            
+            for (;;) {
+                // send update
+                writer->write(prepare_response_object("test_data",shandler->get_data()));
+                
+                sleep(1);
+            }
+            
+            // loop over sending updates
+        }
 
         writer->write(prepare_response("test_complete",""));
     } catch (case_exception& e) {
+        std::cout << "case_exception: " << e.what() << std::endl;
         writer->write(prepare_response("error",e.what()));
         return;
     } catch (websocketpp::exception& e) {
+        std::cout << "websocketpp::exception: " << e.what() << std::endl;
         writer->write(prepare_response("error",e.what()));
         return;
     } catch (websocketpp::uri_exception& e) {
+        std::cout << "websocketpp::uri_exception: " << e.what() << std::endl;
         writer->write(prepare_response("error",e.what()));
         return;
     }

@@ -72,7 +72,11 @@ public:
     
     void on_timer(connection_ptr con,const boost::system::error_code& error);
     
-    void on_close(connection_ptr con) {}
+    void on_close(connection_ptr con) {
+        con->alog()->at(websocketpp::log::alevel::DEVEL) 
+            << "case_handler::on_close" 
+            << websocketpp::log::endl;
+    }
     void on_fail(connection_ptr con);
     
     const std::string& get_data() const;

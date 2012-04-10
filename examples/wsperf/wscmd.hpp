@@ -29,7 +29,9 @@
 #define WSCMD_HPP
 
 #include <map>
+#include <stdexcept>
 #include <string>
+#include <sstream>
 
 namespace wscmd {
     // Parses a wscmd string.
@@ -56,6 +58,18 @@ namespace wscmd {
     };
     
     wscmd::cmd parse(const std::string& m);
+    
+    template <typename T>
+    bool extract_number(wscmd::cmd command,std::string key,T& val) {
+        if (command.args[key] != "") {
+            std::istringstream buf(command.args[key]);
+            
+            buf >> val;
+            
+            if(buf) {return true;}
+        }
+        return false;
+    }
 } // namespace wscmd
 
 #endif // WSCMD_HPP

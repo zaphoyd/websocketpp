@@ -89,6 +89,9 @@ message_test::message_test(wscmd::cmd& cmd)
 }
 
 void message_test::on_open(connection_ptr con) {
+    con->alog()->at(websocketpp::log::alevel::DEVEL) 
+        << "message_test::on_open" << websocketpp::log::endl;
+    
     m_msg = con->get_data_message();
     
     m_data.reserve(static_cast<size_t>(m_message_size));
