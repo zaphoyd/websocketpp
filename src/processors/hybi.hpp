@@ -44,7 +44,8 @@ namespace hybi_state {
     enum value {
         READ_HEADER = 0,
         READ_PAYLOAD = 1,
-        READY = 2
+        READY = 2,
+        IGNORE = 3
     };
 }
 
@@ -256,6 +257,15 @@ public:
                     case hybi_state::READY:
                         // shouldn't be here..
                         break;
+                    case hybi_state::IGNORE:
+                        s.ignore(m_payload_left);
+                        m_payload_left -= s.gcount();
+                        
+                        if (m_payload_left == 0) {
+                            reset();
+                        }
+                        
+                        break;
                     default:
                         break;
                 }
@@ -268,12 +278,20 @@ public:
                     // processor for a new message.
                     if (m_header.ready()) {
                         m_header.reset();
+                        ignore();
                     }
                 }
                 
                 throw e;
             }
         }
+    }
+    
+    // Sends the processor an inturrupt signal instructing it to ignore the next
+    // num bytes and then reset itself. This is used to flush a bad frame out of
+    // the read buffer.
+    void ignore() {
+        m_state = hybi_state::IGNORE;
     }
     
     void process_header(std::istream& s) {
@@ -344,17 +362,33 @@ public:
     
     void process_payload(std::istream& input) {
         //std::cout << "payload left 1: " << m_payload_left << std::endl;
-        uint64_t written;
+        size_t num;
+        
+        // read bytes into processor buffer. Read the lesser of the buffer size
+        // and the number of bytes left in the payload.
+        
+        input.read(m_payload_buffer, std::min(m_payload_left, PAYLOAD_BUFFER_SIZE));
+        num = input.gcount();
+                
+        if (input.bad()) {
+            throw processor::exception("istream readsome error",
+                                       processor::error::FATAL_ERROR);
+        }
+        
+        if (num == 0) {
+            return;
+        }
+        
+        m_payload_left -= num;
+        
+        // tell the appropriate message to process the bytes.
         if (m_header.is_control()) {
-            written = m_control_message->process_payload(input,m_payload_left);
+            m_control_message->process_payload(m_payload_buffer,num);
         } else {
             //m_connection.alog().at(log::alevel::DEVEL) << "process_payload. Size:  " << m_payload_left << log::endl;
-            written = m_data_message->process_payload(input,m_payload_left);
+            m_data_message->process_payload(m_payload_buffer,num);
         }
-        m_payload_left -= written;
-        
-        //std::cout << "payload left 2: " << m_payload_left << std::endl;
-        
+                
         if (m_payload_left == 0) {
             process_frame();
         }
@@ -406,6 +440,7 @@ public:
             case hybi_state::READ_HEADER:
                 return m_header.get_bytes_needed();
             case hybi_state::READ_PAYLOAD:
+            case hybi_state::IGNORE:
                 return m_payload_left;
             case hybi_state::READY:
                 return 0;
@@ -561,6 +596,10 @@ public:
         prepare_frame(msg);
     }
 private:
+    // must be divisible by 8 (some things are hardcoded for 4 and 8 byte word
+    // sizes
+    static const size_t     PAYLOAD_BUFFER_SIZE = 512;
+    
     connection_type&        m_connection;
     int                     m_state;
     
@@ -568,11 +607,15 @@ private:
     message::control_ptr    m_control_message;
     hybi_header             m_header;
     hybi_header             m_write_header;
-    uint64_t                m_payload_left;
+    size_t                  m_payload_left;
     
+    char                    m_payload_buffer[PAYLOAD_BUFFER_SIZE];
     
     frame::parser<connection_type>  m_write_frame; // TODO: refactor this out
 };  
+
+template <class connection_type>
+const size_t hybi<connection_type>::PAYLOAD_BUFFER_SIZE;
 
 } // namespace processor
 } // namespace websocketpp

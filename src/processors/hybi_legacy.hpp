@@ -193,7 +193,16 @@ public:
                 m_state = hybi_legacy_state::DONE;
             } else {
                 if (m_data_message) {
-                    m_data_message->process_payload(input,1);
+                    size_t num;
+                    
+                    num = input.readsome(m_payload_buffer, PAYLOAD_BUFFER_SIZE);
+                    
+                    if (input.bad()) {
+                        throw processor::exception("istream readsome error",
+                                                   processor::error::FATAL_ERROR);
+                    }
+                    
+                    m_data_message->process_payload(m_payload_buffer,num);
                 }
             }
         }
@@ -324,12 +333,18 @@ private:
         }
     }
     
+    // must be divisible by 8 (some things are hardcoded for 4 and 8 byte word
+    // sizes
+    static const size_t         PAYLOAD_BUFFER_SIZE = 512;
+    
     connection_type&            m_connection;
     hybi_legacy_state::value    m_state;
     
     message::data_ptr           m_data_message;
     
     std::string                 m_key3;
+    
+    char                        m_payload_buffer[PAYLOAD_BUFFER_SIZE];
 };
     
 } // processor

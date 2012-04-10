@@ -31,6 +31,7 @@
 #include "../processors/hybi_header.hpp"
 
 using websocketpp::message::data;
+using websocketpp::processor::hybi_util::circshift_prepared_key;
 
 data::data(data::pool_ptr p, size_t s) : m_prepared(false),m_index(s),m_ref_count(0),m_pool(p),m_live(false) {
     m_payload.reserve(PAYLOAD_SIZE_INIT);
@@ -47,59 +48,63 @@ const std::string& data::get_header() const {
     return m_header;
 }
 
-uint64_t data::process_payload(std::istream& input,uint64_t size) {
-    unsigned char c;
-    const uint64_t new_size = m_payload.size() + size;
-    uint64_t i;
+// input must be a buffer with size divisible by the machine word_size and at 
+// least ceil(size/word_size)*word_size bytes long.
+void data::process_payload(char *input, size_t size) {
+    //std::cout << "data message processing: " << size << " bytes" << std::endl;
+    
+    const size_t new_size = m_payload.size() + size;
     
     if (new_size > PAYLOAD_SIZE_MAX) {
         throw processor::exception("Message too big",processor::error::MESSAGE_TOO_BIG);
     }
     
     if (new_size > m_payload.capacity()) {
-        m_payload.reserve(std::max<size_t>(
-            static_cast<size_t>(new_size), static_cast<size_t>(2*m_payload.capacity())
-        ));
+        m_payload.reserve(std::max(new_size, 2*m_payload.capacity()));
     }
     
-    i = 0;
-    while(input.good() && i < size) {
-        c = input.get();
+    if (m_masked) {
+        //std::cout << "message is masked" << std::endl;
         
-        if (!input.fail()) {
-            process_character(c);
-            i++;
+        //std::cout << "before: " << zsutil::to_hex(input, size) << std::endl;
+        
+        // this retrieves ceiling of size / word size
+        size_t n = (size + sizeof(size_t) - 1) / sizeof(size_t);
+        
+        // reinterpret the input as an array of word sized integers
+        size_t* data = reinterpret_cast<size_t*>(input);
+        
+        // unmask working buffer
+        for (int i = 0; i < n; i++) {
+            data[i] ^= m_prepared_key;
         }
         
-        if (input.bad()) {
-            throw processor::exception("istream read error 2",
-                                       processor::error::FATAL_ERROR);
+        //std::cout << "after: " << zsutil::to_hex(input, size) << std::endl;
+        
+        // circshift working key
+        //std::cout << "circshift by : " << size%4 << " bytes " << zsutil::to_hex(reinterpret_cast<char*>(&m_prepared_key),sizeof(size_t));
+        m_prepared_key = circshift_prepared_key(m_prepared_key, size%4);
+        //std::cout << " to " << zsutil::to_hex(reinterpret_cast<char*>(&m_prepared_key),sizeof(size_t)) << std::endl;
+    }
+    
+    if (m_opcode == frame::opcode::TEXT) {
+        if (!m_validator.decode(input, input+size)) {
+            throw processor::exception("Invalid UTF8 data",
+                                       processor::error::PAYLOAD_VIOLATION);
         }
     }
     
-    // successfully read all bytes
-    return i;
-}
-
-void data::process_character(unsigned char c) {
-    if (m_masking_index >= 0) {
-        c = c ^ m_masking_key.c[m_masking_index];
-        m_masking_index = index_value((m_masking_index+1)%4);
-    }
+    // copy working buffer into
+    //std::cout << "before: " << m_payload.size() << std::endl;
     
-    if (m_opcode == frame::opcode::TEXT && 
-        !m_validator.consume(static_cast<uint32_t>((unsigned char)(c))))
-    {
-        throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
-    }
+    m_payload.append(input, size);
     
-    // add c to payload 
-    m_payload.push_back(c);
+    //std::cout << "after: " << m_payload.size() << std::endl;
 }
     
 void data::reset(websocketpp::frame::opcode::value opcode) {
     m_opcode = opcode;
-    m_masking_index = M_NOT_MASKED;
+    m_masked = false;
     m_payload.clear();
     m_validator.reset();
     m_prepared = false;
@@ -108,10 +113,10 @@ void data::reset(websocketpp::frame::opcode::value opcode) {
 void data::complete() {
     if (m_opcode == frame::opcode::TEXT) {
         if (!m_validator.complete()) {
-            throw processor::exception("Invalid UTF8 data",processor::error::PAYLOAD_VIOLATION);
+            throw processor::exception("Invalid UTF8 data",
+                                       processor::error::PAYLOAD_VIOLATION);
         }
     }
-    
 }
 
 void data::validate_payload() {
@@ -128,7 +133,8 @@ void data::validate_payload() {
 
 void data::set_masking_key(int32_t key) {
     m_masking_key.i = key;
-    m_masking_index = (key == 0 ? M_MASK_KEY_ZERO : M_BYTE_0); 
+    m_prepared_key = processor::hybi_util::prepare_masking_key(m_masking_key);
+    m_masked = true;
 }
 
 void data::set_prepared(bool b) {
@@ -150,7 +156,7 @@ void data::append_payload(const std::string& payload) {
     m_payload.append(payload);
 }
 void data::mask() {
-    if (m_masking_index >= 0) {
+    if (m_masked && m_payload.size() > 0) {
         // By default WebSocket++ performs block masking/unmasking in a mannor that makes
         // some assumptions about the nature of the machine and STL library used. In 
         // particular the assumption is either a 32 or 64 bit word size and an STL with
@@ -162,9 +168,20 @@ void data::mask() {
         // To disable this optimization (for use with alternative STL implementations or
         // processors) define WEBSOCKETPP_STRICT_MASKING when compiling the library. This
         // will force the library to perform masking in single byte chunks.
-        #define WEBSOCKETPP_STRICT_MASKING
+        //#define WEBSOCKETPP_STRICT_MASKING
         
-        #ifndef WEBSOCKETPP_STRICT_MASKING
+        #ifdef WEBSOCKETPP_STRICT_MASKING
+            size_t len = m_payload.size();
+            for (size_t i = 0; i < len; i++) {
+                m_payload[i] ^= m_masking_key.c[i%4];
+            }
+        #else
+            // This should trigger a write to the string in case the STL 
+            // implimentation is copy-on-write and hasn't been written to yet.
+            // Performing the masking will always require a copy of the string 
+            // in this case to hold the masked version.
+            m_payload[0] = m_payload[0];
+            
             size_t size = m_payload.size()/sizeof(size_t);
             size_t key = m_masking_key.i;
             if (sizeof(size_t) == 8) {
@@ -178,15 +195,6 @@ void data::mask() {
             for (size_t i = size*sizeof(size_t); i < m_payload.size(); i++) {
                 m_payload[i] ^= m_masking_key.c[i%4];
             }
-        #else
-            size_t len = m_payload.size();
-            for (size_t i = 0; i < len; i++) {
-                m_payload[i] ^= m_masking_key.c[i%4];
-            }
-            /*for (std::string::iterator it = m_payload.begin(); it != m_payload.end(); it++) {
-                (*it) = *it ^ m_masking_key.c[m_masking_index];
-                m_masking_index = index_value((m_masking_index+1)&3);
-            }*/
         #endif
     }
 }

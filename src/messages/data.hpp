@@ -30,11 +30,13 @@
 
 #include "../common.hpp"
 #include "../utf8_validator/utf8_validator.hpp"
+#include "../processors/hybi_util.hpp"
 
 #include <boost/detail/atomic_count.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/utility.hpp>
 
 #include <algorithm>
@@ -79,6 +81,8 @@ public:
      * pointer.
      */
     element_ptr get() {
+        boost::lock_guard<boost::mutex> lock(m_lock);
+        
         element_ptr p;
         
         /*std::cout << "message requested (" 
@@ -110,6 +114,8 @@ public:
         return p;
     }
     void recycle(element_ptr p) {
+        boost::lock_guard<boost::mutex> lock(m_lock);
+        
         if (p->get_index()+1 > m_used.size() || m_used[p->get_index()] != p) {
             //std::cout << "error tried to recycle a pointer we don't control" << std::endl;
             // error tried to recycle a pointer we don't control
@@ -133,6 +139,7 @@ public:
     
     // set a function that will be called when new elements are avaliable.
     void set_callback(callback_type fn) {
+        boost::lock_guard<boost::mutex> lock(m_lock);
         m_callback = fn;
     }
     
@@ -144,6 +151,8 @@ private:
     std::vector<element_ptr> m_used;
     
     callback_type   m_callback;
+    
+    boost::mutex      m_lock;
 };
 
 class data {
@@ -168,8 +177,8 @@ public:
     // validation. Returns number of bytes read.
     // throws a processor::exception if the message is too big, there is a fatal
     // istream read error, or invalid UTF8 data is read for a text message
-    uint64_t process_payload(std::istream& input,uint64_t size);
-    void process_character(unsigned char c);
+    //uint64_t process_payload(std::istream& input,uint64_t size);
+    void process_payload(char * input, size_t size);
     void complete();
     void validate_payload();
     
@@ -185,7 +194,11 @@ public:
     void set_prepared(bool b);
     bool get_prepared() const;
     void mask();
-        
+    
+    int32_t get_masking_key() const {
+        return m_masking_key.i;
+    }
+    
     // pool management interface
     void set_live();
     size_t get_index() const;
@@ -193,34 +206,24 @@ private:
     static const uint64_t PAYLOAD_SIZE_INIT = 1000; // 1KB
     static const uint64_t PAYLOAD_SIZE_MAX = 100000000;// 100MB
     
-    enum index_value {
-        M_MASK_KEY_ZERO = -2,
-        M_NOT_MASKED = -1,
-        M_BYTE_0 = 0,
-        M_BYTE_1 = 1,
-        M_BYTE_2 = 2,
-        M_BYTE_3 = 3
-    };
-    
-    union masking_key {
-        int32_t i;
-        char    c[4];
-    };
+    typedef websocketpp::processor::hybi_util::masking_key_type masking_key_type;
     
     friend void intrusive_ptr_add_ref(const data * s) {
         ++s->m_ref_count;
     }
     
     friend void intrusive_ptr_release(const data * s) {
+        boost::unique_lock<boost::mutex> lock(s->m_lock);
+        
         // TODO: thread safety
         long count = --s->m_ref_count;
         if (count == 1 && s->m_live) {
             // recycle if endpoint exists
             s->m_live = false;
             
-            
             pool_ptr pp = s->m_pool.lock();
             if (pp) {
+                lock.unlock();
                 pp->recycle(ptr(const_cast<data *>(s)));
             }
             
@@ -237,8 +240,9 @@ private:
     utf8_validator::validator   m_validator;
     
     // Masking state
-    masking_key                 m_masking_key;
-    index_value                 m_masking_index;
+    masking_key_type            m_masking_key;
+    bool                        m_masked;
+    size_t                      m_prepared_key;
     
     std::string                 m_header;
     std::string                 m_payload;
@@ -250,6 +254,7 @@ private:
     mutable boost::detail::atomic_count m_ref_count;
     mutable pool_weak_ptr               m_pool;
     mutable bool                        m_live;
+    mutable boost::mutex                m_lock;
 };
 
 typedef boost::intrusive_ptr<data> data_ptr;

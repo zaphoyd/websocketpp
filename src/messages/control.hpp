@@ -34,6 +34,9 @@
 #include "../processors/processor.hpp"
 #include "../websocket_frame.hpp"
 #include "../utf8_validator/utf8_validator.hpp"
+#include "../processors/hybi_util.hpp"
+
+using websocketpp::processor::hybi_util::circshift_prepared_key;
 
 namespace websocketpp {
 namespace message {
@@ -52,36 +55,31 @@ public:
         return m_payload;
     }
     
-    uint64_t process_payload(std::istream& input,uint64_t size) {
-        char c;
-        const uint64_t new_size = m_payload.size() + size;
-        uint64_t i;
+    void process_payload(char *input,uint64_t size) {
+        const size_t new_size = m_payload.size() + size;
         
         if (new_size > PAYLOAD_SIZE_MAX) {
             throw processor::exception("Message payload was too large.",processor::error::MESSAGE_TOO_BIG);
         }
         
-        i = 0;
-        while(input.good() && i < size) {
-            c = input.get();
+        if (m_masked) {
+            // this retrieves ceiling of size / word size
+            size_t n = (size + sizeof(size_t) - 1) / sizeof(size_t);
             
-            if (!input.fail()) {
-                if (m_masking_index >= 0) {
-                    c = c ^ m_masking_key.c[(m_masking_index++)%4];
-                }
-                
-                m_payload.push_back(c);
-                i++;
+            // reinterpret the input as an array of word sized integers
+            size_t* data = reinterpret_cast<size_t*>(input);
+            
+            // unmask working buffer
+            for (int i = 0; i < n; i++) {
+                data[i] ^= m_prepared_key;
             }
             
-            if (input.bad()) {
-                throw processor::exception("istream read error 2",
-                                           processor::error::FATAL_ERROR);
-            }
+            // circshift working key
+            m_prepared_key = circshift_prepared_key(m_prepared_key, size%4);
         }
-        
-        // successfully read all bytes
-        return i;
+                
+        // copy working buffer into
+        m_payload.append(input, size);
     }
     
     void complete() {
@@ -133,9 +131,9 @@ public:
     }
     
     void set_masking_key(int32_t key) {
-        //*reinterpret_cast<int32_t*>(m_masking_key) = key;
         m_masking_key.i = key;
-        m_masking_index = (key == 0 ? -1 : 0);
+        m_prepared_key = processor::hybi_util::prepare_masking_key(m_masking_key);
+        m_masked = true;
     }
 private:
     uint16_t get_raw_close_code() const {
@@ -154,6 +152,8 @@ private:
     static const uint64_t PAYLOAD_SIZE_INIT = 128; // 128B
     static const uint64_t PAYLOAD_SIZE_MAX = 128; // 128B
     
+    typedef websocketpp::processor::hybi_util::masking_key_type masking_key_type;
+    
     union masking_key {
         int32_t i;
         char    c[4];
@@ -166,9 +166,9 @@ private:
     utf8_validator::validator   m_validator;
     
     // Masking state
-    masking_key                 m_masking_key;
-    //unsigned char               m_masking_key[4];
-    int                         m_masking_index;
+    masking_key_type            m_masking_key;
+    bool                        m_masked;
+    size_t                      m_prepared_key;
     
     // Message payload
     std::string                 m_payload;
