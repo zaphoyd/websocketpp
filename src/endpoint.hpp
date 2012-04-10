@@ -48,7 +48,14 @@ class endpoint_base {
 protected:
     /// Start the run method of the endpoint's io_service object.
     void run_internal() {
-        m_io_service.run();
+        for (;;) {
+            try {
+                m_io_service.run();
+                break;
+            } catch (const std::exception & e) {
+                throw e;
+            }
+        }
     }
     
     boost::asio::io_service m_io_service;
@@ -89,8 +96,10 @@ public:
     typedef typename traits::socket_type socket_type;
     /// The type of the access logger based on the logger policy.
     typedef typename traits::alogger_type alogger_type;
+    typedef typename traits::alogger_ptr alogger_ptr;
     /// The type of the error logger based on the logger policy.
     typedef typename traits::elogger_type elogger_type;
+    typedef typename traits::elogger_ptr elogger_ptr;
     /// The type of the connection that this endpoint creates.
     typedef typename traits::connection_type connection_type;
     /// A shared pointer to the type of connection that this endpoint creates.
@@ -127,20 +136,23 @@ public:
      * when creating new connections.
      */
     explicit endpoint(handler_ptr handler) 
-     : role_type(endpoint_base::m_io_service),
-       socket_type(endpoint_base::m_io_service),
-       m_handler(handler),
-       m_read_threshold(DEFAULT_READ_THRESHOLD),
-       m_silent_close(DEFAULT_SILENT_CLOSE),
-       m_state(IDLE),
-       m_pool(new message::pool<message::data>(1000)),
-       m_pool_control(new message::pool<message::data>(SIZE_MAX))
+     : role_type(endpoint_base::m_io_service)
+     , socket_type(endpoint_base::m_io_service)
+     , m_handler(handler)
+     , m_read_threshold(DEFAULT_READ_THRESHOLD)
+     , m_silent_close(DEFAULT_SILENT_CLOSE)
+     , m_state(IDLE)
+     , m_alog(new alogger_type())
+     , m_elog(new elogger_type())
+     , m_pool(new message::pool<message::data>(1000))
+     , m_pool_control(new message::pool<message::data>(SIZE_MAX))
     {
         m_pool->set_callback(boost::bind(&type::on_new_message,this));
     }
     
     /// Destroy an endpoint
     ~endpoint() {
+        m_alog->at(log::alevel::DEVEL) << "Endpoint destructor called" << log::endl;
         // Tell the memory pool we don't want to be notified about newly freed
         // messages any more (because we wont be here)
         m_pool->set_callback(NULL);
@@ -153,6 +165,7 @@ public:
         while (!m_connections.empty()) {
             remove_connection(*m_connections.begin());
         }
+        m_alog->at(log::alevel::DEVEL) << "Endpoint destructor done" << log::endl;
     }
     
     // copy/assignment constructors require C++11
@@ -176,6 +189,9 @@ public:
      * @endcode
      */
     alogger_type& alog() {
+        return *m_alog;
+    }
+    alogger_ptr alog_ptr() {
         return m_alog;
     }
     
@@ -191,6 +207,9 @@ public:
      * @endcode
      */
     elogger_type& elog() {
+        return *m_elog;
+    }
+    elogger_ptr elog_ptr() {
         return m_elog;
     }
     
@@ -219,7 +238,7 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (!new_handler) {
-            elog().at(log::elevel::FATAL) 
+            elog()->at(log::elevel::FATAL) 
                 << "Tried to switch to a NULL handler." << log::endl;
             throw websocketpp::exception("TODO: handlers can't be null");
         }
@@ -318,7 +337,7 @@ public:
     {
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
-        alog().at(log::alevel::ENDPOINT) 
+        m_alog->at(log::alevel::ENDPOINT) 
         << "Endpoint received signal to close all connections cleanly with code " 
         << code << " and reason " << reason << log::endl;
         
@@ -363,14 +382,14 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (clean) {
-            alog().at(log::alevel::ENDPOINT) 
-            << "Endpoint is stopping cleanly" << log::endl;
+            m_alog->at(log::alevel::ENDPOINT) 
+                << "Endpoint is stopping cleanly" << log::endl;
             
             m_state = STOPPING;
             close_all(code,reason);
         } else {
-            alog().at(log::alevel::ENDPOINT) 
-            << "Endpoint is stopping immediately" << log::endl;
+            m_alog->at(log::alevel::ENDPOINT) 
+                << "Endpoint is stopping immediately" << log::endl;
             
             endpoint_base::m_io_service.stop();
             m_state = STOPPED;
@@ -405,8 +424,8 @@ protected:
         connection_ptr new_connection(new connection_type(*this,m_handler));
         m_connections.insert(new_connection);
         
-        alog().at(log::alevel::DEVEL) << "Connection created: count is now: " 
-                                      << m_connections.size() << log::endl;
+        m_alog->at(log::alevel::DEVEL) << "Connection created: count is now: " 
+                                       << m_connections.size() << log::endl;
         
         return new_connection;
     }
@@ -436,16 +455,16 @@ protected:
         
         m_connections.erase(con);
         
-        alog().at(log::alevel::DEVEL) << "Connection removed: count is now: " 
-                                      << m_connections.size() << log::endl;
+        m_alog->at(log::alevel::DEVEL) << "Connection removed: count is now: " 
+                                       << m_connections.size() << log::endl;
         
         if (m_state == STOPPING && m_connections.empty()) {
             // If we are in the process of stopping and have reached zero
             // connections stop the io_service.
-            stop(false);
-            alog().at(log::alevel::ENDPOINT) 
+            m_alog->at(log::alevel::ENDPOINT) 
                 << "Endpoint has reached zero connections in STOPPING state. Stopping io_service now." 
                 << log::endl;
+            stop(false);
         }
     }
     
@@ -467,7 +486,7 @@ protected:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         m_read_waiting.push(con);
-        alog().at(log::alevel::DEVEL) << "connection " << con << " is waiting. " << m_read_waiting.size() << log::endl;
+        m_alog->at(log::alevel::DEVEL) << "connection " << con << " is waiting. " << m_read_waiting.size() << log::endl;
     }
     
     /// Message pool callback indicating that there is a free data message
@@ -478,7 +497,7 @@ protected:
         if (!m_read_waiting.empty()) {
             connection_ptr next = m_read_waiting.front();
             
-            alog().at(log::alevel::DEVEL) << "Waking connection " << next << ". " << m_read_waiting.size()-1 << log::endl;
+            m_alog->at(log::alevel::DEVEL) << "Waking connection " << next << ". " << m_read_waiting.size()-1 << log::endl;
             
             (*next).handle_read_frame(boost::system::error_code());
             m_read_waiting.pop();
@@ -503,8 +522,8 @@ private:
     state                       m_state;
     
     std::set<connection_ptr>    m_connections;
-    alogger_type                m_alog;
-    elogger_type                m_elog;
+    alogger_ptr                 m_alog;
+    elogger_ptr                 m_elog;
     
     // resource pools for read/write message buffers
     message::pool<message::data>::ptr   m_pool;
@@ -533,8 +552,10 @@ struct endpoint_traits< endpoint<role, socket, logger> > {
     
     /// The type of the access logger based on the logger policy.
     typedef logger<log::alevel::value> alogger_type;
+    typedef boost::shared_ptr<alogger_type> alogger_ptr;
     /// The type of the error logger based on the logger policy.
     typedef logger<log::elevel::value> elogger_type;
+    typedef boost::shared_ptr<elogger_type> elogger_ptr;
     
     /// The type of the connection that this endpoint creates.
     typedef connection<type,

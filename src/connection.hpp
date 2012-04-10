@@ -102,20 +102,27 @@ public:
     };
     
     connection(endpoint_type& e,handler_ptr h) 
-     : role_type(e),
-       socket_type(e),
-       m_endpoint(e),
-       m_handler(h),
-       m_read_threshold(e.get_read_threshold()),
-       m_silent_close(e.get_silent_close()),
-       m_timer(e.endpoint_base::m_io_service,boost::posix_time::seconds(0)),
-       m_state(session::state::CONNECTING),
-       m_write_buffer(0),
-       m_write_state(IDLE),
-       m_remote_close_code(close::status::ABNORMAL_CLOSE),
-       m_read_state(READING),
-       m_strand(e.endpoint_base::m_io_service),
-       m_detached(false)
+     : role_type(e)
+     , socket_type(e)
+     , m_endpoint(e)
+     , m_alog(e.alog_ptr())
+     , m_elog(e.elog_ptr())
+     , m_handler(h)
+     , m_read_threshold(e.get_read_threshold())
+     , m_silent_close(e.get_silent_close())
+     , m_timer(e.endpoint_base::m_io_service,boost::posix_time::seconds(0))
+     , m_state(session::state::CONNECTING)
+     , m_protocol_error(false)
+     , m_write_buffer(0)
+     , m_write_state(IDLE)
+     , m_local_close_code(close::status::ABNORMAL_CLOSE)
+     , m_remote_close_code(close::status::ABNORMAL_CLOSE)
+     , m_closed_by_me(false)
+     , m_failed_by_me(false)
+     , m_dropped_by_me(false)
+     , m_read_state(READING)
+     , m_strand(e.endpoint_base::m_io_service)
+     , m_detached(false)
     {
         socket_type::init();
         
@@ -184,6 +191,7 @@ public:
      */
     void detach() {
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
         m_detached = true;
     }
     
@@ -222,7 +230,7 @@ public:
         } else if (m_state == session::state::OPEN) {
             m_endpoint.endpoint_base::m_io_service.post(
                 m_strand.wrap(boost::bind(
-                    &type::send_close,
+                    &type::begin_close,
                     type::shared_from_this(),
                     code,
                     reason
@@ -495,8 +503,8 @@ public:
             throw exception("get_data_message: Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
         }
         
-        if (m_state != session::state::OPEN) {
-            throw exception("get_data_message called from state other than OPEN",
+        if (m_state != session::state::OPEN && m_state != session::state::CLOSING) {
+            throw exception("get_data_message called from invalid state",
                             error::INVALID_STATE);
         }
         
@@ -538,8 +546,8 @@ public:
         if (m_detached) {return;}
         
         if (!new_handler) {
-            elog().at(log::elevel::FATAL) << "Tried to switch to a NULL handler." 
-                                          << log::endl;
+            elog()->at(log::elevel::FATAL) << "Tried to switch to a NULL handler." 
+                                           << log::endl;
             terminate(true);
             return;
         }
@@ -631,12 +639,8 @@ public:
      *
      * @return A reference to the endpoint's access logger
      */
-    typename endpoint::alogger_type& alog() {
-        if (m_detached) {
-            throw exception("alog(): Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
-        }
-        
-        return m_endpoint.alog();
+    typename endpoint::alogger_ptr alog() {
+        return m_alog;
     }
     
     /// Returns a reference to the endpoint's error logger.
@@ -647,12 +651,8 @@ public:
      *
      * @return A reference to the endpoint's error logger
      */
-    typename endpoint::elogger_type& elog() {
-        if (m_detached) {
-            throw exception("elog(): Endpoint was destroyed",error::ENDPOINT_UNAVAILABLE);
-        }
-        
-        return m_endpoint.elog();
+    typename endpoint::elogger_ptr elog() {
+        return m_elog;
     }
     
     /// Returns a pointer to the endpoint's handler.
@@ -693,7 +693,7 @@ public:
      */
     void handle_socket_init(const boost::system::error_code& error) {
         if (error) {
-            elog().at(log::elevel::RERROR) 
+            elog()->at(log::elevel::RERROR) 
                 << "Socket initialization failed, error code: " << error 
                 << log::endl;
             this->terminate(false);
@@ -722,38 +722,44 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         // check if state changed while we were waiting for a read.
-        if (m_state == session::state::CLOSED) { return; }
+        if (m_state == session::state::CLOSED) {
+            alog()->at(log::alevel::DEVEL) 
+                << "handle read returning due to closed connection" 
+                << log::endl;
+            return;
+        }
         if (m_state == session::state::CONNECTING) { return; }
         
         if (error) {
             if (error == boost::asio::error::eof) {         
-                // got unexpected EOF
-                // TODO: log error
-                elog().at(log::elevel::RERROR) 
-                    << "Remote connection dropped unexpectedly" << log::endl;
+                elog()->at(log::elevel::RERROR) 
+                    << "Unexpected EOF from remote endpoint, terminating connection." 
+                    << log::endl;
                 terminate(false);
+                return;
             } else if (error == boost::asio::error::operation_aborted) {
                 // got unexpected abort (likely our server issued an abort on
                 // all connections on this io_service)
                 
-                // TODO: log error
-                elog().at(log::elevel::RERROR) 
-                    << "Terminating due to abort: " << error << log::endl;
+                elog()->at(log::elevel::RERROR) 
+                    << "Connection terminating due to aborted read: " 
+                    << error << log::endl;
                 terminate(true);
+                return;
             } else {
                 // Other unexpected error
                 
-                // TODO: log error
-                elog().at(log::elevel::RERROR) 
-                    << "Terminating due to unknown error: " << error 
+                elog()->at(log::elevel::RERROR) 
+                    << "Connection terminating due to unknown error: " << error 
                     << log::endl;
                 terminate(false);
+                return;
             }
         }
         
         // process data from the buffer just read into
         std::istream s(&m_buf);
-        
+                
         while (m_state != session::state::CLOSED && m_buf.size() > 0) {
             try {
                 m_processor->consume(s);
@@ -772,19 +778,27 @@ public:
                 }
                 
                 switch(e.code()) {
+                    // the protocol error flag is set by any processor exception
+                    // that indicates that the composition of future bytes in 
+                    // the read stream cannot be reliably determined. Bytes will
+                    // no longer be read after that point.
                     case processor::error::PROTOCOL_VIOLATION:
-                        send_close(close::status::PROTOCOL_ERROR,e.what());
+                        m_protocol_error = true;
+                        begin_close(close::status::PROTOCOL_ERROR,e.what());
                         break;
                     case processor::error::PAYLOAD_VIOLATION:
-                        send_close(close::status::INVALID_PAYLOAD,e.what());
+                        m_protocol_error = true;
+                        begin_close(close::status::INVALID_PAYLOAD,e.what());
                         break;
                     case processor::error::INTERNAL_ENDPOINT_ERROR:
-                        send_close(close::status::INTERNAL_ENDPOINT_ERROR,e.what());
+                        m_protocol_error = true;
+                        begin_close(close::status::INTERNAL_ENDPOINT_ERROR,e.what());
                         break;
                     case processor::error::SOFT_ERROR:
                         continue;
                     case processor::error::MESSAGE_TOO_BIG:
-                        send_close(close::status::MESSAGE_TOO_BIG,e.what());
+                        m_protocol_error = true;
+                        begin_close(close::status::MESSAGE_TOO_BIG,e.what());
                         break;
                     case processor::error::OUT_OF_MESSAGES:
                         // we need to wait for a message to be returned by the
@@ -795,9 +809,9 @@ public:
                         return;
                     default:
                         // Fatal error, forcibly end connection immediately.
-                        elog().at(log::elevel::DEVEL) 
-                            << "Dropping TCP due to unrecoverable exception: " << e.code()
-                            << " (" << e.what() << ")" << log::endl;
+                        elog()->at(log::elevel::DEVEL) 
+                            << "Terminating connection due to unrecoverable processor exception: " 
+                            << e.code() << " (" << e.what() << ")" << log::endl;
                         terminate(true);
                 }
                 break;
@@ -806,7 +820,10 @@ public:
         }
         
         // try and read more
-        if (m_state != session::state::CLOSED && m_processor->get_bytes_needed() > 0) {
+        if (m_state != session::state::CLOSED && 
+            m_processor->get_bytes_needed() > 0 && 
+            !m_protocol_error)
+        {
             // TODO: read timeout timer?
             
             boost::asio::async_read(
@@ -838,8 +855,9 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (!new_handler) {            
-            elog().at(log::elevel::FATAL) 
-                << "Tried to switch to a NULL handler." << log::endl;
+            elog()->at(log::elevel::FATAL) 
+                << "Terminating connection due to attempted switch to NULL handler." 
+                << log::endl;
             // TODO: unserialized call to terminate?
             terminate(true);
             return;
@@ -892,13 +910,15 @@ public:
                 
                 if (m_state == session::state::OPEN) {
                     // other end is initiating
-                    elog().at(log::elevel::DEVEL) << "sending close ack" << log::endl;
+                    alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "sending close ack" << log::endl;
                     
                     // TODO:
                     send_close_ack();
                 } else if (m_state == session::state::CLOSING) {
                     // ack of our close
-                    elog().at(log::elevel::DEVEL) << "got close ack" << log::endl;
+                    alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "got close ack" << log::endl;
                     
                     terminate(false);
                     // TODO: start terminate timer (if client)
@@ -911,7 +931,7 @@ public:
         }
     }
     
-    /// Send a close frame
+    /// Begins a clean close handshake
     /**
      * Initiates a close handshake by sending a close frame with the given code 
      * and reason. 
@@ -923,24 +943,26 @@ public:
      * @param code The code to send
      * @param reason The reason to send
      */
-    void send_close(close::status::value code, const std::string& reason) {
+    void begin_close(close::status::value code, const std::string& reason) {
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        alog()->at(log::alevel::DEBUG_CLOSE) << "begin_close called" << log::endl;
         
         if (m_detached) {return;}
         
         if (m_state != session::state::OPEN) {
-            elog().at(log::elevel::WARN) 
+            elog()->at(log::elevel::WARN) 
                 << "Tried to disconnect a session that wasn't open" << log::endl;
             return;
         }
         
         if (close::status::invalid(code)) {
-            elog().at(log::elevel::WARN) 
+            elog()->at(log::elevel::WARN) 
                 << "Tried to close a connection with invalid close code: " 
                 << code << log::endl;
             return;
         } else if (close::status::reserved(code)) {
-            elog().at(log::elevel::WARN) 
+            elog()->at(log::elevel::WARN) 
                 << "Tried to close a connection with reserved close code: " 
                 << code << log::endl;
             return;
@@ -949,6 +971,22 @@ public:
         m_state = session::state::CLOSING;
         
         m_closed_by_me = true;
+        
+        if (m_silent_close) {
+            m_local_close_code = close::status::NO_STATUS;
+            m_local_close_reason = "";
+            
+            // In case of protocol error in silent mode just drop the connection.
+            // This is allowed by the spec and improves robustness over sending an
+            // empty close frame that we would ignore the ack to.
+            if (m_protocol_error) {
+                terminate(false);
+                return;
+            }
+        } else {
+            m_local_close_code = code;
+            m_local_close_reason = reason;
+        }
         
         m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
         m_timer.async_wait(
@@ -959,28 +997,21 @@ public:
             ))
         );
         
-        if (m_silent_close) {
-            m_local_close_code = close::status::NO_STATUS;
-            m_local_close_reason = "";
-        } else {
-            m_local_close_code = code;
-            m_local_close_reason = reason;
-        }
-        
         // TODO: optimize control messages and handle case where endpoint is
         // out of messages
         message::data_ptr msg = get_control_message2();
         
         if (!msg) {
-            // server is out of resources, close connection.
-            elog().at(log::elevel::RERROR) 
-                << "Server has run out of message buffers." << log::endl;
+            // Server endpoint is out of control messages. Force drop connection
+            elog()->at(log::elevel::RERROR) 
+                << "Request for control message failed (out of resources). Terminating connection."
+                << log::endl;
             terminate(true);
             return;
         }
         
         msg->reset(frame::opcode::CLOSE);
-        m_processor->prepare_close_frame(msg,code,reason);
+        m_processor->prepare_close_frame(msg,m_local_close_code,m_local_close_reason);
         
         m_endpoint.endpoint_base::m_io_service.post(
             m_strand.wrap(boost::bind(
@@ -989,12 +1020,6 @@ public:
                 msg
             ))
         );
-        
-        // By setting inturrupt here we flush all outgoing messages from the message
-        // queue. Doing so is compliant behavior but "non-strict". The default will be
-        // fully compliant. This should be a configurable setting. Production environments
-        // should choose the appropriate option.
-        // m_write_state = INTURRUPT;
     }
     
     /// send an acknowledgement close frame
@@ -1004,6 +1029,8 @@ public:
      * Concurrency: Must be called within m_stranded method
      */
     void send_close_ack() {
+        alog()->at(log::alevel::DEBUG_CLOSE) << "send_close_ack called" << log::endl;
+        
         // echo close value unless there is a good reason not to.
         if (m_silent_close) {
             m_local_close_code = close::status::NO_STATUS;
@@ -1040,8 +1067,9 @@ public:
         
         if (!msg) {
             // server is out of resources, close connection.
-            elog().at(log::elevel::RERROR) 
-                << "Server has run out of message buffers." << log::endl;
+            elog()->at(log::elevel::RERROR) 
+                << "Request for control message failed (out of resources). Terminating connection."
+                << log::endl;
             terminate(true);
             return;
         }
@@ -1125,7 +1153,7 @@ public:
             // if we are in an inturrupted state and had nothing else to write
             // it is safe to terminate the connection.
             if (m_write_state == INTURRUPT) {
-                alog().at(log::alevel::DEBUG_CLOSE) 
+                alog()->at(log::alevel::DEBUG_CLOSE) 
                     << "Exit after inturrupt" << log::endl;
                 terminate(false);
             }
@@ -1139,28 +1167,37 @@ public:
      * Concurrency: Must be called within m_stranded method
      */
     void handle_write(const boost::system::error_code& error) {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        
+        
         if (error) {
+            if (m_state == session::state::CLOSED) {
+                alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "handle_write error in CLOSED state. Ignoring." 
+                        << log::endl;
+                return;
+            }
+            
             if (error == boost::asio::error::operation_aborted) {
                 // previous write was aborted
-                if (!m_detached) {
-                    alog().at(log::alevel::DEBUG_CLOSE) 
-                        << "handle_write was called with operation_aborted error" 
-                        << log::endl;
-                }
+                alog()->at(log::alevel::DEBUG_CLOSE) 
+                    << "ASIO write was aborted. Exiting write loop." 
+                    << log::endl;
+                //terminate(false);
+                return;
             } else {
-                log_error("Error writing frame data",error);
+                log_error("ASIO write failed with unknown error. Terminating connection.",error);
                 terminate(false);
                 return;
             }
         }
         
-        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
         
         if (m_write_queue.size() == 0) {
-            if (!m_detached) {
-                alog().at(log::alevel::DEBUG_CLOSE) 
-                    << "handle_write called with empty queue" << log::endl;
-            }
+            alog()->at(log::alevel::DEBUG_CLOSE) 
+                << "handle_write called with empty queue" << log::endl;
             return;
         }
         
@@ -1175,17 +1212,43 @@ public:
             m_write_state = IDLE;
         }
         
+        
+        
+        
         if (code != frame::opcode::CLOSE) {
             // only continue next write if the connection is still open
             if (m_state == session::state::OPEN || m_state == session::state::CLOSING) {
                 write();
             }
         } else {
-            if (!m_detached) {
-                alog().at(log::alevel::DEBUG_CLOSE) 
-                        << "Exit after writing close frame" << log::endl;
+            if (m_closed_by_me) {
+                alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "Initial close frame sent" << log::endl;
+                // this is my close message
+                // no more writes allowed after this. will hang on to read their
+                // close response unless I just sent a protocol error close, in
+                // which case I assume the other end is too broken to return
+                // a meaningful response.
+                if (m_protocol_error) {
+                    terminate(false);
+                }
+            } else {
+                // this is a close ack
+                // now that it has been written close the connection
+                
+                if (m_endpoint.is_server()) {
+                    // if I am a server close immediately
+                    alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "Close ack sent. Terminating immediately." << log::endl;
+                    terminate(false);
+                } else {
+                    // if I am a client give the server a moment to close.
+                    alog()->at(log::alevel::DEBUG_CLOSE) 
+                        << "Close ack sent. Termination queued." << log::endl;
+                    // TODO: set timer here and close afterwards
+                    terminate(false);
+                }
             }
-            terminate(false);
         }
     }
     
@@ -1203,6 +1266,10 @@ public:
      */
     void terminate(bool failed_by_me) {
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        alog()->at(log::alevel::DEVEL) 
+                << "terminate called from state: " << m_state << log::endl;
+        
         // If state is closed it either means terminate was called twice or
         // something other than this library called it. In either case running
         // it will only cause problems
@@ -1240,19 +1307,39 @@ public:
         // remove the last shared pointer to the connection held by WS++. If we
         // are DETACHED this has already been done and can't be done again.
         if (!m_detached) {
+            alog()->at(log::alevel::DEVEL) 
+                << "terminate removing connection" << log::endl;
             m_endpoint.remove_connection(type::shared_from_this());
+            
+            /*m_endpoint.endpoint_base::m_io_service.post(
+                m_strand.wrap(boost::bind(
+                    &type::remove_connection,
+                    type::shared_from_this()
+                ))
+            );*/
         }
+    }
+    
+    // This was an experiment in deferring the detachment of the connection 
+    // until all handlers had been cleaned up. With the switch to a local logger
+    // this can probably be removed entirely.
+    void remove_connection() {
+        // finally remove this connection from the endpoint's list. This will
+        // remove the last shared pointer to the connection held by WS++. If we
+        // are DETACHED this has already been done and can't be done again.
+        /*if (!m_detached) {
+            alog()->at(log::alevel::DEVEL) << "terminate removing connection: start" << log::endl;
+            m_endpoint.remove_connection(type::shared_from_this());
+        }*/
     }
     
     // this is called when an async asio call encounters an error
     void log_error(std::string msg,const boost::system::error_code& e) {
-        if (!m_detached) {return;}
-        elog().at(log::elevel::RERROR) << msg << "(" << e << ")" << log::endl;
+        elog()->at(log::elevel::RERROR) << msg << "(" << e << ")" << log::endl;
     }
     
     void log_close_result() {
-        if (!m_detached) {return;}
-        alog().at(log::alevel::DISCONNECT) 
+        alog()->at(log::alevel::DISCONNECT) 
             //<< "Disconnect " << (m_was_clean ? "Clean" : "Unclean")
             << "Disconnect " 
             << " close local:[" << m_local_close_code
@@ -1265,18 +1352,14 @@ public:
     void fail_on_expire(const boost::system::error_code& error) {
         if (error) {
             if (error != boost::asio::error::operation_aborted) {
-                if (!m_detached) {
-                    elog().at(log::elevel::DEVEL) 
-                        << "fail_on_expire timer ended in unknown error" << log::endl;
-                }
+                elog()->at(log::elevel::DEVEL) 
+                    << "fail_on_expire timer ended in unknown error" << log::endl;
                 terminate(false);
             }
             return;
         }
-        if (!m_detached) {
-            elog().at(log::elevel::DEVEL) 
-                << "fail_on_expire timer expired" << log::endl;
-        }
+        elog()->at(log::elevel::DEVEL) 
+            << "fail_on_expire timer expired" << log::endl;
         terminate(true);
     }
     
@@ -1285,7 +1368,9 @@ public:
     }
 public:
 //protected:  TODO: figure out why VCPP2010 doesn't like protected here
-    endpoint_type&              m_endpoint;
+    endpoint_type&                  m_endpoint;
+    typename endpoint::alogger_ptr  m_alog;
+    typename endpoint::elogger_ptr  m_elog;
     
     // Overridable connection specific settings
     handler_ptr                 m_handler;          // object to dispatch callbacks to
@@ -1300,6 +1385,7 @@ public:
     
     // WebSocket connection state
     session::state::value       m_state;
+    bool                        m_protocol_error;
     
     // stuff that actually does the work
     processor::ptr              m_processor;

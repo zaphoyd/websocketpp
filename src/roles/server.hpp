@@ -202,7 +202,7 @@ public:
     
     template <typename InternetProtocol> 
     void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t n = 1) {
-        m_endpoint.alog().at(log::alevel::DEVEL) 
+        m_endpoint.m_alog->at(log::alevel::DEVEL) 
             << "role::server listening on port " << port << log::endl;
         boost::asio::ip::tcp::endpoint e(internet_protocol, port);
         listen(e,n);
@@ -303,9 +303,9 @@ void server<endpoint>::start_accept() {
     
     if (con == connection_ptr()) {
         // the endpoint is no longer capable of accepting new connections.
-        m_endpoint.alog().at(log::alevel::CONNECT) 
-        << "Connection refused because endpoint is out of resources or closing." 
-        << log::endl;
+        m_endpoint.m_alog->at(log::alevel::CONNECT) 
+            << "Connection refused because endpoint is out of resources or closing." 
+            << log::endl;
         return;
     }
         
@@ -331,7 +331,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
     
     if (error) {
         if (error == boost::system::errc::too_many_files_open) {
-            m_endpoint.elog().at(log::elevel::RERROR) 
+            m_endpoint.m_elog->at(log::elevel::RERROR) 
                 << "async_accept returned error: " << error 
                 << " (too many files open)" << log::endl;
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
@@ -341,7 +341,7 @@ void server<endpoint>::handle_accept(connection_ptr con,
             // the operation was canceled. This was probably due to the 
             // io_service being stopped.
         } else {
-            m_endpoint.elog().at(log::elevel::RERROR) 
+            m_endpoint.m_elog->at(log::elevel::RERROR) 
                 << "async_accept returned error: " << error 
                 << " (unknown)" << log::endl;
         }
@@ -447,7 +447,7 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
 {
     if (error) {
         // log error
-        m_endpoint.elog().at(log::elevel::RERROR) 
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
             << "Error reading HTTP request. code: " << error << log::endl;
         m_connection.terminate(false);
         return;
@@ -463,7 +463,7 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
         
         // TODO: is there a way to short circuit this or something? 
         // This is often useful but slow to generate.
-        //m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
+        //m_endpoint.m_alog.at(log::alevel::DEBUG_HANDSHAKE) << m_request.raw() << log::endl;
         
         std::string h = m_request.header("Upgrade");
         if (boost::ifind_first(h,"websocket")) {
@@ -554,12 +554,12 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             m_response.set_status(http::status_code::OK);
         }
     } catch (const http::exception& e) {
-        m_endpoint.elog().at(log::elevel::RERROR) << e.what() << log::endl;
+        m_endpoint.m_elog->at(log::elevel::RERROR) << e.what() << log::endl;
         m_response.set_status(e.m_error_code,e.m_error_msg);
         m_response.set_body(e.m_body);
     } catch (const uri_exception& e) {
         // there was some error building the uri
-        m_endpoint.elog().at(log::elevel::RERROR) << e.what() << log::endl;
+        m_endpoint.m_elog->at(log::elevel::RERROR) << e.what() << log::endl;
         m_response.set_status(http::status_code::BAD_REQUEST);
     }
     
@@ -598,7 +598,7 @@ void server<endpoint>::connection<connection_type>::write_response() {
     
     shared_const_buffer buffer(raw);
     
-    m_endpoint.alog().at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
+    m_endpoint.m_alog->at(log::alevel::DEBUG_HANDSHAKE) << raw << log::endl;
     
     boost::asio::async_write(
         m_connection.get_socket(),
@@ -620,7 +620,7 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
     // TODO: handshake timer
     
     if (error) {
-        m_endpoint.elog().at(log::elevel::RERROR) 
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
             << "Network error writing handshake respons. code: " << error 
             << log::endl;
         
@@ -634,7 +634,7 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
             // the expected response and the connection can be closed.
         } else {
             // this was a websocket connection that ended in an error
-            m_endpoint.elog().at(log::elevel::RERROR) 
+            m_endpoint.m_elog->at(log::elevel::RERROR) 
                 << "Handshake ended with HTTP error: " 
                 << m_response.get_status_code() << " " 
                 << m_response.get_status_msg() << log::endl;
@@ -670,20 +670,20 @@ void server<endpoint>::connection<connection_type>::log_open_result() {
     boost::system::error_code ec;
     boost::asio::ip::tcp::endpoint ep = m_connection.get_raw_socket().remote_endpoint(ec);
     if (ec) {
-        m_endpoint.elog().at(log::elevel::WARN) 
+        m_endpoint.m_elog->at(log::elevel::WARN) 
             << "Error getting remote endpoint. code: " << ec << log::endl;
     }
     
-    m_endpoint.alog().at(log::alevel::CONNECT) 
+    m_endpoint.m_alog->at(log::alevel::CONNECT) 
         << (m_version == -1 ? "HTTP" : "WebSocket") << " Connection ";
     
     if (ec) {
-        m_endpoint.alog().at(log::alevel::CONNECT) << "Unknown";
+        m_endpoint.m_alog->at(log::alevel::CONNECT) << "Unknown";
     } else {
-        m_endpoint.alog().at(log::alevel::CONNECT) << ep;
+        m_endpoint.m_alog->at(log::alevel::CONNECT) << ep;
     }
     
-    m_endpoint.alog().at(log::alevel::CONNECT) << " "
+    m_endpoint.m_alog->at(log::alevel::CONNECT) << " "
         << (m_version == -1 ? "" : version.str())
         << (get_request_header("User-Agent") == "" ? "NULL" : get_request_header("User-Agent")) 
         << " " << (m_uri ? m_uri->get_resource() : "uri is NULL") << " " 
