@@ -35,6 +35,10 @@
 
 #include <cassert>
 
+#ifdef min
+	#undef min
+#endif // #ifdef min
+
 namespace websocketpp {
 namespace processor {
 
@@ -56,7 +60,7 @@ public:
         reset();
     }
     
-    void validate_handshake(const http::parser::request& headers) const {
+    void validate_handshake(const http::parser::request& /*headers*/) const {
         
     }
     
@@ -195,7 +199,7 @@ public:
                 if (m_data_message) {
                     size_t num;
                     
-                    num = input.readsome(m_payload_buffer, PAYLOAD_BUFFER_SIZE);
+                    num = static_cast<size_t>(input.readsome(m_payload_buffer, PAYLOAD_BUFFER_SIZE));
                     
                     if (input.bad()) {
                         throw processor::exception("istream readsome error",
@@ -289,8 +293,8 @@ public:
     }
     
     void prepare_close_frame(message::data_ptr msg,
-                             close::status::value code,
-                             const std::string& reason)
+                             close::status::value /*code*/,
+                             const std::string& /*reason*/)
     {
         assert(msg);
         if (msg->get_prepared()) {
@@ -349,4 +353,5 @@ private:
     
 } // processor
 } // websocketpp
+
 #endif // WEBSOCKET_PROCESSOR_HYBI_LEGACY_HPP

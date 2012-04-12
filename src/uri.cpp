@@ -316,5 +316,5 @@ uint16_t uri::get_port_from_string(const std::string& port) const {
         throw websocketpp::uri_exception("Error parsing port string: "+port);
     }
     
-    return t_port;
+    return static_cast<uint16_t>(t_port);
 }

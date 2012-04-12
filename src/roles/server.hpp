@@ -63,7 +63,7 @@ class server {
 public:
     // Connection specific details
     template <typename connection_type>
-    class connection {
+    class connection : boost::noncopyable {
     public:
         typedef connection<connection_type> type;
         typedef endpoint endpoint_type;
@@ -443,7 +443,7 @@ void server<endpoint>::connection<connection_type>::async_init() {
 template <class endpoint>
 template <class connection_type>
 void server<endpoint>::connection<connection_type>::handle_read_request(
-    const boost::system::error_code& error, std::size_t bytes_transferred)
+    const boost::system::error_code& error, std::size_t /*bytes_transferred*/)
 {
     if (error) {
         // log error

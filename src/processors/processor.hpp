@@ -82,7 +82,7 @@ public:
 namespace websocketpp {
 namespace processor {
     
-class processor_base {
+class processor_base : boost::noncopyable {
 public:
     virtual ~processor_base() {}
     // validate client handshake

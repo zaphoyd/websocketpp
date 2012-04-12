@@ -49,6 +49,10 @@
 #include <queue>
 #include <set>
 
+#ifdef min
+	#undef min
+#endif // #ifdef min
+
 namespace websocketpp {
 
 class endpoint_base;
@@ -63,8 +67,7 @@ template <
 class connection 
  : public role< connection<endpoint,role,socket> >,
    public socket< connection<endpoint,role,socket> >,
-   public boost::enable_shared_from_this< connection<endpoint,role,socket> >,
-   boost::noncopyable
+   public boost::enable_shared_from_this< connection<endpoint,role,socket> >
 {
 public:
     typedef connection_traits< connection<endpoint,role,socket> > traits;
