@@ -276,7 +276,7 @@ void client<endpoint>::run(bool perpetual) {
     
     // TODO: preliminary support for multi-threaded clients. Finish external
     // interface once better tested
-    int num_threads = 1;
+    size_t num_threads = 1;
     
     if (num_threads == 1) {
         m_io_service.run();

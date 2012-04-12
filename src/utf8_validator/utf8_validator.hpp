@@ -45,7 +45,7 @@ public:
     validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}
     
     bool consume (uint32_t byte) {
-        if (utf8_validator::decode(&m_state,&m_codepoint,byte) == UTF8_REJECT) {
+        if (utf8_validator::decode(&m_state,&m_codepoint,static_cast<uint8_t>(byte)) == UTF8_REJECT) {
             return false;
         }
         return true;

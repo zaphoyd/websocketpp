@@ -56,7 +56,7 @@ public:
     }
     
     void process_payload(char *input,uint64_t size) {
-        const size_t new_size = m_payload.size() + size;
+        const size_t new_size = static_cast<size_t>(m_payload.size() + size);
         
         if (new_size > PAYLOAD_SIZE_MAX) {
             throw processor::exception("Message payload was too large.",processor::error::MESSAGE_TOO_BIG);
@@ -64,13 +64,13 @@ public:
         
         if (m_masked) {
             // this retrieves ceiling of size / word size
-            size_t n = (size + sizeof(size_t) - 1) / sizeof(size_t);
+            size_t n = static_cast<size_t>((size + sizeof(size_t) - 1) / sizeof(size_t));
             
             // reinterpret the input as an array of word sized integers
             size_t* data = reinterpret_cast<size_t*>(input);
             
             // unmask working buffer
-            for (int i = 0; i < n; i++) {
+            for (size_t i = 0; i < n; i++) {
                 data[i] ^= m_prepared_key;
             }
             
@@ -79,7 +79,7 @@ public:
         }
                 
         // copy working buffer into
-        m_payload.append(input, size);
+        m_payload.append(input, static_cast<size_t>(size));
     }
     
     void complete() {

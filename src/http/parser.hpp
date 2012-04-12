@@ -55,8 +55,8 @@ class parser {
 public:
     // consumes bytes from the stream and returns true if enough bytes have
     // been read
-    bool consume (std::istream& s) {
-        throw "No Implimented";
+    bool consume (std::istream&) {
+        throw "Not Implemented";
     }
     
     void set_version(const std::string& version) {
