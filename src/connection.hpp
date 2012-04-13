@@ -991,14 +991,9 @@ public:
             m_local_close_reason = reason;
         }
         
-        m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
-        m_timer.async_wait(
-            m_strand.wrap(boost::bind(
-                &type::fail_on_expire,
-                type::shared_from_this(),
-                boost::asio::placeholders::error
-            ))
-        );
+        // wait for close timer
+        // TODO: configurable value
+        register_timeout(5000, "Timeout on close handshake");
         
         // TODO: optimize control messages and handle case where endpoint is
         // out of messages
@@ -1280,7 +1275,7 @@ public:
         
         // TODO: ensure any other timers are accounted for here.
         // cancel the close timeout
-        m_timer.cancel();
+        cancel_timeout();
         
         // version -1 is an HTTP (non-websocket) connection.
         if (role_type::get_version() != -1) {
@@ -1352,7 +1347,24 @@ public:
             << log::endl;
      }
     
-    void fail_on_expire(const boost::system::error_code& error) {
+    void register_timeout(size_t ms, std::string msg) {
+        m_timer.expires_from_now(boost::posix_time::milliseconds(ms));
+        m_timer.async_wait(
+            m_strand.wrap(boost::bind(
+                &type::fail_on_expire,
+                type::shared_from_this(),
+                boost::asio::placeholders::error,
+                msg
+            ))
+        );
+    }
+    
+    void cancel_timeout() {
+         m_timer.cancel();
+    }
+    
+    // TODO: put failure code/reason in a user readable place
+    void fail_on_expire(const boost::system::error_code& error,std::string& msg) {
         if (error) {
             if (error != boost::asio::error::operation_aborted) {
                 elog()->at(log::elevel::DEVEL) 
@@ -1361,8 +1373,8 @@ public:
             }
             return;
         }
-        elog()->at(log::elevel::DEVEL) 
-            << "fail_on_expire timer expired" << log::endl;
+        alog()->at(log::alevel::DISCONNECT) 
+            << "fail_on_expire timer expired with message: " << msg << log::endl;
         terminate(true);
     }
     
