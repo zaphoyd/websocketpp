@@ -426,6 +426,10 @@ void server<endpoint>::connection<connection_type>::async_init() {
     boost::lock_guard<boost::recursive_mutex> lock(m_connection.m_lock);
     
     m_connection.get_handler()->on_handshake_init(m_connection.shared_from_this());
+    
+    // TODO: make this value configurable
+    m_connection.register_timeout(5000,"Timeout on WebSocket handshake");
+    
     boost::asio::async_read_until(
         m_connection.get_socket(),
         m_connection.buffer(),
@@ -620,8 +624,6 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::handle_write_response(
     const boost::system::error_code& error)
 {
-    // TODO: handshake timer
-    
     if (error) {
         m_endpoint.m_elog->at(log::elevel::RERROR) 
             << "Network error writing handshake respons. code: " << error 
@@ -646,11 +648,13 @@ void server<endpoint>::connection<connection_type>::handle_write_response(
         return;
     }
     
+    m_connection.cancel_timeout();
+    
     log_open_result();
     
     m_connection.m_state = session::state::OPEN;
     
-    m_endpoint.get_handler()->on_open(m_connection.shared_from_this());
+    m_connection.get_handler()->on_open(m_connection.shared_from_this());
     
     get_io_service().post(
         m_connection.m_strand.wrap(boost::bind(
