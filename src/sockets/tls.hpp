@@ -68,6 +68,7 @@ public:
     // to set up their asio TLS context.
     class handler_interface {
     public:
+        virtual void on_tcp_init() {};
         virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
     };
     
@@ -89,8 +90,8 @@ public:
         }
     protected:
         connection(tls<endpoint_type>& e)
-         : m_endpoint(e),
-           m_connection(static_cast< connection_type& >(*this)) {}
+         : m_endpoint(e)
+         , m_connection(static_cast< connection_type& >(*this)) {}
         
         void init() {
             m_context_ptr = m_connection.get_handler()->on_tls_init();
@@ -104,6 +105,12 @@ public:
         
         void async_init(boost::function<void(const boost::system::error_code&)> callback)
         {
+            m_connection.get_handler()->on_tcp_init();
+            
+            // wait for TLS handshake
+            // TODO: configurable value
+            m_connection.register_timeout(5000,"Timeout on TLS handshake");
+            
             m_socket_ptr->async_handshake(
                 m_endpoint.get_handshake_type(),
                 boost::bind(
@@ -116,12 +123,7 @@ public:
         }
         
         void handle_init(socket_init_callback callback,const boost::system::error_code& error) {
-            /*if (error) {
-                std::cout << "SSL handshake error" << std::endl;
-            } else {
-                //static_cast< connection_type* >(this)->websocket_handshake();
-                
-            }*/
+            m_connection.cancel_timeout();
             callback(error);
         }
         
