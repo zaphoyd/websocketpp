@@ -141,6 +141,8 @@ public:
         void async_init();
         void handle_read_request(const boost::system::error_code& error,
                                  std::size_t bytes_transferred);
+        void handle_short_key3(const boost::system::error_code& error,
+                                 std::size_t bytes_transferred);
         void write_response();
         void handle_write_response(const boost::system::error_code& error);
         
@@ -497,19 +499,46 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
                 // future versions wont. We need to pull off an additional eight
                 // bytes after the /r/n/r/n and store them somewhere that the
                 // processor can find them.
-                char foo[9];
+                char foo[8];
                 
-                request.get(foo,9);
+                request.read(foo,8);
                 
                 if (request.gcount() != 8) {
+                    size_t left = 8 - static_cast<size_t>(request.gcount());
                     // This likely occurs because the full key3 wasn't included
                     // in the asio read. It is likely that the extra bytes are
                     // actually on the wire and another asio read would get them
                     // Fixing this will require a way of restarting the 
                     // handshake read and storing the existing bytes until that
                     // comes back. Issue #101
+                    
+                    m_endpoint.m_elog->at(log::elevel::RERROR) 
+                        << "Short Key 3: " << zsutil::to_hex(std::string(foo)) 
+                        << " bytes missing: " << left 
+                        << " eofbit: " << (request.eof() ? "true" : "false")
+                        << " failbit: " << (request.fail() ? "true" : "false")
+                        << " badbit: " << (request.bad() ? "true" : "false")
+                        << " goodbit: " << (request.good() ? "true" : "false")
+                        << log::endl;
+                    
                     throw http::exception("Full Key3 not found in first chop",
                                           http::status_code::INTERNAL_SERVER_ERROR);
+                    /*m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
+                    
+                    
+                    
+                    boost::asio::async_read(
+                        m_connection.get_socket(),
+                        m_connection.buffer(),
+                        boost::asio::transfer_at_least(left),
+                        m_connection.get_strand().wrap(boost::bind(
+                            &type::handle_short_key3,
+                            m_connection.shared_from_this(),
+                            boost::asio::placeholders::error,
+                            boost::asio::placeholders::bytes_transferred
+                        ))
+                    );
+                    return;*/
                 }
                 m_request.add_header("Sec-WebSocket-Key3",std::string(foo));
             } else if (m_version == 7 || m_version == 8 || m_version == 13) {
@@ -560,6 +589,69 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             
             m_response.set_status(http::status_code::OK);
         }
+    } catch (const http::exception& e) {
+        m_endpoint.m_elog->at(log::elevel::RERROR) << e.what() << log::endl;
+        m_response.set_status(e.m_error_code,e.m_error_msg);
+        m_response.set_body(e.m_body);
+    } catch (const uri_exception& e) {
+        // there was some error building the uri
+        m_endpoint.m_elog->at(log::elevel::RERROR) << e.what() << log::endl;
+        m_response.set_status(http::status_code::BAD_REQUEST);
+    }
+    
+    write_response();
+}
+
+template <class endpoint>
+template <class connection_type>
+void server<endpoint>::connection<connection_type>::handle_short_key3 (
+    const boost::system::error_code& error, std::size_t /*bytes_transferred*/)
+{
+    if (error) {
+        // log error
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
+            << "Error reading HTTP request. code: " << error << log::endl;
+        m_connection.terminate(false);
+        return;
+    }
+    
+    try {
+        std::istream request(&m_connection.buffer());
+        
+        std::string foo = m_request.header("Sec-WebSocket-Key3");
+        
+        size_t left = 8-foo.size();
+        
+        if (left == 0) {
+            // ?????
+            throw http::exception("handle_short_key3 called without short key",
+                                  http::status_code::INTERNAL_SERVER_ERROR);
+        }
+        
+        char foo2[9];
+                
+        request.get(foo2,left);
+        
+        if (request.gcount() != left) {
+            // ?????
+            throw http::exception("Full Key3 not found",
+                                  http::status_code::INTERNAL_SERVER_ERROR);
+        }
+        
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
+                        << "Recovered from Short Key 3: " << left << log::endl;
+        
+        foo.append(std::string(foo2));
+        
+        m_request.replace_header("Sec-WebSocket-Key3",foo2);
+        
+        m_connection.m_processor->validate_handshake(m_request);
+        m_origin = m_connection.m_processor->get_origin(m_request);
+        m_uri = m_connection.m_processor->get_uri(m_request);
+        
+        m_endpoint.get_handler()->validate(m_connection.shared_from_this());
+        
+        m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
     } catch (const http::exception& e) {
         m_endpoint.m_elog->at(log::elevel::RERROR) << e.what() << log::endl;
         m_response.set_status(e.m_error_code,e.m_error_msg);
