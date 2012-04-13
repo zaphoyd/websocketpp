@@ -123,6 +123,19 @@ namespace websocketpp {
     } // namespace status
     } // namespace close
     
+    namespace fail {
+    namespace status {
+        enum value {
+            GOOD = 0,           // no failure yet!
+            SYSTEM = 1,         // system call returned error, check that code
+            WEBSOCKET = 2,      // websocket close codes contain error
+            UNKNOWN = 3,        // No failure information is avaliable
+            TIMEOUT_TLS = 4,    // TLS handshake timed out
+            TIMEOUT_WS = 5      // WS handshake timed out
+        };
+    } // namespace status
+    } // namespace fail
+    
     namespace frame {
         // Opcodes are 4 bits
         // See spec section 5.2

@@ -118,6 +118,7 @@ public:
      , m_protocol_error(false)
      , m_write_buffer(0)
      , m_write_state(IDLE)
+     , m_fail_code(fail::status::GOOD)
      , m_local_close_code(close::status::ABNORMAL_CLOSE)
      , m_remote_close_code(close::status::ABNORMAL_CLOSE)
      , m_closed_by_me(false)
@@ -328,11 +329,71 @@ public:
         return m_write_buffer;
     }
     
-    /// Get Local Close Code
+    /// Get library fail code
     /**
-     * Returns the close code that WebSocket++ believes to be the reason the connection
-     * closed. This value may include special values otherwise not allowed on the wire
-     * such as 1006 for abnormal closure or 1015 for TLS handshake not performed.
+     * Returns the internal WS++ fail code. This code starts at a value of
+     * websocketpp::fail::status::GOOD and will be set to other values as errors
+     * occur. Some values are direct errors, others point to locations where
+     * more specific error information can be found. Key values:
+     * 
+     * (all in websocketpp::fail::status:: ) namespace
+     * GOOD - No error has occurred yet
+     * SYSTEM - A system call failed, the system error code is avaliable via
+     *          get_fail_system_code()
+     * WEBSOCKET - The WebSocket connection close handshake was performed, more 
+     *             information is avaliable via get_local_close_code()/reason()
+     * UNKNOWN - terminate was called without a more specific error being set
+     * 
+     * Refer to common.hpp for the rest of the individual codes. Call
+     * get_fail_reason() for a human readable error.
+     * 
+     * Visibility: public
+     * State: Valid from any
+     * Concurrency: callable from any thread
+     *
+     * @return Fail code supplied by WebSocket++
+     */
+    fail::status::value get_fail_code() const {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        return m_fail_code;
+    }
+    
+    /// Get library failure reason
+    /**
+     * Returns a human readable library failure reason.
+     * 
+     * Visibility: public
+     * State: Valid from any
+     * Concurrency: callable from any thread
+     *
+     * @return Fail reason supplied by WebSocket++
+     */
+    std::string get_fail_reason() const {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        return m_fail_reason;
+    }
+    
+    /// Get system failure code
+    /**
+     * Returns the system error code that caused WS++ to fail the connection
+     * 
+     * Visibility: public
+     * State: Valid from any
+     * Concurrency: callable from any thread
+     *
+     * @return Error code supplied by system
+     */
+    boost::system::error_code get_system_fail_code() const {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        
+        return m_fail_system;
+    }
+    
+    /// Get WebSocket close code sent by WebSocket++
+    /**
+     * Returns the system error code that caused 
      * 
      * Visibility: public
      * State: Valid from CLOSED, an exception is thrown otherwise
@@ -353,8 +414,9 @@ public:
     
     /// Get Local Close Reason
     /**
-     * Returns the close reason that WebSocket++ believes to be the reason the connection
-     * closed. This is almost certainly the value passed to the `close()` method.
+     * Returns the close reason that WebSocket++ believes to be the reason the 
+     * connection closed. This is almost certainly the value passed to the 
+     * `close()` method.
      * 
      * Visibility: public
      * State: Valid from CLOSED, an exception is thrown otherwise
@@ -993,7 +1055,7 @@ public:
         
         // wait for close timer
         // TODO: configurable value
-        register_timeout(5000, "Timeout on close handshake");
+        register_timeout(5000,fail::status::WEBSOCKET,"Timeout on close handshake");
         
         // TODO: optimize control messages and handle case where endpoint is
         // out of messages
@@ -1292,10 +1354,20 @@ public:
             
             if (old_state == session::state::CONNECTING) {
                 m_handler->on_fail(type::shared_from_this());
+                
+                if (m_fail_code == fail::status::GOOD) {
+                    m_fail_code = fail::status::UNKNOWN;
+                    m_fail_reason = "Terminate called in connecting state without more specific error.";
+                }
             } else if (old_state == session::state::OPEN || 
                        old_state == session::state::CLOSING)
             {
                 m_handler->on_close(type::shared_from_this());
+                
+                if (m_fail_code == fail::status::GOOD) {
+                    m_fail_code = fail::status::WEBSOCKET;
+                    m_fail_reason = "Terminate called in open state without more specific error.";
+                }
             }
             
             log_close_result(); 
@@ -1347,13 +1419,14 @@ public:
             << log::endl;
      }
     
-    void register_timeout(size_t ms, std::string msg) {
+    void register_timeout(size_t ms,fail::status::value s, std::string msg) {
         m_timer.expires_from_now(boost::posix_time::milliseconds(ms));
         m_timer.async_wait(
             m_strand.wrap(boost::bind(
                 &type::fail_on_expire,
                 type::shared_from_this(),
                 boost::asio::placeholders::error,
+                s,
                 msg
             ))
         );
@@ -1363,8 +1436,10 @@ public:
          m_timer.cancel();
     }
     
-    // TODO: put failure code/reason in a user readable place
-    void fail_on_expire(const boost::system::error_code& error,std::string& msg) {
+    void fail_on_expire(const boost::system::error_code& error,
+                        fail::status::value status,
+                        std::string& msg)
+    {
         if (error) {
             if (error != boost::asio::error::operation_aborted) {
                 elog()->at(log::elevel::DEVEL) 
@@ -1373,6 +1448,11 @@ public:
             }
             return;
         }
+        
+        m_fail_code = status;
+        m_fail_system = error;
+        m_fail_reason = msg;
+        
         alog()->at(log::alevel::DISCONNECT) 
             << "fail_on_expire timer expired with message: " << msg << log::endl;
         terminate(true);
@@ -1412,6 +1492,9 @@ public:
     write_state                     m_write_state;
     
     // Close state
+    fail::status::value         m_fail_code;
+    boost::system::error_code   m_fail_system;
+    std::string                 m_fail_reason;
     close::status::value        m_local_close_code;
     std::string                 m_local_close_reason;
     close::status::value        m_remote_close_code;

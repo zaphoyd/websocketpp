@@ -437,41 +437,28 @@ void client<endpoint>::handle_connect(connection_ptr con,
         
         con->start();
     } else {
+        con->m_fail_code = fail::status::SYSTEM;
+        con->m_fail_system = error;
+        
         if (error == boost::system::errc::connection_refused) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (connection refused)" << log::endl;
+            con->m_fail_reason = "Connection refused";
         } else if (error == boost::system::errc::operation_canceled) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (operation canceled)" << log::endl;
+            con->m_fail_reason = "Operation canceled";
         } else if (error == boost::system::errc::connection_reset) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (connection reset)" << log::endl;
-            
-            /*if (con->retry()) {
-                m_endpoint.m_elog->at(log::elevel::RERROR) 
-                    << "Retrying connection" << log::endl;
-                connect(con->get_uri());
-                m_endpoint.remove_connection(con);
-            }*/
+            con->m_fail_reason = "Connection Reset";
         } else if (error == boost::system::errc::timed_out) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (operation timed out)" << log::endl;
+            con->m_fail_reason = "Operation timed out";
         } else if (error == boost::system::errc::broken_pipe) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (broken pipe)" << log::endl;
+            con->m_fail_reason = "Broken pipe";
         } else {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "An error occurred while establishing a connection: " 
-                << error << " (unknown)" << log::endl;
-            throw "client error";
+            con->m_fail_reason = "Unknown";
         }
-        m_endpoint.get_handler()->on_fail(con->shared_from_this());
-        m_endpoint.remove_connection(con);
+        
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
+                << "An error occurred while establishing a connection: " 
+                << error << " (" << con->m_fail_reason << ")" << log::endl;
+        
+        con->terminate(false);
     }
 }
 

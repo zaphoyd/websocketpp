@@ -334,21 +334,29 @@ void server<endpoint>::handle_accept(connection_ptr con,
     boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.m_lock);
     
     if (error) {
+        con->m_fail_code = fail::status::SYSTEM;
+        con->m_fail_system = error;
+        
         if (error == boost::system::errc::too_many_files_open) {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "async_accept returned error: " << error 
-                << " (too many files open)" << log::endl;
+            con->m_fail_reason = "too many files open";
+            
+            // TODO: make this configurable
             m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
             m_timer.async_wait(boost::bind(&type::start_accept,this));
-            return;
         } else if (error == boost::asio::error::operation_aborted) {
+            con->m_fail_reason = "io_service operation canceled";
+            
             // the operation was canceled. This was probably due to the 
             // io_service being stopped.
         } else {
-            m_endpoint.m_elog->at(log::elevel::RERROR) 
-                << "async_accept returned error: " << error 
-                << " (unknown)" << log::endl;
+            con->m_fail_reason = "unknown";
         }
+        
+        m_endpoint.m_elog->at(log::elevel::RERROR) 
+                << "async_accept returned error: " << error 
+                << " (" << con->m_fail_reason << ")" << log::endl;
+        
+        con->terminate(false);
     } else {
         con->start();
     }
@@ -430,7 +438,8 @@ void server<endpoint>::connection<connection_type>::async_init() {
     m_connection.get_handler()->on_handshake_init(m_connection.shared_from_this());
     
     // TODO: make this value configurable
-    m_connection.register_timeout(5000,"Timeout on WebSocket handshake");
+    m_connection.register_timeout(5000,fail::status::TIMEOUT_WS,
+                                       "Timeout on WebSocket handshake");
     
     boost::asio::async_read_until(
         m_connection.get_socket(),

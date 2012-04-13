@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_SOCKET_TLS_HPP
 #define WEBSOCKETPP_SOCKET_TLS_HPP
 
+#include "../common.hpp"
 #include "socket_base.hpp"
 
 #include <boost/asio.hpp>
@@ -109,7 +110,9 @@ public:
             
             // wait for TLS handshake
             // TODO: configurable value
-            m_connection.register_timeout(5000,"Timeout on TLS handshake");
+            m_connection.register_timeout(5000,
+                                          fail::status::TIMEOUT_TLS,
+                                          "Timeout on TLS handshake");
             
             m_socket_ptr->async_handshake(
                 m_endpoint.get_handshake_type(),
