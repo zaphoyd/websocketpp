@@ -172,6 +172,8 @@ public:
     // handler interface callback base class
     class handler_interface {
     public:
+        virtual void on_handshake_init(connection_ptr con) {}
+        
         virtual void validate(connection_ptr con) {}
         virtual void on_open(connection_ptr con) {}
         virtual void on_close(connection_ptr con) {}
@@ -423,6 +425,7 @@ template <class connection_type>
 void server<endpoint>::connection<connection_type>::async_init() {
     boost::lock_guard<boost::recursive_mutex> lock(m_connection.m_lock);
     
+    m_connection.get_handler()->on_handshake_init(m_connection.shared_from_this());
     boost::asio::async_read_until(
         m_connection.get_socket(),
         m_connection.buffer(),
