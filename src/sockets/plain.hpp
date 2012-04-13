@@ -49,8 +49,11 @@ public:
         return false;
     }
     
-    // plain sockets do not add anything to the handler interface
-    class handler_interface {};
+    // hooks that this policy adds to handlers of connections that use it
+    class handler_interface {
+    public:
+        virtual void on_tcp_init() {};
+    };
     
     // Connection specific details
     template <typename connection_type>
@@ -69,13 +72,17 @@ public:
             return false;
         }
     protected:
-        connection(plain<endpoint_type>& e) : m_socket(e.get_io_service()) {}
+        connection(plain<endpoint_type>& e)
+         : m_socket(e.get_io_service())
+         , m_connection(static_cast< connection_type& >(*this)) {}
         
         void init() {
             
         }
         
         void async_init(socket_init_callback callback) {
+            m_connection.get_handler()->on_tcp_init();
+            
             // TODO: make configuration option for NO_DELAY
             m_socket.set_option(boost::asio::ip::tcp::no_delay(true));
             
@@ -95,6 +102,7 @@ public:
         }
     private:
         boost::asio::ip::tcp::socket m_socket;
+        connection_type&             m_connection;
     };
 protected:
     plain (boost::asio::io_service& m) : m_io_service(m) {}
