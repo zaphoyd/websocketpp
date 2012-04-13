@@ -229,6 +229,7 @@ private:
             
             //s->m_pool->recycle(ptr(const_cast<data *>(s)));
         } else if (count == 0) {
+            lock.unlock();
             boost::checked_delete(static_cast<data const *>(s));
         }
     }
