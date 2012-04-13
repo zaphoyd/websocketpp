@@ -36,6 +36,13 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef IGNORE
+	#undef IGNORE
+#endif // #ifdef IGNORE
+
+#ifdef min
+	#undef min
+#endif // #ifdef min
 
 namespace websocketpp {
 namespace processor {
@@ -259,7 +266,7 @@ public:
                         break;
                     case hybi_state::IGNORE:
                         s.ignore(m_payload_left);
-                        m_payload_left -= s.gcount();
+                        m_payload_left -= static_cast<size_t>(s.gcount());
                         
                         if (m_payload_left == 0) {
                             reset();
@@ -318,7 +325,7 @@ public:
         
         m_control_message->reset(m_header.get_opcode(),m_header.get_masking_key());
         
-        m_payload_left = m_header.get_payload_size();
+        m_payload_left = static_cast<size_t>(m_header.get_payload_size());
         
         if (m_payload_left == 0) {
             process_frame();
@@ -349,7 +356,7 @@ public:
             }
         }
         
-        m_payload_left = m_header.get_payload_size();
+        m_payload_left = static_cast<size_t>(m_header.get_payload_size());
         
         if (m_payload_left == 0) {
             process_frame();
@@ -368,7 +375,7 @@ public:
         // and the number of bytes left in the payload.
         
         input.read(m_payload_buffer, std::min(m_payload_left, PAYLOAD_BUFFER_SIZE));
-        num = input.gcount();
+        num = static_cast<size_t>(input.gcount());
                 
         if (input.bad()) {
             throw processor::exception("istream readsome error",
@@ -586,7 +593,7 @@ public:
         
         // set close payload
         if (code != close::status::NO_STATUS) {
-            const uint16_t payload = htons(code);
+            const uint16_t payload = htons(static_cast<u_short>(code));
         
             msg->set_payload(std::string(reinterpret_cast<const char*>(&payload), 2));
             msg->append_payload(reason);

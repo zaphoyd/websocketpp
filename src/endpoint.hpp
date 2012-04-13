@@ -79,8 +79,7 @@ template <
 class endpoint 
  : public endpoint_base,
    public role< endpoint<role,socket,logger> >,
-   public socket< endpoint<role,socket,logger> >,
-   boost::noncopyable
+   public socket< endpoint<role,socket,logger> >
 {
 public:
     /// Type of the traits class that stores endpoint related types.

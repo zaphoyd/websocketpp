@@ -33,7 +33,8 @@ namespace hybi_util {
 
 size_t prepare_masking_key(const masking_key_type& key) {
     size_t prepared_key = key.i;
-    if (sizeof(size_t) == 8) {
+	size_t wordSize = sizeof(size_t);
+    if (wordSize == 8) {
         prepared_key <<= 32;
         prepared_key |= (static_cast<size_t>(key.i) & 0x00000000FFFFFFFFLL);
     }

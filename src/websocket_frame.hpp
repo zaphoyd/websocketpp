@@ -71,7 +71,7 @@ private:
  */
     
 template <class rng_policy>
-class parser {
+class parser : boost::noncopyable {
 public:
     // basic payload byte flags
     static const uint8_t BPB0_OPCODE = 0x0F;

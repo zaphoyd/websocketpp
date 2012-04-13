@@ -30,6 +30,10 @@
 #include "../processors/processor.hpp"
 #include "../processors/hybi_header.hpp"
 
+#ifdef max
+	#undef max
+#endif // #ifdef max
+
 using websocketpp::message::data;
 using websocketpp::processor::hybi_util::circshift_prepared_key;
 
@@ -75,7 +79,7 @@ void data::process_payload(char *input, size_t size) {
         size_t* data = reinterpret_cast<size_t*>(input);
         
         // unmask working buffer
-        for (int i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
             data[i] ^= m_prepared_key;
         }
         
@@ -184,7 +188,8 @@ void data::mask() {
             
             size_t size = m_payload.size()/sizeof(size_t);
             size_t key = m_masking_key.i;
-            if (sizeof(size_t) == 8) {
+			size_t wordSize = sizeof(size_t);
+            if (wordSize == 8) {
                 key <<= 32;
                 key |= (static_cast<size_t>(m_masking_key.i) & 0x00000000FFFFFFFFLL);
             }
@@ -214,4 +219,3 @@ void data::set_live() {
 size_t data::get_index() const {
     return m_index;
 }
-

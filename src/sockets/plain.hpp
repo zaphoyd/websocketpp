@@ -39,7 +39,7 @@ namespace websocketpp {
 namespace socket {
 
 template <typename endpoint_type>
-class plain {
+class plain : boost::noncopyable {
 public:
     boost::asio::io_service& get_io_service() {
         return m_io_service;
