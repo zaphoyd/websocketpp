@@ -40,6 +40,10 @@
     #define SIZE_MAX ((size_t)(-1))
 #endif
 
+#ifdef _MSC_VER
+    #define _WEBSOCKETPP_CPP11_FRIEND_
+#endif
+
 #include <exception>
 #include <string>
 #include <vector>
