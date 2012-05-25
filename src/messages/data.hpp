@@ -186,6 +186,7 @@ public:
     // sets the payload to payload. Performs max size and UTF8 validation 
     // immediately and throws processor::exception if it fails
     void set_payload(const std::string& payload);
+    void set_payload(const char* payload, size_t size);
     void append_payload(const std::string& payload);
     
     void set_header(const std::string& header);
