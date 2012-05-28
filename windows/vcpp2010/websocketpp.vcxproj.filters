@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\src\md5\md5.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\processors\hybi_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\network_utilities.hpp">
