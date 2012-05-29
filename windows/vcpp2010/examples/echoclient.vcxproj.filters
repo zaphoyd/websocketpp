@@ -23,8 +23,5 @@
     <ClCompile Include="..\..\..\examples\echo_client\echo_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\examples\echo_client\echo_client_handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
