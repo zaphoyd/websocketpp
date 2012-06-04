@@ -58,11 +58,30 @@ using wsperf::stress_handler;
  * primarily useful for debugging.
  */
 stress_handler::stress_handler(wscmd::cmd& cmd)
- : m_current_connections(0)
- , m_max_connections(0)
- , m_total_connections(0)
- , m_failed_connections(0)
+  : m_current_connections(0)
+  , m_max_connections(0)
+  , m_total_connections(0)
+  , m_failed_connections(0)
+  , m_next_con_id(0)
+  , m_init(boost::chrono::steady_clock::now())
 {
+}
+
+void stress_handler::on_connect(connection_ptr con) {
+    boost::lock_guard<boost::mutex> lock(m_lock);
+    
+    m_con_data[con] = con_data(m_next_con_id++, m_init);
+    m_con_data[con].start = boost::chrono::steady_clock::now();
+    m_dirty.push_back(con);
+}
+
+void stress_handler::on_handshake_init(connection_ptr con) {
+    boost::lock_guard<boost::mutex> lock(m_lock);
+        
+    m_con_data[con].tcp_established = boost::chrono::steady_clock::now();
+    m_dirty.push_back(con);
+    
+    // TODO: log close reason?
 }
 
 void stress_handler::on_open(connection_ptr con) {
@@ -75,6 +94,10 @@ void stress_handler::on_open(connection_ptr con) {
         if (m_current_connections > m_max_connections) {
             m_max_connections = m_current_connections;
         }
+        
+        m_con_data[con].on_open = boost::chrono::steady_clock::now();
+        m_con_data[con].status = "Open";
+        m_dirty.push_back(con);
     }
     
     start(con);
@@ -85,6 +108,10 @@ void stress_handler::on_close(connection_ptr con) {
     
     m_current_connections--;
     
+    m_con_data[con].on_close = boost::chrono::steady_clock::now();
+    m_con_data[con].status = "Closed";
+    m_dirty.push_back(con);
+    
     // TODO: log close reason?
 }
 
@@ -93,10 +120,25 @@ void stress_handler::on_fail(connection_ptr con) {
     
     m_failed_connections++;
     
+    m_con_data[con].on_fail = boost::chrono::steady_clock::now();
+    m_con_data[con].status = "Failed";
+    m_dirty.push_back(con);
+    
     // TODO: log failure reason
 }
 
 void stress_handler::start(connection_ptr con) {}
+
+void stress_handler::close(connection_ptr con) {
+    //boost::lock_guard<boost::mutex> lock(m_lock);
+        
+    m_con_data[con].close_sent = boost::chrono::steady_clock::now();
+    m_con_data[con].status = "Closing";
+    m_dirty.push_back(con);
+    
+    con->close(websocketpp::close::status::NORMAL);
+    // TODO: log close reason?
+}
 
 std::string stress_handler::get_data() const {
     std::stringstream data;
@@ -109,9 +151,73 @@ std::string stress_handler::get_data() const {
         data << ",\"max_connections\":" << m_max_connections;
         data << ",\"total_connections\":" << m_total_connections;
         data << ",\"failed_connections\":" << m_failed_connections;
+        
+        data << ",\"connection_data\":[";
+        
+        // for each item in m_dirty
+        std::string sep = "";
+        std::list<connection_ptr>::const_iterator it;
+        for (it = m_dirty.begin(); it != m_dirty.end(); it++) {
+            std::map<connection_ptr,con_data>::const_iterator element;
+            
+            element = m_con_data.find(*it);
+            
+            if (element == m_con_data.end()) {
+                continue;
+            }
+            
+            data << sep << element->second.print();
+            sep = ",";
+        }
+        m_dirty.clear();
+        
+        data << "]";
     }
     
     data << "}";
     
     return data.str();
+}
+
+void stress_handler::maintenance() {
+    std::list<connection_ptr> to_process;
+    
+    {
+        boost::lock_guard<boost::mutex> lock(m_lock);
+        
+        std::map<connection_ptr,con_data>::iterator it;
+        for (it = m_con_data.begin(); it != m_con_data.end(); it++) {
+            to_process.push_back((*it).first);
+        }
+    }
+    
+    time_point now = boost::chrono::steady_clock::now();
+    
+    std::list<connection_ptr>::iterator it;
+    for (it = to_process.begin(); it != to_process.end(); it++) {
+        connection_ptr con = (*it);
+        std::map<connection_ptr,con_data>::iterator element;
+        
+        boost::lock_guard<boost::mutex> lock(m_lock);
+        
+        element = m_con_data.find(con);
+        
+        if (element == m_con_data.end()) {
+            continue;
+        }
+        
+        con_data& data = element->second;
+        
+        // check the connection state
+        if (con->get_state() != websocketpp::session::state::OPEN) {
+            continue;
+        }
+        
+        boost::chrono::nanoseconds dur = now - data.on_open;
+        size_t milliseconds = dur.count() / 1000000.;
+        
+        if (milliseconds > 5000) {
+            close(con);
+        }
+    }
 }

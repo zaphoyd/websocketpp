@@ -36,6 +36,7 @@ class stress_aggregate : public stress_handler {
 public:
     typedef stress_aggregate type;
     
+    
     /// Construct a stress test from a wscmd command
     explicit stress_aggregate(wscmd::cmd& cmd);
     
@@ -47,6 +48,8 @@ public:
     const std::string get_data() const;
 protected:
     std::map<std::string,size_t> m_msg_stats;
+    
+    
 };
 
 typedef boost::shared_ptr<stress_aggregate> stress_aggregate_ptr;

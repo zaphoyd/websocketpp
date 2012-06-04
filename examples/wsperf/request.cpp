@@ -96,17 +96,27 @@ void request::process(unsigned int id) {
             
             // create connections
             for (size_t i = 0; i < connection_count; i++) {
-                e.connect(uri);
+                client::connection_ptr con;
+                
+                con = e.get_connection(uri);
+                
+                shandler->on_connect(con);
+                
+                e.connect(con);
             }
             
             for (;;) {
                 // send update
                 writer->write(prepare_response_object("test_data",shandler->get_data()));
                 
+                // check for too few connections
+                
+                shandler->maintenance();
+                
+                // check for done-ness
+                
                 sleep(1);
             }
-            
-            // loop over sending updates
         }
 
         writer->write(prepare_response("test_complete",""));

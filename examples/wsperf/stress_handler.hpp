@@ -42,27 +42,94 @@ using websocketpp::client;
 
 namespace wsperf {
 
+struct con_data {
+    typedef boost::chrono::steady_clock::time_point time_point;
+    
+    con_data() {}
+    
+    con_data(size_t id,time_point init)
+      : id(id)
+      , init(init)
+      , start(init)
+      , tcp_established(init)
+      , on_open(init)
+      , on_fail(init)
+      , close_sent(init)
+      , on_close(init)
+      , status("Connecting")
+    {
+    }
+    
+    std::string print() const {
+        std::stringstream o;
+        
+        o << "{";
+        o << "\"id\":" << id;
+        o << ",\"status\":\"" << status << "\"";
+        o << ",\"start\":" << get_rel_microseconds(start);
+        o << ",\"tcp\":" << get_rel_microseconds(tcp_established);
+        o << ",\"open\":" << get_rel_microseconds(on_open);
+        o << ",\"fail\":" << get_rel_microseconds(on_fail);
+        o << ",\"close_sent\":" << get_rel_microseconds(close_sent);
+        o << ",\"close\":" << get_rel_microseconds(on_close);
+        
+        o << "}";
+        
+        return o.str();
+    }
+    
+    double get_rel_microseconds(time_point t) const {
+        boost::chrono::nanoseconds dur = t - init;
+        return static_cast<double> (dur.count()) / 1000.;
+    }
+    
+    size_t   id;
+    time_point init;
+    time_point start;
+    time_point tcp_established;
+    time_point on_open;
+    time_point on_fail;
+    time_point close_sent;
+    time_point on_close;
+    std::string status;
+};
+
 class stress_handler : public client::handler {
 public:
     typedef stress_handler type;
+    typedef boost::chrono::steady_clock::time_point time_point;
+    typedef std::map<connection_ptr,time_point> time_map;
     
     /// Construct a stress test from a wscmd command
     explicit stress_handler(wscmd::cmd& cmd);
     
+    void on_connect(connection_ptr con);
+    
+    
+    void on_handshake_init(connection_ptr con);
     void on_open(connection_ptr con);
     void on_close(connection_ptr con);
     void on_fail(connection_ptr con);
     
     void start(connection_ptr con);
+    void close(connection_ptr con);
     void end();
     
     std::string get_data() const;
+    virtual void maintenance();
 protected:
     size_t m_current_connections;
     size_t m_max_connections;
     size_t m_total_connections;
     size_t m_failed_connections;
-        
+    
+    size_t m_next_con_id;
+    time_point  m_init;
+    
+    // connection related timestamps
+    std::map<connection_ptr,con_data> m_con_data;
+    mutable std::list<connection_ptr> m_dirty;
+    
     // Stats update timer
     size_t m_timeout;
     boost::shared_ptr<boost::asio::deadline_timer> m_timer;

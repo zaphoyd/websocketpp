@@ -61,7 +61,9 @@ stress_aggregate::stress_aggregate(wscmd::cmd& cmd)
  : stress_handler(cmd)
 {}
 
-void stress_aggregate::start(connection_ptr con) {}
+void stress_aggregate::start(connection_ptr con) {
+    
+}
 
 void stress_aggregate::on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
     std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
