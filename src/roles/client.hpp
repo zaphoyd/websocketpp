@@ -147,6 +147,8 @@ public:
         void async_init() {
             m_connection.m_processor = processor::ptr(new processor::hybi<connection_type>(m_connection));
             
+            m_connection.get_handler()->on_handshake_init(m_connection.shared_from_this());
+            
             write_request();
         }
         
@@ -193,6 +195,7 @@ public:
         virtual void on_message(connection_ptr con,message::data_ptr) {}
         
         // Optional
+        virtual void on_handshake_init(connection_ptr con) {}
         virtual bool on_ping(connection_ptr con,std::string) {return true;}
         virtual void on_pong(connection_ptr con,std::string) {}
         virtual void on_pong_timeout(connection_ptr con,std::string) {}
