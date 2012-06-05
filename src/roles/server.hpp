@@ -341,8 +341,8 @@ void server<endpoint>::handle_accept(connection_ptr con,
             con->m_fail_reason = "too many files open";
             
             // TODO: make this configurable
-            m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
-            m_timer.async_wait(boost::bind(&type::start_accept,this));
+            //m_timer.expires_from_now(boost::posix_time::milliseconds(1000));
+            //m_timer.async_wait(boost::bind(&type::start_accept,this));
         } else if (error == boost::asio::error::operation_aborted) {
             con->m_fail_reason = "io_service operation canceled";
             
