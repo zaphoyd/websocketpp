@@ -116,7 +116,7 @@ public:
     void end();
     
     std::string get_data() const;
-    virtual void maintenance();
+    virtual bool maintenance();
 protected:
     size_t m_current_connections;
     size_t m_max_connections;

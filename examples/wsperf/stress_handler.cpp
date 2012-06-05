@@ -179,15 +179,24 @@ std::string stress_handler::get_data() const {
     return data.str();
 }
 
-void stress_handler::maintenance() {
+bool stress_handler::maintenance() {
     std::list<connection_ptr> to_process;
     
     {
         boost::lock_guard<boost::mutex> lock(m_lock);
         
+        bool quit = true;
+        
         std::map<connection_ptr,con_data>::iterator it;
         for (it = m_con_data.begin(); it != m_con_data.end(); it++) {
             to_process.push_back((*it).first);
+            if ((*it).first->get_state() != websocketpp::session::state::CLOSED) {
+                quit = false;
+            }
+        }
+        
+        if (quit) {
+            return true;
         }
     }
     
@@ -220,4 +229,6 @@ void stress_handler::maintenance() {
             close(con);
         }
     }
+    
+    return false;
 }

@@ -94,6 +94,11 @@ void request::process(unsigned int id) {
             
             boost::thread t(boost::bind(&client::run, &e, true));
             
+            size_t handshake_delay;
+            if(!wscmd::extract_number<size_t>(command, "handshake_delay",handshake_delay)) {
+                handshake_delay = 10;
+            }
+            
             // create connections
             for (size_t i = 0; i < connection_count; i++) {
                 client::connection_ptr con;
@@ -103,6 +108,8 @@ void request::process(unsigned int id) {
                 shandler->on_connect(con);
                 
                 e.connect(con);
+                
+                boost::this_thread::sleep(boost::posix_time::milliseconds(handshake_delay));
             }
             
             for (;;) {
@@ -111,12 +118,18 @@ void request::process(unsigned int id) {
                 
                 // check for too few connections
                 
-                shandler->maintenance();
+                bool quit = shandler->maintenance();
                 
                 // check for done-ness
+                if (quit) {
+                    break;
+                }
+                
                 
                 sleep(1);
             }
+            e.end_perpetual();
+            t.join();
         }
 
         writer->write(prepare_response("test_complete",""));
