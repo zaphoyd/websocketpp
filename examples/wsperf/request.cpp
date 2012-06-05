@@ -126,7 +126,7 @@ void request::process(unsigned int id) {
                 }
                 
                 
-                sleep(1);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
             }
             e.end_perpetual();
             t.join();

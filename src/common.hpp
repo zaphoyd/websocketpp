@@ -41,7 +41,9 @@
 #endif
 
 #ifdef _MSC_VER
-    #define _WEBSOCKETPP_CPP11_FRIEND_
+    #ifndef _WEBSOCKETPP_CPP11_FRIEND_
+        #define _WEBSOCKETPP_CPP11_FRIEND_
+    #endif
 #endif
 
 #include <exception>
