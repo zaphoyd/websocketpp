@@ -46,7 +46,7 @@ namespace con_lifetime {
     enum value {
         FIXED = 0,
         RANDOM = 1,
-        INFINITE = 2
+        UNLIMITED = 2
     };
 }
 
@@ -56,7 +56,7 @@ namespace msg_mode {
     enum value {
         NONE = 0,
         FIXED = 1,
-        INFINITE = 2
+        UNLIMITED = 2
     };
 }
 
