@@ -278,7 +278,7 @@ bool stress_handler::maintenance() {
         }
         
         boost::chrono::nanoseconds dur = now - data.on_open;
-        size_t milliseconds = static_cast<size_t> (dur.count() / 1000000.);
+        size_t milliseconds = static_cast<size_t>(dur.count()) / 1000000;
         
         if (milliseconds > m_con_duration) {
             close(con);
