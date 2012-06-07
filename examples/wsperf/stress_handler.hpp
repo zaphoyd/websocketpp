@@ -42,6 +42,25 @@ using websocketpp::client;
 
 namespace wsperf {
 
+namespace con_lifetime {
+    enum value {
+        FIXED = 0,
+        RANDOM = 1,
+        INFINITE = 2
+    };
+}
+
+
+
+namespace msg_mode {
+    enum value {
+        NONE = 0,
+        FIXED = 1,
+        INFINITE = 2
+    };
+}
+
+
 struct con_data {
     typedef boost::chrono::steady_clock::time_point time_point;
     
@@ -133,6 +152,16 @@ protected:
     // Stats update timer
     size_t m_timeout;
     boost::shared_ptr<boost::asio::deadline_timer> m_timer;
+    
+    // test settings pulled from the command
+    con_lifetime::value m_con_lifetime;
+    size_t              m_con_duration;
+    bool                m_con_sync;
+    
+    msg_mode::value     m_msg_mode;
+    size_t              m_msg_count;
+    size_t              m_msg_size;
+    
     
     mutable boost::mutex m_lock;
 };

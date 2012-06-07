@@ -64,7 +64,62 @@ stress_handler::stress_handler(wscmd::cmd& cmd)
   , m_failed_connections(0)
   , m_next_con_id(0)
   , m_init(boost::chrono::steady_clock::now())
+  , m_con_sync(false)
 {
+    if (!wscmd::extract_number<size_t>(cmd,"msg_count",m_msg_count)) {
+        m_msg_count = 0;
+    }
+    
+    if (!wscmd::extract_number<size_t>(cmd,"msg_size",m_msg_size)) {
+        m_msg_size = 0;
+    }
+    
+    std::string mode;
+    if (wscmd::extract_string(cmd,"msg_mode",mode)) {
+        if (mode == "fixed") {
+            m_msg_mode = msg_mode::FIXED;
+        } else if (mode == "infinite") {
+            m_msg_mode = msg_mode::INFINITE;
+        } else {
+            m_msg_mode = msg_mode::NONE;
+        }
+    } else {
+         m_msg_mode = msg_mode::NONE;
+    }
+    
+    if (wscmd::extract_string(cmd,"con_lifetime",mode)) {
+        if (mode == "random") {
+            m_con_lifetime = con_lifetime::RANDOM;
+        } else if (mode == "infinite") {
+            m_con_lifetime = con_lifetime::INFINITE;
+        } else {
+            m_con_lifetime = con_lifetime::FIXED;
+        }
+    } else {
+        m_con_lifetime = con_lifetime::FIXED;
+    }
+    
+    if (m_con_lifetime == con_lifetime::FIXED) {
+        if (!wscmd::extract_number<size_t>(cmd,"con_duration",m_con_duration)) {
+            m_con_duration = 5000;
+        }
+    } else if (m_con_lifetime == con_lifetime::RANDOM) {
+        size_t max_dur;
+        if (!wscmd::extract_number<size_t>(cmd,"con_duration",max_dur)) {
+            max_dur = 5000;
+        }
+        
+        // TODO: choose random number between 0 and max_dur
+        m_con_duration = max_dur;
+    }
+    
+    std::cout << "con_duration: " << m_con_duration
+              << "msg_count: " << m_msg_count
+              << "msg_size: " << m_msg_size
+              << "m_con_sync: " << m_con_sync
+              << "m_con_lifetime: " << m_con_lifetime
+              << "m_msg_mode: " << m_msg_mode
+              << std::endl;
 }
 
 void stress_handler::on_connect(connection_ptr con) {
@@ -225,7 +280,7 @@ bool stress_handler::maintenance() {
         boost::chrono::nanoseconds dur = now - data.on_open;
         size_t milliseconds = dur.count() / 1000000.;
         
-        if (milliseconds > 5000) {
+        if (milliseconds > m_con_duration) {
             close(con);
         }
     }
