@@ -40,7 +40,7 @@ public:
     /// Construct a stress test from a wscmd command
     explicit stress_aggregate(wscmd::cmd& cmd);
     
-    void on_message(connection_ptr con,websocketpp::message::data_ptr msg);
+    //void on_message(connection_ptr con,websocketpp::message::data_ptr msg);
     
     void start(connection_ptr con);
     void end();

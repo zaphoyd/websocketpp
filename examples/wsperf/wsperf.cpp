@@ -191,7 +191,7 @@ int start_client(po::variables_map& vm) {
 int main(int argc, char* argv[]) {
     try {
         // 12288 is max OS X limit without changing kernal settings
-        /*const rlim_t ideal_size = 10000;
+        const rlim_t ideal_size = 10000;
         rlim_t old_size;
         rlim_t old_max;
         
@@ -223,7 +223,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "Failed. This server will be limited to " << old_size << " concurrent connections. Error code: " << errno << " system max: " << old_max << std::endl;
                 }
             }
-        }*/
+        }
         
         std::string config_file;
         

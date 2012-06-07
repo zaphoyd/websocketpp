@@ -28,6 +28,7 @@
 #include "request.hpp"
 #include "stress_aggregate.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 using wsperf::request;
@@ -36,6 +37,7 @@ void request::process(unsigned int id) {
     case_handler_ptr test;
     stress_handler_ptr shandler;
     std::string uri;
+    size_t connections_opened = 0;
     size_t connection_count;
     
     wscmd::cmd command = wscmd::parse(req);
@@ -48,6 +50,7 @@ void request::process(unsigned int id) {
         } else if (command.command == "stress_test") {
             shandler = stress_handler_ptr(new stress_aggregate(command));
             
+            // todo make sure this isn't 0
             if(!wscmd::extract_number<size_t>(command, "connection_count",connection_count)) {
                 connection_count = 1;
             }
@@ -92,6 +95,14 @@ void request::process(unsigned int id) {
         } else if (command.command == "stress_test") {
             client e(shandler);
             
+            e.alog().unset_level(websocketpp::log::alevel::ALL);
+            e.elog().unset_level(websocketpp::log::elevel::ALL);
+            
+            /*client::connection_ptr con;
+            con = e.get_connection(uri);
+            shandler->on_connect(con);
+            e.connect(con);*/
+            
             boost::thread t(boost::bind(&client::run, &e, true));
             
             size_t handshake_delay;
@@ -99,37 +110,53 @@ void request::process(unsigned int id) {
                 handshake_delay = 10;
             }
             
-            // create connections
+            // open n connections
             for (size_t i = 0; i < connection_count; i++) {
                 client::connection_ptr con;
-                
                 con = e.get_connection(uri);
-                
                 shandler->on_connect(con);
-                
                 e.connect(con);
-                
+            
                 boost::this_thread::sleep(boost::posix_time::milliseconds(handshake_delay));
             }
             
-            for (;;) {
-                // send update
-                writer->write(prepare_response_object("test_data",shandler->get_data()));
+            // start sending messages 
+            shandler->start_message_test();
+            
+            e.end_perpetual();
+            
+            t.join();
+            
+            std::cout << "writing data" << std::endl;
+            writer->write(prepare_response_object("test_data",shandler->get_data()));
+            
+            /*for (;;) {
+                // tell the handler to perform its event loop
                 
-                // check for too few connections
+                bool quit = false;
                 
-                bool quit = shandler->maintenance();
+                if (connections_opened == connection_count) {
+                    std::cout << "maintenance loop" << std::endl;
+                    quit = shandler->maintenance();
+                }
                 
                 // check for done-ness
                 if (quit) {
+                    // send update to command
+                    std::cout << "writing data" << std::endl;
+                    writer->write(prepare_response_object("test_data",shandler->get_data()));
                     break;
                 }
                 
+                // unless we know we have something to do, sleep for a bit.
+                if (connections_opened < connection_count) {
+                    continue;
+                }
                 
                 boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-            }
-            e.end_perpetual();
-            t.join();
+            }*/
+            //e.end_perpetual();
+            
         }
 
         writer->write(prepare_response("test_complete",""));

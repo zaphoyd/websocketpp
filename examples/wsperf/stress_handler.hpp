@@ -60,6 +60,14 @@ namespace msg_mode {
     };
 }
 
+struct msg_data {
+    typedef boost::chrono::steady_clock::time_point time_point;
+    
+    size_t      msg_id;
+    time_point  send_time;
+    time_point  recv_time;
+    //size_t      payload_len;
+};
 
 struct con_data {
     typedef boost::chrono::steady_clock::time_point time_point;
@@ -91,6 +99,19 @@ struct con_data {
         o << ",\"fail\":" << get_rel_microseconds(on_fail);
         o << ",\"close_sent\":" << get_rel_microseconds(close_sent);
         o << ",\"close\":" << get_rel_microseconds(on_close);
+                
+        o << ",\"messages\":[";
+        std::string sep = "";
+        std::vector<msg_data>::const_iterator it;
+        for (it = messages.begin(); it != messages.end(); it++) {
+            o << sep << "[" 
+              << get_rel_microseconds((*it).send_time) << ","
+              << get_rel_microseconds((*it).recv_time)
+              << "]";
+            sep = ",";
+        }
+        
+        o << "]";
         
         o << "}";
         
@@ -111,7 +132,11 @@ struct con_data {
     time_point close_sent;
     time_point on_close;
     std::string status;
+    std::vector<msg_data> messages;
+    //stress_handler::message_ptr msg;
 };
+
+
 
 class stress_handler : public client::handler {
 public:
@@ -124,6 +149,7 @@ public:
     
     void on_connect(connection_ptr con);
     
+    void on_message(connection_ptr con,websocketpp::message::data_ptr msg);
     
     void on_handshake_init(connection_ptr con);
     void on_open(connection_ptr con);
@@ -133,9 +159,11 @@ public:
     void start(connection_ptr con);
     void close(connection_ptr con);
     void end();
-    
+        
     std::string get_data() const;
     virtual bool maintenance();
+    
+    void start_message_test();
 protected:
     size_t m_current_connections;
     size_t m_max_connections;
@@ -152,6 +180,9 @@ protected:
     // Stats update timer
     size_t m_timeout;
     boost::shared_ptr<boost::asio::deadline_timer> m_timer;
+    
+    size_t              m_next_msg_id;
+    boost::shared_ptr<std::string> m_msg;
     
     // test settings pulled from the command
     con_lifetime::value m_con_lifetime;

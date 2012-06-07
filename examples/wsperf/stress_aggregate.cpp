@@ -65,12 +65,12 @@ void stress_aggregate::start(connection_ptr con) {
     
 }
 
-void stress_aggregate::on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
+/*void stress_aggregate::on_message(connection_ptr con,websocketpp::message::data_ptr msg) {
     std::string hash = websocketpp::md5_hash_hex(msg->get_payload());
     
     boost::lock_guard<boost::mutex> lock(m_lock);
     m_msg_stats[hash]++;
-}
+}*/
 
 /*std::string stress_aggregate::get_data() const {
     std::stringstream data;
