@@ -60,7 +60,7 @@ namespace wscmd {
     wscmd::cmd parse(const std::string& m);
     
     template <typename T>
-    bool extract_number(wscmd::cmd command,std::string key,T& val) {
+    bool extract_number(wscmd::cmd command,const std::string& key,T& val) {
         if (command.args[key] != "") {
             std::istringstream buf(command.args[key]);
             
@@ -70,6 +70,8 @@ namespace wscmd {
         }
         return false;
     }
+    
+    bool extract_string(wscmd::cmd command,const std::string& key,std::string& val);
 } // namespace wscmd
 
 #endif // WSCMD_HPP

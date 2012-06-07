@@ -68,3 +68,11 @@ wscmd::cmd wscmd::parse(const std::string& m) {
     return command;
 }
 
+bool wscmd::extract_string(wscmd::cmd command,const std::string& key,std::string& val) {
+    if (command.args[key] != "") {
+        val = command.args[key];
+       return true;
+    } else {
+        return false;
+    }
+}
