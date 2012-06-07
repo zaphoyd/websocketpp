@@ -79,7 +79,7 @@ stress_handler::stress_handler(wscmd::cmd& cmd)
         if (mode == "fixed") {
             m_msg_mode = msg_mode::FIXED;
         } else if (mode == "infinite") {
-            m_msg_mode = msg_mode::INFINITE;
+            m_msg_mode = msg_mode::UNLIMITED;
         } else {
             m_msg_mode = msg_mode::NONE;
         }
@@ -91,7 +91,7 @@ stress_handler::stress_handler(wscmd::cmd& cmd)
         if (mode == "random") {
             m_con_lifetime = con_lifetime::RANDOM;
         } else if (mode == "infinite") {
-            m_con_lifetime = con_lifetime::INFINITE;
+            m_con_lifetime = con_lifetime::UNLIMITED;
         } else {
             m_con_lifetime = con_lifetime::FIXED;
         }
@@ -278,7 +278,7 @@ bool stress_handler::maintenance() {
         }
         
         boost::chrono::nanoseconds dur = now - data.on_open;
-        size_t milliseconds = dur.count() / 1000000.;
+        size_t milliseconds = static_cast<size_t>(dur.count()) / 1000000;
         
         if (milliseconds > m_con_duration) {
             close(con);
