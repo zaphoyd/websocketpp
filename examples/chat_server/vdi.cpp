@@ -25,9 +25,8 @@
  * 
  */
 
-#include "chat.hpp"
+#include "vdi.hpp"
 
-#include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -44,11 +43,11 @@ void chat_server_handler::validate(connection_ptr con) {
         throw(websocketpp::http::exception(err.str(),websocketpp::http::status_code::NOT_FOUND));
     }
     
-    // Require specific origin example
-    if (con->get_origin() != "http://127.0.0.1") {
+    /*// Require specific origin example
+    if (con->get_origin() != "http://zaphoyd.com") {
         err << "Request from unrecognized origin: " << con->get_origin();
         throw(websocketpp::http::exception(err.str(),websocketpp::http::status_code::FORBIDDEN));
-    }
+    }*/
 }
 
 
@@ -145,17 +144,21 @@ void chat_server_handler::on_message(connection_ptr con, message_ptr msg) {
 
 void chat_server_handler::http(connection_ptr con)
 {
+	//con->set_body("HTTP Response!!");
+	//return;
+#include <iostream> // for std::cerr debugging
+#include <fstream>	// istreambuf_iterator
 	boost::filesystem::path p(boost::filesystem::current_path());
 	p /= con->get_resource();
+	std::cerr << p.string() << std::endl;
 	p.normalize();
-	//std::cerr << p.string() << std::endl; // debuging
+	std::cerr << p.string() << std::endl;
 
 	if (boost::filesystem::exists(p) &&
 			boost::filesystem::is_regular_file(p)) {
 		boost::filesystem::ifstream f(p, std::ios::binary);
 		if (!f.fail()) {
 			std::string body;
-			body.reserve(boost::filesystem::file_size(p));
 			body.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 			con->set_body(body);
 			f.close();

@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef CHAT_HPP
-#define CHAT_HPP
+#ifndef VDI_HPP
+#define VDI_HPP
 
 // com.zaphoyd.websocketpp.chat protocol
 // 
@@ -38,7 +38,7 @@
 // {"type":"msg","sender":"<sender>","value":"<msg>" }
 // {"type":"participants","value":[<participant>,...]}
 
-#include "../../src/websocketpp.hpp"
+#include "websocketpp/websocketpp.hpp"
 
 #include <map>
 #include <string>
