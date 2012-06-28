@@ -11,7 +11,7 @@ ifneq ($(OS), Darwin)
 	LDFLAGS := $(LDFLAGS) -lrt -lpthread
 endif
 
-wsperf: wsperf.o request.o case.o generic.o wscmd.o
+wsperf: wsperf.o request.o case.o generic.o wscmd.o stress_aggregate.o stress_handler.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp
