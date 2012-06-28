@@ -150,25 +150,25 @@ endif
 
 # Compile object files
 $(objdir)/sha1.o: $(srcdir)/sha1/sha1.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 	
 $(objdir)/base64.o: $(srcdir)/base64/base64.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 $(objdir)/hybi_header.o: $(srcdir)/processors/hybi_header.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 $(objdir)/hybi_util.o: $(srcdir)/processors/hybi_util.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 $(objdir)/data.o: $(srcdir)/messages/data.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 $(objdir)/md5.o: $(srcdir)/md5/md5.c
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 $(objdir)/%.o: $(srcdir)/%.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+	$(CXX) $< -c -o $@ $(CXXFLAGS)
 
 ifeq ($(SHARED),1)
 install: banner install_headers $(lib_target)
