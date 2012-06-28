@@ -155,6 +155,10 @@ void data::set_payload(const std::string& payload) {
     m_payload.reserve(payload.size());
     m_payload = payload;
 }
+void data::set_payload(const char* payload, size_t size) {
+    m_payload = std::string(payload, size);
+}
+
 void data::append_payload(const std::string& payload) {
     m_payload.reserve(m_payload.size()+payload.size());
     m_payload.append(payload);

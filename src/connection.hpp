@@ -200,6 +200,7 @@ public:
     }
     
     void send(const std::string& payload, frame::opcode::value op = frame::opcode::TEXT);
+    void send(const char* payload, size_t size, frame::opcode::value op = frame::opcode::BINARY);
     void send(message::data_ptr msg);
     
     /// Close connection
@@ -1163,7 +1164,24 @@ public:
         
         write();
     }
-    
+     
+    /// Push message to write queue and start writer if it was idle
+    /** 
+     * Visibility: protected (called only by asio dispatcher)
+     * State: Valid from OPEN and CLOSING, ignored otherwise
+     * Concurrency: Must be called within m_stranded method
+     */
+    void write_message(message::data_ptr msg, size_t size) {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        if (m_state != session::state::OPEN && m_state != session::state::CLOSING) {return;}
+        if (m_write_state == INTURRUPT) {return;}
+        
+        m_write_buffer += size;
+        m_write_queue.push(msg);
+        
+        write();
+    }
+
     /// Begin async write of next message in list
     /** 
      * Visibility: private
@@ -1196,7 +1214,7 @@ public:
             }
                         
             m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_header()));
-            m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_payload()));
+            m_write_buf.push_back(boost::asio::buffer(m_write_queue.front()->get_payload(), m_write_queue.front()->get_payload().size()));
             
             //m_endpoint.alog().at(log::alevel::DEVEL) << "write header: " << zsutil::to_hex(m_write_queue.front()->get_header()) << log::endl;
             
@@ -1540,9 +1558,7 @@ struct connection_traits< connection<endpoint,role,socket> > {
  *
  * @param payload Payload to write_state
  * @param op opcode to send the message as
- */
-template <typename endpoint,template <class> class role,template <class> class socket>
-void 
+ */ template <typename endpoint,template <class> class role,template <class> class socket> void 
 connection<endpoint,role,socket>::send(const std::string& payload,frame::opcode::value op)
 {
     {
@@ -1561,6 +1577,41 @@ connection<endpoint,role,socket>::send(const std::string& payload,frame::opcode:
     
     msg->reset(op);
     msg->set_payload(payload);
+    send(msg);
+}
+
+/// convenience overload for sending a one off message.
+/**
+ * Creates a message, fills in payload, and queues a write as a message of
+ * type op. Default type is TEXT. 
+ * 
+ * Visibility: public
+ * State: Valid from OPEN, ignored otherwise
+ * Concurrency: callable from any thread
+ *
+ * @param payload Payload to write_state
+ * @param op opcode to send the message as
+ */
+template <typename endpoint,template <class> class role,template <class> class socket>
+void 
+connection<endpoint,role,socket>::send(const char* payload, size_t size, frame::opcode::value op)
+{
+    {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        if (m_state != session::state::OPEN) {return;}
+    }
+    
+    websocketpp::message::data::ptr msg = get_control_message2();
+    
+    if (!msg) {
+        throw exception("Endpoint send queue is full",error::SEND_QUEUE_FULL);
+    }
+    if (op != frame::opcode::TEXT && op != frame::opcode::BINARY) {
+        throw exception("opcode must be either TEXT or BINARY",error::GENERIC);
+    }
+    
+    msg->reset(op);
+    msg->set_payload(payload, size);
     send(msg);
 }
 
