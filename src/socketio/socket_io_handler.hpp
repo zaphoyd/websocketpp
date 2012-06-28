@@ -5,6 +5,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/regex.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "../roles/client.hpp"
 #include "../websocketpp.hpp"
@@ -19,7 +22,13 @@ namespace socketio {
 
 class socketio_client_handler : public client::handler {
 public:
-   socketio_client_handler() {}
+   // Constructor for initializing timer.
+   socketio_client_handler() :
+      m_heartbeatActive(false)
+   {
+      m_heartbeatTimer = std::unique_ptr<boost::asio::deadline_timer>(new boost::asio::deadline_timer(m_heartbeatService, boost::posix_time::seconds(0)));
+   }
+
    virtual ~socketio_client_handler() {}
 
    void on_fail(connection_ptr con);
@@ -42,7 +51,17 @@ public:
    // Closes the connection
    void close();
 
+   // Heartbeat operations.
+   void start_heartbeat();
+   void stop_heartbeat();
+
 private:
+   // Sends a heartbeat to the server.
+   void send_heartbeat();
+
+   // Called when the heartbeat timer fires.
+   void heartbeat();
+
    // Parses a socket.IO message received
    void parse_message(const std::string &msg);
 
@@ -54,8 +73,13 @@ private:
    unsigned int m_heartbeatTimeout;
    unsigned int m_disconnectTimeout;
 
-   // Currently we assume websocket as the transport. This string is stored for possible future use.
+   // Currently we assume websocket as the transport, though you can find others in this string
    std::string m_transports;
+
+   // Heartbeat variabes.
+   boost::asio::io_service m_heartbeatService;
+   std::unique_ptr<boost::asio::deadline_timer> m_heartbeatTimer;
+   bool m_heartbeatActive;
 };
 
 typedef boost::shared_ptr<socketio_client_handler> socketio_client_handler_ptr;

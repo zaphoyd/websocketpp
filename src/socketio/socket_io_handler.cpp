@@ -11,6 +11,9 @@ void socketio_client_handler::on_fail(connection_ptr con)
 void socketio_client_handler::on_open(connection_ptr con)
 {
    m_con = con;
+   // Reassign heartbeat timer to actual io_service being used.
+   m_heartbeatTimer = std::unique_ptr<boost::asio::deadline_timer>(new boost::asio::deadline_timer(con->get_io_service(), boost::posix_time::seconds(0)));
+   start_heartbeat();
 
    std::cout << "Connected." << std::endl;
 }
@@ -18,6 +21,7 @@ void socketio_client_handler::on_open(connection_ptr con)
 void socketio_client_handler::on_close(connection_ptr con)
 {
    m_con = connection_ptr();
+   stop_heartbeat();
 
    std::cout << "Client Disconnected." << std::endl;
 }
@@ -27,6 +31,11 @@ void socketio_client_handler::on_message(connection_ptr con, message_ptr msg)
    // For now just drop message in log until parser is online
    std::cout << msg->get_payload() << std::endl;
 }
+
+// Client Functions
+// Note from websocketpp code: methods (except for perform_handshake) will be called
+// from outside the io_service.run thread and need to be careful to not touch unsynchronized
+// member variables.
 
 // Performs a socket.IO handshake
 // https://github.com/LearnBoost/socket.io-spec
@@ -143,14 +152,10 @@ std::string socketio_client_handler::perform_handshake(const std::string &url)
    std::cout << "Disconnect Timeout: " << m_disconnectTimeout << std::endl;
    std::cout << "Allowed Transports: " << m_transports << std::endl;
 
-   // Form the complete connection uri
+   // Form the complete connection uri. Default transport method is websocket (since we are websocketpp).
    // If secure websocket connection is desired, replace ws with wss.
    return "ws://" + uo.get_host() + "/socket.io/1/websocket/" + m_sid;
 }
-
-// Client Functions
-// Note from websocketpp code: methods will be called from outside the io_service.run thread
-// and need to be careful to not touch unsynchronized member variables.
 
 void socketio_client_handler::send(const std::string &msg)
 {
@@ -172,6 +177,49 @@ void socketio_client_handler::close()
    }
 
    m_con->close(websocketpp::close::status::GOING_AWAY, "");
+}
+
+void socketio_client_handler::start_heartbeat()
+{
+   // Heartbeat is already active so don't do anything.
+   if (m_heartbeatActive) return;
+   
+   // Check valid heartbeat wait time.
+   if (m_heartbeatTimeout > 0)
+   {
+      m_heartbeatTimer->expires_at(m_heartbeatTimer->expires_at() + boost::posix_time::seconds(m_heartbeatTimeout));
+      m_heartbeatActive = true;
+      m_heartbeatTimer->async_wait(boost::bind(&socketio_client_handler::heartbeat, this));
+
+      std::cout << "Sending heartbeats. Timeout: " << m_heartbeatTimeout << std::endl;
+   }
+}
+
+void socketio_client_handler::stop_heartbeat()
+{
+   // Timer is already stopped.
+   if (!m_heartbeatActive) return;
+
+   // Stop the heartbeats.
+   m_heartbeatActive = false;
+   m_heartbeatTimer->cancel();
+
+   std::cout << "Stopped sending heartbeats." << std::endl;
+}
+
+void socketio_client_handler::send_heartbeat()
+{
+   m_con->send("2::");
+
+   std::cout << "Sent Heartbeat" << std::endl;
+}
+
+void socketio_client_handler::heartbeat()
+{
+   send_heartbeat();
+
+   m_heartbeatTimer->expires_at(m_heartbeatTimer->expires_at() + boost::posix_time::seconds(m_heartbeatTimeout));
+   m_heartbeatTimer->async_wait(boost::bind(&socketio_client_handler::heartbeat, this));
 }
 
 void socketio_client_handler::parse_message(const std::string &msg)
