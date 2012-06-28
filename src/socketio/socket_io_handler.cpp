@@ -5,7 +5,7 @@ using websocketpp::client;
 
 void socketio_client_handler::on_fail(connection_ptr con)
 {
-   std::cout << "Connectio failed." << std::endl;
+   std::cout << "Connection failed." << std::endl;
 }
 
 void socketio_client_handler::on_open(connection_ptr con)
