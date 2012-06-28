@@ -296,7 +296,8 @@ void server<endpoint>::listen(const std::string &host, const std::string &servic
     if (endpoint_iterator == end) {
         throw std::invalid_argument("Can't resolve host/service to listen");
     }
-    listen(*endpoint_iterator,n);
+    const boost::asio::ip::tcp::endpoint &ep = *endpoint_iterator;
+    listen(ep,n);
 }
 
 template <class endpoint>
