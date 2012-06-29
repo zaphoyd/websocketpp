@@ -350,7 +350,7 @@ void socketio_client_handler::parse_message(const std::string &msg)
             m_con->elog()->at(websocketpp::log::elevel::WARN) << "JSON Parse Error: " << matches[4] << websocketpp::log::endl;
             return;
          }
-         if (!json["name"].IsString() || !json["args"].IsArray())
+         if (!json["name"].IsString())
          {
             m_con->elog()->at(websocketpp::log::elevel::WARN) << "Invalid socket.IO Event" << websocketpp::log::endl;
             return;
@@ -397,7 +397,7 @@ void socketio_client_handler::on_socketio_json(int msgId, std::string msgEndpoin
 // This is where you'd add in behavior to handle events
 void socketio_client_handler::on_socketio_event(int msgId, std::string msgEndpoint, std::string name, const Value& args)
 {
-   // Args is an array, managed by rapidjson.
+   // Args is an array, managed by rapidjson, and could be null
    std::cout << "Received event (" << msgId << ") " << std::endl;
 }
 
