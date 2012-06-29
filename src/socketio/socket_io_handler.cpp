@@ -397,7 +397,8 @@ void socketio_client_handler::on_socketio_json(int msgId, std::string msgEndpoin
 // This is where you'd add in behavior to handle events
 void socketio_client_handler::on_socketio_event(int msgId, std::string msgEndpoint, std::string name, const Value& args)
 {
-   std::cout << "Received event (" << msgId << ") " << name << " args[0]: " << args[SizeType(0)].GetString() << std::endl;
+   // Args is an array, managed by rapidjson.
+   std::cout << "Received event (" << msgId << ") " << std::endl;
 }
 
 // This is where you'd add in behavior to handle ack

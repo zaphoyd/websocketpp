@@ -10,6 +10,9 @@
 #ifndef SOCKET_IO_HANDLER_HPP
 #define SOCKET_IO_HANDLER_HPP
 
+// C4355: this used in base member initializer list
+#pragma warning(disable:4355)
+
 #include <boost/shared_ptr.hpp>
 #include <boost/regex.hpp>
 #include <boost/asio.hpp>
