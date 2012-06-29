@@ -162,7 +162,9 @@ std::string socketio_client_handler::perform_handshake(std::string url, std::str
 
    // Form the complete connection uri. Default transport method is websocket (since we are websocketpp).
    // If secure websocket connection is desired, replace ws with wss.
-   m_socketIoUri = "ws://" + uo.get_host() + socketIoResource + "/1/websocket/" + m_sid;
+   std::stringstream iouri;
+   iouri << "ws://" << uo.get_host() << ":" << uo.get_port() << socketIoResource << "/1/websocket/" << m_sid;
+   m_socketIoUri = iouri.str();
    return m_socketIoUri;
 }
 
