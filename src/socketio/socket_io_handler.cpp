@@ -1,3 +1,12 @@
+/* socket_io_handler.cpp
+ * Evan Shimizu, June 2012
+ * websocket++ handler implementing the socket.io protocol.
+ * https://github.com/LearnBoost/socket.io-spec 
+ *
+ * This implementation uses the rapidjson library.
+ * See examples at https://github.com/kennytm/rapidjson.
+ */
+
 #include "socket_io_handler.hpp"
 
 using socketio::socketio_client_handler;
@@ -11,7 +20,7 @@ void socketio_client_handler::on_fail(connection_ptr con)
 void socketio_client_handler::on_open(connection_ptr con)
 {
    m_con = con;
-   // Reassign heartbeat timer to actual io_service being used.
+   // Create the heartbeat timer and use the same io_service as the main event loop.
    m_heartbeatTimer = std::unique_ptr<boost::asio::deadline_timer>(new boost::asio::deadline_timer(con->get_io_service(), boost::posix_time::seconds(0)));
    start_heartbeat();
 
@@ -28,8 +37,8 @@ void socketio_client_handler::on_close(connection_ptr con)
 
 void socketio_client_handler::on_message(connection_ptr con, message_ptr msg)
 {
-   // For now just drop message in log until parser is online
-   std::cout << msg->get_payload() << std::endl;
+   // Parse the incoming message according to socket.IO rules
+   parse_message(msg->get_payload());
 }
 
 // Client Functions
@@ -37,10 +46,9 @@ void socketio_client_handler::on_message(connection_ptr con, message_ptr msg)
 // from outside the io_service.run thread and need to be careful to not touch unsynchronized
 // member variables.
 
-// Performs a socket.IO handshake
-// https://github.com/LearnBoost/socket.io-spec
-std::string socketio_client_handler::perform_handshake(const std::string &url)
+std::string socketio_client_handler::perform_handshake(std::string url, std::string socketIoResource)
 {
+   // Log currently not accessible from this function, outputting to std::cout
    std::cout << "Parsing websocket uri..." << std::endl;
    websocketpp::uri uo(url);
 
@@ -59,7 +67,7 @@ std::string socketio_client_handler::perform_handshake(const std::string &url)
    boost::asio::streambuf request;
    std::ostream reqstream(&request);
 
-   reqstream << "POST /socket.io/1/ HTTP/1.0\r\n";
+   reqstream << "POST " << socketIoResource << "/1/ HTTP/1.0\r\n";
    reqstream << "Host: " << uo.get_host() << "\r\n";
    reqstream << "Accept: */*\r\n";
    reqstream << "Connection: close\r\n\r\n";
@@ -154,7 +162,8 @@ std::string socketio_client_handler::perform_handshake(const std::string &url)
 
    // Form the complete connection uri. Default transport method is websocket (since we are websocketpp).
    // If secure websocket connection is desired, replace ws with wss.
-   return "ws://" + uo.get_host() + "/socket.io/1/websocket/" + m_sid;
+   m_socketIoUri = "ws://" + uo.get_host() + socketIoResource + "/1/websocket/" + m_sid;
+   return m_socketIoUri;
 }
 
 void socketio_client_handler::send(const std::string &msg)
@@ -165,7 +174,58 @@ void socketio_client_handler::send(const std::string &msg)
       return;
    }
 
+   m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Sent: " << msg << websocketpp::log::endl;
    m_con->send(msg);
+}
+
+void socketio_client_handler::send(unsigned int type, std::string endpoint, std::string msg, unsigned int id)
+{
+   // Construct the message.
+   // Format: [type]:[id]:[endpoint]:[msg]
+   std::stringstream package;
+   package << type << ":";
+   if (id > 0) package << id;
+   package << ":" << endpoint << ":" << msg;
+
+   send(package.str());
+}
+
+void socketio_client_handler::emit(std::string name, Document& args, std::string endpoint, unsigned int id)
+{
+   // Add the name to the data being sent.
+   Value n;
+   n.SetString(name.c_str(), name.length(), args.GetAllocator());
+   args.AddMember("name", n, args.GetAllocator());
+
+   // Stringify json
+   char writeBuffer[JSON_BUFFER_SIZE];
+   memset(writeBuffer, 0, JSON_BUFFER_SIZE);
+	FileWriteStream os(stdout, writeBuffer, sizeof(writeBuffer));
+	Writer<FileWriteStream> writer(os);
+   args.Accept(writer);
+
+   // Extract the message from the stream and format it.
+   std::string package(writeBuffer);
+   send(5, endpoint, package.substr(0, package.find('\0')), id);
+}
+
+void socketio_client_handler::message(std::string msg, std::string endpoint, unsigned int id)
+{
+   send(3, endpoint, msg, id);
+}
+
+void socketio_client_handler::json_message(Document& json, std::string endpoint, unsigned int id)
+{
+   // Stringify json
+   char writeBuffer[JSON_BUFFER_SIZE];
+   memset(writeBuffer, 0, JSON_BUFFER_SIZE);
+	FileWriteStream os(stdout, writeBuffer, sizeof(writeBuffer));
+	Writer<FileWriteStream> writer(os);
+   json.Accept(writer);
+
+   // Extract the message from the stream and format it.
+   std::string package(writeBuffer);
+   send(4, endpoint, package.substr(0, package.find('\0')), id);
 }
 
 void socketio_client_handler::close()
@@ -176,6 +236,7 @@ void socketio_client_handler::close()
       return;
    }
 
+   send(3, "disconnect", "");
    m_con->close(websocketpp::close::status::GOING_AWAY, "");
 }
 
@@ -209,9 +270,11 @@ void socketio_client_handler::stop_heartbeat()
 
 void socketio_client_handler::send_heartbeat()
 {
-   m_con->send("2::");
-
-   std::cout << "Sent Heartbeat" << std::endl;
+   if (m_con)
+   {
+      m_con->send("2::");
+      std::cout << "Sent Heartbeat" << std::endl;
+   }
 }
 
 void socketio_client_handler::heartbeat()
@@ -224,6 +287,125 @@ void socketio_client_handler::heartbeat()
 
 void socketio_client_handler::parse_message(const std::string &msg)
 {
-   // Parse response here.
+   // Parse response according to socket.IO rules.
    // https://github.com/LearnBoost/socket.io-spec
+
+   boost::cmatch matches;
+   const boost::regex expression("([0-8]):([0-9]*):([^:]*)[:]?(.*)");
+
+   if(boost::regex_match(msg.c_str(), matches, expression))
+   {
+      int type;
+      int msgId;
+      Document json;
+
+      // Attempt to parse the first match as an int.
+      std::stringstream convert(matches[1]);
+      if (!(convert >> type)) type = -1;
+
+      // Store second param for parsing as message id. Not every type has this, so if it's missing we just use 0 as the ID.
+      std::stringstream convertId(matches[2]);
+      if (!(convertId >> msgId)) msgId = 0;
+
+      switch (type)
+      {
+      // Disconnect
+      case (0):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received message type 0 (Disconnect)" << websocketpp::log::endl;
+         close();
+         break;
+      // Connection Acknowledgement
+      case (1):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 1 (Connect): " << msg << websocketpp::log::endl;
+         break;
+      // Heartbeat
+      case (2):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 2 (Heartbeat)" << websocketpp::log::endl;
+         send_heartbeat();
+         break;
+      // Message
+      case (3):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 3 (Message): " << msg << websocketpp::log::endl;
+         on_socketio_message(msgId, matches[3], matches[4]);
+         break;
+      // JSON Message
+      case (4):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 4 (JSON Message): " << msg << websocketpp::log::endl;
+         // Parse JSON
+         if (json.Parse<0>(matches[4].str().c_str()).HasParseError())
+         {
+            m_con->elog()->at(websocketpp::log::elevel::WARN) << "JSON Parse Error: " << matches[4] << websocketpp::log::endl;
+            return;
+         }
+         on_socketio_json(msgId, matches[3], json);
+         break;
+      // Event
+      case (5):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 5 (Event): " << msg << websocketpp::log::endl;
+         // Parse JSON
+         if (json.Parse<0>(matches[4].str().c_str()).HasParseError())
+         {
+            m_con->elog()->at(websocketpp::log::elevel::WARN) << "JSON Parse Error: " << matches[4] << websocketpp::log::endl;
+            return;
+         }
+         if (!json["name"].IsString() || !json["args"].IsArray())
+         {
+            m_con->elog()->at(websocketpp::log::elevel::WARN) << "Invalid socket.IO Event" << websocketpp::log::endl;
+            return;
+         }
+         on_socketio_event(msgId, matches[3], json["name"].GetString(), json["args"]);
+         break;
+      // Ack
+      case (6):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 6 (ACK)" << websocketpp::log::endl;
+         on_socketio_ack(matches[4]);
+         break;
+      // Error
+      case (7):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 7 (Error): " << msg << websocketpp::log::endl;
+         on_socketio_error(matches[3], matches[4].str().substr(0, matches[4].str().find("+")), matches[4].str().substr(matches[4].str().find("+")+1));
+         break;
+      // Noop
+      case (8):
+         m_con->alog()->at(websocketpp::log::alevel::DEVEL) << "Received Message type 8 (Noop)" << websocketpp::log::endl;
+         break;
+      default:
+         std::cout << "Invalid Socket.IO message type: " << type << std::endl;
+         break;
+      }
+   }
+   else
+   {
+      std::cout << "Non-Socket.IO message: " << msg << std::endl;
+   }
+}
+
+// This is where you'd add in behavior to handle the message data for your own app.
+void socketio_client_handler::on_socketio_message(int msgId, std::string msgEndpoint, std::string data)
+{
+   std::cout << "Received message (" << msgId << ") " << data << std::endl;
+}
+
+// This is where you'd add in behavior to handle json messages.
+void socketio_client_handler::on_socketio_json(int msgId, std::string msgEndpoint, Document& json)
+{
+   std::cout << "Received JSON Data (" << msgId << ")" << std::endl;
+}
+
+// This is where you'd add in behavior to handle events
+void socketio_client_handler::on_socketio_event(int msgId, std::string msgEndpoint, std::string name, const Value& args)
+{
+   std::cout << "Received event (" << msgId << ") " << name << " args[0]: " << args[SizeType(0)].GetString() << std::endl;
+}
+
+// This is where you'd add in behavior to handle ack
+void socketio_client_handler::on_socketio_ack(std::string data)
+{
+   std::cout << "Received ACK: " << data << std::endl;
+}
+
+// This is where you'd add in behavior to handle errors
+void socketio_client_handler::on_socketio_error(std::string endpoint, std::string reason, std::string advice)
+{
+   std::cout << "Received Error: " << reason << " Advice: " << advice << std::endl;
 }
