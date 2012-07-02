@@ -38,11 +38,28 @@ using namespace rapidjson;
 
 namespace socketio {
 
+// Class for event callbacks.
+// Class is automatically created on handler init. For now, you must manually bind function names to
+// function pointers.
+// Class is broken out from the main handler class to allow for easier editing of functions
+// and modularity of code.
+class socketio_events
+{
+public:
+   void example(const Value& args);
+};
+
 class socketio_client_handler : public client::handler {
 public:
    socketio_client_handler() :
       m_heartbeatActive(false)
-   { }
+   {
+      // Instance of events class used for actually calling the events functions.
+      m_socketioEvents = std::unique_ptr<socketio_events>(new socketio_events());
+
+      // You can bind events inside or outside of the constructor.
+      bind_event("anevent", &socketio_events::example);
+   }
 
    virtual ~socketio_client_handler() {}
 
@@ -56,6 +73,10 @@ public:
    void on_message(connection_ptr con, message_ptr msg);
 
    // Client Functions - such as send, etc.
+
+   // Function pointer to a event handler.
+   // Args is an array, managed by rapidjson, and could be null
+   typedef void (socketio_events::*eventFunc)(const Value& args);
 
    // Performs a socket.IO handshake
    // https://github.com/LearnBoost/socket.io-spec
@@ -78,6 +99,14 @@ public:
 
    // Sends a JSON message (type 4)
    void json_message(Document& json, std::string endpoint = "", unsigned int id = 0);
+
+   // Binds a function to a name. Function will be passed a a Value ref as the only argument.
+   // If the function already exists, this function returns false. You must call unbind_event
+   // on the name of the function first to re-bind a name.
+   bool bind_event(std::string name, eventFunc func);
+
+   // Removes the binding between event [name] and the function associated with it.
+   bool unbind_event(std::string name);
 
    // Closes the connection
    void close();
@@ -118,6 +147,10 @@ private:
    // Heartbeat variabes.
    std::unique_ptr<boost::asio::deadline_timer> m_heartbeatTimer;
    bool m_heartbeatActive;
+
+   // Event bindings
+   std::map<std::string, eventFunc> m_events;
+   std::unique_ptr<socketio_events> m_socketioEvents;
 };
 
 typedef boost::shared_ptr<socketio_client_handler> socketio_client_handler_ptr;

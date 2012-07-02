@@ -10,7 +10,20 @@
 #include "socket_io_handler.hpp"
 
 using socketio::socketio_client_handler;
+using socketio::socketio_events;
 using websocketpp::client;
+
+// Event handlers
+
+void socketio_events::example(const Value& args)
+{
+   // Event handlers are responsible for knowing what's in args.
+   // This function expects a string as the first argument, and doesn't care about the rest.
+   std::cout << "Hello! You've just successfully tested this event. Args[0]: " << args[SizeType(0)].GetString() << std::endl;
+}
+
+
+// Websocket++ client handler
 
 void socketio_client_handler::on_fail(connection_ptr con)
 {
@@ -230,6 +243,29 @@ void socketio_client_handler::json_message(Document& json, std::string endpoint,
    send(4, endpoint, package.substr(0, package.find('\0')), id);
 }
 
+bool socketio_client_handler::bind_event(std::string name, eventFunc func)
+{
+   // If the name is already in use, don't replace it.
+   if (m_events.count(name) == 0)
+   {
+      m_events[name] = func;
+      return true;
+   }
+
+   return false;
+}
+
+bool socketio_client_handler::unbind_event(std::string name)
+{
+   // Delete from map if the key exists.
+   if (m_events.count(name) > 0)
+   {
+      m_events.erase(m_events.find(name));
+      return true;
+   }
+   return false;
+}
+
 void socketio_client_handler::close()
 {
    if (!m_con)
@@ -394,11 +430,18 @@ void socketio_client_handler::on_socketio_json(int msgId, std::string msgEndpoin
    std::cout << "Received JSON Data (" << msgId << ")" << std::endl;
 }
 
-// This is where you'd add in behavior to handle events
+// This is where you'd add in behavior to handle events.
+// By default, nothing is done with the endpoint or ID params.
 void socketio_client_handler::on_socketio_event(int msgId, std::string msgEndpoint, std::string name, const Value& args)
 {
-   // Args is an array, managed by rapidjson, and could be null
    std::cout << "Received event (" << msgId << ") " << std::endl;
+
+   if (m_events.count(name) > 0)
+   {
+      eventFunc func = m_events[name];
+      ((*m_socketioEvents).*(func))(args);
+   }
+   else std::cout << "No bound event with name: " << name << std::endl;
 }
 
 // This is where you'd add in behavior to handle ack
