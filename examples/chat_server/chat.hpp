@@ -59,6 +59,9 @@ public:
     void on_close(connection_ptr con);
     
     void on_message(connection_ptr con, message_ptr msg);
+
+	// handle regular http request(non-websocket)
+	void http(connection_ptr con);
 private:
     std::string serialize_state();
     std::string encode_message(std::string sender,std::string msg,bool escape = true);

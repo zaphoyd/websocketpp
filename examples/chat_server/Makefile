@@ -1,4 +1,4 @@
-BOOST_LIBS=boost_system boost_date_time boost_program_options boost_thread boost_regex
+BOOST_LIBS=boost_system boost_date_time boost_program_options boost_thread boost_regex boost_filesystem
 
 include ../common.mk
 

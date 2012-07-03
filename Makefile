@@ -34,7 +34,7 @@ BOOST_PREFIX ?= /usr/local
 BOOST_LIB_PATH		?= $(BOOST_PREFIX)/lib
 BOOST_INCLUDE_PATH  ?= $(BOOST_PREFIX)/include
 
-libs = -L$(BOOST_LIB_PATH) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options -lboost_thread
+libs = -L$(BOOST_LIB_PATH) -lboost_system -lboost_date_time -lboost_regex -lboost_random -lboost_program_options -lboost_thread-mt
 
 //libs_static = $(BOOST_PATH)/boost_system.a $(BOOST_PATH)/boost_regex.a
 
