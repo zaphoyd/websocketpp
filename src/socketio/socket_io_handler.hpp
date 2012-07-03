@@ -39,8 +39,7 @@ using namespace rapidjson;
 namespace socketio {
 
 // Class for event callbacks.
-// Class is automatically created on handler init. For now, you must manually bind function names to
-// function pointers.
+// Class is automatically created  on the stack to handle calling the function when an event callback is triggered.
 // Class is broken out from the main handler class to allow for easier editing of functions
 // and modularity of code.
 class socketio_events
@@ -54,9 +53,6 @@ public:
    socketio_client_handler() :
       m_heartbeatActive(false)
    {
-      // Instance of events class used for actually calling the events functions.
-      m_socketioEvents = std::unique_ptr<socketio_events>(new socketio_events());
-
       // You can bind events inside or outside of the constructor.
       bind_event("anevent", &socketio_events::example);
    }
@@ -76,7 +72,7 @@ public:
 
    // Function pointer to a event handler.
    // Args is an array, managed by rapidjson, and could be null
-   typedef void (socketio_events::*eventFunc)(const Value& args);
+   typedef std::function<void (socketio_events&, const Value&)> eventFunc;
 
    // Performs a socket.IO handshake
    // https://github.com/LearnBoost/socket.io-spec
@@ -150,7 +146,6 @@ private:
 
    // Event bindings
    std::map<std::string, eventFunc> m_events;
-   std::unique_ptr<socketio_events> m_socketioEvents;
 };
 
 typedef boost::shared_ptr<socketio_client_handler> socketio_client_handler_ptr;

@@ -438,8 +438,8 @@ void socketio_client_handler::on_socketio_event(int msgId, std::string msgEndpoi
 
    if (m_events.count(name) > 0)
    {
-      eventFunc func = m_events[name];
-      ((*m_socketioEvents).*(func))(args);
+      socketio_events events;
+      m_events[name](events, args);
    }
    else std::cout << "No bound event with name: " << name << std::endl;
 }
