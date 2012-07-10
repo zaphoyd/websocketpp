@@ -199,7 +199,9 @@ public:
                 if (m_data_message) {
                     size_t num;
                     
-                    num = static_cast<size_t>(input.readsome(m_payload_buffer, PAYLOAD_BUFFER_SIZE));
+                    input.get(m_payload_buffer, PAYLOAD_BUFFER_SIZE, 0xFF);
+                    
+                    num = static_cast<size_t>(input.gcount());
                     
                     if (input.bad()) {
                         throw processor::exception("istream readsome error",
