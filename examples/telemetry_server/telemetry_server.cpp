@@ -66,7 +66,7 @@ public:
     typedef boost::shared_ptr<type> ptr;
     
     telemetry_server_handler() : m_done(false),m_value(0) {
-        boost::function<void(const std::string&)> callback = boost::bind(&type::on_tick,this,_1);
+        boost::function<bool(const std::string&)> callback = boost::bind(&type::on_tick,this,_1);
         
         // start a thread that will generate telemetry independently and call
         // this handler back when it has new data to send.
