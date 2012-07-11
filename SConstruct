@@ -10,6 +10,8 @@
 import os, sys
 env = Environment(ENV = os.environ)
 
+#env["CXX"] = "clang++"
+
 ## Boost
 ##
 ## Note: You need to either set BOOSTROOT to the root of a stock Boost distribution
@@ -133,4 +135,8 @@ chat_server = SConscript('#/examples/chat_server/SConscript',
 
 concurrent_server = SConscript('#/examples/concurrent_server/SConscript',
                          variant_dir = builddir + 'concurrent_server',
+                         duplicate = 0)
+
+telemetry_server = SConscript('#/examples/telemetry_server/SConscript',
+                         variant_dir = builddir + 'telemetry_server',
                          duplicate = 0)

@@ -375,6 +375,9 @@
 		B6E56D821508EACA007E1707 /* SConstruct */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConstruct; sourceTree = "<group>"; };
 		B6E56D84150B887A007E1707 /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; name = SConscript; path = examples/wsperf/SConscript; sourceTree = "<group>"; };
 		B6E56D85150B9021007E1707 /* wsperf.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; name = wsperf.cfg; path = examples/wsperf/wsperf.cfg; sourceTree = "<group>"; };
+		B6E608C815AD9E700050A1CC /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B6E608C915AD9E700050A1CC /* SConscript */ = {isa = PBXFileReference; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
+		B6E608CA15AD9E700050A1CC /* telemetry_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = telemetry_server.cpp; sourceTree = "<group>"; };
 		B6E7E7731505532E00394909 /* wsperf */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = wsperf; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6E7E78A150553D000394909 /* libboost_chrono.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_chrono.dylib; path = usr/local/lib/libboost_chrono.dylib; sourceTree = SDKROOT; };
 		B6FE8CE2144DE17F00B32547 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
@@ -836,6 +839,7 @@
 				B6DF1CC81435ED440029A1B1 /* chat_client */,
 				B6DF1CC71435ED420029A1B1 /* echo_server */,
 				B66388431487D70000DDAE13 /* echo_server_tls */,
+				B6E608C715AD9E700050A1CC /* telemetry_server */,
 			);
 			name = examples;
 			sourceTree = "<group>";
@@ -897,6 +901,17 @@
 				B6E56D6F150457B8007E1707 /* wscmd.hpp */,
 			);
 			name = wsperf;
+			sourceTree = "<group>";
+		};
+		B6E608C715AD9E700050A1CC /* telemetry_server */ = {
+			isa = PBXGroup;
+			children = (
+				B6E608C815AD9E700050A1CC /* Makefile */,
+				B6E608C915AD9E700050A1CC /* SConscript */,
+				B6E608CA15AD9E700050A1CC /* telemetry_server.cpp */,
+			);
+			name = telemetry_server;
+			path = examples/telemetry_server;
 			sourceTree = "<group>";
 		};
 		B6FE8CE4144DE18900B32547 /* documentation */ = {
