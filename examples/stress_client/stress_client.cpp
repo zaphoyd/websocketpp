@@ -138,8 +138,8 @@ private:
         m_msg_stats.clear();
     }
     
-    int m_connections_max;
-    int m_connections_cur;
+    unsigned int m_connections_max;
+    unsigned int m_connections_cur;
     std::map<std::string,size_t>                    m_msg_stats;
     boost::shared_ptr<boost::asio::deadline_timer>  m_timer;
 };
@@ -150,14 +150,16 @@ int main(int argc, char* argv[]) {
     int num_connections = 100;
     int batch_size = 25;
     int delay_ms = 16;
-    
-    if (argc != 5) {
-        std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
-    } else {
-        uri = argv[1];
-        num_connections = atoi(argv[2]);
-        batch_size = atoi(argv[3]);
-        delay_ms = atoi(argv[4]);
+
+    if (argc > 1) {
+        if (argc != 5) {
+            std::cout << "Usage: `echo_client test_url num_connections batch_size delay_ms`" << std::endl;
+        } else {
+            uri = argv[1];
+            num_connections = atoi(argv[2]);
+            batch_size = atoi(argv[3]);
+            delay_ms = atoi(argv[4]);
+        }
     }
         
     // 12288 is max OS X limit without changing kernal settings
@@ -209,7 +211,7 @@ int main(int argc, char* argv[]) {
         
         connections.insert(endpoint.connect(uri));
         
-        boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint));
+        boost::thread t(boost::bind(&plain_endpoint_type::run, &endpoint, false));
         
         std::cout << "launching " << num_connections << " connections to " << uri << " in batches of " << batch_size << std::endl;
         
