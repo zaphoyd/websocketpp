@@ -237,7 +237,7 @@ public:
         boost::lock_guard<boost::recursive_mutex> lock(m_lock);
         
         if (!new_handler) {
-            elog()->at(log::elevel::FATAL) 
+            elog().at(log::elevel::FATAL) 
                 << "Tried to switch to a NULL handler." << log::endl;
             throw websocketpp::exception("TODO: handlers can't be null");
         }
