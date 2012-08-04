@@ -199,7 +199,7 @@ public:
                 if (m_data_message) {
                     size_t num;
                     
-                    input.get(m_payload_buffer, PAYLOAD_BUFFER_SIZE, 0xFF);
+                    input.get(m_payload_buffer, PAYLOAD_BUFFER_SIZE, '\xFF');
                     
                     num = static_cast<size_t>(input.gcount());
                     
