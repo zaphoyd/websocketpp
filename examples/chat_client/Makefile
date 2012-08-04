@@ -2,6 +2,8 @@ BOOST_LIBS=boost_system boost_thread boost_regex boost_random
 
 include ../common.mk
 
+LDFLAGS := $(LDFLAGS) -lpthread
+
 chat_client: chat_client.o chat_client_handler.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
