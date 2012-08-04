@@ -572,9 +572,6 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             
             m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
         } else {
-            // continue as HTTP?
-            m_endpoint.get_handler()->http(m_connection.shared_from_this());
-            
             // should there be a more encapsulated http processor here?
             m_origin = m_request.header("Origin");
             
@@ -596,6 +593,9 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
                                     h.substr(last_colon+1),
                                     m_request.uri()));
             }
+            
+            // continue as HTTP?
+            m_endpoint.get_handler()->http(m_connection.shared_from_this());
             
             m_response.set_status(http::status_code::OK);
         }
