@@ -72,6 +72,7 @@ public:
 
    // Function pointer to a event handler.
    // Args is an array, managed by rapidjson, and could be null
+   // Can change to whatever signature you want, just make sure to change the call in on_socketio_event too.
    typedef std::function<void (socketio_events&, const Value&)> eventFunc;
 
    // Performs a socket.IO handshake

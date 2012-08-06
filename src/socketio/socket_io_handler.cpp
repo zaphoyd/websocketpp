@@ -27,6 +27,9 @@ void socketio_events::example(const Value& args)
 
 void socketio_client_handler::on_fail(connection_ptr con)
 {
+   m_con = connection_ptr();
+   stop_heartbeat();
+
    std::cout << "Connection failed." << std::endl;
 }
 
@@ -148,7 +151,7 @@ std::string socketio_client_handler::perform_handshake(std::string url, std::str
 
    std::getline(resp_stream, body, '\0');
    boost::cmatch matches;
-   const boost::regex expression("([0-9|a-f]*):([0-9]*):([0-9]*):(.*)");
+   const boost::regex expression("([0-9a-zA-Z_-]*):([0-9]*):([0-9]*):(.*)");
 
    if (boost::regex_match(body.c_str(), matches, expression))
    {
