@@ -187,6 +187,8 @@ public:
     // handler interface callback class
     class handler_interface {
     public:
+    	virtual ~handler_interface() {}
+    	
         // Required
         virtual void on_open(connection_ptr con) {}
         virtual void on_close(connection_ptr con) {}

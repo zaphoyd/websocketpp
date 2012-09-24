@@ -174,6 +174,8 @@ public:
     // handler interface callback base class
     class handler_interface {
     public:
+        virtual ~handler_interface() {}
+        
         virtual void on_handshake_init(connection_ptr con) {}
         
         virtual void validate(connection_ptr con) {}

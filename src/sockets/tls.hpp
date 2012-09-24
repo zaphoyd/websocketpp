@@ -69,6 +69,8 @@ public:
     // to set up their asio TLS context.
     class handler_interface {
     public:
+    	virtual ~handler_interface() {}
+    	
         virtual void on_tcp_init() {};
         virtual boost::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
     };

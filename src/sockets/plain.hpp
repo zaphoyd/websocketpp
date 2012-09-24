@@ -52,6 +52,8 @@ public:
     // hooks that this policy adds to handlers of connections that use it
     class handler_interface {
     public:
+    	virtual ~handler_interface() {}
+    	
         virtual void on_tcp_init() {};
     };
     
