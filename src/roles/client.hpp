@@ -207,8 +207,8 @@ public:
        m_io_service(m),
        m_gen(m_rng,
              boost::random::uniform_int_distribution<>(
-                std::numeric_limits<int32_t>::min(),
-                std::numeric_limits<int32_t>::max()
+                (std::numeric_limits<int32_t>::min)(),
+                (std::numeric_limits<int32_t>::max)()
              )) {}
     
     connection_ptr get_connection(const std::string& u);
