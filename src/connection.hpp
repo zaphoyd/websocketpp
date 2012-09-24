@@ -617,13 +617,21 @@ public:
             return;
         }
         
-        m_endpoint.endpoint_base::m_io_service.post(
+        // io_service::strand ordering guarantees are not sufficient here to 
+        // make sure that this code is run before any messages are processed.
+        handler_ptr old_handler = m_handler;
+        
+        old_handler->on_unload(type::shared_from_this(),new_handler);
+        m_handler = new_handler;
+        new_handler->on_load(type::shared_from_this(),old_handler);
+        
+        /*m_endpoint.endpoint_base::m_io_service.post(
             m_strand.wrap(boost::bind(
                 &type::set_handler_internal,
                 type::shared_from_this(),
                 new_handler
             ))
-        );
+        );*/
     }
     
     /// Set connection read threshold
