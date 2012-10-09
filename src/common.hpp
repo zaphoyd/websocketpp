@@ -31,8 +31,7 @@
 #ifndef __STDC_LIMIT_MACROS
   #define __STDC_LIMIT_MACROS
 #endif
-//#include <stdint.h>
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 
 // SIZE_MAX appears to be a compiler thing not an OS header thing.
 // make sure it is defined.

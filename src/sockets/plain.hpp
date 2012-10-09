@@ -35,6 +35,12 @@
 
 #include <iostream>
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+#   pragma warning(push)
+#   pragma warning(disable:4355)
+#endif
+
 namespace websocketpp {
 namespace socket {
 
@@ -115,5 +121,9 @@ private:
     
 } // namespace socket
 } // namespace websocketpp
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 #endif // WEBSOCKETPP_SOCKET_PLAIN_HPP
