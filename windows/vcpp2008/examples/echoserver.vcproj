@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\common.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\boost_1_47_0;.."
+				AdditionalIncludeDirectories=".."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +64,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\..\boost_1_47_0\stage\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -95,6 +95,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\common.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -117,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\boost_1_47_0;.."
+				AdditionalIncludeDirectories=".."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -139,7 +140,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\boost_1_47_0\stage\lib"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -178,21 +178,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\examples\echo_server\echo.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\examples\echo_server\echo_server.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath="..\..\..\examples\echo_server\echo.hpp"
 				>
 			</File>
 		</Filter>

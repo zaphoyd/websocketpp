@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets=".\common.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\boost_1_47_0;."
+				AdditionalIncludeDirectories="."
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -84,6 +85,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets=".\common.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -107,7 +109,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\..\..\boost_1_47_0;."
+				AdditionalIncludeDirectories="."
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;WIN32_LEAN_AND_MEAN;NOCOMM;_WIN32_WINNT=0x0600"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -159,27 +161,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\websocket_client.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_client_session.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_frame.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_server.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_server_session.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_session.cpp"
+				RelativePath="..\..\src\uri.cpp"
 				>
 			</File>
 			<Filter
@@ -198,6 +180,46 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="md5"
+				>
+				<File
+					RelativePath="..\..\src\md5\md5.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="messages"
+				>
+				<File
+					RelativePath="..\..\src\messages\data.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="processors"
+				>
+				<File
+					RelativePath="..\..\src\processors\hybi_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\processors\hybi_util.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="rng"
+				>
+				<File
+					RelativePath="..\..\src\rng\blank_rng.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\rng\boost_rng.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -205,35 +227,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\src\common.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\connection.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\endpoint.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\network_utilities.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\websocket_client.hpp"
+				RelativePath="..\..\src\shared_const_buffer.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\websocket_client_session.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_connection_handler.hpp"
+				RelativePath="..\..\src\uri.hpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\websocket_frame.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_server.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_server_session.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\websocket_session.hpp"
 				>
 			</File>
 			<File
@@ -249,7 +267,7 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="sha"
+				Name="sha1"
 				>
 				<File
 					RelativePath="..\..\src\sha1\sha1.h"
@@ -261,6 +279,114 @@
 				>
 				<File
 					RelativePath="..\..\src\utf8_validator\utf8_validator.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="processors"
+				>
+				<File
+					RelativePath="..\..\src\processors\hybi.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\processors\hybi_header.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\processors\hybi_legacy.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\processors\hybi_util.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\processors\processor.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="http"
+				>
+				<File
+					RelativePath="..\..\src\http\constants.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\http\parser.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="logger"
+				>
+				<File
+					RelativePath="..\..\src\logger\logger.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="md5"
+				>
+				<File
+					RelativePath="..\..\src\md5\md5.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\md5\md5.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="messages"
+				>
+				<File
+					RelativePath="..\..\src\messages\control.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\messages\data.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="rng"
+				>
+				<File
+					RelativePath="..\..\src\rng\blank_rng.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\rng\boost_rng.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="roles"
+				>
+				<File
+					RelativePath="..\..\src\roles\client.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\roles\server.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="sockets"
+				>
+				<File
+					RelativePath="..\..\src\sockets\plain.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\sockets\socket_base.hpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\sockets\tls.hpp"
 					>
 				</File>
 			</Filter>
