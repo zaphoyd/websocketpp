@@ -201,17 +201,17 @@ public:
        m_state(IDLE),
        m_timer(m,boost::posix_time::seconds(0)) {}
     
-    void listen(uint16_t port, size_t n = 1);
+    void listen(uint16_t port, size_t num_threads = 1);
     void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1);
     // uses internal resolver
-    void listen(const std::string &host, const std::string &service, size_t n = 1);
+    void listen(const std::string &host, const std::string &service, size_t num_threads = 1);
     
     template <typename InternetProtocol> 
-    void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t n = 1) {
+    void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
         m_endpoint.m_alog->at(log::alevel::DEVEL) 
             << "role::server listening on port " << port << log::endl;
         boost::asio::ip::tcp::endpoint e(internet_protocol, port);
-        listen(e,n);
+        listen(e,num_threads);
     }
 protected:
     bool is_server() {
@@ -285,12 +285,12 @@ void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e,size_t num
 // server<endpoint> Implimentation
 // TODO: provide a way to stop/reset the server endpoint
 template <class endpoint>
-void server<endpoint>::listen(uint16_t port, size_t n) {
-    listen(boost::asio::ip::tcp::v6(), port, n);
+void server<endpoint>::listen(uint16_t port, size_t num_threads) {
+    listen(boost::asio::ip::tcp::v6(), port, num_threads);
 }
 
 template <class endpoint>
-void server<endpoint>::listen(const std::string &host, const std::string &service, size_t n) {
+void server<endpoint>::listen(const std::string &host, const std::string &service, size_t num_threads) {
     boost::asio::ip::tcp::resolver resolver(m_io_service);
     boost::asio::ip::tcp::resolver::query query(host, service);
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
@@ -299,7 +299,7 @@ void server<endpoint>::listen(const std::string &host, const std::string &servic
         throw std::invalid_argument("Can't resolve host/service to listen");
     }
     const boost::asio::ip::tcp::endpoint &ep = *endpoint_iterator;
-    listen(ep,n);
+    listen(ep,num_threads);
 }
 
 template <class endpoint>
