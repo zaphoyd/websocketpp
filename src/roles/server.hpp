@@ -201,18 +201,40 @@ public:
        m_state(IDLE),
        m_timer(m,boost::posix_time::seconds(0)) {}
     
-    void listen(uint16_t port, size_t num_threads = 1);
-    void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1);
+    void start_listen(uint16_t port, size_t num_threads = 1);
+    void start_listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1);
     // uses internal resolver
-    void listen(const std::string &host, const std::string &service, size_t num_threads = 1);
+    void start_listen(const std::string &host, const std::string &service, size_t num_threads = 1);
     
     template <typename InternetProtocol> 
-    void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
+    void start_listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
         m_endpoint.m_alog->at(log::alevel::DEVEL) 
             << "role::server listening on port " << port << log::endl;
         boost::asio::ip::tcp::endpoint e(internet_protocol, port);
-        listen(e,num_threads);
+        start_listen(e,num_threads);
     }
+
+    void stop_listen(bool join);
+
+    // legacy interface
+    void listen(uint16_t port, size_t num_threads = 1) {
+      start_listen(port,num_threads>1 ? num_threads : 0);
+      if(num_threads > 1) stop_listen(true);
+    }
+    void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1) {
+      start_listen(e,num_threads>1 ? num_threads : 0);
+      if(num_threads > 1) stop_listen(true);
+    }
+    void listen(const std::string &host, const std::string &service, size_t num_threads = 1) {
+      start_listen(host,service,num_threads>1 ? num_threads : 0);
+      if(num_threads > 1) stop_listen(true);
+    }
+    template <typename InternetProtocol> 
+    void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
+      start_listen(internet_protocol,port,num_threads>1 ? num_threads : 0);
+      if(num_threads > 1) stop_listen(true);
+    }
+
 protected:
     bool is_server() {
         return true;
@@ -240,10 +262,12 @@ private:
     state                           m_state;
     
     boost::asio::deadline_timer     m_timer;
+
+    std::vector< boost::shared_ptr<boost::thread> > m_listening_threads;
 };
 
 template <class endpoint>
-void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e,size_t num_threads) {
+void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size_t num_threads) {
     {
         boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
         
@@ -259,38 +283,55 @@ void server<endpoint>::listen(const boost::asio::ip::tcp::endpoint& e,size_t num
         this->start_accept();
     }
     
-    if (num_threads == 1) {
-        m_endpoint.run_internal();
-    } else if (num_threads > 1 && num_threads <= MAX_THREAD_POOL_SIZE) {
-        std::vector< boost::shared_ptr<boost::thread> > threads;
-        
-        for (std::size_t i = 0; i < num_threads; ++i) {
-            boost::shared_ptr<boost::thread> thread(
-                new boost::thread(boost::bind(
-                        &endpoint_type::run_internal,
-                        &m_endpoint
-                ))
-            );
-            threads.push_back(thread);
-        }
-        
-        for (std::size_t i = 0; i < threads.size(); ++i) {
-            threads[i]->join();
-        }
-    } else {
+    if (num_threads < 0 || num_threads > MAX_THREAD_POOL_SIZE) {       
         throw exception("listen called with invalid num_threads value");
+    }
+
+    m_state = LISTENING;
+
+    for (std::size_t i = 0; i < num_threads; ++i) {
+        boost::shared_ptr<boost::thread> thread(
+            new boost::thread(boost::bind(
+                    &endpoint_type::run_internal,
+                    &m_endpoint
+            ))
+        );
+        m_listening_threads.push_back(thread);
+    }
+
+    if(num_threads == 0)
+    {
+        m_endpoint.run_internal();
+        m_state = IDLE;
     }
 }
 
-// server<endpoint> Implimentation
-// TODO: provide a way to stop/reset the server endpoint
 template <class endpoint>
-void server<endpoint>::listen(uint16_t port, size_t num_threads) {
-    listen(boost::asio::ip::tcp::v6(), port, num_threads);
+void server<endpoint>::stop_listen(bool join) {
+    if (m_state != LISTENING) {
+        throw exception("stop_listen called from invalid state");
+    }
+
+    m_state = STOPPING;
+
+    if(join) {
+        for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+            m_listening_threads[i]->join();
+        }
+    }
+
+    m_listening_threads.clear();
+
+    m_state = IDLE;
 }
 
 template <class endpoint>
-void server<endpoint>::listen(const std::string &host, const std::string &service, size_t num_threads) {
+void server<endpoint>::start_listen(uint16_t port, size_t num_threads) {
+    start_listen(boost::asio::ip::tcp::v6(), port, num_threads);
+}
+
+template <class endpoint>
+void server<endpoint>::start_listen(const std::string &host, const std::string &service, size_t num_threads) {
     boost::asio::ip::tcp::resolver resolver(m_io_service);
     boost::asio::ip::tcp::resolver::query query(host, service);
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
@@ -299,7 +340,7 @@ void server<endpoint>::listen(const std::string &host, const std::string &servic
         throw std::invalid_argument("Can't resolve host/service to listen");
     }
     const boost::asio::ip::tcp::endpoint &ep = *endpoint_iterator;
-    listen(ep,num_threads);
+    start_listen(ep,num_threads);
 }
 
 template <class endpoint>
