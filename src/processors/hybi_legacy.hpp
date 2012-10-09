@@ -79,9 +79,7 @@ public:
         // TODO: decide if it is best to silently fail here or produce some sort
         //       of warning or exception.
         const std::string& key3 = request.header("Sec-WebSocket-Key3");
-        std::copy(key3.c_str(),
-                  key3.c_str()+std::min(static_cast<size_t>(8), key3.size()),
-                  &key_final[8]);
+        memcpy(&key_final[8],key3.c_str(),std::min(static_cast<size_t>(8), key3.size()));
         
         m_key3 = md5_hash_string(std::string(key_final,16));
         
@@ -331,11 +329,9 @@ private:
         num = atoi(digits.c_str());
         if (spaces > 0 && num > 0) {
             num = htonl(num/spaces);
-            std::copy(reinterpret_cast<char*>(&num),
-                      reinterpret_cast<char*>(&num)+4,
-                      result);
+            memcpy(result,&num,4);
         } else {
-            std::fill(result,result+4,0);
+            memset(result,0,4);
         }
     }
     
