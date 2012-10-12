@@ -126,6 +126,14 @@ void hybi_header::set_payload_size(uint64_t size) {
         }
         m_payload_size = size;
         *(reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])) = htons(static_cast<uint16_t>(size));
+        
+       /* uint16_t net_size = htons(static_cast<uint16_t>(size));
+		//memcpy(&m_header[BASIC_HEADER_LENGTH], &net_size, sizeof(uint16_t));
+		std::copy(
+			reinterpret_cast<char*>(&net_size),
+			reinterpret_cast<char*>(&net_size)+sizeof(uint16_t),
+			&m_header[BASIC_HEADER_LENGTH]
+		);*/
     } else if (size <= frame::limits::PAYLOAD_SIZE_JUMBO) {
         if (get_masked()) {
             // shift mask bytes to the correct position given the new size
