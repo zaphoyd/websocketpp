@@ -37,7 +37,7 @@ void request::process(unsigned int id) {
     case_handler_ptr test;
     stress_handler_ptr shandler;
     std::string uri;
-    size_t connections_opened = 0;
+    //size_t connections_opened = 0;
     size_t connection_count;
     
     wscmd::cmd command = wscmd::parse(req);
