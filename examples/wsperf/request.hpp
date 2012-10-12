@@ -50,6 +50,8 @@ enum request_type {
 
 class writer {
 public:
+	virtual ~writer() {}
+	
     virtual void write(std::string msg) = 0;
 };
 
