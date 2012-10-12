@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="chatserver"
-	ProjectGUID="{2AFECE48-86DE-47D0-9263-DC0D203AA62D}"
-	RootNamespace="chatserver"
+	Name="concurrent_server"
+	ProjectGUID="{F633A1F7-8FE5-408B-924F-4A3CAEF172C1}"
+	RootNamespace="examples"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -47,6 +47,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="0"
+				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -63,6 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
+				IgnoreDefaultLibraryNames="LIBCMT.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -177,21 +179,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\examples\chat_server\chat.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\examples\chat_server\chat_server.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath="..\..\..\examples\chat_server\chat.hpp"
+				RelativePath="..\..\..\examples\concurrent_server\concurrent_server.cpp"
 				>
 			</File>
 		</Filter>

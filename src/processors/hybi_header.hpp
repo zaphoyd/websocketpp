@@ -136,7 +136,7 @@ private:
     static const uint8_t STATE_WRITE = 4;
     
     uint8_t     m_state;
-    uint64_t    m_bytes_needed;
+    std::streamsize m_bytes_needed;
     uint64_t    m_payload_size;
     char m_header[MAX_HEADER_LENGTH];
 };
