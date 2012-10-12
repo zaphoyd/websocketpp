@@ -61,9 +61,13 @@ if env['PLATFORM'].startswith('win'):
 elif env['PLATFORM'] == 'posix':
    env.Append(CPPDEFINES = ['NDEBUG'])
    env.Append(CCFLAGS = ['-Wall', '-fno-strict-aliasing'])
-   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer', '-march=core2'])
+   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    #env['LINKFLAGS'] = ''
-
+elif env['PLATFORM'] == 'darwin':
+   env.Append(CPPDEFINES = ['NDEBUG'])
+   env.Append(CCFLAGS = ['-Wall', '-Wcast-align'])
+   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+   #env['LINKFLAGS'] = ''
 
 if env['PLATFORM'].startswith('win'):
    env['LIBPATH'] = env['BOOST_LIBS']
