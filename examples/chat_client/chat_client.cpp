@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
         
     try {
         chat_client_handler_ptr handler(new chat_client_handler());
-        client::connection_ptr con;
         client endpoint(handler);
+        client::connection_ptr con;
         
         endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
