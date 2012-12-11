@@ -283,7 +283,7 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
         this->start_accept();
     }
     
-    if (num_threads < 0 || num_threads > MAX_THREAD_POOL_SIZE) {       
+    if (num_threads > MAX_THREAD_POOL_SIZE) {       
         throw exception("listen called with invalid num_threads value");
     }
 
