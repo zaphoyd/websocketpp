@@ -308,10 +308,16 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
 
 template <class endpoint>
 void server<endpoint>::stop_listen(bool join) {
-    if (m_state != LISTENING) {
-        throw exception("stop_listen called from invalid state");
-    }
-
+    {
+    	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
+    	
+		if (m_state != LISTENING) {
+			throw exception("stop_listen called from invalid state");
+		}
+		
+		m_acceptor.close();
+	}
+    
     m_state = STOPPING;
 
     if(join) {
