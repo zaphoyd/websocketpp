@@ -614,6 +614,21 @@ void server<endpoint>::connection<connection_type>::handle_read_request(
             }
             
             m_connection.m_processor->validate_handshake(m_request);
+            
+            // Extract subprotocols
+            std::string subprotocols = m_request.header("Sec-WebSocket-Protocol");
+            if(subprotocols.length() > 0) {
+                boost::char_separator<char> sep(",");
+                boost::tokenizer< boost::char_separator<char> > tokens(subprotocols, sep);
+                for(boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin(); it != tokens.end(); ++it){
+                    std::string proto = *it;
+                    boost::trim(proto);
+                    if (proto.length() > 0){
+                        m_requested_subprotocols.push_back(proto);
+                    }
+                }
+            }
+            
             m_origin = m_connection.m_processor->get_origin(m_request);
             m_uri = m_connection.m_processor->get_uri(m_request);
             
