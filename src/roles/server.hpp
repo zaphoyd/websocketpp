@@ -309,14 +309,14 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
 template <class endpoint>
 void server<endpoint>::stop_listen(bool join) {
     {
-    	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
-    	
-		if (m_state != LISTENING) {
-			throw exception("stop_listen called from invalid state");
-		}
-		
-		m_acceptor.close();
-	}
+        boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
+        
+        if (m_state != LISTENING) {
+            throw exception("stop_listen called from invalid state");
+        }
+        
+        m_acceptor.close();
+    }
     
     m_state = STOPPING;
 
@@ -353,6 +353,13 @@ template <class endpoint>
 void server<endpoint>::start_accept() {
     boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.m_lock);
     
+    if (!m_acceptor.is_open()) {
+        m_endpoint.m_alog->at(log::alevel::ENDPOINT) 
+            << "Accept loop is stopping because acceptor was closed." 
+            << log::endl;
+        return;
+    }
+    
     connection_ptr con = m_endpoint.create_connection();
     
     if (con == connection_ptr()) {
@@ -362,7 +369,7 @@ void server<endpoint>::start_accept() {
             << log::endl;
         return;
     }
-        
+    
     m_acceptor.async_accept(
         con->get_raw_socket(),
         boost::bind(
