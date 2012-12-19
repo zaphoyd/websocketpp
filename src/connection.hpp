@@ -50,7 +50,7 @@
 #include <set>
 
 #ifdef min
-	#undef min
+    #undef min
 #endif // #ifdef min
 
 namespace websocketpp {
@@ -275,10 +275,10 @@ public:
         // Using strand post here rather than ioservice.post(strand.wrap)
         // to ensure that messages are sent in order
         m_strand.post(boost::bind(
-			&type::write_message,
-			type::shared_from_this(),
-			control
-		));
+            &type::write_message,
+            type::shared_from_this(),
+            control
+        ));
     }
     
     /// Send Pong
@@ -309,10 +309,10 @@ public:
         // Using strand post here rather than ioservice.post(strand.wrap)
         // to ensure that messages are sent in order
         m_strand.post(boost::bind(
-			&type::write_message,
-			type::shared_from_this(),
-			control
-		));
+            &type::write_message,
+            type::shared_from_this(),
+            control
+        ));
     }
     
     /// Return send buffer size (payload bytes)
@@ -1084,10 +1084,10 @@ public:
         // Using strand post here rather than ioservice.post(strand.wrap)
         // to ensure that messages are sent in order
         m_strand.post(boost::bind(
-			&type::write_message,
-			type::shared_from_this(),
-			msg
-		));
+            &type::write_message,
+            type::shared_from_this(),
+            msg
+        ));
     }
     
     /// send an acknowledgement close frame
@@ -1148,10 +1148,10 @@ public:
         // Using strand post here rather than ioservice.post(strand.wrap)
         // to ensure that messages are sent in order
         m_strand.post(boost::bind(
-			&type::write_message,
-			type::shared_from_this(),
-			msg
-		));
+            &type::write_message,
+            type::shared_from_this(),
+            msg
+        ));
 
         //m_write_state = INTURRUPT;        
     }
@@ -1591,12 +1591,12 @@ void connection<endpoint,role,socket>::send(message::data_ptr msg) {
     m_processor->prepare_frame(msg);
     
     // Using strand post here rather than ioservice.post(strand.wrap)
-	// to ensure that messages are sent in order
-	m_strand.post(boost::bind(
-		&type::write_message,
-		type::shared_from_this(),
-		msg
-	));
+    // to ensure that messages are sent in order
+    m_strand.post(boost::bind(
+        &type::write_message,
+        type::shared_from_this(),
+        msg
+    ));
 }
 
 } // namespace websocketpp
