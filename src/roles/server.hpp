@@ -214,25 +214,41 @@ public:
         start_listen(e,num_threads);
     }
 
-    void stop_listen(bool join);
+    void stop_listen();
 
     // legacy interface
     void listen(uint16_t port, size_t num_threads = 1) {
       start_listen(port,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+      for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+          std::cout << "joining listening threads" << std::endl;
+          m_listening_threads[i]->join();
+      }
+      m_listening_threads.clear();
     }
     void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1) {
       start_listen(e,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+      for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+          std::cout << "joining listening threads" << std::endl;
+          m_listening_threads[i]->join();
+      }
+      m_listening_threads.clear();
     }
     void listen(const std::string &host, const std::string &service, size_t num_threads = 1) {
       start_listen(host,service,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+      for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+          std::cout << "joining listening threads" << std::endl;
+          m_listening_threads[i]->join();
+      }
+      m_listening_threads.clear();
     }
     template <typename InternetProtocol> 
     void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
       start_listen(internet_protocol,port,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+      for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+          std::cout << "joining listening threads" << std::endl;
+          m_listening_threads[i]->join();
+      }
+      m_listening_threads.clear();
     }
 
 protected:
@@ -297,6 +313,7 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
             ))
         );
         m_listening_threads.push_back(thread);
+        std::cout << "adding listening thread" << std::endl;
     }
 
     if(num_threads == 0)
@@ -307,26 +324,20 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
 }
 
 template <class endpoint>
-void server<endpoint>::stop_listen(bool join) {
-    
-    if (m_state != LISTENING) {
-    	throw exception("stop_listen called from invalid state");
-    }
-    
-    if(join) {
-        m_state = STOPPING;
-        for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-            m_listening_threads[i]->join();
-        }
-    
-        m_listening_threads.clear();
-    }
-    
+void server<endpoint>::stop_listen() {
     {
     	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
+    	
+		if (m_state != LISTENING) {
+			throw exception("stop_listen called from invalid state");
+		}
+		
 		m_acceptor.close();
 	}
     
+    m_state = STOPPING;
+    
+     
     m_state = IDLE;
 }
 
@@ -351,7 +362,14 @@ void server<endpoint>::start_listen(const std::string &host, const std::string &
 template <class endpoint>
 void server<endpoint>::start_accept() {
     boost::lock_guard<boost::recursive_mutex> lock(m_endpoint.m_lock);
-    
+
+    if (!m_acceptor.is_open()) {
+        m_endpoint.m_alog->at(log::alevel::ENDPOINT) 
+            << "Accept loop is stopping because acceptor was closed." 
+            << log::endl;
+        return;
+    }
+
     connection_ptr con = m_endpoint.create_connection();
     
     if (con == connection_ptr()) {
@@ -362,6 +380,8 @@ void server<endpoint>::start_accept() {
         return;
     }
 
+    std::cout << "start_accept called" << std::endl;
+        
     m_acceptor.async_accept(
         con->get_raw_socket(),
         boost::bind(

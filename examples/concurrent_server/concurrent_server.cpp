@@ -36,6 +36,7 @@
 
 using websocketpp::server;
 
+
 // A request encapsulates all of the information necesssary to perform a request
 // the coordinator will fill in this information from the websocket connection 
 // and add it to the processing queue. Sleeping in this example is a placeholder
@@ -93,6 +94,7 @@ public:
     concurrent_server_handler(request_coordinator& c) : m_coordinator(c) {}
     
     void on_message(connection_ptr con,message_ptr msg) {
+        std::cout << "concurrent on_message called" << std::endl;
         int value = atoi(msg->get_payload().c_str());
         
         if (value == 0) {
@@ -132,11 +134,19 @@ void process_requests(request_coordinator* coordinator);
 void process_requests(request_coordinator* coordinator) {
     request r;
     
+    std::cout << "a worked thread will start executin loop" << std::endl;
     while (1) {
         coordinator->get_request(r);
         
         r.process();
     }
+}
+
+void stop_server(server *s,int timeout)
+{
+    if(timeout == 0) return;
+    boost::this_thread::sleep(boost::posix_time::milliseconds(timeout));
+    s->stop_listen();
 }
 
 // usage: <port> <thread_pool_threads> <worker_threads>
@@ -162,9 +172,10 @@ void process_requests(request_coordinator* coordinator) {
 //                  based on hardware concurrency available and expected load and
 //                  job length.
 int main(int argc, char* argv[]) {
-    unsigned short port = 9002;
-    size_t worker_threads = 2;
+    unsigned short port = 9003;
+    size_t worker_threads = 4;
     size_t pool_threads = 2;
+    int killtime = 0;
     
     try {
         if (argc >= 2) {
@@ -181,6 +192,11 @@ int main(int argc, char* argv[]) {
             std::stringstream buffer(argv[3]);
             buffer >> worker_threads;
         }
+        
+        if (argc >= 5) {
+            std::stringstream buffer(argv[4]);
+            buffer >> killtime;
+        }
            
         request_coordinator rc;
         
@@ -193,11 +209,14 @@ int main(int argc, char* argv[]) {
         
         server echo_endpoint(h);
         
-        echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-        echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
+        //echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
+        //echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
+        echo_endpoint.alog().set_level(websocketpp::log::alevel::ALL);
+        echo_endpoint.elog().set_level(websocketpp::log::elevel::ALL);
         
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
+        //echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
+        //echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
+        
         
         std::list<boost::shared_ptr<boost::thread> > threads;
         if (worker_threads > 0) {
@@ -213,7 +232,13 @@ int main(int argc, char* argv[]) {
         std::cout << "Starting WebSocket sleep server on port " << port 
                   << " with thread pool size " << pool_threads << " and " 
                   << worker_threads << " worker threads." << std::endl;
+
+        boost::thread end_thread(boost::bind(&stop_server,&echo_endpoint,killtime));
+
         echo_endpoint.listen(port,pool_threads);
+        end_thread.join();
+        std::cout << "end in main" << std::endl;
+
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
     }
