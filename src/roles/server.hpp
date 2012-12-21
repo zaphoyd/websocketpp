@@ -220,7 +220,6 @@ public:
     void listen(uint16_t port, size_t num_threads = 1) {
       start_listen(port,num_threads>1 ? num_threads : 0);
       for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-          std::cout << "joining listening threads" << std::endl;
           m_listening_threads[i]->join();
       }
       m_listening_threads.clear();
@@ -228,7 +227,6 @@ public:
     void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1) {
       start_listen(e,num_threads>1 ? num_threads : 0);
       for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-          std::cout << "joining listening threads" << std::endl;
           m_listening_threads[i]->join();
       }
       m_listening_threads.clear();
@@ -236,7 +234,6 @@ public:
     void listen(const std::string &host, const std::string &service, size_t num_threads = 1) {
       start_listen(host,service,num_threads>1 ? num_threads : 0);
       for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-          std::cout << "joining listening threads" << std::endl;
           m_listening_threads[i]->join();
       }
       m_listening_threads.clear();
@@ -245,7 +242,6 @@ public:
     void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
       start_listen(internet_protocol,port,num_threads>1 ? num_threads : 0);
       for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-          std::cout << "joining listening threads" << std::endl;
           m_listening_threads[i]->join();
       }
       m_listening_threads.clear();
@@ -313,7 +309,6 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
             ))
         );
         m_listening_threads.push_back(thread);
-        std::cout << "adding listening thread" << std::endl;
     }
 
     if(num_threads == 0)
@@ -380,8 +375,6 @@ void server<endpoint>::start_accept() {
         return;
     }
 
-    std::cout << "start_accept called" << std::endl;
-        
     m_acceptor.async_accept(
         con->get_raw_socket(),
         boost::bind(
