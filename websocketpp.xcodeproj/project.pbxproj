@@ -257,7 +257,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		47C39D7E1691ABDA00241877 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_regex.dylib; path = ../../../../../../usr/local/lib/libboost_regex.dylib; sourceTree = "<group>"; };
+		47C39D7E1691ABDA00241877 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_regex.dylib; path = /usr/local/lib/libboost_regex.dylib; sourceTree = "<absolute>"; };
 		B6138760145AD09700ED9B19 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/echo_server/Makefile; sourceTree = "<group>"; };
 		B6138763145AD1F700ED9B19 /* chat_client.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = chat_client.html; path = examples/chat_server/chat_client.html; sourceTree = "<group>"; };
 		B6138764145AD1F700ED9B19 /* chat_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = chat_server.cpp; path = examples/chat_server/chat_server.cpp; sourceTree = "<group>"; };
@@ -363,13 +363,13 @@
 		B6DF1C8F1434AC3E0029A1B1 /* utf8_validator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = utf8_validator.hpp; sourceTree = "<group>"; };
 		B6DF1C981434AC470029A1B1 /* websocket_frame.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocket_frame.hpp; path = src/websocket_frame.hpp; sourceTree = "<group>"; };
 		B6DF1C9F1434AC470029A1B1 /* websocketpp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = websocketpp.hpp; path = src/websocketpp.hpp; sourceTree = "<group>"; };
-		B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = ../../../../../../../../../usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
-		B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_date_time.dylib; path = ../../../../../../../../../usr/local/lib/libboost_date_time.dylib; sourceTree = SDKROOT; };
-		B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_regex.dylib; path = ../../../../../../../../../usr/local/lib/libboost_regex.dylib; sourceTree = SDKROOT; };
-		B6DF1CC01434AF6A0029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = ../../../../../../../../../usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
+		B6DF1CBC1434AE070029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = /usr/local/lib/libboost_system.dylib; sourceTree = "<absolute>"; };
+		B6DF1CBE1434AF6A0029A1B1 /* libboost_date_time.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_date_time.dylib; path = /usr/local/lib/libboost_date_time.dylib; sourceTree = "<absolute>"; };
+		B6DF1CBF1434AF6A0029A1B1 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_regex.dylib; path = /usr/local/lib/libboost_regex.dylib; sourceTree = "<absolute>"; };
+		B6DF1CC01434AF6A0029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = /usr/local/lib/libboost_system.dylib; sourceTree = "<absolute>"; };
 		B6DF1CCA1435ED760029A1B1 /* echo_server.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = echo_server.cpp; path = examples/echo_server/echo_server.cpp; sourceTree = "<group>"; };
 		B6DF1CD11435ED910029A1B1 /* echo_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = echo_server; sourceTree = BUILT_PRODUCTS_DIR; };
-		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = ../../../../../../../../../usr/local/lib/libboost_system.dylib; sourceTree = SDKROOT; };
+		B6DF1CE11435F1860029A1B1 /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_system.dylib; path = /usr/local/lib/libboost_system.dylib; sourceTree = "<absolute>"; };
 		B6DF1CE31435F8250029A1B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B6E56D6614FEFC54007E1707 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = examples/wsperf/Makefile; sourceTree = "<group>"; };
 		B6E56D6714FEFC54007E1707 /* wsperf_commander.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = wsperf_commander.html; path = examples/wsperf/wsperf_commander.html; sourceTree = "<group>"; };
