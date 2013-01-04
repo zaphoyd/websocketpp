@@ -218,21 +218,29 @@ public:
 
     // legacy interface
     void listen(uint16_t port, size_t num_threads = 1) {
-      start_listen(port,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+		start_listen(port,num_threads>1 ? num_threads : 0);
+		if(num_threads > 1) {
+			stop_listen(true);
+		}
     }
     void listen(const boost::asio::ip::tcp::endpoint& e, size_t num_threads = 1) {
-      start_listen(e,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+		start_listen(e,num_threads>1 ? num_threads : 0);
+		if(num_threads > 1) {
+			stop_listen(true);
+		}
     }
     void listen(const std::string &host, const std::string &service, size_t num_threads = 1) {
-      start_listen(host,service,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+		start_listen(host,service,num_threads>1 ? num_threads : 0);
+		if(num_threads > 1) {
+			stop_listen(true);
+		}
     }
     template <typename InternetProtocol> 
     void listen(const InternetProtocol &internet_protocol, uint16_t port, size_t num_threads = 1) {
-      start_listen(internet_protocol,port,num_threads>1 ? num_threads : 0);
-      if(num_threads > 1) stop_listen(true);
+		start_listen(internet_protocol,port,num_threads>1 ? num_threads : 0);
+		if(num_threads > 1) {
+			stop_listen(true);
+		}
     }
 
 protected:
@@ -309,24 +317,32 @@ void server<endpoint>::start_listen(const boost::asio::ip::tcp::endpoint& e,size
 template <class endpoint>
 void server<endpoint>::stop_listen(bool join) {
     {
-        boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
-        
-        if (m_state != LISTENING) {
-            throw exception("stop_listen called from invalid state");
-        }
-        
-        m_acceptor.close();
-    }
+    	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
 	
-    if(join) {
-        for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
-            m_listening_threads[i]->join();
-        }
+		if (m_state != LISTENING) {
+			throw exception("stop_listen called from invalid state");
+		}
     }
-
-    m_listening_threads.clear();
-
-    m_state = IDLE;
+    
+    // If there are multiple threads we should join before stopping. Normally
+    // this will result in WebSocket++ blocking here waiting for the workers to
+    if (join) {
+    	for (std::size_t i = 0; i < m_listening_threads.size(); ++i) {
+			m_listening_threads[i]->join();
+		}
+	
+		m_listening_threads.clear();
+    }
+    
+	boost::unique_lock<boost::recursive_mutex> lock(m_endpoint.m_lock);
+	
+	if (m_state != LISTENING) {
+		throw exception("stop_listen called from invalid state");
+	}
+	
+	// Clean up
+	m_acceptor.close();
+	m_state = IDLE;
 }
 
 template <class endpoint>
