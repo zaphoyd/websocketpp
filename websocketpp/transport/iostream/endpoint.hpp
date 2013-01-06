@@ -40,7 +40,8 @@ template <typename concurrency>
 class endpoint {
 public:
 	typedef iostream::connection<concurrency> con_policy;
-		
+    typedef typename con_policy::ptr trans_connection_ptr;
+
 	// generate and manage our own io_service
 	explicit endpoint() 
 	{

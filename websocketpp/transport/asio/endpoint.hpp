@@ -65,7 +65,9 @@ public:
 	//typedef lib::shared_ptr<boost::asio::io_service> io_service_ptr;
 	typedef boost::asio::io_service* io_service_ptr;
 	typedef lib::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr;
-		
+	
+    typedef typename con_policy::ptr trans_connection_ptr;
+
 	// generate and manage our own io_service
 	explicit endpoint() 
 	  : m_external_io_service(false)
@@ -186,8 +188,7 @@ public:
 
 	// Accept the next connection attempt via m_acceptor and assign it to con.
 	// callback is called 
-	template <typename connection_ptr>
-	void async_accept(connection_ptr con, accept_handler callback) {
+	void async_accept(trans_connection_ptr tcon, accept_handler callback) {
 		if (m_state != LISTENING) {
 			// TODO: throw invalid state
 			std::cout << "asio::async_accept called from the wrong state" << std::endl;
@@ -198,11 +199,11 @@ public:
 		
 		// TEMP
 		m_acceptor->async_accept(
-			con->get_raw_socket(),
+			tcon->get_raw_socket(),
 			lib::bind(
-				&type::handle_accept<connection_ptr>,
+				&type::handle_accept,
 				this,
-				con,
+				tcon->get_handle(),
 				callback,
 				lib::placeholders::_1
 			)
@@ -251,16 +252,17 @@ public:
 		listen(*endpoint_iterator);
 	}
 protected:
-	template <typename connection_ptr>
-	void handle_accept(connection_ptr con, accept_handler callback, const boost::system::error_code& error) {
+	void handle_accept(connection_hdl hdl, accept_handler callback,
+        const boost::system::error_code& error)
+    {
 		if (error) {
-			con->terminate();
+			//con->terminate();
 			// TODO: Better translation of errors at this point
-			callback(make_error_code(error::pass_through));
+			callback(hdl,make_error_code(error::pass_through));
 		}
 		
-		con->start();
-		callback(lib::error_code());
+		//con->start();
+		callback(hdl,lib::error_code());
 	}
 	
 	bool is_listening() const {

@@ -31,6 +31,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
 
 namespace websocketpp {
 namespace transport {
@@ -57,7 +58,7 @@ namespace transport {
  */
 
 // Endpoint callbacks
-typedef lib::function<void(const lib::error_code&)> accept_handler;
+typedef lib::function<void(connection_hdl,const lib::error_code&)> accept_handler;
 
 typedef lib::function<void()> endpoint_lock;
 

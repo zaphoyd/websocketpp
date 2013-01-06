@@ -72,7 +72,9 @@ public:
 	typedef typename base::handler_ptr handler_ptr;
 
 	typedef typename base::connection_ptr connection_ptr;
-	
+	typedef typename transport_type::con_policy trans_connection_type;
+	typedef typename transport_type::trans_connection_ptr trans_connection_ptr;
+
 	explicit server(typename base::handler_ptr default_handler) 
 	  : base(default_handler,true)
 	{
@@ -92,20 +94,32 @@ public:
 	void start_accept() {
 		connection_ptr con = get_connection();
 		
-		transport_type::template async_accept<connection_ptr>(
-			con,
+		transport_type::async_accept(
+			lib::static_pointer_cast<trans_connection_type>(con),
 			lib::bind(
 				&type::handle_accept,
 				this,
-				lib::placeholders::_1
+				lib::placeholders::_1,
+				lib::placeholders::_2
 			)
 		);
 	}
 	
-	void handle_accept(const lib::error_code& ec) {
-		if (ec) {
-			std::cout << "handle_accept: error: " << ec << std::endl;
-		}
+	void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
+        connection_ptr con = base::get_con_from_hdl(hdl);
+        
+        if (!con) {
+            // TODO: should this be considered a server fatal error?
+            std::cout << "handle_accept got an invalid handle back" << std::endl;
+        } else {
+            if (ec) {
+                con->terminate();
+
+                std::cout << "handle_accept: error: " << ec << std::endl;
+            } else {
+                con->start();
+            }
+        }
 		
 		start_accept();
 	}

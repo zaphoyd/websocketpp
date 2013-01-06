@@ -256,14 +256,13 @@ void connection<config>::close(const close::status::value code,
 template <typename config>
 lib::error_code connection<config>::interrupt() {
     std::cout << "connection::interrupt" << std::endl;
-    return transport_type::inturrupt(
+    /*return transport_type::inturrupt(
         lib::bind(
             &type::handle_inturrupt,
-            type::shared_from_this(),
-            lib::placeholders::_1
+            type::shared_from_this()
         )
-    );
-    //return lib::error_code();
+    );*/
+    return lib::error_code();
 }
 
 
