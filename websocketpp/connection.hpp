@@ -197,6 +197,7 @@ public:
      */
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
+        transport_type::set_handle(hdl);
     }
     
     /// Get Connection Handle
