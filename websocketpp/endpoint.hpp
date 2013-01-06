@@ -101,30 +101,21 @@ public:
     void set_open_handler(open_handler h) {
         m_open_handler = h;
     }
+    void set_interrupt_handler(interrupt_handler h) {
+        m_interrupt_handler = h;
+    }
 
     void interrupt(connection_hdl hdl, lib::error_code & ec) {
-
-        std::cout << "Interrupting connection " << &hdl << std::endl;
-        
-        /*lib::shared_ptr<void> s(hdl->lock());
-
-        if (!s) {
-            std::cout << "bad weak pointer in interrupt" << std::endl;
-            return;
-        }
-
-        connection_ptr con = lib::static_pointer_cast<connection_type, void>(hdl)->lock();*/
-        connection_ptr con = lib::static_pointer_cast<connection_type, void>(hdl.lock());
+        connection_ptr con = get_con_from_hdl(hdl);
 
         if (!con) {
             ec = error::make_error_code(error::bad_connection);
             return;
         }
 
-        std::cout << "CALL con->interrupt() HERE!!" << std::endl;
-        ec = con->interrupt();
+        std::cout << "Interrupting connection " << con.get() << std::endl;
 
-        //ec = lib::error_code();
+        ec = con->interrupt();
     }
 
     void interrupt(connection_hdl hdl) {
@@ -160,6 +151,7 @@ private:
 	std::string					m_user_agent;
 	
     open_handler                m_open_handler;
+    interrupt_handler           m_interrupt_handler;
 
 	// endpoint resources
 	std::set<connection_ptr>	m_connections;

@@ -46,6 +46,8 @@ typedef lib::function<void(connection_hdl)> open_handler;
 typedef lib::function<void(connection_hdl)> close_handler;
 typedef lib::function<void(connection_hdl)> fail_handler;
 
+typedef lib::function<void(connection_hdl)> interrupt_handler;
+
 typedef lib::function<void(connection_hdl)> handshake_init_handler;
 
 typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
@@ -214,6 +216,10 @@ public:
 
     void set_open_handler(open_handler h) {
         m_open_handler = h;
+    }
+    
+    void set_interrupt_handler(interrupt_handler h) {
+        m_interrupt_handler = h;
     }
 
     /// Set new connection handler
@@ -699,6 +705,7 @@ private:
     connection_hdl          m_connection_hdl;
     handler_ptr             m_handler;
     open_handler            m_open_handler;
+    interrupt_handler       m_interrupt_handler;
 
     /// External connection state
     /**

@@ -237,7 +237,7 @@ protected:
         m_connection_hdl = hdl;
     }
 
-    lib::error_code inturrupt(inturrupt_handler handler) {
+    lib::error_code interrupt(inturrupt_handler handler) {
         // strand post handle_inturrupt
         /*m_strand->post(lib::bind(
             &type::handle_inturrupt,
@@ -255,9 +255,9 @@ protected:
         return lib::error_code();
     }
 
-    void handle_inturrupt(inturrupt_handler handler) { 
+    /*void handle_inturrupt(inturrupt_handler handler) { 
         handler();
-    }
+    }*/
     
     /// close and clean up the underlying socket
     void shutdown() {
