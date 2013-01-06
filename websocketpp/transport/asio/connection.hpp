@@ -31,6 +31,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+
 #include <websocketpp/transport/asio/base.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
@@ -93,6 +94,11 @@ public:
 
     void set_tcp_init_handler(tcp_init_handler h) {
         m_tcp_init_handler = h;
+    }
+
+    /// Get the connection handle
+    connection_hdl get_handle() const {
+        return m_connection_hdl;
     }
 protected:
     /// Initialize transport for reading
@@ -219,6 +225,17 @@ protected:
 		
 		security::set_handler(m_handler);
 	}
+    
+    /// Set Connection Handle
+    /**
+     * See common/connection_hdl.hpp for information
+     * 
+     * @param hdl A connection_hdl that the transport will use to refer 
+     * to itself
+     */
+    void set_handle(connection_hdl hdl) {
+        m_connection_hdl = hdl;
+    }
 
     lib::error_code inturrupt(inturrupt_handler handler) {
         // strand post handle_inturrupt
@@ -257,6 +274,7 @@ private:
 	// transport resources
     io_service_ptr      m_io_service;
 	handler_ptr			m_handler;
+    connection_hdl      m_connection_hdl;
     std::vector<boost::asio::const_buffer> m_bufs;
 
     // Handlers
