@@ -1,0 +1,108 @@
+/*
+ * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the WebSocket++ Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
+
+#ifndef WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP
+#define WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP
+
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/system_error.hpp>
+#include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
+
+#include <boost/asio.hpp>
+
+#include <iostream>
+#include <string>
+
+namespace websocketpp {
+namespace transport {
+namespace security {
+
+/**
+ * The transport::security::* classes are a set of security/socket related
+ * policies and support code for the ASIO transport types.
+ */
+
+namespace error {
+	enum value {
+		/// Catch-all error for security policy errors that don't fit in other
+		/// categories
+		security = 1,
+		
+		/// A function was called in a state that it was illegal to do so.
+		invalid_state,
+		
+		/// The application was prompted to provide a TLS context and it was
+		/// empty or otherwise invalid
+		invalid_tls_context,
+		
+		/// TLS Handshake Timeout
+		tls_handshake_timeout,
+		
+		/// pass_through from underlying library
+		pass_through
+	};
+} // namespace error
+
+class security_category : public lib::error_category {
+public:
+	const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+		return "websocketpp.transport.asio.security";
+	}
+	
+	std::string message(int value) const {
+		switch(value) {
+			case error::security:
+				return "Security policy error";
+			case error::invalid_state:
+				return "Invalid state";
+			case error::invalid_tls_context:
+				return "Invalid or empty TLS context supplied";
+			case error::tls_handshake_timeout:
+				return "TLS handshake timed out";
+			case error::pass_through:
+				return "Pass through from underlying library";
+			default:
+				return "Unknown";
+		}
+	}
+};
+
+//static const security_category error_category;
+
+lib::error_code make_error(error::value e) {
+	return lib::error_code(static_cast<int>(e), security_category());
+}
+
+typedef lib::function<void(const lib::error_code&)> init_handler;
+
+} // namespace security
+} // namespace transport
+} // namespace websocketpp
+
+#endif // WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP

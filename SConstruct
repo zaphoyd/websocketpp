@@ -1,16 +1,18 @@
-#AddOption('--prefix',
-#          dest='prefix',
-#          nargs=1, type='string',
-#          action='store',
-#          metavar='DIR',
-#          help='installation prefix')
-#env = Environment(PREFIX = GetOption('prefix'))
-
-
-import os, sys
+import os, sys, commands
 env = Environment(ENV = os.environ)
 
+# figure out a better way to configure this
 #env["CXX"] = "clang++"
+if os.environ.has_key('CXX'):
+    env['CXX'] = os.environ['CXX']
+
+if os.environ.has_key('CXXFLAGS'):
+    #env['CXXFLAGS'] = os.environ['CXXFLAGS']
+    env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
+
+if os.environ.has_key('LINKFLAGS'):
+    #env['LDFLAGS'] = os.environ['LDFLAGS']
+    env.Append(LINKFLAGS = os.environ['LINKFLAGS'])
 
 ## Boost
 ##
@@ -27,22 +29,24 @@ elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
 else:
    raise SCons.Errors.UserError, "Neither BOOSTROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!"
 
-env.Append(CPPPATH = [env['BOOST_INCLUDES']])
-env.Append(LIBPATH = [env['BOOST_LIBS']])
+if os.environ.has_key('WSPP_ENABLE_CPP11'):
+   env['WSPP_ENABLE_CPP11'] = True
+else:
+   env['WSPP_ENABLE_CPP11'] = False
 
 boost_linkshared = False
 
-def boostlibs(libnames):
-   if env['PLATFORM'].startswith('win'):
+def boostlibs(libnames,localenv):
+   if localenv['PLATFORM'].startswith('win'):
       # Win/VC++ supports autolinking. nothing to do.
       # http://www.boost.org/doc/libs/1_49_0/more/getting_started/windows.html#auto-linking
       return []
    else:
       libs = []
-      prefix = env['SHLIBPREFIX'] if boost_linkshared else env['LIBPREFIX']
-      suffix = env['SHLIBSUFFIX'] if boost_linkshared else env['LIBSUFFIX']
+      prefix = localenv['SHLIBPREFIX'] if boost_linkshared else localenv['LIBPREFIX']
+      suffix = localenv['SHLIBSUFFIX'] if boost_linkshared else localenv['LIBSUFFIX']
       for name in libnames:
-         lib = File(os.path.join(env['BOOST_LIBS'], '%sboost_%s%s' % (prefix, name, suffix)))
+         lib = File(os.path.join(localenv['BOOST_LIBS'], '%sboost_%s%s' % (prefix, name, suffix)))
          libs.append(lib)
       return libs
 
@@ -60,24 +64,36 @@ if env['PLATFORM'].startswith('win'):
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
 elif env['PLATFORM'] == 'posix':
    env.Append(CPPDEFINES = ['NDEBUG'])
-   env.Append(CCFLAGS = ['-Wall', '-fno-strict-aliasing'])
-   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+   env.Append(CCFLAGS = ['-Wall'])
+   #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
-   env.Append(CPPDEFINES = ['NDEBUG'])
-   env.Append(CCFLAGS = ['-Wall', '-Wcast-align'])
-   env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+   #env.Append(CPPDEFINES = ['NDEBUG'])
+   env.Append(CCFLAGS = ['-Wall','-O0'])
+   #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    #env['LINKFLAGS'] = ''
 
 if env['PLATFORM'].startswith('win'):
-   env['LIBPATH'] = env['BOOST_LIBS']
+   #env['LIBPATH'] = env['BOOST_LIBS']
+   pass
 else:
    env['LIBPATH'] = ['/usr/lib',
-                     '/usr/local/lib',
-                     env['BOOST_LIBS']]
+                     '/usr/local/lib'] #, env['BOOST_LIBS']
+
+# Compiler specific warning flags
+if env['CXX'].startswith('g++'):
+   env.Append(CCFLAGS = ['-Wcast-align'])
+elif env['CXX'].startswith('clang++'):
+   #env.Append(CCFLAGS = ['-Wcast-align'])
+   #env.Append(CCFLAGS = ['-Wglobal-constructors'])
+   env.Append(CCFLAGS = ['-Wno-padded'])
+   
+   # Wpadded
+   # Wsign-conversion
 
 platform_libs = []
 tls_libs = []
+
 tls_build = False
 
 if env['PLATFORM'] == 'posix':
@@ -91,56 +107,112 @@ elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass
 
+## Append WebSocket++ path
+env.Append(CPPPATH = ['#'])
+
+##### Set up C++11 environment
+polyfill_libs = [] # boost libraries used as drop in replacements for incomplete
+				   # C++11 STL implimentations
+env_cpp11 = env.Clone ()
+
+if env_cpp11['CXX'].startswith('g++'):
+   # TODO: check g++ version
+   
+   # g++ STL lacks support for <regex>
+   
+   GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
+   
+   if GCC_VERSION > "4.4.0":
+      print "C++11 build environment partially enabled"
+      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_MEMORY_','_WEBSOCKETPP_CPP11_FUNCTIONAL_','_WEBSOCKETPP_CPP11_SYSTEM_ERROR_','_WEBSOCKETPP_NOEXCEPT_'])
+      # libstdc++ does not yet support <regex>
+      # boost regex is a drop in replacement
+      polyfill_libs += boostlibs(['regex'],env_cpp11)
+   else:
+      print "C++11 build environment is not supported on this version of G++"
+elif env_cpp11['CXX'].startswith('clang++'):
+   print "C++11 build environment enabled"
+   env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
+   
+   # look for optional second boostroot compiled with clang's libc++ STL library
+   # this prevents warnings/errors when linking code built with two different
+   # incompatible STL libraries.
+   if os.environ.has_key('BOOSTROOT_CPP11'):
+      env_cpp11['BOOST_INCLUDES'] = os.environ['BOOSTROOT_CPP11']
+      env_cpp11['BOOST_LIBS'] = os.path.join(os.environ['BOOSTROOT_CPP11'], 'stage', 'lib')
+   elif os.environ.has_key('BOOST_INCLUDES_CPP11') and os.environ.has_key('BOOST_LIBS_CPP11'):
+      env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES_CPP11']
+      env_cpp11['BOOST_LIBS'] = os.environ['BOOST_LIBS_CPP11']
+else:
+   print "C++11 build environment disabled"
+
+#env.Append(CPPPATH = [env['BOOST_INCLUDES']])
+env.Append(CPPFLAGS = '-isystem '+env['BOOST_INCLUDES'])
+env.Append(LIBPATH = [env['BOOST_LIBS']])
+
+#env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
+env_cpp11.Append(CPPFLAGS = '-isystem ' + env_cpp11['BOOST_INCLUDES'])
+env_cpp11.Append(LIBPATH = [env_cpp11['BOOST_LIBS']])
 
 releasedir = 'build/release/'
 debugdir = 'build/debug/'
+testdir = 'build/test/'
 builddir = releasedir
 
 Export('env')
+Export('env_cpp11')
 Export('platform_libs')
 Export('boostlibs')
 Export('tls_libs')
+Export('polyfill_libs')
 
 ## END OF CONFIG !!
 
 ## TARGETS:
 
-static_lib, shared_lib = SConscript('src/SConscript',
-                                    variant_dir = builddir + 'websocketpp',
-                                    duplicate = 0)
+# Unit tests, add test folders with SConscript files to to_test list.
+to_test = ['utility','http','processors','message_buffer','extension','transport/asio','connection'] #,'http','processors','connection'
 
-wslib = static_lib
-Export('wslib')
+for t in to_test:
+   new_tests = SConscript('#/test/'+t+'/SConscript',variant_dir = testdir + t, duplicate = 0)
+   for a in new_tests:
+      new_alias = Alias('test', [a], a.abspath)
+      AlwaysBuild(new_alias)
 
-wsperf = SConscript('#/examples/wsperf/SConscript',
-                    variant_dir = builddir + 'wsperf',
-                    duplicate = 0)
+# Main test application
+main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
 
-echo_server = SConscript('#/examples/echo_server/SConscript',
-                         variant_dir = builddir + 'echo_server',
-                         duplicate = 0)
+# echo_server
+echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = builddir + 'echo_server',duplicate = 0)
 
-if tls_build:
-   echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',
-                            variant_dir = builddir + 'echo_server_tls',
-                            duplicate = 0)
+# echo_server_tls
+echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
 
-echo_client = SConscript('#/examples/echo_client/SConscript',
-                         variant_dir = builddir + 'echo_client',
-                         duplicate = 0)
+#wsperf = SConscript('#/examples/wsperf/SConscript',
+#                    variant_dir = builddir + 'wsperf',
+#                    duplicate = 0)
 
-chat_client = SConscript('#/examples/chat_client/SConscript',
-                         variant_dir = builddir + 'chat_client',
-                         duplicate = 0)
+#echo_server = SConscript('#/examples/echo_server/SConscript',
+#                         variant_dir = builddir + 'echo_server',
+#                         duplicate = 0)
 
-chat_server = SConscript('#/examples/chat_server/SConscript',
-                         variant_dir = builddir + 'chat_server',
-                         duplicate = 0)
+#if tls_build:
+#   echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',
+#                            variant_dir = builddir + 'echo_server_tls',
+#                            duplicate = 0)
 
-concurrent_server = SConscript('#/examples/concurrent_server/SConscript',
-                         variant_dir = builddir + 'concurrent_server',
-                         duplicate = 0)
+#echo_client = SConscript('#/examples/echo_client/SConscript',
+#                         variant_dir = builddir + 'echo_client',
+#                         duplicate = 0)
 
-telemetry_server = SConscript('#/examples/telemetry_server/SConscript',
-                         variant_dir = builddir + 'telemetry_server',
-                         duplicate = 0)
+#chat_client = SConscript('#/examples/chat_client/SConscript',
+#                         variant_dir = builddir + 'chat_client',
+#                         duplicate = 0)
+
+#chat_server = SConscript('#/examples/chat_server/SConscript',
+#                         variant_dir = builddir + 'chat_server',
+#                         duplicate = 0)
+
+#concurrent_server = SConscript('#/examples/concurrent_server/SConscript',
+#                         variant_dir = builddir + 'concurrent_server',
+#                         duplicate = 0)

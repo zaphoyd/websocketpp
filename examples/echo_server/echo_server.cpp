@@ -1,73 +1,112 @@
-/*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the WebSocket++ Project nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- */
+#include <websocketpp/config/asio_no_tls.hpp>
 
-#include "../../src/websocketpp.hpp"
+#include <websocketpp/server.hpp>
 
-#include <cstring>
+#include <iostream>
 
-using websocketpp::server;
+typedef websocketpp::server<websocketpp::config::asio> server;
 
-class echo_server_handler : public server::handler {
-public:
-    void on_message(connection_ptr con, message_ptr msg) {
-        con->send(msg->get_payload(),msg->get_opcode());
+class handler : public server::handler {
+	bool validate(connection_ptr con) {
+		std::cout << "handler validate" << std::endl;
+		return true;
+	}
+	
+	void http(connection_ptr con) {
+	    std::cout << "handler http" << std::endl;
+	    con->set_status(websocketpp::http::status_code::OK);
+	    con->set_body("foo");
+	}
+	
+	void on_load(connection_ptr con, ptr old_handler) {
+		std::cout << "handler on_load" << std::endl;
+	}
+	void on_unload(connection_ptr con, ptr new_handler) {
+		std::cout << "handler on_unload" << std::endl;
+	}
+	
+	void on_open(connection_ptr con) {
+		std::cout << "handler on_open" << std::endl;
+	}
+	void on_fail(connection_ptr con) {
+		std::cout << "handler on_fail" << std::endl;
+	}
+	
+	void on_message(connection_ptr con, message_ptr msg) {
+		std::cout << "handler on_message" << std::endl;
+		//std::cout << "Message was: " << msg->get_payload() << std::endl;
+        try {
+           con->send(msg->get_payload(),msg->get_opcode());
+        } catch (const websocketpp::lib::error_code& e) {
+            std::cout << "Echo failed because: " << e  << "(" << e.message() << ")" << std::endl;
+        }
+	}
+
+    bool on_ping(connection_ptr con, const std::string & msg) {
+        std::cout << "handler on_ping" << std::endl;
+        return true;
+    }
+	
+    void on_pong(connection_ptr con, const std::string & msg) {
+        std::cout << "handler on_pong" << std::endl;
+    }
+	
+    void on_pong_timeout(connection_ptr con, const std::string & msg) {
+        std::cout << "handler on_pong_timeout" << std::endl;
+    }
+	
+	void on_close(connection_ptr con) {
+		std::cout << "handler on_close" << std::endl;
+	}
+
+    void on_interrupt(connection_ptr con) {
+		std::cout << "handler on_interrupt" << std::endl;
     }
 };
 
-int main(int argc, char* argv[]) {
-    unsigned short port = 9002;
-        
-    if (argc == 2) {
-        port = atoi(argv[1]);
-        
-        if (port == 0) {
-            std::cout << "Unable to parse port input " << argv[1] << std::endl;
-            return 1;
-        }
+class test_handler {
+public:
+    test_handler(server& s): m_server(s) {}
+
+    void on_open(websocketpp::connection_hdl hdl) {
+        std::cout << "on_open called with hdl: " << &hdl << std::endl;
+        m_server.interrupt(hdl);
     }
-    
-    try {       
-        server::handler::ptr h(new echo_server_handler());
-        server echo_endpoint(h);
-        
-        echo_endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
-        echo_endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
-        
-        echo_endpoint.alog().set_level(websocketpp::log::alevel::CONNECT);
-        echo_endpoint.alog().set_level(websocketpp::log::alevel::DISCONNECT);
-        
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::RERROR);
-        echo_endpoint.elog().set_level(websocketpp::log::elevel::FATAL);
-        
-        std::cout << "Starting WebSocket echo server on port " << port << std::endl;
-        echo_endpoint.listen(port);
-    } catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
+private:
+    server& m_server;
+};
+
+void on_close(server* s, websocketpp::connection_hdl hdl) {
+    std::cout << "on_close called with hdl: " << &hdl << std::endl;
+    s->interrupt(hdl);
+}
+
+int main() {
+    server::handler::ptr h(new handler());
+	
+	server echo_server(h);
+	
+	echo_server.init_asio();
+	
+    test_handler t(echo_server);
+
+    //echo_server.set_open_handler(websocketpp::lib::bind(&test_handler::on_open,t,websocketpp::lib::placeholders::_1));
+    echo_server.set_open_handler(websocketpp::lib::bind(&on_close,&echo_server,websocketpp::lib::placeholders::_1));
+
+	// Listen
+	echo_server.listen(9002);
+	
+	// Start the server accept loop
+	echo_server.start_accept();
+
+	// Start the ASIO io_service run loop
+	try {
+        echo_server.run();
+    } catch (const std::exception & e) {
+        std::cout << e.what() << std::endl;
+    } catch (websocketpp::lib::error_code e) {
+        std::cout << e.message() << std::endl;
+    } catch (...) {
+        std::cout << "other exception" << std::endl;
     }
-    
-    return 0;
 }

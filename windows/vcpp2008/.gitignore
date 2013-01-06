@@ -1,9 +1,0 @@
-*.user
-*.ncb
-*.suo
-Debug
-Release
-examples/*.user
-examples/*.ncb
-examples/Debug
-examples/Release
