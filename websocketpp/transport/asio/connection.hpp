@@ -51,7 +51,9 @@ class connection : public security {
 public:
 	typedef connection<security> type;
 	typedef security security_type;
-		
+	
+    typedef lib::shared_ptr<type> ptr;
+
 	class handler_interface : public security_type::handler_interface {
 	public:
 		virtual void on_tcp_init() {};
