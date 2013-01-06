@@ -54,7 +54,7 @@ struct stub_config {
     
     /// permessage_compress_config
     struct permessage_compress_config {
-        typedef request_type request_type;
+        typedef stub_config::request_type request_type;
     };
 
     typedef websocketpp::extensions::permessage_compress::disabled
