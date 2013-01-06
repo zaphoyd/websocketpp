@@ -101,7 +101,7 @@ struct core {
 
     /// permessage_compress extension
     struct permessage_compress_config {
-        typedef request_type request_type;
+        typedef core::request_type request_type;
         
         /// If the remote endpoint requests that we reset the compression
         /// context after each message should we honor the request?
