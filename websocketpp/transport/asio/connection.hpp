@@ -228,6 +228,7 @@ protected:
 
         // would this work?
         m_io_service->post(handler);
+        return lib::error_code();
     }
     
     lib::error_code dispatch(dispatch_handler handler) {
