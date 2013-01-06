@@ -98,12 +98,21 @@ public:
 	
 	bool is_server() const {return m_is_server;}
 
+    /*************************/
+    /* Set Handler functions */
+    /*************************/
+
     void set_open_handler(open_handler h) {
         m_open_handler = h;
     }
     void set_interrupt_handler(interrupt_handler h) {
         m_interrupt_handler = h;
     }
+    
+    /*************************************/
+    /* Connection pass through functions */
+    /*************************************/
+     
 
     void interrupt(connection_hdl hdl, lib::error_code & ec) {
         connection_ptr con = get_con_from_hdl(hdl);
