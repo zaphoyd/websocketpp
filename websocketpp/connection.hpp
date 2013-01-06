@@ -191,11 +191,26 @@ public:
      * The connection handle is a token that can be shared outside the 
      * WebSocket++ core for the purposes of identifying a connection and 
      * sending it messages.
+     *
+     * @param hdl A connection_hdl that the connection will use to refer
+     * to itself.
      */
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
     }
     
+    /// Get Connection Handle
+    /**
+     * The connection handle is a token that can be shared outside the
+     * WebSocket++ core for the purposes of identifying a connection and
+     * sending it messages.
+     * 
+     * @return A handle to the connection
+     */
+    connection_hdl get_handle() {
+        return m_connection_hdl;
+    }
+
     void set_open_handler(open_handler h) {
         m_open_handler = h;
     }
