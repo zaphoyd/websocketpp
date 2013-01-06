@@ -141,7 +141,17 @@ protected:
 	
 	connection_ptr create_connection();
 	void remove_connection(connection_ptr con);
-	
+    
+    /// Retrieves a connection_ptr from a connection_hdl
+    /**
+     * @param hdl The connection handle to translate
+     *
+     * @return the connection_ptr. May be NULL if the handle was invalid.
+     */
+    connection_ptr get_con_from_hdl(connection_hdl hdl) {
+        return lib::static_pointer_cast<connection_type,void>(hdl.lock());
+    }
+
 	// protected resources
 	mutex_type	m_mutex;
 private:
