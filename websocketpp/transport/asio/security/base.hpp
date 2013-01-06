@@ -93,10 +93,15 @@ public:
 	}
 };
 
+const lib::error_category& get_security_category() {
+    static security_category instance;
+    return instance;
+}
+
 //static const security_category error_category;
 
 lib::error_code make_error(error::value e) {
-	return lib::error_code(static_cast<int>(e), security_category());
+	return lib::error_code(static_cast<int>(e), get_security_category());
 }
 
 typedef lib::function<void(const lib::error_code&)> init_handler;
