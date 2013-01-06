@@ -207,7 +207,7 @@ public:
      * 
      * @return A handle to the connection
      */
-    connection_hdl get_handle() {
+    connection_hdl get_handle() const {
         return m_connection_hdl;
     }
 
