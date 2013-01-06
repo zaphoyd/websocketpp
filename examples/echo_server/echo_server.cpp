@@ -85,6 +85,10 @@ void on_interrupt(server* s, websocketpp::connection_hdl hdl) {
     std::cout << "on_interrupt called with hdl: " << hdl.lock().get() << std::endl;
 }
 
+void on_tcp_init(websocketpp::connection_hdl hdl) {
+    std::cout << "on_tcp_init called with hdl: " << hdl.lock().get() << std::endl;
+}
+
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::bind;
 
@@ -101,6 +105,7 @@ int main() {
     //echo_server.set_open_handler(websocketpp::lib::bind(&test_handler::on_open,t,websocketpp::lib::placeholders::_1));
     echo_server.set_open_handler(bind(&on_open,&echo_server,::_1));
     echo_server.set_interrupt_handler(bind(&on_interrupt,&echo_server,::_1));
+    echo_server.set_tcp_init_handler(&on_tcp_init);
 
 	// Listen
 	echo_server.listen(9002);

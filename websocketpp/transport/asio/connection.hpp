@@ -57,7 +57,6 @@ public:
 
 	class handler_interface : public security_type::handler_interface {
 	public:
-		virtual void on_tcp_init() {};
 	};
 	
 	typedef lib::shared_ptr<handler_interface> handler_ptr;
@@ -120,8 +119,8 @@ protected:
 	}
 	
 	void handle_init(init_handler callback, const lib::error_code& ec) {
-		if (!ec) {
-			m_handler->on_tcp_init();
+		if (m_tcp_init_handler) {
+			m_tcp_init_handler(m_connection_hdl);
 		}
 		
 		callback(ec);

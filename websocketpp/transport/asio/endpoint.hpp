@@ -160,6 +160,9 @@ public:
      * @see WebSocket++ handler documentation for more information about
      * handlers.
      */
+    void set_tcp_init_handler(tcp_init_handler h) {
+        m_tcp_init_handler = h;
+    }
 
 	// listen manually
 	void listen(const boost::asio::ip::tcp::endpoint& e) {
