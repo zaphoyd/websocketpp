@@ -69,17 +69,25 @@ public:
     test_handler(server& s): m_server(s) {}
 
     void on_open(websocketpp::connection_hdl hdl) {
-        std::cout << "on_open called with hdl: " << &hdl << std::endl;
+        std::cout << "on_open called with hdl: " << hdl.lock().get() << std::endl;
         m_server.interrupt(hdl);
     }
 private:
     server& m_server;
 };
 
-void on_close(server* s, websocketpp::connection_hdl hdl) {
-    std::cout << "on_close called with hdl: " << &hdl << std::endl;
+void on_open(server* s, websocketpp::connection_hdl hdl) {
+    std::cout << "on_open called with hdl: " << hdl.lock().get() << std::endl;
     s->interrupt(hdl);
 }
+
+void on_interrupt(server* s, websocketpp::connection_hdl hdl) {
+    std::cout << "on_interrupt called with hdl: " << hdl.lock().get() << std::endl;
+}
+
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::bind;
+
 
 int main() {
     server::handler::ptr h(new handler());
@@ -91,7 +99,8 @@ int main() {
     test_handler t(echo_server);
 
     //echo_server.set_open_handler(websocketpp::lib::bind(&test_handler::on_open,t,websocketpp::lib::placeholders::_1));
-    echo_server.set_open_handler(websocketpp::lib::bind(&on_close,&echo_server,websocketpp::lib::placeholders::_1));
+    echo_server.set_open_handler(bind(&on_open,&echo_server,::_1));
+    echo_server.set_interrupt_handler(bind(&on_interrupt,&echo_server,::_1));
 
 	// Listen
 	echo_server.listen(9002);
