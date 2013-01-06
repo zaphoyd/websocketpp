@@ -122,9 +122,9 @@ public:
         }
 
         std::cout << "CALL con->interrupt() HERE!!" << std::endl;
-        //con->interrupt();
+        ec = con->interrupt();
 
-        ec = lib::error_code();
+        //ec = lib::error_code();
     }
 
     void interrupt(connection_hdl hdl) {
