@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 
+#include <websocketpp/common/memory.hpp>
+
 #include <websocketpp/transport/base/connection.hpp>
 #include <websocketpp/transport/iostream/base.hpp>
 
@@ -42,6 +44,7 @@ template <typename concurrency>
 class connection {
 public:
 	typedef connection<concurrency> type;
+    typedef lib::shared_ptr<type> ptr;
 	
 	class handler_interface {};
 	
