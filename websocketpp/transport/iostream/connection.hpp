@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>
 #include <websocketpp/transport/iostream/base.hpp>
@@ -161,6 +162,14 @@ protected:
 	void set_handler(handler_ptr new_handler) {
 		m_handler = new_handler;
 	}
+    
+    /// Set Connection Handle
+    /**
+     * @param hdl The new handle
+     */
+    void set_handle(connection_hdl hdl) {
+        m_connection_hdl = hdl;
+    }
 
     lib::error_code dispatch(dispatch_handler handler) {
         handler(); 
@@ -212,6 +221,7 @@ private:
 	// transport resources
 	std::ostream*   output_stream;
 	handler_ptr		m_handler;
+    connection_hdl  m_connection_hdl;
 	
 	bool			m_reading;
 	const bool		m_is_server;
