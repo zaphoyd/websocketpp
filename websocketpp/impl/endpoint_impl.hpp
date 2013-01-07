@@ -59,6 +59,8 @@ endpoint<connection,config>::create_connection() {
 
     // Copy default handlers from the endpoint
     con->set_open_handler(m_open_handler);
+    con->set_close_handler(m_close_handler);
+    con->set_fail_handler(m_fail_handler);
     con->set_interrupt_handler(m_interrupt_handler);
 	
     con->set_termination_handler(

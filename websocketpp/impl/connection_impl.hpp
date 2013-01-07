@@ -977,8 +977,6 @@ void connection<config>::handle_send_http_response(
         "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
     );
     
-    m_handler->on_open(type::shared_from_this());
-
     if (m_open_handler) {
         m_open_handler(m_connection_hdl);
     }
@@ -994,10 +992,14 @@ void connection<config>::terminate() {
 
     if (m_state == session::state::CONNECTING) {
         m_state = session::state::CLOSED;
-        m_handler->on_fail(type::shared_from_this());
+        if (m_fail_handler) {
+            m_fail_handler(m_connection_hdl);
+        }
     } else {
         m_state = session::state::CLOSED;
-        m_handler->on_close(type::shared_from_this());
+        if (m_close_handler) {
+            m_close_handler(m_connection_hdl);
+        }
     }
     
     // call the termination handler if it exists

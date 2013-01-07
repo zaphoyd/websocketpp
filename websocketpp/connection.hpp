@@ -145,12 +145,12 @@ public:
         // TODO: validate is server only. hide from client handlers?
         virtual bool validate(connection_ptr con) {return true;} 
         
-        virtual void on_inturrupt(connection_ptr con) {}
+        //virtual void on_inturrupt(connection_ptr con) {}
 
-        virtual void on_open(connection_ptr con) {}
-        virtual void on_fail(connection_ptr con) {}
+        //virtual void on_open(connection_ptr con) {}
+        //virtual void on_fail(connection_ptr con) {}
         virtual void on_message(connection_ptr con, message_ptr msg) {}
-        virtual void on_close(connection_ptr con) {}
+        //virtual void on_close(connection_ptr con) {}
 
         virtual bool on_ping(connection_ptr con, const std::string &) {
             return true;
@@ -222,10 +222,45 @@ public:
         return m_connection_hdl;
     }
 
+    /// Set open handler
+    /**
+     * The open handler is called after the WebSocket handshake is complete and
+     * the connection is considered OPEN.
+     *
+     * @param h The new open_handler
+     */
     void set_open_handler(open_handler h) {
         m_open_handler = h;
     }
+
+    /// Set close handler
+    /**
+     * The close handler is called immediately after the connection is closed.
+     *
+     * @param h The new close_handler
+     */
+    void set_close_handler(close_handler h) {
+        m_close_handler = h;
+    }
     
+    /// Set fail handler
+    /**
+     * The fail handler is called whenever the connection fails while the 
+     * handshake is bring processed.
+     *
+     * @param h The new fail_handler
+     */
+    void set_fail_handler(fail_handler h) {
+        m_fail_handler = h;
+    }
+
+    /// Set interrupt handler
+    /**
+     * The interrupt handler is called whenever the connection is manually
+     * interrupted by the application.
+     *
+     * @param h The new interrupt_handler
+     */
     void set_interrupt_handler(interrupt_handler h) {
         m_interrupt_handler = h;
     }
@@ -709,11 +744,17 @@ private:
     // static settings
     const std::string		m_user_agent;
 	
-    /// Pointer to the handler
+    /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;
-    handler_ptr             m_handler;
+
+    /// Handler objects
     open_handler            m_open_handler;
+    close_handler           m_close_handler;
+    fail_handler            m_fail_handler;
     interrupt_handler       m_interrupt_handler;
+
+    /// Legacy Handler
+    handler_ptr             m_handler;
 
     /// External connection state
     /**
