@@ -34,24 +34,19 @@
 
 namespace websocketpp {
 
-/*namespace role {
-class server {
-public:
-	static bool is_server () {
-	    return true;
-	}
-};
-} // namespace role*/
-
+/// Server endpoint role based on the given config
+/**
+ *
+ */
 template <typename config>
-class server 
-  : public endpoint<connection<config>,config>
-{
+class server : public endpoint<connection<config>,config> {
 public:
+    /// Type of this endpoint
 	typedef server<config> type;	
 	
-	// endpoint policies
+	/// Type of the endpoint concurrency component
 	typedef typename config::concurrency_type concurrency_type;
+    /// Type of the endpoint transport component
 	typedef typename config::transport_type transport_type;
 	
 	// connection policies
@@ -59,33 +54,35 @@ public:
 	//typedef concurrency_type concurrency_con_policy;
 	//typedef typename transport_type::con_policy transport_con_policy;
 	
-	// connection type
+	/// Type of the connections this server will create
 	typedef connection<config> connection_type;
+	/// Type of a shared pointer to the connections this server will create
+    typedef typename connection_type::ptr connection_ptr;
+
+    /// Type of the connection transport component
+    typedef typename transport_type::transport_con_type transport_con_type;
+    /// Type of a shared pointer to the connection transport component
+    typedef typename transport_con_type::ptr transport_con_ptr;
+
+	/// Type of the endpoint component of this server
+	typedef endpoint<connection_type,config> endpoint_type;
 	
-	// endpoint base type
-	typedef endpoint<connection_type,config> base;
 	
-	
-	
-	typedef typename base::handler_type handler_type;
+	// TODO: clean up these types
+	typedef typename endpoint_type::handler_type handler_type;
 	typedef handler_type handler; // for backwards compatibility
-	typedef typename base::handler_ptr handler_ptr;
+	typedef typename endpoint_type::handler_ptr handler_ptr;
 
-	typedef typename base::connection_ptr connection_ptr;
-	typedef typename transport_type::con_policy trans_connection_type;
-	typedef typename transport_type::trans_connection_ptr trans_connection_ptr;
-
-	explicit server(typename base::handler_ptr default_handler) 
-	  : base(default_handler,true)
+	explicit server(typename endpoint_type::handler_ptr default_handler) 
+	  : endpoint_type(default_handler,true)
 	{
 		std::cout << "server constructor" << std::endl; 
 	}
 	
-
 	// return an initialized connection_ptr. Call start() on this object to 
 	// begin the processing loop.
 	connection_ptr get_connection() {
-		connection_ptr con = base::create_connection();
+		connection_ptr con = endpoint_type::create_connection();
 				
 		return con;
 	}
@@ -95,7 +92,7 @@ public:
 		connection_ptr con = get_connection();
 		
 		transport_type::async_accept(
-			lib::static_pointer_cast<trans_connection_type>(con),
+			lib::static_pointer_cast<transport_con_type>(con),
 			lib::bind(
 				&type::handle_accept,
 				this,
@@ -106,7 +103,7 @@ public:
 	}
 	
 	void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
-        connection_ptr con = base::get_con_from_hdl(hdl);
+        connection_ptr con = endpoint_type::get_con_from_hdl(hdl);
         
         if (!con) {
             // TODO: should this be considered a server fatal error?
