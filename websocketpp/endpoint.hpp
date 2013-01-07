@@ -123,6 +123,8 @@ public:
         m_pong_timeout_handler = h;
     }
     void set_interrupt_handler(interrupt_handler h) {m_interrupt_handler = h;}
+    void set_http_handler(http_handler h) {m_http_handler = h;}
+    void set_validate_handler(validate_handler h) {m_validate_handler = h;}
     
     /*************************************/
     /* Connection pass through functions */
@@ -181,6 +183,8 @@ private:
     pong_handler                m_pong_handler;
     pong_timeout_handler        m_pong_timeout_handler;
     interrupt_handler           m_interrupt_handler;
+    http_handler                m_http_handler;
+    validate_handler            m_validate_handler;
 
 	// endpoint resources
 	std::set<connection_ptr>	m_connections;

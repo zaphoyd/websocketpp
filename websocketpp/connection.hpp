@@ -142,10 +142,10 @@ public:
         typedef typename connection::ptr connection_ptr;
         typedef typename config::message_type::ptr message_ptr;
         
-        virtual void http(connection_ptr con) {}
+        //virtual void http(connection_ptr con) {}
 
         // TODO: validate is server only. hide from client handlers?
-        virtual bool validate(connection_ptr con) {return true;} 
+        //virtual bool validate(connection_ptr con) {return true;} 
         
         //virtual void on_inturrupt(connection_ptr con) {}
 
@@ -309,6 +309,37 @@ public:
         m_interrupt_handler = h;
     }
 
+    /// Set http handler
+    /**
+     * The http handler is called after an HTTP request other than a WebSocket
+     * upgrade request is received. It allows a WebSocket++ server to respond
+     * to regular HTTP requests on the same port as it processes WebSocket 
+     * connections. This can be useful for hosting error messages, flash 
+     * policy files, status pages, and other simple HTTP responses. It is not
+     * intended to be used as a primary web server.
+     *
+     * @param h The new http_handler
+     */
+    void set_http_handler(http_handler h) {
+        m_http_handler = h;
+    }
+    
+    /// Set validate handler
+    /**
+     * The validate handler is called after a WebSocket handshake has been 
+     * parsed but before a response is returned. It provides the application
+     * a chance to examine the request and determine whether or not it wants
+     * to accept the connection.
+     *
+     * Returning false from the validate handler will reject the connection.
+     * If no validate handler is present, all connections will be allowed.
+     *
+     * @param h The new validate_handler
+     */
+    void set_validate_handler(validate_handler h) {
+        m_validate_handler = h;
+    }
+    
     /// Set new connection handler
     /**
      * Will invoke the old handler's on_unload callback followed by the
@@ -799,6 +830,8 @@ private:
     pong_handler            m_pong_handler;
     pong_timeout_handler    m_pong_timeout_handler;
     interrupt_handler       m_interrupt_handler;
+    http_handler            m_http_handler;
+    validate_handler        m_validate_handler;
 
     /// Legacy Handler
     handler_ptr             m_handler;

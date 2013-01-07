@@ -65,6 +65,8 @@ endpoint<connection,config>::create_connection() {
     con->set_pong_handler(m_pong_handler);
     con->set_pong_timeout_handler(m_pong_timeout_handler);
     con->set_interrupt_handler(m_interrupt_handler);
+    con->set_http_handler(m_http_handler);
+    con->set_validate_handler(m_validate_handler);
 	
     con->set_termination_handler(
 	    lib::bind(

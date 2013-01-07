@@ -762,7 +762,9 @@ bool connection<config>::process_handshake_request() {
         // this is not a websocket handshake. Process as plain HTTP
         std::cout << "HTTP REQUEST" << std::endl;
 
-        m_handler->http(type::shared_from_this());
+        if (m_http_handler) {
+            m_http_handler(m_connection_hdl);
+        }
 
         return true;
     }
@@ -809,7 +811,7 @@ bool connection<config>::process_handshake_request() {
     }
     
     // Ask application to validate the connection
-    if (m_handler->validate(type::shared_from_this())) {
+    if (!m_validate_handler || m_validate_handler(m_connection_hdl)) {
         m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
         
         // Write the appropriate response headers based on request and 
