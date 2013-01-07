@@ -37,9 +37,10 @@ namespace config {
 struct asio : public core {
 	typedef core::concurrency_type concurrency_type;
 	
-	typedef websocketpp::transport::security::none security_type;
+	typedef websocketpp::transport::asio::basic_socket::endpoint socket_type;
 	
-	typedef websocketpp::transport::asio::endpoint<concurrency_type,security_type> transport_type;
+	typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
+        transport_type;
 
 	typedef core::request_type request_type;
 	typedef core::response_type response_type;

@@ -53,7 +53,8 @@ struct core {
     typedef websocketpp::concurrency::none concurrency_type;
 	
     // Transport Policy
-    typedef websocketpp::transport::iostream::endpoint<concurrency_type> transport_type;
+    typedef websocketpp::transport::iostream::endpoint<concurrency_type> 
+        transport_type;
 
     // HTTP Parser Policies
     typedef http::parser::request request_type;
