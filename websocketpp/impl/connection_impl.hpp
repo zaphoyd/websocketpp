@@ -59,7 +59,7 @@ void connection<config>::set_handler(
     }
     m_handler = new_handler;
     
-    transport_type::set_handler(new_handler);
+    transport_con_type::set_handler(new_handler);
     
     new_handler->on_load(type::shared_from_this(),old_handler);
 }
@@ -133,7 +133,7 @@ void connection<config>::send(typename config::message_type::ptr msg) {
     }
     
 	if (needs_writing) {
-		transport_type::dispatch(lib::bind(
+		transport_con_type::dispatch(lib::bind(
 			&type::write_frame,
 			type::shared_from_this()
 		));
@@ -165,7 +165,7 @@ void connection<config>::ping(const std::string& payload) {
     }
 
     if (needs_writing) {
-		transport_type::dispatch(lib::bind(
+		transport_con_type::dispatch(lib::bind(
 			&type::write_frame,
 			type::shared_from_this()
 		));
@@ -199,7 +199,7 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     }
 
     if (needs_writing) {
-		transport_type::dispatch(lib::bind(
+		transport_con_type::dispatch(lib::bind(
 			&type::write_frame,
 			type::shared_from_this()
 		));
@@ -256,7 +256,7 @@ void connection<config>::close(const close::status::value code,
 template <typename config>
 lib::error_code connection<config>::interrupt() {
     std::cout << "connection::interrupt" << std::endl;
-    return transport_type::interrupt(
+    return transport_con_type::interrupt(
         lib::bind(
             &type::handle_interrupt,
             type::shared_from_this()
@@ -422,7 +422,7 @@ void connection<config>::start() {
     // Depending on how the transport impliments init this function may return
     // immediately and call handle_transport_init later or call 
     // handle_transport_init from this function.
-    transport_type::init(
+    transport_con_type::init(
         lib::bind(
             &type::handle_transport_init,
             type::shared_from_this(),
@@ -481,7 +481,7 @@ template <typename config>
 void connection<config>::read(size_t num_bytes) {
     std::cout << "connection read" << std::endl;
     
-    transport_type::async_read_at_least(
+    transport_con_type::async_read_at_least(
         num_bytes,
         m_buf,
         config::connection_read_buffer_size,
@@ -585,7 +585,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
         this->send_http_response();
     } else {
         // read at least 1 more byte
-        transport_type::async_read_at_least(
+        transport_con_type::async_read_at_least(
             1,
             m_buf,
             config::connection_read_buffer_size,
@@ -696,7 +696,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 	    }
     }
     
-    transport_type::async_read_at_least(
+    transport_con_type::async_read_at_least(
         // std::min wont work with undefined static const values.
         // TODO: is there a more elegant way to do this?
         // Need to determine if requesting 1 byte or the exact number of bytes 
@@ -876,7 +876,7 @@ template <typename config>
 void connection<config>::write(std::string msg) {
     std::cout << "connection write" << std::endl;
     
-    transport_type::async_write(
+    transport_con_type::async_write(
         msg.c_str(),
         msg.size(),
         lib::bind(
@@ -924,7 +924,7 @@ void connection<config>::send_http_response() {
     std::cout << raw << std::endl;
     
     // write raw bytes
-    transport_type::async_write(
+    transport_con_type::async_write(
         raw.c_str(),
         raw.size(),
         lib::bind(
@@ -994,7 +994,7 @@ template <typename config>
 void connection<config>::terminate() {
     std::cout << "connection terminate" << std::endl;
     
-    transport_type::shutdown();
+    transport_con_type::shutdown();
 
     if (m_state == session::state::CONNECTING) {
         m_state = session::state::CLOSED;
@@ -1049,7 +1049,7 @@ void connection<config>::write_frame() {
     std::cout << "frame is: " << utility::to_hex(header) 
               << utility::to_hex(payload) << std::endl;
 
-    transport_type::async_write(
+    transport_con_type::async_write(
         m_send_buffer,
         lib::bind(
             &type::handle_write_frame,
@@ -1086,7 +1086,7 @@ void connection<config>::handle_write_frame(bool terminate,
     }
 
     if (needs_writing) {
-		transport_type::dispatch(lib::bind(
+		transport_con_type::dispatch(lib::bind(
 			&type::write_frame,
 			type::shared_from_this()
 		));
@@ -1256,7 +1256,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     bool needs_writing = write_push(msg);
     
     if (needs_writing) {
-		transport_type::dispatch(lib::bind(
+		transport_con_type::dispatch(lib::bind(
 			&type::write_frame,
 			type::shared_from_this()
 		));
@@ -1273,7 +1273,7 @@ connection<config>::get_processor(int version) const {
         case 0:
             return processor_ptr(
                 new processor::hybi00<config>(
-                    transport_type::is_secure(),
+                    transport_con_type::is_secure(),
                     m_is_server,
                     m_msg_manager
                 )
@@ -1282,7 +1282,7 @@ connection<config>::get_processor(int version) const {
         case 7:
             return processor_ptr(
                 new processor::hybi07<config>(
-                    transport_type::is_secure(),
+                    transport_con_type::is_secure(),
                     m_is_server,
                     m_msg_manager
                 )
@@ -1291,7 +1291,7 @@ connection<config>::get_processor(int version) const {
         case 8:
             return processor_ptr(
                 new processor::hybi08<config>(
-                    transport_type::is_secure(),
+                    transport_con_type::is_secure(),
                     m_is_server,
                     m_msg_manager
                 )
@@ -1300,7 +1300,7 @@ connection<config>::get_processor(int version) const {
         case 13:
             return processor_ptr(
                 new processor::hybi13<config>(
-                    transport_type::is_secure(),
+                    transport_con_type::is_secure(),
                     m_is_server,
                     m_msg_manager
                 )

@@ -110,20 +110,28 @@ namespace internal_state {
 // impliments the websocket state machine
 template <typename config>
 class connection
- : public config::transport_type::con_policy
+ : public config::transport_type::transport_con_type
  , public lib::enable_shared_from_this< connection<config> >
 {
 public:
+    /// Type of this connection
     typedef connection<config> type;
+    /// Type of a shared pointer to this connection
     typedef lib::shared_ptr<type> ptr;
+    /// Type of a weak pointer to this connection
     typedef lib::weak_ptr<type> weak_ptr;
     
+    /// Type of the concurrency component of this connection
     typedef typename config::concurrency_type concurrency_type;
-    typedef typename config::transport_type::con_policy transport_type;
-    
+    /// Type of the transport component of this connection
+    typedef typename config::transport_type::transport_con_type 
+        transport_con_type;
+    /// Type of a shared pointer to the transport component of this connection
+    typedef typename transport_con_type::ptr transport_con_ptr;
+
     typedef lib::function<void(ptr)> termination_handler;
     
-    class handler : public transport_type::handler_interface {
+    class handler : public transport_con_type::handler_interface {
     public:
         typedef handler type;
         typedef lib::shared_ptr<type> ptr;
@@ -175,7 +183,7 @@ public:
     typedef session::internal_state::value istate_type;
 
     explicit connection(bool is_server, const std::string& ua)
-      : transport_type(is_server)
+      : transport_con_type(is_server)
       , m_user_agent(ua)
       , m_state(session::state::CONNECTING)
       , m_internal_state(session::internal_state::USER_INIT)
@@ -199,7 +207,7 @@ public:
      */
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
-        transport_type::set_handle(hdl);
+        transport_con_type::set_handle(hdl);
     }
     
     /// Get Connection Handle

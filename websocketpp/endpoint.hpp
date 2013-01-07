@@ -40,20 +40,32 @@ static const char user_agent[] = "WebSocket++/0.3.0dev";
 
 // creates and manages connections
 template <typename connection, typename config>
-class endpoint 
-  : public config::transport_type
-{
+class endpoint : public config::transport_type {
 public:
 	// Import appropriate types from our helper class
 	// See endpoint_types for more details.
 	typedef endpoint<connection,config> type;
 	
-	typedef connection connection_type;
+    /// Type of the transport component of this endpoint
+    typedef typename config::transport_type transport_type;
+    /// Type of the concurrency component of this endpoint
 	typedef typename config::concurrency_type concurrency_type;
-	typedef typename config::transport_type transport_type;
-	
+
+    /// Type of the connections that this endpoint creates
+	typedef connection connection_type;
+    /// Shared pointer to connection_type
 	typedef typename connection_type::ptr connection_ptr;
+    /// Weak pointer to connection type
 	typedef typename connection_type::weak_ptr connection_weak_ptr;
+    
+    /// Type of the transport component of the connections that this endpoint 
+    /// creates
+    typedef typename transport_type::transport_con_type transport_con_type;
+    /// Type of a shared pointer to the transport component of the connections
+    /// that this endpoint creates.
+    typedef typename transport_con_type::ptr transport_con_ptr;
+	
+    // TODO: organize these
 	typedef typename connection_type::handler handler_type;
 	typedef typename handler_type::ptr handler_ptr;
 	typedef typename connection_type::termination_handler termination_handler;
