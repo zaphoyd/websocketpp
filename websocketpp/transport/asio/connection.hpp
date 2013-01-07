@@ -70,7 +70,7 @@ public:
     typedef boost::asio::io_service* io_service_ptr;	
 
     // TODO: clean up the rest of these types
-	class handler_interface : public socket_con_type::handler_interface {
+	class handler_interface {
 	public:
 	};
 	
@@ -235,8 +235,6 @@ protected:
     
 	void set_handler(handler_ptr new_handler) {
 		m_handler = new_handler;
-		
-		socket_con_type::set_handler(m_handler);
 	}
     
     /// Set Connection Handle

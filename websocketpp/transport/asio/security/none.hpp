@@ -60,14 +60,6 @@ public:
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
 	
-    // TODO: clean up these types
-	class handler_interface {
-	public:
-		virtual void on_socket_init(boost::asio::ip::tcp::socket& socket) {};
-	};
-	
-	typedef lib::shared_ptr<handler_interface> handler_ptr;
-	
 	explicit connection() : m_state(UNINITIALIZED) {
 		std::cout << "transport::asio::basic_socket::connection constructor" 
                   << std::endl; 
@@ -146,10 +138,6 @@ protected:
 	 	callback(lib::error_code());
 	}
 	
-	void set_handler(handler_ptr new_handler) {
-		m_handler = new_handler;
-	}
-    
     /// Sets the connection handle
     /**
      * The connection handle is passed to any handlers to identify the 
@@ -176,7 +164,6 @@ private:
 	
 	socket_ptr	        m_socket;
 	state		        m_state;
-	handler_ptr         m_handler;
 
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;

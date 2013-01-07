@@ -75,15 +75,6 @@ public:
 	
 	typedef boost::system::error_code boost_error;
 	
-	class handler_interface {
-	public:
-		virtual void on_socket_init(socket_type::lowest_layer_type& socket) {};
-		virtual lib::shared_ptr<boost::asio::ssl::context> on_tls_init() = 0;
-	};
-	
-	typedef lib::shared_ptr<handler_interface> handler_ptr;
-	
-	
 	explicit connection() {
 		std::cout << "transport::asio::tls_socket::connection constructor" 
                   << std::endl; 
@@ -244,10 +235,6 @@ protected:
 		callback(lib::error_code());
 	}
 	
-	void set_handler(handler_ptr new_handler) {
-		m_handler = new_handler;
-	}
-
     void shutdown() {
         boost::system::error_code ec;
         m_socket->shutdown(ec);
@@ -268,7 +255,6 @@ private:
 	socket_ptr		    m_socket;
 	timer_ptr		    m_timer;
 	bool			    m_is_server;
-	handler_ptr		    m_handler;
     
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
