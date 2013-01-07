@@ -47,20 +47,34 @@ namespace asio {
 
 typedef lib::function<void(connection_hdl)> tcp_init_handler;
 
-template <typename security>
-class connection : public security {
+/// Boost Asio based connection transport component
+/**
+ * transport::asio::connection impliments a connection transport component using
+ * Boost ASIO that works with the transport::asio::endpoint endpoint transport
+ * component.
+ */
+template <typename socket>
+class connection : public socket {
 public:
-	typedef connection<security> type;
-	typedef security security_type;
-	
+    /// Type of this connection transport component
+	typedef connection<socket> type;
+    /// Type of a shared pointer to this connection transport component
     typedef lib::shared_ptr<type> ptr;
 
-	class handler_interface : public security_type::handler_interface {
+    /// Type of the socket connection component
+    typedef socket socket_con_type;
+    /// Type of a shared pointer to the socket connection component
+    typedef typename socket_con_type::ptr socket_con_ptr;
+	
+    /// Type of a pointer to the ASIO io_service being used
+    typedef boost::asio::io_service* io_service_ptr;	
+
+    // TODO: clean up the rest of these types
+	class handler_interface : public socket_con_type::handler_interface {
 	public:
 	};
 	
 	typedef lib::shared_ptr<handler_interface> handler_ptr;
-    typedef boost::asio::io_service* io_service_ptr;	
 
 	// generate and manage our own io_service
 	explicit connection(bool is_server)
@@ -70,7 +84,7 @@ public:
 	}
 	
 	bool is_secure() const {
-	    return security::is_secure();
+	    return socket_con_type::is_secure();
 	}
 	
 	/// Finish constructing the transport
@@ -88,7 +102,7 @@ public:
 
         //m_strand.reset(new boost::asio::strand(*io_service));
     	
-    	security::init_asio(io_service, m_is_server);
+    	socket_con_type::init_asio(io_service, m_is_server);
     }
 
     void set_tcp_init_handler(tcp_init_handler h) {
@@ -108,7 +122,7 @@ protected:
     void init(init_handler callback) {
 		std::cout << "asio connection init" << std::endl;
 		
-		security_type::init(
+		socket_con_type::init(
 			lib::bind(
 				&type::handle_init,
 				this,
@@ -144,7 +158,7 @@ protected:
 		}
 		
 		boost::asio::async_read(
-			security_type::get_socket(),
+			socket_con_type::get_socket(),
 			boost::asio::buffer(buf,len),
 			boost::asio::transfer_at_least(num_bytes),
 			lib::bind(
@@ -177,7 +191,7 @@ protected:
         m_bufs.push_back(boost::asio::buffer(buf,len));
     	
         boost::asio::async_write(
-			security_type::get_socket(),
+			socket_con_type::get_socket(),
             m_bufs,
 			lib::bind(
 				&type::handle_async_write,
@@ -196,7 +210,7 @@ protected:
         }
         
     	boost::asio::async_write(
-			security_type::get_socket(),
+			socket_con_type::get_socket(),
 			m_bufs,
 			lib::bind(
 				&type::handle_async_write,
@@ -222,7 +236,7 @@ protected:
 	void set_handler(handler_ptr new_handler) {
 		m_handler = new_handler;
 		
-		security::set_handler(m_handler);
+		socket_con_type::set_handler(m_handler);
 	}
     
     /// Set Connection Handle
@@ -260,7 +274,7 @@ protected:
     
     /// close and clean up the underlying socket
     void shutdown() {
-        security_type::shutdown();
+        socket_con_type::shutdown();
     }
 private:
 	// static settings

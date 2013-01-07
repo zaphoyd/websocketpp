@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,30 +43,35 @@ namespace websocketpp {
 namespace transport {
 namespace asio {
 
+/// Boost Asio based endpoint transport component
 /**
- * 
- * 
- * 
- * 
- * 
-From Endpoint
-- get new connection
-
-
-*/
-
-template <typename concurrency, typename security>
-class endpoint : public security {
+ * transport::asio::endpoint impliments an endpoint transport component using
+ * Boost ASIO.
+ */
+template <typename concurrency, typename socket>
+class endpoint : public socket {
 public:
-	typedef endpoint<concurrency,security> type;
-		
-	typedef asio::connection<security> con_policy;
-	
-	//typedef lib::shared_ptr<boost::asio::io_service> io_service_ptr;
+    /// Type of this endpoint transport component
+	typedef endpoint<concurrency,socket> type;
+    
+    /// Type of the socket endpoint component
+    typedef socket socket_type;
+    /// Type of the socket connection component
+    typedef typename socket_type::socket_con_type socket_con_type;
+    /// Type of a shared pointer to the socket connection component
+    typedef typename socket_con_type::ptr socket_con_ptr;
+    
+    /// Type of the connection transport component associated with this
+    /// endpoint transport component
+	typedef asio::connection<socket_con_type> transport_con_type;
+    /// Type of a shared pointer to the connection transport component
+    /// associated with this endpoint transport component
+    typedef typename transport_con_type::ptr transport_con_ptr;
+
+    /// Type of a pointer to the ASIO io_service being used
 	typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a shared pointer to the acceptor being used
 	typedef lib::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr;
-	
-    typedef typename con_policy::ptr trans_connection_ptr;
 
 	// generate and manage our own io_service
 	explicit endpoint() 
@@ -191,10 +196,11 @@ public:
 
 	// Accept the next connection attempt via m_acceptor and assign it to con.
 	// callback is called 
-	void async_accept(trans_connection_ptr tcon, accept_handler callback) {
+	void async_accept(transport_con_ptr tcon, accept_handler callback) {
 		if (m_state != LISTENING) {
 			// TODO: throw invalid state
-			std::cout << "asio::async_accept called from the wrong state" << std::endl;
+			std::cout << "asio::async_accept called from the wrong state" 
+                      << std::endl;
 			throw;
 		}
 		
@@ -274,16 +280,19 @@ protected:
 	
 	/// Initialize a connection
 	/**
-	 * init(connection_ptr) is called by an endpoint once for each newly created
-	 * connection. It's purpose is to give the transport policy the chance to
-	 * perform any transport specific initialization that couldn't be done via
-	 * the default constructor.
+	 * init is called by an endpoint once for each newly created connection. It's 
+     * purpose is to give the transport policy the chance to perform any transport 
+     * specific initialization that couldn't be done via the default constructor.
+     *
+     * @param tcon A pointer to the transport portion of the connection.
 	 */
-	template <typename connection_ptr>
-	void init(connection_ptr con) {
-		// init tls?
-		con->init_asio(m_io_service);
-        con->set_tcp_init_handler(m_tcp_init_handler);
+	void init(transport_con_ptr tcon) {
+		tcon->init_asio(m_io_service);
+        tcon->set_tcp_init_handler(m_tcp_init_handler);
+
+        // Initialize the connection socket component
+        socket_type::init(lib::static_pointer_cast<socket_con_type,
+            transport_con_type>(tcon));
 	}
 private:
 	enum state {
