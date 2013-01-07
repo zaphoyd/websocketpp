@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP
-#define WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP
+#ifndef WEBSOCKETPP_TRANSPORT_ASIO_SOCKET_BASE_HPP
+#define WEBSOCKETPP_TRANSPORT_ASIO_SOCKET_BASE_HPP
 
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
@@ -41,10 +41,11 @@
 
 namespace websocketpp {
 namespace transport {
-namespace security {
+namespace asio {
+namespace socket {
 
 /**
- * The transport::security::* classes are a set of security/socket related
+ * The transport::asio::socket::* classes are a set of security/socket related
  * policies and support code for the ASIO transport types.
  */
 
@@ -53,7 +54,11 @@ namespace error {
 		/// Catch-all error for security policy errors that don't fit in other
 		/// categories
 		security = 1,
-		
+	    
+        /// Catch-all error for socket component errors that don't fit in other
+        /// categories
+        socket,
+
 		/// A function was called in a state that it was illegal to do so.
 		invalid_state,
 		
@@ -65,20 +70,25 @@ namespace error {
 		tls_handshake_timeout,
 		
 		/// pass_through from underlying library
-		pass_through
+		pass_through,
+
+        /// Required tls_init handler not present
+        missing_tls_init_handler
 	};
 } // namespace error
 
-class security_category : public lib::error_category {
+class socket_category : public lib::error_category {
 public:
 	const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-		return "websocketpp.transport.asio.security";
+		return "websocketpp.transport.asio.socket";
 	}
 	
 	std::string message(int value) const {
 		switch(value) {
 			case error::security:
 				return "Security policy error";
+			case error::socket:
+				return "Socket component error";
 			case error::invalid_state:
 				return "Invalid state";
 			case error::invalid_tls_context:
@@ -87,27 +97,28 @@ public:
 				return "TLS handshake timed out";
 			case error::pass_through:
 				return "Pass through from underlying library";
+            case error::missing_tls_init_handler:
+				return "Required tls_init handler not present.";
 			default:
 				return "Unknown";
 		}
 	}
 };
 
-const lib::error_category& get_security_category() {
-    static security_category instance;
+const lib::error_category& get_socket_category() {
+    static socket_category instance;
     return instance;
 }
 
-//static const security_category error_category;
-
 lib::error_code make_error(error::value e) {
-	return lib::error_code(static_cast<int>(e), get_security_category());
+	return lib::error_code(static_cast<int>(e), get_socket_category());
 }
 
 typedef lib::function<void(const lib::error_code&)> init_handler;
 
-} // namespace security
+} // namespace socket
+} // namespace asio
 } // namespace transport
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_TRANSPORT_SECURITY_BASE_HPP
+#endif // WEBSOCKETPP_TRANSPORT_ASIO_SOCKET_BASE_HPP

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,13 +37,30 @@
 
 namespace websocketpp {
 namespace transport {
-namespace security {
+namespace asio {
+namespace basic_socket {
 
-class none {
+typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)> 
+    socket_init_handler;
+
+/// Basic Boost ASIO connection socket component
+/**
+ * transport::asio::basic_socket::connection impliments a connection socket
+ * component using Boost ASIO ip::tcp::socket.
+ */
+class connection {
 public:
-	typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+    /// Type of this connection socket component
+	typedef connection type;
+    /// Type of a shared pointer to this connection socket component
+    typedef lib::shared_ptr<type> ptr;
+
+    /// Type of a pointer to the ASIO io_service being used
 	typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a shared pointer to the socket being used.
+    typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
 	
+    // TODO: clean up these types
 	class handler_interface {
 	public:
 		virtual void on_socket_init(boost::asio::ip::tcp::socket& socket) {};
@@ -51,15 +68,31 @@ public:
 	
 	typedef lib::shared_ptr<handler_interface> handler_ptr;
 	
-	explicit none() : m_state(UNINITIALIZED)
-	{
-		std::cout << "transport::security::none constructor" << std::endl; 
+	explicit connection() : m_state(UNINITIALIZED) {
+		std::cout << "transport::asio::basic_socket::connection constructor" 
+                  << std::endl; 
 	}
 	
+    /// Check whether or not this connection is secure
+    /**
+     * @return Wether or not this connection is secure
+     */
 	bool is_secure() const {
 	    return false;
 	}
 	
+    /// Set the socket initialization handler
+    /**
+     * The socket initialization handler is called after the socket object is
+     * created but before it is used. This gives the application a chance to
+     * set any ASIO socket options it needs.
+     *
+     * @param h The new socket_init_handler
+     */
+    void set_socket_init_handler(socket_init_handler h) {
+        m_socket_init_handler = h;
+    }
+
 	/// Retrieve a pointer to the underlying socket
 	/**
 	 * This is used internally. It can also be used to set socket options, etc
@@ -87,7 +120,7 @@ protected:
 	 */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
     	if (m_state != UNINITIALIZED) {
-    		return make_error(error::invalid_state);
+    		return socket::make_error(socket::error::invalid_state);
     	}
     	
     	m_socket.reset(new boost::asio::ip::tcp::socket(*service));
@@ -100,11 +133,13 @@ protected:
 	/// Initialize security policy for reading
 	void init(init_handler callback) {
 		if (m_state != READY) {
-	 		callback(make_error(error::invalid_state));
+	 		callback(socket::make_error(socket::error::invalid_state));
 	 		return;
 	 	}
 	 	
-	 	m_handler->on_socket_init(*m_socket);
+        if (m_socket_init_handler) {
+            m_socket_init_handler(m_hdl,*m_socket);
+        }
 	 	
 	 	m_state = READING;
 	 	
@@ -114,6 +149,17 @@ protected:
 	void set_handler(handler_ptr new_handler) {
 		m_handler = new_handler;
 	}
+    
+    /// Sets the connection handle
+    /**
+     * The connection handle is passed to any handlers to identify the 
+     * connection
+     *
+     * @param hdl The new handle
+     */
+    void set_handle(connection_hdl hdl) {
+        m_hdl = hdl;
+    }
 
     void shutdown() {
         boost::system::error_code ec;
@@ -128,12 +174,70 @@ private:
 		READING = 2
 	};
 	
-	socket_ptr	m_socket;
-	state		m_state;
-	handler_ptr m_handler;
+	socket_ptr	        m_socket;
+	state		        m_state;
+	handler_ptr         m_handler;
+
+    connection_hdl      m_hdl;
+    socket_init_handler m_socket_init_handler;
 };
 
-} // namespace security
+/// Basic ASIO endpoint socket component
+/**
+ * transport::asio::basic_socket::endpoint impliments an endpoint socket
+ * component that uses Boost ASIO's ip::tcp::socket.
+ */
+class endpoint {
+public:
+    /// The type of this endpoint socket component
+    typedef endpoint type;
+    
+    /// The type of the corresponding connection socket component
+    typedef connection socket_con_type;
+    /// The type of a shared pointer to the corresponding connection socket
+    /// component.
+    typedef typename socket_con_type::ptr socket_con_ptr;
+    
+	explicit endpoint() {
+		std::cout << "transport::asio::basic_socket::endpoint constructor" 
+                  << std::endl; 
+	}
+
+    /// Checks whether the endpoint creates secure connections
+    /**
+     * @return Wether or not the endpoint creates secure connections
+     */
+    bool is_secure() const {
+        return false;
+    }
+
+    /// Set socket init handler
+    /**
+     * The socket init handler is called after a connection's socket is created
+     * but before it is used. This gives the end application an opportunity to 
+     * set asio socket specific parameters.
+     *
+     * @param h The new socket_init_handler
+     */
+    void set_socket_init_handler(socket_init_handler h) {
+        m_socket_init_handler = h;
+    }
+
+protected:
+    /// Initialize a connection
+    /**
+     * Called by the transport after a new connection is created to initialize
+     * the socket component of the connection.
+     */
+    void init(socket_con_ptr scon) {
+        scon->set_socket_init_handler(m_socket_init_handler);
+    }
+private:
+    socket_init_handler m_socket_init_handler;
+};
+
+} // namespace basic_socket
+} // namespace asio
 } // namespace transport
 } // namespace websocketpp
 
