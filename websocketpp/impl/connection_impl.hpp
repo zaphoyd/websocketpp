@@ -42,9 +42,7 @@ namespace websocketpp {
 namespace istate = session::internal_state;
 
 template <typename config>
-void connection<config>::set_handler(
-    handler_ptr new_handler)
-{
+void connection<config>::set_handler(handler_ptr new_handler) {
     std::cout << "connection set_handler" << std::endl;
     //scoped_lock_type lock(m_connection_state_lock);
 
@@ -58,8 +56,6 @@ void connection<config>::set_handler(
         old_handler->on_unload(type::shared_from_this(),new_handler);
     }
     m_handler = new_handler;
-    
-    transport_con_type::set_handler(new_handler);
     
     new_handler->on_load(type::shared_from_this(),old_handler);
 }

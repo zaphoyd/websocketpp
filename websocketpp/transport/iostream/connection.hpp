@@ -50,10 +50,6 @@ public:
     typedef lib::shared_ptr<type> ptr;
 	
     // TODO: clean up the rest of these types
-	class handler_interface {};
-	
-	typedef lib::shared_ptr<handler_interface> handler_ptr;
-	
 	typedef typename concurrency::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency::mutex_type mutex_type;
 	
@@ -162,10 +158,6 @@ protected:
         }
     }
 
-	void set_handler(handler_ptr new_handler) {
-		m_handler = new_handler;
-	}
-    
     /// Set Connection Handle
     /**
      * @param hdl The new handle
@@ -223,7 +215,6 @@ private:
 	
 	// transport resources
 	std::ostream*   output_stream;
-	handler_ptr		m_handler;
     connection_hdl  m_connection_hdl;
 	
 	bool			m_reading;

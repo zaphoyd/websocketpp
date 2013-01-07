@@ -69,13 +69,6 @@ public:
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;	
 
-    // TODO: clean up the rest of these types
-	class handler_interface {
-	public:
-	};
-	
-	typedef lib::shared_ptr<handler_interface> handler_ptr;
-
 	// generate and manage our own io_service
 	explicit connection(bool is_server)
 	  : m_is_server(is_server)
@@ -233,10 +226,6 @@ protected:
     	}
     }
     
-	void set_handler(handler_ptr new_handler) {
-		m_handler = new_handler;
-	}
-    
     /// Set Connection Handle
     /**
      * See common/connection_hdl.hpp for information
@@ -284,7 +273,6 @@ private:
 	
 	// transport resources
     io_service_ptr      m_io_service;
-	handler_ptr			m_handler;
     connection_hdl      m_connection_hdl;
     std::vector<boost::asio::const_buffer> m_bufs;
 

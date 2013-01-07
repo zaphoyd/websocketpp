@@ -131,7 +131,7 @@ public:
 
     typedef lib::function<void(ptr)> termination_handler;
     
-    class handler : public transport_con_type::handler_interface {
+    class handler {
     public:
         typedef handler type;
         typedef lib::shared_ptr<type> ptr;
