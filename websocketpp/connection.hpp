@@ -54,6 +54,8 @@ typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
 typedef lib::function<void(connection_hdl,std::string)> pong_handler;
 typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
 
+typedef lib::function<bool(connection_hdl)> validate_handler;
+typedef lib::function<void(connection_hdl)> http_handler;
 
 // constants related to the default WebSocket protocol versions available
 #ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
@@ -152,11 +154,11 @@ public:
         virtual void on_message(connection_ptr con, message_ptr msg) {}
         //virtual void on_close(connection_ptr con) {}
 
-        virtual bool on_ping(connection_ptr con, const std::string &) {
-            return true;
-        }
-        virtual void on_pong(connection_ptr con, const std::string &) {}
-        virtual void on_pong_timeout(connection_ptr con, const std::string &) {}
+        //virtual bool on_ping(connection_ptr con, const std::string &) {
+        //    return true;
+        //}
+        //virtual void on_pong(connection_ptr con, const std::string &) {}
+        //virtual void on_pong_timeout(connection_ptr con, const std::string &) {}
 
         virtual void on_load(connection_ptr con, ptr old_handler) {}
         virtual void on_unload(connection_ptr con, ptr new_handler) {}
@@ -254,6 +256,48 @@ public:
         m_fail_handler = h;
     }
 
+    /// Set ping handler
+    /**
+     * The ping handler is called whenever the connection receives a ping 
+     * control frame. The ping payload is included.
+     *
+     * The ping handler's return time controls whether or not a pong is
+     * sent in response to this ping. Returning false will suppress the
+     * return pong. If no ping handler is set a pong will be sent.
+     *
+     * @param h The new ping_handler
+     */
+    void set_ping_handler(ping_handler h) {
+        m_ping_handler = h;
+    }
+    
+    /// Set pong handler
+    /**
+     * The pong handler is called whenever the connection receives a pong
+     * control frame. The pong payload is included.
+     *
+     * @param h The new pong_handler
+     */
+    void set_pong_handler(pong_handler h) {
+        m_pong_handler = h;
+    }
+    
+    /// Set pong timeout handler
+    /**
+     * If the transport component being used supports timers, the pong timeout 
+     * handler is called whenever a pong control frame is not received with the
+     * configured timeout period after the application sends a ping.
+     *
+     * This can be used to probe the health of the remote endpoint's WebSocket 
+     * implimentation. This does not guarantee that the remote application 
+     * itself is still healthy but can be a useful diagnostic.
+     *
+     * @param h The new pong_timeout_handler
+     */
+    void set_pong_timeout_handler(pong_timeout_handler h) {
+        m_pong_timeout_handler = h;
+    }
+    
     /// Set interrupt handler
     /**
      * The interrupt handler is called whenever the connection is manually
@@ -751,6 +795,9 @@ private:
     open_handler            m_open_handler;
     close_handler           m_close_handler;
     fail_handler            m_fail_handler;
+    ping_handler            m_ping_handler;
+    pong_handler            m_pong_handler;
+    pong_timeout_handler    m_pong_timeout_handler;
     interrupt_handler       m_interrupt_handler;
 
     /// Legacy Handler

@@ -34,6 +34,8 @@
 
 namespace websocketpp {
 
+typedef lib::function<bool(connection_hdl)> validate_handler;
+
 /// Server endpoint role based on the given config
 /**
  *

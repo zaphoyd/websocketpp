@@ -117,6 +117,11 @@ public:
     void set_open_handler(open_handler h) {m_open_handler = h;}
     void set_close_handler(close_handler h) {m_close_handler = h;}
     void set_fail_handler(fail_handler h) {m_fail_handler = h;}
+    void set_ping_handler(ping_handler h) {m_ping_handler = h;}
+    void set_pong_handler(pong_handler h) {m_pong_handler = h;}
+    void set_pong_timeout_handler(pong_timeout_handler h) {
+        m_pong_timeout_handler = h;
+    }
     void set_interrupt_handler(interrupt_handler h) {m_interrupt_handler = h;}
     
     /*************************************/
@@ -172,6 +177,9 @@ private:
     open_handler                m_open_handler;
     close_handler               m_close_handler;
     fail_handler                m_fail_handler;
+    ping_handler                m_ping_handler;
+    pong_handler                m_pong_handler;
+    pong_timeout_handler        m_pong_timeout_handler;
     interrupt_handler           m_interrupt_handler;
 
 	// endpoint resources

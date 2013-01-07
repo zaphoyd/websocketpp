@@ -1148,8 +1148,13 @@ void connection<config>::process_control_frame(typename
     lib::error_code ec;
 
     if (op == frame::opcode::PING) {
-        if (m_handler->on_ping(type::shared_from_this(),msg->get_payload())) {
-            // send pong
+        bool pong = true;
+        
+        if (m_ping_handler) {
+            pong = m_ping_handler(m_connection_hdl, msg->get_payload());
+        }
+
+        if (pong) {
             this->pong(msg->get_payload(),ec);
             if (ec) {
                 std::cout << "Failed to send response pong: " 
@@ -1157,7 +1162,9 @@ void connection<config>::process_control_frame(typename
             }
         }
     } else if (op == frame::opcode::PONG) {
-        m_handler->on_pong(type::shared_from_this(), msg->get_payload());
+        if (m_pong_handler) {
+            m_pong_handler(m_connection_hdl, msg->get_payload());
+        }
     } else if (op == frame::opcode::CLOSE) {
         std::cout << "Got close frame" << std::endl;
         // record close code and reason somewhere
