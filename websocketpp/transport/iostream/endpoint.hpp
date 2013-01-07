@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 
+#include <websocketpp/common/memory.hpp>
+
 #include <websocketpp/transport/iostream/connection.hpp>
 
 #include <iostream>
@@ -39,9 +41,18 @@ namespace iostream {
 template <typename concurrency>
 class endpoint {
 public:
-	typedef iostream::connection<concurrency> con_policy;
-    typedef typename con_policy::ptr trans_connection_ptr;
+    /// Type of this endpoint transport component
+    typedef endpoint type;
+    /// Type of a pointer to this endpoint transport component
+    typedef lib::shared_ptr<type> ptr;
 
+    /// Type of this endpoint transport component's associated connection
+    /// transport component.
+	typedef iostream::connection<concurrency> transport_con_type;
+    /// Type of a shared pointer to this endpoint transport component's 
+    /// associated connection transport component
+    typedef typename transport_con_type::ptr transport_con_ptr;
+    
 	// generate and manage our own io_service
 	explicit endpoint() 
 	{
@@ -52,9 +63,8 @@ public:
 		output_stream = o;
 	}
 protected:
-    template <typename connection_ptr>
-	void init(connection_ptr con) {
-		con->register_ostream(output_stream);
+	void init(transport_con_ptr tcon) {
+		tcon->register_ostream(output_stream);
 	}
 private:
 	std::ostream* output_stream;

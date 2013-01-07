@@ -44,9 +44,12 @@ namespace iostream {
 template <typename concurrency>
 class connection {
 public:
+    /// Type of this connection transport component
 	typedef connection<concurrency> type;
+    /// Type of a shared pointer to this connection transport component
     typedef lib::shared_ptr<type> ptr;
 	
+    // TODO: clean up the rest of these types
 	class handler_interface {};
 	
 	typedef lib::shared_ptr<handler_interface> handler_ptr;
