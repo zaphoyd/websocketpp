@@ -6,7 +6,7 @@
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
-class handler : public server::handler {
+/*class handler : public server::handler {
 	bool validate(connection_ptr con) {
 		std::cout << "handler validate" << std::endl;
 		return true;
@@ -62,7 +62,7 @@ class handler : public server::handler {
     void on_interrupt(connection_ptr con) {
 		std::cout << "handler on_interrupt" << std::endl;
     }
-};
+};*/
 
 class test_handler {
 public:
@@ -105,9 +105,7 @@ void on_message(server* s,websocketpp::connection_hdl hdl,message_ptr msg) {
 }
 
 int main() {
-    server::handler::ptr h(new handler());
-	
-	server echo_server(h);
+	server echo_server;
 	
 	echo_server.init_asio();
 	

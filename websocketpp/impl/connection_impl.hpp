@@ -42,27 +42,6 @@ namespace websocketpp {
 namespace istate = session::internal_state;
 
 template <typename config>
-void connection<config>::set_handler(handler_ptr new_handler) {
-    std::cout << "connection set_handler" << std::endl;
-    //scoped_lock_type lock(m_connection_state_lock);
-
-    if (!new_handler) {
-        // TODO
-        throw std::logic_error("set_handler");
-    }
-    
-    handler_ptr old_handler = m_handler;
-    if (old_handler) {
-        old_handler->on_unload(type::shared_from_this(),new_handler);
-    }
-    m_handler = new_handler;
-    
-    new_handler->on_load(type::shared_from_this(),old_handler);
-}
-
-
-
-template <typename config>
 void connection<config>::set_termination_handler(
     termination_handler new_handler) 
 {
@@ -468,8 +447,6 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     // server: read/process/write/go
     // client: process/write/read/process/go
     
-    //m_handler->on_open(type::shared_from_this());
-    
     //this->read();
 }
 
@@ -685,7 +662,6 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 std::cout << "null message from m_processor" << std::endl;
             } else if (!is_control(msg->get_opcode())) {
                 // data message, dispatch to user
-                //m_handler->on_message(type::shared_from_this(), msg);
                 if (m_message_handler) {
                     m_message_handler(m_connection_hdl, msg);
                 }
@@ -845,6 +821,7 @@ bool connection<config>::process_handshake_request() {
     return true;
 }
 
+// TODO: does this function still need to be here?
 template <typename config>
 void connection<config>::handle_read(const lib::error_code& ec, 
 	size_t bytes_transferred) 
@@ -867,7 +844,7 @@ void connection<config>::handle_read(const lib::error_code& ec,
         return;
     }
     
-    m_handler->on_message(type::shared_from_this(),foo);
+    //m_handler->on_message(type::shared_from_this(),foo);
     
     this->read();
 }

@@ -50,11 +50,6 @@ public:
     /// Type of the endpoint transport component
 	typedef typename config::transport_type transport_type;
 	
-	// connection policies
-	//typedef role::server role_con_policy;
-	//typedef concurrency_type concurrency_con_policy;
-	//typedef typename transport_type::con_policy transport_con_policy;
-	
 	/// Type of the connections this server will create
 	typedef connection<config> connection_type;
 	/// Type of a shared pointer to the connections this server will create
@@ -70,12 +65,8 @@ public:
 	
 	
 	// TODO: clean up these types
-	typedef typename endpoint_type::handler_type handler_type;
-	typedef handler_type handler; // for backwards compatibility
-	typedef typename endpoint_type::handler_ptr handler_ptr;
 
-	explicit server(typename endpoint_type::handler_ptr default_handler) 
-	  : endpoint_type(default_handler,true)
+	explicit server() : endpoint_type(true)
 	{
 		std::cout << "server constructor" << std::endl; 
 	}

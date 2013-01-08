@@ -23,7 +23,7 @@
 //typedef websocketpp::server<concurrency,transport> server;
 typedef websocketpp::server<websocketpp::config::core> server;
 
-class handler : public server::handler {
+/*class handler : public server::handler {
 	bool validate(connection_ptr con) {
 		std::cout << "handler validate" << std::endl;
 		if (con->get_origin() != "http://www.example.com") {
@@ -60,7 +60,7 @@ class handler : public server::handler {
 	void on_close(connection_ptr con) {
 		std::cout << "handler on_close" << std::endl;
 	}
-};
+};*/
 
 int main() {
 	typedef websocketpp::message_buffer::message<websocketpp::message_buffer::alloc::con_msg_manager> 

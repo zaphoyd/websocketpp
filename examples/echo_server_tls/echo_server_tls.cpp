@@ -6,7 +6,7 @@
 
 typedef websocketpp::server<websocketpp::config::asio_tls> server;
 
-class handler : public server::handler {
+/*class handler : public server::handler {
 	
 	std::string get_password() const {
         return "test";
@@ -62,12 +62,10 @@ class handler : public server::handler {
 	void on_close(connection_ptr con) {
 		std::cout << "handler on_close" << std::endl;
 	}
-};
+};*/
 
 int main() {
-	server::handler::ptr h(new handler());
-	
-	server echo_server(h);
+	server echo_server;
 	
 	echo_server.init_asio();
 	

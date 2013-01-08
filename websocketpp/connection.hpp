@@ -133,39 +133,6 @@ public:
 
     typedef lib::function<void(ptr)> termination_handler;
     
-    class handler {
-    public:
-        typedef handler type;
-        typedef lib::shared_ptr<type> ptr;
-        typedef lib::weak_ptr<type> weak_ptr;
-        
-        typedef typename connection::ptr connection_ptr;
-        typedef typename config::message_type::ptr message_ptr;
-        
-        //virtual void http(connection_ptr con) {}
-
-        // TODO: validate is server only. hide from client handlers?
-        //virtual bool validate(connection_ptr con) {return true;} 
-        
-        //virtual void on_inturrupt(connection_ptr con) {}
-
-        //virtual void on_open(connection_ptr con) {}
-        //virtual void on_fail(connection_ptr con) {}
-        virtual void on_message(connection_ptr con, message_ptr msg) {}
-        //virtual void on_close(connection_ptr con) {}
-
-        //virtual bool on_ping(connection_ptr con, const std::string &) {
-        //    return true;
-        //}
-        //virtual void on_pong(connection_ptr con, const std::string &) {}
-        //virtual void on_pong_timeout(connection_ptr con, const std::string &) {}
-
-        virtual void on_load(connection_ptr con, ptr old_handler) {}
-        virtual void on_unload(connection_ptr con, ptr new_handler) {}
-    };
-    
-    typedef typename handler::ptr handler_ptr;
-    
     typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
     typedef typename concurrency_type::mutex_type mutex_type;
     
@@ -352,23 +319,6 @@ public:
     void set_message_handler(message_handler h) {
         m_message_handler = h;
     }
-
-    /// Set new connection handler
-    /**
-     * Will invoke the old handler's on_unload callback followed by the
-     * new handler's on_load callback. These callbacks will both happen
-     * immediately and before set_handler returns. If called in a method
-     * within the connection's strand (such as another callback) the
-     * next callback run after the present one will use the new state
-     * including ones that are on the asio stack already but not yet 
-     * scheduled.
-     *
-     * This method may be called at any time.
-     *
-     * @param new_handler The new handler to switch to.
-     */
-    void set_handler(handler_ptr new_handler);
-    
     
     /// Return the same origin policy origin value from the opening request.
     /**
@@ -846,9 +796,6 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
-
-    /// Legacy Handler
-    handler_ptr             m_handler;
 
     /// External connection state
     /**

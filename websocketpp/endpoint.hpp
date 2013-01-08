@@ -69,15 +69,12 @@ public:
     typedef typename connection_type::message_handler message_handler;
 
     // TODO: organize these
-	typedef typename connection_type::handler handler_type;
-	typedef typename handler_type::ptr handler_ptr;
 	typedef typename connection_type::termination_handler termination_handler;
 	
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-	explicit endpoint(handler_ptr default_handler, bool is_server)
-	  : m_default_handler(default_handler)
- 	  , m_user_agent(::websocketpp::user_agent)
+	explicit endpoint(bool is_server)
+ 	  : m_user_agent(::websocketpp::user_agent)
  	  , m_is_server(is_server)
 	{
 		std::cout << "endpoint constructor" << std::endl;
@@ -177,7 +174,6 @@ protected:
 	mutex_type	m_mutex;
 private:
 	// dynamic settings
-	handler_ptr				    m_default_handler;
 	std::string					m_user_agent;
 	
     open_handler                m_open_handler;
