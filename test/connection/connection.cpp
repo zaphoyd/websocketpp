@@ -52,20 +52,6 @@ using websocketpp::lib::bind;
 		}
 		return true;
 	}
-	
-	void http(connection_ptr con) {}
-	
-	void on_load(connection_ptr con, ptr old_handler) {}
-	void on_unload(connection_ptr con, ptr new_handler) {}
-	
-	void on_open(connection_ptr con) {}
-	void on_fail(connection_ptr con) {}
-	
-	void on_message(connection_ptr con, message_ptr msg) {
-		con->write(msg->get_payload());
-	}
-	
-	void on_close(connection_ptr con) {}
 };*/
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
