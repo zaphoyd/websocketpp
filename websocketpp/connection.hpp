@@ -360,7 +360,7 @@ public:
      * @param op The opcode to generated the message with. Default is 
      * frame::opcode::text
      */
-	void send(const std::string& payload, frame::opcode::value op = 
+    lib::error_code send(const std::string& payload, frame::opcode::value op = 
 		frame::opcode::TEXT);
 
     /// Add a message to the outgoing send queue
@@ -376,7 +376,7 @@ public:
      *
      * @param msg A message_ptr to the message to send.
      */
-	void send(message_ptr msg);
+    lib::error_code send(message_ptr msg);
 
     /// Asyncronously invoke handler::on_inturrupt
     /**

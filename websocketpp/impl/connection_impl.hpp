@@ -66,20 +66,23 @@ size_t connection<config>::get_buffered_amount() const {
 
 
 template <typename config>
-void connection<config>::send(const std::string& payload, frame::opcode::value op) {
+lib::error_code connection<config>::send(const std::string& payload, 
+    frame::opcode::value op)
+{
 	message_ptr msg = m_msg_manager->get_message(op,payload.size());
 	msg->append_payload(payload);
 	
-	send(msg);
+	return send(msg);
 }
 
 template <typename config>
-void connection<config>::send(typename config::message_type::ptr msg) {
+lib::error_code connection<config>::send(typename config::message_type::ptr msg)
+{
 	std::cout << "send" << std::endl;
 	// TODO: 
 	
     if (m_state != session::state::OPEN) {
-       throw error::make_error_code(error::invalid_state);
+       return error::make_error_code(error::invalid_state);
     }
     
     message_ptr outgoing_msg;
@@ -94,14 +97,14 @@ void connection<config>::send(typename config::message_type::ptr msg) {
     	outgoing_msg = m_msg_manager->get_message();
     	
     	if (!outgoing_msg) {
-    		throw error::make_error_code(error::no_outgoing_buffers);
+    		return error::make_error_code(error::no_outgoing_buffers);
     	}
     	
     	scoped_lock_type lock(m_write_lock);
     	lib::error_code ec = m_processor->prepare_data_frame(msg,outgoing_msg);
     	
     	if (ec) {
-    		throw ec;
+    		return ec;
     	}
     	
         needs_writing = write_push(outgoing_msg);
@@ -113,6 +116,8 @@ void connection<config>::send(typename config::message_type::ptr msg) {
 			type::shared_from_this()
 		));
 	}
+
+    return lib::error_code();
 }
 
 template <typename config>
@@ -237,7 +242,6 @@ lib::error_code connection<config>::interrupt() {
             type::shared_from_this()
         )
     );
-    return lib::error_code();
 }
 
 

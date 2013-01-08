@@ -67,6 +67,8 @@ public:
 	
     /// Type of message_handler
     typedef typename connection_type::message_handler message_handler;
+    /// Type of message pointers that this endpoint uses
+    typedef typename connection_type::message_ptr message_ptr;
 
     // TODO: organize these
 	typedef typename connection_type::termination_handler termination_handler;
@@ -131,10 +133,8 @@ public:
     /* Connection pass through functions */
     /*************************************/
      
-
     void interrupt(connection_hdl hdl, lib::error_code & ec) {
         connection_ptr con = get_con_from_hdl(hdl);
-
         if (!con) {
             ec = error::make_error_code(error::bad_connection);
             return;
@@ -148,9 +148,43 @@ public:
     void interrupt(connection_hdl hdl) {
         lib::error_code ec;
         interrupt(hdl,ec);
-        if (ec) {
-            throw ec;
+        if (ec) { throw ec; }
+    }
+
+    void send(connection_hdl hdl, const std::string& payload, 
+        frame::opcode::value op, lib::error_code & ec)
+    {
+        connection_ptr con = get_con_from_hdl(hdl);
+        if (!con) {
+            ec = error::make_error_code(error::bad_connection);
+            return;
         }
+
+        ec = con->send(payload,op);
+    }
+
+    void send(connection_hdl hdl, const std::string& payload,
+        frame::opcode::value op)
+    {
+        lib::error_code ec;
+        send(hdl,payload,op,ec);
+        if (ec) { throw ec; }
+    }
+
+    void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec) {
+        connection_ptr con = get_con_from_hdl(hdl);
+        if (!con) {
+            ec = error::make_error_code(error::bad_connection);
+            return;
+        }
+
+        ec = con->send(msg);
+    }
+
+    void send(connection_hdl hdl, message_ptr msg) {
+        lib::error_code ec;
+        send(hdl,msg,ec);
+        if (ec) { throw ec; }
     }
 protected:
 	// Import appropriate internal types from our policy classes
