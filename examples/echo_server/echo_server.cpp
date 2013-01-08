@@ -89,9 +89,20 @@ void on_tcp_init(websocketpp::connection_hdl hdl) {
     std::cout << "on_tcp_init called with hdl: " << hdl.lock().get() << std::endl;
 }
 
+
 using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
+// pull out the type of messages sent by our config
+typedef websocketpp::config::asio::message_type::ptr message_ptr;
+
+void on_message(server* s,websocketpp::connection_hdl hdl,message_ptr msg) {
+    std::cout << "on_message called with hdl: " << hdl.lock().get() 
+              << " and message: " << msg->get_payload()
+              << std::endl;
+    //s->get_con_from_hdl(hdl)->send(msg->get_payload(),msg->get_opcode());
+}
 
 int main() {
     server::handler::ptr h(new handler());
@@ -102,10 +113,10 @@ int main() {
 	
     test_handler t(echo_server);
 
-    //echo_server.set_open_handler(websocketpp::lib::bind(&test_handler::on_open,t,websocketpp::lib::placeholders::_1));
     echo_server.set_open_handler(bind(&on_open,&echo_server,::_1));
     echo_server.set_interrupt_handler(bind(&on_interrupt,&echo_server,::_1));
     echo_server.set_tcp_init_handler(&on_tcp_init);
+    echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
 
 	// Listen
 	echo_server.listen(9002);

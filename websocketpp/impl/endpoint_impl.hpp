@@ -67,6 +67,7 @@ endpoint<connection,config>::create_connection() {
     con->set_interrupt_handler(m_interrupt_handler);
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
+    con->set_message_handler(m_message_handler);
 	
     con->set_termination_handler(
 	    lib::bind(

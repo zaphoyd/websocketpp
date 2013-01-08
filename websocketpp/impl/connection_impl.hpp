@@ -685,7 +685,10 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 std::cout << "null message from m_processor" << std::endl;
             } else if (!is_control(msg->get_opcode())) {
                 // data message, dispatch to user
-                m_handler->on_message(type::shared_from_this(), msg);
+                //m_handler->on_message(type::shared_from_this(), msg);
+                if (m_message_handler) {
+                    m_message_handler(m_connection_hdl, msg);
+                }
             } else {
                 process_control_frame(msg);
             }

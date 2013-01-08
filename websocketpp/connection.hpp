@@ -181,6 +181,9 @@ public:
     typedef processor::processor<config> processor_type;
     typedef lib::shared_ptr<processor_type> processor_ptr;
     
+    // Message handler (needs to know message type)
+    typedef lib::function<void(connection_hdl,message_ptr)> message_handler;
+
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
@@ -340,6 +343,16 @@ public:
         m_validate_handler = h;
     }
     
+    /// Set message handler
+    /**
+     * The message handler is called after a new message has been received.
+     *
+     * @param h The new message_handler
+     */
+    void set_message_handler(message_handler h) {
+        m_message_handler = h;
+    }
+
     /// Set new connection handler
     /**
      * Will invoke the old handler's on_unload callback followed by the
@@ -832,6 +845,7 @@ private:
     interrupt_handler       m_interrupt_handler;
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
+    message_handler         m_message_handler;
 
     /// Legacy Handler
     handler_ptr             m_handler;
