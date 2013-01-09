@@ -1,0 +1,99 @@
+server
+   -> endpoint
+         -> transport
+
+
+
+
+server
+- parent of endpoint, so inheirits all of endpoint
+
+
+endpoint
+- can create connections
+- knows types
+-- endpoint
+-- connection
+-- endpoint transport
+-- connection transport
+
+
+endpoint transport
+- knows types
+-- endpoint transport
+-- connection transport
+
+- has endpoint specific transport state
+-- acceptor
+-- io_service
+
+
+connection
+- knows connection type
+
+connection transport
+- has connection specific transport state
+-- socket
+
+
+#######################
+# Initialization Loop #
+#######################
+
+Endpoint Construction Phase (every step here happens in reverse)
+- role constructor
+- endpoint constructor
+-- sets useragent and is_server
+- transport endpoint constructor
+-- ASIO: set external_io_service false
+-- ASIO: state: uninitialized
+- socket endpoint constructor
+
+Endpoint Initialization Phase
+- set handlers (optional)
+- set on_tls_init (required for use of transport::asio::tls_socket::endpoint)
+- Server needs no initialization?
+- Endpoint needs no initialization?
+- ASIO: call to transport::endpoint::init_asio
+-- creates (or sets) the io_service
+-- sets external_io_service
+-- initializes acceptor
+-- sets state to ready
+- IOSTREAM: register_ostream
+- SERVER ASIO: listen(...)
+-- sets state to listening
+-- opens acceptor
+-- sets some acceptor options
+-- binds the acceptor
+-- starts listening
+- SERVER ASIO: start_accept
+-- will create a new connection
+-- will queue up async_accept on that connection's socket
+-- when the socket is accepted or an error occurs, the connection will either be
+   started or terminated. Afterwards a new accept operation is initiated.
+- SERVER ASIO: start io_service
+-- If using the internal io_service this typically means run()
+-- If using an external io_service you are free to run it however you like or
+   perform the above steps using an already running io_service.
+
+
+Connection Initialization Phase
+
+###############
+
+
+create a server
+call any transport init required by the transport you are using
+call server->start_accept();
+
+
+
+start_accept
+- Create a new connection
+- Ask transport
+
+
+
+#### connection api ####
+send message
+
