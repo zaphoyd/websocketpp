@@ -56,7 +56,7 @@ public:
 	// generate and manage our own io_service
 	explicit endpoint() 
 	{
-		std::cout << "iostream transport constructor" << std::endl; 
+		std::cout << "transport::iostream::endpoint constructor" << std::endl; 
 	}
 	
 	void register_ostream(std::ostream* o) {
