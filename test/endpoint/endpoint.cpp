@@ -45,3 +45,14 @@ BOOST_AUTO_TEST_CASE( construct_server_asio_plain ) {
 BOOST_AUTO_TEST_CASE( construct_server_asio_tls ) {
     websocketpp::server<websocketpp::config::asio_tls> s;
 }
+
+BOOST_AUTO_TEST_CASE( initialize_server_asio ) {
+    websocketpp::server<websocketpp::config::asio> s;
+    s.init_asio();
+}
+
+BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
+    websocketpp::server<websocketpp::config::asio> s;
+    boost::asio::io_service ios;
+    s.init_asio(&ios);
+}
