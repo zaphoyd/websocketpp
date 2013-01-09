@@ -139,7 +139,9 @@ protected:
 	 * @param is_server Whether or not the endpoint is a server or not.
 	 */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
+        std::cout << "transport::security::tls_socket::init_asio" << std::endl;
         if (!m_tls_init_handler) {
+            std::cout << "missing_tls_init_handler" << std::endl;
 			return socket::make_error(socket::error::missing_tls_init_handler);
         }
         m_context = m_tls_init_handler(m_hdl);
@@ -321,6 +323,7 @@ protected:
      * the socket component of the connection.
      */
     void init(socket_con_ptr scon) {
+        std::cout << "transport::asio::tls_socket::init" << std::endl;
         scon->set_socket_init_handler(m_socket_init_handler);
         scon->set_tls_init_handler(m_tls_init_handler);
     }

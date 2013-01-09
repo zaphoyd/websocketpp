@@ -217,6 +217,8 @@ public:
 				lib::placeholders::_1
 			)
 		);
+
+		std::cout << "done" << std::endl;
 	}
 
 	/// wraps the run method of the internal io_service object
@@ -287,12 +289,14 @@ protected:
      * @param tcon A pointer to the transport portion of the connection.
 	 */
 	void init(transport_con_ptr tcon) {
-		tcon->init_asio(m_io_service);
-        tcon->set_tcp_init_handler(m_tcp_init_handler);
+        std::cout << "transport::asio::init" << std::endl;
 
         // Initialize the connection socket component
         socket_type::init(lib::static_pointer_cast<socket_con_type,
             transport_con_type>(tcon));
+
+		tcon->init_asio(m_io_service);
+        tcon->set_tcp_init_handler(m_tcp_init_handler);
 	}
 private:
 	enum state {

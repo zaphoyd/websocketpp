@@ -6,70 +6,60 @@
 
 typedef websocketpp::server<websocketpp::config::asio_tls> server;
 
-/*class handler : public server::handler {
-	
-	std::string get_password() const {
-        return "test";
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+using websocketpp::lib::bind;
+
+// pull out the type of messages sent by our config
+typedef websocketpp::config::asio::message_type::ptr message_ptr;
+typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+
+void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+    std::cout << "on_message called with hdl: " << hdl.lock().get() 
+              << " and message: " << msg->get_payload()
+              << std::endl;
+
+    try {
+        s->send(hdl, msg->get_payload(), msg->get_opcode());
+    } catch (const websocketpp::lib::error_code& e) {
+        std::cout << "Echo failed because: " << e  
+                  << "(" << e.message() << ")" << std::endl;
     }
-	
-	websocketpp::lib::shared_ptr<boost::asio::ssl::context> on_tls_init() {
-        // create a tls context, init, and return.
-        websocketpp::lib::shared_ptr<boost::asio::ssl::context> context(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
-        try {
-            context->set_options(boost::asio::ssl::context::default_workarounds |
-                                 boost::asio::ssl::context::no_sslv2 |
-                                 boost::asio::ssl::context::single_dh_use);
-            context->set_password_callback(boost::bind(&handler::get_password, this));
-            context->use_certificate_chain_file("server.pem");
-            context->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
-            //context->use_tmp_dh_file("../../src/ssl/dh512.pem");
-        } catch (std::exception& e) {
-            std::cout << e.what() << std::endl;
-        }
-        return context;
+}
+
+std::string get_password() {
+    return "test";
+}
+
+context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+    std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
+    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+
+    try {
+        ctx->set_options(boost::asio::ssl::context::default_workarounds |
+                         boost::asio::ssl::context::no_sslv2 |
+                         boost::asio::ssl::context::single_dh_use);
+        ctx->set_password_callback(bind(&get_password));
+        ctx->use_certificate_chain_file("server.pem");
+        ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
+    } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
     }
-	
-	bool validate(connection_ptr con) {
-		std::cout << "handler validate" << std::endl;
-		return true;
-	}
-	
-	void http(connection_ptr con) {
-	    std::cout << "handler http" << std::endl;
-	    con->set_status(websocketpp::http::status_code::OK);
-	    con->set_body("foo");
-	}
-	
-	void on_load(connection_ptr con, ptr old_handler) {
-		std::cout << "handler on_load" << std::endl;
-	}
-	void on_unload(connection_ptr con, ptr new_handler) {
-		std::cout << "handler on_unload" << std::endl;
-	}
-	
-	void on_open(connection_ptr con) {
-		std::cout << "handler on_open" << std::endl;
-	}
-	void on_fail(connection_ptr con) {
-		std::cout << "handler on_fail" << std::endl;
-	}
-	
-	void on_message(connection_ptr con, message_ptr msg) {
-		std::cout << "handler on_message" << std::endl;
-		std::cout << "Message was: " << msg->get_payload() << std::endl;
-	}
-	
-	void on_close(connection_ptr con) {
-		std::cout << "handler on_close" << std::endl;
-	}
-};*/
+    return ctx;
+}
 
 int main() {
+    // Create a server endpoint
 	server echo_server;
 	
+    // Register our message handler
+    echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+    echo_server.set_tls_init_handler(bind(&on_tls_init,::_1));
+
+    // Initialize ASIO
 	echo_server.init_asio();
 	
-	// Listen
+	// Listen on port 9002
 	echo_server.listen(9002);
 	
 	// Start the server accept loop
