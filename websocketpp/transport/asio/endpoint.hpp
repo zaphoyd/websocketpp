@@ -83,7 +83,7 @@ public:
 	
 	~endpoint() {
 		// clean up our io_service if we were initialized with an internal one.
-		if (m_state != UNINITIALIZED && m_external_io_service) {
+		if (m_state != UNINITIALIZED && !m_external_io_service) {
 			delete m_io_service;
 		}
 	}
