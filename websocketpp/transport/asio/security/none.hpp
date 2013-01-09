@@ -183,7 +183,7 @@ public:
     typedef connection socket_con_type;
     /// The type of a shared pointer to the corresponding connection socket
     /// component.
-    typedef typename socket_con_type::ptr socket_con_ptr;
+    typedef socket_con_type::ptr socket_con_ptr;
     
 	explicit endpoint() {
 		std::cout << "transport::asio::basic_socket::endpoint constructor" 
