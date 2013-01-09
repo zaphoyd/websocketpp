@@ -99,7 +99,8 @@ public:
         
         if (!con) {
             // TODO: should this be considered a server fatal error?
-            std::cout << "handle_accept got an invalid handle back" << std::endl;
+            std::cout << "handle_accept got an invalid handle back" 
+                      << std::endl;
         } else {
             if (ec) {
                 con->terminate();
@@ -110,6 +111,7 @@ public:
             }
         }
 		
+        // TODO: are there cases where we should terminate this loop?
 		start_accept();
 	}
 private:

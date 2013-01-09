@@ -52,12 +52,13 @@ int main() {
     // Create a server endpoint
 	server echo_server;
 	
+    // Initialize ASIO
+	echo_server.init_asio();
+
     // Register our message handler
     echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
     echo_server.set_tls_init_handler(bind(&on_tls_init,::_1));
 
-    // Initialize ASIO
-	echo_server.init_asio();
 	
 	// Listen on port 9002
 	echo_server.listen(9002);
