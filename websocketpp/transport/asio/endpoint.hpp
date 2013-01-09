@@ -138,13 +138,13 @@ public:
 	 *
 	 * Calling init_asio shifts the internal state from UNINITIALIZED to READY
 	 */
-	void init_asio(io_service_ptr ptr, bool external = true) {
+	void init_asio(io_service_ptr ptr) {
 		if (m_state != UNINITIALIZED) {
 			// TODO: throw invalid state
 			throw;
 		}
 		m_io_service = ptr;
-        m_external_io_service = external;
+        m_external_io_service = true;
 		m_acceptor.reset(new boost::asio::ip::tcp::acceptor(*m_io_service));
 		m_state = READY;
 	}
@@ -154,7 +154,8 @@ public:
 	 * @see init_asio(io_service_ptr ptr)
 	 */
 	void init_asio() {
-		init_asio(new boost::asio::io_service(),false);
+		init_asio(new boost::asio::io_service());
+        m_external_io_service = false;
 	}
 	
     /// Sets the tcp init handler
