@@ -180,7 +180,7 @@ for t in to_test:
       AlwaysBuild(new_alias)
 
 # Main test application
-main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
+#main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
 
 # echo_server
 echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = builddir + 'echo_server',duplicate = 0)
