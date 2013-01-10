@@ -20,14 +20,14 @@ if os.environ.has_key('LINKFLAGS'):
 ## or set BOOST_INCLUDES and BOOST_LIBS if Boost comes with your OS distro e.g. and
 ## needs BOOST_INCLUDES=/usr/include/boost and BOOST_LIBS=/usr/lib like Ubuntu.
 ##
-if os.environ.has_key('BOOSTROOT'):
-   env['BOOST_INCLUDES'] = os.environ['BOOSTROOT']
-   env['BOOST_LIBS'] = os.path.join(os.environ['BOOSTROOT'], 'stage', 'lib')
+if os.environ.has_key('BOOST_ROOT'):
+   env['BOOST_INCLUDES'] = os.environ['BOOST_ROOT']
+   env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib')
 elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
    env['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES']
    env['BOOST_LIBS'] = os.environ['BOOST_LIBS']
 else:
-   raise SCons.Errors.UserError, "Neither BOOSTROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!"
+   raise SCons.Errors.UserError, "Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!"
 
 if os.environ.has_key('WSPP_ENABLE_CPP11'):
    env['WSPP_ENABLE_CPP11'] = True
@@ -137,9 +137,9 @@ elif env_cpp11['CXX'].startswith('clang++'):
    # look for optional second boostroot compiled with clang's libc++ STL library
    # this prevents warnings/errors when linking code built with two different
    # incompatible STL libraries.
-   if os.environ.has_key('BOOSTROOT_CPP11'):
-      env_cpp11['BOOST_INCLUDES'] = os.environ['BOOSTROOT_CPP11']
-      env_cpp11['BOOST_LIBS'] = os.path.join(os.environ['BOOSTROOT_CPP11'], 'stage', 'lib')
+   if os.environ.has_key('BOOST_ROOT_CPP11'):
+      env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_ROOT_CPP11']
+      env_cpp11['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT_CPP11'], 'stage', 'lib')
    elif os.environ.has_key('BOOST_INCLUDES_CPP11') and os.environ.has_key('BOOST_LIBS_CPP11'):
       env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES_CPP11']
       env_cpp11['BOOST_LIBS'] = os.environ['BOOST_LIBS_CPP11']
