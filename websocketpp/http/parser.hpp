@@ -28,6 +28,7 @@
 #ifndef HTTP_PARSER_HPP
 #define HTTP_PARSER_HPP
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 
