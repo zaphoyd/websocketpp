@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 #define WEBSOCKETPP_CLOSE_HPP
 
 #include <websocketpp/error.hpp> 
+#include <websocketpp/common/network.hpp>
 #include <websocketpp/utf8_validator.hpp> 
 
 #ifndef __STDC_LIMIT_MACROS
