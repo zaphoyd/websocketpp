@@ -70,14 +70,12 @@ typename T::const_iterator ci_find_substr(const T& str1,
         str2, str2+size, my_equal<typename T::value_type>(loc) );
 }
 
-#define TYP_INIT 0 
-#define TYP_SMLE 1 
-#define TYP_BIGE 2 
+
 
 /// Host to network long long
-uint64_t htonll(uint64_t src);
+//uint64_t htonll(uint64_t src);
 /// Network to host long long
-uint64_t ntohll(uint64_t src);
+//uint64_t ntohll(uint64_t src);
 
 /// Convert std::string to ascii printed string of hex digits
 std::string to_hex(const std::string& input);
