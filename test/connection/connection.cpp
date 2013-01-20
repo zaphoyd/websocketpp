@@ -28,57 +28,7 @@
 #define BOOST_TEST_MODULE connection
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-#include <sstream>
-
-// Test Environment:
-// server, no TLS, no locks, iostream based transport
-#include <websocketpp/config/core.hpp>
-#include <websocketpp/server.hpp>
-
-typedef websocketpp::server<websocketpp::config::core> server;
-typedef websocketpp::config::core::message_type::ptr message_ptr;
-
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-using websocketpp::lib::bind;
-
-/*class echo_handler : public server::handler {
-	bool validate(connection_ptr con) {
-		std::cout << "handler validate" << std::endl;
-		if (con->get_origin() != "http://www.example.com") {
-		    con->set_status(websocketpp::http::status_code::FORBIDDEN);
-		    return false;
-		}
-		return true;
-	}
-};*/
-
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-    s->send(hdl, msg->get_payload(), msg->get_opcode());
-}
-
-std::string run_server_test(std::string input) {
-    server test_server;
-    server::connection_ptr con;
-    
-    test_server.set_message_handler(bind(&on_message,&test_server,::_1,::_2));
-
-    std::stringstream output;
-	
-	test_server.register_ostream(&output);
-	
-	con = test_server.get_connection();
-	
-	con->start();
-	
-	std::stringstream channel;
-	
-	channel << input;
-	channel >> *con;
-	
-	return output.str();
-}
+#include "connection_tu2.hpp"
 
 // NOTE: these tests currently test against hardcoded output values. I am not 
 // sure how problematic this will be. If issues arise like order of headers the 
