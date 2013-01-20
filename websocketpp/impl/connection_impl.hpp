@@ -233,6 +233,10 @@ void connection<config>::close(const close::status::value code,
     }
 }
 
+/// Trigger the on_interrupt handler
+/**
+ * This is thread safe if the transport is thread safe
+ */
 template <typename config>
 lib::error_code connection<config>::interrupt() {
     std::cout << "connection::interrupt" << std::endl;

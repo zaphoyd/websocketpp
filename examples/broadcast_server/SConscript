@@ -14,7 +14,7 @@ prgs = []
 
 # if a C++11 environment is avaliable build using that, otherwise use boost
 if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
-   ALL_LIBS = boostlibs(['system'],env_cpp11) + [platform_libs] + [polyfill_libs]
+   ALL_LIBS = boostlibs(['system','thread'],env_cpp11) + [platform_libs] + [polyfill_libs]
    prgs += env_cpp11.Program('broadcast_server', ["broadcast_server.cpp"], LIBS = ALL_LIBS)
 else:
    ALL_LIBS = boostlibs(['system','regex'],env) + [platform_libs] + [polyfill_libs]
