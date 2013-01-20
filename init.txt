@@ -94,6 +94,14 @@ start_accept
 
 
 
-#### connection api ####
+
+#############################
+# Endpoint API (Thread Safe #
+#############################
+
+
+##################
+# Connection API #
+##################
 send message
 
