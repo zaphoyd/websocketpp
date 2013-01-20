@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -122,12 +122,12 @@ public:
 	}
 };
 
-const lib::error_category& get_category() {
+inline const lib::error_category& get_category() {
 	static category instance;
 	return instance;
 }
 
-lib::error_code make_error_code(error::value e) {
+inline lib::error_code make_error_code(error::value e) {
 	return lib::error_code(static_cast<int>(e), get_category());
 }
 

@@ -228,12 +228,12 @@ public:
 	}
 };
 
-const lib::error_category& get_processor_category() {
+inline const lib::error_category& get_processor_category() {
 	static processor_category instance;
 	return instance;
 }
 
-lib::error_code make_error_code(error::processor_errors e) {
+inline lib::error_code make_error_code(error::processor_errors e) {
 	return lib::error_code(static_cast<int>(e), get_processor_category());
 }
 
@@ -250,7 +250,7 @@ lib::error_code make_error_code(error::processor_errors e) {
  * applications, ex: invalid arguments) then 
  * close::status::internal_endpoint_error is returned.
  */
-close::status::value to_ws(lib::error_code ec) {
+inline close::status::value to_ws(lib::error_code ec) {
     if (ec.category() != get_processor_category()) {
         return close::status::blank;
     }

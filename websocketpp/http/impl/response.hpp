@@ -37,7 +37,7 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
-size_t response::consume(const char *buf, size_t len) {
+inline size_t response::consume(const char *buf, size_t len) {
 	if (m_state == DONE) {return 0;}
 	
 	if (m_state == BODY) {
@@ -131,7 +131,7 @@ size_t response::consume(const char *buf, size_t len) {
 	}
 }
 
-bool response::parse_complete(std::istream& s) {
+inline bool response::parse_complete(std::istream& s) {
 	// parse a complete header (ie \r\n\r\n MUST be in the input stream)
 	std::string response;
 	
@@ -159,32 +159,34 @@ bool response::parse_complete(std::istream& s) {
 	return parse_headers(s);
 }
 
-std::string response::raw() const {
+inline std::string response::raw() const {
 	// TODO: validation. Make sure all required fields have been set?
 	
 	std::stringstream raw;
 	
-	raw << get_version() << " " << m_status_code << " " << m_status_msg << "\r\n";
-	raw << raw_headers() << "\r\n";
+	raw << get_version() << " " << m_status_code << " " << m_status_msg;
+	raw << "\r\n" << raw_headers() << "\r\n";
 	
 	raw << m_body;
 	
 	return raw.str();
 }
     
-void response::set_status(status_code::value code) {
+inline void response::set_status(status_code::value code) {
 	// TODO: validation?
 	m_status_code = code;
 	m_status_msg = get_string(code);
 }
 
-void response::set_status(status_code::value code, const std::string& msg) {
+inline void response::set_status(status_code::value code, const std::string& 
+    msg)
+{
 	// TODO: validation?
 	m_status_code = code;
 	m_status_msg = msg;
 }
     
-void response::set_body(const std::string& value) {
+inline void response::set_body(const std::string& value) {
 	if (value.size() == 0) {
 		remove_header("Content-Length");
 		m_body = "";
@@ -198,7 +200,9 @@ void response::set_body(const std::string& value) {
 }
 
 
-void response::process(std::string::iterator begin, std::string::iterator end) {
+inline void response::process(std::string::iterator begin, 
+    std::string::iterator end)
+{
 	std::string::iterator cursor_start = begin;
 	std::string::iterator cursor_end = std::find(begin,end,' ');
 	
@@ -226,7 +230,7 @@ void response::process(std::string::iterator begin, std::string::iterator end) {
 	set_status(status_code::value(code),std::string(cursor_end+1,end));
 }
 
-size_t response::process_body(const char *buf, size_t len) {
+inline size_t response::process_body(const char *buf, size_t len) {
 	// If no content length was set then we read forever and never set m_ready
 	if (m_read == 0) {
 		m_body.append(buf,len);

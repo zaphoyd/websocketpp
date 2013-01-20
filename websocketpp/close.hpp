@@ -116,7 +116,7 @@ union code_converter {
  *
  * @return The extracted value
  */
-status::value extract_code(const std::string& payload, lib::error_code & ec) {
+inline status::value extract_code(const std::string& payload, lib::error_code & ec) {
     ec = lib::error_code();
 
     if (payload.size() == 0) {
@@ -156,7 +156,7 @@ status::value extract_code(const std::string& payload, lib::error_code & ec) {
  *
  * @return the reason string.
  */
-std::string extract_reason(const std::string& payload, lib::error_code & ec) {
+inline std::string extract_reason(const std::string& payload, lib::error_code & ec) {
     std::string reason = "";    
     ec = lib::error_code();
 

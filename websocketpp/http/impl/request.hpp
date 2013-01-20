@@ -37,7 +37,7 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
-bool request::parse_complete(std::istream& s) {
+inline bool request::parse_complete(std::istream& s) {
 	std::string request;
 	
 	// get status line
@@ -64,7 +64,7 @@ bool request::parse_complete(std::istream& s) {
 	return parse_headers(s);
 }
     
-size_t request::consume(const char *buf, size_t len) {
+inline size_t request::consume(const char *buf, size_t len) {
 	if (m_ready) {return 0;}
 	
 	if (m_buf->size() + len > MAX_HEADER_SIZE) {
@@ -131,7 +131,7 @@ size_t request::consume(const char *buf, size_t len) {
 	}
 }
     
-std::string request::raw() {
+inline std::string request::raw() {
 	// TODO: validation. Make sure all required fields have been set?
 	std::stringstream raw;
 	
@@ -141,7 +141,7 @@ std::string request::raw() {
 	return raw.str();
 }
     
-void request::set_method(const std::string& method) {
+inline void request::set_method(const std::string& method) {
 	if (std::find_if(method.begin(),method.end(),is_not_token_char) != method.end()) {
 		throw exception("Invalid method token.",status_code::BAD_REQUEST);
 	}
@@ -149,12 +149,14 @@ void request::set_method(const std::string& method) {
 	m_method = method;
 }
     
-void request::set_uri(const std::string& uri) {
+inline void request::set_uri(const std::string& uri) {
 	// TODO: validation?
 	m_uri = uri;
 }
 
-void request::process(std::string::iterator begin, std::string::iterator end) {
+inline void request::process(std::string::iterator begin, std::string::iterator 
+    end)
+{
 	std::string::iterator cursor_start = begin;
 	std::string::iterator cursor_end = std::find(begin,end,' ');
 	

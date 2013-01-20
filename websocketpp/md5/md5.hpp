@@ -83,13 +83,13 @@ typedef struct md5_state_s {
 } md5_state_t;
 
 /* Initialize the algorithm. */
-void md5_init(md5_state_t *pms);
+inline void md5_init(md5_state_t *pms);
 
 /* Append a string to the message. */
-void md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes);
+inline void md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes);
 
 /* Finish the message and return the digest. */
-void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
+inline void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 
 #undef ZSW_MD5_BYTE_ORDER	/* 1 = big-endian, -1 = little-endian, 0 = unknown */
 #ifdef ARCH_IS_BIG_ENDIAN
