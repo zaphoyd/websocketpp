@@ -236,16 +236,14 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
     }
-
+    
+    /// Trigger the on_interrupt handler
+    /**
+     * This needs to be thread safe
+     *
+     * Might need a strand at some point?
+     */
     lib::error_code interrupt(inturrupt_handler handler) {
-        // strand post handle_inturrupt
-        /*m_strand->post(lib::bind(
-            &type::handle_inturrupt,
-            this,
-            handler
-        ));*/
-
-        // would this work?
         m_io_service->post(handler);
         return lib::error_code();
     }

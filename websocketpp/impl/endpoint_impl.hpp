@@ -75,6 +75,8 @@ endpoint<connection,config>::create_connection() {
 	    )
 	);
 	transport_type::init(con);
+
+    scoped_lock_type lock(m_mutex);
 	m_connections.insert(con);
 	
 	
@@ -88,7 +90,7 @@ template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
     std::cout << "remove_connection. New count: " << m_connections.size()-1
 		      << std::endl;
-    scoped_lock_type lock(m_state_lock);
+    scoped_lock_type lock(m_mutex);
 		
 	// unregister the termination handler
 	con->set_termination_handler(termination_handler());
