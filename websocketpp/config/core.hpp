@@ -29,7 +29,7 @@
 #define WEBSOCKETPP_CONFIG_CORE_HPP
 
 // Concurrency
-#include <websocketpp/concurrency/none.hpp>
+#include <websocketpp/concurrency/basic.hpp>
 
 // Transport
 #include <websocketpp/transport/iostream/endpoint.hpp>
@@ -42,6 +42,9 @@
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
 
+// Loggers
+#include <websocketpp/logger/basic.hpp>
+
 // Extensions
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
 
@@ -50,7 +53,7 @@ namespace config {
 
 struct core {
     // Concurrency policy
-    typedef websocketpp::concurrency::none concurrency_type;
+    typedef websocketpp::concurrency::basic concurrency_type;
 	
     // Transport Policy
     typedef websocketpp::transport::iostream::endpoint<concurrency_type> 
@@ -67,6 +70,12 @@ struct core {
 		con_msg_manager_type;
     typedef message_buffer::alloc::endpoint_msg_manager<con_msg_manager_type> 
 		endpoint_msg_manager_type;
+	
+	/// Logging policies
+	typedef websocketpp::logger::basic<concurrency_type,
+	    websocketpp::logger::error_names> elog_type;
+	typedef websocketpp::logger::basic<concurrency_type,
+	    websocketpp::logger::access_names> alog_type;
 	
     /// 
 	static const size_t connection_read_buffer_size = 32;

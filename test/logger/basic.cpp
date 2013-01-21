@@ -24,56 +24,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+//#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE basic_logger
+#include <boost/test/unit_test.hpp>
 
-#ifndef WEBSOCKETPP_CONFIG_ASIO_HPP
-#define WEBSOCKETPP_CONFIG_ASIO_HPP
+#include <string>
 
-#include <websocketpp/config/core.hpp>
-#include <websocketpp/transport/asio/endpoint.hpp>
-#include <websocketpp/transport/asio/security/tls.hpp>
+#include <websocketpp/logger/basic.hpp>
+#include <websocketpp/concurrency/none.hpp>
 
-namespace websocketpp {
-namespace config {
-
-struct asio : public core {
-	typedef core::concurrency_type concurrency_type;
-	
-    typedef websocketpp::transport::asio::basic_socket::endpoint socket_type;
-	
-    typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
-        transport_type;
-
-	typedef core::request_type request_type;
-	typedef core::response_type response_type;
-
-	typedef core::message_type message_type;
-	typedef core::con_msg_manager_type con_msg_manager_type;
-	typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
-	
-	typedef core::alog_type alog_type;
-	typedef core::alog_type elog_type;
-};
-
-struct asio_tls : public core {
-	typedef core::concurrency_type concurrency_type;
-	
-    typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
-	
-    typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
-        transport_type;
-
-	typedef core::request_type request_type;
-	typedef core::response_type response_type;
-
-	typedef core::message_type message_type;
-	typedef core::con_msg_manager_type con_msg_manager_type;
-	typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
-	
-	typedef core::alog_type alog_type;
-	typedef core::alog_type elog_type;
-};
-
-} // namespace config
-} // namespace websocketpp
-
-#endif // WEBSOCKETPP_CONFIG_CORE_HPP
+BOOST_AUTO_TEST_CASE( is_token_char ) {
+    typedef websocketpp::logger::basic<websocketpp::concurrency::none,websocketpp::logger::error_names> error_logger;
+    
+    error_logger elog;
+    
+    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::info ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::warn ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::rerror ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::fatal ) == true );
+    
+    elog.set_channels(websocketpp::logger::error_names::info);
+    
+    elog.write(websocketpp::logger::error_names::info,"Information");
+    elog.write(websocketpp::logger::error_names::warn,"A warning");
+    elog.write(websocketpp::logger::error_names::rerror,"A error");
+    elog.write(websocketpp::logger::error_names::fatal,"A critical error");
+}
