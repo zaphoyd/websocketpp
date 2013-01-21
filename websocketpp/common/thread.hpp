@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,23 +25,36 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_CONCURRENCY_STL_HPP
-#define WEBSOCKETPP_CONCURRENCY_STL_HPP
+#ifndef WEBSOCKETPP_COMMON_THREAD_HPP
+#define WEBSOCKETPP_COMMON_THREAD_HPP
 
-#include <mutex>
+#ifdef _WEBSOCKETPP_CPP11_STL_
+	#ifndef _WEBSOCKETPP_CPP11_THREAD_
+		#define _WEBSOCKETPP_CPP11_THREAD_
+	#endif
+#endif
 
-#include <iostream>
+#ifdef _WEBSOCKETPP_CPP11_THREAD_
+	#include <thread>
+	#include <mutex>
+#else
+	#include <boost/thread.hpp>
+	#include <boost/thread/mutex.hpp>
+	#include <boost/thread/condition_variable.hpp>
+#endif
 
 namespace websocketpp {
-namespace concurrency {
+namespace lib {
 
-class stl {
-public:
-	typedef std::mutex mutex_type;
-	typedef std::lock_guard<mutex_type> scoped_lock_type; 
-};
+#ifdef _WEBSOCKETPP_CPP11_THREAD_
+	using std::mutex;
+	using std::lock_guard;
+#else
+	using boost::mutex;
+	using boost::lock_guard;
+#endif
 
-} // namespace concurrency
+} // namespace lib
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_CONCURRENCY_STL_HPP
+#endif // WEBSOCKETPP_COMMON_THREAD_HPP

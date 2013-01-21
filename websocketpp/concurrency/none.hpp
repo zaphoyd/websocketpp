@@ -28,7 +28,7 @@
 #ifndef WEBSOCKETPP_CONCURRENCY_NONE_HPP
 #define WEBSOCKETPP_CONCURRENCY_NONE_HPP
 
-#include <iostream>
+//#include <iostream>
 
 namespace websocketpp {
 namespace concurrency {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,23 +25,21 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_CONCURRENCY_BOOST_HPP
-#define WEBSOCKETPP_CONCURRENCY_BOOST_HPP
+#ifndef WEBSOCKETPP_CONCURRENCY_BASIC_HPP
+#define WEBSOCKETPP_CONCURRENCY_BASIC_HPP
 
-#include <boost/thread/mutex.hpp>
-
-#include <iostream>
+#include <websocketpp/common/thread.hpp>
 
 namespace websocketpp {
 namespace concurrency {
 
-class libboost {
+class basic {
 public:
-	typedef boost::mutex mutex_type;
-	typedef boost::lock_guard<mutex_type> scoped_lock_type; 
+	typedef lib::mutex mutex_type;
+	typedef lib::lock_guard<mutex_type> scoped_lock_type; 
 };
 
 } // namespace concurrency
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_CONCURRENCY_BOOST_HPP
+#endif // WEBSOCKETPP_CONCURRENCY_BASIC_HPP
