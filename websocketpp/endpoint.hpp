@@ -125,6 +125,54 @@ public:
         return m_is_server;
     }
     
+    /********************************/
+    /* Pass-through logging adaptor */
+    /********************************/
+    
+    /// Set Access logging channel
+    /**
+     * Set the access logger's channel value. The value is a number whose
+     * interpretation depends on the logging policy in use.
+     * 
+     * @param channels The channel value(s) to set
+     */
+    void set_access_channels(log::level channels) {
+        m_alog.set_channels(channels);
+    }
+    
+    /// Clear Access logging channels
+    /**
+     * Clear the access logger's channel value. The value is a number whose
+     * interpretation depends on the logging policy in use.
+     * 
+     * @param channels The channel value(s) to clear
+     */
+    void clear_access_channels(log::level channels) {
+        m_alog.clear_channels(channels);
+    }
+    
+    /// Set Error logging channel
+    /**
+     * Set the error logger's channel value. The value is a number whose
+     * interpretation depends on the logging policy in use.
+     * 
+     * @param channels The channel value(s) to set
+     */
+    void set_error_channels(log::level channels) {
+        m_elog.set_channels(channels);
+    }
+    
+    /// Clear Error logging channels
+    /**
+     * Clear the error logger's channel value. The value is a number whose
+     * interpretation depends on the logging policy in use.
+     * 
+     * @param channels The channel value(s) to clear
+     */
+    void clear_error_channels(log::level channels) {
+        m_elog.clear_channels(channels);
+    }
+    
     /*************************/
     /* Set Handler functions */
     /*************************/
