@@ -50,3 +50,18 @@ BOOST_AUTO_TEST_CASE( is_token_char ) {
     elog.write(websocketpp::log::elevel::rerror,"A error");
     elog.write(websocketpp::log::elevel::fatal,"A critical error");
 }
+
+BOOST_AUTO_TEST_CASE( access_clear ) {
+    typedef websocketpp::log::basic<websocketpp::concurrency::none,websocketpp::log::alevel> access_log;
+    
+    std::stringstream out;
+    access_log logger(0xffffffff,&out);
+    
+    // clear all channels
+    logger.clear_channels(0xffffffff);
+    
+    // writes shouldn't happen
+    logger.write(websocketpp::log::alevel::devel,"devel");
+    std::cout << "|" << out.str() << "|" << std::endl;
+    BOOST_CHECK( out.str().size() == 0 );
+}
