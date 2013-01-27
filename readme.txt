@@ -18,6 +18,7 @@ Implimented but needs more testing
 - pong_handler
 - tcp_init_handler
 - exception/error handling
+- Logging
 
 Needs work:
 - random number generation
@@ -25,7 +26,6 @@ Needs work:
 - close_handler
 - validate_handler
 - http_handler
-- Logging
 - Client role
 - Extension support
 - permessage_compress extension
