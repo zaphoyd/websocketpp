@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,11 +37,6 @@ namespace config {
 struct asio : public core {
 	typedef core::concurrency_type concurrency_type;
 	
-	typedef websocketpp::transport::asio::basic_socket::endpoint socket_type;
-	
-	typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
-        transport_type;
-
 	typedef core::request_type request_type;
 	typedef core::response_type response_type;
 
@@ -51,9 +46,20 @@ struct asio : public core {
 	
 	typedef core::alog_type alog_type;
 	typedef core::alog_type elog_type;
+    
+    struct transport_config {
+        typedef asio::concurrency_type concurrency_type;
+        typedef asio::alog_type alog_type;
+        typedef asio::elog_type elog_type;
+        typedef websocketpp::transport::asio::basic_socket::endpoint 
+            socket_type;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config> 
+        transport_type;
 };
 
 } // namespace config
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_CONFIG_CORE_HPP
+#endif // WEBSOCKETPP_CONFIG_ASIO_HPP

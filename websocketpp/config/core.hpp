@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,10 +55,6 @@ struct core {
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
 	
-    // Transport Policy
-    typedef websocketpp::transport::iostream::endpoint<concurrency_type> 
-        transport_type;
-
     // HTTP Parser Policies
     typedef http::parser::request request_type;
     typedef http::parser::response response_type;
@@ -72,11 +68,21 @@ struct core {
 		endpoint_msg_manager_type;
 	
 	/// Logging policies
-	typedef websocketpp::logger::basic<concurrency_type,
-	    websocketpp::logger::error_names> elog_type;
-	typedef websocketpp::logger::basic<concurrency_type,
-	    websocketpp::logger::access_names> alog_type;
+	typedef websocketpp::log::basic<concurrency_type,
+	    websocketpp::log::elevel> elog_type;
+	typedef websocketpp::log::basic<concurrency_type,
+	    websocketpp::log::alevel> alog_type;
 	
+    struct transport_config {
+        typedef core::concurrency_type concurrency_type;
+        typedef core::elog_type elog_type;
+        typedef core::alog_type alog_type;
+    };
+
+    /// Transport Endpoint Component
+    typedef websocketpp::transport::iostream::endpoint<transport_config> 
+        transport_type;
+
     /// 
 	static const size_t connection_read_buffer_size = 32;
     

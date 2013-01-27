@@ -25,43 +25,23 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_CONFIG_ASIO_HPP
-#define WEBSOCKETPP_CONFIG_ASIO_HPP
+#ifndef WEBSOCKETPP_CONFIG_ASIO_TLS_HPP
+#define WEBSOCKETPP_CONFIG_ASIO_TLS_HPP
 
 #include <websocketpp/config/core.hpp>
 #include <websocketpp/transport/asio/endpoint.hpp>
 #include <websocketpp/transport/asio/security/tls.hpp>
 
+// Pull in non-tls config
+#include <websocketpp/config/asio_no_tls.hpp>
+
+// Define TLS config
 namespace websocketpp {
 namespace config {
-
-struct asio : public core {
-	typedef core::concurrency_type concurrency_type;
-	
-    typedef websocketpp::transport::asio::basic_socket::endpoint socket_type;
-	
-    typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
-        transport_type;
-
-	typedef core::request_type request_type;
-	typedef core::response_type response_type;
-
-	typedef core::message_type message_type;
-	typedef core::con_msg_manager_type con_msg_manager_type;
-	typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
-	
-	typedef core::alog_type alog_type;
-	typedef core::alog_type elog_type;
-};
 
 struct asio_tls : public core {
 	typedef core::concurrency_type concurrency_type;
 	
-    typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
-	
-    typedef websocketpp::transport::asio::endpoint<concurrency_type,socket_type> 
-        transport_type;
-
 	typedef core::request_type request_type;
 	typedef core::response_type response_type;
 
@@ -71,9 +51,19 @@ struct asio_tls : public core {
 	
 	typedef core::alog_type alog_type;
 	typedef core::alog_type elog_type;
+
+    struct transport_config {
+        typedef asio_tls::concurrency_type concurrency_type;
+        typedef asio_tls::alog_type alog_type;
+        typedef asio_tls::elog_type elog_type;
+        typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config> 
+        transport_type;
 };
 
 } // namespace config
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_CONFIG_CORE_HPP
+#endif // WEBSOCKETPP_CONFIG_ASIO_TLS_HPP
