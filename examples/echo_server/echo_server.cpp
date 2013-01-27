@@ -31,20 +31,24 @@ int main() {
 	// Create a server endpoint
     server echo_server;
 	
-    // Initialize ASIO
-	echo_server.init_asio();
-	
-    // Register our message handler
-    echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
-
-	// Listen on port 9002
-	echo_server.listen(9002);
-	
-	// Start the server accept loop
-	echo_server.start_accept();
-
-	// Start the ASIO io_service run loop
 	try {
+        // Set logging settings
+        echo_server.set_access_channels(websocketpp::log::alevel::all);
+        echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        
+        // Initialize ASIO
+        echo_server.init_asio();
+        
+        // Register our message handler
+        echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+        
+        // Listen on port 9002
+        echo_server.listen(9002);
+        
+        // Start the server accept loop
+        echo_server.start_accept();
+	    
+	    // Start the ASIO io_service run loop
         echo_server.run();
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
