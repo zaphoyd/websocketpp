@@ -34,7 +34,7 @@ struct action {
     websocketpp::connection_hdl hdl;
     server::message_ptr msg;
 };
-
+ 
 class broadcast_server {
 public:
     broadcast_server() {
