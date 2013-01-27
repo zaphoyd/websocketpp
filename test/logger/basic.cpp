@@ -25,7 +25,7 @@
  * 
  */
 //#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE basic_logger
+#define BOOST_TEST_MODULE basic_log
 #include <boost/test/unit_test.hpp>
 
 #include <string>
@@ -34,19 +34,19 @@
 #include <websocketpp/concurrency/none.hpp>
 
 BOOST_AUTO_TEST_CASE( is_token_char ) {
-    typedef websocketpp::logger::basic<websocketpp::concurrency::none,websocketpp::logger::error_names> error_logger;
+    typedef websocketpp::log::basic<websocketpp::concurrency::none,websocketpp::log::elevel> error_log;
     
-    error_logger elog;
+    error_log elog;
     
-    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::info ) == true );
-    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::warn ) == true );
-    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::rerror ) == true );
-    BOOST_CHECK( elog.static_test(websocketpp::logger::error_names::fatal ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::log::elevel::info ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::log::elevel::warn ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::log::elevel::rerror ) == true );
+    BOOST_CHECK( elog.static_test(websocketpp::log::elevel::fatal ) == true );
     
-    elog.set_channels(websocketpp::logger::error_names::info);
+    elog.set_channels(websocketpp::log::elevel::info);
     
-    elog.write(websocketpp::logger::error_names::info,"Information");
-    elog.write(websocketpp::logger::error_names::warn,"A warning");
-    elog.write(websocketpp::logger::error_names::rerror,"A error");
-    elog.write(websocketpp::logger::error_names::fatal,"A critical error");
+    elog.write(websocketpp::log::elevel::info,"Information");
+    elog.write(websocketpp::log::elevel::warn,"A warning");
+    elog.write(websocketpp::log::elevel::rerror,"A error");
+    elog.write(websocketpp::log::elevel::fatal,"A critical error");
 }
