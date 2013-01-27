@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -68,7 +68,8 @@ public:
 
 	explicit server() : endpoint_type(true)
 	{
-		std::cout << "server constructor" << std::endl; 
+		endpoint_type::m_alog.write(log::alevel::devel,
+            "server constructor");
 	}
 	
 	// return an initialized connection_ptr. Call start() on this object to 
@@ -99,13 +100,14 @@ public:
         
         if (!con) {
             // TODO: should this be considered a server fatal error?
-            std::cout << "handle_accept got an invalid handle back" 
-                      << std::endl;
+            endpoint_type::m_elog.write(log::elevel::warn,
+                "handle_accept got an invalid handle back");
         } else {
             if (ec) {
                 con->terminate();
 
-                std::cout << "handle_accept: error: " << ec << std::endl;
+                endpoint_type::m_elog.write(log::elevel::rerror,
+                    "handle_accept error: "+ec.message());
             } else {
                 con->start();
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -256,7 +256,7 @@ public:
 	    
         ec = lib::error_code();
 
-		std::cout << "consume: " << utility::to_hex(buf,len) << std::endl;
+		//std::cout << "consume: " << utility::to_hex(buf,len) << std::endl;
 
 		// Loop while we don't have a message ready and we still have bytes 
 		// left to process. 
@@ -546,7 +546,7 @@ public:
 
             std::copy(reason.begin(),reason.end(),payload.begin()+2);
         }
-
+                
         return this->prepare_control(frame::opcode::CLOSE,payload,out);
     }
 protected:
@@ -836,9 +836,9 @@ protected:
 		} else {
 			frame::extended_header e(payload.size());
 			out->set_header(frame::prepare_header(h,e));
-            std::cout << "o: " << o.size() << std::endl; 
+            //std::cout << "o: " << o.size() << std::endl; 
             std::copy(payload.begin(),payload.end(),o.begin());
-            std::cout << "o: " << o.size() << std::endl; 
+            //std::cout << "o: " << o.size() << std::endl; 
 		}
 				
 		out->set_prepared(true);

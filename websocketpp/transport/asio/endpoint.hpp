@@ -48,14 +48,21 @@ namespace asio {
  * transport::asio::endpoint impliments an endpoint transport component using
  * Boost ASIO.
  */
-template <typename concurrency, typename socket>
-class endpoint : public socket {
+template <typename config>
+class endpoint : public config::socket_type {
 public:
     /// Type of this endpoint transport component
-	typedef endpoint<concurrency,socket> type;
-    
-    /// Type of the socket endpoint component
-    typedef socket socket_type;
+	typedef endpoint<config> type;
+
+    /// Type of the concurrency policy
+    typedef typename config::concurrency_type concurrency_type;
+    /// Type of the socket policy
+    typedef typename config::socket_type socket_type;
+    /// Type of the error logging policy
+    typedef typename config::elog_type elog_type;
+    /// Type of the access logging policy
+    typedef typename config::alog_type alog_type;
+
     /// Type of the socket connection component
     typedef typename socket_type::socket_con_type socket_con_type;
     /// Type of a shared pointer to the socket connection component
@@ -63,7 +70,7 @@ public:
     
     /// Type of the connection transport component associated with this
     /// endpoint transport component
-	typedef asio::connection<socket_con_type> transport_con_type;
+	typedef asio::connection<config> transport_con_type;
     /// Type of a shared pointer to the connection transport component
     /// associated with this endpoint transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
@@ -174,7 +181,8 @@ public:
 	void listen(const boost::asio::ip::tcp::endpoint& e) {
 		if (m_state != READY) {
 			// TODO
-			std::cout << "asio::listen called from the wrong state" << std::endl;
+            m_elog->write(log::elevel::library,
+                "asio::listen called from the wrong state");
 			throw;
 		}
 		m_acceptor->open(e.protocol());
@@ -200,12 +208,12 @@ public:
 	void async_accept(transport_con_ptr tcon, accept_handler callback) {
 		if (m_state != LISTENING) {
 			// TODO: throw invalid state
-			std::cout << "asio::async_accept called from the wrong state" 
-                      << std::endl;
+            m_elog->write(log::elevel::library,
+                "asio::async_accept called from the wrong state");
 			throw;
 		}
 		
-		std::cout << "call async accept" << std::endl;
+        m_alog->write(log::alevel::devel, "calling async accept");
 		
 		// TEMP
 		m_acceptor->async_accept(
@@ -218,8 +226,6 @@ public:
 				lib::placeholders::_1
 			)
 		);
-
-		std::cout << "done" << std::endl;
 	}
 
 	/// wraps the run method of the internal io_service object
@@ -264,6 +270,21 @@ public:
 		listen(*endpoint_iterator);
 	}
 protected:
+    /// Initialize logging
+    /**
+     * The loggers are located in the main endpoint class. As such, the 
+     * transport doesn't have direct access to them. This method is called
+     * by the endpoint constructor to allow shared logging from the transport
+     * component. These are raw pointers to member variables of the endpoint.
+     * In particular, they cannot be used in the transport constructor as they
+     * haven't been constructed yet, and cannot be used in the transport 
+     * destructor as they will have been destroyed by then.
+     */
+    void init_logging(elog_type* e, alog_type* a) {
+        m_elog = e;
+        m_alog = a;
+    }
+
 	void handle_accept(connection_hdl hdl, accept_handler callback,
         const boost::system::error_code& error)
     {
@@ -283,14 +304,15 @@ protected:
 	
 	/// Initialize a connection
 	/**
-	 * init is called by an endpoint once for each newly created connection. It's 
-     * purpose is to give the transport policy the chance to perform any transport 
-     * specific initialization that couldn't be done via the default constructor.
+	 * init is called by an endpoint once for each newly created connection. 
+     * It's purpose is to give the transport policy the chance to perform any 
+     * transport specific initialization that couldn't be done via the default 
+     * constructor.
      *
      * @param tcon A pointer to the transport portion of the connection.
 	 */
 	void init(transport_con_ptr tcon) {
-        std::cout << "transport::asio::init" << std::endl;
+        m_alog->write(log::alevel::devel, "transport::asio::init");
 
         // Initialize the connection socket component
         socket_type::init(lib::static_pointer_cast<socket_con_type,
@@ -314,6 +336,9 @@ private:
 	bool				m_external_io_service;
 	acceptor_ptr		m_acceptor;
 	
+    elog_type* m_elog;
+    alog_type* m_alog;
+
 	// Transport state
 	state				m_state;
 };

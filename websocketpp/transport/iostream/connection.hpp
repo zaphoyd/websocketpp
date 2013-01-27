@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,30 +34,39 @@
 #include <websocketpp/transport/base/connection.hpp>
 #include <websocketpp/transport/iostream/base.hpp>
 
-#include <iostream>
+#include <sstream>
 #include <vector>
 
 namespace websocketpp {
 namespace transport {
 namespace iostream {
 
-template <typename concurrency>
+template <typename config>
 class connection {
 public:
     /// Type of this connection transport component
-	typedef connection<concurrency> type;
+	typedef connection<config> type;
     /// Type of a shared pointer to this connection transport component
     typedef lib::shared_ptr<type> ptr;
 	
-    // TODO: clean up the rest of these types
-	typedef typename concurrency::scoped_lock_type scoped_lock_type;
-	typedef typename concurrency::mutex_type mutex_type;
+    /// transport concurrency policy
+    typedef typename config::concurrency_type concurrency_type;
+    /// Type of this transport's access logging policy
+    typedef typename config::alog_type alog_type;
+    /// Type of this transport's error logging policy
+    typedef typename config::elog_type elog_type;
+
+    // Concurrency policy types
+	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
+	typedef typename concurrency_type::mutex_type mutex_type;
 	
-	explicit connection(bool is_server)
+	explicit connection(bool is_server, alog_type& alog, elog_type& elog)
 	  : m_reading(false)
 	  , m_is_server(is_server)
+	  , m_alog(alog)
+	  , m_elog(elog)
 	{
-		std::cout << "iostream connection transport constructor" << std::endl;
+        m_alog.write(log::alevel::devel,"iostream con transport constructor");
 	}
 	
 	void register_ostream(std::ostream* o) {
@@ -80,7 +89,7 @@ public:
 	}
 protected:
 	void init(init_handler callback) {
-		std::cout << "iostream connection init" << std::endl;
+        m_alog.write(log::alevel::devel,"iostream connection init");
 		callback(lib::error_code());
 	}
 	
@@ -95,7 +104,9 @@ protected:
 	void async_read_at_least(size_t num_bytes, char *buf, size_t len, 
 		read_handler handler)
 	{
-		std::cout << "iostream_con async_read_at_least: " << num_bytes << std::endl;
+        std::stringstream s;
+        s << "iostream_con async_read_at_least: " << num_bytes;
+        m_alog.write(log::alevel::devel,s.str());
 		
 		if (num_bytes > len) {
 		    handler(make_error_code(error::invalid_num_bytes),size_t(0));
@@ -116,7 +127,7 @@ protected:
 	}
 	
 	void async_write(const char* buf, size_t len, write_handler handler) {
-	    std::cout << "iostream_con async_write" << std::endl;
+        m_alog.write(log::alevel::devel,"iostream_con async_write");
 		// TODO: lock transport state?
 		
 		if (!output_stream) {
@@ -138,7 +149,7 @@ protected:
      * TODO: unit tests
      */
     void async_write(const std::vector<buffer>& bufs, write_handler handler) {
-	    std::cout << "iostream_con async_write buffer list" << std::endl;
+        m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
 		// TODO: lock transport state?
 		
 		if (!output_stream) {
@@ -176,18 +187,18 @@ protected:
     }
 private:
 	void read(std::istream &in) {
-	    std::cout << "iostream_con read" << std::endl;
+        m_alog.write(log::alevel::devel,"iostream_con read");
 		
 		while (in.good()) {
 		    if (!m_reading) {
-		        std::cout << "write while not reading" << std::endl;
+                m_elog.write(log::elevel::devel,"write while not reading");
                 break;
 		    }
 		    
             in.read(m_buf,m_len-m_cursor);
             
             if (in.gcount() == 0) {
-                std::cout << "read zero bytes" << std::endl;
+                m_elog.write(log::elevel::devel,"read zero bytes");
                 break;
             }
             
@@ -219,6 +230,8 @@ private:
 	
 	bool			m_reading;
 	const bool		m_is_server;
+    alog_type& m_alog;
+    elog_type& m_elog;
 
 	// This lock ensures that only one thread can edit read data for this 
 	// connection. This is a very coarse lock that is basically locked all the 

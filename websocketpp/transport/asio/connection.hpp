@@ -38,7 +38,7 @@
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 
-#include <iostream>
+#include <sstream>
 #include <vector>
 
 namespace websocketpp {
@@ -53,27 +53,33 @@ typedef lib::function<void(connection_hdl)> tcp_init_handler;
  * Boost ASIO that works with the transport::asio::endpoint endpoint transport
  * component.
  */
-template <typename socket>
-class connection : public socket {
+template <typename config>
+class connection : public config::socket_type::socket_con_type {
 public:
     /// Type of this connection transport component
-	typedef connection<socket> type;
+	typedef connection<config> type;
     /// Type of a shared pointer to this connection transport component
     typedef lib::shared_ptr<type> ptr;
 
     /// Type of the socket connection component
-    typedef socket socket_con_type;
+    typedef typename config::socket_type::socket_con_type socket_con_type;
     /// Type of a shared pointer to the socket connection component
     typedef typename socket_con_type::ptr socket_con_ptr;
+    /// Type of this transport's access logging policy
+    typedef typename config::alog_type alog_type;
+    /// Type of this transport's error logging policy
+    typedef typename config::elog_type elog_type;
 	
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;	
 
 	// generate and manage our own io_service
-	explicit connection(bool is_server)
+	explicit connection(bool is_server, alog_type& alog, elog_type& elog)
 	  : m_is_server(is_server)
+	  , m_alog(alog)
+	  , m_elog(elog)
 	{
-		std::cout << "asio connection transport constructor" << std::endl;
+        m_alog.write(log::alevel::devel,"asio con transport constructor");
 	}
 	
 	bool is_secure() const {
@@ -113,7 +119,7 @@ protected:
 	 * boost::asio components to the io_service
 	 */
     void init(init_handler callback) {
-		std::cout << "asio connection init" << std::endl;
+        m_alog.write(log::alevel::devel,"asio connection init");
 		
 		socket_con_type::init(
 			lib::bind(
@@ -141,11 +147,13 @@ protected:
 	void async_read_at_least(size_t num_bytes, char *buf, size_t len, 
 		read_handler handler)
 	{
-		std::cout << "asio async_read_at_least: " 
-		          << num_bytes << std::endl;
+        std::stringstream s;
+        s << "asio async_read_at_least: " << num_bytes;
+        m_alog.write(log::alevel::devel,s.str());
 		
 		if (num_bytes > len) {
-			std::cout << "asio async_read_at_least error::invalid_num_bytes" << std::endl;
+            m_elog.write(log::elevel::devel,
+                "asio async_read_at_least error::invalid_num_bytes");
 		    handler(make_error_code(error::invalid_num_bytes),size_t(0));
 		    return;
 		}
@@ -169,13 +177,13 @@ protected:
     {
     	// TODO: translate this better
     	if (ec) {
-    		std::cout << "asio async_read_at_least error::pass_through" 
-                      << "Original Error: " << ec 
-                      << " (" << ec.message()  << ")"
-                      << std::endl;
+            std::stringstream s;
+            s << "asio async_read_at_least error::pass_through"
+              << "Original Error: " << ec << " (" << ec.message() << ")";
+            m_elog.write(log::elevel::devel,s.str());
     		handler(make_error_code(error::pass_through), bytes_transferred);	
     	} else {
-    		std::cout << "asio async_read_at_least no error" << std::endl;
+            m_alog.write(log::alevel::devel,"asio async_read_at_least no error");
     		handler(lib::error_code(), bytes_transferred);
     	}
     }
@@ -264,7 +272,9 @@ protected:
 private:
 	// static settings
 	const bool			m_is_server;
-	
+    alog_type& m_alog;
+    elog_type& m_elog;
+
 	// dynamic settings
 	
 	// transport state

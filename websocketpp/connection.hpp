@@ -125,6 +125,11 @@ public:
     
     /// Type of the concurrency component of this connection
     typedef typename config::concurrency_type concurrency_type;
+    /// Type of the access logging policy
+    typedef typename config::alog_type alog_type;
+    /// Type of the error logging policy
+    typedef typename config::elog_type elog_type;
+
     /// Type of the transport component of this connection
     typedef typename config::transport_type::transport_con_type 
         transport_con_type;
@@ -154,16 +159,19 @@ public:
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
-    explicit connection(bool is_server, const std::string& ua)
-      : transport_con_type(is_server)
+    explicit connection(bool is_server, const std::string& ua, alog_type& alog, 
+        elog_type& elog)
+      : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
       , m_state(session::state::CONNECTING)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
 	  , m_send_buffer_size(0)
 	  , m_is_server(is_server)
+	  , m_alog(alog)
+	  , m_elog(elog)
     {
-        std::cout << "connection constructor" << std::endl;
+        m_alog.write(log::alevel::devel,"connection constructor");
     }
     
     // Public Interface
@@ -859,6 +867,8 @@ private:
     uri_ptr                 m_uri;
     
     const bool				m_is_server;
+    alog_type& m_alog;
+    elog_type& m_elog;
     
     // Close state
     /// Close code that was sent on the wire by this endpoint

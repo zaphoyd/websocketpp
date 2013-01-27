@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/logger/basic.hpp>
 
 #include <websocketpp/transport/iostream/connection.hpp>
 
@@ -38,17 +39,24 @@ namespace websocketpp {
 namespace transport {
 namespace iostream {
 
-template <typename concurrency>
+template <typename config>
 class endpoint {
 public:
     /// Type of this endpoint transport component
     typedef endpoint type;
     /// Type of a pointer to this endpoint transport component
     typedef lib::shared_ptr<type> ptr;
+    
+    /// Type of this endpoint's concurrency policy
+    typedef typename config::concurrency_type concurrency_type;
+    /// Type of this endpoint's error logging policy
+    typedef typename config::elog_type elog_type;
+    /// Type of this endpoint's access logging policy
+    typedef typename config::alog_type alog_type;
 
     /// Type of this endpoint transport component's associated connection
     /// transport component.
-	typedef iostream::connection<concurrency> transport_con_type;
+	typedef iostream::connection<config> transport_con_type;
     /// Type of a shared pointer to this endpoint transport component's 
     /// associated connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
@@ -60,14 +68,32 @@ public:
 	}
 	
 	void register_ostream(std::ostream* o) {
+        m_alog->write(log::alevel::devel,"register_ostream");
 		output_stream = o;
 	}
 protected:
+    /// Initialize logging
+    /**
+     * The loggers are located in the main endpoint class. As such, the 
+     * transport doesn't have direct access to them. This method is called
+     * by the endpoint constructor to allow shared logging from the transport
+     * component. These are raw pointers to member variables of the endpoint.
+     * In particular, they cannot be used in the transport constructor as they
+     * haven't been constructed yet, and cannot be used in the transport 
+     * destructor as they will have been destroyed by then.
+     */
+    void init_logging(elog_type* e, alog_type* a) {
+        m_elog = e;
+        m_alog = a;
+    }
+
 	void init(transport_con_ptr tcon) {
 		tcon->register_ostream(output_stream);
 	}
 private:
 	std::ostream* output_stream;
+    elog_type* m_elog;
+    alog_type* m_alog;
 };
 
 

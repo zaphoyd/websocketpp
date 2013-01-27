@@ -41,11 +41,12 @@
  */
 
 #include <ctime>
+#include <iostream>
 
 namespace websocketpp {
-namespace logger {
+namespace log {
 
-struct error_names {
+struct elevel {
     static const uint32_t none = 0x0;
     static const uint32_t devel = 0x1;
     static const uint32_t library = 0x2;
@@ -75,7 +76,7 @@ struct error_names {
 	}
 };
 
-struct access_names {
+struct alevel {
     static const uint32_t none = 0x0;
     static const uint32_t connect = 0x1;
     static const uint32_t disconnect = 0x2;

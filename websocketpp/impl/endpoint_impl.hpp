@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@ namespace websocketpp {
 template <typename connection, typename config>
 typename endpoint<connection,config>::connection_ptr
 endpoint<connection,config>::create_connection() {
-    std::cout << "create_connection" << std::endl;
+    m_alog.write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
 	
 	/*if (m_state == STOPPING || m_state == STOPPED) {
@@ -41,7 +41,8 @@ endpoint<connection,config>::create_connection() {
 	}*/
 	
     // Create a connection on the heap and manage it using a shared pointer
-	connection_ptr con(new connection_type(m_is_server,m_user_agent));
+    connection_ptr con(new connection_type(m_is_server,m_user_agent,m_alog,
+        m_elog));
     
     connection_weak_ptr w(con);
     
@@ -88,8 +89,10 @@ endpoint<connection,config>::create_connection() {
 
 template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
-    std::cout << "remove_connection. New count: " << m_connections.size()-1
-		      << std::endl;
+	std::stringstream s;
+	s << "remove_connection. New count: " << m_connections.size()-1;
+	m_alog.write(log::alevel::devel,s.str());
+	
     scoped_lock_type lock(m_mutex);
 		
 	// unregister the termination handler

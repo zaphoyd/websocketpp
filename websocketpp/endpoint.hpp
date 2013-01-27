@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,7 +79,12 @@ public:
  	  : m_user_agent(::websocketpp::user_agent)
  	  , m_is_server(is_server)
 	{
-		std::cout << "endpoint constructor" << std::endl;
+		m_alog.set_channels(0xffffffff);
+		m_elog.set_channels(0xffffffff);
+		
+		m_alog.write(log::alevel::devel,"endpoint constructor");
+
+        transport_type::init_logging(&m_elog,&m_alog);
 	}
 	
 	/// Returns the user agent string that this endpoint will use
@@ -119,7 +124,7 @@ public:
 	bool is_server() const {
         return m_is_server;
     }
-
+    
     /*************************/
     /* Set Handler functions */
     /*************************/
@@ -178,9 +183,10 @@ public:
             ec = error::make_error_code(error::bad_connection);
             return;
         }
-
-        std::cout << "Interrupting connection " << con.get() << std::endl;
-
+        
+        m_alog.write(log::alevel::devel,
+            "Interrupting connection"+con.get());
+        
         ec = con->interrupt();
     }
     
@@ -233,6 +239,9 @@ protected:
 	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency_type::mutex_type mutex_type;
 	
+	typedef typename config::elog_type elog_type;
+	typedef typename config::alog_type alog_type;
+	
 	connection_ptr create_connection();
 	void remove_connection(connection_ptr con);
     
@@ -251,6 +260,9 @@ protected:
             hdl.lock());
         return con;
     }
+    
+    alog_type m_alog;
+    elog_type m_elog;
 private:
 	// dynamic settings
 	std::string					m_user_agent;
@@ -265,7 +277,9 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
-
+    
+    
+    
 	// endpoint resources
 	std::set<connection_ptr>	m_connections;
 	
