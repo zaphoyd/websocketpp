@@ -46,17 +46,19 @@
 namespace websocketpp {
 namespace log {
 
+typedef uint32_t level;
+
 struct elevel {
-    static const uint32_t none = 0x0;
-    static const uint32_t devel = 0x1;
-    static const uint32_t library = 0x2;
-    static const uint32_t info = 0x4;
-    static const uint32_t warn = 0x8;
-    static const uint32_t rerror = 0x10;
-    static const uint32_t fatal = 0x20;
-    static const uint32_t all = 0xffffffff;
+    static const level none = 0x0;
+    static const level devel = 0x1;
+    static const level library = 0x2;
+    static const level info = 0x4;
+    static const level warn = 0x8;
+    static const level rerror = 0x10;
+    static const level fatal = 0x20;
+    static const level all = 0xffffffff;
     
-    static const char* channel_name(uint32_t channel) {
+    static const char* channel_name(level channel) {
 	    switch(channel) {
 	        case devel:
 	            return "devel";
@@ -77,21 +79,21 @@ struct elevel {
 };
 
 struct alevel {
-    static const uint32_t none = 0x0;
-    static const uint32_t connect = 0x1;
-    static const uint32_t disconnect = 0x2;
-    static const uint32_t control = 0x4;
-    static const uint32_t frame_header = 0x8;
-    static const uint32_t frame_payload = 0x10;
-    static const uint32_t message_header = 0x20;
-    static const uint32_t message_payload = 0x40;
-    static const uint32_t endpoint = 0x80;
-    static const uint32_t debug_handshake = 0x100;
-    static const uint32_t debug_close = 0x200;
-    static const uint32_t devel = 0x400;
-    static const uint32_t all = 0xffffffff;
+    static const level none = 0x0;
+    static const level connect = 0x1;
+    static const level disconnect = 0x2;
+    static const level control = 0x4;
+    static const level frame_header = 0x8;
+    static const level frame_payload = 0x10;
+    static const level message_header = 0x20;
+    static const level message_payload = 0x40;
+    static const level endpoint = 0x80;
+    static const level debug_handshake = 0x100;
+    static const level debug_close = 0x200;
+    static const level devel = 0x400;
+    static const level all = 0xffffffff;
     
-    static const char* channel_name(uint32_t channel) {
+    static const char* channel_name(level channel) {
 	    switch(channel) {
 	        case connect:
 	            return "connect";
@@ -124,41 +126,43 @@ struct alevel {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>() 
+    basic<concurrency,names>(std::ostream* out = &std::cout) 
       : m_static_channels(0xffffffff)
-      , m_dynamic_channels(0) {}
+      , m_dynamic_channels(0)
+      , m_out(out) {}
     
-    basic<concurrency,names>(uint32_t c)
+    basic<concurrency,names>(level c, std::ostream* out = &std::cout)
       : m_static_channels(c)
-      , m_dynamic_channels(0) {}
+      , m_dynamic_channels(0)
+      , m_out(out) {}
     
-    void set_channels(uint32_t channels) {
+    void set_channels(level channels) {
         scoped_lock_type lock(m_lock);
         m_dynamic_channels |= (channels & m_static_channels);
     }
     
-    void clear_channels(uint32_t channels) {
+    void clear_channels(level channels) {
         scoped_lock_type lock(m_lock);
-        m_dynamic_channels &= channels;
+        m_dynamic_channels &= ~channels;
     }
     
-    void write(uint32_t channel, const std::string& msg) {
-        scoped_lock_type lock(m_lock);
-        if (!this->dynamic_test(channel)) { return; }
-        std::cout << "[" << get_timestamp() << "] " 
-                  << "[" << names::channel_name(channel) << "] " 
-                  << msg << std::endl;
-    }
-    
-    void write(uint32_t channel, const char* msg) {
+    void write(level channel, const std::string& msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
-        std::cout << "[" << get_timestamp() << "] "
+        *m_out << "[" << get_timestamp() << "] " 
                   << "[" << names::channel_name(channel) << "] " 
-                  << msg << std::endl;
+                  << msg << "\n";
     }
     
-    bool static_test(uint32_t channel) const {
+    void write(level channel, const char* msg) {
+        scoped_lock_type lock(m_lock);
+        if (!this->dynamic_test(channel)) { return; }
+        *m_out << "[" << get_timestamp() << "] "
+                  << "[" << names::channel_name(channel) << "] " 
+                  << msg << "\n";
+    }
+    
+    bool static_test(level channel) const {
         return channel & m_static_channels;
     }
     
@@ -166,7 +170,7 @@ private:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency::mutex_type mutex_type;
 	
-	bool dynamic_test(uint32_t channel) {
+	bool dynamic_test(level channel) {
 	    return channel & m_dynamic_channels;
 	}
 	
@@ -179,8 +183,9 @@ private:
 	mutex_type m_lock;
 	
     char buffer[30];
-    const uint32_t m_static_channels;
-    uint32_t m_dynamic_channels;
+    const level m_static_channels;
+    level m_dynamic_channels;
+    std::ostream* m_out;
 };
 
 } // logger

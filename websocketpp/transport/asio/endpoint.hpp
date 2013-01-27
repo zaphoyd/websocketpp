@@ -148,8 +148,13 @@ public:
 	void init_asio(io_service_ptr ptr) {
 		if (m_state != UNINITIALIZED) {
 			// TODO: throw invalid state
+			m_elog->write(log::elevel::library,
+                "asio::init_asio called from the wrong state");
 			throw;
 		}
+		
+		m_alog->write(log::alevel::devel,"asio::init_asio");
+		
 		m_io_service = ptr;
         m_external_io_service = true;
 		m_acceptor.reset(new boost::asio::ip::tcp::acceptor(*m_io_service));
@@ -185,11 +190,16 @@ public:
                 "asio::listen called from the wrong state");
 			throw;
 		}
+		
+		m_alog->write(log::alevel::devel,"asio::listen");
+		
 		m_acceptor->open(e.protocol());
         m_acceptor->set_option(boost::asio::socket_base::reuse_address(true));
         m_acceptor->bind(e);
         m_acceptor->listen();
         m_state = LISTENING;
+        
+        m_alog->write(log::alevel::devel,"mark");
 	}
 	
 	void cancel() {
@@ -213,7 +223,7 @@ public:
 			throw;
 		}
 		
-        m_alog->write(log::alevel::devel, "calling async accept");
+        m_alog->write(log::alevel::devel, "asio::async_accept");
 		
 		// TEMP
 		m_acceptor->async_accept(
