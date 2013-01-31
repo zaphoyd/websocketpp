@@ -85,7 +85,7 @@ public:
 	  : m_external_io_service(false)
 	  , m_state(UNINITIALIZED)
 	{
-		std::cout << "transport::asio::endpoint constructor" << std::endl; 
+		//std::cout << "transport::asio::endpoint constructor" << std::endl; 
 	}
 	
 	~endpoint() {

@@ -76,8 +76,8 @@ public:
 	typedef boost::system::error_code boost_error;
 	
 	explicit connection() {
-		std::cout << "transport::asio::tls_socket::connection constructor" 
-                  << std::endl; 
+		//std::cout << "transport::asio::tls_socket::connection constructor" 
+        //          << std::endl; 
 	}
 	
     /// Check whether or not this connection is secure

@@ -61,8 +61,8 @@ public:
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
 	
 	explicit connection() : m_state(UNINITIALIZED) {
-		std::cout << "transport::asio::basic_socket::connection constructor" 
-                  << std::endl; 
+		//std::cout << "transport::asio::basic_socket::connection constructor" 
+        //          << std::endl; 
 	}
 	
     /// Check whether or not this connection is secure
