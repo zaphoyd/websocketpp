@@ -167,6 +167,7 @@ public:
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
 	  , m_send_buffer_size(0)
+	  , m_temp_lock(false)
 	  , m_is_server(is_server)
 	  , m_alog(alog)
 	  , m_elog(elog)
@@ -860,6 +861,7 @@ private:
      * Lock m_write_lock
      */
     std::vector<transport::buffer> m_send_buffer;
+    bool m_temp_lock;
 
     // connection data
     request_type            m_request;

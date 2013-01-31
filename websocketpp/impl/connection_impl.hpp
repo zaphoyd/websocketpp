@@ -1032,6 +1032,12 @@ void connection<config>::write_frame() {
     {
     	scoped_lock_type lock(m_write_lock);
     	
+    	if (m_temp_lock) {
+    	    return;
+    	} else {
+    	    m_temp_lock = true;
+    	}
+    	
     	if (m_send_queue.empty()) {
     		return;
     	}
@@ -1096,6 +1102,8 @@ void connection<config>::handle_write_frame(bool terminate,
         scoped_lock_type lock(m_write_lock);
         
         needs_writing = !m_send_queue.empty();
+        
+        m_temp_lock = false;
     }
 
     if (needs_writing) {
