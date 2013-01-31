@@ -70,6 +70,11 @@ public:
     /// Type of message pointers that this endpoint uses
     typedef typename connection_type::message_ptr message_ptr;
     
+    /// Type of error logger
+    typedef typename config::elog_type elog_type;
+    /// Type of access logger
+	typedef typename config::alog_type alog_type;
+    
     // TODO: organize these
 	typedef typename connection_type::termination_handler termination_handler;
 	
@@ -173,15 +178,37 @@ public:
         m_elog.clear_channels(channels);
     }
     
+    /// Get reference to access logger
+    /**
+     * TODO
+     * 
+     * @return A reference to the access logger
+     */
+    alog_type& get_alog() {
+        return m_alog;
+    }
+    
+    /// Get reference to error logger
+    /**
+     * TODO
+     * 
+     * @return A reference to the error logger
+     */
+    elog_type& get_elog() {
+        return m_elog;
+    }
+    
     /*************************/
     /* Set Handler functions */
     /*************************/
 
     void set_open_handler(open_handler h) {
+        m_alog.write(log::alevel::devel,"set_open_handler");
         scoped_lock_type guard(m_mutex);
         m_open_handler = h;
     }
     void set_close_handler(close_handler h) {
+        m_alog.write(log::alevel::devel,"set_close_handler");
         scoped_lock_type guard(m_mutex);
         m_close_handler = h;
     }
@@ -214,6 +241,7 @@ public:
         m_validate_handler = h;
     }
     void set_message_handler(message_handler h) {
+        m_alog.write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
     }
@@ -286,9 +314,6 @@ protected:
 	// Import appropriate internal types from our policy classes
 	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency_type::mutex_type mutex_type;
-	
-	typedef typename config::elog_type elog_type;
-	typedef typename config::alog_type alog_type;
 	
 	connection_ptr create_connection();
 	void remove_connection(connection_ptr con);
