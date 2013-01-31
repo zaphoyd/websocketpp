@@ -91,6 +91,7 @@ struct alevel {
     static const level debug_handshake = 0x100;
     static const level debug_close = 0x200;
     static const level devel = 0x400;
+    static const level app = 0x800;
     static const level all = 0xffffffff;
     
     static const char* channel_name(level channel) {
@@ -117,6 +118,8 @@ struct alevel {
 	            return "debug_close";
 	        case devel:
 	            return "devel";
+	        case app:
+	            return "application";
 	        default:
 	            return "unknown";
 	    }
