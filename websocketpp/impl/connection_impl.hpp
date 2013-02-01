@@ -77,6 +77,16 @@ lib::error_code connection<config>::send(const std::string& payload,
 }
 
 template <typename config>
+lib::error_code connection<config>::send(const void* payload, size_t len,
+    frame::opcode::value op)
+{
+	message_ptr msg = m_msg_manager->get_message(op,len);
+	msg->append_payload(payload,len);
+	
+	return send(msg);
+}
+
+template <typename config>
 lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 {
     m_alog.write(log::alevel::devel,"connection send");

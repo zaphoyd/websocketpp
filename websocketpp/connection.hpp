@@ -359,9 +359,6 @@ public:
      * Convenience method to send a message given a payload string and 
      * optionally an opcode. Default opcode is utf8 text.
      *
-     * Errors are returned via an exception
-     * TODO: make exception system_error rather than error_code
-     *
      * This method locks the m_write_lock mutex
      *
      * @param payload The payload string to generated the message with
@@ -371,6 +368,23 @@ public:
      */
     lib::error_code send(const std::string& payload, frame::opcode::value op = 
 		frame::opcode::TEXT);
+		
+	/// Send a message (raw array overload)
+    /**
+     * Convenience method to send a message given a raw array and optionally an 
+     * opcode. Default opcode is binary.
+     *
+     * This method locks the m_write_lock mutex
+     *
+     * @param payload A pointer to the array containing the bytes to send.
+     *
+     * @param len Length of the array.
+     *
+     * @param op The opcode to generated the message with. Default is 
+     * frame::opcode::binary
+     */
+    lib::error_code send(const void* payload, size_t len, frame::opcode::value 
+        op = frame::opcode::BINARY);
 
     /// Add a message to the outgoing send queue
     /**
