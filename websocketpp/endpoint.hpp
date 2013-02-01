@@ -83,9 +83,10 @@ public:
 	explicit endpoint(bool is_server)
  	  : m_user_agent(::websocketpp::user_agent)
  	  , m_is_server(is_server)
+ 	  , m_elog(&std::cerr)
 	{
 		m_alog.set_channels(0xffffffff);
-		m_elog.set_channels(0xffffffff);
+		m_elog.set_channels(0x00000000);
 		
 		m_alog.write(log::alevel::devel,"endpoint constructor");
 
