@@ -96,12 +96,21 @@ public:
 	}
 	
 	void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
-        connection_ptr con = endpoint_type::get_con_from_hdl(hdl);
+        lib::error_code hdl_ec;
+        connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
         
-        if (!con) {
-            // TODO: should this be considered a server fatal error?
-            endpoint_type::m_elog.write(log::elevel::warn,
+        if (hdl_ec == error::bad_connection) {
+            // The connection we were trying to connect went out of scope
+            // This really shouldn't happen
+            endpoint_type::m_elog.write(log::elevel::fatal,
                 "handle_accept got an invalid handle back");
+            con->terminate();
+        } else if (hdl_ec) {
+            // There was some other unknown error attempting to convert the hdl
+            // to a connection.
+            endpoint_type::m_elog.write(log::elevel::fatal,
+                "handle_accept error in get_con_from_hdl: "+hdl_ec.message());
+            con->terminate();
         } else {
             if (ec) {
                 con->terminate();
