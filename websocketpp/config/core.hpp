@@ -84,7 +84,7 @@ struct core {
         transport_type;
 
     /// 
-	static const size_t connection_read_buffer_size = 32;
+	static const size_t connection_read_buffer_size = 512;
     
     /// Drop connections immediately on protocol error. 
     /** 
