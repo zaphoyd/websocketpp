@@ -161,6 +161,26 @@ void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg) {
 }
 
 template <typename connection, typename config>
+void endpoint<connection,config>::close(connection_hdl hdl, 
+    const close::status::value code, const std::string & reason, 
+    lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
+
+    ec = con->close(code,reason);
+}
+    
+template <typename connection, typename config>
+void endpoint<connection,config>::close(connection_hdl hdl, 
+    const close::status::value code, const std::string & reason)
+{
+    lib::error_code ec;
+    send(hdl,code,reason,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
 	std::stringstream s;
 	s << "remove_connection. New count: " << m_connections.size()-1;

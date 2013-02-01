@@ -251,6 +251,14 @@ public:
     /* Connection pass through functions */
     /*************************************/
     
+    /**
+     * These functions act as adaptors to their counterparts in connection. They
+     * can produce one additional type of error, the bad_connection error, that
+     * indicates that the conversion from connection_hdl to connection_ptr 
+     * failed due to the connection not existing anymore. Each method has a 
+     * default and an exception free varient.
+     */
+    
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
@@ -266,6 +274,11 @@ public:
 
     void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
     void send(connection_hdl hdl, message_ptr msg);
+    
+    void close(connection_hdl hdl, const close::status::value code, 
+        const std::string & reason, lib::error_code & ec);
+    void close(connection_hdl hdl, const close::status::value code, 
+        const std::string & reason);
 protected:
 	// Import appropriate internal types from our policy classes
 	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
