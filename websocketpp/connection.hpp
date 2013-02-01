@@ -167,7 +167,7 @@ public:
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
 	  , m_send_buffer_size(0)
-	  , m_temp_lock(false)
+	  , m_write_flag(false)
 	  , m_is_server(is_server)
 	  , m_alog(alog)
 	  , m_elog(elog)
@@ -784,10 +784,8 @@ private:
      * TODO: unit tests
      *
      * @param msg The message to push
-     *
-     * @return whether or not the queue was empty.
      */
-    bool write_push(message_ptr msg);
+    void write_push(message_ptr msg);
 
     /// Pop a message from the write queue
     /**
@@ -834,7 +832,7 @@ private:
 
     mutable mutex_type      m_connection_state_lock;
 
-    /// The lock used to protect shared state involved in sending messages
+    /// The lock used to protect the message queue
     /**
      * Serializes access to the write queue as well as shared state within the 
      * processor.
@@ -875,7 +873,12 @@ private:
      * Lock m_write_lock
      */
     std::vector<transport::buffer> m_send_buffer;
-    bool m_temp_lock;
+    
+    /// True if there is currently an outstanding transport write
+    /**
+     * Lock m_write_lock
+     */
+    bool m_write_flag;
 
     // connection data
     request_type            m_request;
