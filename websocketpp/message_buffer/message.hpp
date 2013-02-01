@@ -252,7 +252,7 @@ public:
 	void set_payload(const void *payload, size_t len) {
 		m_payload.reserve(len);
 		const char* pl = static_cast<const char *>(payload);
-		m_payload.assign(pl, pl + length);
+		m_payload.assign(pl, pl + len);
 	}
 	
 	void append_payload(const std::string& payload) {
