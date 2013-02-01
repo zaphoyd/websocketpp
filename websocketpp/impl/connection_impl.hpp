@@ -214,6 +214,10 @@ void connection<config>::close(const close::status::value code,
 {
     m_alog.write(log::alevel::devel,"connection close");
     // check state
+    if (m_state != session::state::OPEN) {
+       ec = error::make_error_code(error::invalid_state);
+       return;
+    }
     
     // check reason length
     if (reason.size() > frame::limits::close_reason_size) {
