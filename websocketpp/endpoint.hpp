@@ -254,63 +254,22 @@ public:
     /**
      * Is thread safe if transport is
      */
-    void interrupt(connection_hdl hdl, lib::error_code & ec) {
-        connection_ptr con = get_con_from_hdl(hdl);
-        if (!con) {
-            ec = error::make_error_code(error::bad_connection);
-            return;
-        }
-        
-        m_alog.write(log::alevel::devel,
-            "Interrupting connection"+con.get());
-        
-        ec = con->interrupt();
-    }
+    void interrupt(connection_hdl hdl, lib::error_code & ec);
     
     /**
      * Is thread safe if transport is
      */
-    void interrupt(connection_hdl hdl) {
-        lib::error_code ec;
-        interrupt(hdl,ec);
-        if (ec) { throw ec; }
-    }
+    void interrupt(connection_hdl hdl);
 
     void send(connection_hdl hdl, const std::string& payload, 
-        frame::opcode::value op, lib::error_code & ec)
-    {
-        connection_ptr con = get_con_from_hdl(hdl);
-        if (!con) {
-            ec = error::make_error_code(error::bad_connection);
-            return;
-        }
-
-        ec = con->send(payload,op);
-    }
+        frame::opcode::value op, lib::error_code & ec);
 
     void send(connection_hdl hdl, const std::string& payload,
-        frame::opcode::value op)
-    {
-        lib::error_code ec;
-        send(hdl,payload,op,ec);
-        if (ec) { throw ec; }
-    }
+        frame::opcode::value op);
 
-    void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec) {
-        connection_ptr con = get_con_from_hdl(hdl);
-        if (!con) {
-            ec = error::make_error_code(error::bad_connection);
-            return;
-        }
+    void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
 
-        ec = con->send(msg);
-    }
-
-    void send(connection_hdl hdl, message_ptr msg) {
-        lib::error_code ec;
-        send(hdl,msg,ec);
-        if (ec) { throw ec; }
-    }
+    void send(connection_hdl hdl, message_ptr msg);
 protected:
 	// Import appropriate internal types from our policy classes
 	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;

@@ -88,6 +88,70 @@ endpoint<connection,config>::create_connection() {
 }
 
 template <typename connection, typename config>
+void endpoint<connection,config>::interrupt(connection_hdl hdl, 
+    lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl);
+    if (!con) {
+        ec = error::make_error_code(error::bad_connection);
+        return;
+    }
+    
+    m_alog.write(log::alevel::devel,"Interrupting connection"+con.get());
+    
+    ec = con->interrupt();
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::interrupt(connection_hdl hdl) {
+    lib::error_code ec;
+    interrupt(hdl,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, 
+    const std::string& payload, frame::opcode::value op, lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl);
+    if (!con) {
+        ec = error::make_error_code(error::bad_connection);
+        return;
+    }
+
+    ec = con->send(payload,op);
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, const std::string& 
+    payload, frame::opcode::value op)
+{
+    lib::error_code ec;
+    send(hdl,payload,op,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg, 
+    lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl);
+    if (!con) {
+        ec = error::make_error_code(error::bad_connection);
+        return;
+    }
+
+    ec = con->send(msg);
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg) {
+    lib::error_code ec;
+    send(hdl,msg,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
 	std::stringstream s;
 	s << "remove_connection. New count: " << m_connections.size()-1;
