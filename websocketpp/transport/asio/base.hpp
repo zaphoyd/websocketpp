@@ -79,12 +79,12 @@ public:
 	}
 };
 
-const lib::error_category& get_category() {
+inline const lib::error_category& get_category() {
 	static category instance;
 	return instance;
 }
 
-lib::error_code make_error_code(error::value e) {
+inline lib::error_code make_error_code(error::value e) {
 	return lib::error_code(static_cast<int>(e), get_category());
 }
 
