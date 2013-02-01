@@ -149,7 +149,6 @@ void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg,
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
-
     ec = con->send(msg);
 }
 
@@ -167,8 +166,7 @@ void endpoint<connection,config>::close(connection_hdl hdl,
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
-
-    ec = con->close(code,reason);
+    con->close(code,reason,ec);
 }
     
 template <typename connection, typename config>
