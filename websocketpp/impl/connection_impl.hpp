@@ -213,28 +213,17 @@ void connection<config>::close(const close::status::value code,
     const std::string & reason, lib::error_code & ec) 
 {
     m_alog.write(log::alevel::devel,"connection close");
-    // check state
+
     if (m_state != session::state::OPEN) {
        ec = error::make_error_code(error::invalid_state);
        return;
     }
     
-    // check reason length
-    if (reason.size() > frame::limits::close_reason_size) {
-        ec = this->send_close_frame(
-            code,
-            std::string(reason,0,frame::limits::close_reason_size),
-            false,
-            close::status::terminal(code)
-        );
-    } else {
-        ec = this->send_close_frame(
-            code,
-            reason,
-            false,
-            close::status::terminal(code)
-        );
-    }
+    // Truncate reason to maximum size allowable in a close frame.
+    std::string tr(reason,0,std::min<size_t>(reason.size(),
+        frame::limits::close_reason_size));
+    
+    ec = this->send_close_frame(code,tr,false,close::status::terminal(code));
 }
 
 template<typename config>
