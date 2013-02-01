@@ -249,12 +249,19 @@ public:
 		m_payload = payload;
 	}
 	
+	void set_payload(const void *payload, size_t len) {
+		m_payload.reserve(len);
+		const char* pl = static_cast<const char *>(payload);
+		m_payload.assign(pl, pl + length);
+	}
+	
 	void append_payload(const std::string& payload) {
 		m_payload.append(payload);
 	}
 	
-	void append_payload(const char *buf, size_t len) {
-		m_payload.append(buf,len);
+	void append_payload(const void *payload, size_t len) {
+	    m_payload.reserve(m_payload.size()+len);
+		m_payload.append(static_cast<const char *>(payload),len);
 	}
 
 	/// Recycle the message
