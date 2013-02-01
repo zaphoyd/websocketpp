@@ -26,6 +26,7 @@
  */
 
 #include "data.hpp"
+#include <string>
 
 #include "../processors/processor.hpp"
 #include "../processors/hybi_header.hpp"
@@ -155,6 +156,15 @@ void data::set_payload(const std::string& payload) {
     m_payload.reserve(payload.size());
     m_payload = payload;
 }
+
+// This could be improved using string_ref if it is ever added to the language.
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3334.html
+void data::set_payload(const void *payload, size_t length) {
+    m_payload.reserve(length);
+    const char* pl = static_cast<const char*>(payload);
+    m_payload.assign(pl, pl + length);
+}
+
 void data::append_payload(const std::string& payload) {
     m_payload.reserve(m_payload.size()+payload.size());
     m_payload.append(payload);

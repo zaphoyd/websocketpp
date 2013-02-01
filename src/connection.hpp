@@ -200,6 +200,9 @@ public:
     }
     
     void send(const std::string& payload, frame::opcode::value op = frame::opcode::TEXT);
+    // In the future this could be changed to string_ref if it is adopted by
+    // the standard http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3334.html
+    void send(const void *payload, uint64_t length, frame::opcode::value op = frame::opcode::BINARY);
     void send(message::data_ptr msg);
     
     /// Close connection
@@ -1570,6 +1573,41 @@ connection<endpoint,role,socket>::send(const std::string& payload,frame::opcode:
     
     msg->reset(op);
     msg->set_payload(payload);
+    send(msg);
+}
+
+/// convenience overload for sending a one off message.
+/**
+ * Creates a message, fills in payload, and queues a write as a message of
+ * type op. Default type is BINARY. 
+ * 
+ * Visibility: public
+ * State: Valid from OPEN, ignored otherwise
+ * Concurrency: callable from any thread
+ *
+ * @param payload Payload to write_state
+ * @param op opcode to send the message as
+ */
+template <typename endpoint,template <class> class role,template <class> class socket>
+void 
+connection<endpoint,role,socket>::send(const void *payload, uint64_t length, frame::opcode::value op)
+{
+    {
+        boost::lock_guard<boost::recursive_mutex> lock(m_lock);
+        if (m_state != session::state::OPEN) {return;}
+    }
+    
+    websocketpp::message::data::ptr msg = get_control_message2();
+    
+    if (!msg) {
+        throw exception("Endpoint send queue is full",error::SEND_QUEUE_FULL);
+    }
+    if (op != frame::opcode::TEXT && op != frame::opcode::BINARY) {
+        throw exception("opcode must be either TEXT or BINARY",error::GENERIC);
+    }
+    
+    msg->reset(op);
+    msg->set_payload(payload, length);
     send(msg);
 }
 
