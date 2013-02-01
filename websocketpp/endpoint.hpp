@@ -251,24 +251,20 @@ public:
     /* Connection pass through functions */
     /*************************************/
     
-    /**
-     * Is thread safe if transport is
-     */
     void interrupt(connection_hdl hdl, lib::error_code & ec);
-    
-    /**
-     * Is thread safe if transport is
-     */
     void interrupt(connection_hdl hdl);
 
     void send(connection_hdl hdl, const std::string& payload, 
         frame::opcode::value op, lib::error_code & ec);
-
     void send(connection_hdl hdl, const std::string& payload,
+        frame::opcode::value op);
+        
+    void send(connection_hdl hdl, const void* payload, size_t len,
+        frame::opcode::value op, lib::error_code & ec);
+    void send(connection_hdl hdl, const void* payload, size_t len,
         frame::opcode::value op);
 
     void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
-
     void send(connection_hdl hdl, message_ptr msg);
 protected:
 	// Import appropriate internal types from our policy classes

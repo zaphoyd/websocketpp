@@ -126,10 +126,27 @@ void endpoint<connection,config>::send(connection_hdl hdl, const std::string&
 }
 
 template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, const void * payload,
+    size_t len, frame::opcode::value op, lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
+    ec = con->send(payload,len,op);
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::send(connection_hdl hdl, const void * payload,
+    size_t len, frame::opcode::value op)
+{
+    lib::error_code ec;
+    send(hdl,payload,len,op,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
 void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg, 
     lib::error_code & ec)
 {
-        ec = error::make_error_code(error::bad_connection);
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
 
