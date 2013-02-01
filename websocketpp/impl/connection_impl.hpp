@@ -971,7 +971,10 @@ void connection<config>::handle_send_http_response(
             // the expected response and the connection can be closed.
         } else {
             // this was a websocket connection that ended in an error
-            m_elog.write(log::elevel::rerror,"Handshake ended with HTTP error: "+m_response.get_status_code());
+            std::stringstream s;
+            s << "Handshake ended with HTTP error: " 
+              << m_response.get_status_code();
+            m_elog.write(log::elevel::rerror,s.str());
         }
         this->terminate();
         return;
