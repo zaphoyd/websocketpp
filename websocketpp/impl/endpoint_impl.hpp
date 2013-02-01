@@ -91,11 +91,8 @@ template <typename connection, typename config>
 void endpoint<connection,config>::interrupt(connection_hdl hdl, 
     lib::error_code & ec)
 {
-    connection_ptr con = get_con_from_hdl(hdl);
-    if (!con) {
-        ec = error::make_error_code(error::bad_connection);
-        return;
-    }
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
     
     m_alog.write(log::alevel::devel,"Interrupting connection"+con.get());
     
@@ -113,11 +110,8 @@ template <typename connection, typename config>
 void endpoint<connection,config>::send(connection_hdl hdl, 
     const std::string& payload, frame::opcode::value op, lib::error_code & ec)
 {
-    connection_ptr con = get_con_from_hdl(hdl);
-    if (!con) {
-        ec = error::make_error_code(error::bad_connection);
-        return;
-    }
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
 
     ec = con->send(payload,op);
 }
@@ -135,11 +129,9 @@ template <typename connection, typename config>
 void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg, 
     lib::error_code & ec)
 {
-    connection_ptr con = get_con_from_hdl(hdl);
-    if (!con) {
         ec = error::make_error_code(error::bad_connection);
-        return;
-    }
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
 
     ec = con->send(msg);
 }
