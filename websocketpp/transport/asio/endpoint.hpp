@@ -279,6 +279,30 @@ public:
 		}
 		listen(*endpoint_iterator);
 	}
+	
+	typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    
+    timer_ptr set_timer(long duration, timer_handler handler) {
+        timer_ptr timer(new boost::asio::deadline_timer(*m_io_service)); 
+        timer->expires_from_now(boost::posix_time::milliseconds(duration));
+        timer->async_wait(lib::bind(&type::timer_handler, this, handler, 
+            lib::placeholders::_1));
+        return timer;
+    }
+    
+    void timer_handler(timer_handler h, const boost::system::error_code& ec) {
+        if (ec == boost::asio::error::operation_aborted) {
+            h(make_error_code(transport::error::operation_aborted));
+        } else if (ec) {
+            std::stringstream s;
+            s << "asio async_wait error::pass_through"
+              << "Original Error: " << ec << " (" << ec.message() << ")";
+            m_elog->write(log::elevel::devel,s.str());
+            h(make_error_code(transport::error::pass_through));
+        } else {
+            h(lib::error_code());
+        }
+    }
 protected:
     /// Initialize logging
     /**

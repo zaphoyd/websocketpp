@@ -154,7 +154,8 @@ protected:
 		if (num_bytes > len) {
             m_elog.write(log::elevel::devel,
                 "asio async_read_at_least error::invalid_num_bytes");
-		    handler(make_error_code(error::invalid_num_bytes),size_t(0));
+		    handler(make_error_code(transport::error::invalid_num_bytes),
+		        size_t(0));
 		    return;
 		}
 		
@@ -181,7 +182,8 @@ protected:
             s << "asio async_read_at_least error::pass_through"
               << "Original Error: " << ec << " (" << ec.message() << ")";
             m_elog.write(log::elevel::devel,s.str());
-    		handler(make_error_code(error::pass_through), bytes_transferred);	
+    		handler(make_error_code(transport::error::pass_through), 
+    		    bytes_transferred);	
     	} else {
             m_alog.write(log::alevel::devel,"asio async_read_at_least no error");
     		handler(lib::error_code(), bytes_transferred);
@@ -270,42 +272,29 @@ protected:
         socket_con_type::shutdown();
     }
     
-    /*typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
     
-    timer_ptr set_timer(long duration, handler) {
-        // create a timer
-        timer_ptr timer(new boost::asio::deadline_timer(*m_io_service));
-                
-        // set timer for milliseconds from now
+    timer_ptr set_timer(long duration, timer_handler handler) {
+        timer_ptr timer(new boost::asio::deadline_timer(*m_io_service)); 
         timer->expires_from_now(boost::posix_time::milliseconds(duration));
-        
-        // add timer to list of timers
-        // async start timer
-        // return timer_hdl
+        timer->async_wait(lib::bind(&type::timer_handler, this, handler, 
+            lib::placeholders::_1));
+        return timer;
     }
     
-    void cancel_timer(timer_hdl) {
-        
-    }
-    
-    void timer_handler (handler, const boost::system::error_code& ec) {
+    void timer_handler(timer_handler h, const boost::system::error_code& ec) {
         if (ec == boost::asio::error::operation_aborted) {
-            // was cancelled
-            handler(make_error_code(error::pass_through));
+            h(make_error_code(transport::error::operation_aborted));
         } else if (ec) {
-            // other error
             std::stringstream s;
             s << "asio async_wait error::pass_through"
               << "Original Error: " << ec << " (" << ec.message() << ")";
             m_elog.write(log::elevel::devel,s.str());
-            handler(make_error_code(error::pass_through));
+            h(make_error_code(transport::error::pass_through));
+        } else {
+            h(lib::error_code());
         }
-        
-        // timer ran out
-        handler(make_error_code(error::pass_through));
-    }*/
-    
-    
+    }
 private:
 	// static settings
 	const bool			m_is_server;
