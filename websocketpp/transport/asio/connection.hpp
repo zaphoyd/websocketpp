@@ -269,6 +269,43 @@ protected:
     void shutdown() {
         socket_con_type::shutdown();
     }
+    
+    /*typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    
+    timer_ptr set_timer(long duration, handler) {
+        // create a timer
+        timer_ptr timer(new boost::asio::deadline_timer(*m_io_service));
+                
+        // set timer for milliseconds from now
+        timer->expires_from_now(boost::posix_time::milliseconds(duration));
+        
+        // add timer to list of timers
+        // async start timer
+        // return timer_hdl
+    }
+    
+    void cancel_timer(timer_hdl) {
+        
+    }
+    
+    void timer_handler (handler, const boost::system::error_code& ec) {
+        if (ec == boost::asio::error::operation_aborted) {
+            // was cancelled
+            handler(make_error_code(error::pass_through));
+        } else if (ec) {
+            // other error
+            std::stringstream s;
+            s << "asio async_wait error::pass_through"
+              << "Original Error: " << ec << " (" << ec.message() << ")";
+            m_elog.write(log::elevel::devel,s.str());
+            handler(make_error_code(error::pass_through));
+        }
+        
+        // timer ran out
+        handler(make_error_code(error::pass_through));
+    }*/
+    
+    
 private:
 	// static settings
 	const bool			m_is_server;
