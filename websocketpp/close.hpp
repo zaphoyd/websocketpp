@@ -31,12 +31,9 @@
 
 #include <websocketpp/error.hpp> 
 #include <websocketpp/common/network.hpp>
+#include <websocketpp/common/stdint.hpp>
 #include <websocketpp/utf8_validator.hpp> 
 
-#ifndef __STDC_LIMIT_MACROS
-	#define __STDC_LIMIT_MACROS 1
-#endif
-#include <stdint.h>
 #include <string>
 
 namespace websocketpp {

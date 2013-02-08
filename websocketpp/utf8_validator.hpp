@@ -4,10 +4,7 @@
 #ifndef UTF8_VALIDATOR_HPP
 #define UTF8_VALIDATOR_HPP
 
-#ifndef __STDC_LIMIT_MACROS
-	#define __STDC_LIMIT_MACROS 1
-#endif
-#include <stdint.h>
+#include <websocketpp/common/stdint.hpp>
 
 namespace websocketpp {
 namespace utf8_validator {

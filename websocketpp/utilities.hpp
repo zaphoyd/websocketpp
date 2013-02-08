@@ -29,11 +29,7 @@
 #define WEBSOCKETPP_UTILITIES_HPP
 
 #include <algorithm>
-
-#ifndef __STDC_LIMIT_MACROS
-	#define __STDC_LIMIT_MACROS 1
-#endif
-#include <stdint.h>
+#include <websocketpp/common/stdint.hpp>
 
 namespace websocketpp {
 namespace utility {
