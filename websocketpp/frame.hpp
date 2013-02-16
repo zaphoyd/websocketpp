@@ -172,7 +172,7 @@ struct basic_header {
 		uint8_t basic_value;
 		
 		if (size <= limits::payload_size_basic) {
-			basic_value = size;
+			basic_value = static_cast<uint8_t>(size);
 		} else if (size <= limits::payload_size_extended) {
 			basic_value = payload_size_code_16bit;
 		} else {
@@ -396,7 +396,7 @@ inline lib::error_code set_size(basic_header &h, extended_header &eh, uint64_t
 	uint8_t basic_value;
 	
 	if (size <= limits::payload_size_basic) {
-		basic_value = size;
+		basic_value = static_cast<uint8_t>(size);
 	} else if (size <= limits::payload_size_extended) {
 		basic_value = payload_size_code_16bit;
 	} else if (size <= limits::payload_size_jumbo) {
@@ -576,8 +576,8 @@ inline size_t prepare_masking_key(const masking_key_type& key) {
 	size_t low_bits = static_cast<size_t>(key.i);
 	
 	if (sizeof(size_t) == 8) {
-		size_t high_bits = static_cast<size_t>(key.i);
-		return (high_bits << 32) | low_bits;
+		uint64_t high_bits = static_cast<size_t>(key.i);
+		return static_cast<size_t>((high_bits << 32) | low_bits);
 	} else {
 		return low_bits;
 	}
