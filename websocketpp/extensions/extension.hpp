@@ -52,7 +52,7 @@ namespace extensions {
 namespace error {
 enum value {
     /// Catch all
-    generic = 1,
+    general = 1,
 
     /// Extension disabled
     disabled
@@ -68,7 +68,7 @@ public:
 
     std::string message(int value) const {
         switch(value) {
-            case generic:
+            case general:
                 return "Generic extension error";
             case disabled:
                 return "Use of methods from disabled extension";

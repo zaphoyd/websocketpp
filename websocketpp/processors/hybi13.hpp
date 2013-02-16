@@ -355,7 +355,7 @@ public:
 				}
 			} else {
 				// shouldn't be here
-                ec = make_error_code(error::generic);
+                ec = make_error_code(error::general);
 				return 0;
 			}
 		}

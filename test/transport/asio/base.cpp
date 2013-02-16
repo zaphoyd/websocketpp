@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE( blank_error ) {
 
 BOOST_AUTO_TEST_CASE( asio_error ) {
 	using websocketpp::transport::asio::error::make_error_code;
-	using websocketpp::transport::asio::error::generic;
+	using websocketpp::transport::asio::error::general;
 	
-	websocketpp::lib::error_code ec = make_error_code(generic);
+	websocketpp::lib::error_code ec = make_error_code(general);
 		
-    BOOST_CHECK( ec == generic );
+    BOOST_CHECK( ec == general );
     BOOST_CHECK( ec.value() == 1 );
 }

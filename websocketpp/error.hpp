@@ -37,7 +37,7 @@ namespace websocketpp {
 namespace error {
 enum value {
     /// Catch-all library error
-    generic = 1,
+    general = 1,
 
     /// send attempted when endpoint write queue was full
     send_queue_full,
@@ -90,7 +90,7 @@ public:
 	
 	std::string message(int value) const {
 		switch(value) {
-			case error::generic:
+			case error::general:
 				return "Generic error";
 			case error::send_queue_full:
 				return "send queue full";
@@ -146,7 +146,7 @@ namespace websocketpp {
 class exception : public std::exception {
 public: 
     exception(const std::string& msg,
-              error::value code = error::generic) 
+              error::value code = error::general) 
     : m_msg(msg),m_code(code) {}
     ~exception() throw() {}
     

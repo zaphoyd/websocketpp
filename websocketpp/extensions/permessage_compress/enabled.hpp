@@ -46,7 +46,7 @@ namespace permessage_compress {
 namespace error {
 enum value {
     /// Catch all
-    generic = 1,
+    general = 1,
 
     /// Invalid extension parameters
     invalid_parameters,
@@ -77,7 +77,7 @@ public:
 
     std::string message(int value) const {
         switch(value) {
-            case generic:
+            case general:
                 return "Generic permessage-compress error";
             case invalid_parameters:
                 return "Invalid extension parameters";

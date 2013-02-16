@@ -77,7 +77,7 @@ namespace error {
 enum processor_errors {
     /// Catch-all error for processor policy errors that don't fit in other
     /// categories
-    generic = 1,
+    general = 1,
     
     /// Error was the result of improperly formatted user input
     bad_request,
@@ -168,7 +168,7 @@ public:
 	
 	std::string message(int value) const {
 		switch(value) {
-			case error::generic:
+			case error::general:
 				return "Generic processor error";
 			case error::bad_request:
 				return "invalid user input";

@@ -85,7 +85,7 @@ namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
     /// categories
-    generic = 1,
+    general = 1,
     
     /// underlying transport pass through
     pass_through,
@@ -113,7 +113,7 @@ class category : public lib::error_category {
 	
 	std::string message(int value) const {
 		switch(value) {
-			case generic:
+			case general:
 				return "Generic transport policy error";
 			case pass_through:
 				return "Underlying Transport Error";

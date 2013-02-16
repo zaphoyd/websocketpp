@@ -50,7 +50,7 @@ namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
     /// categories
-    generic = 1,
+    general = 1,
     
     /// async_read_at_least call requested more bytes than buffer can store
     invalid_num_bytes,
@@ -67,7 +67,7 @@ public:
 	
 	std::string message(int value) const {
 		switch(value) {
-			case error::generic:
+			case error::general:
 				return "Generic asio transport policy error";
 			case error::invalid_num_bytes:
 				return "async_read_at_least call requested more bytes than buffer can store";
