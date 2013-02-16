@@ -62,7 +62,7 @@ namespace http {
     };
     
     inline bool is_token_char(unsigned char c) {
-    	return HEADER_TOKEN[c];
+    	return (HEADER_TOKEN[c] == 1);
     }
     
     inline bool is_not_token_char(unsigned char c) {
