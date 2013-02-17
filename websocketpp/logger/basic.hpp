@@ -176,7 +176,7 @@ private:
 	typedef typename concurrency::mutex_type mutex_type;
 	
 	bool dynamic_test(level channel) {
-	    return channel & m_dynamic_channels;
+	    return ((channel & m_dynamic_channels) != 0);
 	}
 	
     const char* get_timestamp() {
