@@ -168,7 +168,7 @@ public:
     }
     
     bool static_test(level channel) const {
-        return channel & m_static_channels;
+        return ((channel & m_static_channels) != 0);
     }
     
 private:
