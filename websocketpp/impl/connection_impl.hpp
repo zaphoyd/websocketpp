@@ -1013,11 +1013,13 @@ void connection<config>::terminate() {
         if (m_fail_handler) {
             m_fail_handler(m_connection_hdl);
         }
-    } else {
+    } else if (m_state != session::state::CLOSED) {
         m_state = session::state::CLOSED;
         if (m_close_handler) {
             m_close_handler(m_connection_hdl);
         }
+    } else {
+    	m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
     }
     
     // call the termination handler if it exists
