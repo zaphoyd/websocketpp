@@ -31,12 +31,24 @@
 #include <limits>
 #include <iostream>
 
+#include <boost/version.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
+
+#if BOOST_VERSION > 104100
+#define HAS_BOOST_RANDOM_DEVICE 1
+#define HAS_BOOST_ASIO_ASYNC_CONNECT 1
+#else
+#define HAS_BOOST_RANDOM_DEVICE 0
+#define HAS_BOOST_ASIO_ASYNC_CONNECT 0
+#endif
+
+#if HAS_BOOST_RANDOM_DEVICE
 #include <boost/random/random_device.hpp>
+#endif
 
 #include "../endpoint.hpp"
 #include "../uri.hpp"
@@ -207,11 +219,20 @@ public:
     client (boost::asio::io_service& m) 
      : m_endpoint(static_cast< endpoint_type& >(*this)),
        m_io_service(m),
-       m_gen(m_rng,
+#if HAS_BOOST_RANDOM_DEVICE
+			 m_gen(m_rng,
              boost::random::uniform_int_distribution<>(
                 (std::numeric_limits<int32_t>::min)(),
                 (std::numeric_limits<int32_t>::max)()
-             )) {}
+             )
+#else
+       m_gen(m_rng,
+             boost::uniform_smallint<>(
+                (std::numeric_limits<int32_t>::min)(),
+                (std::numeric_limits<int32_t>::max)()
+             )
+#endif
+    ) {}
     
     connection_ptr get_connection(const std::string& u);
     
@@ -230,11 +251,19 @@ private:
     endpoint_type&              m_endpoint;
     boost::asio::io_service&    m_io_service;
     
-    boost::random::random_device    m_rng;
+#if HAS_BOOST_RANDOM_DEVICE
+		boost::random::random_device    m_rng;
     boost::random::variate_generator<
         boost::random::random_device&,
         boost::random::uniform_int_distribution<>
     > m_gen;
+#else
+    boost::mt19937   m_rng;
+    boost::variate_generator<
+        boost::mt19937&,
+        boost::uniform_smallint<>
+    > m_gen;
+#endif
     
     boost::shared_ptr<boost::asio::io_service::work> m_idle_worker;
 };
@@ -411,7 +440,8 @@ client<endpoint>::connect(connection_ptr con) {
     tcp::resolver::query query(con->get_host(),p.str());
     tcp::resolver::iterator iterator = resolver.resolve(query);
     
-    boost::asio::async_connect(
+#if HAS_BOOST_ASIO_ASYNC_CONNECT
+		boost::asio::async_connect(
         con->get_raw_socket(),
         iterator,
         boost::bind(
@@ -419,8 +449,16 @@ client<endpoint>::connect(connection_ptr con) {
             this, // shared from this?
             con,
             boost::asio::placeholders::error
-        )
-    ); 
+        ));
+#else
+    con->get_raw_socket().async_connect(iterator,
+        boost::bind(
+            &endpoint_type::handle_connect,
+            this, // shared from this?
+            con,
+            boost::asio::placeholders::error
+        ));
+#endif
     
     return con;
 }
