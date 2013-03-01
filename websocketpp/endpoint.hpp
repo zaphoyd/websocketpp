@@ -75,6 +75,11 @@ public:
     /// Type of access logger
 	typedef typename config::alog_type alog_type;
     
+    /// Type of our concurrency policy's scoped lock object
+	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
+	/// Type of our concurrency policy's mutex object
+	typedef typename concurrency_type::mutex_type mutex_type;
+    
     // TODO: organize these
 	typedef typename connection_type::termination_handler termination_handler;
 	
@@ -279,18 +284,16 @@ public:
         const std::string & reason, lib::error_code & ec);
     void close(connection_hdl hdl, const close::status::value code, 
         const std::string & reason);
-protected:
-	// Import appropriate internal types from our policy classes
-	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
-	typedef typename concurrency_type::mutex_type mutex_type;
-	
-	connection_ptr create_connection();
-	void remove_connection(connection_ptr con);
-    
+        
     /// Retrieves a connection_ptr from a connection_hdl
     /**
      * Converting a weak pointer to shared_ptr is not thread safe because the
      * pointer could be deleted at any time.
+     *
+     * NOTE: This method may be called by handler to upgrade its handle to a
+     * full connection_ptr. That full connection may then be used safely for the 
+     * remainder of the handler body. get_con_from_hdl and the resulting
+     * connection_ptr are NOT safe to use outside the handler loop.
      *
      * @param hdl The connection handle to translate
      *
@@ -305,6 +308,13 @@ protected:
         }
         return con;
     }
+protected:
+	
+	
+	connection_ptr create_connection();
+	void remove_connection(connection_ptr con);
+    
+    
     
     alog_type m_alog;
     elog_type m_elog;
