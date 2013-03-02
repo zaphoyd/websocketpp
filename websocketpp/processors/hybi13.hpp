@@ -291,7 +291,7 @@ public:
 				if (ec){break;}
 					
 				m_state = APPLICATION;
-				m_bytes_needed = get_payload_size(m_basic_header,m_extended_header);
+				m_bytes_needed = static_cast<size_t>(get_payload_size(m_basic_header,m_extended_header));
 					
 				// check if this frame is the start of a new message and set up
 				// the appropriate message metadata.
