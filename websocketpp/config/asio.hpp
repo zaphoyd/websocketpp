@@ -51,6 +51,8 @@ struct asio_tls : public core {
 	
 	typedef core::alog_type alog_type;
 	typedef core::alog_type elog_type;
+	
+	typedef core::rng_type rng_type;
 
     struct transport_config {
         typedef asio_tls::concurrency_type concurrency_type;

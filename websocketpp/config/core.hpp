@@ -28,6 +28,9 @@
 #ifndef WEBSOCKETPP_CONFIG_CORE_HPP
 #define WEBSOCKETPP_CONFIG_CORE_HPP
 
+// Integers
+#include <websocketpp/common/stdint.hpp>
+
 // Concurrency
 #include <websocketpp/concurrency/basic.hpp>
 
@@ -44,6 +47,9 @@
 
 // Loggers
 #include <websocketpp/logger/basic.hpp>
+
+// RNG
+#include <websocketpp/random/random_device.hpp>
 
 // Extensions
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
@@ -72,6 +78,10 @@ struct core {
 	    websocketpp::log::elevel> elog_type;
 	typedef websocketpp::log::basic<concurrency_type,
 	    websocketpp::log::alevel> alog_type;
+	
+	/// RNG policies
+	typedef websocketpp::random::random_device<uint32_t,concurrency_type> 
+	    rng_type;
 	
     struct transport_config {
         typedef core::concurrency_type concurrency_type;
