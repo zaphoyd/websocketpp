@@ -171,7 +171,7 @@ Export('polyfill_libs')
 ## TARGETS:
 
 # Unit tests, add test folders with SConscript files to to_test list.
-to_test = ['utility','http','logger','processors','message_buffer','extension','transport/asio','endpoint','connection'] #,'http','processors','connection'
+to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/asio','endpoint','connection'] #,'http','processors','connection'
 
 for t in to_test:
    new_tests = SConscript('#/test/'+t+'/SConscript',variant_dir = testdir + t, duplicate = 0)
