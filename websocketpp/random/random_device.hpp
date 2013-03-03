@@ -32,6 +32,7 @@
 
 namespace websocketpp {
 namespace random {
+namespace random_device {
 
 /// Thread safe non-deterministic random integer generator.
 /**
@@ -50,22 +51,28 @@ namespace random {
 template <typename int_type, typename concurrency>
 class int_generator {
 	public:
+		typedef typename concurrency::scoped_lock_type scoped_lock_type;
+	    typedef typename concurrency::mutex_type mutex_type;
+		
 		/// constructor
 		//mac TODO: figure out if signed types present a range problem
-		random_device() : m_dis() {}
+		int_generator() : m_dis() {}
 		
 		/// advances the engine's state and returns the generated value
 		int_type operator()() {
-			concurrency::scoped_lock_type(m_lock);
+			scoped_lock_type guard(m_lock);
 			return m_dis(m_rng);
 		}
 	private:
+	    
+	    
 		lib::random_device m_rng;
 		lib::uniform_int_distribution<int_type> m_dis;
 		
-		concurrency::mutex_type m_lock;
+		mutex_type m_lock;
 };
-	
+
+} // namespace random_device
 } // namespace random
 } // namespace websocketpp
 
