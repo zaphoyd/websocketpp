@@ -71,7 +71,7 @@ public:
 	
 	void register_ostream(std::ostream* o) {
 		// TODO: lock transport state?
-		
+		scoped_lock_type lock(m_read_mutex);
 		output_stream = o;
 	}
 	
