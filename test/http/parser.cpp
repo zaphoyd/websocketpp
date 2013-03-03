@@ -828,3 +828,44 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK( r.get_header("Content-Type") == "text/html" );
     BOOST_CHECK( r.get_body() == "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
 }
+
+BOOST_AUTO_TEST_CASE( write_request_basic ) {
+    websocketpp::http::parser::request r;
+    
+    std::string raw = "GET / HTTP/1.1\r\n\r\n";
+    
+    r.set_version("HTTP/1.1");
+    r.set_method("GET");
+    r.set_uri("/");
+    
+    BOOST_CHECK( r.raw() == raw );
+}
+
+BOOST_AUTO_TEST_CASE( write_request_with_header ) {
+    websocketpp::http::parser::request r;
+    
+    std::string raw = "GET / HTTP/1.1\r\nHost: http://example.com\r\n\r\n";
+    
+    r.set_version("HTTP/1.1");
+    r.set_method("GET");
+    r.set_uri("/");
+    r.replace_header("Host","http://example.com");
+    
+    BOOST_CHECK( r.raw() == raw );
+}
+
+BOOST_AUTO_TEST_CASE( write_request_with_body ) {
+    websocketpp::http::parser::request r;
+    
+    std::string raw = "POST / HTTP/1.1\r\nContent-Length: 48\r\nContent-Type: application/x-www-form-urlencoded\r\nHost: http://example.com\r\n\r\nlicenseID=string&content=string&paramsXML=string";
+    
+    r.set_version("HTTP/1.1");
+    r.set_method("POST");
+    r.set_uri("/");
+    r.replace_header("Host","http://example.com");
+    r.replace_header("Content-Type","application/x-www-form-urlencoded");
+    r.set_body("licenseID=string&content=string&paramsXML=string");
+    
+    std::cout << r.raw() << std::endl;
+    BOOST_CHECK( r.raw() == raw );
+}
