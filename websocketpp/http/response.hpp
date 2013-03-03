@@ -123,17 +123,6 @@ public:
      */
     void set_status(status_code::value code, const std::string& msg);
     
-    /// Set response body content
-    /**
-     * Set the body content of the HTTP response to the parameter string. Note
-     * set_body will also set the Content-Length HTTP header to the appropriate
-     * value. If you want the Content-Length header to be something else set it
-     * to something else after calling set_body
-     * 
-     * @param value String data to include as the body content.
-     */
-    void set_body(const std::string& value);
-    
     /// Return the response status code
     status_code::value get_status_code() const {
     	return m_status_code;
@@ -142,11 +131,6 @@ public:
     /// Return the response status message
     const std::string& get_status_msg() const {
     	return m_status_msg;
-    }
-    
-    /// Return the body string
-    const std::string& get_body() const {
-    	return m_body;
     }
 private:
 	/// Helper function for consume. Process response line
@@ -163,7 +147,6 @@ private:
 	};
 	
     std::string         			m_status_msg;
-    std::string         			m_body;
     size_t							m_read;
     lib::shared_ptr<std::string>	m_buf;
     status_code::value  			m_status_code;

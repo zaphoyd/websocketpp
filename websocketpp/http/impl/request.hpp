@@ -136,7 +136,7 @@ inline std::string request::raw() {
 	std::stringstream raw;
 	
 	raw << m_method << " " << m_uri << " " << get_version() << "\r\n";
-	raw << raw_headers() << "\r\n";
+	raw << raw_headers() << "\r\n" << m_body;
 	
 	return raw.str();
 }

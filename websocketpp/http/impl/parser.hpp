@@ -108,6 +108,18 @@ inline void parser::remove_header(const std::string &key) {
     m_headers.erase(key);
 }
 
+inline void parser::set_body(const std::string& value) {
+	if (value.size() == 0) {
+		remove_header("Content-Length");
+		m_body = "";
+		return;
+	}
+	
+	std::stringstream foo;
+	foo << value.size();
+	replace_header("Content-Length", foo.str());
+	m_body = value;
+}
 
 inline bool parser::parse_headers(std::istream& s) {
     std::string header;

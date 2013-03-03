@@ -355,6 +355,11 @@ public:
      */
     const std::string& get_header(const std::string& key) const;
     
+    /// Get the body string
+    const std::string& get_body() const {
+    	return m_body;
+    }
+    
     /// Get the HTTP header with name `key`
     /**
      * 
@@ -392,6 +397,17 @@ public:
     
     /// Remove a header
     void remove_header(const std::string &key);
+    
+    /// Set body content
+    /**
+     * Set the body content of the HTTP response to the parameter string. Note
+     * set_body will also set the Content-Length HTTP header to the appropriate
+     * value. If you want the Content-Length header to be something else, do so
+     * via replace_header("Content-Length") after calling set_body()
+     * 
+     * @param value String data to include as the body content.
+     */
+    void set_body(const std::string& value);
 protected:
 	/// DEPRECATED Read headers out of an istream
     bool parse_headers(std::istream& s);
@@ -401,9 +417,10 @@ protected:
     
     /// Return headers in raw string form.
     std::string raw_headers() const;
-private:
+
     std::string m_version;
     header_list m_headers;
+    std::string m_body;
 };
 
 } // namespace parser

@@ -185,20 +185,6 @@ inline void response::set_status(status_code::value code, const std::string&
 	m_status_code = code;
 	m_status_msg = msg;
 }
-    
-inline void response::set_body(const std::string& value) {
-	if (value.size() == 0) {
-		remove_header("Content-Length");
-		m_body = "";
-		return;
-	}
-	
-	std::stringstream foo;
-	foo << value.size();
-	replace_header("Content-Length", foo.str());
-	m_body = value;
-}
-
 
 inline void response::process(std::string::iterator begin, 
     std::string::iterator end)
