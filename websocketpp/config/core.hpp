@@ -49,7 +49,7 @@
 #include <websocketpp/logger/basic.hpp>
 
 // RNG
-#include <websocketpp/random/random_device.hpp>
+#include <websocketpp/random/none.hpp>
 
 // Extensions
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
@@ -80,8 +80,7 @@ struct core {
 	    websocketpp::log::alevel> alog_type;
 	
 	/// RNG policies
-	typedef websocketpp::random::random_device<uint32_t,concurrency_type> 
-	    rng_type;
+	typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 	
     struct transport_config {
         typedef core::concurrency_type concurrency_type;
