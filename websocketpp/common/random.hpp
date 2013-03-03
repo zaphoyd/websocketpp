@@ -40,7 +40,7 @@
 	#include <boost/version.hpp>
 	
 	#if (BOOST_VERSION/100000) == 1 && ((BOOST_VERSION/100)%1000) > 46
-		#include <boost/random/random.hpp>
+		#include <boost/random/uniform_int_distribution.hpp>
 		#include <boost/random/random_device.hpp>
 	#elif (BOOST_VERSION/100000) == 1 && ((BOOST_VERSION/100)%1000) >= 43
 		#include <boost/nondet_random.hpp>
