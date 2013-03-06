@@ -64,6 +64,10 @@ struct endpoint_extension {
         return extension_value;
     }
     
+    bool is_server() const {
+        return false;
+    }
+    
     int extension_value;
 };
 
@@ -92,4 +96,6 @@ BOOST_AUTO_TEST_CASE( endpoint_extensions ) {
     
     BOOST_CHECK( s.extension_value == 5 );
     BOOST_CHECK( s.extension_method() == 5 );
+    
+    BOOST_CHECK( s.is_server() == true );
 }
