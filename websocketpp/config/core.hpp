@@ -51,6 +51,9 @@
 // RNG
 #include <websocketpp/random/none.hpp>
 
+// User stub base classes
+#include <websocketpp/endpoint_base.hpp>
+
 // Extensions
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
 
@@ -91,7 +94,10 @@ struct core {
     /// Transport Endpoint Component
     typedef websocketpp::transport::iostream::endpoint<transport_config> 
         transport_type;
-
+    
+    /// User overridable Endpoint base class
+    typedef websocketpp::endpoint_base endpoint_base;
+    
     /// 
 	static const size_t connection_read_buffer_size = 512;
     
