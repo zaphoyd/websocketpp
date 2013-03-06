@@ -45,7 +45,7 @@ struct asio : public core {
 	typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
 	
 	typedef core::alog_type alog_type;
-	typedef core::alog_type elog_type;
+	typedef core::elog_type elog_type;
     
     typedef core::rng_type rng_type;
     
