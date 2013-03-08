@@ -47,10 +47,12 @@ namespace lib {
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
 	using std::function;
 	using std::bind;
+	using std::ref;
 	namespace placeholders = std::placeholders;
 #else
 	using boost::function;
 	using boost::bind;
+	using boost::ref;
 	namespace placeholders {
 		// TODO: there has got to be a better way than this
 		using ::_1;
