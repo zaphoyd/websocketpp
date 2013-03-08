@@ -284,7 +284,7 @@ public:
     void close(connection_hdl hdl, const close::status::value code, 
         const std::string & reason);
         
-    /// Retrieves a connection_ptr from a connection_hdl
+    /// Retrieves a connection_ptr from a connection_hdl (exception free)
     /**
      * Converting a weak pointer to shared_ptr is not thread safe because the
      * pointer could be deleted at any time.
@@ -304,6 +304,16 @@ public:
             hdl.lock());
         if (!con) {
             ec = error::make_error_code(error::bad_connection);
+        }
+        return con;
+    }
+    
+    /// Retrieves a connection_ptr from a connection_hdl (exception version)
+    connection_ptr get_con_from_hdl(connection_hdl hdl) {
+        lib::error_code ec;
+        connection_ptr con = this->get_con_from_hdl(hdl,ec);
+        if (ec) {
+            throw ec;
         }
         return con;
     }
