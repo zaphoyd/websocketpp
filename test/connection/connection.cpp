@@ -45,6 +45,53 @@ BOOST_AUTO_TEST_CASE( basic_http_request ) {
 
     BOOST_CHECK(o2 == output);
 }
+
+struct connection_extension {
+    connection_extension() : extension_value(5) {}
+    
+    int extension_method() {
+        return extension_value;
+    }
+    
+    bool is_server() const {
+        return false;
+    }
+    
+    int extension_value;
+};
+
+struct stub_config : public websocketpp::config::core {
+    typedef core::concurrency_type concurrency_type;
+
+    typedef core::request_type request_type;
+    typedef core::response_type response_type;
+
+    typedef core::message_type message_type;
+    typedef core::con_msg_manager_type con_msg_manager_type;
+    typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
+
+    typedef core::alog_type alog_type;
+    typedef core::elog_type elog_type;
+
+    typedef core::rng_type rng_type;
+    
+    typedef core::transport_type transport_type;
+    
+    typedef core::endpoint_base endpoint_base;
+    typedef connection_extension connection_base;
+};
+
+BOOST_AUTO_TEST_CASE( connection_extensions ) {
+    stub_config::alog_type alog;
+    stub_config::elog_type elog;
+    websocketpp::connection<stub_config> s(true,"",alog,elog);
+    
+    BOOST_CHECK( s.extension_value == 5 );
+    BOOST_CHECK( s.extension_method() == 5 );
+    
+    BOOST_CHECK( s.is_server() == true );
+}
+
 /*
 BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";

@@ -53,6 +53,7 @@
 
 // User stub base classes
 #include <websocketpp/endpoint_base.hpp>
+#include <websocketpp/connection_base.hpp>
 
 // Extensions
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
@@ -97,6 +98,8 @@ struct core {
     
     /// User overridable Endpoint base class
     typedef websocketpp::endpoint_base endpoint_base;
+    /// User overridable Connection base class
+    typedef websocketpp::connection_base connection_base;
     
     /// 
 	static const size_t connection_read_buffer_size = 512;

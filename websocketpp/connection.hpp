@@ -113,6 +113,7 @@ namespace internal_state {
 template <typename config>
 class connection
  : public config::transport_type::transport_con_type
+ , public config::connection_base
  , public lib::enable_shared_from_this< connection<config> >
 {
 public:
@@ -176,33 +177,11 @@ public:
     }
     
     // Public Interface
-    
-    /// Set Connection Handle
-    /**
-     * The connection handle is a token that can be shared outside the 
-     * WebSocket++ core for the purposes of identifying a connection and 
-     * sending it messages.
-     *
-     * @param hdl A connection_hdl that the connection will use to refer
-     * to itself.
-     */
-    void set_handle(connection_hdl hdl) {
-        m_connection_hdl = hdl;
-        transport_con_type::set_handle(hdl);
-    }
-    
-    /// Get Connection Handle
-    /**
-     * The connection handle is a token that can be shared outside the
-     * WebSocket++ core for the purposes of identifying a connection and
-     * sending it messages.
-     * 
-     * @return A handle to the connection
-     */
-    connection_hdl get_handle() const {
-        return m_connection_hdl;
-    }
 
+    ///////////////////////////
+    // Set Handler Callbacks //
+    ///////////////////////////
+    
     /// Set open handler
     /**
      * The open handler is called after the WebSocket handshake is complete and
@@ -329,14 +308,9 @@ public:
         m_message_handler = h;
     }
     
-    /// Return the same origin policy origin value from the opening request.
-    /**
-     * This value is available after the HTTP request has been fully read and 
-     * may be called from any thread.
-     *
-     * @return The connection's origin value from the opening handshake.
-     */
-    const std::string& get_origin() const;
+    //////////////////////////////////
+    // Uncategorized public methods //
+    //////////////////////////////////
     
 	/// Get the size of the outgoing write buffer (in payload bytes)
 	/**
@@ -353,6 +327,10 @@ public:
 
 	/// DEPRECATED: use get_buffered_amount instead
 	size_t buffered_amount() const {return get_buffered_amount();}
+    
+    ////////////////////
+    // Action Methods //
+    ////////////////////
     
     /// Create a message and then add it to the outgoing send queue
     /**
@@ -474,7 +452,7 @@ public:
     /// exception free variant of close
     void close(const close::status::value code, const std::string & reason, 
         lib::error_code & ec);
-
+    
     ////////////////////////////////////////////////
     // Pass-through access to the uri information //
     ////////////////////////////////////////////////
@@ -608,12 +586,58 @@ public:
      */
     void remove_header(const std::string &key);
     
+    /////////////////////////////////////////////////////////////
+    // Pass-through access to the other connection information //
+    /////////////////////////////////////////////////////////////
+    
+    /// Get Connection Handle
+    /**
+     * The connection handle is a token that can be shared outside the
+     * WebSocket++ core for the purposes of identifying a connection and
+     * sending it messages.
+     * 
+     * @return A handle to the connection
+     */
+    connection_hdl get_handle() const {
+        return m_connection_hdl;
+    }
+    
+    /// Get whether or not this connection is part of a server or client
+    /**
+     * @return whether or not the connection is attached to a server endpoint
+     */
+    bool is_server() const {
+        return m_is_server;
+    }
+    
+    /// Return the same origin policy origin value from the opening request.
+    /**
+     * This value is available after the HTTP request has been fully read and 
+     * may be called from any thread.
+     *
+     * @return The connection's origin value from the opening handshake.
+     */
+    const std::string& get_origin() const;
     
     ////////////////////////////////////////////////////////////////////////
     // The remaining public member functions are for internal/policy use  //
     // only. Do not call from application code unless you understand what //
     // you are doing.                                                     //
     ////////////////////////////////////////////////////////////////////////
+    
+    /// Set Connection Handle
+    /**
+     * The connection handle is a token that can be shared outside the 
+     * WebSocket++ core for the purposes of identifying a connection and 
+     * sending it messages.
+     *
+     * @param hdl A connection_hdl that the connection will use to refer
+     * to itself.
+     */
+    void set_handle(connection_hdl hdl) {
+        m_connection_hdl = hdl;
+        transport_con_type::set_handle(hdl);
+    }
     
     void start();
     
