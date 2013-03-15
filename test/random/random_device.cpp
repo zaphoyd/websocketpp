@@ -28,6 +28,8 @@
 #define BOOST_TEST_MODULE random_device
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
+
 #include <websocketpp/common/stdint.hpp>
 #include <websocketpp/random/random_device.hpp>
 #include <websocketpp/concurrency/none.hpp>
