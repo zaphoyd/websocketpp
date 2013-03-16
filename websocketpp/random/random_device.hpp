@@ -56,7 +56,7 @@ class int_generator {
 		
 		/// constructor
 		//mac TODO: figure out if signed types present a range problem
-		int_generator() : m_dis() {}
+		int_generator() {}
 		
 		/// advances the engine's state and returns the generated value
 		int_type operator()() {
