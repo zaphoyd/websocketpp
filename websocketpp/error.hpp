@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ERROR_HPP
 #define WEBSOCKETPP_ERROR_HPP
 
+#include <string>
+
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 
@@ -76,7 +78,10 @@ enum value {
     invalid_utf8,
     
     /// Bad or unknown connection
-    bad_connection
+    bad_connection,
+    
+    /// Unit testing utility error code
+    test
 }; // enum value
 
 
@@ -116,6 +121,8 @@ public:
 				return "Invalid UTF-8";
 			case error::bad_connection:
 				return "Bad Connection";
+			case error::test:
+				return "Test Error";
 			default:
 				return "Unknown";
 		}
