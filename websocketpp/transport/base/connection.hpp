@@ -57,6 +57,11 @@ namespace transport {
  *     Websocket++ promises to have only one async_write in flight at a time.
  *     The transport must promise to only call the write_handler once per async
  *     write
+ * 
+ * - std::string remote_endpoint(): retrieve address of remote endpoint
+ * - is_secure(): whether or not the connection to the remote endpoint is secure
+ * - lib::error_code dispatch(dispatch_handler handler): invoke handler within
+ *     the transport's event system if it uses one.
  */
 
 // Endpoint callbacks
