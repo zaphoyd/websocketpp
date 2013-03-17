@@ -72,7 +72,7 @@ public:
 	void register_ostream(std::ostream* o) {
 		// TODO: lock transport state?
 		scoped_lock_type lock(m_read_mutex);
-		output_stream = o;
+		m_output_stream = o;
 	}
 	
 	friend std::istream& operator>> (std::istream &in, type &t) {
@@ -130,14 +130,14 @@ protected:
         m_alog.write(log::alevel::devel,"iostream_con async_write");
 		// TODO: lock transport state?
 		
-		if (!output_stream) {
+		if (!m_output_stream) {
 			handler(make_error_code(error::output_stream_required));
 			return;
 		}
 		
-		output_stream->write(buf,len);
+		m_output_stream->write(buf,len);
 		
-		if (output_stream->bad()) {
+		if (m_output_stream->bad()) {
 			handler(make_error_code(error::bad_stream));
 		} else {
 			handler(lib::error_code());
@@ -152,16 +152,16 @@ protected:
         m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
 		// TODO: lock transport state?
 		
-		if (!output_stream) {
+		if (!m_output_stream) {
 			handler(make_error_code(error::output_stream_required));
 			return;
 		}
         
         std::vector<buffer>::const_iterator it;
 	    for	(it = bufs.begin(); it != bufs.end(); it++) {
-            output_stream->write((*it).buf,(*it).len);
+            m_output_stream->write((*it).buf,(*it).len);
             
-            if (output_stream->bad()) {
+            if (m_output_stream->bad()) {
                 handler(make_error_code(error::bad_stream));
             } else {
                 handler(lib::error_code());
@@ -225,7 +225,7 @@ private:
 	size_t			m_cursor;
 	
 	// transport resources
-	std::ostream*   output_stream;
+	std::ostream*   m_output_stream;
     connection_hdl  m_connection_hdl;
 	
 	bool			m_reading;
