@@ -163,10 +163,10 @@ protected:
             
             if (m_output_stream->bad()) {
                 handler(make_error_code(error::bad_stream));
-            } else {
-                handler(lib::error_code());
             }
         }
+        
+        handler(lib::error_code());
     }
 
     /// Set Connection Handle
