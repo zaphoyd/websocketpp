@@ -1004,24 +1004,28 @@ void connection<config>::handle_send_http_response(
 
 template <typename config>
 void connection<config>::terminate() {
-    m_alog.write(log::alevel::devel,"connection terminate");
+    try {
+        m_alog.write(log::alevel::devel,"connection terminate");
     
-    transport_con_type::shutdown();
+        transport_con_type::shutdown();
 
-    if (m_state == session::state::CONNECTING) {
-        m_state = session::state::CLOSED;
-        if (m_fail_handler) {
-            m_fail_handler(m_connection_hdl);
+        if (m_state == session::state::CONNECTING) {
+            m_state = session::state::CLOSED;
+            if (m_fail_handler) {
+                m_fail_handler(m_connection_hdl);
+            }
+        } else if (m_state != session::state::CLOSED) {
+            m_state = session::state::CLOSED;
+            if (m_close_handler) {
+                m_close_handler(m_connection_hdl);
+            }
+        } else {
+            m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
         }
-    } else if (m_state != session::state::CLOSED) {
-        m_state = session::state::CLOSED;
-        if (m_close_handler) {
-            m_close_handler(m_connection_hdl);
-        }
-    } else {
-    	m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
+    } catch (const std::exception& e) {
+        m_elog.write(log::elevel::warn,
+            std::string("terminate failed. Reason was: ") + e.what());
     }
-    
     // call the termination handler if it exists
     // if it exists it might (but shouldn't) refer to a bad memory location. 
     // If it does, we don't care and should catch and ignore it.
