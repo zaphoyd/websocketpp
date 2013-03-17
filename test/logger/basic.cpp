@@ -32,6 +32,7 @@
 
 #include <websocketpp/logger/basic.hpp>
 #include <websocketpp/concurrency/none.hpp>
+#include <websocketpp/concurrency/basic.hpp>
 
 BOOST_AUTO_TEST_CASE( is_token_char ) {
     typedef websocketpp::log::basic<websocketpp::concurrency::none,websocketpp::log::elevel> error_log;
@@ -62,6 +63,19 @@ BOOST_AUTO_TEST_CASE( access_clear ) {
     
     // writes shouldn't happen
     logger.write(websocketpp::log::alevel::devel,"devel");
-    std::cout << "|" << out.str() << "|" << std::endl;
+    //std::cout << "|" << out.str() << "|" << std::endl;
     BOOST_CHECK( out.str().size() == 0 );
+}
+
+BOOST_AUTO_TEST_CASE( basic_concurrency ) {
+    typedef websocketpp::log::basic<websocketpp::concurrency::basic,websocketpp::log::alevel> access_log;
+    
+    std::stringstream out;
+    access_log logger(0xffffffff,&out);
+    
+    logger.set_channels(0xffffffff);
+        
+    logger.write(websocketpp::log::alevel::devel,"devel");
+    //std::cout << "|" << out.str() << "|" << std::endl;
+    BOOST_CHECK( out.str().size() > 0 );
 }
