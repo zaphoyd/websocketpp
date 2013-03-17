@@ -118,6 +118,11 @@ protected:
 		    return;
 		}
 		
+		if (num_bytes == 0 || len == 0) {
+		    handler(lib::error_code(),size_t(0));
+		    return;
+		}
+		
 		m_buf = buf;
 		m_len = len;
 		m_bytes_needed = num_bytes;
