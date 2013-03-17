@@ -87,6 +87,20 @@ public:
 	bool is_secure() const {
 	    return false;
 	}
+	
+	/// Get the remote endpoint address
+	/**
+	 * The iostream transport has no information about the ultimate remote 
+	 * endpoint. It will return the string "iostream transport". To indicate 
+	 * this.
+	 *
+	 * TODO: allow user settable remote endpoint addresses if this seems useful
+	 *
+	 * @return A string identifying the address of the remote endpoint
+	 */
+	std::string get_remote_endpoint() const {
+	    return "iostream transport";
+	}
 protected:
 	void init(init_handler callback) {
         m_alog.write(log::alevel::devel,"iostream connection init");
