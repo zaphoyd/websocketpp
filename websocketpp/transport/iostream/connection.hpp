@@ -71,12 +71,38 @@ public:
         m_alog.write(log::alevel::devel,"iostream con transport constructor");
 	}
 	
+	/// Register a std::ostream with the transport for writing output
+	/**
+	 * Register a std::ostream with the transport. All future writes will be
+	 * done to this output stream.
+	 * 
+	 * @param o A pointer to the ostream to use for output.
+	 */
 	void register_ostream(std::ostream* o) {
 		// TODO: lock transport state?
 		scoped_lock_type lock(m_read_mutex);
 		m_output_stream = o;
 	}
 	
+	/// Overloaded stream input operator
+	/**
+	 * Attempts to read input from the given stream into the transport. Bytes
+	 * will be extracted from the input stream to fullfill any pending reads.
+	 * Input in this manner will only read until the current read buffer has
+	 * been filled. Then it will signal the library to process the input. If the
+	 * library's input handler adds a new async_read, additional bytes will be
+	 * read, otherwise the input operation will end. 
+	 * 
+	 * When this function returns one of the following conditions is true:
+	 * - There is no outstanding read operation
+	 * - There are no more bytes avaliable in the input stream
+	 * 
+	 * You can use tellg() on the input stream to determine if all of the input
+	 * bytes were read or not.
+	 *
+	 * If there is no pending read operation when the input method is called, it
+	 * will return immediately and tellg() will not have changed.
+	 */
 	friend std::istream& operator>> (std::istream &in, type &t) {
 	    // this serializes calls to external read.
 		scoped_lock_type lock(t.m_read_mutex);
@@ -86,6 +112,16 @@ public:
 		return in;
 	}
 	
+	/// Tests whether or not the underlying transport is secure
+	/**
+	 * iostream transport will return false always because it has no information
+	 * about the ultimate remote endpoint. This may or may not be accurate 
+	 * depending on the real source of bytes being input.
+	 *
+	 * TODO: allow user settable is_secure flag if this seems useful
+	 *
+	 * @return Whether or not the underlying transport is secure
+	 */
 	bool is_secure() const {
 	    return false;
 	}
@@ -109,13 +145,32 @@ protected:
 		callback(lib::error_code());
 	}
 	
-	// post?
-	
-	
-	/// read at least num_bytes bytes into buf and then call handler. 
+	/// Initiate an async_read for at least num_bytes bytes into buf
 	/**
+	 * Initiates an async_read request for at least num_bytes bytes. The input
+	 * will be read into buf. A maximum of len bytes will be input. When the
+	 * operation is complete, handler will be called with the status and number
+	 * of bytes read.
+	 *
+	 * This method may or may not call handler from within the initial call. The
+	 * application should be prepared to accept either.
+	 *
+	 * The application should never call this method a second time before it has
+	 * been called back for the first read. If this is done, the second read 
+	 * will be called back immediately with a double_read error.
+	 *
+	 * If num_bytes or len are zero handler will be called back immediately 
+	 * indicating success.
 	 * 
-	 * 
+	 * @param num_bytes Don't call handler until at least this many bytes have
+	 * been read.
+	 *
+	 * @param buf The buffer to read bytes into
+	 *
+	 * @param len The size of buf. At maximum, this many bytes will be read.
+	 *
+	 * @param handler The callback to invoke when the operation is complete or
+	 * ends in an error
 	 */
 	void async_read_at_least(size_t num_bytes, char *buf, size_t len, 
 		read_handler handler)
@@ -147,6 +202,20 @@ protected:
 		m_reading = true;
 	}
 	
+	/// Asyncronous Transport Write
+	/**
+	 * Write len bytes in buf to the output stream. Call handler to report 
+	 * success or failure. handler may or may not be called during async_write,
+	 * but it must be safe for this to happen.
+	 * 
+	 * Will return 0 on success. Other possible errors (not exhaustive)
+	 * output_stream_required: No output stream was registered to write to
+	 * bad_stream: a ostream pass through error
+	 *
+	 * @param buf buffer to read bytes from
+	 * @param len number of bytes to write
+	 * @param handler Callback to invoke with operation status.
+	 */
 	void async_write(const char* buf, size_t len, write_handler handler) {
         m_alog.write(log::alevel::devel,"iostream_con async_write");
 		// TODO: lock transport state?
@@ -165,10 +234,19 @@ protected:
 		}
 	}
 	
-    /// Write
-    /**
-     * TODO: unit tests
-     */
+    /// Asyncronous Transport Write (scatter-gather)
+	/**
+	 * Write a sequence of buffers to the output stream. Call handler to report 
+	 * success or failure. handler may or may not be called during async_write,
+	 * but it must be safe for this to happen.
+	 * 
+	 * Will return 0 on success. Other possible errors (not exhaustive)
+	 * output_stream_required: No output stream was registered to write to
+	 * bad_stream: a ostream pass through error
+	 *
+	 * @param bufs vector of buffers to write
+	 * @param handler Callback to invoke with operation status.
+	 */
     void async_write(const std::vector<buffer>& bufs, write_handler handler) {
         m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
 		// TODO: lock transport state?
@@ -197,7 +275,18 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
     }
-
+    
+    /// Call given handler back within the transport's event system (if present)
+    /**
+     * Invoke a callback within the transport's event system if it has one. If
+     * it doesn't, the handler will be invoked immediately before this function
+     * returns.
+     * 
+     * @param handler The callback to invoke
+     * 
+     * @return Whether or not the transport was able to register the handler for
+     * callback.
+     */
     lib::error_code dispatch(dispatch_handler handler) {
         handler(); 
         return lib::error_code();
