@@ -195,7 +195,7 @@ private:
                 break;
 		    }
 		    
-            in.read(m_buf,m_len-m_cursor);
+            in.read(m_buf+m_cursor,m_len-m_cursor);
             
             if (in.gcount() == 0) {
                 m_elog.write(log::elevel::devel,"read zero bytes");
