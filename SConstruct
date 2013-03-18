@@ -124,7 +124,7 @@ if env_cpp11['CXX'].startswith('g++'):
    
    if GCC_VERSION > "4.4.0":
       print "C++11 build environment partially enabled"
-      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_MEMORY_','_WEBSOCKETPP_CPP11_FUNCTIONAL_','_WEBSOCKETPP_CPP11_SYSTEM_ERROR_','_WEBSOCKETPP_CPP11_RANDOM_DEVICE_','_WEBSOCKETPP_NOEXCEPT_'])
+      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_','_WEBSOCKETPP_NO_CPP11_REGEX_'])
       # libstdc++ does not yet support <regex>
       # boost regex is a drop in replacement
       polyfill_libs += boostlibs(['regex'],env_cpp11)
