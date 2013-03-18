@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( const_methods ) {
     iostream_con con(true,a,e);
 		
     BOOST_CHECK( con.is_secure() == false );
-    BOOST_CHECK( con.get_remote_endpoint() == "iostream" );
+    BOOST_CHECK( con.get_remote_endpoint() == "iostream transport" );
 }
 
 BOOST_AUTO_TEST_CASE( write_before_ostream_set ) {
