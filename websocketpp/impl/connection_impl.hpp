@@ -890,7 +890,7 @@ void connection<config>::write(std::string msg) {
     m_alog.write(log::alevel::devel,"connection write");
     
     transport_con_type::async_write(
-        msg.c_str(),
+        msg.data(),
         msg.size(),
         lib::bind(
             &type::handle_write,
@@ -968,6 +968,8 @@ void connection<config>::handle_send_http_response(
         return;
     }
     
+    this->log_open_result();
+    
     if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) 
     {
         if (m_processor) {
@@ -985,7 +987,6 @@ void connection<config>::handle_send_http_response(
     }
     
     // TODO: cancel handshake timer
-    // TODO: log open result
     
     this->atomic_state_change(
         istate::PROCESS_HTTP_REQUEST,
@@ -1449,6 +1450,42 @@ typename config::message_type::ptr connection<config>::write_pop()
       << " buffer size: " << m_send_buffer_size;
     m_alog.write(log::alevel::devel,s.str());
     return msg;
+}
+
+template <typename config>
+void connection<config>::log_open_result()
+{
+    std::stringstream s;
+    
+    int version;
+    if (!processor::is_websocket_handshake(m_request)) {
+        version = -1;
+    } else {
+        version = processor::get_websocket_version(m_request);
+    }
+    
+    // Connection Type
+    s << (version == -1 ? "HTTP" : "WebSocket") << " Connection ";
+    
+    // Remote endpoint address
+    s << "Unknown" << " ";
+    
+    // Version string if WebSocket
+    if (version != -1) {
+        s << "v" << version << " ";
+    }
+    
+    // User Agent
+    std::string ua = m_request.get_header("User-Agent");
+    s << (ua == "" ? "NULL" : ua) << " ";
+    
+    // URI
+    s << (m_uri ? m_uri->get_resource() : "NULL") << " ";
+    
+    // Status code
+    s << m_response.get_status_code();
+    
+    m_alog.write(log::alevel::connect,s.str());
 }
 
 } // namespace websocketpp

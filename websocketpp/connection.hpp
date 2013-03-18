@@ -823,7 +823,15 @@ private:
      * @return the message_ptr at the front of the queue
      */
     message_ptr write_pop();
-
+    
+    /// Prints information about the incoming connection to the access log
+    /**
+     * Prints information about the incoming connection to the access log.
+     * Includes: connection type, websocket version, remote endpoint, user agent
+     * path, status code.
+     */
+    void log_open_result();
+    
     // static settings
     const std::string		m_user_agent;
 	
