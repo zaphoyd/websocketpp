@@ -303,6 +303,10 @@ public:
             h(lib::error_code());
         }
     }
+    
+    boost::asio::io_service& get_io_service() {
+    	return *m_io_service;
+    }
 protected:
     /// Initialize logging
     /**
