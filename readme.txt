@@ -1,13 +1,30 @@
-Experimental 0.3.x branch of WebSocket++
+WebSocket++ 0.3.x branch
 
-This branch really is experimental and should not be used as the basis for any
-serious projects. Its API is likely to change rapidly in the next few weeks.
+This branch is no longer "experimental". It represents the current edge release
+of the WebSocket++ library. The API of 0.3.x has some significant changes from
+0.2.x, so care should be taken when upgrading.
+
+This branch's API is relatively stable now. Features implimented so far are 
+unlikely to change (except where explicitly noted). New features will be added
+regularly until parity with the 0.2 branch is reached.
+
+This is the preferred branch for new projects, especially those that involve 
+multithreaded servers. It is better tested and documented. The 0.3.x API will 
+be the basis for the 1.0 release.
+
+NOTE: 0.3.x is presently server only. The client role has not been completed 
+yet.
 
 Complete & Tested:
 - Server role passes all Autobahn v0.5.9 test suite tests strictly
 - Streaming UTF8 validation
+- random number generation
+- iostream based transport
+- C++11 support
+- LLVM/Clang support
+- GCC support
 
-Implimented but needs more testing
+Implimented, needs more testing
 - TLS support
 - echo_server & echo_server_tls
 - External io_service support
@@ -20,12 +37,17 @@ Implimented but needs more testing
 - exception/error handling
 - Logging
 
-Needs work:
-- random number generation
+Implimented, API not finalized
 - open_handler
 - close_handler
 - validate_handler
 - http_handler
+
+Needs work:
 - Client role
 - Extension support
 - permessage_compress extension
+- Visual Studio / Windows support
+- Hybi 00/Hixie 76 legacy protocol support
+- Message buffer pool
+- Performance tuning
