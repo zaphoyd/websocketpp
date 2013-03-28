@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_PROCESSOR_HYBI00_HPP
 #define WEBSOCKETPP_PROCESSOR_HYBI00_HPP
 
+#include <cstdlib>
+
 // For htonl
 #if defined(WIN32)
 	#include <winsock2.h>
@@ -109,7 +111,7 @@ public:
         std::copy(key3.c_str(),
                   key3.c_str()+std::min(static_cast<size_t>(8), key3.size()),
                   &key_final[8]);
-                  
+        
         res.append_header(
             "Sec-WebSocket-Key3",
             md5::md5_hash_string(std::string(key_final,16))
@@ -242,7 +244,7 @@ private:
             }
         }
         
-        num = atoi(digits.c_str());
+        num = strtoul(digits.c_str(), NULL, 10);
         if (spaces > 0 && num > 0) {
             num = htonl(num/spaces);
             std::copy(reinterpret_cast<char*>(&num),
