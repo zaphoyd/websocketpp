@@ -29,7 +29,7 @@
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 
 #include <websocketpp/common/memory.hpp>
-#include <websocketpp/logger/basic.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/transport/iostream/connection.hpp>
 

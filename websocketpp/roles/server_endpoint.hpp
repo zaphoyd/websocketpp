@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_SERVER_ENDPOINT_HPP
 
 #include <websocketpp/endpoint.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <iostream>
 

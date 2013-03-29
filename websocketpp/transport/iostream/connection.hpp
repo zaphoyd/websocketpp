@@ -30,7 +30,7 @@
 
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
-#include <websocketpp/logger/basic.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>
 #include <websocketpp/transport/iostream/base.hpp>

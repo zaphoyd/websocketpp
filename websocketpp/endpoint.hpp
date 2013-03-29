@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_ENDPOINT_HPP
 
 #include <websocketpp/connection.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <iostream>
 #include <set>
@@ -318,12 +319,8 @@ public:
         return con;
     }
 protected:
-	
-	
 	connection_ptr create_connection();
 	void remove_connection(connection_ptr con);
-    
-    
     
     alog_type m_alog;
     elog_type m_elog;

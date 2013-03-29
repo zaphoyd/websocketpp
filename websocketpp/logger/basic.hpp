@@ -44,89 +44,10 @@
 #include <iostream>
 
 #include <websocketpp/common/stdint.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 namespace websocketpp {
 namespace log {
-
-typedef uint32_t level;
-
-struct elevel {
-    static const level none = 0x0;
-    static const level devel = 0x1;
-    static const level library = 0x2;
-    static const level info = 0x4;
-    static const level warn = 0x8;
-    static const level rerror = 0x10;
-    static const level fatal = 0x20;
-    static const level all = 0xffffffff;
-    
-    static const char* channel_name(level channel) {
-	    switch(channel) {
-	        case devel:
-	            return "devel";
-	        case library:
-	            return "library";
-	        case info:
-	            return "info";
-	        case warn:
-	            return "warning";
-	        case rerror:
-	            return "error";
-	        case fatal:
-	            return "fatal";
-	        default:
-	            return "unknown";
-	    }
-	}
-};
-
-struct alevel {
-    static const level none = 0x0;
-    static const level connect = 0x1;
-    static const level disconnect = 0x2;
-    static const level control = 0x4;
-    static const level frame_header = 0x8;
-    static const level frame_payload = 0x10;
-    static const level message_header = 0x20;
-    static const level message_payload = 0x40;
-    static const level endpoint = 0x80;
-    static const level debug_handshake = 0x100;
-    static const level debug_close = 0x200;
-    static const level devel = 0x400;
-    static const level app = 0x800;
-    static const level all = 0xffffffff;
-    
-    static const char* channel_name(level channel) {
-	    switch(channel) {
-	        case connect:
-	            return "connect";
-	        case disconnect:
-	            return "disconnect";
-	        case control:
-	            return "control";
-	        case frame_header:
-	            return "frame_header";
-	        case frame_payload:
-	            return "frame_payload";
-	        case message_header:
-	            return "message_header";
-	        case message_payload:
-	            return "message_payload";
-	        case endpoint:
-	            return "endpoint";
-	        case debug_handshake:
-	            return "debug_handshake";
-	        case debug_close:
-	            return "debug_close";
-	        case devel:
-	            return "devel";
-	        case app:
-	            return "application";
-	        default:
-	            return "unknown";
-	    }
-	}
-};
 
 template <typename concurrency, typename names>
 class basic {
