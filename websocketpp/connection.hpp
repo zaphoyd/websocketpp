@@ -29,11 +29,16 @@
 #define WEBSOCKETPP_CONNECTION_HPP
 
 #include <websocketpp/close.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/error.hpp>
+#include <websocketpp/frame.hpp>
+#include <websocketpp/http/constants.hpp>
+#include <websocketpp/logger/levels.hpp>
 #include <websocketpp/processors/processor.hpp>
-#include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/transport/base/connection.hpp>
+
 
 #include <iostream>
 #include <vector>
