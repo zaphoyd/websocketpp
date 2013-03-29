@@ -307,6 +307,10 @@ public:
     boost::asio::io_service& get_io_service() {
     	return *m_io_service;
     }
+    
+    bool is_secure() const {
+        return socket_type::is_secure();
+    }
 protected:
     /// Initialize logging
     /**

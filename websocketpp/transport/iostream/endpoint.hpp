@@ -71,6 +71,20 @@ public:
         m_alog->write(log::alevel::devel,"register_ostream");
 		output_stream = o;
 	}
+	
+	/// Tests whether or not the underlying transport is secure
+	/**
+	 * iostream transport will return false always because it has no information
+	 * about the ultimate remote endpoint. This may or may not be accurate 
+	 * depending on the real source of bytes being input.
+	 *
+	 * TODO: allow user settable is_secure flag if this seems useful
+	 *
+	 * @return Whether or not the underlying transport is secure
+	 */
+	bool is_secure() const {
+	    return false;
+	}
 protected:
     /// Initialize logging
     /**
