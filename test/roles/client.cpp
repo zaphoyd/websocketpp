@@ -56,11 +56,29 @@ struct stub_config : public websocketpp::config::core {
 typedef websocketpp::client<stub_config> client;
 typedef client::connection_ptr connection_ptr;
 
-BOOST_AUTO_TEST_CASE( get_connection ) {
+BOOST_AUTO_TEST_CASE( invalid_uri ) {
     client c;
     websocketpp::lib::error_code ec;
     
     connection_ptr con = c.get_connection("foo", ec);
     
     BOOST_CHECK( ec == websocketpp::error::make_error_code(websocketpp::error::invalid_uri) );
+}
+
+BOOST_AUTO_TEST_CASE( unsecure_endpoint ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    
+    connection_ptr con = c.get_connection("wss://localhost/", ec);
+    
+    BOOST_CHECK( ec == websocketpp::error::make_error_code(websocketpp::error::endpoint_not_secure) );
+}
+
+BOOST_AUTO_TEST_CASE( get_connection ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    
+    BOOST_CHECK( con );
 }

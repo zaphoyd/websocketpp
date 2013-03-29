@@ -82,24 +82,29 @@ public:
 	connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
 	    // parse uri
         try {
+            // uri validation
+            uri_ptr location(new uri(u));
             
+            if (location->get_secure() && !transport_type::is_secure()) {
+                ec = error::make_error_code(error::endpoint_not_secure);
+                return connection_ptr();
+            }
+            
+            // create connection
+            connection_ptr con = endpoint_type::create_connection();
+            
+            if (!con) {
+                ec = error::make_error_code(error::con_creation_failed);
+                return con;
+            }
+            
+            // Success
+            ec = lib::error_code();
+            return con;
         } catch (uri_exception) {
-        
+            ec = error::make_error_code(error::invalid_uri);
+            return connection_ptr();
         }
-        
-	    // uri validation
-	    
-	    // create connection
-		connection_ptr con = endpoint_type::create_connection();
-		
-		if (!con) {
-		    ec = error::make_error_code(error::con_creation_failed);
-		    return con;
-		}
-		
-		// Success
-		ec = lib::error_code();
-		return con;
 	}
 	
 	/// Begin the connection process for the given connection
@@ -120,6 +125,10 @@ public:
 	// connect(...)
 private:
     // handle_connect
+    void handle_connect(connection_ptr con, const lib::error_code & ec) {
+        // start connection if successful
+        // set failure information if not and call con->terminate
+    }
 };
 
 } // namespace websocketpp
