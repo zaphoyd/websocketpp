@@ -81,7 +81,10 @@ enum value {
     bad_connection,
     
     /// Unit testing utility error code
-    test
+    test,
+    
+    /// Connection creation attempted failed
+    con_creation_failed
 }; // enum value
 
 
@@ -123,6 +126,8 @@ public:
 				return "Bad Connection";
 			case error::test:
 				return "Test Error";
+			case error::con_creation_failed:
+				return "Connection creation attempt failed";
 			default:
 				return "Unknown";
 		}
