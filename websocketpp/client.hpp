@@ -28,59 +28,6 @@
 #ifndef WEBSOCKETPP_CLIENT_HPP
 #define WEBSOCKETPP_CLIENT_HPP
 
-#include <websocketpp/endpoint.hpp>
-
-#include <iostream>
-#include <string>
-
-namespace websocketpp {
-
-template <typename transport>
-class client : public endpoint<transport> {
-protected:
-	typedef client<transport> type;
-	
-	typedef endpoint<transport> base;	
-public:
-	typedef typename base::connection_ptr connection_ptr;
-	
-	explicit client(typename base::handler_ptr default_handler) 
-	 : base(default_handler,true)
-	{
-		std::cout << "client constructor" << std::endl; 
-	}
-	
-	connection_ptr get_connection(const std::string& u);
-	
-	connection_ptr connect(const std::string& u);
-	connection_ptr connect(connection_ptr con);
-private:
-};
-
-
-template <typename transport>
-typename client<transport>::connection_ptr
-client<transport>::get_connection(const std::string& u) {
-	connection_ptr con = base::create_connection();
-}
-
-template <typename transport>
-typename client<transport>::connection_ptr
-client<transport>::connect(const std::string& u) {
-	connection_ptr con = get_connection(u);
-	return connect(con);
-}
-
-template <typename transport>
-typename client<transport>::connection_ptr
-client<transport>::connect(typename client<transport>::connection_ptr con) {
-	transport::connect(con);
-	return con;
-}
-
-} // namespace websocketpp
-
-
-
+#include <websocketpp/roles/client_endpoint.hpp>
 
 #endif //WEBSOCKETPP_CLIENT_HPP

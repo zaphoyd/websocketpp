@@ -29,19 +29,99 @@
 #define WEBSOCKETPP_CLIENT_ENDPOINT_HPP
 
 #include <websocketpp/endpoint.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <iostream>
-#include <string>
 
 namespace websocketpp {
-namespace role {
 
 
+/// Client endpoint role based on the given config
+/**
+ *
+ */
+template <typename config>
+class client : public endpoint<connection<config>,config> {
+public:
+    /// Type of this endpoint
+	typedef client<config> type;	
+	
+	/// Type of the endpoint concurrency component
+	typedef typename config::concurrency_type concurrency_type;
+    /// Type of the endpoint transport component
+	typedef typename config::transport_type transport_type;
+	
+	/// Type of the connections this server will create
+	typedef connection<config> connection_type;
+	/// Type of a shared pointer to the connections this server will create
+    typedef typename connection_type::ptr connection_ptr;
 
-} // namespace role
+    /// Type of the connection transport component
+    typedef typename transport_type::transport_con_type transport_con_type;
+    /// Type of a shared pointer to the connection transport component
+    typedef typename transport_con_type::ptr transport_con_ptr;
+
+	/// Type of the endpoint component of this server
+	typedef endpoint<connection_type,config> endpoint_type;
+	
+	explicit client() : endpoint_type(false)
+	{
+		endpoint_type::m_alog.write(log::alevel::devel,
+            "client constructor");
+	}
+	
+	/// Get a new connection
+	/**
+	 * Creates and returns a pointer to a new connection to the given URI
+	 * suitable for passing to connect(connection_ptr). This method allows
+	 * applying connection specific settings before performing the opening
+	 * handshake.
+	 * 
+	 * @return A connection_ptr to the new connection
+	 */
+	connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
+	    // parse uri
+        try {
+            
+        } catch (uri_exception) {
+        
+        }
+        
+	    // uri validation
+	    
+	    // create connection
+		connection_ptr con = endpoint_type::create_connection();
+		
+		if (!con) {
+		    ec = error::make_error_code(error::con_creation_failed);
+		    return con;
+		}
+		
+		// Success
+		ec = lib::error_code();
+		return con;
+	}
+	
+	/// Begin the connection process for the given connection
+	/**
+	 * Initiates the opening connection handshake for connection con. Exact
+	 * behavior depends on the underlying transport policy.
+	 *
+	 * @return The pointer to the connection originally passed in.
+	 */
+	connection_ptr connect(connection_ptr con) {
+	    // transport async_connect
+	    
+	    return con;
+	}
+	
+	
+	
+	// connect(...)
+private:
+    // handle_connect
+};
+
 } // namespace websocketpp
-
-
-
 
 #endif //WEBSOCKETPP_CLIENT_ENDPOINT_HPP
