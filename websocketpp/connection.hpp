@@ -497,6 +497,15 @@ public:
      * @return The port component of the connection URI
      */
     uint16_t get_port() const;
+    
+    /// Sets the connection URI
+    /**
+     * This should really only be called by internal library methods unless you
+     * really know what you are doing.
+     *
+     * @param uri The new URI to set
+     */
+    void set_uri(uri_ptr uri);
         
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
