@@ -98,6 +98,8 @@ public:
                 return con;
             }
             
+            con->set_uri(location);
+            
             // Success
             ec = lib::error_code();
             return con;

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( invalid_uri ) {
     
     connection_ptr con = c.get_connection("foo", ec);
     
-    BOOST_CHECK( ec == websocketpp::error::make_error_code(websocketpp::error::invalid_uri) );
+    BOOST_CHECK_EQUAL( ec , websocketpp::error::make_error_code(websocketpp::error::invalid_uri) );
 }
 
 BOOST_AUTO_TEST_CASE( unsecure_endpoint ) {
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( unsecure_endpoint ) {
     
     connection_ptr con = c.get_connection("wss://localhost/", ec);
     
-    BOOST_CHECK( ec == websocketpp::error::make_error_code(websocketpp::error::endpoint_not_secure) );
+    BOOST_CHECK_EQUAL( ec , websocketpp::error::make_error_code(websocketpp::error::endpoint_not_secure) );
 }
 
 BOOST_AUTO_TEST_CASE( get_connection ) {
@@ -81,4 +81,8 @@ BOOST_AUTO_TEST_CASE( get_connection ) {
     connection_ptr con = c.get_connection("ws://localhost/", ec);
     
     BOOST_CHECK( con );
+    BOOST_CHECK_EQUAL( con->get_host() , "localhost" );
+    BOOST_CHECK_EQUAL( con->get_port() , 80 );
+    BOOST_CHECK_EQUAL( con->get_secure() , false );
+    BOOST_CHECK_EQUAL( con->get_resource() , "/" );
 }
