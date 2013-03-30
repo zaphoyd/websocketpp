@@ -31,6 +31,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/logger/levels.hpp>
 
+#include <websocketpp/transport/base/endpoint.hpp>
 #include <websocketpp/transport/iostream/connection.hpp>
 
 #include <iostream>
@@ -100,7 +101,13 @@ protected:
         m_elog = e;
         m_alog = a;
     }
-
+    
+    /// Initiate a new connection
+    void async_connect(transport_con_ptr tcon, connect_handler callback) {
+        // Do we need to do anything here?
+        callback(tcon->get_handle(),lib::error_code());
+    }
+    
 	void init(transport_con_ptr tcon) {
 		tcon->register_ostream(output_stream);
 	}
