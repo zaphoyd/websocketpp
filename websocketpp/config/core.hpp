@@ -28,7 +28,10 @@
 #ifndef WEBSOCKETPP_CONFIG_CORE_HPP
 #define WEBSOCKETPP_CONFIG_CORE_HPP
 
-// Integers
+
+
+// Non-Policy common stuff
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 
 // Concurrency
@@ -101,6 +104,14 @@ struct core {
     /// User overridable Connection base class
     typedef websocketpp::connection_base connection_base;
     
+    /// WebSocket Protocol version to use as a client
+    /**
+     * What version of the WebSocket Protocol to use for outgoing client 
+     * connections. Setting this to a value other than 13 (RFC6455) is not
+     * recommended.
+     */ 
+    static const int client_version = 13; // RFC6455
+        
     /// 
 	static const size_t connection_read_buffer_size = 512;
     
