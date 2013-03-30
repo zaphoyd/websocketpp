@@ -105,13 +105,13 @@ public:
             // This really shouldn't happen
             endpoint_type::m_elog.write(log::elevel::fatal,
                 "handle_accept got an invalid handle back");
-            con->terminate();
+            //con->terminate();
         } else if (hdl_ec) {
             // There was some other unknown error attempting to convert the hdl
             // to a connection.
             endpoint_type::m_elog.write(log::elevel::fatal,
                 "handle_accept error in get_con_from_hdl: "+hdl_ec.message());
-            con->terminate();
+            //con->terminate();
         } else {
             if (ec) {
                 con->terminate();
