@@ -63,7 +63,7 @@ public:
     typedef typename transport_con_type::ptr transport_con_ptr;
     
 	// generate and manage our own io_service
-	explicit endpoint() 
+	explicit endpoint() : output_stream(NULL)
 	{
 		std::cout << "transport::iostream::endpoint constructor" << std::endl; 
 	}
