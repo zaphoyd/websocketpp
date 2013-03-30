@@ -34,7 +34,6 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/system_error.hpp>
 
-
 namespace websocketpp {
 namespace transport {
 
@@ -64,10 +63,7 @@ namespace transport {
  *     the transport's event system if it uses one.
  */
 
-// Endpoint callbacks
-typedef lib::function<void(connection_hdl,const lib::error_code&)> accept_handler;
 
-typedef lib::function<void()> endpoint_lock;
 
 // Connection callbacks
 typedef lib::function<void(const lib::error_code&)> init_handler;

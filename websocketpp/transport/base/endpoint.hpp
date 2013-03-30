@@ -28,11 +28,21 @@
 #ifndef WEBSOCKETPP_TRANSPORT_BASE_HPP
 #define WEBSOCKETPP_TRANSPORT_BASE_HPP
 
+#include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/system_error.hpp>
+
 #include <iostream>
 
 namespace websocketpp {
 namespace transport {
 
+// Endpoint callbacks
+typedef lib::function<void(connection_hdl,const lib::error_code&)> accept_handler;
+typedef lib::function<void(connection_hdl,const lib::error_code&)> connect_handler;
+
+typedef lib::function<void()> endpoint_lock;
 
 } // namespace transport
 } // namespace websocketpp
