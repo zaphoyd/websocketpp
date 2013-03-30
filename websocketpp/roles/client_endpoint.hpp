@@ -114,11 +114,22 @@ public:
 	 * Initiates the opening connection handshake for connection con. Exact
 	 * behavior depends on the underlying transport policy.
 	 *
+     * @param con The connection to connect
+     *
 	 * @return The pointer to the connection originally passed in.
 	 */
 	connection_ptr connect(connection_ptr con) {
-	    // transport async_connect
-	    
+	    // Ask transport to perform a connection
+        transport_type::async_connect(
+			lib::static_pointer_cast<transport_con_type>(con),
+			lib::bind(
+				&type::handle_connect,
+				this,
+				lib::placeholders::_1,
+				lib::placeholders::_2
+			)
+		);
+        
 	    return con;
 	}
 	
@@ -127,9 +138,32 @@ public:
 	// connect(...)
 private:
     // handle_connect
-    void handle_connect(connection_ptr con, const lib::error_code & ec) {
-        // start connection if successful
-        // set failure information if not and call con->terminate
+    void handle_connect(connection_hdl hdl, const lib::error_code & ec) {
+        lib::error_code hdl_ec;
+        connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
+        
+        if (hdl_ec == error::bad_connection) {
+            endpoint_type::m_elog.write(log::elevel::fatal,
+                "handle_connect got an invalid handle back");
+        } else if (hdl_ec) {
+            // There was some other unknown error attempting to convert the hdl
+            // to a connection.
+            endpoint_type::m_elog.write(log::elevel::fatal,
+                "handle_connect error in get_con_from_hdl: "+hdl_ec.message());
+            //con->terminate();
+        } else if (ec) {
+            // TODO
+            // Set connection's failure reasons
+            con->terminate();
+            
+            endpoint_type::m_elog.write(log::elevel::rerror,
+                    "handle_connect error: "+ec.message());
+        } else {
+            endpoint_type::m_alog.write(log::alevel::connect,
+                "Successful connection");
+            
+            con->start();
+        }
     }
 };
 
