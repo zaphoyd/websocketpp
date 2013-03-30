@@ -139,6 +139,11 @@ public:
 	std::string get_remote_endpoint() const {
 	    return "iostream transport";
 	}
+	
+	/// Get the connection handle
+    connection_hdl get_handle() const {
+        return m_connection_hdl;
+    }
 protected:
 	void init(init_handler callback) {
         m_alog.write(log::alevel::devel,"iostream connection init");
