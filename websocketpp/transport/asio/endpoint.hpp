@@ -79,6 +79,8 @@ public:
 	typedef boost::asio::io_service* io_service_ptr;
     /// Type of a shared pointer to the acceptor being used
 	typedef lib::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr;
+    /// Type of a shared pointer to the resolver being used
+	typedef lib::shared_ptr<boost::asio::ip::tcp::resolver> resolver_ptr;
 
 	// generate and manage our own io_service
 	explicit endpoint() 
@@ -334,10 +336,94 @@ protected:
 			//con->terminate();
 			// TODO: Better translation of errors at this point
 			callback(hdl,make_error_code(error::pass_through));
+			return;
 		}
 		
 		//con->start();
 		callback(hdl,lib::error_code());
+	}
+	
+	/// Initiate a new connection
+	// TODO: there have to be some more failure conditions here
+    void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
+        using namespace boost::asio::ip;
+        
+        // Create a resolver
+        if (!m_resolver) {
+            m_resolver.reset(new boost::asio::ip::tcp::resolver(*m_io_service));
+        }
+        
+        tcp::resolver::query query(u->get_host(),u->get_port_str());
+        /*tcp::resolver::iterator iterator = resolver.resolve(query);
+        
+        boost::asio::async_connect(
+            tcon->get_raw_socket(),
+            iterator,
+            lib::bind(
+                &type::handle_connect,
+                this, // shared from this?
+                tcon,
+                cb,
+				lib::placeholders::_1
+            )
+        );*/
+        
+        m_resolver->async_resolve(
+            query,
+            lib::bind(
+                &type::handle_resolve,
+                this,
+                tcon,
+                cb,
+                lib::placeholders::_1,
+                lib::placeholders::_2
+            )
+        );
+    }
+    
+    void handle_resolve(transport_con_ptr tcon, connect_handler callback,
+        const boost::system::error_code& ec, 
+        boost::asio::ip::tcp::resolver::iterator iterator)
+    {
+		if (ec) {
+			//con->terminate();
+			// TODO: Better translation of errors at this point
+			std::stringstream s;
+            s << "asio async_resolve error::pass_through: "
+              << "Original Error: " << ec << " (" << ec.message() << ")";
+            m_elog->write(log::elevel::devel,s.str());
+			callback(tcon->get_handle(),make_error_code(error::pass_through));
+			return;
+		}
+		
+		boost::asio::async_connect(
+            tcon->get_raw_socket(),
+            iterator,
+            lib::bind(
+                &type::handle_connect,
+                this, // shared from this?
+                tcon,
+                callback,
+				lib::placeholders::_1
+            )
+        );
+	}
+    
+    void handle_connect(transport_con_ptr tcon, connect_handler callback,
+        const boost::system::error_code& ec)
+    {
+		if (ec) {
+			//con->terminate();
+			// TODO: Better translation of errors at this point
+			std::stringstream s;
+            s << "asio async_connect error::pass_through: "
+              << "Original Error: " << ec << " (" << ec.message() << ")";
+            m_elog->write(log::elevel::devel,s.str());
+			callback(tcon->get_handle(),make_error_code(error::pass_through));
+			return;
+		}
+		
+		callback(tcon->get_handle(),lib::error_code());
 	}
 	
 	bool is_listening() const {
@@ -377,6 +463,7 @@ private:
 	io_service_ptr		m_io_service;
 	bool				m_external_io_service;
 	acceptor_ptr		m_acceptor;
+	resolver_ptr        m_resolver;
 	
     elog_type* m_elog;
     alog_type* m_alog;
