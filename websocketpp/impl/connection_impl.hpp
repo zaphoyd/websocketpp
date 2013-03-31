@@ -1394,7 +1394,8 @@ connection<config>::get_processor(int version) const {
                 new processor::hybi07<config>(
                     transport_con_type::is_secure(),
                     m_is_server,
-                    m_msg_manager
+                    m_msg_manager,
+                    m_rng
                 )
             );
             break;
@@ -1403,7 +1404,8 @@ connection<config>::get_processor(int version) const {
                 new processor::hybi08<config>(
                     transport_con_type::is_secure(),
                     m_is_server,
-                    m_msg_manager
+                    m_msg_manager,
+                    m_rng
                 )
             );
             break;
@@ -1412,7 +1414,8 @@ connection<config>::get_processor(int version) const {
                 new processor::hybi13<config>(
                     transport_con_type::is_secure(),
                     m_is_server,
-                    m_msg_manager
+                    m_msg_manager,
+                    m_rng
                 )
             );
             break;

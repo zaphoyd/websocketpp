@@ -44,9 +44,11 @@ public:
 	typedef typename config::request_type request_type;
 	
 	typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
+    typedef typename config::rng_type rng_type;
 
-    explicit hybi08(bool secure, bool server, msg_manager_ptr manager) 
-      : hybi13<config>(secure, server, manager) {}
+    explicit hybi08(bool secure, bool server, msg_manager_ptr manager, 
+        rng_type& rng) 
+      : hybi13<config>(secure, server, manager, rng) {}
     
     int get_version() const {
         return 8;

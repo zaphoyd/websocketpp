@@ -155,7 +155,9 @@ public:
 	
 	typedef typename config::con_msg_manager_type con_msg_manager_type;
     typedef typename con_msg_manager_type::ptr con_msg_manager_ptr;
-
+    
+    /// Type of RNG
+    
     typedef processor::processor<config> processor_type;
     typedef lib::shared_ptr<processor_type> processor_ptr;
     
@@ -166,7 +168,7 @@ public:
     typedef session::internal_state::value istate_type;
 
     explicit connection(bool is_server, const std::string& ua, alog_type& alog, 
-        elog_type& elog)
+        elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
       , m_state(session::state::CONNECTING)
@@ -177,6 +179,7 @@ public:
 	  , m_is_server(is_server)
 	  , m_alog(alog)
 	  , m_elog(elog)
+	  , m_rng(rng)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -934,6 +937,8 @@ private:
     const bool				m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
+    
+    rng_type & m_rng;
     
     // Close state
     /// Close code that was sent on the wire by this endpoint

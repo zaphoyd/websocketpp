@@ -80,6 +80,9 @@ public:
 	/// Type of our concurrency policy's mutex object
 	typedef typename concurrency_type::mutex_type mutex_type;
     
+    /// Type of RNG
+    typedef typename config::rng_type rng_type;
+    
     // TODO: organize these
 	typedef typename connection_type::termination_handler termination_handler;
 	
@@ -339,7 +342,7 @@ private:
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
     
-    
+    rng_type m_rng;
     
 	// endpoint resources
 	std::set<connection_ptr>	m_connections;

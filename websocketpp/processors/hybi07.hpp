@@ -41,9 +41,11 @@ template <typename config>
 class hybi07 : public hybi08<config> {
 public:
     typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
+	typedef typename config::rng_type rng_type;
 	
-	explicit hybi07(bool secure,bool server, msg_manager_ptr manager) 
-      : hybi08<config>(secure, server, manager) {} 
+	explicit hybi07(bool secure,bool server, msg_manager_ptr manager, 
+	    rng_type& rng) 
+      : hybi08<config>(secure, server, manager, rng) {} 
     
     int get_version() const {
         return 7;

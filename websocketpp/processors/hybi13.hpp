@@ -65,14 +65,17 @@ public:
 
 	typedef typename config::con_msg_manager_type msg_manager_type;
 	typedef typename msg_manager_type::ptr msg_manager_ptr;
+    typedef typename config::rng_type rng_type;
 
     typedef typename config::permessage_compress_type permessage_compress_type;
     
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit hybi13(bool secure, bool server, msg_manager_ptr manager) 
+    explicit hybi13(bool secure, bool server, msg_manager_ptr manager, 
+        rng_type& rng) 
       : processor<config>(secure,server)
 	  , m_msg_manager(manager)
+	  , m_rng(rng)
 	{
 		reset_headers();
 	} 
@@ -899,7 +902,7 @@ protected:
     // utf8 validator
     // compression state
 
-
+    rng_type& m_rng;
 
 	// Overall state of the processor
 	state m_state;

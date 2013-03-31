@@ -42,7 +42,7 @@ endpoint<connection,config>::create_connection() {
 	
     // Create a connection on the heap and manage it using a shared pointer
     connection_ptr con(new connection_type(m_is_server,m_user_agent,m_alog,
-        m_elog));
+        m_elog, m_rng));
     
     connection_weak_ptr w(con);
     
