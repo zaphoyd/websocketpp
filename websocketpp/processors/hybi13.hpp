@@ -195,6 +195,30 @@ public:
         return lib::error_code();
     }
     
+    lib::error_code handshake_request(request_type& req, uri_ptr uri) const {
+        req.set_method("GET");
+        req.set_uri(uri->get_resource());
+        req.set_version("HTTP/1.1");
+        
+        req.append_header("Upgrade","websocket");
+        req.append_header("Connection","Upgrade");
+        req.replace_header("Sec-WebSocket-Version","13");
+        req.replace_header("Host",uri->get_host_port());
+        
+        // Generate handshake key
+        frame::uint32_converter conv;
+        unsigned char raw_key[16];
+        
+        for (int i = 0; i < 4; i++) {
+            conv.i = m_rng();
+            std::copy(conv.c,conv.c+4,&raw_key[i*4]);
+        }
+        
+        req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
+                
+        return lib::error_code();
+    }
+    
     std::string get_raw(const response_type& res) const {
         return res.raw();
     }

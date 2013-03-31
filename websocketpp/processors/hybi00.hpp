@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -134,6 +134,11 @@ public:
         }
         
         return lib::error_code();
+    }
+    
+    // outgoing client connection processing is not supported for this version
+    lib::error_code handshake_request(request_type& req, uri_ptr uri) const {
+        return error::make_error_code(error::no_protocol_support);
     }
     
     std::string get_raw(const response_type& res) const {

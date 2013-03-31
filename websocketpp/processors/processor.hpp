@@ -193,6 +193,15 @@ public:
     virtual lib::error_code process_handshake(const request_type& req,
         response_type& res) const = 0;
     
+    /// Fill in an HTTP request for an outgoing connection handshake
+    /**
+     * @param req The request to process.
+     *
+     * @return An error code, 0 on success, non-zero for other errors
+     */
+    virtual lib::error_code handshake_request(request_type& req, uri_ptr uri)
+        const = 0;
+    
     /// Given a completed response, get the raw bytes to put on the wire
     virtual std::string get_raw(const response_type& request) const = 0;
     
@@ -307,8 +316,8 @@ public:
     virtual lib::error_code prepare_close(close::status::value code, 
         const std::string & reason, message_ptr out) const = 0;
 protected:
-    const bool                m_secure;
-	const bool				  m_server;
+    const bool m_secure;
+	const bool m_server;
 };
 
 
