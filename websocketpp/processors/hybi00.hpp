@@ -137,7 +137,15 @@ public:
     }
     
     // outgoing client connection processing is not supported for this version
-    lib::error_code handshake_request(request_type& req, uri_ptr uri) const {
+    lib::error_code client_handshake_request(request_type& req, uri_ptr uri) 
+        const
+    {
+        return error::make_error_code(error::no_protocol_support);
+    }
+    
+    lib::error_code validate_server_handshake_response(const request_type& req,
+        response_type& res) const
+    {
         return error::make_error_code(error::no_protocol_support);
     }
     

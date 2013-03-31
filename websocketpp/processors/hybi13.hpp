@@ -40,6 +40,8 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 
+#include <websocketpp/http/constants.hpp>
+
 #include <websocketpp/processors/processor.hpp>
 
 #include <websocketpp/sha1/sha1.hpp>
@@ -166,14 +168,6 @@ public:
 	{
         std::string server_key = request.get_header("Sec-WebSocket-Key");
         
-            //  library works on ints rather than bytes
-                message_digest[i] = htonl(message_digest[i]);
-            }
-            server_key = base64_encode(
-                reinterpret_cast<const unsigned char*>(message_digest),
-            );
-            
-            response.replace_header("Sec-WebSocket-Accept",server_key);
         lib::error_code ec = process_handshake_key(server_key);
         
         if (ec) {
@@ -187,7 +181,9 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code handshake_request(request_type& req, uri_ptr uri) const {
+    lib::error_code client_handshake_request(request_type& req, uri_ptr 
+        uri) const
+    {
         req.set_method("GET");
         req.set_uri(uri->get_resource());
         req.set_version("HTTP/1.1");
@@ -207,6 +203,41 @@ public:
         }
         
         req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
+                
+        return lib::error_code();
+    }
+    
+    lib::error_code validate_server_handshake_response(const request_type& req,
+        response_type& res) const
+    {
+        // A valid response has an HTTP 101 switching protocols code
+        if (res.get_status_code() != http::status_code::switching_protocols) {
+            return error::make_error_code(error::invalid_http_status);
+        }
+        
+        // And the upgrade token in an upgrade header
+        const std::string& upgrade_header = res.get_header("Upgrade");
+        if (utility::ci_find_substr(upgrade_header, constants::upgrade_token,
+            sizeof(constants::upgrade_token)-1) == upgrade_header.end())
+        {
+            return error::make_error_code(error::missing_required_header);
+        }
+        
+        // And the websocket token in the connection header
+        const std::string& con_header = res.get_header("Connection");
+        if (utility::ci_find_substr(con_header, constants::connection_token,
+            sizeof(constants::connection_token)-1) == con_header.end())
+        {
+            return error::make_error_code(error::missing_required_header);
+        }
+        
+        // And has a valid Sec-WebSocket-Accept value
+        std::string key = req.get_header("Sec-WebSocket-Key");
+        lib::error_code ec = process_handshake_key(key);
+        
+        if (ec || key != res.get_header("Sec-WebSocket-Accept")) {
+            return error::make_error_code(error::missing_required_header);
+        }
                 
         return lib::error_code();
     }
@@ -847,7 +878,7 @@ protected:
      *
      * @return Status code, zero on success, non-zero on error
      */
-    lib::error_code prepare_control(frame::opcode::value op, 
+    lib::error_code prepare_control(frame::opcode::value op,
         const std::string & payload, message_ptr out) const
     {
 		if (!out) {

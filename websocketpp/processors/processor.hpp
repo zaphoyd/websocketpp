@@ -199,8 +199,19 @@ public:
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code handshake_request(request_type& req, uri_ptr uri)
-        const = 0;
+    virtual lib::error_code client_handshake_request(request_type& req, 
+        uri_ptr uri) const = 0;
+        
+    /// Validate the server's response to an outgoing handshake request
+    /**
+     * @param req The original request sent
+     *
+     * @param res The reponse to generate
+     *
+     * @return An error code, 0 on success, non-zero for other errors
+     */
+    virtual lib::error_code validate_server_handshake_response(const 
+        request_type & req, response_type & res) const = 0;
     
     /// Given a completed response, get the raw bytes to put on the wire
     virtual std::string get_raw(const response_type& request) const = 0;
