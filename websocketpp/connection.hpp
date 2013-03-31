@@ -157,6 +157,7 @@ public:
     typedef typename con_msg_manager_type::ptr con_msg_manager_ptr;
     
     /// Type of RNG
+    typedef typename config::rng_type rng_type;
     
     typedef processor::processor<config> processor_type;
     typedef lib::shared_ptr<processor_type> processor_ptr;
@@ -672,6 +673,7 @@ public:
         size_t bytes_transferred);
     
     void handle_send_http_response(const lib::error_code& ec);
+    void handle_send_http_request(const lib::error_code& ec);
     
     
     /// Get array of WebSocket protocol versions that this connection supports.
@@ -756,6 +758,9 @@ protected:
 private:
     /// Completes m_response, serializes it, and sends it out on the wire.
     void send_http_response();
+    
+    /// Sends an opening WebSocket connect request
+    void send_http_request();
     
     /// Alternate path for send_http_response in error conditions
     void send_http_response_error();
@@ -893,7 +898,11 @@ private:
     size_t                  m_buf_cursor;
     termination_handler     m_termination_handler;
     con_msg_manager_ptr     m_msg_manager;
-
+    
+    // TODO: this is not memory efficient. this value is not used after the
+    // handshake.
+    std::string m_handshake_buffer;
+    
     /// Pointer to the processor object for this connection
     /**
      * The processor provides functionality that is specific to the WebSocket 

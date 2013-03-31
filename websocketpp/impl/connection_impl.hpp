@@ -465,7 +465,10 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     if (m_is_server) {
         this->read(1);
     } else {
-        // call prepare HTTP request
+        // We are a client. Set the processor to the version specified in the
+        // config file and send a handshake request.
+        m_processor = get_processor(config::client_version);
+        this->send_http_request();
     }
     
     // TODO: Begin websocket handshake
@@ -929,25 +932,23 @@ void connection<config>::send_http_response() {
     
     // Set some common headers
     m_response.replace_header("Server",m_user_agent);
-    
-    std::string raw;
-    
+        
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
-        raw = m_processor->get_raw(m_response);
+        m_handshake_buffer = m_processor->get_raw(m_response);
     } else {
         // a processor wont exist for raw HTTP responses.
-        raw = m_response.raw();
+        m_handshake_buffer = m_response.raw();
     }
     
     if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+raw);
+        m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
     }
     
     // write raw bytes
     transport_con_type::async_write(
-        raw.c_str(),
-        raw.size(),
+        m_handshake_buffer.data(),
+        m_handshake_buffer.size(),
         lib::bind(
             &type::handle_send_http_response,
             type::shared_from_this(),
@@ -1007,6 +1008,111 @@ void connection<config>::handle_send_http_response(
     }
 
     this->handle_read_frame(lib::error_code(), m_buf_cursor);
+}
+
+template <typename config>
+void connection<config>::send_http_request() {
+    m_alog.write(log::alevel::devel,"connection send_http_request");
+    
+    // TODO: origin header
+    // TODO: subprotocol requests
+    
+    // Generate client key
+    // set client key header
+    
+    // Set User-Agent header
+    
+
+        
+    // Have the protocol processor fill in the appropriate fields based on the
+    // selected client version
+    if (m_processor) {
+        lib::error_code ec;
+        ec = m_processor->handshake_request(m_request,m_uri);
+        
+        if (ec) {
+            m_elog.write(log::elevel::fatal,
+                "Internal library error: processor error: "+ec.message());
+            return;
+        }
+    } else {
+        m_elog.write(log::elevel::fatal,
+            "Internal library error: missing processor");
+        return;
+    }
+    
+    // Unless the user has overridden the user agent, send generic WS++
+    if (m_request.get_header("User-Agent") == "") {
+        m_request.replace_header("User-Agent",m_user_agent);
+    }
+    
+    m_handshake_buffer = m_request.raw();
+    
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,
+            "Raw Handshake response:\n"+m_handshake_buffer);
+    }
+    
+    transport_con_type::async_write(
+        m_handshake_buffer.data(),
+        m_handshake_buffer.size(),
+        lib::bind(
+            &type::handle_send_http_request,
+            type::shared_from_this(),
+            lib::placeholders::_1
+        )
+    );
+}
+
+template <typename config>
+void connection<config>::handle_send_http_request(const lib::error_code& ec) {
+    m_alog.write(log::alevel::devel,"handle_send_http_request");
+    
+    /*this->atomic_state_check(
+        istate::PROCESS_HTTP_REQUEST,
+        "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
+    );
+    
+    if (ec) {
+        m_elog.write(log::elevel::rerror,
+            "error in handle_send_http_response: "+ec.message());
+        this->terminate();
+        return;
+    }
+    
+    this->log_open_result();
+    
+    if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) 
+    {
+        if (m_processor) {
+            // if this was not a websocket connection, we have written 
+            // the expected response and the connection can be closed.
+        } else {
+            // this was a websocket connection that ended in an error
+            std::stringstream s;
+            s << "Handshake ended with HTTP error: " 
+              << m_response.get_status_code();
+            m_elog.write(log::elevel::rerror,s.str());
+        }
+        this->terminate();
+        return;
+    }
+    
+    // TODO: cancel handshake timer
+    
+    this->atomic_state_change(
+        istate::PROCESS_HTTP_REQUEST,
+        istate::PROCESS_CONNECTION,
+        session::state::CONNECTING,
+        session::state::OPEN,
+        "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
+    );
+    
+    if (m_open_handler) {
+        m_open_handler(m_connection_hdl);
+    }
+
+    this->handle_read_frame(lib::error_code(), m_buf_cursor);*/
 }
 
 template <typename config>

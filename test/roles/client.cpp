@@ -30,8 +30,12 @@
 
 #include <iostream>
 
+#include <websocketpp/random/random_device.hpp>
+
 #include <websocketpp/config/core.hpp>
 #include <websocketpp/client.hpp>
+
+#include <websocketpp/http/request.hpp>
 
 struct stub_config : public websocketpp::config::core {
     typedef core::concurrency_type concurrency_type;
@@ -46,7 +50,8 @@ struct stub_config : public websocketpp::config::core {
     typedef core::alog_type alog_type;
     typedef core::elog_type elog_type;
 
-    typedef core::rng_type rng_type;
+    //typedef core::rng_type rng_type;
+    typedef websocketpp::random::random_device::int_generator<uint32_t,concurrency_type> rng_type;
     
     typedef core::transport_type transport_type;
     
@@ -86,3 +91,52 @@ BOOST_AUTO_TEST_CASE( get_connection ) {
     BOOST_CHECK_EQUAL( con->get_secure() , false );
     BOOST_CHECK_EQUAL( con->get_resource() , "/" );
 }
+
+BOOST_AUTO_TEST_CASE( connect_con ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    std::stringstream out;
+    std::string o;
+    
+    c.register_ostream(&out);
+    
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    c.connect(con);
+    
+    o = out.str();
+    websocketpp::http::parser::request r;
+    r.consume(o.data(),o.size());
+    
+    BOOST_CHECK( r.ready() );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET");
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1");
+    BOOST_CHECK_EQUAL( r.get_uri(), "/");
+    
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "localhost");
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Version"), "13");
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade");
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket");
+    
+    // Key is randomly generated & User-Agent will change so just check that
+    // they are not empty.
+    BOOST_CHECK_NE( r.get_header("Sec-WebSocket-Key"), "");
+    BOOST_CHECK_NE( r.get_header("User-Agent"), "" );
+    
+    // connection should have written out an opening handshake request and be in
+    // the read response internal state
+    
+    std::cout << "output: " << out.str() << std::endl;
+}
+
+
+// test cases
+// - adding headers
+// - adding Upgrade header
+// - adding Connection header
+// - adding Sec-WebSocket-Version, Sec-WebSocket-Key, or Host header
+// - other Sec* headers?
+// - User Agent header?
+
+
+// Origin support
+// Subprotocol requests
