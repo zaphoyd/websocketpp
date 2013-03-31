@@ -84,143 +84,110 @@ struct stub_config_ext {
     static const bool enable_extensions = false;
 };
 
-BOOST_AUTO_TEST_CASE( exact_match ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-	stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
+typedef stub_config::con_msg_manager_type con_msg_manager_type;
+typedef stub_config::message_type::ptr message_ptr;
+
+// Set up a structure that constructs new copies of all of the support structure
+// for using connection processors
+struct processor_setup {
+    processor_setup(bool server) 
+      : msg_manager(new con_msg_manager_type())
+      , p(false,server,msg_manager,rng) {}
+    
     websocketpp::lib::error_code ec;
+	con_msg_manager_type::ptr msg_manager;
+	stub_config::rng_type rng;
+	stub_config::request_type req;
+    stub_config::response_type res;
+	websocketpp::processor::hybi13<stub_config> p;
+};
+
+BOOST_AUTO_TEST_CASE( exact_match ) {
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK(!ec);
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK(!env.p.validate_handshake(env.req));
     
     websocketpp::uri_ptr u;
-    bool exception = false;
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
+    BOOST_CHECK_NO_THROW( u = env.p.get_uri(env.req) );
     
-    BOOST_CHECK(exception == false);
-    BOOST_CHECK(u->get_secure() == false);
-    BOOST_CHECK(u->get_host() == "www.example.com");
-    BOOST_CHECK(u->get_resource() == "/");
-    BOOST_CHECK(u->get_port() == websocketpp::uri_default_port);
+    BOOST_CHECK_EQUAL(u->get_secure(), false);
+    BOOST_CHECK_EQUAL(u->get_host(), "www.example.com");
+    BOOST_CHECK_EQUAL(u->get_resource(), "/");
+    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::uri_default_port);
     
-    p.process_handshake(r,response);
+    env.p.process_handshake(env.req,env.res);
     
-    BOOST_CHECK(response.get_header("Connection") == "upgrade");
-    BOOST_CHECK(response.get_header("Upgrade") == "websocket");
-    BOOST_CHECK(response.get_header("Sec-WebSocket-Accept") == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+    BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "upgrade");
+    BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "websocket");
+    BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Accept"), "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 }
 
 BOOST_AUTO_TEST_CASE( non_get_method ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-	stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
 
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_http_method );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK( env.p.validate_handshake(env.req) == websocketpp::processor::error::invalid_http_method );
 }
 
 BOOST_AUTO_TEST_CASE( old_http_version ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_http_version );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::invalid_http_version );
 }
 
 BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::missing_required_header );
+    BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
+    BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::missing_required_header );
 }
 
 BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::lib::error_code ec;
+    processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::missing_required_header );
+    BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
+    BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::missing_required_header );
 }
 
 BOOST_AUTO_TEST_CASE( bad_host ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    stub_config::rng_type rng;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::uri_ptr u;
-    bool exception = false;
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size());
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( !ec );
-    
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
-    
-    BOOST_CHECK(exception == true);
+    BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
+    BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
+    BOOST_CHECK( !env.p.validate_handshake(env.req) );    
+    BOOST_CHECK_THROW( env.p.get_uri(env.req), websocketpp::uri_exception );
 }
 
 // FRAME TESTS TO DO
@@ -238,375 +205,266 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 // 0x81 0x80
 
 BOOST_AUTO_TEST_CASE( frame_empty_binary_unmasked ) {
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
 	uint8_t frame[2] = {0x82, 0x00};
-    websocketpp::lib::error_code ec;
 
 	// all in one chunk
-	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager,rng);
+	processor_setup env1(false);
 
-	size_t ret1 = p1.consume(frame,2,ec);
+	size_t ret1 = env1.p.consume(frame,2,env1.ec);
 	
-	BOOST_CHECK( ret1 == 2 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p1.ready() == true );	
+	BOOST_CHECK_EQUAL( ret1, 2 );
+	BOOST_CHECK( !env1.ec );
+	BOOST_CHECK_EQUAL( env1.p.ready(), true );	
 	
 	// two separate chunks
-	websocketpp::processor::hybi13<stub_config> p2(false,false,msg_manager,rng);
+	processor_setup env2(false);
 
-	BOOST_CHECK( p2.consume(frame,1,ec) == 1 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p2.ready() == false );
+	BOOST_CHECK_EQUAL( env2.p.consume(frame,1,env2.ec), 1 );
+	BOOST_CHECK( !env2.ec );
+	BOOST_CHECK_EQUAL( env2.p.ready(), false );
 
-	BOOST_CHECK( p2.consume(frame+1,1,ec) == 1 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p2.ready() == true );
+	BOOST_CHECK_EQUAL( env2.p.consume(frame+1,1,env2.ec), 1 );
+	BOOST_CHECK( !env2.ec );
+	BOOST_CHECK_EQUAL( env2.p.ready(), true );
 }
 
 BOOST_AUTO_TEST_CASE( frame_small_binary_unmasked ) {
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[4] = {0x82, 0x02, 0x2A, 0x2A};
-    websocketpp::lib::error_code ec;
 	
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,4,ec) == 4 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p.ready() == true );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env.p.consume(frame,4,env.ec), 4 );
+	BOOST_CHECK( !env.ec );
+	BOOST_CHECK_EQUAL( env.p.ready(), true );
 	
-	message_ptr foo = p.get_message();
+	message_ptr foo = env.p.get_message();
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( foo->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( foo->get_payload(), "**" );
 
 }
 
 BOOST_AUTO_TEST_CASE( frame_extended_binary_unmasked ) {
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[130] = {0x82, 0x7E, 0x00, 0x7E};
-    websocketpp::lib::error_code ec;
 	frame[0] = 0x82;
 	frame[1] = 0x7E;
 	frame[2] = 0x00;
 	frame[3] = 0x7E;
 	std::fill_n(frame+4,126,0x2A);
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,130,ec) == 130 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p.ready() == true );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env.p.consume(frame,130,env.ec), 130 );
+	BOOST_CHECK( !env.ec );
+	BOOST_CHECK_EQUAL( env.p.ready(), true );
 	
-	message_ptr foo = p.get_message();
+	message_ptr foo = env.p.get_message();
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( foo->get_payload().size() == 126 );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( foo->get_payload().size(), 126 );
 }
 
 BOOST_AUTO_TEST_CASE( frame_jumbo_binary_unmasked ) {
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[130] = {0x82, 0x7E, 0x00, 0x7E};
-    websocketpp::lib::error_code ec;
 	std::fill_n(frame+4,126,0x2A);
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,130,ec) == 130 );
-	BOOST_CHECK( !ec );
-	BOOST_CHECK( p.ready() == true );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env.p.consume(frame,130,env.ec), 130 );
+	BOOST_CHECK( !env.ec );
+	BOOST_CHECK_EQUAL( env.p.ready(), true );
 	
-	message_ptr foo = p.get_message();
+	message_ptr foo = env.p.get_message();
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( foo->get_payload().size() == 126 );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( foo->get_payload().size(), 126 );
 }
 
 BOOST_AUTO_TEST_CASE( control_frame_too_large ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[130] = {0x88, 0x7E, 0x00, 0x7E};
-    websocketpp::lib::error_code ec;
 	std::fill_n(frame+4,126,0x2A);
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,130,ec) > 0 );
-	BOOST_CHECK( ec == websocketpp::processor::error::control_too_big  );
-	BOOST_CHECK( p.ready() == false );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_GT( env.p.consume(frame,130,env.ec), 0 );
+	BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::control_too_big  );
+	BOOST_CHECK_EQUAL( env.p.ready(), false );
 }
 
 BOOST_AUTO_TEST_CASE( rsv_bits_used ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	
 	uint8_t frame[3][2] = {{0x90, 0x00},
-		                  {0xA0, 0x00},
-	                      {0xC0, 0x00}};
-    websocketpp::lib::error_code ec;
+		                   {0xA0, 0x00},
+	                       {0xC0, 0x00}};
 
 	for (int i = 0; i < 3; i++) {
-		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+		processor_setup env(false);
 	
-		BOOST_CHECK( p.get_message() == message_ptr() );
-		BOOST_CHECK( p.consume(frame[i],2,ec) > 0 );
-	    BOOST_CHECK( ec == websocketpp::processor::error::invalid_rsv_bit  );
-		BOOST_CHECK( p.ready() == false );
+		BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+		BOOST_CHECK_GT( env.p.consume(frame[i],2,env.ec), 0 );
+	    BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_rsv_bit  );
+		BOOST_CHECK_EQUAL( env.p.ready(), false );
 	}
 }
 
 
 BOOST_AUTO_TEST_CASE( reserved_opcode_used ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	
 	uint8_t frame[10][2] = {{0x83, 0x00},
-		                   {0x84, 0x00},
-	                       {0x85, 0x00},
-	                       {0x86, 0x00},
-	                       {0x87, 0x00},
-	                       {0x8B, 0x00},
-	                       {0x8C, 0x00},
-	                       {0x8D, 0x00},
-	                       {0x8E, 0x00},
-	                       {0x8F, 0x00}};
-    websocketpp::lib::error_code ec;
+		                    {0x84, 0x00},
+	                        {0x85, 0x00},
+	                        {0x86, 0x00},
+	                        {0x87, 0x00},
+	                        {0x8B, 0x00},
+	                        {0x8C, 0x00},
+	                        {0x8D, 0x00},
+	                        {0x8E, 0x00},
+	                        {0x8F, 0x00}};
 
 	for (int i = 0; i < 10; i++) {
-		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+		processor_setup env(false);
 	
-		BOOST_CHECK( p.get_message() == message_ptr() );
-		BOOST_CHECK( p.consume(frame[i],2,ec) > 0 );
-	    BOOST_CHECK( ec == websocketpp::processor::error::invalid_opcode  );
-		BOOST_CHECK( p.ready() == false );
+		BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+		BOOST_CHECK_GT( env.p.consume(frame[i],2,env.ec), 0 );
+	    BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_opcode  );
+		BOOST_CHECK_EQUAL( env.p.ready(), false );
 	}
 }
 
 BOOST_AUTO_TEST_CASE( fragmented_control_message ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[2] = {0x08, 0x00};
-    websocketpp::lib::error_code ec;
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,2,ec) > 0 );
-	BOOST_CHECK( ec == websocketpp::processor::error::fragmented_control );
-	BOOST_CHECK( p.ready() == false );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_GT( env.p.consume(frame,2,env.ec), 0 );
+	BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::fragmented_control );
+	BOOST_CHECK_EQUAL( env.p.ready(), false );
 }
 
 BOOST_AUTO_TEST_CASE( fragmented_binary_message ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p0(false,false,msg_manager,rng);
-	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager,rng);
+	processor_setup env0(false);
+	processor_setup env1(false);
 
 	uint8_t frame0[6] = {0x02, 0x01, 0x2A, 0x80, 0x01, 0x2A};
 	uint8_t frame1[8] = {0x02, 0x01, 0x2A, 0x89, 0x00, 0x80, 0x01, 0x2A};
-    websocketpp::lib::error_code ec;
 
 	// read fragmented message in one chunk
-	BOOST_CHECK( p0.get_message() == message_ptr() );
-	BOOST_CHECK( p0.consume(frame0,6,ec) == 6 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == true );
-	BOOST_CHECK( p0.get_message()->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env0.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env0.p.consume(frame0,6,env0.ec), 6 );
+    BOOST_CHECK( !env0.ec );
+	BOOST_CHECK_EQUAL( env0.p.ready(), true );
+	BOOST_CHECK_EQUAL( env0.p.get_message()->get_payload(), "**" );
 	
 	// read fragmented message in two chunks
-	BOOST_CHECK( p0.get_message() == message_ptr() );
-	BOOST_CHECK( p0.consume(frame0,3,ec) == 3 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == false );
-	BOOST_CHECK( p0.consume(frame0+3,3,ec) == 3 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == true );
-	BOOST_CHECK( p0.get_message()->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env0.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env0.p.consume(frame0,3,env0.ec), 3 );
+    BOOST_CHECK( !env0.ec );
+	BOOST_CHECK_EQUAL( env0.p.ready(), false );
+	BOOST_CHECK_EQUAL( env0.p.consume(frame0+3,3,env0.ec), 3 );
+    BOOST_CHECK( !env0.ec );
+	BOOST_CHECK_EQUAL( env0.p.ready(), true );
+	BOOST_CHECK_EQUAL( env0.p.get_message()->get_payload(), "**" );
 
 	// read fragmented message with control message in between
-	BOOST_CHECK( p0.get_message() == message_ptr() );
-	BOOST_CHECK( p0.consume(frame1,8,ec) == 5 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == true );
-	BOOST_CHECK( p0.get_message()->get_opcode() == websocketpp::frame::opcode::PING);
-	BOOST_CHECK( p0.consume(frame1+5,3,ec) == 3 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == true );
-	BOOST_CHECK( p0.get_message()->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env0.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env0.p.consume(frame1,8,env0.ec), 5 );
+    BOOST_CHECK( !env0.ec );
+	BOOST_CHECK_EQUAL( env0.p.ready(), true );
+	BOOST_CHECK_EQUAL( env0.p.get_message()->get_opcode(), websocketpp::frame::opcode::PING);
+	BOOST_CHECK_EQUAL( env0.p.consume(frame1+5,3,env0.ec), 3 );
+    BOOST_CHECK( !env0.ec );
+	BOOST_CHECK_EQUAL( env0.p.ready(), true );
+	BOOST_CHECK_EQUAL( env0.p.get_message()->get_payload(), "**" );
 
     // read lone continuation frame
-	BOOST_CHECK( p0.get_message() == message_ptr() );
-	BOOST_CHECK( p0.consume(frame0+3,3,ec) > 0);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_continuation );
+	BOOST_CHECK_EQUAL( env0.p.get_message(), message_ptr() );
+	BOOST_CHECK_GT( env0.p.consume(frame0+3,3,env0.ec), 0);
+    BOOST_CHECK_EQUAL( env0.ec, websocketpp::processor::error::invalid_continuation );
 
     // read two start frames in a row
-	BOOST_CHECK( p1.get_message() == message_ptr() );
-	BOOST_CHECK( p1.consume(frame0,3,ec) == 3);
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p1.consume(frame0,3,ec) > 0);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_continuation );
+	BOOST_CHECK_EQUAL( env1.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env1.p.consume(frame0,3,env1.ec), 3);
+    BOOST_CHECK( !env1.ec );
+	BOOST_CHECK_GT( env1.p.consume(frame0,3,env1.ec), 0);
+    BOOST_CHECK_EQUAL( env1.ec, websocketpp::processor::error::invalid_continuation );
 }
 
 BOOST_AUTO_TEST_CASE( unmasked_client_frame ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
+	processor_setup env(true);
 
 	uint8_t frame[2] = {0x82, 0x00};
-    websocketpp::lib::error_code ec;
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,2,ec) > 0 );
-	BOOST_CHECK( ec == websocketpp::processor::error::masking_required );
-	BOOST_CHECK( p.ready() == false );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_GT( env.p.consume(frame,2,env.ec), 0 );
+	BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::masking_required );
+	BOOST_CHECK_EQUAL( env.p.ready(), false );
 }
 
 BOOST_AUTO_TEST_CASE( masked_server_frame ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
+	processor_setup env(false);
 
 	uint8_t frame[8] = {0x82, 0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xD5, 0xD5};
-    websocketpp::lib::error_code ec;
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,8,ec) > 0 );
-	BOOST_CHECK( ec == websocketpp::processor::error::masking_forbidden );
-	BOOST_CHECK( p.ready() == false );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_GT( env.p.consume(frame,8,env.ec), 0 );
+	BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::masking_forbidden );
+	BOOST_CHECK_EQUAL( env.p.ready(), false );
 }
 
 BOOST_AUTO_TEST_CASE( frame_small_binary_masked ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
+	processor_setup env(true);
 
 	uint8_t frame[8] = {0x82, 0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xD5, 0xD5};
-    websocketpp::lib::error_code ec;
 
-	BOOST_CHECK( p.get_message() == message_ptr() );
-	BOOST_CHECK( p.consume(frame,8,ec) == 8 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p.ready() == true );
-	BOOST_CHECK( p.get_message()->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env.p.consume(frame,8,env.ec), 8 );
+    BOOST_CHECK( !env.ec );
+	BOOST_CHECK_EQUAL( env.p.ready(), true );
+	BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "**" );
 }
 
 BOOST_AUTO_TEST_CASE( masked_fragmented_binary_message ) {
-	using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p0(false,true,msg_manager,rng);
+    processor_setup env(true);
 
 	uint8_t frame0[14] = {0x02, 0x81, 0xAB, 0x23, 0x98, 0x45, 0x81, 
 	                     0x80, 0x81, 0xB8, 0x34, 0x12, 0xFF, 0x92};
-    websocketpp::lib::error_code ec;
 
 	// read fragmented message in one chunk
-	BOOST_CHECK( p0.get_message() == message_ptr() );
-	BOOST_CHECK( p0.consume(frame0,14,ec) == 14 );
-    BOOST_CHECK( !ec );
-	BOOST_CHECK( p0.ready() == true );	
-	BOOST_CHECK( p0.get_message()->get_payload() == "**" );
+	BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
+	BOOST_CHECK_EQUAL( env.p.consume(frame0,14,env.ec), 14 );
+    BOOST_CHECK( !env.ec );
+	BOOST_CHECK_EQUAL( env.p.ready(), true );	
+	BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "**" );
 }
 
 BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
-    // setup
-    using namespace websocketpp::processor;
-
-	typedef stub_config::con_msg_manager_type con_msg_manager_type;
-	typedef stub_config::message_type::ptr message_ptr;
-
-	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	stub_config::rng_type rng;
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
+	processor_setup env(true);
     
-    // test
-    websocketpp::lib::error_code e;
-    message_ptr in = msg_manager->get_message();
-    message_ptr out = msg_manager->get_message();
+    message_ptr in = env.msg_manager->get_message();
+    message_ptr out = env.msg_manager->get_message();
     message_ptr invalid;
 
     // empty pointers arguements should return sane error 
-    e = p.prepare_data_frame(invalid,invalid);
-    BOOST_CHECK( e == websocketpp::processor::error::invalid_arguments );
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,invalid), websocketpp::processor::error::invalid_arguments );
 
-    e = p.prepare_data_frame(in,invalid);
-    BOOST_CHECK( e == websocketpp::processor::error::invalid_arguments );
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(in,invalid), websocketpp::processor::error::invalid_arguments );
 
-    e = p.prepare_data_frame(invalid,out);
-    BOOST_CHECK( e == websocketpp::processor::error::invalid_arguments );
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,out), websocketpp::processor::error::invalid_arguments );
 
     // test valid opcodes
     // control opcodes should return an error, data ones shouldn't
     for (int i = 0; i < 0xF; i++) {
         in->set_opcode(websocketpp::frame::opcode::value(i));
         
-        e = p.prepare_data_frame(in,out);
+        env.ec = env.p.prepare_data_frame(in,out);
         
         if (websocketpp::frame::opcode::is_control(in->get_opcode())) {
-            BOOST_CHECK( e == websocketpp::processor::error::invalid_opcode );
+            BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_opcode );
         } else {
-            BOOST_CHECK( e != websocketpp::processor::error::invalid_opcode );
+            BOOST_CHECK_NE( env.ec, websocketpp::processor::error::invalid_opcode );
         }
     }
     
@@ -616,4 +474,9 @@ BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
     //e = prepare_data_frame(in,out);
 
 
+}
+
+
+BOOST_AUTO_TEST_CASE( client_handshake_response ) {
+    processor_setup(false);
 }
