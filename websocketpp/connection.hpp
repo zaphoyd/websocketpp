@@ -502,6 +502,15 @@ public:
      */
     uint16_t get_port() const;
     
+    /// Gets the connection URI
+    /**
+     * This should really only be called by internal library methods unless you
+     * really know what you are doing.
+     *
+     * @return A pointer to the connection's URI
+     */
+    uri_ptr get_uri() const;
+    
     /// Sets the connection URI
     /**
      * This should really only be called by internal library methods unless you
