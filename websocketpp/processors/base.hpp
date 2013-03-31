@@ -132,6 +132,9 @@ enum processor_errors {
 
     /// Invalid HTTP version
     invalid_http_version,
+    
+    /// Invalid HTTP status
+    invalid_http_status,
 
     /// Missing Required Header
     missing_required_header,
@@ -206,6 +209,8 @@ public:
                 return "Invalid HTTP method.";
             case error::invalid_http_version:
                 return "Invalid HTTP version.";
+            case error::invalid_http_status:
+                return "Invalid HTTP status.";
             case error::missing_required_header:
                 return "A required HTTP header is missing";
             case error::sha1_library:
