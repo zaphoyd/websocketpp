@@ -185,7 +185,6 @@ protected:
     		handler(make_error_code(transport::error::pass_through), 
     		    bytes_transferred);	
     	} else {
-            m_alog.write(log::alevel::devel,"asio async_read_at_least no error");
     		handler(lib::error_code(), bytes_transferred);
     	}
     }
