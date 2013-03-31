@@ -122,6 +122,7 @@ public:
 	    // Ask transport to perform a connection
         transport_type::async_connect(
 			lib::static_pointer_cast<transport_con_type>(con),
+			con->get_uri(),
 			lib::bind(
 				&type::handle_connect,
 				this,

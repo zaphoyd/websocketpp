@@ -32,6 +32,7 @@
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
+#include <websocketpp/uri.hpp>
 
 #include <iostream>
 

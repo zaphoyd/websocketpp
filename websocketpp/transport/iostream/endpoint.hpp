@@ -103,9 +103,9 @@ protected:
     }
     
     /// Initiate a new connection
-    void async_connect(transport_con_ptr tcon, connect_handler callback) {
+    void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
         // Do we need to do anything here?
-        callback(tcon->get_handle(),lib::error_code());
+        cb(tcon->get_handle(),lib::error_code());
     }
     
 	void init(transport_con_ptr tcon) {
