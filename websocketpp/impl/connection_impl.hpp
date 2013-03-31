@@ -1049,7 +1049,7 @@ void connection<config>::send_http_request() {
     
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,
-            "Raw Handshake response:\n"+m_handshake_buffer);
+            "Raw Handshake request:\n"+m_handshake_buffer);
     }
     
     transport_con_type::async_write(
