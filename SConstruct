@@ -190,6 +190,10 @@ echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
+
+# echo_client
+echo_client = SConscript('#/examples/echo_client/SConscript',variant_dir = builddir + 'echo_client',duplicate = 0)
+
 #
 #wsperf = SConscript('#/examples/wsperf/SConscript',
 #                    variant_dir = builddir + 'wsperf',
