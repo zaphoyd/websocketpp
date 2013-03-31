@@ -1021,7 +1021,7 @@ void connection<config>::send_http_request() {
     // selected client version
     if (m_processor) {
         lib::error_code ec;
-        ec = m_processor->handshake_request(m_request,m_uri);
+        ec = m_processor->client_handshake_request(m_request,m_uri);
         
         if (ec) {
             m_elog.write(log::elevel::fatal,
@@ -1111,8 +1111,9 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         this->terminate();
         return;
     }
+    size_t bytes_processed = 0;
     try {
-        m_response.consume(m_buf,bytes_transferred);
+        bytes_processed = m_response.consume(m_buf,bytes_transferred);
     } catch (http::exception & e) {
         m_elog.write(log::elevel::rerror,
             std::string("error in handle_read_http_response: ")+e.what());
@@ -1121,8 +1122,43 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
     }
     
     if (m_response.ready()) {
-        // process
-        // 
+        lib::error_code ec = m_processor->validate_server_handshake_response(
+            m_request,
+            m_response
+        );
+        if (ec) {
+            m_elog.write(log::elevel::rerror,
+                std::string("Server handshake response was invalid: ")+
+                ec.message()
+            );
+            this->terminate();
+            return;
+        }
+        
+        // response is valid, connection can now be assumed to be open
+        this->atomic_state_change(
+            istate::READ_HTTP_RESPONSE,
+            istate::PROCESS_CONNECTION,
+            session::state::CONNECTING,
+            session::state::OPEN,
+            "handle_read_http_response must be called from READ_HTTP_RESPONSE state"
+        );
+        
+        this->log_open_result();
+        
+        if (m_open_handler) {
+            m_open_handler(m_connection_hdl);
+        }
+        
+        // TODO: cancel handshake timer
+        
+        // The remaining bytes in m_buf are frame data. Copy them to the 
+        // beginning of the buffer and note the length. They will be read after
+        // the handshake completes and before more bytes are read.
+        std::copy(m_buf+bytes_processed,m_buf+bytes_transferred,m_buf);
+        m_buf_cursor = bytes_transferred-bytes_processed;
+        
+        this->handle_read_frame(lib::error_code(), m_buf_cursor);
     } else {
         transport_con_type::async_read_at_least(
             1,
