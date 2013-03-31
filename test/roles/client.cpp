@@ -126,6 +126,11 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
     // the read response internal state
     
     std::cout << "output: " << out.str() << std::endl;
+    
+    // TODO: more tests related to reading the HTTP response
+    std::stringstream channel2;
+	channel2 << "e\r\n\r\n";
+	channel2 >> *con;
 }
 
 

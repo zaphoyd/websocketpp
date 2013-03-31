@@ -668,13 +668,14 @@ public:
     
     void handle_handshake_read(const lib::error_code& ec,
     	size_t bytes_transferred);
-    
-    void handle_read_frame(const lib::error_code& ec,
+    void handle_read_http_response(const lib::error_code& ec,
         size_t bytes_transferred);
     
     void handle_send_http_response(const lib::error_code& ec);
     void handle_send_http_request(const lib::error_code& ec);
     
+    void handle_read_frame(const lib::error_code& ec,
+        size_t bytes_transferred);
     
     /// Get array of WebSocket protocol versions that this connection supports.
     const std::vector<int>& get_supported_versions() const;

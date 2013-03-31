@@ -1016,13 +1016,6 @@ void connection<config>::send_http_request() {
     
     // TODO: origin header
     // TODO: subprotocol requests
-    
-    // Generate client key
-    // set client key header
-    
-    // Set User-Agent header
-    
-
         
     // Have the protocol processor fill in the appropriate fields based on the
     // selected client version
@@ -1068,51 +1061,80 @@ template <typename config>
 void connection<config>::handle_send_http_request(const lib::error_code& ec) {
     m_alog.write(log::alevel::devel,"handle_send_http_request");
     
-    /*this->atomic_state_check(
-        istate::PROCESS_HTTP_REQUEST,
-        "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
+    this->atomic_state_check(
+        istate::WRITE_HTTP_REQUEST,
+        "handle_send_http_request must be called from WRITE_HTTP_REQUEST state"
     );
     
     if (ec) {
         m_elog.write(log::elevel::rerror,
-            "error in handle_send_http_response: "+ec.message());
+            "error in handle_send_http_request: "+ec.message());
         this->terminate();
         return;
     }
     
-    this->log_open_result();
-    
-    if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) 
-    {
-        if (m_processor) {
-            // if this was not a websocket connection, we have written 
-            // the expected response and the connection can be closed.
-        } else {
-            // this was a websocket connection that ended in an error
-            std::stringstream s;
-            s << "Handshake ended with HTTP error: " 
-              << m_response.get_status_code();
-            m_elog.write(log::elevel::rerror,s.str());
-        }
-        this->terminate();
-        return;
-    }
-    
-    // TODO: cancel handshake timer
+    // TODO: start read response timer?
     
     this->atomic_state_change(
-        istate::PROCESS_HTTP_REQUEST,
-        istate::PROCESS_CONNECTION,
-        session::state::CONNECTING,
-        session::state::OPEN,
-        "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
+        istate::WRITE_HTTP_REQUEST,
+        istate::READ_HTTP_RESPONSE,
+        "handle_send_http_request must be called from WRITE_HTTP_REQUEST state"
     );
     
-    if (m_open_handler) {
-        m_open_handler(m_connection_hdl);
-    }
+    transport_con_type::async_read_at_least(
+        1,
+        m_buf,
+        config::connection_read_buffer_size,
+        lib::bind(
+            &type::handle_read_http_response,
+            type::shared_from_this(),
+            lib::placeholders::_1,
+            lib::placeholders::_2
+        )
+    );
+}
 
-    this->handle_read_frame(lib::error_code(), m_buf_cursor);*/
+template <typename config>
+void connection<config>::handle_read_http_response(const lib::error_code& ec,
+    size_t bytes_transferred)
+{
+    m_alog.write(log::alevel::devel,"handle_read_http_response");
+    
+    this->atomic_state_check(
+        istate::READ_HTTP_RESPONSE,
+        "handle_read_http_response must be called from READ_HTTP_RESPONSE state"
+    );
+    
+    if (ec) {
+        m_elog.write(log::elevel::rerror,
+            "error in handle_read_http_response: "+ec.message());
+        this->terminate();
+        return;
+    }
+    try {
+        m_response.consume(m_buf,bytes_transferred);
+    } catch (http::exception & e) {
+        m_elog.write(log::elevel::rerror,
+            std::string("error in handle_read_http_response: ")+e.what());
+        this->terminate();
+        return;
+    }
+    
+    if (m_response.ready()) {
+        // process
+    } else {
+        transport_con_type::async_read_at_least(
+            1,
+            m_buf,
+            config::connection_read_buffer_size,
+            lib::bind(
+                &type::handle_read_http_response,
+                type::shared_from_this(),
+                lib::placeholders::_1,
+                lib::placeholders::_2
+            )
+        );
+    }
 }
 
 template <typename config>
