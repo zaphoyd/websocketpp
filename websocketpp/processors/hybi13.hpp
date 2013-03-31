@@ -517,9 +517,7 @@ public:
 		
 		if (masked) {
 			// Generate masking key.
-			// TODO: figure out where the RNG should live
-			// TODO: actually use a RNG here
-			key.i = 0;
+			key.i = m_rng();
 			
 			frame::extended_header e(i.size(),key.i);
 			out->set_header(frame::prepare_header(h,e));
@@ -903,9 +901,7 @@ protected:
 
 		if (masked) {
 			// Generate masking key.
-			// TODO: figure out where the RNG should live
-			// TODO: actually use a RNG here
-			key.i = 0;
+			key.i = m_rng();
 			
 			frame::extended_header e(payload.size(),key.i);
 			out->set_header(frame::prepare_header(h,e));
