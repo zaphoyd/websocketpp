@@ -165,32 +165,24 @@ public:
         response_type& response) const
 	{
         std::string server_key = request.get_header("Sec-WebSocket-Key");
-        server_key.append(constants::handshake_guid);
-                
-        SHA1        sha;
-        uint32_t    message_digest[5];
         
-        sha << server_key.c_str();
-                
-        if (sha.Result(message_digest)){
-            // convert sha1 hash bytes to network byte order because this sha1
             //  library works on ints rather than bytes
-            for (int i = 0; i < 5; i++) {
                 message_digest[i] = htonl(message_digest[i]);
             }
-            
             server_key = base64_encode(
                 reinterpret_cast<const unsigned char*>(message_digest),
-                20
             );
             
-            // set handshake accept headers
             response.replace_header("Sec-WebSocket-Accept",server_key);
-            response.append_header("Upgrade",constants::upgrade_token);
-            response.append_header("Connection",constants::connection_token);
-        } else {
-            return make_error_code(error::sha1_library);
+        lib::error_code ec = process_handshake_key(server_key);
+        
+        if (ec) {
+            return ec;
         }
+        
+        response.replace_header("Sec-WebSocket-Accept",server_key);
+        response.append_header("Upgrade",constants::upgrade_token);
+        response.append_header("Connection",constants::connection_token);
         
         return lib::error_code();
     }
@@ -577,7 +569,34 @@ public:
         return this->prepare_control(frame::opcode::CLOSE,payload,out);
     }
 protected:
-	/// Reads bytes from buf into m_basic_header
+	/// Convert a client handshake key into a server response key in place
+    lib::error_code process_handshake_key(std::string & key) const {
+        key.append(constants::handshake_guid);
+                
+        SHA1        sha;
+        uint32_t    message_digest[5];
+        
+        sha << key.c_str();
+                
+        if (sha.Result(message_digest)){
+            // convert sha1 hash bytes to network byte order because this sha1
+            //  library works on ints rather than bytes
+            for (int i = 0; i < 5; i++) {
+                message_digest[i] = htonl(message_digest[i]);
+            }
+            
+            key = base64_encode(
+                reinterpret_cast<const unsigned char*>(message_digest),
+                20
+            );
+            
+            return lib::error_code();
+        } else {
+            return error::make_error_code(error::sha1_library);
+        }
+    }
+    
+    /// Reads bytes from buf into m_basic_header
 	size_t copy_basic_header_bytes(const uint8_t * buf, size_t len) {
 		if (len == 0 || m_bytes_needed == 0) {
 			return 0;
