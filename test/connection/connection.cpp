@@ -84,7 +84,8 @@ struct stub_config : public websocketpp::config::core {
 BOOST_AUTO_TEST_CASE( connection_extensions ) {
     stub_config::alog_type alog;
     stub_config::elog_type elog;
-    websocketpp::connection<stub_config> s(true,"",alog,elog);
+    stub_config::rng_type rng;
+    websocketpp::connection<stub_config> s(true,"",alog,elog,rng);
     
     BOOST_CHECK( s.extension_value == 5 );
     BOOST_CHECK( s.extension_method() == 5 );

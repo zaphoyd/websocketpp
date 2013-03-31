@@ -37,6 +37,7 @@
 #include <websocketpp/http/response.hpp>
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
+#include <websocketpp/random/none.hpp>
 
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
 #include <websocketpp/extensions/permessage_compress/enabled.hpp>
@@ -49,6 +50,8 @@ struct stub_config {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type> 
 		con_msg_manager_type;
+    
+    typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
     
     struct permessage_compress_config {
         typedef stub_config::request_type request_type;
@@ -69,6 +72,8 @@ struct stub_config_ext {
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type> 
 		con_msg_manager_type;
     
+    typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
+    
     struct permessage_compress_config {
         typedef stub_config_ext::request_type request_type;
     };
@@ -83,7 +88,8 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
@@ -121,7 +127,8 @@ BOOST_AUTO_TEST_CASE( non_get_method ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
 
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -138,7 +145,8 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -155,7 +163,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
@@ -172,7 +181,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
@@ -189,7 +199,8 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     websocketpp::uri_ptr u;
     bool exception = false;
     websocketpp::lib::error_code ec;
@@ -229,11 +240,12 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 BOOST_AUTO_TEST_CASE( frame_empty_binary_unmasked ) {
 	typedef stub_config::con_msg_manager_type con_msg_manager_type;
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
+	stub_config::rng_type rng;
 	uint8_t frame[2] = {0x82, 0x00};
     websocketpp::lib::error_code ec;
 
 	// all in one chunk
-	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager);
+	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager,rng);
 
 	size_t ret1 = p1.consume(frame,2,ec);
 	
@@ -242,7 +254,7 @@ BOOST_AUTO_TEST_CASE( frame_empty_binary_unmasked ) {
 	BOOST_CHECK( p1.ready() == true );	
 	
 	// two separate chunks
-	websocketpp::processor::hybi13<stub_config> p2(false,false,msg_manager);
+	websocketpp::processor::hybi13<stub_config> p2(false,false,msg_manager,rng);
 
 	BOOST_CHECK( p2.consume(frame,1,ec) == 1 );
 	BOOST_CHECK( !ec );
@@ -258,7 +270,8 @@ BOOST_AUTO_TEST_CASE( frame_small_binary_unmasked ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[4] = {0x82, 0x02, 0x2A, 0x2A};
     websocketpp::lib::error_code ec;
@@ -280,7 +293,8 @@ BOOST_AUTO_TEST_CASE( frame_extended_binary_unmasked ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[130] = {0x82, 0x7E, 0x00, 0x7E};
     websocketpp::lib::error_code ec;
@@ -306,7 +320,8 @@ BOOST_AUTO_TEST_CASE( frame_jumbo_binary_unmasked ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[130] = {0x82, 0x7E, 0x00, 0x7E};
     websocketpp::lib::error_code ec;
@@ -330,7 +345,8 @@ BOOST_AUTO_TEST_CASE( control_frame_too_large ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[130] = {0x88, 0x7E, 0x00, 0x7E};
     websocketpp::lib::error_code ec;
@@ -349,6 +365,7 @@ BOOST_AUTO_TEST_CASE( rsv_bits_used ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
+	stub_config::rng_type rng;
 	
 	uint8_t frame[3][2] = {{0x90, 0x00},
 		                  {0xA0, 0x00},
@@ -356,7 +373,7 @@ BOOST_AUTO_TEST_CASE( rsv_bits_used ) {
     websocketpp::lib::error_code ec;
 
 	for (int i = 0; i < 3; i++) {
-		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 	
 		BOOST_CHECK( p.get_message() == message_ptr() );
 		BOOST_CHECK( p.consume(frame[i],2,ec) > 0 );
@@ -373,6 +390,7 @@ BOOST_AUTO_TEST_CASE( reserved_opcode_used ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
+	stub_config::rng_type rng;
 	
 	uint8_t frame[10][2] = {{0x83, 0x00},
 		                   {0x84, 0x00},
@@ -387,7 +405,7 @@ BOOST_AUTO_TEST_CASE( reserved_opcode_used ) {
     websocketpp::lib::error_code ec;
 
 	for (int i = 0; i < 10; i++) {
-		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+		websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 	
 		BOOST_CHECK( p.get_message() == message_ptr() );
 		BOOST_CHECK( p.consume(frame[i],2,ec) > 0 );
@@ -403,7 +421,8 @@ BOOST_AUTO_TEST_CASE( fragmented_control_message ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[2] = {0x08, 0x00};
     websocketpp::lib::error_code ec;
@@ -421,8 +440,9 @@ BOOST_AUTO_TEST_CASE( fragmented_binary_message ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p0(false,false,msg_manager);
-	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p0(false,false,msg_manager,rng);
+	websocketpp::processor::hybi13<stub_config> p1(false,false,msg_manager,rng);
 
 	uint8_t frame0[6] = {0x02, 0x01, 0x2A, 0x80, 0x01, 0x2A};
 	uint8_t frame1[8] = {0x02, 0x01, 0x2A, 0x89, 0x00, 0x80, 0x01, 0x2A};
@@ -476,7 +496,8 @@ BOOST_AUTO_TEST_CASE( unmasked_client_frame ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
 
 	uint8_t frame[2] = {0x82, 0x00};
     websocketpp::lib::error_code ec;
@@ -494,7 +515,8 @@ BOOST_AUTO_TEST_CASE( masked_server_frame ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,false,msg_manager,rng);
 
 	uint8_t frame[8] = {0x82, 0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xD5, 0xD5};
     websocketpp::lib::error_code ec;
@@ -512,7 +534,8 @@ BOOST_AUTO_TEST_CASE( frame_small_binary_masked ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
 
 	uint8_t frame[8] = {0x82, 0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xD5, 0xD5};
     websocketpp::lib::error_code ec;
@@ -531,7 +554,8 @@ BOOST_AUTO_TEST_CASE( masked_fragmented_binary_message ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p0(false,true,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p0(false,true,msg_manager,rng);
 
 	uint8_t frame0[14] = {0x02, 0x81, 0xAB, 0x23, 0x98, 0x45, 0x81, 
 	                     0x80, 0x81, 0xB8, 0x34, 0x12, 0xFF, 0x92};
@@ -553,7 +577,8 @@ BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
 	typedef stub_config::message_type::ptr message_ptr;
 
 	con_msg_manager_type::ptr msg_manager(new con_msg_manager_type());
-	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+	websocketpp::processor::hybi13<stub_config> p(false,true,msg_manager,rng);
     
     // test
     websocketpp::lib::error_code e;

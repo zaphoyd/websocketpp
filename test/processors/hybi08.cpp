@@ -37,6 +37,7 @@
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
 #include <websocketpp/extensions/permessage_compress/disabled.hpp>
+#include <websocketpp/random/none.hpp>
 
 struct stub_config {
 	typedef websocketpp::http::parser::request request_type;
@@ -46,6 +47,8 @@ struct stub_config {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type> 
 		con_msg_manager_type;
+
+    typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 
     /// Extension related config
     static const bool enable_extensions = false;
@@ -65,7 +68,8 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
@@ -102,8 +106,9 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 BOOST_AUTO_TEST_CASE( non_get_method ) {
 	stub_config::request_type r;
     stub_config::response_type response;
+    stub_config::rng_type rng;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
 
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -120,7 +125,8 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -137,7 +143,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\n\r\n";
@@ -154,7 +161,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\n\r\n";
@@ -171,7 +179,8 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 	stub_config::request_type r;
     stub_config::response_type response;
 	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager);
+	stub_config::rng_type rng;
+    websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::uri_ptr u;
     bool exception = false;
     websocketpp::lib::error_code ec;
