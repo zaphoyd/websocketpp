@@ -1127,7 +1127,9 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         return;
     }
     
-    if (m_response.ready()) {
+    m_elog.write(log::elevel::rerror,std::string("Raw response: ")+m_response.raw());
+    
+    if (m_response.headers_ready()) {
         lib::error_code ec = m_processor->validate_server_handshake_response(
             m_request,
             m_response
