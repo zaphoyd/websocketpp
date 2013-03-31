@@ -134,14 +134,6 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
 }
 
 
-// test cases
-// - adding headers
-// - adding Upgrade header
-// - adding Connection header
-// - adding Sec-WebSocket-Version, Sec-WebSocket-Key, or Host header
-// - other Sec* headers?
-// - User Agent header?
 
 
-// Origin support
-// Subprotocol requests
+

@@ -477,6 +477,81 @@ BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( client_handshake_request ) {
+    processor_setup env(false);
+    
+    websocketpp::uri_ptr u(new websocketpp::uri("ws://localhost/"));
+    
+    env.p.client_handshake_request(env.req,u);
+    
+    BOOST_CHECK_EQUAL( env.req.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( env.req.get_version(), "HTTP/1.1");
+    BOOST_CHECK_EQUAL( env.req.get_uri(), "/");
+    
+    BOOST_CHECK_EQUAL( env.req.get_header("Host"), "localhost");
+    BOOST_CHECK_EQUAL( env.req.get_header("Sec-WebSocket-Version"), "13");
+    BOOST_CHECK_EQUAL( env.req.get_header("Connection"), "Upgrade");
+    BOOST_CHECK_EQUAL( env.req.get_header("Upgrade"), "websocket");
+}
+
+// TODO: 
+// test cases
+// - adding headers
+// - adding Upgrade header
+// - adding Connection header
+// - adding Sec-WebSocket-Version, Sec-WebSocket-Key, or Host header
+// - other Sec* headers?
+// - User Agent header?
+
+// Origin support
+// Subprotocol requests
+
+//websocketpp::uri_ptr u(new websocketpp::uri("ws://localhost/"));
+    //env.p.client_handshake_request(env.req,u);
+
+BOOST_AUTO_TEST_CASE( client_handshake_response_404 ) {
+    processor_setup env(false);
+    
+    std::string res = "HTTP/1.1 404 Not Found\r\n\r\n";
+    env.res.consume(res.data(),res.size());
+    
+    BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::invalid_http_status );
+}
+
+BOOST_AUTO_TEST_CASE( client_handshake_response_no_upgrade ) {
+    processor_setup env(false);
+    
+    std::string res = "HTTP/1.1 101 Switching Protocols\r\n\r\n";
+    env.res.consume(res.data(),res.size());
+    
+    BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
+}
+
+BOOST_AUTO_TEST_CASE( client_handshake_response_no_connection ) {
+    processor_setup env(false);
+    
+    std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\n\r\n";
+    env.res.consume(res.data(),res.size());
+    
+    BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
+}
+
+BOOST_AUTO_TEST_CASE( client_handshake_response_no_accept ) {
+    processor_setup env(false);
+    
+    std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\nConnection: bar, UpGrAdE\r\n\r\n";
+    env.res.consume(res.data(),res.size());
+    
+    BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
+}
+
 BOOST_AUTO_TEST_CASE( client_handshake_response ) {
-    processor_setup(false);
+    processor_setup env(false);
+    
+    env.req.append_header("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==");
+    
+    std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\nConnection: bar, UpGrAdE\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n";
+    env.res.consume(res.data(),res.size());
+    
+    BOOST_CHECK( !env.p.validate_server_handshake_response(env.req,env.res) );
 }
