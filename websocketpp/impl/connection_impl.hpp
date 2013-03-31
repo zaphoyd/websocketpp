@@ -300,6 +300,12 @@ uint16_t connection<config>::get_port() const {
 }
 
 template <typename config>
+uri_ptr connection<config>::get_uri() const {
+    //scoped_lock_type lock(m_connection_state_lock);
+    return m_uri;
+}
+
+template <typename config>
 void connection<config>::set_uri(uri_ptr uri) {
     //scoped_lock_type lock(m_connection_state_lock);
     m_uri = uri;
