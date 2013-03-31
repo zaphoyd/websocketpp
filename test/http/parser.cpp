@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
 BOOST_AUTO_TEST_CASE( max_header_len ) {
     websocketpp::http::parser::request r;
     
-    std::string raw(websocketpp::http::MAX_HEADER_SIZE+1,'*');
+    std::string raw(websocketpp::http::max_header_size+1,'*');
     
     bool exception = false;
     size_t pos = 0;
@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE( max_header_len ) {
     try {
     	pos += r.consume(raw.c_str(),raw.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::REQUEST_HEADER_FIELDS_TOO_LARGE) {
+    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
     		exception = true;
     	}
     }
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE( max_header_len ) {
 BOOST_AUTO_TEST_CASE( max_header_len_split ) {
     websocketpp::http::parser::request r;
     
-    std::string raw(websocketpp::http::MAX_HEADER_SIZE-1,'*');
+    std::string raw(websocketpp::http::max_header_size-1,'*');
     std::string raw2(2,'*');
     
     bool exception = false;
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE( max_header_len_split ) {
     	pos += r.consume(raw.c_str(),raw.size());
     	pos += r.consume(raw2.c_str(),raw2.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::REQUEST_HEADER_FIELDS_TOO_LARGE) {
+    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
     		exception = true;
     	}
     }
@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     BOOST_CHECK( pos == 159 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::SWITCHING_PROTOCOLS );
+    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::switching_protocols );
     BOOST_CHECK( r.get_status_msg() == "Switching Protocols" );
     BOOST_CHECK( r.get_header("Upgrade") == "websocket" );
     BOOST_CHECK( r.get_header("Connection") == "Upgrade" );
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::OK );
+    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::ok );
     BOOST_CHECK( r.get_status_msg() == "OK" );
     BOOST_CHECK( r.get_header("Date") == "Thu, 10 May 2012 11:59:25 GMT" );
     BOOST_CHECK( r.get_header("Server") == "Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch" );

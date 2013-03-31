@@ -77,7 +77,7 @@ inline const std::string& parser::get_header(const std::string& key) const {
     header_list::const_iterator h = m_headers.find(key);
     
     if (h == m_headers.end()) {
-        return EMPTY_HEADER;
+        return empty_header;
     } else {
         return h->second;
     }
@@ -87,7 +87,7 @@ inline void parser::append_header(const std::string &key,const std::string
     &val)
 {
     if (std::find_if(key.begin(),key.end(),is_not_token_char) != key.end()) {
-        throw exception("Invalid header name",status_code::BAD_REQUEST);
+        throw exception("Invalid header name",status_code::bad_request);
     }
     
     // TODO: prevent use of reserved headers?
@@ -133,7 +133,7 @@ inline bool parser::parse_headers(std::istream& s) {
             header.erase(header.end()-1);
         }
         
-        end = header.find(HEADER_SEPARATOR,0);
+        end = header.find(header_separator,0);
         
         if (end != std::string::npos) {         
             append_header(header.substr(0,end),header.substr(end+2));
@@ -160,16 +160,16 @@ inline void parser::process_header(std::string::iterator begin,
     std::string::iterator cursor = std::search(
         begin,
         end,
-        HEADER_SEPARATOR,
-        HEADER_SEPARATOR + sizeof(HEADER_SEPARATOR) - 1
+        header_separator,
+        header_separator + sizeof(header_separator) - 1
     );
     
     if (cursor == end) {
-        throw exception("Invalid header line",status_code::BAD_REQUEST);
+        throw exception("Invalid header line",status_code::bad_request);
     }
     
     append_header(std::string(begin,cursor),
-                  std::string(cursor+sizeof(HEADER_SEPARATOR)-1,end));
+                  std::string(cursor+sizeof(header_separator)-1,end));
 }
 
 } // namespace parser

@@ -32,17 +32,17 @@
 
 namespace websocketpp {
 namespace http {
-    static const char HEADER_DELIMITER[] = "\r\n";
-    static const char HEADER_SEPARATOR[] = ": ";
-    static const std::string EMPTY_HEADER = "";
+    static const char header_delimiter[] = "\r\n";
+    static const char header_separator[] = ": ";
+    static const std::string empty_header = "";
     
     // Maximum size in bytes before rejecting an HTTP header as too big.
-    const size_t MAX_HEADER_SIZE = 16000;
+    const size_t max_header_size = 16000;
     
     // invalid HTTP token characters
     // 0x00 - 0x32, 0x7f-0xff
     // ( ) < > @ , ; : \ " / [ ] ? = { }
-    static const char HEADER_TOKEN[] = {
+    static const char header_token[] = {
     	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..0f
     	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 10..1f
     	0,1,0,1,1,1,1,1,0,0,1,1,0,1,1,0, // 20..2f
@@ -62,11 +62,11 @@ namespace http {
     };
     
     inline bool is_token_char(unsigned char c) {
-    	return (HEADER_TOKEN[c] == 1);
+    	return (header_token[c] == 1);
     }
     
     inline bool is_not_token_char(unsigned char c) {
-    	return !HEADER_TOKEN[c];
+    	return !header_token[c];
     }
     
     // Space (32) or horizontal tab (9)
@@ -80,159 +80,159 @@ namespace http {
 
     namespace status_code {
         enum value {
-            UNINITIALIZED = 0,
+            uninitialized = 0,
             
-            CONTINUE = 100,
-            SWITCHING_PROTOCOLS = 101,
+            continue_code = 100,
+            switching_protocols = 101,
             
-            OK = 200,
-            CREATED = 201,
-            ACCEPTED = 202,
-            NON_AUTHORITATIVE_INFORMATION = 203,
-            NO_CONTENT = 204,
-            RESET_CONTENT = 205,
-            PARTIAL_CONTENT = 206,
+            ok = 200,
+            created = 201,
+            accepted = 202,
+            non_authoritative_information = 203,
+            no_content = 204,
+            reset_content = 205,
+            partial_content = 206,
             
-            MULTIPLE_CHOICES = 300,
-            MOVED_PERMANENTLY = 301,
-            FOUND = 302,
-            SEE_OTHER = 303,
-            NOT_MODIFIED = 304,
-            USE_PROXY = 305,
-            TEMPORARY_REDIRECT = 307,
+            multiple_choices = 300,
+            moved_permanently = 301,
+            found = 302,
+            see_other = 303,
+            not_modified = 304,
+            use_proxy = 305,
+            temporary_redirect = 307,
             
-            BAD_REQUEST = 400,
-            UNAUTHORIZED = 401,
-            PAYMENT_REQUIRED = 402,
-            FORBIDDEN = 403,
-            NOT_FOUND = 404,
-            METHOD_NOT_ALLOWED = 405,
-            NOT_ACCEPTABLE = 406,
-            PROXY_AUTHENTICATION_REQUIRED = 407,
-            REQUEST_TIMEOUT = 408,
-            CONFLICT = 409,
-            GONE = 410,
-            LENGTH_REQUIRED = 411,
-            PRECONDITION_FAILED = 412,
-            REQUEST_ENTITY_TOO_LARGE = 413,
-            REQUEST_URI_TOO_LONG = 414,
-            UNSUPPORTED_MEDIA_TYPE = 415,
-            REQUEST_RANGE_NOT_SATISFIABLE = 416,
-            EXPECTATION_FAILED = 417,
-            IM_A_TEAPOT = 418,
-            UPGRADE_REQUIRED = 426,
-            PRECONDITION_REQUIRED = 428,
-            TOO_MANY_REQUESTS = 429,
-            REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
+            bad_request = 400,
+            unauthorized = 401,
+            payment_required = 402,
+            forbidden = 403,
+            not_found = 404,
+            method_not_allowed = 405,
+            not_acceptable = 406,
+            proxy_authentication_required = 407,
+            request_timeout = 408,
+            conflict = 409,
+            gone = 410,
+            length_required = 411,
+            precondition_failed = 412,
+            request_entity_too_large = 413,
+            request_uri_too_long = 414,
+            unsupported_media_type = 415,
+            request_range_not_satisfiable = 416,
+            expectation_failed = 417,
+            im_a_teapot = 418,
+            upgrade_required = 426,
+            precondition_required = 428,
+            too_many_requests = 429,
+            request_header_fields_too_large = 431,
             
-            INTERNAL_SERVER_ERROR = 500,
-            NOT_IMPLIMENTED = 501,
-            BAD_GATEWAY = 502,
-            SERVICE_UNAVAILABLE = 503,
-            GATEWAY_TIMEOUT = 504,
-            HTTP_VERSION_NOT_SUPPORTED = 505,
-            NOT_EXTENDED = 510,
-            NETWORK_AUTHENTICATION_REQUIRED = 511
+            internal_server_error = 500,
+            not_implimented = 501,
+            bad_gateway = 502,
+            service_unavailable = 503,
+            gateway_timeout = 504,
+            http_version_not_supported = 505,
+            not_extended = 510,
+            network_authentication_required = 511
         };
         
         // TODO: should this be inline?
         inline std::string get_string(value c) {
             switch (c) {
-                case UNINITIALIZED:
+                case uninitialized:
                 	return "Uninitialized";
-                case CONTINUE:
+                case continue_code:
                     return "Continue";
-                case SWITCHING_PROTOCOLS:
+                case switching_protocols:
                     return "Switching Protocols";
-                case OK:
+                case ok:
                     return "OK";
-                case CREATED:
+                case created:
                     return "Created";
-                case ACCEPTED:
+                case accepted:
                     return "Accepted";
-                case NON_AUTHORITATIVE_INFORMATION:
+                case non_authoritative_information:
                     return "Non Authoritative Information";
-                case NO_CONTENT:
+                case no_content:
                     return "No Content";
-                case RESET_CONTENT:
+                case reset_content:
                     return "Reset Content";
-                case PARTIAL_CONTENT:
+                case partial_content:
                     return "Partial Content";
-                case MULTIPLE_CHOICES:
+                case multiple_choices:
                     return "Multiple Choices";
-                case MOVED_PERMANENTLY:
+                case moved_permanently:
                     return "Moved Permanently";
-                case FOUND:
+                case found:
                     return "Found";
-                case SEE_OTHER:
+                case see_other:
                     return "See Other";
-                case NOT_MODIFIED:
+                case not_modified:
                     return "Not Modified";
-                case USE_PROXY:
+                case use_proxy:
                     return "Use Proxy";
-                case TEMPORARY_REDIRECT:
+                case temporary_redirect:
                     return "Temporary Redirect";
-                case BAD_REQUEST:
+                case bad_request:
                     return "Bad Request";
-                case UNAUTHORIZED:
+                case unauthorized:
                     return "Unauthorized";
-                case PAYMENT_REQUIRED:
+                case payment_required:
                 	return "Payment Required";
-                case FORBIDDEN:
+                case forbidden:
                     return "Forbidden";
-                case NOT_FOUND:
+                case not_found:
                     return "Not Found";
-                case METHOD_NOT_ALLOWED:
+                case method_not_allowed:
                     return "Method Not Allowed";
-                case NOT_ACCEPTABLE:
+                case not_acceptable:
                     return "Not Acceptable";
-                case PROXY_AUTHENTICATION_REQUIRED:
+                case proxy_authentication_required:
                     return "Proxy Authentication Required";
-                case REQUEST_TIMEOUT:
+                case request_timeout:
                     return "Request Timeout";
-                case CONFLICT:
+                case conflict:
                     return "Conflict";
-                case GONE:
+                case gone:
                     return "Gone";
-                case LENGTH_REQUIRED:
+                case length_required:
                     return "Length Required";
-                case PRECONDITION_FAILED:
+                case precondition_failed:
                     return "Precondition Failed";
-                case REQUEST_ENTITY_TOO_LARGE:
+                case request_entity_too_large:
                     return "Request Entity Too Large";
-                case REQUEST_URI_TOO_LONG:
+                case request_uri_too_long:
                     return "Request-URI Too Long";
-                case UNSUPPORTED_MEDIA_TYPE:
+                case unsupported_media_type:
                     return "Unsupported Media Type";
-                case REQUEST_RANGE_NOT_SATISFIABLE:
+                case request_range_not_satisfiable:
                     return "Requested Range Not Satisfiable";
-                case EXPECTATION_FAILED:
+                case expectation_failed:
                     return "Expectation Failed";
-                case IM_A_TEAPOT:
+                case im_a_teapot:
                     return "I'm a teapot";
-                case UPGRADE_REQUIRED:
+                case upgrade_required:
                     return "Upgrade Required";
-                case PRECONDITION_REQUIRED:
+                case precondition_required:
                     return "Precondition Required";
-                case TOO_MANY_REQUESTS:
+                case too_many_requests:
                     return "Too Many Requests";
-                case REQUEST_HEADER_FIELDS_TOO_LARGE:
+                case request_header_fields_too_large:
                     return "Request Header Fields Too Large";
-                case INTERNAL_SERVER_ERROR:
+                case internal_server_error:
                     return "Internal Server Error";
-                case NOT_IMPLIMENTED:
+                case not_implimented:
                     return "Not Implimented";
-                case BAD_GATEWAY:
+                case bad_gateway:
                     return "Bad Gateway";
-                case SERVICE_UNAVAILABLE:
+                case service_unavailable:
                     return "Service Unavailable";
-                case GATEWAY_TIMEOUT:
+                case gateway_timeout:
                     return "Gateway Timeout";
-                case HTTP_VERSION_NOT_SUPPORTED:
+                case http_version_not_supported:
                     return "HTTP Version Not Supported";
-                case NOT_EXTENDED:
+                case not_extended:
                     return "Not Extended";
-                case NETWORK_AUTHENTICATION_REQUIRED:
+                case network_authentication_required:
                     return "Network Authentication Required";
                 default:
                     return "Unknown";

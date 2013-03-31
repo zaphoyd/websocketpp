@@ -40,10 +40,10 @@ namespace parser {
 
 namespace state {
 	enum value {
-		METHOD,
-		RESOURCE,
-		VERSION,
-		HEADERS
+		method,
+		resource,
+		version,
+		headers
 	};
 }
 

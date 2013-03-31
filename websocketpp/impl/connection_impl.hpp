@@ -567,7 +567,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
             } else {
                 // TODO: need more bytes
                 m_alog.write(log::alevel::devel,"short key3 read");
-                m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+                m_response.set_status(http::status_code::internal_server_error);
                 this->send_http_response_error();
                 return;
             }
@@ -744,7 +744,7 @@ bool connection<config>::initialize_processor() {
     if (version < 0) {
         m_alog.write(log::alevel::devel,
             "BAD REQUEST: can't determine version");
-        m_response.set_status(http::status_code::BAD_REQUEST);
+        m_response.set_status(http::status_code::bad_request);
         return false;
     }
     
@@ -759,7 +759,7 @@ bool connection<config>::initialize_processor() {
     // with Sec-WebSocket-Version header filled with values we do accept
     m_alog.write(log::alevel::devel,
         "BAD REQUEST: no processor for version");
-    m_response.set_status(http::status_code::BAD_REQUEST);
+    m_response.set_status(http::status_code::bad_request);
     
     std::stringstream ss;
     std::string sep = "";
@@ -796,7 +796,7 @@ bool connection<config>::process_handshake_request() {
         // Not a valid handshake request
         m_alog.write(log::alevel::devel,
             "BAD REQUEST (724) "+ec.message());
-        m_response.set_status(http::status_code::BAD_REQUEST);
+        m_response.set_status(http::status_code::bad_request);
         return false;
     }
     
@@ -810,7 +810,7 @@ bool connection<config>::process_handshake_request() {
         // a failed connection attempt.
         m_alog.write(log::alevel::devel,
             "BAD REQUEST: (737) " + neg_results.first.message());
-        m_response.set_status(http::status_code::BAD_REQUEST);
+        m_response.set_status(http::status_code::bad_request);
         return false;
     } else {
         // extension negotiation succeded, set response header accordingly
@@ -828,13 +828,13 @@ bool connection<config>::process_handshake_request() {
     } catch (const websocketpp::uri_exception& e) {
         m_alog.write(log::alevel::devel,
             std::string("BAD REQUEST: uri failed to parse: ")+e.what());
-        m_response.set_status(http::status_code::BAD_REQUEST);
+        m_response.set_status(http::status_code::bad_request);
         return false;
     }
     
     // Ask application to validate the connection
     if (!m_validate_handler || m_validate_handler(m_connection_hdl)) {
-        m_response.set_status(http::status_code::SWITCHING_PROTOCOLS);
+        m_response.set_status(http::status_code::switching_protocols);
         
         // Write the appropriate response headers based on request and 
         // processor version
@@ -845,7 +845,7 @@ bool connection<config>::process_handshake_request() {
             s << "Processing error: " << ec << "(" << ec.message() << ")";
             m_alog.write(log::alevel::devel,s.str());
 
-            m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+            m_response.set_status(http::status_code::internal_server_error);
             return false;
         }
     } else {
@@ -855,8 +855,8 @@ bool connection<config>::process_handshake_request() {
         // Use Bad Request if the user handler did not provide a more 
         // specific http response error code.
         // TODO: is there a better default?
-        if (m_response.get_status_code() == http::status_code::UNINITIALIZED) {
-            m_response.set_status(http::status_code::BAD_REQUEST);
+        if (m_response.get_status_code() == http::status_code::uninitialized) {
+            m_response.set_status(http::status_code::bad_request);
         }
         
         return false;
@@ -924,8 +924,8 @@ template <typename config>
 void connection<config>::send_http_response() {
     m_alog.write(log::alevel::devel,"connection send_http_response");
     
-    if (m_response.get_status_code() == http::status_code::UNINITIALIZED) {
-        m_response.set_status(http::status_code::INTERNAL_SERVER_ERROR);
+    if (m_response.get_status_code() == http::status_code::uninitialized) {
+        m_response.set_status(http::status_code::internal_server_error);
     }
     
     m_response.set_version("HTTP/1.1");
@@ -977,7 +977,7 @@ void connection<config>::handle_send_http_response(
     
     this->log_open_result();
     
-    if (m_response.get_status_code() != http::status_code::SWITCHING_PROTOCOLS) 
+    if (m_response.get_status_code() != http::status_code::switching_protocols) 
     {
         if (m_processor) {
             // if this was not a websocket connection, we have written 
@@ -1122,6 +1122,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
     
     if (m_response.ready()) {
         // process
+        // 
     } else {
         transport_con_type::async_read_at_least(
             1,

@@ -67,10 +67,10 @@ inline bool request::parse_complete(std::istream& s) {
 inline size_t request::consume(const char *buf, size_t len) {
 	if (m_ready) {return 0;}
 	
-	if (m_buf->size() + len > MAX_HEADER_SIZE) {
+	if (m_buf->size() + len > max_header_size) {
 		// exceeded max header size
 		throw exception("Maximum header size exceeded.",
-		                status_code::REQUEST_HEADER_FIELDS_TOO_LARGE);
+		                status_code::request_header_fields_too_large);
 	}
 	
 	// copy new header bytes into buffer
@@ -85,12 +85,12 @@ inline size_t request::consume(const char *buf, size_t len) {
 		end = std::search(
 			begin,
 			m_buf->end(),
-			HEADER_DELIMITER,
-			HEADER_DELIMITER+sizeof(HEADER_DELIMITER)-1
+			header_delimiter,
+			header_delimiter+sizeof(header_delimiter)-1
 		);
 		
 		//std::cout << "mark5: " << end-begin << std::endl;
-	    //std::cout << "mark6: " << sizeof(HEADER_DELIMITER) << std::endl;
+	    //std::cout << "mark6: " << sizeof(header_delimiter) << std::endl;
 
 		if (end == m_buf->end()) {
 			// we are out of bytes. Discard the processed bytes and copy the
@@ -105,13 +105,13 @@ inline size_t request::consume(const char *buf, size_t len) {
 		if (end-begin == 0) {
 			// we got a blank line
 			if (m_method.empty() || get_header("Host") == "") {
-				throw exception("Incomplete Request",status_code::BAD_REQUEST);
+				throw exception("Incomplete Request",status_code::bad_request);
 			}
 			m_ready = true;
 			
 			size_t bytes_processed = (
 				len - static_cast<std::string::size_type>(m_buf->end()-end)
-				    + sizeof(HEADER_DELIMITER) - 1
+				    + sizeof(header_delimiter) - 1
 			);
 			
 			// frees memory used temporarily during request parsing
@@ -127,7 +127,7 @@ inline size_t request::consume(const char *buf, size_t len) {
 			}
 		}
 		
-		begin = end+sizeof(HEADER_DELIMITER)-1;
+		begin = end+sizeof(header_delimiter)-1;
 	}
 }
     
@@ -143,7 +143,7 @@ inline std::string request::raw() {
     
 inline void request::set_method(const std::string& method) {
 	if (std::find_if(method.begin(),method.end(),is_not_token_char) != method.end()) {
-		throw exception("Invalid method token.",status_code::BAD_REQUEST);
+		throw exception("Invalid method token.",status_code::bad_request);
 	}
 
 	m_method = method;
@@ -161,7 +161,7 @@ inline void request::process(std::string::iterator begin, std::string::iterator
 	std::string::iterator cursor_end = std::find(begin,end,' ');
 	
 	if (cursor_end == end) {
-		throw exception("Invalid request line1",status_code::BAD_REQUEST);
+		throw exception("Invalid request line1",status_code::bad_request);
 	}
 	
 	set_method(std::string(cursor_start,cursor_end));
@@ -170,7 +170,7 @@ inline void request::process(std::string::iterator begin, std::string::iterator
 	cursor_end = std::find(cursor_start,end,' ');
 	
 	if (cursor_end == end) {
-		throw exception("Invalid request line2",status_code::BAD_REQUEST);
+		throw exception("Invalid request line2",status_code::bad_request);
 	}
 	
 	set_uri(std::string(cursor_start,cursor_end));
