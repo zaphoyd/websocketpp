@@ -94,7 +94,7 @@ public:
  	  , m_is_server(is_server)
 	{
 		m_alog.set_channels(0xffffffff);
-		m_elog.set_channels(0x00000000);
+		m_elog.set_channels(0xffffffff);
 		
 		m_alog.write(log::alevel::devel,"endpoint constructor");
 
