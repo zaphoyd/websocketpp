@@ -12,11 +12,8 @@ This is the preferred branch for new projects, especially those that involve
 multithreaded servers. It is better tested and documented. The 0.3.x API will 
 be the basis for the 1.0 release.
 
-NOTE: 0.3.x is presently server only. The client role has not been completed 
-yet.
-
 Complete & Tested:
-- Server role passes all Autobahn v0.5.9 test suite tests strictly
+- Server and client roles pass all Autobahn v0.5.9 test suite tests strictly
 - Streaming UTF8 validation
 - random number generation
 - iostream based transport
