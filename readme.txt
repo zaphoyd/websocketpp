@@ -23,6 +23,8 @@ Complete & Tested:
 - C++11 support
 - LLVM/Clang support
 - GCC support
+- 64 bit support
+- 32 bit support
 
 Implimented, needs more testing
 - TLS support
@@ -36,6 +38,7 @@ Implimented, needs more testing
 - tcp_init_handler
 - exception/error handling
 - Logging
+- Client role
 
 Implimented, API not finalized
 - open_handler
@@ -44,7 +47,7 @@ Implimented, API not finalized
 - http_handler
 
 Needs work:
-- Client role
+- PowerPC support
 - Extension support
 - permessage_compress extension
 - Visual Studio / Windows support
