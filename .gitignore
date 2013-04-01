@@ -14,6 +14,25 @@
 *.so.?.?.?
 *.a
 *.dylib
+lib/*
+
+# CMake
+*.cmake
+*.dir
+CMakeFiles
+INSTALL.*
+ZERO_CHECK.*
+CMakeCache.txt
+install_manifest.txt
+
+# Windows/Visual Studio
+*.vcproj*
+*.sln
+*.suo
+*.ncb
+*/Debug/*
+*/Release/*
+*/RelWithDebInfo/*
 
 objs_shared/
 objs_static/
