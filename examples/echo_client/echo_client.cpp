@@ -13,53 +13,65 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
 
+int case_count = 0;
 
-// Define a callback to handle incoming messages
-void on_open(client* c, websocketpp::connection_hdl hdl) {
-    std::cout << "on_open called for " << hdl.lock().get() << std::endl;
-    try {
-        c->send(hdl, "Foo", websocketpp::frame::opcode::text);
-    } catch (const websocketpp::lib::error_code& e) {
-        std::cout << "Send failed because: " << e  
-                  << "(" << e.message() << ")" << std::endl;
+void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
+    client::connection_ptr con = c->get_con_from_hdl(hdl);
+    
+    if (con->get_resource() == "/getCaseCount") {
+        std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
+        case_count = atoi(msg->get_payload().c_str());
+    } else {
+        c->send(hdl, msg->get_payload(), msg->get_opcode());
     }
 }
 
-void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
-    std::cout << "on_message called with hdl: " << hdl.lock().get() 
-              << " and message: " << msg->get_payload()
-              << std::endl;
-
-    /*try {
-        c->send(hdl, msg->get_payload(), msg->get_opcode());
-    } catch (const websocketpp::lib::error_code& e) {
-        std::cout << "Echo failed because: " << e  
-                  << "(" << e.message() << ")" << std::endl;
-    }*/
-}
-
-int main() {
+int main(int argc, char* argv[]) {
 	// Create a server endpoint
     client echo_client;
 	
+	std::string uri = "ws://localhost:9001";
+	
+	if (argc == 2) {
+	    uri = argv[1];
+	}
+	
 	try {
-        // Set logging settings
-        echo_client.set_access_channels(websocketpp::log::alevel::all);
-        echo_client.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        // We expect there to be a lot of errors, so suppress them
+        echo_client.clear_access_channels(websocketpp::log::alevel::all);
+        echo_client.clear_error_channels(websocketpp::log::elevel::all);
         
         // Initialize ASIO
         echo_client.init_asio();
         
         // Register our handlers
         echo_client.set_message_handler(bind(&on_message,&echo_client,::_1,::_2));
-        echo_client.set_open_handler(bind(&on_open,&echo_client,::_1));
         
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = echo_client.get_connection("ws://localhost:9002/", ec);
+        client::connection_ptr con = echo_client.get_connection(uri+"/getCaseCount", ec);
         echo_client.connect(con);
 	    
 	    // Start the ASIO io_service run loop
         echo_client.run();
+        
+        std::cout << "case count: " << case_count << std::endl;
+        
+        for (int i = 1; i <= case_count; i++) {
+            echo_client.reset();
+            
+            std::stringstream url;
+            
+            url << uri << "/runCase?case=" << i << "&agent=WebSocket++/0.3.0-dev";
+            
+            con = echo_client.get_connection(url.str(), ec);
+                        
+            echo_client.connect(con);
+            
+            echo_client.run();
+        }
+        
+        std::cout << "done" << std::endl;
+        
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
