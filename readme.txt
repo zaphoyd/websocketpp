@@ -45,6 +45,7 @@ Implimented, API not finalized
 
 Needs work:
 - PowerPC support
+- Subprotocol negotiation
 - Extension support
 - permessage_compress extension
 - Visual Studio / Windows support
