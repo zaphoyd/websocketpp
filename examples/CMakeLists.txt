@@ -1,17 +1,8 @@
 
+# Roams all subdirs for CMakeLists.txt
 list_subdirectories(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 foreach (SUBDIR ${SUBDIRS})
-    # Check if this folder has source/header files
-    file (GLOB SOURCE_FILES ${SUBDIR}/*.cpp)
-    file (GLOB HEADER_FILES ${SUBDIR}/*.hpp)
-    list (LENGTH SOURCE_FILES SRC_LEN)
-    list (LENGTH HEADER_FILES H_LEN)
-    if (NOT SRC_LEN EQUAL 0 OR NOT H_LEN EQUAL 0)
-        init_target (${SUBDIR})
-        build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-        include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE})
-        link_directories (${WEBSOCKETPP_LIB})
-        target_link_libraries (${TARGET_NAME} optimized libwebsocketpp debug libwebsocketppd)
-        final_target ()
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${SUBDIR}/CMakeLists.txt")
+        add_subdirectory (${SUBDIR})
     endif ()
 endforeach ()

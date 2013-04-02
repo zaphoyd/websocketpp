@@ -31,8 +31,11 @@ install_manifest.txt
 *.suo
 *.ncb
 */Debug/*
+*/*/Debug/*
 */Release/*
+*/*/Release/*
 */RelWithDebInfo/*
+*/*/RelWithDebInfo/*
 
 objs_shared/
 objs_static/
