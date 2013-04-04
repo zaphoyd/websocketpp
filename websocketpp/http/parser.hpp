@@ -156,8 +156,12 @@ struct parameter {
 typedef std::vector<parameter> parameter_list;
 */
 
+//typedef std::map<std::string,std::string> string_map;
+//typedef std::vector< std::pair< std::string, attribute_list > > parameter_list;
+
 typedef std::map<std::string,std::string> attribute_list;
-typedef std::map<std::string,attribute_list> parameter_list;
+//typedef std::map<std::string,attribute_list> parameter_list;
+typedef std::vector< std::pair< std::string, attribute_list > > parameter_list;
 
 template <typename InputIterator>
 InputIterator extract_attributes(InputIterator begin, InputIterator end,
@@ -286,7 +290,8 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
         // Safe break point, insert parameter with blank attributes and exit
         cursor = http::parser::extract_all_lws(cursor,end);
         if (cursor == end) {
-            parameters[parameter_name] = attributes;
+            //parameters[parameter_name] = attributes;
+            parameters.push_back(std::make_pair(parameter_name,attributes));
             break;
         }
 
@@ -306,7 +311,8 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
         }
         
         // insert parameter into output list
-        parameters[parameter_name] = attributes;
+        //parameters[parameter_name] = attributes;
+        parameters.push_back(std::make_pair(parameter_name,attributes));
         
         cursor = http::parser::extract_all_lws(cursor,end);
         if (cursor == end) {break;}

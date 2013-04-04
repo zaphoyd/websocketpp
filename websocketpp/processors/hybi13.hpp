@@ -116,26 +116,27 @@ public:
         
         typename request_type::parameter_list::const_iterator it;
         
-        // if permessage_compress is implimented, check if it was requested
-        if (m_permessage_compress.is_implimented()) {
-            it = p.find("permessage-compress");
-            
+        if (m_permessage_deflate.is_implimented()) {
             err_str_pair neg_ret;
+            for (it = p.begin(); it != p.end(); ++it) {
+                // look through each extension, if the key is permessage-deflate
+                if (it->first == "permessage-deflate") {
+                    std::cout << "mark3: " << std::endl;
+                    neg_ret = m_permessage_deflate.negotiate(it->second);
+                    std::cout << neg_ret.first.message() << " - " << neg_ret.second << std::endl;
 
-            if (it != p.end()) {
-                neg_ret = m_permessage_compress.negotiate(it->second);
-
-                if (neg_ret.first) {
-                    // Figure out if this is an error that should halt all
-                    // extension negotiations or simply cause negotiation of
-                    // this specific extension to fail.
-                    std::cout << "permessage-compress negotiation failed: " 
-                              << neg_ret.first << " and message " 
-                              << neg_ret.second << std::endl;
-                } else {
-                    // Note: this list will need commas if WebSocket++ ever
-                    // supports more than one extension
-                    ret.second += neg_ret.second;
+                    if (neg_ret.first) {
+                        // Figure out if this is an error that should halt all
+                        // extension negotiations or simply cause negotiation of
+                        // this specific extension to fail.
+                        std::cout << "permessage-compress negotiation failed: " 
+                                  << neg_ret.first.message() << std::endl;
+                    } else {
+                        // Note: this list will need commas if WebSocket++ ever
+                        // supports more than one extension
+                        ret.second += neg_ret.second;
+                        continue;
+                    }
                 }
             }
         }
