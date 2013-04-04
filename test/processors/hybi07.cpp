@@ -36,7 +36,7 @@
 #include <websocketpp/http/response.hpp>
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
-#include <websocketpp/extensions/permessage_compress/disabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 #include <websocketpp/random/none.hpp>
 
 struct stub_config {
@@ -56,12 +56,12 @@ struct stub_config {
     /// Extension specific config
     
     /// permessage_compress_config
-    struct permessage_compress_config {
+    struct permessage_deflate_config {
         typedef stub_config::request_type request_type;
     };
 
-    typedef websocketpp::extensions::permessage_compress::disabled
-        <permessage_compress_config> permessage_compress_type;
+    typedef websocketpp::extensions::permessage_deflate::disabled
+        <permessage_deflate_config> permessage_deflate_type;
 };
 
 BOOST_AUTO_TEST_CASE( exact_match ) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_EXTENSION_PERMESSAGE_COMPRESS_DISABLED_HPP
-#define WEBSOCKETPP_EXTENSION_PERMESSAGE_COMPRESS_DISABLED_HPP
+#ifndef WEBSOCKETPP_EXTENSION_PERMESSAGE_DEFLATE_DISABLED_HPP
+#define WEBSOCKETPP_EXTENSION_PERMESSAGE_DEFLATE_DISABLED_HPP
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
@@ -39,12 +39,12 @@
 
 namespace websocketpp {
 namespace extensions {
-namespace permessage_compress {
+namespace permessage_deflate {
 
-/// Stub class for use when disabling permessage_compress extension
+/// Stub class for use when disabling permessage_deflate extension
 /**
- * This class is a stub that impliments the permessage_compress interface
- * with minimal dependencies. It is used to disable permessage_compress
+ * This class is a stub that impliments the permessage_deflate interface
+ * with minimal dependencies. It is used to disable permessage_deflate
  * functionality at compile time without loading any unnecessary code.
  */
 template <typename config>
@@ -58,12 +58,12 @@ public:
     }
     
     /// Returns true if the extension is capable of providing 
-    /// permessage_compress functionality
+    /// permessage_deflate functionality
     bool is_implimented() const {
         return false;
     }
     
-    /// Returns true if permessage_compress functionality is active for this 
+    /// Returns true if permessage_deflate functionality is active for this 
     /// connection
     bool is_enabled() const {
         return false;
@@ -84,8 +84,8 @@ public:
     }
 };
 
-} // namespace permessage_compress
+} // namespace permessage_deflate
 } // namespace extensions
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_EXTENSION_PERMESSAGE_COMPRESS_DISABLED_HPP
+#endif // WEBSOCKETPP_EXTENSION_PERMESSAGE_DEFLATE_DISABLED_HPP

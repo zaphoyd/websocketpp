@@ -69,7 +69,7 @@ public:
 	typedef typename msg_manager_type::ptr msg_manager_ptr;
     typedef typename config::rng_type rng_type;
 
-    typedef typename config::permessage_compress_type permessage_compress_type;
+    typedef typename config::permessage_deflate_type permessage_deflate_type;
     
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
@@ -86,8 +86,8 @@ public:
         return 13;
     }
     
-    bool has_permessage_compress() const {
-        return m_permessage_compress.is_implimented();
+    bool has_permessage_deflate() const {
+        return m_permessage_deflate.is_implimented();
     }
 
     err_str_pair negotiate_extensions(const request_type& req) {
@@ -123,6 +123,7 @@ public:
                 if (it->first == "permessage-deflate") {
                     std::cout << "mark3: " << std::endl;
                     neg_ret = m_permessage_deflate.negotiate(it->second);
+                    
                     std::cout << neg_ret.first.message() << " - " << neg_ret.second << std::endl;
 
                     if (neg_ret.first) {
@@ -509,7 +510,7 @@ public:
 		
 		frame::masking_key_type key;
 		bool masked = !base::m_server;
-        bool compressed = m_permessage_compress.is_enabled() 
+        bool compressed = m_permessage_deflate.is_enabled() 
                           && in->get_compressed();
         bool fin = in->get_fin();
 		
@@ -530,7 +531,7 @@ public:
 		// prepare payload
 		if (compressed) {
 			// compress and store in o after header.
-            m_permessage_compress.compress(i,o);
+            m_permessage_deflate.compress(i,o);
 
 			// mask in place if necessary
             if (masked) {
@@ -700,11 +701,11 @@ protected:
         size_t offset = out.size();
 
 		// decompress message if needed.
-		if (m_permessage_compress.is_enabled() 
+		if (m_permessage_deflate.is_enabled() 
             && frame::get_rsv1(m_basic_header))
         {
             // Decompress current buffer into the message buffer
-            m_permessage_compress.decompress(buf,len,out);
+            m_permessage_deflate.decompress(buf,len,out);
             
             // get the length of the newly uncompressed output
             offset = out.size() - offset;
@@ -762,7 +763,7 @@ protected:
         // a control message.
         //
         // TODO: unit tests for this
-        if (frame::get_rsv1(h) && (!m_permessage_compress.is_enabled() 
+        if (frame::get_rsv1(h) && (!m_permessage_deflate.is_enabled() 
                 || frame::opcode::is_control(op)))
         {        
             return make_error_code(error::invalid_rsv_bit);
@@ -979,7 +980,7 @@ protected:
 	state m_state;
 
     // Extensions
-    permessage_compress_type m_permessage_compress;
+    permessage_deflate_type m_permessage_deflate;
 };
 
 } // namespace processor

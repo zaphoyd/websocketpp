@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,8 +39,8 @@
 #include <websocketpp/message_buffer/alloc.hpp>
 #include <websocketpp/random/none.hpp>
 
-#include <websocketpp/extensions/permessage_compress/disabled.hpp>
-#include <websocketpp/extensions/permessage_compress/enabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/disabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/enabled.hpp>
 
 struct stub_config {
 	typedef websocketpp::http::parser::request request_type;
@@ -53,12 +53,12 @@ struct stub_config {
     
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
     
-    struct permessage_compress_config {
+    struct permessage_deflate_config {
         typedef stub_config::request_type request_type;
     };
 
-    typedef websocketpp::extensions::permessage_compress::disabled
-        <permessage_compress_config> permessage_compress_type;
+    typedef websocketpp::extensions::permessage_deflate::disabled
+        <permessage_deflate_config> permessage_deflate_type;
 
     static const bool enable_extensions = false;
 };
@@ -74,14 +74,14 @@ struct stub_config_ext {
     
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
     
-    struct permessage_compress_config {
+    struct permessage_deflate_config {
         typedef stub_config_ext::request_type request_type;
     };
     
-    typedef websocketpp::extensions::permessage_compress::enabled
-        <permessage_compress_config> permessage_compress_type;
+    typedef websocketpp::extensions::permessage_deflate::enabled
+        <permessage_deflate_config> permessage_deflate_type;
 
-    static const bool enable_extensions = false;
+    static const bool enable_extensions = true;
 };
 
 typedef stub_config::con_msg_manager_type con_msg_manager_type;
@@ -100,6 +100,19 @@ struct processor_setup {
 	stub_config::request_type req;
     stub_config::response_type res;
 	websocketpp::processor::hybi13<stub_config> p;
+};
+
+struct processor_setup_ext {
+    processor_setup_ext(bool server) 
+      : msg_manager(new con_msg_manager_type())
+      , p(false,server,msg_manager,rng) {}
+    
+    websocketpp::lib::error_code ec;
+	con_msg_manager_type::ptr msg_manager;
+	stub_config::rng_type rng;
+	stub_config::request_type req;
+    stub_config::response_type res;
+	websocketpp::processor::hybi13<stub_config_ext> p;
 };
 
 BOOST_AUTO_TEST_CASE( exact_match ) {
@@ -555,3 +568,54 @@ BOOST_AUTO_TEST_CASE( client_handshake_response ) {
     
     BOOST_CHECK( !env.p.validate_server_handshake_response(env.req,env.res) );
 }
+
+BOOST_AUTO_TEST_CASE( extensions_disabled ) {
+    processor_setup env(true);
+
+    env.req.replace_header("Sec-WebSocket-Extensions","");
+
+    std::pair<websocketpp::lib::error_code,std::string> neg_results;
+    neg_results = env.p.negotiate_extensions(env.req);
+    
+    BOOST_CHECK_EQUAL( neg_results.first, websocketpp::processor::error::extensions_disabled );
+    BOOST_CHECK_EQUAL( neg_results.second, "" );
+}
+
+BOOST_AUTO_TEST_CASE( extension_negotiation_blank ) {
+    processor_setup_ext env(true);
+
+    env.req.replace_header("Sec-WebSocket-Extensions","");
+
+    std::pair<websocketpp::lib::error_code,std::string> neg_results;
+    neg_results = env.p.negotiate_extensions(env.req);
+    
+    BOOST_CHECK( !neg_results.first );
+    BOOST_CHECK_EQUAL( neg_results.second, "" );
+}
+
+BOOST_AUTO_TEST_CASE( extension_negotiation_unknown ) {
+    processor_setup_ext env(true);
+
+    env.req.replace_header("Sec-WebSocket-Extensions","foo");
+
+    std::pair<websocketpp::lib::error_code,std::string> neg_results;
+    neg_results = env.p.negotiate_extensions(env.req);
+    
+    BOOST_CHECK( !neg_results.first );
+    BOOST_CHECK_EQUAL( neg_results.second, "" );
+}
+
+/*BOOST_AUTO_TEST_CASE( extension_negotiation_permessage_deflate ) {
+    processor_setup_ext env(true);
+
+    env.req.replace_header("Sec-WebSocket-Extensions","permessage-deflate; foo; bar=\"x x\"");
+
+    std::pair<websocketpp::lib::error_code,std::string> neg_results;
+    neg_results = env.p.negotiate_extensions(env.req);
+    
+    std::cout << neg_results.first.message() << neg_results.second << std::endl;
+
+    BOOST_CHECK( !neg_results.first );
+    BOOST_CHECK_EQUAL( neg_results.second, "permessage-deflate" );
+}*/
+

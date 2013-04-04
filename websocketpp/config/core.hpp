@@ -59,7 +59,7 @@
 #include <websocketpp/connection_base.hpp>
 
 // Extensions
-#include <websocketpp/extensions/permessage_compress/disabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 
 namespace websocketpp {
 namespace config {
@@ -145,7 +145,7 @@ struct core {
     /// Extension specific settings:
 
     /// permessage_compress extension
-    struct permessage_compress_config {
+    struct permessage_deflate_config {
         typedef core::request_type request_type;
         
         /// If the remote endpoint requests that we reset the compression
@@ -160,14 +160,14 @@ struct core {
         static const uint8_t minimum_outgoing_window_bits = 8;
     };
 
-    typedef websocketpp::extensions::permessage_compress::disabled
-        <permessage_compress_config> permessage_compress_type;
+    typedef websocketpp::extensions::permessage_deflate::disabled
+        <permessage_deflate_config> permessage_deflate_type;
 
-    /// Autonegotiate permessage-compress
+    /// Autonegotiate permessage-deflate
     /**
-     * Automatically enables the permessage-compress extension. 
+     * Automatically enables the permessage-deflate extension. 
      *
-     * For clients this results in a permessage-compress extension request being
+     * For clients this results in a permessage-deflate extension request being
      * sent with every request rather than requiring it to be requested manually
      * 
      * For servers this results in accepting the first set of extension settings
