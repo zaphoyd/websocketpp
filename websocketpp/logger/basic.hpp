@@ -102,13 +102,13 @@ private:
 	
     const char* get_timestamp() {
         std::time_t t = std::time(NULL);
-        std::strftime(buffer,30,"%Y-%m-%d %H:%M:%S%z",std::localtime(&t));
+        std::strftime(buffer,39,"%Y-%m-%d %H:%M:%S%z",std::localtime(&t));
         return buffer;
     }
 
 	mutex_type m_lock;
 	
-    char buffer[30];
+    char buffer[40];
     const level m_static_channels;
     level m_dynamic_channels;
     std::ostream* m_out;
