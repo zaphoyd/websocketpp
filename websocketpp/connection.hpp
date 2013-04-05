@@ -519,7 +519,20 @@ public:
      * @param uri The new URI to set
      */
     void set_uri(uri_ptr uri);
-        
+    
+    /////////////////////////////
+    // Subprotocol negotiation //
+    /////////////////////////////
+    
+    /// Gets the negotated subprotocol
+    /**
+     * Retrieves the subprotocol that was negotiated during the handshake. This
+     * method is valid in the open handler and later.
+     *
+     * @return The negotiated subprotocol
+     */
+    const std::string& get_subprotocol() const;
+    
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
     /////////////////////////////////////////////////////////////
@@ -952,6 +965,7 @@ private:
     request_type            m_request;
     response_type           m_response;
     uri_ptr                 m_uri;
+    std::string             m_subprotocol;
     
     const bool				m_is_server;
     alog_type& m_alog;

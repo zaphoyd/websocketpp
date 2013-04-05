@@ -316,7 +316,10 @@ void connection<config>::set_uri(uri_ptr uri) {
 
 
 
-
+template <typename config>
+const std::string & connection<config>::get_subprotocol() const {
+    return m_subprotocol;
+}
 
 
 
