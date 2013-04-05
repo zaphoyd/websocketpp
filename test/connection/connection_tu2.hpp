@@ -51,5 +51,6 @@ using websocketpp::lib::bind;
 	}
 };*/
 
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg);
+void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg);
 std::string run_server_test(std::string input);
+std::string run_server_test(server & s,std::string input);

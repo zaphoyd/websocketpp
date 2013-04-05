@@ -81,40 +81,49 @@ struct stub_config : public websocketpp::config::core {
     typedef connection_extension connection_base;
 };
 
-BOOST_AUTO_TEST_CASE( connection_extensions ) {
-    stub_config::alog_type alog;
+struct connection_setup {
+    connection_setup(bool server) 
+      : c(server,"",alog,elog,rng) {}
+    
+    websocketpp::lib::error_code ec;
+	stub_config::alog_type alog;
     stub_config::elog_type elog;
-    stub_config::rng_type rng;
-    websocketpp::connection<stub_config> s(true,"",alog,elog,rng);
+	stub_config::rng_type rng;
+	websocketpp::connection<stub_config> c;
+};
+
+/*void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+    s->send(hdl, msg->get_payload(), msg->get_opcode());
+}*/
+
+void validate_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+    s->send(hdl, msg->get_payload(), msg->get_opcode());
+}
+
+
+
+BOOST_AUTO_TEST_CASE( connection_extensions ) {
+    connection_setup env(true);
     
-    BOOST_CHECK( s.extension_value == 5 );
-    BOOST_CHECK( s.extension_method() == 5 );
+    BOOST_CHECK( env.c.extension_value == 5 );
+    BOOST_CHECK( env.c.extension_method() == 5 );
     
-    BOOST_CHECK( s.is_server() == true );
+    BOOST_CHECK( env.c.is_server() == true );
+}
+
+BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: ";
+    output+=websocketpp::user_agent;
+    output+="\r\nUpgrade: websocket\r\n\r\n";
+	
+	server s;
+	s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
+	
+    BOOST_CHECK(run_server_test(s,input) == output);
 }
 
 /*
-BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
-    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
-    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: "+websocketpp::USER_AGENT+"\r\nUpgrade: websocket\r\n\r\n";
-	    
-    BOOST_CHECK(run_server_test(input) == output);
-}
-
-BOOST_AUTO_TEST_CASE( invalid_websocket_version ) {
-    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: a\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
-    std::string output = "HTTP/1.1 400 Bad Request\r\nServer: "+websocketpp::USER_AGENT+"\r\n\r\n";
-	    
-    BOOST_CHECK(run_server_test(input) == output);
-}
-
-BOOST_AUTO_TEST_CASE( unimplimented_websocket_version ) {
-    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 14\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
-
-    std::string output = "HTTP/1.1 400 Bad Request\r\nSec-WebSocket-Version: 0,7,8,13\r\nServer: "+websocketpp::USER_AGENT+"\r\n\r\n";
-	    
-    BOOST_CHECK(run_server_test(input) == output);
-}
 
 BOOST_AUTO_TEST_CASE( user_reject_origin ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example2.com\r\n\r\n";
