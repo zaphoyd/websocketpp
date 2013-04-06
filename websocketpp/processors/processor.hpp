@@ -128,9 +128,7 @@ int get_websocket_version(request_type& r) {
 //
 //         // handle msg;
 //     }
-// }
-// 
-// 
+// } 
 
 template <typename config>
 class processor {
@@ -186,12 +184,14 @@ public:
     /**
      * @param req The request to process
      *
+     * @param subprotocol The subprotocol in use
+     *
      * @param res The response to store the processed response in
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code process_handshake(const request_type& req,
-        response_type& res) const = 0;
+    virtual lib::error_code process_handshake(const request_type& req, const 
+        std::string & subprotocol, response_type& res) const = 0;
     
     /// Fill in an HTTP request for an outgoing connection handshake
     /**

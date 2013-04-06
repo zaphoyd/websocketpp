@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK_EQUAL(u->get_resource(), "/");
     BOOST_CHECK_EQUAL(u->get_port(), websocketpp::uri_default_port);
     
-    env.p.process_handshake(env.req,env.res);
+    env.p.process_handshake(env.req,"",env.res);
     
     BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "upgrade");
     BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "websocket");

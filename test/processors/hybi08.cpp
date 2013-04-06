@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK(u->get_resource() == "/");
     BOOST_CHECK(u->get_port() == websocketpp::uri_default_port);
     
-    p.process_handshake(r,response);
+    p.process_handshake(r,"",response);
     
     BOOST_CHECK(response.get_header("Connection") == "upgrade");
     BOOST_CHECK(response.get_header("Upgrade") == "websocket");

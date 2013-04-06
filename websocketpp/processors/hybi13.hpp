@@ -165,8 +165,12 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code process_handshake(const request_type& request, 
-        response_type& response) const
+    /* TODO: the 'subprotocol' parameter may need to be expanded into a more 
+     * generic struct if other user input parameters to the processed handshake
+     * are found.
+     */
+    lib::error_code process_handshake(const request_type& request, const
+        std::string & subprotocol, response_type& response) const
 	{
         std::string server_key = request.get_header("Sec-WebSocket-Key");
         
@@ -179,6 +183,10 @@ public:
         response.replace_header("Sec-WebSocket-Accept",server_key);
         response.append_header("Upgrade",constants::upgrade_token);
         response.append_header("Connection",constants::connection_token);
+        
+        if (!subprotocol.empty()) {
+            response.replace_header("Sec-WebSocket-Protocol",subprotocol);
+        }
         
         return lib::error_code();
     }

@@ -91,8 +91,8 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code process_handshake(const request_type& req,
-        response_type& res) const
+    lib::error_code process_handshake(const request_type& req, const
+        std::string & subprotocol, response_type& res) const
     {
         char key_final[16];
         
