@@ -194,6 +194,9 @@ broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_d
 # echo_client
 echo_client = SConscript('#/examples/echo_client/SConscript',variant_dir = builddir + 'echo_client',duplicate = 0)
 
+# subprotocol_server
+subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
+
 #
 #wsperf = SConscript('#/examples/wsperf/SConscript',
 #                    variant_dir = builddir + 'wsperf',
