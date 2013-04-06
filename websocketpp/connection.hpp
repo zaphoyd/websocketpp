@@ -571,6 +571,22 @@ public:
     // Pass-through access to the request and response objects //
     /////////////////////////////////////////////////////////////
     
+    /// Retrieve a request header
+    /**
+     * Retrieve the value of a header from the handshake HTTP request.
+     * 
+     * @param key Name of the header to get
+     */
+    const std::string & get_request_header(const std::string &key);
+    
+    /// Retrieve a response header
+    /**
+     * Retrieve the value of a header from the handshake HTTP request.
+     * 
+     * @param key Name of the header to get
+     */
+    const std::string & get_response_header(const std::string &key);
+    
     /// Set response status code and message
     /**
      * Sets the response status code to `code` and looks up the corresponding

@@ -359,6 +359,19 @@ void connection<config>::select_subprotocol(const std::string & value) {
     }
 }
 
+
+template <typename config>
+const std::string & 
+connection<config>::get_request_header(const std::string &key) {
+    return m_request.get_header(key);
+}
+
+template <typename config>
+const std::string & 
+connection<config>::get_response_header(const std::string &key) {
+    return m_response.get_header(key);
+}
+
 template <typename config>
 void connection<config>::set_status(
     http::status_code::value code) 
