@@ -321,6 +321,12 @@ const std::string & connection<config>::get_subprotocol() const {
     return m_subprotocol;
 }
 
+template <typename config>
+const std::vector<std::string> & 
+connection<config>::get_requested_subprotocols() const {
+    return m_requested_subprotocols;
+}
+
 
 
 
@@ -839,6 +845,21 @@ bool connection<config>::process_handshake_request() {
             std::string("BAD REQUEST: uri failed to parse: ")+e.what());
         m_response.set_status(http::status_code::bad_request);
         return false;
+    }
+    
+    // extract subprotocols
+    if (!m_request.get_header("Sec-WebSocket-Protocol").empty()) {
+    	typename request_type::parameter_list p;
+    	
+    	 if (!m_request.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
+             typename request_type::parameter_list::const_iterator it;
+
+             for (it = p.begin(); it != p.end(); ++it) {
+                 m_requested_subprotocols.push_back(it->first);
+             }
+    	 } else {
+             // TODO: just ignore? log? fail?
+         }
     }
     
     // Ask application to validate the connection

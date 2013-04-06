@@ -85,15 +85,20 @@ void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-/*void validate_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {
+bool validate_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     
     std::stringstream o;
     
-    o << con->get_subprotocols.size();
-    
+    o << con->get_requested_subprotocols().size();
+    if (con->get_requested_subprotocols().size() == 1) {
+        o << "," << con->get_requested_subprotocols()[0];
+    }
+
     *out = o.str();
-}*/
+    
+    return true;
+}
 
 void open_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -149,7 +154,7 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_empty ) {
     BOOST_CHECK_EQUAL(subprotocol, "");
 }
 
-/*BOOST_AUTO_TEST_CASE( accept_subprotocol_one ) {
+BOOST_AUTO_TEST_CASE( accept_subprotocol_one ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo\r\n\r\n";
 
     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
@@ -163,9 +168,9 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_empty ) {
 	s.set_open_handler(bind(&open_func_subprotocol,&s,&open,::_1));
 	
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
-    BOOST_CHECK_EQUAL(validate, "1");
+    BOOST_CHECK_EQUAL(validate, "1,foo");
     BOOST_CHECK_EQUAL(open, "");
-}*/
+}
 
 /*BOOST_AUTO_TEST_CASE( user_reject_origin ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example2.com\r\n\r\n";

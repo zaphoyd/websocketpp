@@ -107,7 +107,7 @@ private:
     }
 
 	mutex_type m_lock;
-	
+		
     char buffer[40];
     const level m_static_channels;
     level m_dynamic_channels;

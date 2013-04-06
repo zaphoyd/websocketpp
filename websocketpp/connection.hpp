@@ -533,6 +533,15 @@ public:
      */
     const std::string& get_subprotocol() const;
     
+    /// Gets all of the subprotocols requested by the client
+    /**
+     * Retrieves the subprotocols that were requested during the handshake. This
+     * method is valid in the validate handler and later.
+     *
+     * @return A vector of the requested subprotocol
+     */
+    const std::vector<std::string> & get_requested_subprotocols() const;
+    
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
     /////////////////////////////////////////////////////////////
@@ -966,6 +975,10 @@ private:
     response_type           m_response;
     uri_ptr                 m_uri;
     std::string             m_subprotocol;
+    
+    // connection data that might not be necessary to keep around for the life
+    // of the whole connection.
+    std::vector<std::string> m_requested_subprotocols;
     
     const bool				m_is_server;
     alog_type& m_alog;
