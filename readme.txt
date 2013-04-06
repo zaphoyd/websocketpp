@@ -36,6 +36,7 @@ Implimented, needs more testing
 - exception/error handling
 - Logging
 - Client role
+- Server subprotocol negotiation
 
 Implimented, API not finalized
 - open_handler
@@ -45,7 +46,7 @@ Implimented, API not finalized
 
 Needs work:
 - PowerPC support
-- Subprotocol negotiation
+- Client subprotocol negotiation
 - Extension support
 - permessage_compress extension
 - Visual Studio / Windows support
