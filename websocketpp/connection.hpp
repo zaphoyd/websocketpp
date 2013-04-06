@@ -542,6 +542,31 @@ public:
      */
     const std::vector<std::string> & get_requested_subprotocols() const;
     
+    /// Select a subprotocol to use (exception free)
+    /**
+     * Indicates which subprotocol should be used for this connection. Valid 
+     * only during the validate handler callback. Subprotocol selected must have
+     * been requested by the client. Consult get_requested_subprotocols() for a
+     * list of valid subprotocols.
+     *
+     * @param value The subprotocol to select
+     *
+     * @param ec A reference to an error code that will be filled in the case of
+     * errors
+     */
+    void select_subprotocol(const std::string & value, lib::error_code & ec);
+    
+    /// Select a subprotocol to use
+    /**
+     * Indicates which subprotocol should be used for this connection. Valid 
+     * only during the validate handler callback. Subprotocol selected must have
+     * been requested by the client. Consult get_requested_subprotocols() for a
+     * list of valid subprotocols.
+     *
+     * @param value The subprotocol to select
+     */
+    void select_subprotocol(const std::string & value);
+    
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
     /////////////////////////////////////////////////////////////

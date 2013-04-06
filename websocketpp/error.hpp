@@ -84,7 +84,10 @@ enum value {
     test,
     
     /// Connection creation attempted failed
-    con_creation_failed
+    con_creation_failed,
+    
+    /// Selected subprotocol was not requested by the client
+    unrequested_subprotocol
 }; // enum value
 
 
@@ -128,6 +131,8 @@ public:
 				return "Test Error";
 			case error::con_creation_failed:
 				return "Connection creation attempt failed";
+		    case error::unrequested_subprotocol:
+		        return "Selected subprotocol was not requested by the client";
 			default:
 				return "Unknown";
 		}

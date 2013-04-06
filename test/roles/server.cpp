@@ -85,18 +85,26 @@ void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-bool validate_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {
+bool validate_func_subprotocol(server* s, std::string* out, std::string accept,
+    websocketpp::connection_hdl hdl)
+{
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     
     std::stringstream o;
     
-    o << con->get_requested_subprotocols().size();
-    if (con->get_requested_subprotocols().size() == 1) {
-        o << "," << con->get_requested_subprotocols()[0];
+    const std::vector<std::string> & protocols = con->get_requested_subprotocols();
+    std::vector<std::string>::const_iterator it;
+    
+    for (it = protocols.begin(); it != protocols.end(); ++it) {
+        o << *it << ",";
     }
 
     *out = o.str();
     
+    if (accept != "") {
+        con->select_subprotocol(accept);
+    }
+        
     return true;
 }
 
@@ -114,7 +122,7 @@ BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
 	server s;
 	s.set_user_agent("test");
 	
-    BOOST_CHECK(run_server_test(s,input) == output);
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
 BOOST_AUTO_TEST_CASE( invalid_websocket_version ) {
@@ -125,7 +133,7 @@ BOOST_AUTO_TEST_CASE( invalid_websocket_version ) {
     s.set_user_agent("test");
 	//s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
 	
-    BOOST_CHECK(run_server_test(s,input) == output);
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
 BOOST_AUTO_TEST_CASE( unimplimented_websocket_version ) {
@@ -136,10 +144,10 @@ BOOST_AUTO_TEST_CASE( unimplimented_websocket_version ) {
 	server s;
     s.set_user_agent("test");
 	
-    BOOST_CHECK(run_server_test(s,input) == output);
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
-BOOST_AUTO_TEST_CASE( accept_subprotocol_empty ) {
+BOOST_AUTO_TEST_CASE( list_subprotocol_empty ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo\r\n\r\n";
 
     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
@@ -154,7 +162,7 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_empty ) {
     BOOST_CHECK_EQUAL(subprotocol, "");
 }
 
-BOOST_AUTO_TEST_CASE( accept_subprotocol_one ) {
+BOOST_AUTO_TEST_CASE( list_subprotocol_one ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo\r\n\r\n";
 
     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
@@ -164,12 +172,66 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_one ) {
 	
 	server s;
     s.set_user_agent("test");
-	s.set_validate_handler(bind(&validate_func_subprotocol,&s,&validate,::_1));
+	s.set_validate_handler(bind(&validate_func_subprotocol,&s,&validate,"",::_1));
 	s.set_open_handler(bind(&open_func_subprotocol,&s,&open,::_1));
 	
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
-    BOOST_CHECK_EQUAL(validate, "1,foo");
+    BOOST_CHECK_EQUAL(validate, "foo,");
     BOOST_CHECK_EQUAL(open, "");
+}
+
+BOOST_AUTO_TEST_CASE( accept_subprotocol_one ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo\r\n\r\n";
+
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: foo\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
+	
+	std::string validate;
+	std::string open;
+	
+	server s;
+    s.set_user_agent("test");
+	s.set_validate_handler(bind(&validate_func_subprotocol,&s,&validate,"foo",::_1));
+	s.set_open_handler(bind(&open_func_subprotocol,&s,&open,::_1));
+	
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+    BOOST_CHECK_EQUAL(validate, "foo,");
+    BOOST_CHECK_EQUAL(open, "foo");
+}
+
+BOOST_AUTO_TEST_CASE( accept_subprotocol_invalid ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo\r\n\r\n";
+
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: foo\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
+	
+	std::string validate;
+	std::string open;
+	
+	server s;
+    s.set_user_agent("test");
+	s.set_validate_handler(bind(&validate_func_subprotocol,&s,&validate,"foo2",::_1));
+	s.set_open_handler(bind(&open_func_subprotocol,&s,&open,::_1));
+	
+	std::string o;
+	
+	BOOST_CHECK_THROW(o = run_server_test(s,input), websocketpp::lib::error_code);
+}
+
+BOOST_AUTO_TEST_CASE( accept_subprotocol_two ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\nSec-WebSocket-Protocol: foo, bar\r\n\r\n";
+
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nSec-WebSocket-Protocol: bar\r\nServer: test\r\nUpgrade: websocket\r\n\r\n";
+	
+	std::string validate;
+	std::string open;
+	
+	server s;
+    s.set_user_agent("test");
+	s.set_validate_handler(bind(&validate_func_subprotocol,&s,&validate,"bar",::_1));
+	s.set_open_handler(bind(&open_func_subprotocol,&s,&open,::_1));
+	
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+    BOOST_CHECK_EQUAL(validate, "foo,bar,");
+    BOOST_CHECK_EQUAL(open, "bar");
 }
 
 /*BOOST_AUTO_TEST_CASE( user_reject_origin ) {

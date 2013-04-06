@@ -327,9 +327,37 @@ connection<config>::get_requested_subprotocols() const {
     return m_requested_subprotocols;
 }
 
+template <typename config>
+void connection<config>::select_subprotocol(const std::string & value, 
+    lib::error_code & ec)
+{
+    if (value.empty()) {
+        ec = lib::error_code();
+        return;
+    }
+    
+    std::vector<std::string>::iterator it;
+    
+    it = std::find(m_requested_subprotocols.begin(), 
+                   m_requested_subprotocols.end(), 
+                   value);
+    
+    if (it == m_requested_subprotocols.end()) {
+        ec = error::make_error_code(error::unrequested_subprotocol);
+        return;
+    }
+    
+    m_subprotocol = value;
+}
 
-
-
+template <typename config>
+void connection<config>::select_subprotocol(const std::string & value) {
+    lib::error_code ec;
+    this->select_subprotocol(value,ec);
+    if (ec) {
+        throw ec;
+    }
+}
 
 template <typename config>
 void connection<config>::set_status(
@@ -868,7 +896,7 @@ bool connection<config>::process_handshake_request() {
         
         // Write the appropriate response headers based on request and 
         // processor version
-        ec = m_processor->process_handshake(m_request,m_response);
+        ec = m_processor->process_handshake(m_request,m_subprotocol,m_response);
 
         if (ec) {
             std::stringstream s;
@@ -962,7 +990,9 @@ void connection<config>::send_http_response() {
     
     // Set some common headers
     m_response.replace_header("Server",m_user_agent);
-        
+    
+    
+    
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
         m_handshake_buffer = m_processor->get_raw(m_response);
