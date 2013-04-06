@@ -220,6 +220,19 @@ public:
     virtual const std::string& get_origin(const request_type& request) 
 		const = 0;
     
+    /// Extracts requested subprotocols from a handshake request
+    /**
+     * Extracts a list of all subprotocols that the client has requested in the
+     * given opening handshake request.
+     * 
+     * @param req The request to extract from
+     *
+     * @param subprotocol_list A reference to a vector of strings to store the
+     * results in.
+     */
+    virtual lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list) = 0;
+    
     /// Extracts client uri from a handshake request
     virtual uri_ptr get_uri(const request_type& request) const = 0;
     

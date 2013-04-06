@@ -605,6 +605,47 @@ BOOST_AUTO_TEST_CASE( extension_negotiation_unknown ) {
     BOOST_CHECK_EQUAL( neg_results.second, "" );
 }
 
+BOOST_AUTO_TEST_CASE( extract_subprotocols_empty ) {
+	processor_setup env(true);
+    std::vector<std::string> subps;
+    
+    BOOST_CHECK( !env.p.extract_subprotocols(env.req,subps) );
+    BOOST_CHECK_EQUAL( subps.size(), 0 );
+}
+
+BOOST_AUTO_TEST_CASE( extract_subprotocols_one ) {
+	processor_setup env(true);
+    std::vector<std::string> subps;
+    
+    env.req.replace_header("Sec-WebSocket-Protocol","foo");
+    
+    BOOST_CHECK( !env.p.extract_subprotocols(env.req,subps) );
+    BOOST_REQUIRE_EQUAL( subps.size(), 1 );
+    BOOST_CHECK_EQUAL( subps[0], "foo" );
+}
+
+BOOST_AUTO_TEST_CASE( extract_subprotocols_multiple ) {
+	processor_setup env(true);
+    std::vector<std::string> subps;
+    
+    env.req.replace_header("Sec-WebSocket-Protocol","foo,bar");
+    
+    BOOST_CHECK( !env.p.extract_subprotocols(env.req,subps) );
+    BOOST_REQUIRE_EQUAL( subps.size(), 2 );
+    BOOST_CHECK_EQUAL( subps[0], "foo" );
+    BOOST_CHECK_EQUAL( subps[1], "bar" );
+}
+
+BOOST_AUTO_TEST_CASE( extract_subprotocols_invalid) {
+	processor_setup env(true);
+    std::vector<std::string> subps;
+    
+    env.req.replace_header("Sec-WebSocket-Protocol","foo,bar,,,,");
+    
+    BOOST_CHECK_EQUAL( env.p.extract_subprotocols(env.req,subps), websocketpp::processor::error::make_error_code(websocketpp::processor::error::subprotocol_parse_error) );
+    BOOST_CHECK_EQUAL( subps.size(), 0 );
+}
+
 /*BOOST_AUTO_TEST_CASE( extension_negotiation_permessage_deflate ) {
     processor_setup_ext env(true);
 

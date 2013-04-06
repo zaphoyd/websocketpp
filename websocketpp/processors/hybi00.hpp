@@ -157,6 +157,13 @@ public:
         return r.get_header("Origin");
     }
     
+    // hybi00 doesn't support subprotocols so there never will be any requested
+    lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list)
+    {
+        return lib::error_code();
+    }
+    
     uri_ptr get_uri(const request_type& request) const {
         std::string h = request.get_header("Host");
         

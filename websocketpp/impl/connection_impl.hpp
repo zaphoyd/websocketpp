@@ -876,18 +876,11 @@ bool connection<config>::process_handshake_request() {
     }
     
     // extract subprotocols
-    if (!m_request.get_header("Sec-WebSocket-Protocol").empty()) {
-    	typename request_type::parameter_list p;
-    	
-    	 if (!m_request.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
-             typename request_type::parameter_list::const_iterator it;
-
-             for (it = p.begin(); it != p.end(); ++it) {
-                 m_requested_subprotocols.push_back(it->first);
-             }
-    	 } else {
-             // TODO: just ignore? log? fail?
-         }
+    lib::error_code subp_ec = m_processor->extract_subprotocols(m_request,
+        m_requested_subprotocols);
+    
+    if (subp_ec) {
+        // should we do anything?
     }
     
     // Ask application to validate the connection

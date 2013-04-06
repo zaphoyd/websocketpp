@@ -260,6 +260,25 @@ public:
         return r.get_header("Origin");
     }
     
+    lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list)
+    {
+        if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
+            typename request_type::parameter_list p;
+        
+             if (!req.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
+                 typename request_type::parameter_list::const_iterator it;
+
+                 for (it = p.begin(); it != p.end(); ++it) {
+                     subprotocol_list.push_back(it->first);
+                 }
+             } else {
+                 return error::make_error_code(error::subprotocol_parse_error);
+             }
+        }
+        return lib::error_code();
+    }
+    
     uri_ptr get_uri(const request_type& request) const {
         std::string h = request.get_header("Host");
         
