@@ -1080,14 +1080,14 @@ template <typename config>
 void connection<config>::send_http_request() {
     m_alog.write(log::alevel::devel,"connection send_http_request");
     
-    // TODO: origin header
-    // TODO: subprotocol requests
+    // TODO: origin header?
         
     // Have the protocol processor fill in the appropriate fields based on the
     // selected client version
     if (m_processor) {
         lib::error_code ec;
-        ec = m_processor->client_handshake_request(m_request,m_uri);
+        ec = m_processor->client_handshake_request(m_request,m_uri,
+            m_requested_subprotocols);
         
         if (ec) {
             m_elog.write(log::elevel::fatal,

@@ -200,7 +200,7 @@ public:
      * @return An error code, 0 on success, non-zero for other errors
      */
     virtual lib::error_code client_handshake_request(request_type& req, 
-        uri_ptr uri) const = 0;
+        uri_ptr uri, const std::vector<std::string> & subprotocols) const = 0;
         
     /// Validate the server's response to an outgoing handshake request
     /**

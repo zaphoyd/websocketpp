@@ -137,8 +137,8 @@ public:
     }
     
     // outgoing client connection processing is not supported for this version
-    lib::error_code client_handshake_request(request_type& req, uri_ptr uri) 
-        const
+    lib::error_code client_handshake_request(request_type& req, uri_ptr uri, 
+        const std::vector<std::string> & subprotocols) const
     {
         return error::make_error_code(error::no_protocol_support);
     }

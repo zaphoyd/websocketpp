@@ -192,7 +192,7 @@ public:
     }
     
     lib::error_code client_handshake_request(request_type& req, uri_ptr 
-        uri) const
+        uri, const std::vector<std::string> & subprotocols) const
     {
         req.set_method("GET");
         req.set_uri(uri->get_resource());
@@ -202,6 +202,17 @@ public:
         req.append_header("Connection","Upgrade");
         req.replace_header("Sec-WebSocket-Version","13");
         req.replace_header("Host",uri->get_host_port());
+        
+        if (!subprotocols.empty()) {
+            std::ostringstream result;
+            std::vector<std::string>::const_iterator it = subprotocols.begin();
+            result << *it++;
+            while (it != subprotocols.end()) {
+                result << ", " << *it++;
+            }
+            
+            req.replace_header("Sec-WebSocket-Protocol",result.str());
+        }
         
         // Generate handshake key
         frame::uint32_converter conv;

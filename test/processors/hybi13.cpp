@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE( client_handshake_request ) {
     
     websocketpp::uri_ptr u(new websocketpp::uri("ws://localhost/"));
     
-    env.p.client_handshake_request(env.req,u);
+    env.p.client_handshake_request(env.req,u, std::vector<std::string>());
     
     BOOST_CHECK_EQUAL( env.req.get_method(), "GET" );
     BOOST_CHECK_EQUAL( env.req.get_version(), "HTTP/1.1");
