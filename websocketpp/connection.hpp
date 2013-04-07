@@ -39,11 +39,11 @@
 #include <websocketpp/processors/processor.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
-
+#include <algorithm>
 #include <iostream>
-#include <vector>
 #include <queue>
 #include <string>
+#include <vector>
 
 namespace websocketpp {
 
@@ -542,12 +542,43 @@ public:
      */
     const std::vector<std::string> & get_requested_subprotocols() const;
     
+    /// Adds the given subprotocol string to the request list (exception free)
+    /**
+     * Adds a subprotocol to the list to send with the opening handshake. This 
+     * may be called multiple times to request more than one. If the server 
+     * supports one of these, it may choose one. If so, it will return it
+     * in it's handshake reponse and the value will be available via 
+     * get_subprotocol(). Subprotocol requests should be added in order of
+     * preference.
+     *
+     * @param request The subprotocol to request
+     *
+     * @param ec A reference to an error code that will be filled in the case of
+     * errors
+     */
+    void add_subprotocol(const std::string &request, lib::error_code & ec);
+    
+    /// Adds the given subprotocol string to the request list
+    /**
+     * Adds a subprotocol to the list to send with the opening handshake. This 
+     * may be called multiple times to request more than one. If the server 
+     * supports one of these, it may choose one. If so, it will return it
+     * in it's handshake reponse and the value will be available via 
+     * get_subprotocol(). Subprotocol requests should be added in order of
+     * preference.
+     *
+     * @param request The subprotocol to request
+     */
+    void add_subprotocol(const std::string &request);
+    
     /// Select a subprotocol to use (exception free)
     /**
      * Indicates which subprotocol should be used for this connection. Valid 
      * only during the validate handler callback. Subprotocol selected must have
      * been requested by the client. Consult get_requested_subprotocols() for a
      * list of valid subprotocols.
+     *
+     * This member function is valid on server endpoints/connections only
      *
      * @param value The subprotocol to select
      *
@@ -562,6 +593,8 @@ public:
      * only during the validate handler callback. Subprotocol selected must have
      * been requested by the client. Consult get_requested_subprotocols() for a
      * list of valid subprotocols.
+     *
+     * This member function is valid on server endpoints/connections only
      *
      * @param value The subprotocol to select
      */

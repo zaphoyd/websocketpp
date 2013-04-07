@@ -133,7 +133,63 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
 	channel2 >> *con;
 }
 
+BOOST_AUTO_TEST_CASE( select_subprotocol ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    using websocketpp::error::make_error_code;
+    
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    
+    BOOST_CHECK( con );
+    
+    con->select_subprotocol("foo",ec);
+    BOOST_CHECK_EQUAL( ec , make_error_code(websocketpp::error::server_only) );
+    BOOST_CHECK_THROW( con->select_subprotocol("foo") , websocketpp::lib::error_code );
+}
 
+BOOST_AUTO_TEST_CASE( add_subprotocols_invalid ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    using websocketpp::error::make_error_code;
+    
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK( con );
+    
+    con->add_subprotocol("",ec);
+    BOOST_CHECK_EQUAL( ec , make_error_code(websocketpp::error::invalid_subprotocol) );
+    BOOST_CHECK_THROW( con->add_subprotocol("") , websocketpp::lib::error_code );
+    
+    con->add_subprotocol("foo,bar",ec);
+    BOOST_CHECK_EQUAL( ec , make_error_code(websocketpp::error::invalid_subprotocol) );
+    BOOST_CHECK_THROW( con->add_subprotocol("foo,bar") , websocketpp::lib::error_code );
+}
 
+BOOST_AUTO_TEST_CASE( add_subprotocols ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    std::stringstream out;
+    std::string o;
+    
+    c.register_ostream(&out);
+    
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK( con );
+    
+    con->add_subprotocol("foo",ec);
+    BOOST_CHECK( !ec );
+    
+    BOOST_CHECK_NO_THROW( con->add_subprotocol("bar") );
+    
+    c.connect(con);
+    
+    o = out.str();
+    websocketpp::http::parser::request r;
+    r.consume(o.data(),o.size());
+    
+    std::cout << o << std::endl;
+    
+    BOOST_CHECK( r.ready() );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "foo, bar");
+}
 
 

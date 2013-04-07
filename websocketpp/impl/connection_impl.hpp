@@ -328,9 +328,44 @@ connection<config>::get_requested_subprotocols() const {
 }
 
 template <typename config>
+void connection<config>::add_subprotocol(const std::string & value, 
+    lib::error_code & ec)
+{
+    if (m_is_server) {
+        ec = error::make_error_code(error::client_only);
+        return;
+    }
+    
+    // If the value is empty or has a non-RFC2616 token character it is invalid.
+    if (value.empty() || std::find_if(value.begin(),value.end(),
+                                      http::is_not_token_char) != value.end())
+    {
+        ec = error::make_error_code(error::invalid_subprotocol);
+        return;
+    }
+
+    m_requested_subprotocols.push_back(value);
+}
+
+template <typename config>
+void connection<config>::add_subprotocol(const std::string & value) {
+    lib::error_code ec;
+    this->add_subprotocol(value,ec);
+    if (ec) {
+        throw ec;
+    }
+}
+
+
+template <typename config>
 void connection<config>::select_subprotocol(const std::string & value, 
     lib::error_code & ec)
 {
+    if (!m_is_server) {
+        ec = error::make_error_code(error::server_only);
+        return;
+    }
+    
     if (value.empty()) {
         ec = lib::error_code();
         return;

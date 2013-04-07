@@ -77,6 +77,9 @@ enum value {
     /// Invalid UTF-8
     invalid_utf8,
     
+    /// Invalid subprotocol
+    invalid_subprotocol,
+    
     /// Bad or unknown connection
     bad_connection,
     
@@ -87,7 +90,13 @@ enum value {
     con_creation_failed,
     
     /// Selected subprotocol was not requested by the client
-    unrequested_subprotocol
+    unrequested_subprotocol,
+    
+    /// Attempted to use a client specific feature on a server endpoint
+    client_only,
+    
+    /// Attempted to use a server specific feature on a client endpoint
+    server_only,
 }; // enum value
 
 
@@ -125,6 +134,8 @@ public:
 				return "Extracted close code is in a reserved range";
 			case error::invalid_utf8:
 				return "Invalid UTF-8";
+			case error::invalid_subprotocol:
+				return "Invalid subprotocol";
 			case error::bad_connection:
 				return "Bad Connection";
 			case error::test:
@@ -133,6 +144,10 @@ public:
 				return "Connection creation attempt failed";
 		    case error::unrequested_subprotocol:
 		        return "Selected subprotocol was not requested by the client";
+		    case error::client_only:
+		        return "Feature not available on server endpoints";
+		    case error::server_only:
+		        return "Feature not available on client endpoints";
 			default:
 				return "Unknown";
 		}
