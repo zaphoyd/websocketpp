@@ -111,7 +111,33 @@ struct core {
      * recommended.
      */ 
     static const int client_version = 13; // RFC6455
+    
+    /// Default static error logging channels
+    /**
+     * Which error logging channels to enable at compile time. Channels not
+     * enabled here will be unable to be selected by programs using the library.
+     * This option gives an optimizing compiler the ability to remove entirely 
+     * code to test whether or not to print out log messages on a certain 
+     * channel 
+     * 
+     * Default is all except for development/debug level errors
+     */ 
+    static const websocketpp::log::level elog_level = 
+        websocketpp::log::elevel::all ^ websocketpp::log::elevel::devel;
         
+    /// Default static access logging channels
+    /**
+     * Which access logging channels to enable at compile time. Channels not
+     * enabled here will be unable to be selected by programs using the library.
+     * This option gives an optimizing compiler the ability to remove entirely 
+     * code to test whether or not to print out log messages on a certain 
+     * channel 
+     * 
+     * Default is all except for development/debug level access messages
+     */ 
+    static const websocketpp::log::level alog_level = 
+        websocketpp::log::alevel::all ^ websocketpp::log::alevel::devel;
+    
     /// 
 	static const size_t connection_read_buffer_size = 512;
     

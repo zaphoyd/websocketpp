@@ -89,12 +89,13 @@ public:
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
 	explicit endpoint(bool is_server)
- 	  : m_elog(&std::cerr)
+ 	  : m_alog(config::alog_level,&std::cout)
+ 	  , m_elog(config::elog_level,&std::cerr)
  	  , m_user_agent(::websocketpp::user_agent)
  	  , m_is_server(is_server)
 	{
-		m_alog.set_channels(0xffffffff);
-		m_elog.set_channels(0xffffffff);
+		m_alog.set_channels(config::alog_level);
+		m_elog.set_channels(config::elog_level);
 		
 		m_alog.write(log::alevel::devel,"endpoint constructor");
 
