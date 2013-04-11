@@ -36,6 +36,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/utility.hpp>
 
