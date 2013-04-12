@@ -107,7 +107,30 @@ public:
     void set_tcp_init_handler(tcp_init_handler h) {
         m_tcp_init_handler = h;
     }
-
+    
+    /// Get the remote endpoint address
+	/**
+	 * The iostream transport has no information about the ultimate remote 
+	 * endpoint. It will return the string "iostream transport". To indicate 
+	 * this.
+	 *
+	 * TODO: allow user settable remote endpoint addresses if this seems useful
+	 *
+	 * @return A string identifying the address of the remote endpoint
+	 */
+	std::string get_remote_endpoint() const {
+	    lib::error_code ec;
+	    
+	    std::string ret = socket_con_type::get_remote_endpoint(ec);
+	    
+	    if (ec) {
+	        m_elog.write(log::elevel::info,ret);
+	        return "Unknown";
+	    } else {
+	        return ret;
+	    }
+	}
+    
     /// Get the connection handle
     connection_hdl get_handle() const {
         return m_connection_hdl;
@@ -180,7 +203,7 @@ protected:
     	if (ec) {
             std::stringstream s;
             s << "asio async_read_at_least error::pass_through"
-              << "Original Error: " << ec << " (" << ec.message() << ")";
+              << ", Original Error: " << ec << " (" << ec.message() << ")";
             m_elog.write(log::elevel::devel,s.str());
     		handler(make_error_code(transport::error::pass_through), 
     		    bytes_transferred);	

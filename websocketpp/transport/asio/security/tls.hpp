@@ -128,6 +128,34 @@ public:
     void set_tls_init_handler(tls_init_handler h) {
         m_tls_init_handler = h;
     }
+    
+    /// Get the remote endpoint address
+	/**
+	 * The iostream transport has no information about the ultimate remote 
+	 * endpoint. It will return the string "iostream transport". To indicate 
+	 * this.
+	 *
+	 * TODO: allow user settable remote endpoint addresses if this seems useful
+	 *
+	 * @return A string identifying the address of the remote endpoint
+	 */
+	std::string get_remote_endpoint(lib::error_code &ec) const {
+	    std::stringstream s;
+	    
+	    boost::system::error_code bec;
+	    boost::asio::ip::tcp::endpoint ep = m_socket->lowest_layer().remote_endpoint(bec);
+	    
+	    if (bec) {
+	        ec = error::make_error_code(error::pass_through);
+	        s << "Error getting remote endpoint: " << bec 
+	           << " (" << bec.message() << ")";
+	        return s.str();
+	    } else {
+	        ec = lib::error_code();
+	        s << ep;
+	        return s.str();
+	    }
+	}
 protected:
 	/// Perform one time initializations
 	/**
