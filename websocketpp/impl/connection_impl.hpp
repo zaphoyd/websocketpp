@@ -725,7 +725,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     
     if (ec) {
         std::stringstream s;
-    	s << "error in handle_read_frame: " << ec;
+    	s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -1745,7 +1745,7 @@ void connection<config>::log_open_result()
     s << (version == -1 ? "HTTP" : "WebSocket") << " Connection ";
     
     // Remote endpoint address
-    s << "Unknown" << " ";
+    s << transport_con_type::get_remote_endpoint() << " ";
     
     // Version string if WebSocket
     if (version != -1) {
