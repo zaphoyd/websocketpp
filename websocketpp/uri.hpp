@@ -94,8 +94,79 @@ public:
         }
         
         throw websocketpp::uri_exception("Error parsing WebSocket URI");
-
     }
+    
+    /*explicit uri(const std::string& uri) {
+        // test for ws or wss
+        std::string::const_iterator it;
+        std::string::const_iterator temp;
+        
+        it = uri.begin();
+        
+        if (std::equal(it,it+6,"wss://")) {
+            m_secure = true;
+            it += 6;
+        } else if (std::equal(it,it+5,"ws://")) {
+            m_secure = false;
+            it += 5;
+        } else {
+            // error
+        }
+        
+        // extract host.
+        // either a host string
+        // an IPv4 address
+        // or an IPv6 address
+        if (*it == '[') {
+            ++it;
+            // IPv6 literal
+            // extract IPv6 digits until ]
+            temp = std::find(it,uri.end(),']');
+            if (temp == uri.end()) {
+                // error
+            } else {
+                // validate IPv6 literal parts
+                // can contain numbers, a-f and A-F
+            }
+        } else {
+            // IPv4 or hostname
+        }
+        
+        // TODO: should this split resource into path/query?
+        lib::cmatch matches;
+        const lib::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
+        
+        if (lib::regex_match(uri.c_str(), matches, expression)) {
+            m_secure = (matches[1] == "wss");
+            m_host = matches[2];
+            
+            // strip brackets from IPv6 literal URIs
+            if (m_host[0] == '[') {
+                m_host = m_host.substr(1,m_host.size()-2);
+            }
+            
+            std::string port(matches[3]);
+            
+            if (port != "") {
+                // strip off the :
+                // this could probably be done with a better regex.
+                port = port.substr(1);
+            }
+            
+            m_port = get_port_from_string(port);
+            
+            m_resource = matches[4];
+            
+            if (m_resource == "") {
+                m_resource = "/";
+            }
+            
+            return;
+        }
+        
+        throw websocketpp::uri_exception("Error parsing WebSocket URI");
+
+    }*/
     
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource)
       : m_host(host)
