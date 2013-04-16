@@ -1038,6 +1038,10 @@ private:
      */
     std::vector<transport::buffer> m_send_buffer;
     
+    /// a pointer to hold on to the current message being written to keep it 
+    /// from going out of scope before the write is complete.
+    message_ptr m_current_msg;
+    
     /// True if there is currently an outstanding transport write
     /**
      * Lock m_write_lock

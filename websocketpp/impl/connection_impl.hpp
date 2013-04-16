@@ -1319,7 +1319,6 @@ template <typename config>
 void connection<config>::write_frame() {
     m_alog.write(log::alevel::devel,"connection write_frame");
     
-    message_ptr msg;
     {
         scoped_lock_type lock(m_write_lock);
         
@@ -1333,9 +1332,9 @@ void connection<config>::write_frame() {
         
         // Get the next message in the queue. This will return an empty
         // message if the queue was empty.
-        msg = write_pop();
+        m_current_msg = write_pop();
         
-        if (!msg) {
+        if (!m_current_msg) {
             return;
         }
         
@@ -1345,8 +1344,8 @@ void connection<config>::write_frame() {
         m_write_flag = true;
     }
 
-    const std::string& header = msg->get_header();
-    const std::string& payload = msg->get_payload();
+    const std::string& header = m_current_msg->get_header();
+    const std::string& payload = m_current_msg->get_payload();
 
     m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
     m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
@@ -1368,7 +1367,7 @@ void connection<config>::write_frame() {
         lib::bind(
             &type::handle_write_frame,
             type::shared_from_this(),
-            msg->get_terminal(),
+            m_current_msg->get_terminal(),
             lib::placeholders::_1
         )
     );
@@ -1379,6 +1378,7 @@ void connection<config>::handle_write_frame(bool terminate,
     const lib::error_code& ec)
 {
 	m_send_buffer.clear();
+	m_current_msg.reset();
 	
 	if (ec) {
         m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
