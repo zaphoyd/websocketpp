@@ -199,17 +199,26 @@ protected:
     void handle_async_read(read_handler handler, const 
         boost::system::error_code& ec, size_t bytes_transferred)
     {
-    	// TODO: translate this better
-    	if (ec) {
+    	if (!ec) {
+    	    handler(lib::error_code(), bytes_transferred);
+    	    return;
+    	}
+    	
+    	// translate boost error codes into more lib::error_codes
+        if (ec == boost::asio::error::eof) {
+            handler(make_error_code(transport::error::eof), 
+            bytes_transferred);	
+        } else {
+            // other error that we cannot translate into a WebSocket++ 
+            // transport error. Use pass through and print an info warning
+            // with the original error.
             std::stringstream s;
             s << "asio async_read_at_least error::pass_through"
               << ", Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::devel,s.str());
-    		handler(make_error_code(transport::error::pass_through), 
-    		    bytes_transferred);	
-    	} else {
-    		handler(lib::error_code(), bytes_transferred);
-    	}
+            m_elog.write(log::elevel::info,s.str());
+            handler(make_error_code(transport::error::pass_through), 
+                bytes_transferred);	
+        }
     }
     
     void async_write(const char* buf, size_t len, write_handler handler) {

@@ -101,7 +101,10 @@ enum value {
     operation_aborted,
     
     /// Operation not supported
-    operation_not_supported
+    operation_not_supported,
+    
+    /// End of file
+    eof
 };
 
 class category : public lib::error_category {
@@ -124,6 +127,8 @@ class category : public lib::error_category {
 				return "The operation was aborted";
 			case operation_not_supported:
 				return "The operation is not supported by this transport";
+			case eof:
+				return "End of File";
 			default:
 				return "Unknown";
 		}
