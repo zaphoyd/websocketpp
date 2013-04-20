@@ -1757,8 +1757,13 @@ void connection<config>::log_open_result()
     
     // User Agent
     std::string ua = m_request.get_header("User-Agent");
-    s << (ua == "" ? "NULL" : ua) << " ";
-    
+    if (ua == "") {
+        s << "\"\" ";
+    } else {
+        // check if there are any quotes in the user agent
+        s << "\"" << utility::string_replace_all(ua,"\"","\\\"") << "\" ";
+    }
+        
     // URI
     s << (m_uri ? m_uri->get_resource() : "NULL") << " ";
     
