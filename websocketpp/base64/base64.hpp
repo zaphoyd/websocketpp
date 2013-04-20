@@ -1,10 +1,11 @@
 /* 
-   ******
-   base64.hpp is a repackaging of the base64.cpp and base64.h files into a single header
-   suitable for use as a header only library. This conversion was done by Peter Thorson
-   (webmaster@zaphoyd.com) in 2012. All modifications to the code are redistributed under
-   the same license as the original, which is listed below.
-   ******
+    ******
+    base64.hpp is a repackaging of the base64.cpp and base64.h files into a 
+    single headersuitable for use as a header only library. This conversion was 
+    done by Peter Thorson (webmaster@zaphoyd.com) in 2012. All modifications to
+    the code are redistributed under the same license as the original, which is 
+    listed below.
+    ******
    
    base64.cpp and base64.h
 
@@ -36,7 +37,6 @@
 #define _BASE64_HPP_
 
 #include <string>
-#include <iostream>
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -44,7 +44,10 @@ static const std::string base64_chars =
              "0123456789+/";
 
 static inline bool is_base64(unsigned char c) {
-  return (isalnum(c) || (c == '+') || (c == '/'));
+    return (c == 43 || // +
+           (c >= 47 && c <= 57) || // /-9
+           (c >= 65 && c <= 90) || // A-Z
+           (c >= 97 && c <= 122)); // a-z
 }
 
 inline std::string base64_encode(unsigned char const* bytes_to_encode, unsigned 
