@@ -1296,7 +1296,10 @@ void connection<config>::terminate() {
             }
         } else {
             m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
+            return;
         }
+        
+        log_close_result();
     } catch (const std::exception& e) {
         m_elog.write(log::elevel::warn,
             std::string("terminate failed. Reason was: ") + e.what());
@@ -1763,6 +1766,20 @@ void connection<config>::log_open_result()
     s << m_response.get_status_code();
     
     m_alog.write(log::alevel::connect,s.str());
+}
+
+template <typename config>
+void connection<config>::log_close_result()
+{
+    std::stringstream s;
+    
+    s << "Disconnect "
+      << "close local:[" << m_local_close_code 
+      << (m_local_close_reason == "" ? "" : ","+m_local_close_reason) 
+      << "] remote:[" << m_remote_close_code
+      << (m_remote_close_reason == "" ? "" : ","+m_remote_close_reason) << "]";
+    
+    m_alog.write(log::alevel::disconnect,s.str());
 }
 
 } // namespace websocketpp

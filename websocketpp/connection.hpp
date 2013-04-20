@@ -960,6 +960,13 @@ private:
      */
     void log_open_result();
     
+    /// Prints information about a connection being closed to the access log
+    /**
+     * Prints information about a connection being closed to the access log.
+     * Includes: local and remote close codes and reasons
+     */
+    void log_close_result();
+    
     // static settings
     const std::string		m_user_agent;
 	
