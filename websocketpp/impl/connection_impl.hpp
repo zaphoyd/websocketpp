@@ -724,6 +724,14 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     );
     
     if (ec) {
+        if (ec == transport::error::eof) {
+            // we expect to get eof if the connection is closed already
+            if (m_state == session::state::CLOSED) {
+                m_alog.write(log::alevel::devel,"got eof from closed con");
+                return;
+            }
+        }
+        
         std::stringstream s;
     	s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
         m_elog.write(log::elevel::fatal,s.str());
