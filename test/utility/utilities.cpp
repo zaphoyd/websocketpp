@@ -56,4 +56,12 @@ BOOST_AUTO_TEST_CASE( substr_not_found ) {
     BOOST_CHECK(websocketpp::utility::ci_find_substr(haystack,needle) == haystack.end());
 }
 
+BOOST_AUTO_TEST_CASE( string_replace_all ) {
+    std::string source = "foo \"bar\" baz";
+    std::string dest = "foo \\\"bar\\\" baz";
+    
+    using websocketpp::utility::string_replace_all;
+    BOOST_CHECK_EQUAL(string_replace_all(source,"\"","\\\""),dest);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

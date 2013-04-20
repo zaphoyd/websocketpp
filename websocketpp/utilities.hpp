@@ -68,10 +68,8 @@ typename T::const_iterator ci_find_substr(const T& str1,
 
 
 
-/// Host to network long long
-//uint64_t htonll(uint64_t src);
-/// Network to host long long
-//uint64_t ntohll(uint64_t src);
+std::string string_replace_all(std::string subject, const std::string& search,
+                          const std::string& replace);
 
 /// Convert std::string to ascii printed string of hex digits
 std::string to_hex(const std::string& input);
