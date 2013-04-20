@@ -241,13 +241,23 @@ public:
 	}
 
 	/// wraps the run method of the internal io_service object
-	void run() {
-		m_io_service->run();
+	std::size_t run() {
+		return m_io_service->run();
 	}
 	
 	/// wraps the stop method of the internal io_service object
 	void stop() {
 		m_io_service->stop();
+	}
+	
+	/// wraps the poll method of the internal io_service object
+	std::size_t poll() {
+		return m_io_service->poll();
+	}
+	
+	/// wraps the poll_one method of the internal io_service object
+	std::size_t poll_one() {
+		return m_io_service->poll_one();
 	}
 	
 	/// wraps the reset method of the internal io_service object
