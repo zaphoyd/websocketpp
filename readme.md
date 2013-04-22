@@ -1,4 +1,4 @@
-**WARNING LEGACY VERSION**
+**WARNING: LEGACY VERSION**
 
 NOTE: This is the 0.2.x version of WebSocket++. There some fairly significant 
 API changes in 0.3.x so upgrading should be done carefully. Due to these 
