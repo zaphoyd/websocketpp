@@ -92,17 +92,17 @@ public:
         while(1) {
             {
                 scoped_lock guard(m_lock);
-                // If the connection hasn't been opened yet wait a bit and try
-                // again
-                if (!m_open && !m_done) {
-                    sleep(1);
-                    continue;
-                }
-                
                 // If the connection has been closed, stop generating telemetry
                 // and exit.
                 if (m_done) {
                     break;
+                }
+                
+                // If the connection hasn't been opened yet wait a bit and try
+                // again
+                if (!m_open) {
+                    sleep(1);
+                    continue;
                 }
             }
             
