@@ -197,6 +197,9 @@ echo_client = SConscript('#/examples/echo_client/SConscript',variant_dir = build
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
 
+# iostream_server
+iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)
+
 #
 #wsperf = SConscript('#/examples/wsperf/SConscript',
 #                    variant_dir = builddir + 'wsperf',

@@ -1,0 +1,89 @@
+#include <websocketpp/config/core.hpp>
+
+#include <websocketpp/server.hpp>
+
+#include <iostream>
+
+typedef websocketpp::server<websocketpp::config::core> server;
+
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+using websocketpp::lib::bind;
+
+// pull out the type of messages sent by our config
+typedef server::message_ptr message_ptr;
+
+// Define a callback to handle incoming messages
+void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+    /*std::cout << "on_message called with hdl: " << hdl.lock().get() 
+              << " and message: " << msg->get_payload()
+              << std::endl;
+*/
+    try {
+        s->send(hdl, msg->get_payload(), msg->get_opcode());
+    } catch (const websocketpp::lib::error_code& e) {
+  /*      std::cout << "Echo failed because: " << e  
+                  << "(" << e.message() << ")" << std::endl;*/
+    }
+}
+
+int main() {
+    server s;
+	
+	try {        
+        // Clear logging because we are using std out for data
+        // TODO: fix when we can log to files
+        s.clear_error_channels(websocketpp::log::elevel::all);
+        s.clear_access_channels(websocketpp::log::alevel::all);
+        
+        // print all output to stdout
+        s.register_ostream(&std::cout);
+        
+        // Register our message handler
+        s.set_message_handler(bind(&on_message,&s,::_1,::_2));
+        
+        server::connection_ptr con = s.get_connection();
+        
+        con->start();
+        
+        std::cin >> *con;
+        
+        std::cout << "ready done" << std::endl;
+        
+        /*char buf[512];
+        size_t bytes_read;
+        while(std::cin) {
+            bytes_read = std::cin.readsome(buf,512);
+            
+            
+        }*/
+    } catch (const std::exception & e) {
+        std::cout << e.what() << std::endl;
+    } catch (websocketpp::lib::error_code e) {
+        std::cout << e.message() << std::endl;
+    } catch (...) {
+        std::cout << "other exception" << std::endl;
+    }
+}
+
+
+
+/*server test_server;
+    server::connection_ptr con;
+    
+    test_server.set_message_handler(bind(&echo_func,&test_server,::_1,::_2));
+
+    std::stringstream output;
+	
+	test_server.register_ostream(&output);
+	
+	con = test_server.get_connection();
+	
+	con->start();
+	
+	std::stringstream channel;
+	
+	channel << input;
+	channel >> *con;
+	
+	return output.str();*/
