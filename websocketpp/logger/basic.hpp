@@ -62,6 +62,10 @@ public:
       , m_dynamic_channels(0)
       , m_out(out) {}
     
+    void set_ostream(std::ostream* out) {
+        m_out = out;
+    }
+    
     void set_channels(level channels) {
         scoped_lock_type lock(m_lock);
         m_dynamic_channels |= (channels & m_static_channels);
