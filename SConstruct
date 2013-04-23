@@ -200,6 +200,9 @@ subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',varia
 # iostream_server
 iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)
 
+# print_server
+print_server = SConscript('#/examples/print_server/SConscript',variant_dir = builddir + 'print_server',duplicate = 0)
+
 #
 #wsperf = SConscript('#/examples/wsperf/SConscript',
 #                    variant_dir = builddir + 'wsperf',
