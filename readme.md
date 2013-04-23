@@ -1,14 +1,17 @@
+**NOTE: this is a legacy release of the library**
+
+The 0.3.x version (Experimental branch) is the preferred release for all users 
+and is scheduled to be merged into the master branch in the near future. All new
+development should start there.
+
+There are a number of breaking API changes going from 0.2.x to 0.3.x. If you 
+have an existing 0.2.x codebase that you are not ready to upgrade yet there is 
+now a 0.2.x branch that will be maintained for that purpose.
+
+--------------------------------------------------------------------------------
+
 WebSocket++ is a C++ library that impliments RFC6455, the WebSocket protocol.
 It can be used to build applications that feature WebSocket functionality.
-
-NOTE: This is the 0.2.x version of WebSocket++. It is currently the master
-branch as the most recent version (0.3.x) still has some significant feature
-regressions. There some fairly significant API changes in 0.3.x so upgrading
-should be done carefully. Due to these changes, the 0.3.x version is the
-preferred branch for any new development, especially development that involves
-multithreaded servers or C++11. 0.3.x can be found in the 'Experimental' branch
-on GitHub. Once it gets closer to feature parity with 0.2 it will be promoted to
-master.
 
 For more information, please visit: http://www.zaphoyd.com/websocketpp/
 
