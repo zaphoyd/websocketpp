@@ -401,7 +401,7 @@ protected:
 			std::stringstream s;
             s << "asio async_resolve error::pass_through: "
               << "Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog->write(log::elevel::devel,s.str());
+            m_elog->write(log::elevel::info,s.str());
 			callback(tcon->get_handle(),make_error_code(error::pass_through));
 			return;
 		}
@@ -428,7 +428,7 @@ protected:
 			std::stringstream s;
             s << "asio async_connect error::pass_through: "
               << "Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog->write(log::elevel::devel,s.str());
+            m_elog->write(log::elevel::info,s.str());
 			callback(tcon->get_handle(),make_error_code(error::pass_through));
 			return;
 		}
