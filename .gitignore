@@ -53,3 +53,5 @@ build/
 examples/wsperf/wsperf_client
 
 *.out
+
+*.log
