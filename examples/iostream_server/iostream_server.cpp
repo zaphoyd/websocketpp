@@ -3,6 +3,7 @@
 #include <websocketpp/server.hpp>
 
 #include <iostream>
+#include <fstream>
 
 typedef websocketpp::server<websocketpp::config::core> server;
 
@@ -29,12 +30,19 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 
 int main() {
     server s;
+    std::ofstream log;
 	
 	try {        
         // Clear logging because we are using std out for data
         // TODO: fix when we can log to files
-        s.clear_error_channels(websocketpp::log::elevel::all);
-        s.clear_access_channels(websocketpp::log::alevel::all);
+        //s.clear_error_channels(websocketpp::log::elevel::all);
+        //s.clear_access_channels(websocketpp::log::alevel::all);
+        
+        
+        log.open("output.log");
+        
+        s.get_alog().set_ostream(&log);
+        s.get_elog().set_ostream(&log);
         
         // print all output to stdout
         s.register_ostream(&std::cout);
@@ -48,7 +56,7 @@ int main() {
         
         std::cin >> *con;
         
-        std::cout << "ready done" << std::endl;
+        log << "ready done" << std::endl;
         
         /*char buf[512];
         size_t bytes_read;
@@ -57,6 +65,7 @@ int main() {
             
             
         }*/
+        
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
@@ -64,6 +73,7 @@ int main() {
     } catch (...) {
         std::cout << "other exception" << std::endl;
     }
+    log.close();
 }
 
 
