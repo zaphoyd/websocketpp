@@ -180,6 +180,8 @@ public:
 	  , m_alog(alog)
 	  , m_elog(elog)
 	  , m_rng(rng)
+	  , m_local_close_code(close::status::abnormal_close)
+	  , m_remote_close_code(close::status::abnormal_close)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
