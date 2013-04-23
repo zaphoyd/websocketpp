@@ -6,6 +6,12 @@
 // is configured.
 #include <websocketpp/common/thread.hpp>
 
+/**
+ * The telemetry client connects to a WebSocket server and sends a message every
+ * second containing an integer count. This example can be used as the basis for
+ * programs where a client connects and pushes data for logging, stress/load 
+ * testing, etc.
+ */
 class telemetry_client {
 public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
@@ -34,7 +40,8 @@ public:
         // safe manor after the event loop starts.
         m_hdl = con->get_handle();
         
-        // Queue the connection
+        // Queue the connection. No DNS queries or network connections will be
+        // made until the io_service event loop is run.
         m_client.connect(con);
     }
     
@@ -49,6 +56,7 @@ public:
         telemetry_thread.join();
     }
     
+    // The open handler will signal that we are ready to start sending telemetry
     void on_open(websocketpp::connection_hdl hdl) {
         m_client.get_alog().write(websocketpp::log::alevel::app, 
             "Connection opened, starting telemetry!");
@@ -57,6 +65,7 @@ public:
         m_open = true;
     }
     
+    // The close handler will signal that we should stop sending telemetry
     void on_close(websocketpp::connection_hdl hdl) {
         m_client.get_alog().write(websocketpp::log::alevel::app, 
             "Connection closed, stopping telemetry!");
@@ -92,7 +101,12 @@ public:
         
             m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
             m_client.send(m_hdl,val.str(),websocketpp::frame::opcode::text,ec);
-        
+        	
+        	// The most likely error that we will get is that the connection is
+        	// not in the right state. Usually this means we tried to send a 
+        	// message to a connection that was closed or in the process of 
+        	// closing. While many errors here can be easily recovered from, 
+        	// in this simple example, we'll stop the telemetry loop.
             if (ec) {
                 val.str("");
                 val << "Error: " << ec.message();
