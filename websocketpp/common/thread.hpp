@@ -49,9 +49,11 @@ namespace lib {
 #ifdef _WEBSOCKETPP_CPP11_THREAD_
 	using std::mutex;
 	using std::lock_guard;
+	using std::thread;
 #else
 	using boost::mutex;
 	using boost::lock_guard;
+	using boost::thread;
 #endif
 
 } // namespace lib
