@@ -213,10 +213,7 @@ public:
     /// component.
     typedef socket_con_type::ptr socket_con_ptr;
     
-	explicit endpoint() {
-		std::cout << "transport::asio::basic_socket::endpoint constructor" 
-                  << std::endl; 
-	}
+	explicit endpoint() {}
 
     /// Checks whether the endpoint creates secure connections
     /**
