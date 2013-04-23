@@ -65,6 +65,11 @@ size_t connection<config>::get_buffered_amount() const {
     return m_send_buffer_size;
 }
 
+template <typename config>
+session::state::value connection<config>::get_state() const {
+    //scoped_lock_type lock(m_connection_state_lock);
+    return m_state;
+}
 
 template <typename config>
 lib::error_code connection<config>::send(const std::string& payload, 
@@ -92,7 +97,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
     m_alog.write(log::alevel::devel,"connection send");
 	// TODO: 
 	
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
        return error::make_error_code(error::invalid_state);
     }
     
@@ -137,7 +142,7 @@ template <typename config>
 void connection<config>::ping(const std::string& payload) {
     m_alog.write(log::alevel::devel,"connection ping");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
         throw error::make_error_code(error::invalid_state);
     }
     
@@ -170,7 +175,7 @@ template <typename config>
 void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     m_alog.write(log::alevel::devel,"connection pong");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
         return;
     }
@@ -218,7 +223,7 @@ void connection<config>::close(const close::status::value code,
 {
     m_alog.write(log::alevel::devel,"connection close");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
        ec = error::make_error_code(error::invalid_state);
        return;
     }
@@ -726,7 +731,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     if (ec) {
         if (ec == transport::error::eof) {
             // we expect to get eof if the connection is closed already
-            if (m_state == session::state::CLOSED) {
+            if (m_state == session::state::closed) {
                 m_alog.write(log::alevel::devel,"got eof from closed con");
                 return;
             }
@@ -1107,8 +1112,8 @@ void connection<config>::handle_send_http_response(
     this->atomic_state_change(
         istate::PROCESS_HTTP_REQUEST,
         istate::PROCESS_CONNECTION,
-        session::state::CONNECTING,
-        session::state::OPEN,
+        session::state::connecting,
+        session::state::open,
         "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
     );
     
@@ -1230,7 +1235,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         return;
     }
     
-    m_elog.write(log::elevel::rerror,std::string("Raw response: ")+m_response.raw());
+    m_alog.write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
     
     if (m_response.headers_ready()) {
         lib::error_code ec = m_processor->validate_server_handshake_response(
@@ -1250,8 +1255,8 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         this->atomic_state_change(
             istate::READ_HTTP_RESPONSE,
             istate::PROCESS_CONNECTION,
-            session::state::CONNECTING,
-            session::state::OPEN,
+            session::state::connecting,
+            session::state::open,
             "handle_read_http_response must be called from READ_HTTP_RESPONSE state"
         );
         
@@ -1292,13 +1297,13 @@ void connection<config>::terminate() {
     
         transport_con_type::shutdown();
 
-        if (m_state == session::state::CONNECTING) {
-            m_state = session::state::CLOSED;
+        if (m_state == session::state::connecting) {
+            m_state = session::state::closed;
             if (m_fail_handler) {
                 m_fail_handler(m_connection_hdl);
             }
-        } else if (m_state != session::state::CLOSED) {
-            m_state = session::state::CLOSED;
+        } else if (m_state != session::state::closed) {
+            m_state = session::state::closed;
             if (m_close_handler) {
                 m_close_handler(m_connection_hdl);
             }
@@ -1547,7 +1552,7 @@ void connection<config>::process_control_frame(typename
             return;
         }
 
-        if (m_state == session::state::OPEN) {
+        if (m_state == session::state::open) {
             std::stringstream s;
             s << "Received close frame with code " << m_remote_close_code 
               << " and reason " << m_remote_close_reason;
@@ -1558,7 +1563,7 @@ void connection<config>::process_control_frame(typename
                 m_elog.write(log::elevel::devel,
                     "send_close_ack error: "+ec.message());
             }
-        } else if (m_state == session::state::CLOSING) {
+        } else if (m_state == session::state::closing) {
             // ack of our close
             m_alog.write(log::alevel::devel,"Got acknowledgement of close");
             this->terminate();

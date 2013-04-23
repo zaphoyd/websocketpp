@@ -73,12 +73,11 @@ typedef lib::function<void(connection_hdl)> http_handler;
 namespace session {
 namespace state {
 	// externally visible session state (states based on the RFC)
-	
     enum value {
-        CONNECTING = 0,
-        OPEN = 1,
-        CLOSING = 2,
-        CLOSED = 3
+        connecting = 0,
+        open = 1,
+        closing = 2,
+        closed = 3
     };
 } // namespace state
 
@@ -172,7 +171,7 @@ public:
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
-      , m_state(session::state::CONNECTING)
+      , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
 	  , m_send_buffer_size(0)
@@ -741,6 +740,14 @@ public:
      * @return The connection's origin value from the opening handshake.
      */
     const std::string& get_origin() const;
+    
+    /// Return the connection state.
+    /**
+     * Values can be connecting, open, closing, and closed
+     *
+     * @return The connection's current state.
+     */
+    session::state::value get_state() const;
     
     ////////////////////////////////////////////////////////////////////////
     // The remaining public member functions are for internal/policy use  //
