@@ -24,8 +24,10 @@ public:
         m_client.set_access_channels(websocketpp::log::alevel::disconnect);
         m_client.set_access_channels(websocketpp::log::alevel::app);
         
+        // Initialize the Asio transport policy
         m_client.init_asio();
         
+        // Bind the handlers we are using
         using websocketpp::lib::placeholders::_1;
         using websocketpp::lib::bind;
         m_client.set_open_handler(bind(&telemetry_client::on_open,this,::_1));
@@ -33,9 +35,16 @@ public:
         m_client.set_fail_handler(bind(&telemetry_client::on_fail,this,::_1));
     }
     
-    void connect(const std::string & uri) {
+    // This method will block until the connection is complete
+    void run(const std::string & uri) {
+    	// Create a new connection to the given URI
         websocketpp::lib::error_code ec;
         client::connection_ptr con = m_client.get_connection(uri, ec);
+        if (ec) {
+        	m_client.get_alog().write(websocketpp::log::alevel::app, 
+                	"Get Connection Error: "+ec.message());
+        	return;
+        }
         
         // Grab a handle for this connection so we can talk to it in a thread 
         // safe manor after the event loop starts.
@@ -44,9 +53,7 @@ public:
         // Queue the connection. No DNS queries or network connections will be
         // made until the io_service event loop is run.
         m_client.connect(con);
-    }
-    
-    void run() {
+        
         // Create a thread to run the ASIO io_service event loop
         websocketpp::lib::thread asio_thread(&client::run, &m_client);
         
@@ -93,13 +100,9 @@ public:
             {
                 scoped_lock guard(m_lock);
                 // If the connection has been closed, stop generating telemetry
-                // and exit.
-                if (m_done) {
-                    break;
-                }
+                if (m_done) {break;}
                 
-                // If the connection hasn't been opened yet wait a bit and try
-                // again
+                // If the connection hasn't been opened yet wait a bit and retry
                 if (!m_open) {
                     sleep(1);
                     continue;
@@ -118,16 +121,14 @@ public:
             // closing. While many errors here can be easily recovered from, 
             // in this simple example, we'll stop the telemetry loop.
             if (ec) {
-                val.str("");
-                val << "Error: " << ec.message();
-                m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
+                m_client.get_alog().write(websocketpp::log::alevel::app, 
+                	"Send Error: "+ec.message());
                 break;
             }
         
             sleep(1);
         }
     }
-    
 private:
     client m_client;
     websocketpp::connection_hdl m_hdl;
@@ -145,6 +146,5 @@ int main(int argc, char* argv[]) {
         uri = argv[1];
     }
     
-    c.connect(uri);
-    c.run();
+    c.run(uri);
 }
