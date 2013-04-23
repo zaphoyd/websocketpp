@@ -30,6 +30,7 @@ public:
         using websocketpp::lib::bind;
         m_client.set_open_handler(bind(&telemetry_client::on_open,this,::_1));
         m_client.set_close_handler(bind(&telemetry_client::on_close,this,::_1));
+        m_client.set_fail_handler(bind(&telemetry_client::on_fail,this,::_1));
     }
     
     void connect(const std::string & uri) {
@@ -74,6 +75,15 @@ public:
         m_done = true;
     }
     
+    // The fail handler will signal that we should stop sending telemetry
+    void on_fail(websocketpp::connection_hdl hdl) {
+        m_client.get_alog().write(websocketpp::log::alevel::app, 
+            "Connection failed, stopping telemetry!");
+        
+        scoped_lock guard(m_lock);
+        m_done = true;
+    }
+    
     void telemetry_loop() {
         uint64_t count = 0;
         std::stringstream val;
@@ -84,7 +94,7 @@ public:
                 scoped_lock guard(m_lock);
                 // If the connection hasn't been opened yet wait a bit and try
                 // again
-                if (!m_open) {
+                if (!m_open && !m_done) {
                     sleep(1);
                     continue;
                 }
@@ -101,12 +111,12 @@ public:
         
             m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
             m_client.send(m_hdl,val.str(),websocketpp::frame::opcode::text,ec);
-        	
-        	// The most likely error that we will get is that the connection is
-        	// not in the right state. Usually this means we tried to send a 
-        	// message to a connection that was closed or in the process of 
-        	// closing. While many errors here can be easily recovered from, 
-        	// in this simple example, we'll stop the telemetry loop.
+            
+            // The most likely error that we will get is that the connection is
+            // not in the right state. Usually this means we tried to send a 
+            // message to a connection that was closed or in the process of 
+            // closing. While many errors here can be easily recovered from, 
+            // in this simple example, we'll stop the telemetry loop.
             if (ec) {
                 val.str("");
                 val << "Error: " << ec.message();
