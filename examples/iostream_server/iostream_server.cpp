@@ -65,6 +65,8 @@ int main() {
             con->readsome(temp.data(),temp.size());
             std::cout << temp;
             std::cout.flush();
+            s.get_alog().write(websocketpp::log::alevel::app, 
+                	"Got input bytes: "+temp);
         }
         
         /*char buf[512];
