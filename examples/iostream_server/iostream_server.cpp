@@ -60,13 +60,16 @@ int main() {
         
         //log << "ready done" << std::endl;
         
+        
+        char a;
+        
         std::string temp;
-        while(std::cin >> temp) {
-            con->readsome(temp.data(),temp.size());
-            std::cout << temp;
+        while(std::cin.get(a)) {
+            con->readsome(&a,1);
+            std::cout << a;
             std::cout.flush();
             s.get_alog().write(websocketpp::log::alevel::app, 
-                	"Got input bytes: "+temp);
+                	"Got input bytes: "+std::string(&a,1));
         }
         
         /*char buf[512];
