@@ -82,7 +82,7 @@ public:
         *m_out << "[" << get_timestamp() << "] " 
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
-        m_out.flush();
+        m_out->flush();
     }
     
     void write(level channel, const char* msg) {
@@ -91,7 +91,7 @@ public:
         *m_out << "[" << get_timestamp() << "] "
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
-        m_out.flush();
+        m_out->flush();
     }
     
     bool static_test(level channel) const {
