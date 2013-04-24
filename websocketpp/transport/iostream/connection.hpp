@@ -366,6 +366,8 @@ private:
             m_reading = false;
             m_read_handler(lib::error_code(), m_cursor);
         }
+        
+        return bytes_to_copy;
 	}
 	
 	// Read space (Protected by m_read_mutex)
