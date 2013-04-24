@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <unistd.h>
+
 typedef websocketpp::server<websocketpp::config::core> server;
 
 using websocketpp::lib::placeholders::_1;
@@ -35,8 +37,8 @@ int main() {
 	try {        
         // Clear logging because we are using std out for data
         // TODO: fix when we can log to files
-        //s.clear_error_channels(websocketpp::log::elevel::all);
-        //s.clear_access_channels(websocketpp::log::alevel::all);
+        s.set_error_channels(websocketpp::log::elevel::all);
+        s.set_access_channels(websocketpp::log::alevel::all);
         
         
         log.open("output.log");
@@ -54,17 +56,42 @@ int main() {
         
         con->start();
         
-        std::cin >> *con;
+        //std::cin >> *con;
         
-        log << "ready done" << std::endl;
+        //log << "ready done" << std::endl;
+        
+        std::string temp;
+        while(std::cin >> temp) {
+            con->readsome(temp.data(),temp.size());
+            std::cout << temp;
+            std::cout.flush();
+        }
         
         /*char buf[512];
         size_t bytes_read;
+        size_t bytes_processed;
+        
         while(std::cin) {
             bytes_read = std::cin.readsome(buf,512);
             
+            if (bytes_read > 0) {
+                std::cout << "read " << bytes_read << " bytes " 
+                          << websocketpp::utility::to_hex(buf,bytes_read) 
+                          << std::endl;
+            }
             
+            bytes_processed = 0;
+            while (bytes_processed < bytes_read) {
+                std::cout << "foo" << std::endl;
+                bytes_processed += con->readsome(buf+bytes_processed,
+                                                 bytes_read-bytes_processed);
+                std::cout << "bar" << std::endl;
+                sleep(1);
+            }
+            
+            sleep(1);
         }*/
+        std::cout << "end" << std::endl;
         
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
