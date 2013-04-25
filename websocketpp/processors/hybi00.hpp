@@ -39,6 +39,7 @@
 
 #include <websocketpp/processors/processor.hpp>
 
+#include <websocketpp/frame.hpp>
 #include <websocketpp/md5/md5.hpp>
 
 namespace websocketpp {
@@ -218,19 +219,39 @@ public:
 	 */
 	virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
 	{
-		// assert msg
+		if (!in || !out) {
+			return make_error_code(error::invalid_arguments);
+		}
 		
-		// check if the message is prepared already
+		// TODO: check if the message is prepared already
 		
 		// validate opcode
+        if (in->get_opcode() != frame::opcode::text) {
+            return make_error_code(error::invalid_opcode);    
+        }
+        
+        std::string& i = in->get_raw_payload();
+		//std::string& o = out->get_raw_payload();
+
 		// validate payload utf8
-		
-		// if we are a client generate a masking key
-		
+		if (!utf8_validator::validate(i)) {
+            return make_error_code(error::invalid_payload);
+        }
+
 		// generate header
-		// perform compression
-		// perform masking
+        char h = 0x00;
+        char f = 0xff;
+        out->set_header(std::string(&h,1));
+        
+        // process payload
+        out->set_payload(i);
+        out->append_payload(std::string(&f,1));
+
+		// hybi00 doesn't support compression
+		// hybi00 doesn't have masking
 		
+        out->set_prepared(true);
+
 		return lib::error_code();
 	}
 

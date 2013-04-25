@@ -59,6 +59,8 @@ struct processor_setup {
 	websocketpp::processor::hybi00<stub_config> p;
 };
 
+typedef stub_config::message_type::ptr message_ptr;
+
 BOOST_AUTO_TEST_CASE( exact_match ) {
 	processor_setup env(true);
     
@@ -167,3 +169,45 @@ BOOST_AUTO_TEST_CASE( extract_subprotocols ) {
     BOOST_CHECK( !env.p.extract_subprotocols(env.req,subps) );
     BOOST_CHECK_EQUAL( subps.size(), 0 );
 }
+
+BOOST_AUTO_TEST_CASE( prepare_data_frame_null ) {
+    processor_setup env(true);
+    
+    message_ptr in = env.msg_manager->get_message();
+    message_ptr out = env.msg_manager->get_message();
+    message_ptr invalid;
+
+
+    // empty pointers arguements should return sane error 
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,invalid), websocketpp::processor::error::invalid_arguments );
+
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(in,invalid), websocketpp::processor::error::invalid_arguments );
+
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,out), websocketpp::processor::error::invalid_arguments );
+    
+    // test valid opcodes
+    // text (1) should be the only valid opcode
+    for (int i = 0; i < 0xF; i++) {
+        in->set_opcode(websocketpp::frame::opcode::value(i));
+        
+        env.ec = env.p.prepare_data_frame(in,out);
+        
+        if (i != 1) {
+            BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_opcode );
+        } else {
+            BOOST_CHECK_NE( env.ec, websocketpp::processor::error::invalid_opcode );
+        }
+    }
+    
+    /*
+     * TODO: tests for invalid UTF8
+    char buf[2] = {0x00, 0x00};
+
+    in->set_opcode(websocketpp::frame::opcode::text);
+    in->set_payload("foo");
+
+    env.ec = env.p.prepare_data_frame(in,out);
+    BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_payload );
+    */
+}
+
