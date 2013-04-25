@@ -61,6 +61,9 @@ enum value {
 
     /// The endpoint is out of outgoing message buffers
     no_outgoing_buffers,
+    
+    /// The endpoint is out of incoming message buffers
+    no_incoming_buffers,
 
     /// The connection was in the wrong state for this operation
     invalid_state,
@@ -124,6 +127,8 @@ public:
 				return "invalid uri";
 			case error::no_outgoing_buffers:
 				return "no outgoing message buffers";
+			case error::no_incoming_buffers:
+				return "no incoming message buffers";
 			case error::invalid_state:
 				return "invalid state";
 			case error::bad_close_code:
