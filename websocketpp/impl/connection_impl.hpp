@@ -669,6 +669,14 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
             }
         }
         
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,m_request.raw());
+            if (m_request.get_header("Sec-WebSocket-Key3") != "") {
+                m_alog.write(log::alevel::devel,
+                    utility::to_hex(m_request.get_header("Sec-WebSocket-Key3")));
+            }
+        }
+        
         // The remaining bytes in m_buf are frame data. Copy them to the 
         // beginning of the buffer and note the length. They will be read after
         // the handshake completes and before more bytes are read.
@@ -1057,6 +1065,10 @@ void connection<config>::send_http_response() {
     
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
+        if (m_response.get_header("Sec-WebSocket-Key3") != "") {
+            m_alog.write(log::alevel::devel,
+                utility::to_hex(m_response.get_header("Sec-WebSocket-Key3")));
+        }
     }
     
     // write raw bytes
