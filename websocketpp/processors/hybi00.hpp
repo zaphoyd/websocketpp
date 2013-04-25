@@ -124,7 +124,7 @@ public:
             md5::md5_hash_string(std::string(key_final,16))
         );
         
-        res.append_header("Upgrade","websocket");
+        res.append_header("Upgrade","WebSocket");
         res.append_header("Connection","Upgrade");
         
         // Echo back client's origin unless our local application set a
@@ -138,6 +138,10 @@ public:
         if (res.get_header("Sec-WebSocket-Location") == "") {
             uri_ptr uri = get_uri(req);
             res.append_header("Sec-WebSocket-Location",uri->str());
+        }
+        
+        if (subprotocol != "") {
+            res.replace_header("Sec-WebSocket-Protocol",subprotocol);
         }
         
         return lib::error_code();
@@ -157,7 +161,9 @@ public:
     }
     
     std::string get_raw(const response_type& res) const {
-        return res.raw() + res.get_header("Sec-WebSocket-Key3");
+        response_type temp = res;
+        temp.remove_header("Sec-WebSocket-Key3");
+        return temp.raw() + res.get_header("Sec-WebSocket-Key3");
     }
     
     const std::string& get_origin(const request_type& r) const {
