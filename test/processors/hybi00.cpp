@@ -211,3 +211,20 @@ BOOST_AUTO_TEST_CASE( prepare_data_frame_null ) {
     */
 }
 
+BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
+    processor_setup env(true);
+    
+    message_ptr in = env.msg_manager->get_message();
+    message_ptr out = env.msg_manager->get_message();
+    
+    in->set_opcode(websocketpp::frame::opcode::text);
+    in->set_payload("foo");
+
+    env.ec = env.p.prepare_data_frame(in,out);
+    
+    unsigned char raw_header[1] = {0x00};
+    unsigned char raw_payload[4] = {0x66,0x6f,0x6f,0xff};
+
+    BOOST_CHECK_EQUAL( out->get_header(), std::string(reinterpret_cast<char*>(raw_header),1) );
+    BOOST_CHECK_EQUAL( out->get_payload(), std::string(reinterpret_cast<char*>(raw_payload),4) );
+}
