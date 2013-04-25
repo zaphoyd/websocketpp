@@ -386,7 +386,9 @@ public:
 				// check if this frame is the start of a new message and set up
 				// the appropriate message metadata.
 				frame::opcode::value op = frame::get_opcode(m_basic_header);
-
+                
+                // TODO: get_message failure conditions
+                
 				if (frame::opcode::is_control(op)) {
 					m_control_msg = msg_metadata(
 						m_msg_manager->get_message(op,m_bytes_needed),
