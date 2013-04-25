@@ -225,6 +225,48 @@ BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
     unsigned char raw_header[1] = {0x00};
     unsigned char raw_payload[4] = {0x66,0x6f,0x6f,0xff};
 
+    BOOST_CHECK( !env.ec );
     BOOST_CHECK_EQUAL( out->get_header(), std::string(reinterpret_cast<char*>(raw_header),1) );
     BOOST_CHECK_EQUAL( out->get_payload(), std::string(reinterpret_cast<char*>(raw_payload),4) );
+}
+
+
+BOOST_AUTO_TEST_CASE( empty_consume ) {
+    uint8_t frame[2] = {0x00,0x00};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,0,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 0);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
+}
+
+BOOST_AUTO_TEST_CASE( empty_frame ) {
+    uint8_t frame[2] = {0x00, 0xff};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,2,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 2);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), true );
+    BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "" );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
+}
+
+BOOST_AUTO_TEST_CASE( short_frame ) {
+    uint8_t frame[5] = {0x00, 0x66, 0x6f, 0x6f, 0xff};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,5,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 5);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), true );
+    BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "foo" );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
 }

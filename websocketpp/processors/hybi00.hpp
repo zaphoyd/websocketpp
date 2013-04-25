@@ -40,6 +40,8 @@
 #include <websocketpp/processors/processor.hpp>
 
 #include <websocketpp/frame.hpp>
+#include <websocketpp/utf8_validator.hpp>
+
 #include <websocketpp/md5/md5.hpp>
 
 namespace websocketpp {
@@ -63,7 +65,11 @@ public:
 	typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
 
     explicit hybi00(bool secure, bool server, msg_manager_ptr manager) 
-      : processor<config>(secure, server) {}
+      : processor<config>(secure, server)
+      , msg_hdr(0x00)
+      , msg_ftr(0xff)
+      , m_state(HEADER)
+      , m_msg_manager(manager) {}
     
     int get_version() const {
         return 0;
@@ -196,12 +202,65 @@ public:
 
 	/// Process new websocket connection bytes
 	size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
-        ec = make_error_code(error::not_implimented);
-		return 0;
+        // if in state header we are expecting a 0x00 byte, if we don't get one
+        // it is a fatal error
+        size_t p = 0; // bytes processed
+        size_t l = 0;
+
+		ec = lib::error_code();
+
+        while (p < len) {
+            if (m_state == HEADER) {
+                if (buf[p] == msg_hdr) {
+                    p++;
+                    m_msg_ptr = m_msg_manager->get_message(frame::opcode::text,1);
+                    
+                    if (!m_msg_ptr) {
+                        ec = make_error_code(websocketpp::error::no_incoming_buffers);
+                        m_state = FATAL_ERROR;
+                    } else {
+                        m_state = PAYLOAD;
+                    }
+                } else {
+                    ec = make_error_code(error::protocol_violation);
+                    m_state = FATAL_ERROR;
+                }
+            } else if (m_state == PAYLOAD) {
+                uint8_t *it = std::find(buf+p,buf+len,uint8_t(msg_ftr));
+                
+                // 0    1    2    3    4    5
+                // 0x00 0x23 0x23 0x23 0xff 0xXX
+
+                // Copy payload bytes into message
+                l = it-(buf+p);
+                m_msg_ptr->append_payload(buf+p,l);
+                p += l;
+                
+                if (it != buf+len) {
+                    // message is done, copy it and the trailing
+                    p++;
+                    // TODO: validation
+                    m_state = READY;
+                }
+            } else {
+                // TODO
+                break;
+            }
+        }
+        // If we get one, we create a new message and move to application state
+        
+        // if in state application we are copying bytes into the output message
+        // and validating them for UTF8 until we hit a 0xff byte. Once we hit
+        // 0x00, the message is complete and is dispatched. Then we go back to
+        // header state.
+        
+        //ec = make_error_code(error::not_implimented);
+        return p;
 	}
 
 	bool ready() const {
-		return false;
+        std::cout << "state: " << m_state << std::endl;
+		return (m_state == READY);
 	}
 	
 	bool get_error() const {
@@ -209,7 +268,10 @@ public:
 	}
 
 	message_ptr get_message() {
-		return message_ptr();
+		message_ptr ret = m_msg_ptr;
+        m_msg_ptr = message_ptr();
+        m_state = HEADER;
+        return ret;
 	}
 	
 	/// Prepare a message for writing
@@ -239,13 +301,11 @@ public:
         }
 
 		// generate header
-        char h = 0x00;
-        char f = 0xff;
-        out->set_header(std::string(&h,1));
+        out->set_header(std::string(&msg_hdr,1));
         
         // process payload
         out->set_payload(i);
-        out->append_payload(std::string(&f,1));
+        out->append_payload(std::string(&msg_ftr,1));
 
 		// hybi00 doesn't support compression
 		// hybi00 doesn't have masking
@@ -295,6 +355,22 @@ private:
             std::fill(result,result+4,0);
         }
     }
+    
+    enum state {
+		HEADER = 0,
+		PAYLOAD = 1,
+		READY = 2,
+		FATAL_ERROR = 3
+	};
+    
+    const char msg_hdr;
+    const char msg_ftr;
+
+    state m_state;
+    
+    msg_manager_ptr m_msg_manager;
+    message_ptr	m_msg_ptr;
+    utf8_validator::validator m_validator;
 };
 
 
