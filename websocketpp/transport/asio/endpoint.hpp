@@ -364,19 +364,6 @@ protected:
         }
         
         tcp::resolver::query query(u->get_host(),u->get_port_str());
-        /*tcp::resolver::iterator iterator = resolver.resolve(query);
-        
-        boost::asio::async_connect(
-            tcon->get_raw_socket(),
-            iterator,
-            lib::bind(
-                &type::handle_connect,
-                this, // shared from this?
-                tcon,
-                cb,
-				lib::placeholders::_1
-            )
-        );*/
         
         m_resolver->async_resolve(
             query,
