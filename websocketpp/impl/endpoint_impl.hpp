@@ -174,7 +174,7 @@ void endpoint<connection,config>::close(connection_hdl hdl,
     const close::status::value code, const std::string & reason)
 {
     lib::error_code ec;
-    send(hdl,code,reason,ec);
+    close(hdl,code,reason,ec);
     if (ec) { throw ec; }
 }
 
