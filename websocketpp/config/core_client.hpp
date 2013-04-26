@@ -63,6 +63,8 @@ namespace websocketpp {
 namespace config {
 
 struct core_client {
+    typedef core_client type;
+    
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
 	
@@ -89,9 +91,11 @@ struct core_client {
 	    concurrency_type> rng_type;
 	
     struct transport_config {
-        typedef core_client::concurrency_type concurrency_type;
-        typedef core_client::elog_type elog_type;
-        typedef core_client::alog_type alog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::elog_type elog_type;
+        typedef type::alog_type alog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
     };
 
     /// Transport Endpoint Component

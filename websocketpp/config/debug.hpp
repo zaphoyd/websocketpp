@@ -65,6 +65,8 @@ namespace websocketpp {
 namespace config {
 
 struct debug_core {
+    typedef debug_core type;
+    
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
 	
@@ -90,9 +92,11 @@ struct debug_core {
 	typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 	
     struct transport_config {
-        typedef debug_core::concurrency_type concurrency_type;
-        typedef debug_core::elog_type elog_type;
-        typedef debug_core::alog_type alog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::elog_type elog_type;
+        typedef type::alog_type alog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
     };
 
     /// Transport Endpoint Component
@@ -172,7 +176,7 @@ struct debug_core {
 
     /// permessage_compress extension
     struct permessage_deflate_config {
-        typedef debug_core::request_type request_type;
+        typedef type::request_type request_type;
         
         /// If the remote endpoint requests that we reset the compression
         /// context after each message should we honor the request?

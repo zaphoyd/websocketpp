@@ -40,6 +40,7 @@ namespace websocketpp {
 namespace config {
 
 struct debug_asio_tls : public debug_core {
+    typedef debug_asio_tls type;
 	typedef debug_core base;
 	
 	typedef base::concurrency_type concurrency_type;
@@ -57,9 +58,11 @@ struct debug_asio_tls : public debug_core {
 	typedef base::rng_type rng_type;
 
     struct transport_config {
-        typedef debug_asio_tls::concurrency_type concurrency_type;
-        typedef debug_asio_tls::alog_type alog_type;
-        typedef debug_asio_tls::elog_type elog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
         typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
     };
 
