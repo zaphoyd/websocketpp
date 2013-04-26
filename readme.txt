@@ -46,9 +46,11 @@ Implimented, API not finalized
 - http_handler
 
 Needs work:
+- Timeouts
 - PowerPC support
 - Extension support
 - permessage_compress extension
 - Visual Studio / Windows support
 - Message buffer pool
 - Performance tuning
+- Outgoing Proxy Support
