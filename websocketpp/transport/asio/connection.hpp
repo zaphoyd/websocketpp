@@ -70,6 +70,11 @@ public:
     /// Type of this transport's error logging policy
     typedef typename config::elog_type elog_type;
 	
+	typedef typename config::request_type request_type;
+	typedef typename request_type::ptr request_ptr;
+    typedef typename config::response_type response_type;
+    typedef typename response_type::ptr response_ptr;
+	
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;	
 
@@ -159,8 +164,110 @@ protected:
 			m_tcp_init_handler(m_connection_hdl);
 		}
 		
-		callback(ec);
+		if (ec) {
+		    callback(ec);
+		}
+		
+		// If no error, and we are an insecure connection with a proxy set
+		// issue a proxy connect.
+		if (!is_secure() && !m_proxy.empty()) {
+		    proxy_write(callback);
+		} else {
+		    callback(ec);
+		}
 	}
+    
+    void proxy_write(init_handler callback) {
+        if (!m_proxy_data) {
+            // internal endpoint error
+        }
+        
+        m_proxy_data->buf = m_proxy_data->req.raw();
+        
+        m_bufs.push_back(boost::asio::buffer(m_proxy_data->write_buf.data(),
+                                             m_proxy_data->write_buf.size()));
+        
+        boost::asio::async_write(
+            socket_con_type::get_socket(),
+            m_bufs,
+            lib::bind(
+                &type::handle_proxy_connect,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+    }
+    
+    void handle_proxy_write(init_handler callback, const 
+        boost::system::error_code& ec)
+    {
+        if (ec) {
+            m_elog.write(log::elevel::info,
+                "asio handle_proxy_write error: "+ec.message());
+    		callback(make_error_code(error::pass_through));	
+    	} else {
+    		// read response
+    		proxy_read(callback);
+    	}
+    }
+    
+    void proxy_read(init_handler callback) {
+        if (!m_proxy_data) {
+            // internal endpoint error
+        }
+        
+        m_proxy_data->buf = m_proxy_data->req.raw();
+        
+        m_bufs.push_back(boost::asio::buffer(m_proxy_data->write_buf.data(),
+                                             m_proxy_data->write_buf.size()));
+        
+        boost::asio::async_read_until(
+			socket_con_type::get_socket(),
+			m_proxy_data->read_buf,
+			"\r\n\r\n",
+			lib::bind(
+				&type::handle_proxy_read,
+				this,
+				callback,
+				lib::placeholders::_1,
+				lib::placeholders::_2
+			)
+		);
+    }
+    
+    void handle_proxy_read(init_handler callback, const 
+        boost::system::error_code& ec)
+    {
+        if (ec) {
+            m_elog.write(log::elevel::info,
+                "asio handle_proxy_read error: "+ec.message());
+    		callback(make_error_code(error::pass_through));	
+    	} else {
+    		// read response
+    		if (!m_proxy_data) {
+                // internal endpoint error
+            }
+            
+            /*char buf[512];
+            size_t bytes_read;
+            size_t bytes_processed;
+            while(m_proxy_data->read_buf.good()) {
+                bytes_read = m_proxy_data->read_buf.read(buf,512);
+                bytes_processed = m_proxy_data->res.consume(buf,bytes_read);
+                
+                if (bytes_read != bytes_processed) {
+                    // hmmmm
+                }
+            }
+            
+            if (m_proxy_data->res.ready()) {
+                
+            }
+            
+    		proxy_read(callback);*/
+    	}
+    }
     
     /// read at least num_bytes bytes into buf and then call handler. 
 	/**
@@ -331,10 +438,16 @@ private:
 	const bool			m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
-
-	// dynamic settings
-	
-	// transport state
+    
+    struct proxy_data {
+        request_type req;
+        response_type res;
+        std::string write_buf;
+        boost::asio::streambuf read_buf;
+    };
+    
+    std::string m_proxy;
+    lib::shared_ptr<proxy_data> m_proxy_data;
 	
 	// transport resources
     io_service_ptr      m_io_service;
