@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     env.p.process_handshake(env.req,"",env.res);
     
     BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "Upgrade");
-    BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "websocket");
+    BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "WebSocket");
     BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Origin"), "http://example.com");
         
     BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Location"), "ws://www.example.com/");
