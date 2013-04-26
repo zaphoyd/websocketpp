@@ -829,6 +829,28 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK( r.get_body() == "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
 }
 
+/*BOOST_AUTO_TEST_CASE( parse_istream ) {
+    websocketpp::http::parser::response r;
+    
+    std::stringstream s;
+    
+    s << "HTTP/1.1 200 OK\r\nDate: Thu, 10 May 2012 11:59:25 GMT\r\nServer: Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch\r\nLast-Modified: Tue, 30 Mar 2010 17:41:28 GMT\r\nETag: \"16799d-55-4830823a78200\"\r\nAccept-Ranges: bytes\r\nContent-Length: 85\r\nVary: Accept-Encoding\r\nContent-Type: text/html\r\n\r\n<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>";
+    
+    bool exception = false;
+    size_t pos = 0;
+    
+    try {
+    	pos += r.consume(s);
+    } catch (std::exception &e) {
+    	exception = true;
+    	std::cout << e.what() << std::endl;
+    }
+    
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK( pos == 405 );
+    BOOST_CHECK( r.headers_ready() == true );
+}*/
+
 BOOST_AUTO_TEST_CASE( write_request_basic ) {
     websocketpp::http::parser::request r;
     

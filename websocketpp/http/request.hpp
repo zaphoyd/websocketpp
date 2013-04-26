@@ -47,6 +47,9 @@ namespace parser {
  */
 class request : public parser {
 public: 
+    typedef request type;
+    typedef lib::shared_ptr<type> ptr;
+    
     typedef parser::attribute_list attribute_list;
     typedef parser::parameter_list parameter_list;
 
