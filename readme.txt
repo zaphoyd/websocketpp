@@ -37,6 +37,7 @@ Implimented, needs more testing
 - Logging
 - Client role
 - Subprotocol negotiation
+- Hybi 00/Hixie 76 legacy protocol support
 
 Implimented, API not finalized
 - open_handler
@@ -49,6 +50,5 @@ Needs work:
 - Extension support
 - permessage_compress extension
 - Visual Studio / Windows support
-- Hybi 00/Hixie 76 legacy protocol support
 - Message buffer pool
 - Performance tuning
