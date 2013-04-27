@@ -63,7 +63,7 @@ public:
     explicit uri(const std::string& uri) {
         // TODO: should this split resource into path/query?
         lib::cmatch matches;
-        const lib::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
+        const lib::regex expression("(http|ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
         
         if (lib::regex_match(uri.c_str(), matches, expression)) {
             m_secure = (matches[1] == "wss");
