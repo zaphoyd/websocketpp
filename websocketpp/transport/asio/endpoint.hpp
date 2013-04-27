@@ -363,7 +363,25 @@ protected:
             m_resolver.reset(new boost::asio::ip::tcp::resolver(*m_io_service));
         }
         
-        tcp::resolver::query query(u->get_host(),u->get_port_str());
+        std::string proxy = tcon->get_proxy();
+        std::string host;
+        std::string port;
+        
+        if (proxy.empty()) {
+            host = u->get_host();
+            port = u->get_port_str();
+        } else {
+            try {
+                uri_ptr pu(new uri(proxy));
+                tcon->proxy_init(u->get_host_port());
+                host = pu->get_host();
+                port = pu->get_port_str();
+            } catch (uri_exception) {
+                cb(tcon->get_handle(),make_error_code(error::proxy_invalid));
+            }
+        }
+        
+        tcp::resolver::query query(host,port);
         
         m_resolver->async_resolve(
             query,

@@ -56,7 +56,13 @@ enum value {
     invalid_num_bytes,
     
     /// there was an error in the underlying transport library
-    pass_through
+    pass_through,
+    
+    /// The connection to the requested proxy server failed
+    proxy_failed,
+    
+    /// Invalid Proxy URI
+    proxy_invalid
 };
 
 class category : public lib::error_category {
@@ -73,6 +79,10 @@ public:
 				return "async_read_at_least call requested more bytes than buffer can store";
 			case error::pass_through:
 				return "Underlying Transport Error";
+			case error::proxy_failed:
+				return "Proxy connection failed";
+			case error::proxy_invalid:
+				return "Invalid proxy URI";
 			default:
 				return "Unknown";
 		}

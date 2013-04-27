@@ -113,6 +113,14 @@ public:
         m_tcp_init_handler = h;
     }
     
+    void set_proxy(const std::string & proxy) {
+        m_proxy = proxy;
+    }
+    
+    const std::string & get_proxy() const {
+        return m_proxy;
+    }
+
     /// Get the remote endpoint address
 	/**
 	 * The iostream transport has no information about the ultimate remote 
@@ -140,6 +148,22 @@ public:
     connection_hdl get_handle() const {
         return m_connection_hdl;
     }
+    
+    /// initialize the proxy buffers and http parsers
+    /**
+     *
+     * @param authority The address of the server we want the proxy to tunnel to
+     * in the format of a URI authority (host:port)
+     */
+    void proxy_init(const std::string & authority) {
+        m_proxy_data.reset(new proxy_data());
+        m_proxy_data->req.set_version("HTTP/1.1");
+        m_proxy_data->req.set_method("CONNECT");
+
+        m_proxy_data->req.set_uri(authority);
+        m_proxy_data->req.replace_header("Host",authority);
+    }
+
 protected:
     /// Initialize transport for reading
 	/**
@@ -179,19 +203,24 @@ protected:
     
     void proxy_write(init_handler callback) {
         if (!m_proxy_data) {
-            // internal endpoint error
+            m_elog.write(log::elevel::library,
+                "assertion failed: !m_proxy_data in asio::connection::proxy_write");
+            callback(make_error_code(error::general));
+            return;
         }
         
-        m_proxy_data->buf = m_proxy_data->req.raw();
+        m_proxy_data->write_buf = m_proxy_data->req.raw();
         
         m_bufs.push_back(boost::asio::buffer(m_proxy_data->write_buf.data(),
                                              m_proxy_data->write_buf.size()));
         
+        m_alog.write(log::alevel::devel,m_proxy_data->write_buf);
+
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
             lib::bind(
-                &type::handle_proxy_connect,
+                &type::handle_proxy_write,
                 this,
                 callback,
                 lib::placeholders::_1
@@ -202,25 +231,24 @@ protected:
     void handle_proxy_write(init_handler callback, const 
         boost::system::error_code& ec)
     {
+        m_bufs.clear();
+
         if (ec) {
             m_elog.write(log::elevel::info,
                 "asio handle_proxy_write error: "+ec.message());
     		callback(make_error_code(error::pass_through));	
     	} else {
-    		// read response
     		proxy_read(callback);
     	}
     }
     
     void proxy_read(init_handler callback) {
         if (!m_proxy_data) {
-            // internal endpoint error
+            m_elog.write(log::elevel::library,
+                "assertion failed: !m_proxy_data in asio::connection::proxy_read");
+            callback(make_error_code(error::general));
+            return;
         }
-        
-        m_proxy_data->buf = m_proxy_data->req.raw();
-        
-        m_bufs.push_back(boost::asio::buffer(m_proxy_data->write_buf.data(),
-                                             m_proxy_data->write_buf.size()));
         
         boost::asio::async_read_until(
 			socket_con_type::get_socket(),
@@ -237,35 +265,61 @@ protected:
     }
     
     void handle_proxy_read(init_handler callback, const 
-        boost::system::error_code& ec)
+        boost::system::error_code& ec, size_t bytes_transferred)
     {
         if (ec) {
             m_elog.write(log::elevel::info,
                 "asio handle_proxy_read error: "+ec.message());
     		callback(make_error_code(error::pass_through));	
     	} else {
-    		// read response
     		if (!m_proxy_data) {
-                // internal endpoint error
+                m_elog.write(log::elevel::library,
+                    "assertion failed: !m_proxy_data in asio::connection::handle_proxy_read");
+                callback(make_error_code(error::general));
+                return;
             }
             
-            /*char buf[512];
-            size_t bytes_read;
-            size_t bytes_processed;
-            while(m_proxy_data->read_buf.good()) {
-                bytes_read = m_proxy_data->read_buf.read(buf,512);
-                bytes_processed = m_proxy_data->res.consume(buf,bytes_read);
-                
-                if (bytes_read != bytes_processed) {
-                    // hmmmm
-                }
+            std::istream input(&m_proxy_data->read_buf);
+
+            m_proxy_data->res.consume(input);
+            
+            if (!m_proxy_data->res.headers_ready()) {
+                // we read until the headers were done in theory but apparently
+                // they aren't. Internal endpoint error.
+                callback(make_error_code(error::general));
+                return;
+            }
+
+            m_alog.write(log::alevel::devel,m_proxy_data->res.raw());
+
+            if (m_proxy_data->res.get_status_code() != http::status_code::ok) {
+                // got an error response back
+                // TODO: expose this error in a programatically accessible way?
+                // if so, see below for an option on how to do this.
+                std::stringstream s;
+                s << "Proxy connection error: " 
+                  << m_proxy_data->res.get_status_code()
+                  << " ("
+                  << m_proxy_data->res.get_status_msg()
+                  << ")";
+                m_elog.write(log::elevel::info,s.str());
+                callback(make_error_code(error::proxy_failed));
+                return;
             }
             
-            if (m_proxy_data->res.ready()) {
-                
-            }
+            // we have successfully established a connection to the proxy, now
+            // we can continue and the proxy will transparently forward the 
+            // WebSocket connection.
+
+            // TODO: decide if we want an on_proxy callback that would allow
+            // access to the proxy response.
             
-    		proxy_read(callback);*/
+            // free the proxy buffers and req/res objects as they aren't needed
+            // anymore
+            m_proxy_data.reset();
+
+            // call the original init handler back.
+            callback(lib::error_code());
     	}
     }
     
