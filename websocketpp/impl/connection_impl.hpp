@@ -549,7 +549,7 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     
     if (ec) {
         std::stringstream s;
-    	s << "handle_transport_init recieved error: "<< ec;
+    	s << "handle_transport_init recieved error: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
 
         this->terminate();
@@ -606,7 +606,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
     
     if (ec) {
         std::stringstream s;
-    	s << "error in handle_read_handshake: "<< ec;
+    	s << "error in handle_read_handshake: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -1164,7 +1164,7 @@ void connection<config>::send_http_request() {
     if (m_request.get_header("User-Agent") == "") {
         m_request.replace_header("User-Agent",m_user_agent);
     }
-    
+        
     m_handshake_buffer = m_request.raw();
     
     if (m_alog.static_test(log::alevel::devel)) {
