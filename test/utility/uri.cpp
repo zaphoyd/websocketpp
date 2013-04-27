@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE( uri_valid_2 ) {
         BOOST_CHECK( uri.get_secure() == true );
         BOOST_CHECK( uri.get_host() == "thor-websocket.zaphoyd.net");
         BOOST_CHECK( uri.get_port() == 88 );
-        BOOST_CHECK( uri.get_resource() == "/" );       
+        BOOST_CHECK( uri.get_resource() == "/" );
     } catch (websocketpp::uri_exception&) {
         exception = true;
     }
@@ -153,16 +153,33 @@ BOOST_AUTO_TEST_CASE( uri_invalid_long_port ) {
     BOOST_CHECK( exception == true);
 }
 
-// Invalid URI (http method)
-BOOST_AUTO_TEST_CASE( uri_invalid_http ) {
+// Invalid URI (bogus scheme method)
+BOOST_AUTO_TEST_CASE( uri_invalid_scheme ) {
     bool exception = false;
     try {
-        websocketpp::uri uri("http://localhost:9000/chat");     
+        websocketpp::uri uri("foo://localhost:9000/chat");     
     } catch (websocketpp::uri_exception&) {
         exception = true;
     }
 
     BOOST_CHECK( exception == true);
+}
+
+// Valid URI (http method)
+BOOST_AUTO_TEST_CASE( uri_http_scheme ) {
+    bool exception = false;
+    try {
+        websocketpp::uri uri("http://localhost:9000/chat");
+        
+        BOOST_CHECK( uri.get_secure() == false );
+        BOOST_CHECK( uri.get_host() == "localhost");
+        BOOST_CHECK( uri.get_port() == 9000 );
+        BOOST_CHECK( uri.get_resource() == "/chat" );     
+    } catch (websocketpp::uri_exception&) {
+        exception = true;
+    }
+
+    BOOST_CHECK( exception == false);
 }
 
 // Valid URI IPv4 literal
