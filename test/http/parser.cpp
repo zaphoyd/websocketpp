@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK( r.get_body() == "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
 }
 
-/*BOOST_AUTO_TEST_CASE( parse_istream ) {
+BOOST_AUTO_TEST_CASE( parse_istream ) {
     websocketpp::http::parser::response r;
     
     std::stringstream s;
@@ -846,10 +846,11 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     	std::cout << e.what() << std::endl;
     }
     
-    BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 405 );
-    BOOST_CHECK( r.headers_ready() == true );
-}*/
+    BOOST_CHECK_EQUAL( exception, false );
+    BOOST_CHECK_EQUAL( pos, 405 );
+    BOOST_CHECK_EQUAL( r.headers_ready(), true );
+    BOOST_CHECK_EQUAL( r.ready(), true );
+}
 
 BOOST_AUTO_TEST_CASE( write_request_basic ) {
     websocketpp::http::parser::request r;
@@ -888,6 +889,5 @@ BOOST_AUTO_TEST_CASE( write_request_with_body ) {
     r.replace_header("Content-Type","application/x-www-form-urlencoded");
     r.set_body("licenseID=string&content=string&paramsXML=string");
     
-    std::cout << r.raw() << std::endl;
     BOOST_CHECK( r.raw() == raw );
 }

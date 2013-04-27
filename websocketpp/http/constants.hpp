@@ -39,6 +39,9 @@ namespace http {
     // Maximum size in bytes before rejecting an HTTP header as too big.
     const size_t max_header_size = 16000;
     
+    // Number of bytes to use for temporary istream read buffers
+    const size_t istream_buffer = 512;
+    
     // invalid HTTP token characters
     // 0x00 - 0x32, 0x7f-0xff
     // ( ) < > @ , ; : \ " / [ ] ? = { }
