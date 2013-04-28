@@ -194,7 +194,7 @@ protected:
 		
 		// If no error, and we are an insecure connection with a proxy set
 		// issue a proxy connect.
-		if (!is_secure() && !m_proxy.empty()) {
+		if (!m_proxy.empty()) {
 		    proxy_write(callback);
 		} else {
 		    callback(ec);
