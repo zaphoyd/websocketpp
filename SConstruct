@@ -59,6 +59,7 @@ if env['PLATFORM'].startswith('win'):
                             'WIN32_LEAN_AND_MEAN',
                             '_WIN32_WINNT=0x0600',
                             '_CONSOLE',
+                            'BOOST_TEST_DYN_LINK',
                             'NOMINMAX',
                             '_WEBSOCKETPP_CPP11_FRIEND_',
                             '_WEBSOCKETPP_CPP11_MEMORY_',
@@ -191,6 +192,9 @@ if not env['PLATFORM'].startswith('win'):
 
 # Main test application
 #main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
+
+# testee_server
+testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = builddir + 'testee_server',duplicate = 0)
 
 # echo_server
 echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = builddir + 'echo_server',duplicate = 0)
