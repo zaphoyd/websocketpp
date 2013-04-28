@@ -20,6 +20,9 @@ if os.environ.has_key('LINKFLAGS'):
 ## or set BOOST_INCLUDES and BOOST_LIBS if Boost comes with your OS distro e.g. and
 ## needs BOOST_INCLUDES=/usr/include/boost and BOOST_LIBS=/usr/lib like Ubuntu.
 ##
+if os.environ.has_key('BOOSTROOT'):
+    os.environ['BOOST_ROOT'] = os.environ['BOOSTROOT']
+
 if os.environ.has_key('BOOST_ROOT'):
    env['BOOST_INCLUDES'] = os.environ['BOOST_ROOT']
    env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib')
@@ -56,7 +59,10 @@ if env['PLATFORM'].startswith('win'):
                             'WIN32_LEAN_AND_MEAN',
                             '_WIN32_WINNT=0x0600',
                             '_CONSOLE',
-                            '_WEBSOCKETPP_CPP11_FRIEND_'])
+                            'NOMINMAX',
+                            '_WEBSOCKETPP_CPP11_FRIEND_',
+                            '_WEBSOCKETPP_CPP11_MEMORY_',
+                            '_WEBSOCKETPP_CPP11_FUNCTIONAL_'])
    arch_flags  = '/arch:SSE2'
    opt_flags   = '/Ox /Oi /fp:fast'
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
@@ -87,7 +93,7 @@ elif env['CXX'].startswith('clang++'):
    #env.Append(CCFLAGS = ['-Wcast-align'])
    #env.Append(CCFLAGS = ['-Wglobal-constructors'])
    env.Append(CCFLAGS = ['-Wno-padded'])
-   
+
    # Wpadded
    # Wsign-conversion
 
@@ -117,11 +123,11 @@ env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
    # TODO: check g++ version
-   
+
    # g++ STL lacks support for <regex>
-   
+
    GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
-   
+
    if GCC_VERSION > "4.4.0":
       print "C++11 build environment partially enabled"
       env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_','_WEBSOCKETPP_NO_CPP11_REGEX_'])
@@ -133,7 +139,7 @@ if env_cpp11['CXX'].startswith('g++'):
 elif env_cpp11['CXX'].startswith('clang++'):
    print "C++11 build environment enabled"
    env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
-   
+
    # look for optional second boostroot compiled with clang's libc++ STL library
    # this prevents warnings/errors when linking code built with two different
    # incompatible STL libraries.
@@ -146,12 +152,15 @@ elif env_cpp11['CXX'].startswith('clang++'):
 else:
    print "C++11 build environment disabled"
 
-#env.Append(CPPPATH = [env['BOOST_INCLUDES']])
-env.Append(CPPFLAGS = '-isystem '+env['BOOST_INCLUDES'])
+env.Append(CPPPATH = [env['BOOST_INCLUDES']])
+if not env['PLATFORM'].startswith('win'):
+    env.Append(CPPFLAGS = ['-isystem'])
 env.Append(LIBPATH = [env['BOOST_LIBS']])
 
-#env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
-env_cpp11.Append(CPPFLAGS = '-isystem ' + env_cpp11['BOOST_INCLUDES'])
+
+env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
+if not env_cpp11['PLATFORM'].startswith('win'):
+    env_cpp11.Append(CPPFLAGS = ['-isystem'])
 env_cpp11.Append(LIBPATH = [env_cpp11['BOOST_LIBS']])
 
 releasedir = 'build/release/'
@@ -170,14 +179,15 @@ Export('polyfill_libs')
 
 ## TARGETS:
 
-# Unit tests, add test folders with SConscript files to to_test list.
-to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/iostream','transport/asio','roles','endpoint','connection'] #,'http','processors','connection'
+if not env['PLATFORM'].startswith('win'):
+    # Unit tests, add test folders with SConscript files to to_test list.
+    to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/iostream','transport/asio','roles','endpoint','connection'] #,'http','processors','connection'
 
-for t in to_test:
-   new_tests = SConscript('#/test/'+t+'/SConscript',variant_dir = testdir + t, duplicate = 0)
-   for a in new_tests:
-      new_alias = Alias('test', [a], a.abspath)
-      AlwaysBuild(new_alias)
+    for t in to_test:
+       new_tests = SConscript('#/test/'+t+'/SConscript',variant_dir = testdir + t, duplicate = 0)
+       for a in new_tests:
+          new_alias = Alias('test', [a], a.abspath)
+          AlwaysBuild(new_alias)
 
 # Main test application
 #main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
@@ -186,7 +196,8 @@ for t in to_test:
 echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = builddir + 'echo_server',duplicate = 0)
 
 # echo_server_tls
-echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
+if not env['PLATFORM'].startswith('win'):
+    echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
@@ -197,14 +208,15 @@ echo_client = SConscript('#/examples/echo_client/SConscript',variant_dir = build
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
 
-# iostream_server
-iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)
+if not env['PLATFORM'].startswith('win'):
+    # iostream_server
+    iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)
 
-# telemetry_client
-telemetry_client = SConscript('#/examples/telemetry_client/SConscript',variant_dir = builddir + 'telemetry_client',duplicate = 0)
+    # telemetry_client
+    telemetry_client = SConscript('#/examples/telemetry_client/SConscript',variant_dir = builddir + 'telemetry_client',duplicate = 0)
 
-# print_server
-print_server = SConscript('#/examples/print_server/SConscript',variant_dir = builddir + 'print_server',duplicate = 0)
+    # print_server
+    print_server = SConscript('#/examples/print_server/SConscript',variant_dir = builddir + 'print_server',duplicate = 0)
 
 #
 #wsperf = SConscript('#/examples/wsperf/SConscript',
