@@ -48,9 +48,9 @@ int main() {
     server testee_server;
 
 	try {
-        // Set logging settings
-        testee_server.set_access_channels(websocketpp::log::alevel::none);
-        testee_server.clear_access_channels(websocketpp::log::alevel::none);
+        // Total silence
+        testee_server.clear_access_channels(websocketpp::log::alevel::all);
+        testee_server.clear_error_channels(websocketpp::log::alevel::all);
 
         // Initialize ASIO
         testee_server.init_asio();
