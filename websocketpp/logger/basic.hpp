@@ -98,13 +98,12 @@ public:
         return ((channel & m_static_channels) != 0);
     }
     
+    bool dynamic_test(level channel) {
+	    return ((channel & m_dynamic_channels) != 0);
+	}
 private:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency::mutex_type mutex_type;
-	
-	bool dynamic_test(level channel) {
-	    return ((channel & m_dynamic_channels) != 0);
-	}
 	
     const char* get_timestamp() {
         std::time_t t = std::time(NULL);
