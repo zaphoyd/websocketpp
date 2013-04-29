@@ -729,7 +729,7 @@ template <typename config>
 void connection<config>::handle_read_frame(const lib::error_code& ec, 
 	size_t bytes_transferred)
 {
-    m_alog.write(log::alevel::devel,"connection handle_read_frame");
+    //m_alog.write(log::alevel::devel,"connection handle_read_frame");
     
     this->atomic_state_check(
         istate::PROCESS_CONNECTION,
@@ -761,14 +761,18 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     
     size_t p = 0;
     
-    std::stringstream s;
-    s << "p = " << p << " bytes transferred = " << bytes_transferred;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+    	std::stringstream s;
+    	s << "p = " << p << " bytes transferred = " << bytes_transferred;
+    	m_alog.write(log::alevel::devel,s.str());
+    }
     
     while (p < bytes_transferred) {
-        s.str("");
-        s << "calling consume with " << bytes_transferred-p << " bytes";
-        m_alog.write(log::alevel::devel,s.str());
+        if (m_alog.static_test(log::alevel::devel)) {
+        	std::stringstream s;
+        	s << "calling consume with " << bytes_transferred-p << " bytes";
+        	m_alog.write(log::alevel::devel,s.str());
+        }
         
         lib::error_code ec;
 
@@ -777,11 +781,12 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 			bytes_transferred-p,
             ec
 		);
-
-        s.str("");
-        s << "bytes left after consume: " << bytes_transferred-p;
-        m_alog.write(log::alevel::devel,s.str());
-
+		
+		if (m_alog.static_test(log::alevel::devel)) {
+        	std::stringstream s;
+        	s << "bytes left after consume: " << bytes_transferred-p;
+        	m_alog.write(log::alevel::devel,s.str());
+		}
 		if (ec) {
             m_elog.write(log::elevel::rerror,"consume error: "+ec.message());
             
@@ -804,7 +809,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 		}
 
 		if (m_processor->ready()) {
-            m_alog.write(log::alevel::devel,"consume ended in ready");
+            //m_alog.write(log::alevel::devel,"consume ended in ready");
 			
             message_ptr msg = m_processor->get_message();
            
@@ -1345,7 +1350,7 @@ void connection<config>::terminate() {
 
 template <typename config>
 void connection<config>::write_frame() {
-    m_alog.write(log::alevel::devel,"connection write_frame");
+    //m_alog.write(log::alevel::devel,"connection write_frame");
     
     {
         scoped_lock_type lock(m_write_lock);
@@ -1377,8 +1382,10 @@ void connection<config>::write_frame() {
 
     m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
     m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
-
+	
+	
     if (m_alog.static_test(log::alevel::frame_header)) {
+    if (m_alog.dynamic_test(log::alevel::frame_header)) {
         std::stringstream s;
         s << "Dispatching write with " << header.size() 
           << " header bytes and " << payload.size() 
@@ -1386,8 +1393,11 @@ void connection<config>::write_frame() {
         m_alog.write(log::alevel::frame_header,s.str());
         m_alog.write(log::alevel::frame_header,"Header: "+utility::to_hex(header));
     }
+    }
     if (m_alog.static_test(log::alevel::frame_payload)) {
+    if (m_alog.dynamic_test(log::alevel::frame_payload)) {
         m_alog.write(log::alevel::frame_payload,"Payload: "+utility::to_hex(payload));
+    }
     }
     
     transport_con_type::async_write(
