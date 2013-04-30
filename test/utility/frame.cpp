@@ -399,6 +399,7 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask ) {
 	// calls not split on word boundaries
 	pkey = frame::prepare_masking_key(key);
 	std::fill_n(input,16,0x00);
+	std::fill_n(output,16,0x00);
 	
 	pkey_temp = frame::word_mask_circ(input,output,7,pkey);
 	BOOST_CHECK( std::equal(output,output+7,masked) );
