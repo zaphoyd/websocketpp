@@ -749,10 +749,11 @@ inline size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length,
     }
    	
 	// mask partial word at the end
-	if (l > 0) {
-		size_t r = 8*(sizeof(size_t) - l); // convert from bytes to bits
-		output_word[n] = input_word[n] ^ ((prepared_key << r) >> r);
-	}
+    size_t start = length - l;
+    char * test = reinterpret_cast<char *>(&prepared_key);
+    for (size_t i = 0; i < l; ++i) {
+        output[start+i] = input[start+i] ^ test[i];
+    }
 	
 	return circshift_prepared_key(prepared_key,l);
 }
