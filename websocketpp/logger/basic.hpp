@@ -67,6 +67,11 @@ public:
     }
     
     void set_channels(level channels) {
+        if (channels == names::none) {
+        	clear_channels(names::all);
+        	return;
+        }
+        
         scoped_lock_type lock(m_lock);
         m_dynamic_channels |= (channels & m_static_channels);
     }
