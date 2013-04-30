@@ -392,6 +392,7 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask ) {
 	size_t pkey,pkey_temp;
 	pkey = frame::prepare_masking_key(key);
 	std::fill_n(input,16,0x00);
+	std::fill_n(output,16,0x00);
 	frame::word_mask_circ(input,output,15,pkey);
 	BOOST_CHECK( std::equal(output,output+16,masked) );
 
