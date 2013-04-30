@@ -61,7 +61,6 @@ if env['PLATFORM'].startswith('win'):
                             '_CONSOLE',
                             'BOOST_TEST_DYN_LINK',
                             'NOMINMAX',
-                            '_WEBSOCKETPP_CPP11_FRIEND_',
                             '_WEBSOCKETPP_CPP11_MEMORY_',
                             '_WEBSOCKETPP_CPP11_FUNCTIONAL_'])
    arch_flags  = '/arch:SSE2'
@@ -153,15 +152,22 @@ elif env_cpp11['CXX'].startswith('clang++'):
 else:
    print "C++11 build environment disabled"
 
-env.Append(CPPPATH = [env['BOOST_INCLUDES']])
-if not env['PLATFORM'].startswith('win'):
-    env.Append(CPPFLAGS = ['-isystem'])
+# if the build system is known to allow the isystem modifier for library include
+# values then use it for the boost libraries. Otherwise just add them to the 
+# regular CPPPATH values.
+if env['CXX'].startswith('g++') or env['CXX'].startswith('clang'):
+	env.Append(CPPFLAGS = '-isystem ' + env['BOOST_INCLUDES'])
+else:
+	env.Append(CPPPATH = [env['BOOST_INCLUDES']])
 env.Append(LIBPATH = [env['BOOST_LIBS']])
 
-
-env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
-if not env_cpp11['PLATFORM'].startswith('win'):
-    env_cpp11.Append(CPPFLAGS = ['-isystem'])
+# if the build system is known to allow the isystem modifier for library include
+# values then use it for the boost libraries. Otherwise just add them to the 
+# regular CPPPATH values.
+if env_cpp11['CXX'].startswith('g++') or env_cpp11['CXX'].startswith('clang'):
+	env_cpp11.Append(CPPFLAGS = '-isystem ' + env_cpp11['BOOST_INCLUDES'])
+else:
+	env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
 env_cpp11.Append(LIBPATH = [env_cpp11['BOOST_LIBS']])
 
 releasedir = 'build/release/'
