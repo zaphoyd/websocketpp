@@ -139,7 +139,7 @@ inline size_t response::consume(std::istream & s) {
     
     while (s.good()) {
         s.getline(buf,istream_buffer);
-        bytes_read = s.gcount();
+        bytes_read = static_cast<size_t>(s.gcount());
 
         if (s.fail() || s.eof()) {
             bytes_processed = this->consume(buf,bytes_read);

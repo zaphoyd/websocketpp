@@ -67,7 +67,7 @@ public:
     explicit hybi00(bool secure, bool server, msg_manager_ptr manager) 
       : processor<config>(secure, server)
       , msg_hdr(0x00)
-      , msg_ftr(0xff)
+      , msg_ftr(static_cast<char>(0xff))
       , m_state(HEADER)
       , m_msg_manager(manager) {}
     
