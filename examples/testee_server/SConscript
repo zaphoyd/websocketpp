@@ -1,4 +1,4 @@
-## Main development example
+## Autobahn Testee Server
 ##
 
 Import('env')
