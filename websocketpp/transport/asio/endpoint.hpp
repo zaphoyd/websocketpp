@@ -92,6 +92,7 @@ public:
 	
 	~endpoint() {
 		// clean up our io_service if we were initialized with an internal one.
+        m_acceptor.reset();
 		if (m_state != UNINITIALIZED && !m_external_io_service) {
 			delete m_io_service;
 		}
