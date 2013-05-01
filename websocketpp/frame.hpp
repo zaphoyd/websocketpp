@@ -198,7 +198,7 @@ struct extended_header {
 		copy_payload(payload_size);
 	}
 	
-	extended_header(uint64_t payload_size, int32_t masking_key) {
+	extended_header(uint64_t payload_size, uint32_t masking_key) {
 		std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
 		
 		// Copy payload size
@@ -740,13 +740,13 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
  *
  * @return the prepared_key shifted to account for the input length
  */
-inline size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length, 
+inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
 	size_t prepared_key)
 {
     size_t n = length / sizeof(size_t); // whole words
 	size_t l = length - (n * sizeof(size_t)); // remaining bytes
-    size_t* input_word = reinterpret_cast<size_t*>(input);
-    size_t* output_word = reinterpret_cast<size_t*>(output);
+    size_t * input_word = reinterpret_cast<size_t *>(input);
+    size_t * output_word = reinterpret_cast<size_t *>(output);
     
 	// mask word by word
     for (size_t i = 0; i < n; i++) {
@@ -755,9 +755,9 @@ inline size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length,
    	
 	// mask partial word at the end
     size_t start = length - l;
-    char * test = reinterpret_cast<char *>(&prepared_key);
+    uint8_t * byte_key = reinterpret_cast<uint8_t *>(&prepared_key);
     for (size_t i = 0; i < l; ++i) {
-        output[start+i] = input[start+i] ^ test[i];
+        output[start+i] = input[start+i] ^ byte_key[i];
     }
 	
 	return circshift_prepared_key(prepared_key,l);

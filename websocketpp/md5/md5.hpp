@@ -374,7 +374,7 @@ md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes)
 
     /* Process an initial partial block. */
     if (offset) {
-	int copy = (offset + nbytes > 64 ? 64 - offset : nbytes);
+	int copy = (offset + nbytes > 64 ? 64 - offset : static_cast<int>(nbytes));
 
 	std::memcpy(pms->buf + offset, p, copy);
 	if (offset + copy < 64)

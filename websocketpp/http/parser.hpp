@@ -104,7 +104,9 @@ InputIterator extract_lws(InputIterator begin, InputIterator end) {
     InputIterator it = begin;
 
     // strip leading CRLF
-    if (end-begin > 2 && *begin == '\r' && *(begin+1) == '\n' && is_whitespace_char(*(begin+2))) {
+    if (end-begin > 2 && *begin == '\r' && *(begin+1) == '\n' && 
+        is_whitespace_char(static_cast<unsigned char>(*(begin+2))))
+    {
         it+=3;
     }
 

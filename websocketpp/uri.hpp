@@ -255,7 +255,7 @@ private:
             return (m_secure ? uri_default_secure_port : uri_default_port);
         }
         
-        unsigned int t_port = atoi(port.c_str());
+        unsigned int t_port = static_cast<unsigned int>(atoi(port.c_str()));
                 
         if (t_port > 65535) {
             throw websocketpp::uri_exception("Port must be less than 65535");

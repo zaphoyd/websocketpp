@@ -67,7 +67,7 @@ public:
     explicit hybi00(bool secure, bool server, msg_manager_ptr manager) 
       : processor<config>(secure, server)
       , msg_hdr(0x00)
-      , msg_ftr(reinterpret_cast<char>(0xff))
+      , msg_ftr(0xff)
       , m_state(HEADER)
       , m_msg_manager(manager) {}
     
@@ -232,13 +232,13 @@ public:
                     m_state = FATAL_ERROR;
                 }
             } else if (m_state == PAYLOAD) {
-                uint8_t *it = std::find(buf+p,buf+len,uint8_t(msg_ftr));
+                uint8_t *it = std::find(buf+p,buf+len,msg_ftr);
                 
                 // 0    1    2    3    4    5
                 // 0x00 0x23 0x23 0x23 0xff 0xXX
 
                 // Copy payload bytes into message
-                l = it-(buf+p);
+                l = static_cast<size_t>(it-(buf+p));
                 m_msg_ptr->append_payload(buf+p,l);
                 p += l;
                 
@@ -307,11 +307,11 @@ public:
         }
 
 		// generate header
-        out->set_header(std::string(&msg_hdr,1));
+        out->set_header(std::string(reinterpret_cast<const char*>(&msg_hdr),1));
         
         // process payload
         out->set_payload(i);
-        out->append_payload(std::string(&msg_ftr,1));
+        out->append_payload(std::string(reinterpret_cast<const char*>(&msg_ftr),1));
 
 		// hybi00 doesn't support compression
 		// hybi00 doesn't have masking
@@ -338,7 +338,7 @@ public:
     }
 private:
     void decode_client_key(const std::string& key, char* result) const {
-        int spaces = 0;
+        unsigned int spaces = 0;
         std::string digits = "";
         uint32_t num;
         
@@ -351,7 +351,7 @@ private:
             }
         }
         
-        num = strtoul(digits.c_str(), NULL, 10);
+        num = static_cast<uint32_t>(strtoul(digits.c_str(), NULL, 10));
         if (spaces > 0 && num > 0) {
             num = htonl(num/spaces);
             std::copy(reinterpret_cast<char*>(&num),
@@ -369,8 +369,8 @@ private:
 		FATAL_ERROR = 3
 	};
     
-    const char msg_hdr;
-    const char msg_ftr;
+    const uint8_t msg_hdr;
+    const uint8_t msg_ftr;
 
     state m_state;
     

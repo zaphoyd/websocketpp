@@ -88,10 +88,12 @@ else:
 
 # Compiler specific warning flags
 if env['CXX'].startswith('g++'):
+   #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wcast-align'])
 elif env['CXX'].startswith('clang++'):
    #env.Append(CCFLAGS = ['-Wcast-align'])
    #env.Append(CCFLAGS = ['-Wglobal-constructors'])
+   #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wno-padded'])
 
    # Wpadded

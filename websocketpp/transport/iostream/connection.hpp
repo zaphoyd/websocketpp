@@ -326,14 +326,14 @@ private:
                 break;
             }
             
-            in.read(m_buf+m_cursor,m_len-m_cursor);
+            in.read(m_buf+m_cursor,static_cast<std::streamsize>(m_len-m_cursor));
             
             if (in.gcount() == 0) {
                 m_elog.write(log::elevel::devel,"read zero bytes");
                 break;
             }
             
-            m_cursor += in.gcount();
+            m_cursor += static_cast<size_t>(in.gcount());
             
             // TODO: error handling
             if (in.bad()) {
