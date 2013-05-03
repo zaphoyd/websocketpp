@@ -35,6 +35,9 @@
 #include <websocketpp/transport/asio/base.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
+#include <websocketpp/base64/base64.hpp>
+#include <websocketpp/error.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 
@@ -120,7 +123,7 @@ public:
     void set_proxy_basic_auth(const std::string & u, const std::string & p) {
         if (m_proxy_data) {
             std::string val = "Basic "+base64_encode(u + ": " + p);
-            m_proxy->req.replace_header("Proxy-Authorization",val);
+            m_proxy_data->req.replace_header("Proxy-Authorization",val);
         } else {
             // TODO: should we throw errors with invalid stuff here or just
             // silently ignore?
@@ -167,7 +170,7 @@ public:
      */
     lib::error_code proxy_init(const std::string & authority) {
         if (!m_proxy_data) {
-            return make_error_code(error::invalid_state);
+            return websocketpp::error::make_error_code(websocketpp::error::invalid_state);
         }
         m_proxy_data->req.set_version("HTTP/1.1");
         m_proxy_data->req.set_method("CONNECT");
