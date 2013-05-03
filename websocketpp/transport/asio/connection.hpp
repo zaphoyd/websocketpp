@@ -115,6 +115,16 @@ public:
     
     void set_proxy(const std::string & proxy) {
         m_proxy = proxy;
+        m_proxy_data.reset(new proxy_data());
+    }
+    void set_proxy_basic_auth(const std::string & u, const std::string & p) {
+        if (m_proxy_data) {
+            std::string val = "Basic "+base64_encode(u + ": " + p);
+            m_proxy->req.replace_header("Proxy-Authorization",val);
+        } else {
+            // TODO: should we throw errors with invalid stuff here or just
+            // silently ignore?
+        }
     }
     
     const std::string & get_proxy() const {
@@ -155,13 +165,17 @@ public:
      * @param authority The address of the server we want the proxy to tunnel to
      * in the format of a URI authority (host:port)
      */
-    void proxy_init(const std::string & authority) {
-        m_proxy_data.reset(new proxy_data());
+    lib::error_code proxy_init(const std::string & authority) {
+        if (!m_proxy_data) {
+            return make_error_code(error::invalid_state);
+        }
         m_proxy_data->req.set_version("HTTP/1.1");
         m_proxy_data->req.set_method("CONNECT");
 
         m_proxy_data->req.set_uri(authority);
         m_proxy_data->req.replace_header("Host",authority);
+
+        return lib::error_code();
     }
 
 protected:
