@@ -333,7 +333,17 @@ public:
     lib::error_code prepare_close(close::status::value code, 
         const std::string & reason, message_ptr out) const
     {
-        return lib::error_code(error::no_protocol_support);
+        if (!out) {
+            return lib::error_code(error::invalid_arguments);
+        }
+        
+        std::string val;
+        val.append(1,0xff);
+        val.append(1,0x00);
+        out->set_payload(val);
+        out->set_prepared(true);
+
+        return lib::error_code();
     }
 private:
     void decode_client_key(const std::string& key, char* result) const {
