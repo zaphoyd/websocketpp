@@ -236,123 +236,123 @@ BOOST_AUTO_TEST_CASE( extract_parameters ) {
     p.clear();
     it = extract_parameters(s2.begin(),s2.end(),p);
     BOOST_CHECK( it == s2.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    BOOST_CHECK( p.find("foo")->second.size() == 0 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    BOOST_CHECK_EQUAL( p[0].second.size(), 0 );
     
     p.clear();
     it = extract_parameters(s3.begin(),s3.end(),p);
     BOOST_CHECK( it == s3.begin()+5 );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    BOOST_CHECK( p.find("foo")->second.size() == 0 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    BOOST_CHECK_EQUAL( p[0].second.size(), 0 );
     
     p.clear();
     it = extract_parameters(s4.begin(),s4.end(),p);
     BOOST_CHECK( it == s4.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    BOOST_CHECK( p.find("foo")->second.size() == 0 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    BOOST_CHECK_EQUAL( p[0].second.size(), 0 );
     
     p.clear();
     it = extract_parameters(s5.begin(),s5.end(),p);
     BOOST_CHECK( it == s5.end() );
-    BOOST_CHECK( p.size() == 2 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    BOOST_CHECK( p.find("foo")->second.size() == 0 );
-    BOOST_CHECK( p.find("bar") != p.end() );
-    BOOST_CHECK( p.find("bar")->second.size() == 0 );
+    BOOST_CHECK_EQUAL( p.size(), 2 );
+    BOOST_CHECK( p[0].first == "foo" );
+    BOOST_CHECK_EQUAL( p[0].second.size(), 0 );
+    BOOST_CHECK( p[1].first == "bar" );
+    BOOST_CHECK_EQUAL( p[1].second.size(), 0 );
     
     p.clear();
     it = extract_parameters(s6.begin(),s6.end(),p);
     BOOST_CHECK( it == s6.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 1 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 1 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "" );
     
     p.clear();
     it = extract_parameters(s7.begin(),s7.end(),p);
     BOOST_CHECK( it == s7.end() );
-    BOOST_CHECK( p.size() == 2 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 1 );
+    BOOST_CHECK_EQUAL( p.size(), 2 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 1 );
     BOOST_CHECK( a.find("baz") != a.end() );
-    BOOST_CHECK( a.find("baz")->second == "" );
-    BOOST_CHECK( p.find("bar") != p.end() );
-    a = p.find("bar")->second;
-    BOOST_CHECK( a.size() == 0 );
+    BOOST_CHECK_EQUAL( a.find("baz")->second, "" );
+    BOOST_CHECK( p[1].first == "bar" );
+    a = p[1].second;
+    BOOST_CHECK_EQUAL( a.size(), 0 );
     
     p.clear();
     it = extract_parameters(s8.begin(),s8.end(),p);
     BOOST_CHECK( it == s8.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 2 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 2 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "" );
     BOOST_CHECK( a.find("baz") != a.end() );
-    BOOST_CHECK( a.find("baz")->second == "" );
+    BOOST_CHECK_EQUAL( a.find("baz")->second, "" );
     
     p.clear();
     it = extract_parameters(s9.begin(),s9.end(),p);
     BOOST_CHECK( it == s9.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 1 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 1 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "baz" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "baz" );
     
     p.clear();
     it = extract_parameters(s10.begin(),s10.end(),p);
     BOOST_CHECK( it == s10.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 2 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 2 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "baz" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "baz" );
     BOOST_CHECK( a.find("boo") != a.end() );
-    BOOST_CHECK( a.find("boo")->second == "" );
+    BOOST_CHECK_EQUAL( a.find("boo")->second, "" );
     
     p.clear();
     it = extract_parameters(s11.begin(),s11.end(),p);
     BOOST_CHECK( it == s11.end() );
-    BOOST_CHECK( p.size() == 2 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 2 );
+    BOOST_CHECK_EQUAL( p.size(), 2 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 2 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "baz" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "baz" );
     BOOST_CHECK( a.find("boo") != a.end() );
-    BOOST_CHECK( a.find("boo")->second == "" );
-    a = p.find("bob")->second;
-    BOOST_CHECK( a.size() == 0 );
+    BOOST_CHECK_EQUAL( a.find("boo")->second, "" );
+    a = p[1].second;
+    BOOST_CHECK_EQUAL( a.size(), 0 );
     
     p.clear();
     it = extract_parameters(s12.begin(),s12.end(),p);
     BOOST_CHECK( it == s12.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 1 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 1 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "a b c" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "a b c" );
     
     p.clear();
     it = extract_parameters(s13.begin(),s13.end(),p);
     BOOST_CHECK( it == s13.end() );
-    BOOST_CHECK( p.size() == 1 );
-    BOOST_CHECK( p.find("foo") != p.end() );
-    a = p.find("foo")->second;
-    BOOST_CHECK( a.size() == 1 );
+    BOOST_CHECK_EQUAL( p.size(), 1 );
+    BOOST_CHECK( p[0].first == "foo" );
+    a = p[0].second;
+    BOOST_CHECK_EQUAL( a.size(), 1 );
     BOOST_CHECK( a.find("bar") != a.end() );
-    BOOST_CHECK( a.find("bar")->second == "a \"b\" c" );
+    BOOST_CHECK_EQUAL( a.find("bar")->second, "a \"b\" c" );
 }
 
 
@@ -829,6 +829,29 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK( r.get_body() == "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
 }
 
+BOOST_AUTO_TEST_CASE( parse_istream ) {
+    websocketpp::http::parser::response r;
+    
+    std::stringstream s;
+    
+    s << "HTTP/1.1 200 OK\r\nDate: Thu, 10 May 2012 11:59:25 GMT\r\nServer: Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch\r\nLast-Modified: Tue, 30 Mar 2010 17:41:28 GMT\r\nETag: \"16799d-55-4830823a78200\"\r\nAccept-Ranges: bytes\r\nContent-Length: 85\r\nVary: Accept-Encoding\r\nContent-Type: text/html\r\n\r\n<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>";
+    
+    bool exception = false;
+    size_t pos = 0;
+    
+    try {
+    	pos += r.consume(s);
+    } catch (std::exception &e) {
+    	exception = true;
+    	std::cout << e.what() << std::endl;
+    }
+    
+    BOOST_CHECK_EQUAL( exception, false );
+    BOOST_CHECK_EQUAL( pos, 405 );
+    BOOST_CHECK_EQUAL( r.headers_ready(), true );
+    BOOST_CHECK_EQUAL( r.ready(), true );
+}
+
 BOOST_AUTO_TEST_CASE( write_request_basic ) {
     websocketpp::http::parser::request r;
     
@@ -866,6 +889,5 @@ BOOST_AUTO_TEST_CASE( write_request_with_body ) {
     r.replace_header("Content-Type","application/x-www-form-urlencoded");
     r.set_body("licenseID=string&content=string&paramsXML=string");
     
-    std::cout << r.raw() << std::endl;
     BOOST_CHECK( r.raw() == raw );
 }

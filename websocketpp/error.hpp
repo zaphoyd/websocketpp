@@ -61,6 +61,9 @@ enum value {
 
     /// The endpoint is out of outgoing message buffers
     no_outgoing_buffers,
+    
+    /// The endpoint is out of incoming message buffers
+    no_incoming_buffers,
 
     /// The connection was in the wrong state for this operation
     invalid_state,
@@ -77,6 +80,9 @@ enum value {
     /// Invalid UTF-8
     invalid_utf8,
     
+    /// Invalid subprotocol
+    invalid_subprotocol,
+    
     /// Bad or unknown connection
     bad_connection,
     
@@ -84,7 +90,16 @@ enum value {
     test,
     
     /// Connection creation attempted failed
-    con_creation_failed
+    con_creation_failed,
+    
+    /// Selected subprotocol was not requested by the client
+    unrequested_subprotocol,
+    
+    /// Attempted to use a client specific feature on a server endpoint
+    client_only,
+    
+    /// Attempted to use a server specific feature on a client endpoint
+    server_only,
 }; // enum value
 
 
@@ -112,6 +127,8 @@ public:
 				return "invalid uri";
 			case error::no_outgoing_buffers:
 				return "no outgoing message buffers";
+			case error::no_incoming_buffers:
+				return "no incoming message buffers";
 			case error::invalid_state:
 				return "invalid state";
 			case error::bad_close_code:
@@ -122,12 +139,20 @@ public:
 				return "Extracted close code is in a reserved range";
 			case error::invalid_utf8:
 				return "Invalid UTF-8";
+			case error::invalid_subprotocol:
+				return "Invalid subprotocol";
 			case error::bad_connection:
 				return "Bad Connection";
 			case error::test:
 				return "Test Error";
 			case error::con_creation_failed:
 				return "Connection creation attempt failed";
+		    case error::unrequested_subprotocol:
+		        return "Selected subprotocol was not requested by the client";
+		    case error::client_only:
+		        return "Feature not available on server endpoints";
+		    case error::server_only:
+		        return "Feature not available on client endpoints";
 			default:
 				return "Unknown";
 		}

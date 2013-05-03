@@ -53,6 +53,9 @@ namespace parser {
  */
 class response : public parser {
 public:
+	typedef response type;
+    typedef lib::shared_ptr<type> ptr;
+	
 	response() 
       : m_read(0)
       , m_buf(new std::string())
@@ -80,6 +83,8 @@ public:
      * @return Number of bytes processed.
      */
     size_t consume(const char *buf, size_t len);
+    
+    size_t consume(std::istream & s);
     
     /// Returns true if the response is ready.
     /**

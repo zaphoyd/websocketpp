@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,9 @@ namespace http {
     
     // Maximum size in bytes before rejecting an HTTP header as too big.
     const size_t max_header_size = 16000;
+    
+    // Number of bytes to use for temporary istream read buffers
+    const size_t istream_buffer = 512;
     
     // invalid HTTP token characters
     // 0x00 - 0x32, 0x7f-0xff

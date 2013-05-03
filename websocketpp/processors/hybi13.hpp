@@ -69,7 +69,7 @@ public:
 	typedef typename msg_manager_type::ptr msg_manager_ptr;
     typedef typename config::rng_type rng_type;
 
-    typedef typename config::permessage_compress_type permessage_compress_type;
+    typedef typename config::permessage_deflate_type permessage_deflate_type;
     
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
@@ -86,8 +86,8 @@ public:
         return 13;
     }
     
-    bool has_permessage_compress() const {
-        return m_permessage_compress.is_implimented();
+    bool has_permessage_deflate() const {
+        return m_permessage_deflate.is_implimented();
     }
 
     err_str_pair negotiate_extensions(const request_type& req) {
@@ -116,26 +116,28 @@ public:
         
         typename request_type::parameter_list::const_iterator it;
         
-        // if permessage_compress is implimented, check if it was requested
-        if (m_permessage_compress.is_implimented()) {
-            it = p.find("permessage-compress");
-            
+        if (m_permessage_deflate.is_implimented()) {
             err_str_pair neg_ret;
+            for (it = p.begin(); it != p.end(); ++it) {
+                // look through each extension, if the key is permessage-deflate
+                if (it->first == "permessage-deflate") {
+                    std::cout << "mark3: " << std::endl;
+                    neg_ret = m_permessage_deflate.negotiate(it->second);
+                    
+                    std::cout << neg_ret.first.message() << " - " << neg_ret.second << std::endl;
 
-            if (it != p.end()) {
-                neg_ret = m_permessage_compress.negotiate(it->second);
-
-                if (neg_ret.first) {
-                    // Figure out if this is an error that should halt all
-                    // extension negotiations or simply cause negotiation of
-                    // this specific extension to fail.
-                    std::cout << "permessage-compress negotiation failed: " 
-                              << neg_ret.first << " and message " 
-                              << neg_ret.second << std::endl;
-                } else {
-                    // Note: this list will need commas if WebSocket++ ever
-                    // supports more than one extension
-                    ret.second += neg_ret.second;
+                    if (neg_ret.first) {
+                        // Figure out if this is an error that should halt all
+                        // extension negotiations or simply cause negotiation of
+                        // this specific extension to fail.
+                        std::cout << "permessage-compress negotiation failed: " 
+                                  << neg_ret.first.message() << std::endl;
+                    } else {
+                        // Note: this list will need commas if WebSocket++ ever
+                        // supports more than one extension
+                        ret.second += neg_ret.second;
+                        continue;
+                    }
                 }
             }
         }
@@ -163,8 +165,12 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code process_handshake(const request_type& request, 
-        response_type& response) const
+    /* TODO: the 'subprotocol' parameter may need to be expanded into a more 
+     * generic struct if other user input parameters to the processed handshake
+     * are found.
+     */
+    lib::error_code process_handshake(const request_type& request, const
+        std::string & subprotocol, response_type& response) const
 	{
         std::string server_key = request.get_header("Sec-WebSocket-Key");
         
@@ -178,11 +184,15 @@ public:
         response.append_header("Upgrade",constants::upgrade_token);
         response.append_header("Connection",constants::connection_token);
         
+        if (!subprotocol.empty()) {
+            response.replace_header("Sec-WebSocket-Protocol",subprotocol);
+        }
+        
         return lib::error_code();
     }
     
     lib::error_code client_handshake_request(request_type& req, uri_ptr 
-        uri) const
+        uri, const std::vector<std::string> & subprotocols) const
     {
         req.set_method("GET");
         req.set_uri(uri->get_resource());
@@ -192,6 +202,17 @@ public:
         req.append_header("Connection","Upgrade");
         req.replace_header("Sec-WebSocket-Version","13");
         req.replace_header("Host",uri->get_host_port());
+        
+        if (!subprotocols.empty()) {
+            std::ostringstream result;
+            std::vector<std::string>::const_iterator it = subprotocols.begin();
+            result << *it++;
+            while (it != subprotocols.end()) {
+                result << ", " << *it++;
+            }
+            
+            req.replace_header("Sec-WebSocket-Protocol",result.str());
+        }
         
         // Generate handshake key
         frame::uint32_converter conv;
@@ -248,6 +269,25 @@ public:
     
     const std::string& get_origin(const request_type& r) const {
         return r.get_header("Origin");
+    }
+    
+    lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list)
+    {
+        if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
+            typename request_type::parameter_list p;
+        
+             if (!req.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
+                 typename request_type::parameter_list::const_iterator it;
+
+                 for (it = p.begin(); it != p.end(); ++it) {
+                     subprotocol_list.push_back(it->first);
+                 }
+             } else {
+                 return error::make_error_code(error::subprotocol_parse_error);
+             }
+        }
+        return lib::error_code();
     }
     
     uri_ptr get_uri(const request_type& request) const {
@@ -346,7 +386,9 @@ public:
 				// check if this frame is the start of a new message and set up
 				// the appropriate message metadata.
 				frame::opcode::value op = frame::get_opcode(m_basic_header);
-
+                
+                // TODO: get_message failure conditions
+                
 				if (frame::opcode::is_control(op)) {
 					m_control_msg = msg_metadata(
 						m_msg_manager->get_message(op,m_bytes_needed),
@@ -508,7 +550,7 @@ public:
 		
 		frame::masking_key_type key;
 		bool masked = !base::m_server;
-        bool compressed = m_permessage_compress.is_enabled() 
+        bool compressed = m_permessage_deflate.is_enabled() 
                           && in->get_compressed();
         bool fin = in->get_fin();
 		
@@ -529,7 +571,7 @@ public:
 		// prepare payload
 		if (compressed) {
 			// compress and store in o after header.
-            m_permessage_compress.compress(i,o);
+            m_permessage_deflate.compress(i,o);
 
 			// mask in place if necessary
             if (masked) {
@@ -699,11 +741,11 @@ protected:
         size_t offset = out.size();
 
 		// decompress message if needed.
-		if (m_permessage_compress.is_enabled() 
+		if (m_permessage_deflate.is_enabled() 
             && frame::get_rsv1(m_basic_header))
         {
             // Decompress current buffer into the message buffer
-            m_permessage_compress.decompress(buf,len,out);
+            m_permessage_deflate.decompress(buf,len,out);
             
             // get the length of the newly uncompressed output
             offset = out.size() - offset;
@@ -761,7 +803,7 @@ protected:
         // a control message.
         //
         // TODO: unit tests for this
-        if (frame::get_rsv1(h) && (!m_permessage_compress.is_enabled() 
+        if (frame::get_rsv1(h) && (!m_permessage_deflate.is_enabled() 
                 || frame::opcode::is_control(op)))
         {        
             return make_error_code(error::invalid_rsv_bit);
@@ -978,7 +1020,7 @@ protected:
 	state m_state;
 
     // Extensions
-    permessage_compress_type m_permessage_compress;
+    permessage_deflate_type m_permessage_deflate;
 };
 
 } // namespace processor

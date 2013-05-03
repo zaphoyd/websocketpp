@@ -89,12 +89,13 @@ public:
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
 	explicit endpoint(bool is_server)
- 	  : m_elog(&std::cerr)
+ 	  : m_alog(config::alog_level,&std::cout)
+ 	  , m_elog(config::elog_level,&std::cerr)
  	  , m_user_agent(::websocketpp::user_agent)
  	  , m_is_server(is_server)
 	{
-		m_alog.set_channels(0xffffffff);
-		m_elog.set_channels(0xffffffff);
+		m_alog.set_channels(config::alog_level);
+		m_elog.set_channels(config::elog_level);
 		
 		m_alog.write(log::alevel::devel,"endpoint constructor");
 
@@ -304,13 +305,7 @@ public:
      */
     connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
         scoped_lock_type lock(m_mutex);
-/** @todo This wont build on windows with null as the second template argument.
-    I tried to look at the boost docs for this and cound not find why the second param is here.
-    Cleanup ifdefs when verified this builds on other systems. */
-#ifdef WIN32
         connection_ptr con = lib::static_pointer_cast<connection_type>(
-#else
-        connection_ptr con = lib::static_pointer_cast<connection_type,void>(
 #endif
             hdl.lock());
         if (!con) {

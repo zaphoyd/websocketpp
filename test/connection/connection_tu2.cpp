@@ -27,7 +27,7 @@
 
 #include "connection_tu2.hpp"
 
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
@@ -35,7 +35,7 @@ std::string run_server_test(std::string input) {
     server test_server;
     server::connection_ptr con;
     
-    test_server.set_message_handler(bind(&on_message,&test_server,::_1,::_2));
+    test_server.set_message_handler(bind(&echo_func,&test_server,::_1,::_2));
 
     std::stringstream output;
 	
@@ -43,6 +43,23 @@ std::string run_server_test(std::string input) {
 	
 	con = test_server.get_connection();
 	
+	con->start();
+	
+	std::stringstream channel;
+	
+	channel << input;
+	channel >> *con;
+	
+	return output.str();
+}
+
+std::string run_server_test(server& s, std::string input) {
+    server::connection_ptr con;
+    std::stringstream output;
+	
+	s.register_ostream(&output);
+	
+	con = s.get_connection();
 	con->start();
 	
 	std::stringstream channel;

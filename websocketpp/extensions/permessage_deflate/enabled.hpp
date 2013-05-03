@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGECOMPRESS_HPP
-#define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGECOMPRESS_HPP
+#ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
+#define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
@@ -41,7 +41,7 @@
 
 namespace websocketpp {
 namespace extensions {
-namespace permessage_compress {
+namespace permessage_deflate {
     
 namespace error {
 enum value {
@@ -72,7 +72,7 @@ public:
     category() {}
 
     const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-        return "websocketpp.extension.permessage-compress";
+        return "websocketpp.extension.permessage-deflate";
     }
 
     std::string message(int value) const {
@@ -107,20 +107,20 @@ lib::error_code make_error_code(error::value e) {
 }
 
 } // namespace error
-} // namespace permessage_compress
+} // namespace permessage_deflate
 } // namespace extensions
 } // namespace websocketpp
 
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum
-    <websocketpp::extensions::permessage_compress::error::value>
+    <websocketpp::extensions::permessage_deflate::error::value>
 {
     static const bool value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 namespace websocketpp {
 namespace extensions {
-namespace permessage_compress {
+namespace permessage_deflate {
 
 template <typename config>
 class method {
@@ -404,7 +404,7 @@ private:
     z_stream m_istate; // inflate state
 };
 
-/// Impliments the permessage_compress extension interface
+/// Impliments the permessage_deflate extension interface
 /**
  * 
  * Template parameter econfig defines compile time types, constants, and 
@@ -422,7 +422,7 @@ private:
  *
  *
  * Methods:
- * permessage_compress::enabled does not define or impliment any methods 
+ * permessage_deflate::enabled does not define or impliment any methods 
  * itself. It uses the attribute list to determine
  *
  * 
@@ -431,6 +431,8 @@ private:
  */
 template <typename econfig>
 class enabled {
+    typedef std::map<std::string,std::string> string_map;
+
     typedef typename econfig::request_type::attribute_list attribute_list;
     typedef typename attribute_list::const_iterator attribute_iterator;
     typedef lib::shared_ptr< method<econfig> > method_ptr;
@@ -442,7 +444,7 @@ class enabled {
 public:
     enabled() : m_enabled(false) {}
     
-    /// Attempt to negotiate the permessage_compress extension
+    /// Attempt to negotiate the permessage_deflate extension
     /**
      * Parses the attribute list for this extension and attempts to negotiate
      * the extension. Returns a pair<lib::error_code, std::string>. On success
@@ -450,14 +452,41 @@ public:
      * to return in the handshake response. On error
      *
      * @param attributes A list of attributes extracted from the 
-     * 'permessage_compress' extension parameter from the original handshake.
+     * 'permessage_deflate' extension parameter from the original handshake.
      * 
      * @return A pair<lib::error_code, std::string> containing a status code
      * and a value whose interpretation is dependent on the status code.
      */
-    err_str_pair negotiate(const attribute_list& attributes) {
+    err_str_pair negotiate(const string_map& attributes) {
         err_str_pair ret;
         
+        std::cout << "foo: " << attributes.size() << std::endl;
+
+        string_map::const_iterator it;
+        
+        for (it = attributes.begin(); it != attributes.end(); ++it) {
+            std::cout << it->first << ": " << it->second << std::endl;
+        }
+        
+        // start by not accepting any parameters
+        if (attributes.size() == 0) {
+            ret.second = "permessage-deflate";
+        } else {
+            ret.first = make_error_code(error::invalid_parameters);
+        }
+
+        /*
+         *
+         * Sec-WebSocket-Extensions: foo; bar; baz=5, foo2; bar2; baz2=5
+         * 
+         * map<string,map<string,string>>
+         * 
+         * vector<pair<string,vector<pair<string,string>>>>
+         *
+         */
+
+        
+        /*
         // Exactly one parameter is required
         if (attributes.size() != 1) {
             ret.first = make_error_code(error::invalid_parameters);
@@ -500,17 +529,17 @@ public:
             }
         }
         
-        m_enabled = true;
+        m_enabled = true;*/
         return ret;
     }
     
-    /// Returns true if this object impliments permessage_compress functionality
+    /// Returns true if this object impliments permessage_deflate functionality
     bool is_implimented() const {
         return true;
     }
     
     /// returns true if this object is initialized and ready to provide 
-    /// permessage_compress functionality.
+    /// permessage_deflate functionality.
     bool is_enabled() const {
         return m_enabled;
     }
@@ -542,8 +571,8 @@ private:
     method_ptr m_method;
 };
 
-} // namespace permessage_compress
+} // namespace permessage_deflate
 } // namespace extensions
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGECOMPRESS_HPP
+#endif // WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP

@@ -65,6 +65,11 @@ size_t connection<config>::get_buffered_amount() const {
     return m_send_buffer_size;
 }
 
+template <typename config>
+session::state::value connection<config>::get_state() const {
+    //scoped_lock_type lock(m_connection_state_lock);
+    return m_state;
+}
 
 template <typename config>
 lib::error_code connection<config>::send(const std::string& payload, 
@@ -92,7 +97,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
     m_alog.write(log::alevel::devel,"connection send");
 	// TODO: 
 	
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
        return error::make_error_code(error::invalid_state);
     }
     
@@ -137,7 +142,7 @@ template <typename config>
 void connection<config>::ping(const std::string& payload) {
     m_alog.write(log::alevel::devel,"connection ping");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
         throw error::make_error_code(error::invalid_state);
     }
     
@@ -170,7 +175,7 @@ template <typename config>
 void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     m_alog.write(log::alevel::devel,"connection pong");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
         return;
     }
@@ -218,7 +223,7 @@ void connection<config>::close(const close::status::value code,
 {
     m_alog.write(log::alevel::devel,"connection close");
 
-    if (m_state != session::state::OPEN) {
+    if (m_state != session::state::open) {
        ec = error::make_error_code(error::invalid_state);
        return;
     }
@@ -316,11 +321,96 @@ void connection<config>::set_uri(uri_ptr uri) {
 
 
 
+template <typename config>
+const std::string & connection<config>::get_subprotocol() const {
+    return m_subprotocol;
+}
+
+template <typename config>
+const std::vector<std::string> & 
+connection<config>::get_requested_subprotocols() const {
+    return m_requested_subprotocols;
+}
+
+template <typename config>
+void connection<config>::add_subprotocol(const std::string & value, 
+    lib::error_code & ec)
+{
+    if (m_is_server) {
+        ec = error::make_error_code(error::client_only);
+        return;
+    }
+    
+    // If the value is empty or has a non-RFC2616 token character it is invalid.
+    if (value.empty() || std::find_if(value.begin(),value.end(),
+                                      http::is_not_token_char) != value.end())
+    {
+        ec = error::make_error_code(error::invalid_subprotocol);
+        return;
+    }
+
+    m_requested_subprotocols.push_back(value);
+}
+
+template <typename config>
+void connection<config>::add_subprotocol(const std::string & value) {
+    lib::error_code ec;
+    this->add_subprotocol(value,ec);
+    if (ec) {
+        throw ec;
+    }
+}
 
 
+template <typename config>
+void connection<config>::select_subprotocol(const std::string & value, 
+    lib::error_code & ec)
+{
+    if (!m_is_server) {
+        ec = error::make_error_code(error::server_only);
+        return;
+    }
+    
+    if (value.empty()) {
+        ec = lib::error_code();
+        return;
+    }
+    
+    std::vector<std::string>::iterator it;
+    
+    it = std::find(m_requested_subprotocols.begin(), 
+                   m_requested_subprotocols.end(), 
+                   value);
+    
+    if (it == m_requested_subprotocols.end()) {
+        ec = error::make_error_code(error::unrequested_subprotocol);
+        return;
+    }
+    
+    m_subprotocol = value;
+}
+
+template <typename config>
+void connection<config>::select_subprotocol(const std::string & value) {
+    lib::error_code ec;
+    this->select_subprotocol(value,ec);
+    if (ec) {
+        throw ec;
+    }
+}
 
 
+template <typename config>
+const std::string & 
+connection<config>::get_request_header(const std::string &key) {
+    return m_request.get_header(key);
+}
 
+template <typename config>
+const std::string & 
+connection<config>::get_response_header(const std::string &key) {
+    return m_response.get_header(key);
+}
 
 template <typename config>
 void connection<config>::set_status(
@@ -459,7 +549,7 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     
     if (ec) {
         std::stringstream s;
-    	s << "handle_transport_init recieved error: "<< ec;
+    	s << "handle_transport_init recieved error: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
 
         this->terminate();
@@ -516,7 +606,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
     
     if (ec) {
         std::stringstream s;
-    	s << "error in handle_read_handshake: "<< ec;
+    	s << "error in handle_read_handshake: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -579,6 +669,14 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
             }
         }
         
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,m_request.raw());
+            if (m_request.get_header("Sec-WebSocket-Key3") != "") {
+                m_alog.write(log::alevel::devel,
+                    utility::to_hex(m_request.get_header("Sec-WebSocket-Key3")));
+            }
+        }
+        
         // The remaining bytes in m_buf are frame data. Copy them to the 
         // beginning of the buffer and note the length. They will be read after
         // the handshake completes and before more bytes are read.
@@ -631,7 +729,7 @@ template <typename config>
 void connection<config>::handle_read_frame(const lib::error_code& ec, 
 	size_t bytes_transferred)
 {
-    m_alog.write(log::alevel::devel,"connection handle_read_frame");
+    //m_alog.write(log::alevel::devel,"connection handle_read_frame");
     
     this->atomic_state_check(
         istate::PROCESS_CONNECTION,
@@ -639,8 +737,16 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     );
     
     if (ec) {
+        if (ec == transport::error::eof) {
+            // we expect to get eof if the connection is closed already
+            if (m_state == session::state::closed) {
+                m_alog.write(log::alevel::devel,"got eof from closed con");
+                return;
+            }
+        }
+        
         std::stringstream s;
-    	s << "error in handle_read_frame: " << ec;
+    	s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -655,14 +761,18 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     
     size_t p = 0;
     
-    std::stringstream s;
-    s << "p = " << p << " bytes transferred = " << bytes_transferred;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+    	std::stringstream s;
+    	s << "p = " << p << " bytes transferred = " << bytes_transferred;
+    	m_alog.write(log::alevel::devel,s.str());
+    }
     
     while (p < bytes_transferred) {
-        s.str("");
-        s << "calling consume with " << bytes_transferred-p << " bytes";
-        m_alog.write(log::alevel::devel,s.str());
+        if (m_alog.static_test(log::alevel::devel)) {
+        	std::stringstream s;
+        	s << "calling consume with " << bytes_transferred-p << " bytes";
+        	m_alog.write(log::alevel::devel,s.str());
+        }
         
         lib::error_code ec;
 
@@ -671,11 +781,12 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 			bytes_transferred-p,
             ec
 		);
-
-        s.str("");
-        s << "bytes left after consume: " << bytes_transferred-p;
-        m_alog.write(log::alevel::devel,s.str());
-
+		
+		if (m_alog.static_test(log::alevel::devel)) {
+        	std::stringstream s;
+        	s << "bytes left after consume: " << bytes_transferred-p;
+        	m_alog.write(log::alevel::devel,s.str());
+		}
 		if (ec) {
             m_elog.write(log::elevel::rerror,"consume error: "+ec.message());
             
@@ -698,7 +809,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 		}
 
 		if (m_processor->ready()) {
-            m_alog.write(log::alevel::devel,"consume ended in ready");
+            //m_alog.write(log::alevel::devel,"consume ended in ready");
 			
             message_ptr msg = m_processor->get_message();
            
@@ -838,13 +949,21 @@ bool connection<config>::process_handshake_request() {
         return false;
     }
     
+    // extract subprotocols
+    lib::error_code subp_ec = m_processor->extract_subprotocols(m_request,
+        m_requested_subprotocols);
+    
+    if (subp_ec) {
+        // should we do anything?
+    }
+    
     // Ask application to validate the connection
     if (!m_validate_handler || m_validate_handler(m_connection_hdl)) {
         m_response.set_status(http::status_code::switching_protocols);
         
         // Write the appropriate response headers based on request and 
         // processor version
-        ec = m_processor->process_handshake(m_request,m_response);
+        ec = m_processor->process_handshake(m_request,m_subprotocol,m_response);
 
         if (ec) {
             std::stringstream s;
@@ -938,7 +1057,9 @@ void connection<config>::send_http_response() {
     
     // Set some common headers
     m_response.replace_header("Server",m_user_agent);
-        
+    
+    
+    
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
         m_handshake_buffer = m_processor->get_raw(m_response);
@@ -949,6 +1070,10 @@ void connection<config>::send_http_response() {
     
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
+        if (m_response.get_header("Sec-WebSocket-Key3") != "") {
+            m_alog.write(log::alevel::devel,
+                utility::to_hex(m_response.get_header("Sec-WebSocket-Key3")));
+        }
     }
     
     // write raw bytes
@@ -1004,8 +1129,8 @@ void connection<config>::handle_send_http_response(
     this->atomic_state_change(
         istate::PROCESS_HTTP_REQUEST,
         istate::PROCESS_CONNECTION,
-        session::state::CONNECTING,
-        session::state::OPEN,
+        session::state::connecting,
+        session::state::open,
         "handle_send_http_response must be called from PROCESS_HTTP_REQUEST state"
     );
     
@@ -1020,14 +1145,14 @@ template <typename config>
 void connection<config>::send_http_request() {
     m_alog.write(log::alevel::devel,"connection send_http_request");
     
-    // TODO: origin header
-    // TODO: subprotocol requests
+    // TODO: origin header?
         
     // Have the protocol processor fill in the appropriate fields based on the
     // selected client version
     if (m_processor) {
         lib::error_code ec;
-        ec = m_processor->client_handshake_request(m_request,m_uri);
+        ec = m_processor->client_handshake_request(m_request,m_uri,
+            m_requested_subprotocols);
         
         if (ec) {
             m_elog.write(log::elevel::fatal,
@@ -1044,7 +1169,7 @@ void connection<config>::send_http_request() {
     if (m_request.get_header("User-Agent") == "") {
         m_request.replace_header("User-Agent",m_user_agent);
     }
-    
+        
     m_handshake_buffer = m_request.raw();
     
     if (m_alog.static_test(log::alevel::devel)) {
@@ -1127,7 +1252,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         return;
     }
     
-    m_elog.write(log::elevel::rerror,std::string("Raw response: ")+m_response.raw());
+    m_alog.write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
     
     if (m_response.headers_ready()) {
         lib::error_code ec = m_processor->validate_server_handshake_response(
@@ -1147,8 +1272,8 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         this->atomic_state_change(
             istate::READ_HTTP_RESPONSE,
             istate::PROCESS_CONNECTION,
-            session::state::CONNECTING,
-            session::state::OPEN,
+            session::state::connecting,
+            session::state::open,
             "handle_read_http_response must be called from READ_HTTP_RESPONSE state"
         );
         
@@ -1189,19 +1314,22 @@ void connection<config>::terminate() {
     
         transport_con_type::shutdown();
 
-        if (m_state == session::state::CONNECTING) {
-            m_state = session::state::CLOSED;
+        if (m_state == session::state::connecting) {
+            m_state = session::state::closed;
             if (m_fail_handler) {
                 m_fail_handler(m_connection_hdl);
             }
-        } else if (m_state != session::state::CLOSED) {
-            m_state = session::state::CLOSED;
+        } else if (m_state != session::state::closed) {
+            m_state = session::state::closed;
             if (m_close_handler) {
                 m_close_handler(m_connection_hdl);
             }
         } else {
             m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
+            return;
         }
+        
+        log_close_result();
     } catch (const std::exception& e) {
         m_elog.write(log::elevel::warn,
             std::string("terminate failed. Reason was: ") + e.what());
@@ -1222,9 +1350,8 @@ void connection<config>::terminate() {
 
 template <typename config>
 void connection<config>::write_frame() {
-    m_alog.write(log::alevel::devel,"connection write_frame");
+    //m_alog.write(log::alevel::devel,"connection write_frame");
     
-    message_ptr msg;
     {
         scoped_lock_type lock(m_write_lock);
         
@@ -1238,9 +1365,9 @@ void connection<config>::write_frame() {
         
         // Get the next message in the queue. This will return an empty
         // message if the queue was empty.
-        msg = write_pop();
+        m_current_msg = write_pop();
         
-        if (!msg) {
+        if (!m_current_msg) {
             return;
         }
         
@@ -1250,13 +1377,15 @@ void connection<config>::write_frame() {
         m_write_flag = true;
     }
 
-    const std::string& header = msg->get_header();
-    const std::string& payload = msg->get_payload();
+    const std::string& header = m_current_msg->get_header();
+    const std::string& payload = m_current_msg->get_payload();
 
     m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
     m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
-
+	
+	
     if (m_alog.static_test(log::alevel::frame_header)) {
+    if (m_alog.dynamic_test(log::alevel::frame_header)) {
         std::stringstream s;
         s << "Dispatching write with " << header.size() 
           << " header bytes and " << payload.size() 
@@ -1264,8 +1393,11 @@ void connection<config>::write_frame() {
         m_alog.write(log::alevel::frame_header,s.str());
         m_alog.write(log::alevel::frame_header,"Header: "+utility::to_hex(header));
     }
+    }
     if (m_alog.static_test(log::alevel::frame_payload)) {
+    if (m_alog.dynamic_test(log::alevel::frame_payload)) {
         m_alog.write(log::alevel::frame_payload,"Payload: "+utility::to_hex(payload));
+    }
     }
     
     transport_con_type::async_write(
@@ -1273,7 +1405,7 @@ void connection<config>::write_frame() {
         lib::bind(
             &type::handle_write_frame,
             type::shared_from_this(),
-            msg->get_terminal(),
+            m_current_msg->get_terminal(),
             lib::placeholders::_1
         )
     );
@@ -1284,6 +1416,7 @@ void connection<config>::handle_write_frame(bool terminate,
     const lib::error_code& ec)
 {
 	m_send_buffer.clear();
+	m_current_msg.reset();
 	
 	if (ec) {
         m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
@@ -1441,7 +1574,7 @@ void connection<config>::process_control_frame(typename
             return;
         }
 
-        if (m_state == session::state::OPEN) {
+        if (m_state == session::state::open) {
             std::stringstream s;
             s << "Received close frame with code " << m_remote_close_code 
               << " and reason " << m_remote_close_reason;
@@ -1452,7 +1585,7 @@ void connection<config>::process_control_frame(typename
                 m_elog.write(log::elevel::devel,
                     "send_close_ack error: "+ec.message());
             }
-        } else if (m_state == session::state::CLOSING) {
+        } else if (m_state == session::state::closing) {
             // ack of our close
             m_alog.write(log::alevel::devel,"Got acknowledgement of close");
             this->terminate();
@@ -1650,7 +1783,7 @@ void connection<config>::log_open_result()
     s << (version == -1 ? "HTTP" : "WebSocket") << " Connection ";
     
     // Remote endpoint address
-    s << "Unknown" << " ";
+    s << transport_con_type::get_remote_endpoint() << " ";
     
     // Version string if WebSocket
     if (version != -1) {
@@ -1659,8 +1792,13 @@ void connection<config>::log_open_result()
     
     // User Agent
     std::string ua = m_request.get_header("User-Agent");
-    s << (ua == "" ? "NULL" : ua) << " ";
-    
+    if (ua == "") {
+        s << "\"\" ";
+    } else {
+        // check if there are any quotes in the user agent
+        s << "\"" << utility::string_replace_all(ua,"\"","\\\"") << "\" ";
+    }
+        
     // URI
     s << (m_uri ? m_uri->get_resource() : "NULL") << " ";
     
@@ -1668,6 +1806,20 @@ void connection<config>::log_open_result()
     s << m_response.get_status_code();
     
     m_alog.write(log::alevel::connect,s.str());
+}
+
+template <typename config>
+void connection<config>::log_close_result()
+{
+    std::stringstream s;
+    
+    s << "Disconnect "
+      << "close local:[" << m_local_close_code 
+      << (m_local_close_reason == "" ? "" : ","+m_local_close_reason) 
+      << "] remote:[" << m_remote_close_code
+      << (m_remote_close_reason == "" ? "" : ","+m_remote_close_reason) << "]";
+    
+    m_alog.write(log::alevel::disconnect,s.str());
 }
 
 } // namespace websocketpp

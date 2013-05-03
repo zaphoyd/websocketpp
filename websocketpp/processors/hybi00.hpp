@@ -39,6 +39,9 @@
 
 #include <websocketpp/processors/processor.hpp>
 
+#include <websocketpp/frame.hpp>
+#include <websocketpp/utf8_validator.hpp>
+
 #include <websocketpp/md5/md5.hpp>
 
 namespace websocketpp {
@@ -62,7 +65,11 @@ public:
 	typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
 
     explicit hybi00(bool secure, bool server, msg_manager_ptr manager) 
-      : processor<config>(secure, server) {}
+      : processor<config>(secure, server)
+      , msg_hdr(0x00)
+      , msg_ftr(0xff)
+      , m_state(HEADER)
+      , m_msg_manager(manager) {}
     
     int get_version() const {
         return 0;
@@ -91,8 +98,8 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code process_handshake(const request_type& req,
-        response_type& res) const
+    lib::error_code process_handshake(const request_type& req, const
+        std::string & subprotocol, response_type& res) const
     {
         char key_final[16];
         
@@ -117,7 +124,7 @@ public:
             md5::md5_hash_string(std::string(key_final,16))
         );
         
-        res.append_header("Upgrade","websocket");
+        res.append_header("Upgrade","WebSocket");
         res.append_header("Connection","Upgrade");
         
         // Echo back client's origin unless our local application set a
@@ -133,12 +140,16 @@ public:
             res.append_header("Sec-WebSocket-Location",uri->str());
         }
         
+        if (subprotocol != "") {
+            res.replace_header("Sec-WebSocket-Protocol",subprotocol);
+        }
+        
         return lib::error_code();
     }
     
     // outgoing client connection processing is not supported for this version
-    lib::error_code client_handshake_request(request_type& req, uri_ptr uri) 
-        const
+    lib::error_code client_handshake_request(request_type& req, uri_ptr uri, 
+        const std::vector<std::string> & subprotocols) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
@@ -150,11 +161,20 @@ public:
     }
     
     std::string get_raw(const response_type& res) const {
-        return res.raw() + res.get_header("Sec-WebSocket-Key3");
+        response_type temp = res;
+        temp.remove_header("Sec-WebSocket-Key3");
+        return temp.raw() + res.get_header("Sec-WebSocket-Key3");
     }
     
     const std::string& get_origin(const request_type& r) const {
         return r.get_header("Origin");
+    }
+    
+    // hybi00 doesn't support subprotocols so there never will be any requested
+    lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list)
+    {
+        return lib::error_code();
     }
     
     uri_ptr get_uri(const request_type& request) const {
@@ -188,12 +208,64 @@ public:
 
 	/// Process new websocket connection bytes
 	size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
-        ec = make_error_code(error::not_implimented);
-		return 0;
+        // if in state header we are expecting a 0x00 byte, if we don't get one
+        // it is a fatal error
+        size_t p = 0; // bytes processed
+        size_t l = 0;
+
+		ec = lib::error_code();
+
+        while (p < len) {
+            if (m_state == HEADER) {
+                if (buf[p] == msg_hdr) {
+                    p++;
+                    m_msg_ptr = m_msg_manager->get_message(frame::opcode::text,1);
+                    
+                    if (!m_msg_ptr) {
+                        ec = make_error_code(websocketpp::error::no_incoming_buffers);
+                        m_state = FATAL_ERROR;
+                    } else {
+                        m_state = PAYLOAD;
+                    }
+                } else {
+                    ec = make_error_code(error::protocol_violation);
+                    m_state = FATAL_ERROR;
+                }
+            } else if (m_state == PAYLOAD) {
+                uint8_t *it = std::find(buf+p,buf+len,msg_ftr);
+                
+                // 0    1    2    3    4    5
+                // 0x00 0x23 0x23 0x23 0xff 0xXX
+
+                // Copy payload bytes into message
+                l = static_cast<size_t>(it-(buf+p));
+                m_msg_ptr->append_payload(buf+p,l);
+                p += l;
+                
+                if (it != buf+len) {
+                    // message is done, copy it and the trailing
+                    p++;
+                    // TODO: validation
+                    m_state = READY;
+                }
+            } else {
+                // TODO
+                break;
+            }
+        }
+        // If we get one, we create a new message and move to application state
+        
+        // if in state application we are copying bytes into the output message
+        // and validating them for UTF8 until we hit a 0xff byte. Once we hit
+        // 0x00, the message is complete and is dispatched. Then we go back to
+        // header state.
+        
+        //ec = make_error_code(error::not_implimented);
+        return p;
 	}
 
 	bool ready() const {
-		return false;
+		return (m_state == READY);
 	}
 	
 	bool get_error() const {
@@ -201,7 +273,10 @@ public:
 	}
 
 	message_ptr get_message() {
-		return message_ptr();
+		message_ptr ret = m_msg_ptr;
+        m_msg_ptr = message_ptr();
+        m_state = HEADER;
+        return ret;
 	}
 	
 	/// Prepare a message for writing
@@ -211,19 +286,37 @@ public:
 	 */
 	virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
 	{
-		// assert msg
+		if (!in || !out) {
+			return make_error_code(error::invalid_arguments);
+		}
 		
-		// check if the message is prepared already
+		// TODO: check if the message is prepared already
 		
 		// validate opcode
+        if (in->get_opcode() != frame::opcode::text) {
+            return make_error_code(error::invalid_opcode);    
+        }
+        
+        std::string& i = in->get_raw_payload();
+		//std::string& o = out->get_raw_payload();
+
 		// validate payload utf8
-		
-		// if we are a client generate a masking key
-		
+		if (!utf8_validator::validate(i)) {
+            return make_error_code(error::invalid_payload);
+        }
+
 		// generate header
-		// perform compression
-		// perform masking
+        out->set_header(std::string(reinterpret_cast<const char*>(&msg_hdr),1));
+        
+        // process payload
+        out->set_payload(i);
+        out->append_payload(std::string(reinterpret_cast<const char*>(&msg_ftr),1));
+
+		// hybi00 doesn't support compression
+		// hybi00 doesn't have masking
 		
+        out->set_prepared(true);
+
 		return lib::error_code();
 	}
 
@@ -240,11 +333,21 @@ public:
     lib::error_code prepare_close(close::status::value code, 
         const std::string & reason, message_ptr out) const
     {
-        return lib::error_code(error::no_protocol_support);
+        if (!out) {
+            return lib::error_code(error::invalid_arguments);
+        }
+        
+        std::string val;
+        val.append(1,0xff);
+        val.append(1,0x00);
+        out->set_payload(val);
+        out->set_prepared(true);
+
+        return lib::error_code();
     }
 private:
     void decode_client_key(const std::string& key, char* result) const {
-        int spaces = 0;
+        unsigned int spaces = 0;
         std::string digits = "";
         uint32_t num;
         
@@ -257,7 +360,7 @@ private:
             }
         }
         
-        num = strtoul(digits.c_str(), NULL, 10);
+        num = static_cast<uint32_t>(strtoul(digits.c_str(), NULL, 10));
         if (spaces > 0 && num > 0) {
             num = htonl(num/spaces);
             std::copy(reinterpret_cast<char*>(&num),
@@ -267,6 +370,22 @@ private:
             std::fill(result,result+4,0);
         }
     }
+    
+    enum state {
+		HEADER = 0,
+		PAYLOAD = 1,
+		READY = 2,
+		FATAL_ERROR = 3
+	};
+    
+    const uint8_t msg_hdr;
+    const uint8_t msg_ftr;
+
+    state m_state;
+    
+    msg_manager_ptr m_msg_manager;
+    message_ptr	m_msg_ptr;
+    utf8_validator::validator m_validator;
 };
 
 

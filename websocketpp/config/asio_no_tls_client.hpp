@@ -35,6 +35,8 @@ namespace websocketpp {
 namespace config {
 
 struct asio_client : public core_client {
+    typedef asio_client type;
+    
 	typedef core_client::concurrency_type concurrency_type;
 	
 	typedef core_client::request_type request_type;
@@ -50,9 +52,11 @@ struct asio_client : public core_client {
     typedef core_client::rng_type rng_type;
     
     struct transport_config {
-        typedef asio_client::concurrency_type concurrency_type;
-        typedef asio_client::alog_type alog_type;
-        typedef asio_client::elog_type elog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
         typedef websocketpp::transport::asio::basic_socket::endpoint 
             socket_type;
     };

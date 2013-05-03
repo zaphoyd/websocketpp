@@ -36,6 +36,12 @@ Implimented, needs more testing
 - exception/error handling
 - Logging
 - Client role
+- Subprotocol negotiation
+- Hybi 00/Hixie 76 legacy protocol support
+- Performance tuning
+- Outgoing Proxy Support
+- PowerPC support
+- Visual Studio / Windows support
 
 Implimented, API not finalized
 - open_handler
@@ -44,11 +50,9 @@ Implimented, API not finalized
 - http_handler
 
 Needs work:
-- PowerPC support
-- Subprotocol negotiation
+- Timeouts
+
+Non-release blocking feature roadmap
 - Extension support
 - permessage_compress extension
-- Visual Studio / Windows support
-- Hybi 00/Hixie 76 legacy protocol support
 - Message buffer pool
-- Performance tuning

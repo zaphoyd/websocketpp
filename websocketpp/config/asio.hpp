@@ -40,6 +40,8 @@ namespace websocketpp {
 namespace config {
 
 struct asio_tls : public core {
+    typedef asio_tls type;
+    
 	typedef core::concurrency_type concurrency_type;
 	
 	typedef core::request_type request_type;
@@ -55,9 +57,11 @@ struct asio_tls : public core {
 	typedef core::rng_type rng_type;
 
     struct transport_config {
-        typedef asio_tls::concurrency_type concurrency_type;
-        typedef asio_tls::alog_type alog_type;
-        typedef asio_tls::elog_type elog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
         typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
     };
 

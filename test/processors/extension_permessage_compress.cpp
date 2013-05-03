@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,7 +25,7 @@
  * 
  */
 //#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE extension_permessage_compress
+#define BOOST_TEST_MODULE extension_permessage_deflate
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
@@ -33,25 +33,25 @@
 #include <websocketpp/common/memory.hpp>
 
 #include <websocketpp/http/request.hpp>
-#include <websocketpp/extensions/permessage_compress/enabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/enabled.hpp>
 
 struct config {
     typedef websocketpp::http::parser::request request_type;
 };
-typedef websocketpp::extensions::permessage_compress::enabled<config> 
+typedef websocketpp::extensions::permessage_deflate::enabled<config> 
     compressor_type;
 
 using namespace websocketpp;
 
 BOOST_AUTO_TEST_CASE( deflate_init ) {
-    compressor_type compressor;
+    /*compressor_type compressor;
     websocketpp::http::parser::attribute_list attributes;
     std::pair<lib::error_code,std::string> neg_ret;
 
     neg_ret = compressor.negotiate(attributes);
 
     BOOST_CHECK_EQUAL( neg_ret.first, 
-        extensions::permessage_compress::error::invalid_parameters );
+        extensions::permessage_deflate::error::invalid_parameters );*/
     
     /**
      * Window size is primarily controlled by the writer. A stream can only be

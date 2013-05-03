@@ -128,9 +128,7 @@ int get_websocket_version(request_type& r) {
 //
 //         // handle msg;
 //     }
-// }
-// 
-// 
+// } 
 
 template <typename config>
 class processor {
@@ -186,12 +184,14 @@ public:
     /**
      * @param req The request to process
      *
+     * @param subprotocol The subprotocol in use
+     *
      * @param res The response to store the processed response in
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code process_handshake(const request_type& req,
-        response_type& res) const = 0;
+    virtual lib::error_code process_handshake(const request_type& req, const 
+        std::string & subprotocol, response_type& res) const = 0;
     
     /// Fill in an HTTP request for an outgoing connection handshake
     /**
@@ -200,7 +200,7 @@ public:
      * @return An error code, 0 on success, non-zero for other errors
      */
     virtual lib::error_code client_handshake_request(request_type& req, 
-        uri_ptr uri) const = 0;
+        uri_ptr uri, const std::vector<std::string> & subprotocols) const = 0;
         
     /// Validate the server's response to an outgoing handshake request
     /**
@@ -219,6 +219,19 @@ public:
     /// Return the value of the header containing the CORS origin.
     virtual const std::string& get_origin(const request_type& request) 
 		const = 0;
+    
+    /// Extracts requested subprotocols from a handshake request
+    /**
+     * Extracts a list of all subprotocols that the client has requested in the
+     * given opening handshake request.
+     * 
+     * @param req The request to extract from
+     *
+     * @param subprotocol_list A reference to a vector of strings to store the
+     * results in.
+     */
+    virtual lib::error_code extract_subprotocols(const request_type & req,
+        std::vector<std::string> & subprotocol_list) = 0;
     
     /// Extracts client uri from a handshake request
     virtual uri_ptr get_uri(const request_type& request) const = 0;

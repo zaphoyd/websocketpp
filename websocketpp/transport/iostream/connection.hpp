@@ -112,6 +112,22 @@ public:
 		return in;
 	}
 	
+	/// Manual input supply
+	/**
+	 * Copies bytes from buf into WebSocket++'s input buffers. Bytes will be 
+	 * copied from the supplied buffer to fullfull any pending library reads. It
+	 * will return the number of bytes successfully processed. If there are no 
+	 * pending reads readsome will return immediately. Not all of the bytes may
+	 * be able to be read in one call
+	 */
+	size_t readsome(const char *buf, size_t len) {
+	    // this serializes calls to external read.
+		scoped_lock_type lock(m_read_mutex);
+		
+		return this->readsome_impl(buf,len);
+	}
+	
+	
 	/// Tests whether or not the underlying transport is secure
 	/**
 	 * iostream transport will return false always because it has no information
@@ -304,20 +320,20 @@ private:
 	void read(std::istream &in) {
         m_alog.write(log::alevel::devel,"iostream_con read");
 		
-		while (in.good()) {
-		    if (!m_reading) {
+		while (in.good()) {  
+            if (!m_reading) {
                 m_elog.write(log::elevel::devel,"write while not reading");
                 break;
-		    }
-		    
-            in.read(m_buf+m_cursor,m_len-m_cursor);
+            }
+            
+            in.read(m_buf+m_cursor,static_cast<std::streamsize>(m_len-m_cursor));
             
             if (in.gcount() == 0) {
                 m_elog.write(log::elevel::devel,"read zero bytes");
                 break;
             }
             
-            m_cursor += in.gcount();
+            m_cursor += static_cast<size_t>(in.gcount());
             
             // TODO: error handling
             if (in.bad()) {
@@ -330,6 +346,28 @@ private:
                 m_read_handler(lib::error_code(), m_cursor);
             }
         }
+	}
+	
+	size_t readsome_impl(const char * buf, size_t len) {
+	    m_alog.write(log::alevel::devel,"iostream_con readsome");
+	    
+	    if (!m_reading) {
+            m_elog.write(log::elevel::devel,"write while not reading");
+            return 0;
+        }
+        
+        size_t bytes_to_copy = std::min(len,m_len-m_cursor);
+        
+        std::copy(buf,buf+bytes_to_copy,m_buf);
+        
+        m_cursor += bytes_to_copy;
+        
+        if (m_cursor >= m_bytes_needed) {
+            m_reading = false;
+            m_read_handler(lib::error_code(), m_cursor);
+        }
+        
+        return bytes_to_copy;
 	}
 	
 	// Read space (Protected by m_read_mutex)

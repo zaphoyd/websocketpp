@@ -57,12 +57,14 @@
 #include <websocketpp/connection_base.hpp>
 
 // Extensions
-#include <websocketpp/extensions/permessage_compress/disabled.hpp>
+#include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 
 namespace websocketpp {
 namespace config {
 
 struct core_client {
+    typedef core_client type;
+    
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
 	
@@ -89,9 +91,11 @@ struct core_client {
 	    concurrency_type> rng_type;
 	
     struct transport_config {
-        typedef core_client::concurrency_type concurrency_type;
-        typedef core_client::elog_type elog_type;
-        typedef core_client::alog_type alog_type;
+        typedef type::concurrency_type concurrency_type;
+        typedef type::elog_type elog_type;
+        typedef type::alog_type alog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
     };
 
     /// Transport Endpoint Component
@@ -110,7 +114,33 @@ struct core_client {
      * recommended.
      */ 
     static const int client_version = 13; // RFC6455
+    
+    /// Default static error logging channels
+    /**
+     * Which error logging channels to enable at compile time. Channels not
+     * enabled here will be unable to be selected by programs using the library.
+     * This option gives an optimizing compiler the ability to remove entirely 
+     * code to test whether or not to print out log messages on a certain 
+     * channel 
+     * 
+     * Default is all except for development/debug level errors
+     */ 
+    static const websocketpp::log::level elog_level = 
+        websocketpp::log::elevel::all ^ websocketpp::log::elevel::devel;
         
+    /// Default static access logging channels
+    /**
+     * Which access logging channels to enable at compile time. Channels not
+     * enabled here will be unable to be selected by programs using the library.
+     * This option gives an optimizing compiler the ability to remove entirely 
+     * code to test whether or not to print out log messages on a certain 
+     * channel 
+     * 
+     * Default is all except for development/debug level access messages
+     */ 
+    static const websocketpp::log::level alog_level = 
+        websocketpp::log::alevel::all ^ websocketpp::log::alevel::devel;
+    
     /// 
 	static const size_t connection_read_buffer_size = 512;
     
@@ -143,8 +173,8 @@ struct core_client {
     
     /// Extension specific settings:
 
-    /// permessage_compress extension
-    struct permessage_compress_config {
+    /// permessage_deflate extension
+    struct permessage_deflate_config {
         typedef core_client::request_type request_type;
         
         /// If the remote endpoint requests that we reset the compression
@@ -159,8 +189,8 @@ struct core_client {
         static const uint8_t minimum_outgoing_window_bits = 8;
     };
 
-    typedef websocketpp::extensions::permessage_compress::disabled
-        <permessage_compress_config> permessage_compress_type;
+    typedef websocketpp::extensions::permessage_deflate::disabled
+        <permessage_deflate_config> permessage_deflate_type;
 
     /// Autonegotiate permessage-compress
     /**

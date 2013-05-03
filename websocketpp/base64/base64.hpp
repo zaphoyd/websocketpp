@@ -1,10 +1,11 @@
 /* 
-   ******
-   base64.hpp is a repackaging of the base64.cpp and base64.h files into a single header
-   suitable for use as a header only library. This conversion was done by Peter Thorson
-   (webmaster@zaphoyd.com) in 2012. All modifications to the code are redistributed under
-   the same license as the original, which is listed below.
-   ******
+    ******
+    base64.hpp is a repackaging of the base64.cpp and base64.h files into a 
+    single headersuitable for use as a header only library. This conversion was 
+    done by Peter Thorson (webmaster@zaphoyd.com) in 2012. All modifications to
+    the code are redistributed under the same license as the original, which is 
+    listed below.
+    ******
    
    base64.cpp and base64.h
 
@@ -36,7 +37,6 @@
 #define _BASE64_HPP_
 
 #include <string>
-#include <iostream>
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -44,7 +44,10 @@ static const std::string base64_chars =
              "0123456789+/";
 
 static inline bool is_base64(unsigned char c) {
-  return (isalnum(c) || (c == '+') || (c == '/'));
+    return (c == 43 || // +
+           (c >= 47 && c <= 57) || // /-9
+           (c >= 65 && c <= 90) || // A-Z
+           (c >= 97 && c <= 122)); // a-z
 }
 
 inline std::string base64_encode(unsigned char const* bytes_to_encode, unsigned 
@@ -97,6 +100,10 @@ inline std::string base64_encode(unsigned char const* bytes_to_encode, unsigned
   return ret;
 }
 
+inline std::string base64_encode(const std::string & data) {
+    return base64_encode(reinterpret_cast<const unsigned char *>(data.data()),data.size());
+}
+
 inline std::string base64_decode(std::string const& encoded_string) {
     size_t in_len = encoded_string.size();
     int i = 0;
@@ -134,7 +141,9 @@ inline std::string base64_decode(std::string const& encoded_string) {
         char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
         char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
-        for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+        for (j = 0; (j < i - 1); j++) {
+            ret += static_cast<std::string::value_type>(char_array_3[j]);
+        }
     }
 
     return ret;

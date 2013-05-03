@@ -39,11 +39,11 @@
 #include <websocketpp/processors/processor.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
-
+#include <algorithm>
 #include <iostream>
-#include <vector>
 #include <queue>
 #include <string>
+#include <vector>
 
 namespace websocketpp {
 
@@ -73,12 +73,11 @@ typedef lib::function<void(connection_hdl)> http_handler;
 namespace session {
 namespace state {
 	// externally visible session state (states based on the RFC)
-	
     enum value {
-        CONNECTING = 0,
-        OPEN = 1,
-        CLOSING = 2,
-        CLOSED = 3
+        connecting = 0,
+        open = 1,
+        closing = 2,
+        closed = 3
     };
 } // namespace state
 
@@ -172,7 +171,7 @@ public:
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
-      , m_state(session::state::CONNECTING)
+      , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
 	  , m_send_buffer_size(0)
@@ -181,6 +180,8 @@ public:
 	  , m_alog(alog)
 	  , m_elog(elog)
 	  , m_rng(rng)
+	  , m_local_close_code(close::status::abnormal_close)
+	  , m_remote_close_code(close::status::abnormal_close)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -519,10 +520,106 @@ public:
      * @param uri The new URI to set
      */
     void set_uri(uri_ptr uri);
-        
+    
+    /////////////////////////////
+    // Subprotocol negotiation //
+    /////////////////////////////
+    
+    /// Gets the negotated subprotocol
+    /**
+     * Retrieves the subprotocol that was negotiated during the handshake. This
+     * method is valid in the open handler and later.
+     *
+     * @return The negotiated subprotocol
+     */
+    const std::string& get_subprotocol() const;
+    
+    /// Gets all of the subprotocols requested by the client
+    /**
+     * Retrieves the subprotocols that were requested during the handshake. This
+     * method is valid in the validate handler and later.
+     *
+     * @return A vector of the requested subprotocol
+     */
+    const std::vector<std::string> & get_requested_subprotocols() const;
+    
+    /// Adds the given subprotocol string to the request list (exception free)
+    /**
+     * Adds a subprotocol to the list to send with the opening handshake. This 
+     * may be called multiple times to request more than one. If the server 
+     * supports one of these, it may choose one. If so, it will return it
+     * in it's handshake reponse and the value will be available via 
+     * get_subprotocol(). Subprotocol requests should be added in order of
+     * preference.
+     *
+     * @param request The subprotocol to request
+     *
+     * @param ec A reference to an error code that will be filled in the case of
+     * errors
+     */
+    void add_subprotocol(const std::string &request, lib::error_code & ec);
+    
+    /// Adds the given subprotocol string to the request list
+    /**
+     * Adds a subprotocol to the list to send with the opening handshake. This 
+     * may be called multiple times to request more than one. If the server 
+     * supports one of these, it may choose one. If so, it will return it
+     * in it's handshake reponse and the value will be available via 
+     * get_subprotocol(). Subprotocol requests should be added in order of
+     * preference.
+     *
+     * @param request The subprotocol to request
+     */
+    void add_subprotocol(const std::string &request);
+    
+    /// Select a subprotocol to use (exception free)
+    /**
+     * Indicates which subprotocol should be used for this connection. Valid 
+     * only during the validate handler callback. Subprotocol selected must have
+     * been requested by the client. Consult get_requested_subprotocols() for a
+     * list of valid subprotocols.
+     *
+     * This member function is valid on server endpoints/connections only
+     *
+     * @param value The subprotocol to select
+     *
+     * @param ec A reference to an error code that will be filled in the case of
+     * errors
+     */
+    void select_subprotocol(const std::string & value, lib::error_code & ec);
+    
+    /// Select a subprotocol to use
+    /**
+     * Indicates which subprotocol should be used for this connection. Valid 
+     * only during the validate handler callback. Subprotocol selected must have
+     * been requested by the client. Consult get_requested_subprotocols() for a
+     * list of valid subprotocols.
+     *
+     * This member function is valid on server endpoints/connections only
+     *
+     * @param value The subprotocol to select
+     */
+    void select_subprotocol(const std::string & value);
+    
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
     /////////////////////////////////////////////////////////////
+    
+    /// Retrieve a request header
+    /**
+     * Retrieve the value of a header from the handshake HTTP request.
+     * 
+     * @param key Name of the header to get
+     */
+    const std::string & get_request_header(const std::string &key);
+    
+    /// Retrieve a response header
+    /**
+     * Retrieve the value of a header from the handshake HTTP request.
+     * 
+     * @param key Name of the header to get
+     */
+    const std::string & get_response_header(const std::string &key);
     
     /// Set response status code and message
     /**
@@ -645,6 +742,14 @@ public:
      * @return The connection's origin value from the opening handshake.
      */
     const std::string& get_origin() const;
+    
+    /// Return the connection state.
+    /**
+     * Values can be connecting, open, closing, and closed
+     *
+     * @return The connection's current state.
+     */
+    session::state::value get_state() const;
     
     ////////////////////////////////////////////////////////////////////////
     // The remaining public member functions are for internal/policy use  //
@@ -864,6 +969,13 @@ private:
      */
     void log_open_result();
     
+    /// Prints information about a connection being closed to the access log
+    /**
+     * Prints information about a connection being closed to the access log.
+     * Includes: local and remote close codes and reasons
+     */
+    void log_close_result();
+    
     // static settings
     const std::string		m_user_agent;
 	
@@ -942,6 +1054,10 @@ private:
      */
     std::vector<transport::buffer> m_send_buffer;
     
+    /// a pointer to hold on to the current message being written to keep it 
+    /// from going out of scope before the write is complete.
+    message_ptr m_current_msg;
+    
     /// True if there is currently an outstanding transport write
     /**
      * Lock m_write_lock
@@ -952,6 +1068,11 @@ private:
     request_type            m_request;
     response_type           m_response;
     uri_ptr                 m_uri;
+    std::string             m_subprotocol;
+    
+    // connection data that might not be necessary to keep around for the life
+    // of the whole connection.
+    std::vector<std::string> m_requested_subprotocols;
     
     const bool				m_is_server;
     alog_type& m_alog;

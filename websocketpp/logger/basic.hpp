@@ -62,7 +62,16 @@ public:
       , m_dynamic_channels(0)
       , m_out(out) {}
     
+    void set_ostream(std::ostream* out) {
+        m_out = out;
+    }
+    
     void set_channels(level channels) {
+        if (channels == names::none) {
+        	clear_channels(names::all);
+        	return;
+        }
+        
         scoped_lock_type lock(m_lock);
         m_dynamic_channels |= (channels & m_static_channels);
     }
@@ -78,6 +87,7 @@ public:
         *m_out << "[" << get_timestamp() << "] " 
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
+        m_out->flush();
     }
     
     void write(level channel, const char* msg) {
@@ -86,29 +96,29 @@ public:
         *m_out << "[" << get_timestamp() << "] "
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
+        m_out->flush();
     }
     
     bool static_test(level channel) const {
         return ((channel & m_static_channels) != 0);
     }
     
+    bool dynamic_test(level channel) {
+	    return ((channel & m_dynamic_channels) != 0);
+	}
 private:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
 	typedef typename concurrency::mutex_type mutex_type;
 	
-	bool dynamic_test(level channel) {
-	    return ((channel & m_dynamic_channels) != 0);
-	}
-	
     const char* get_timestamp() {
         std::time_t t = std::time(NULL);
-        std::strftime(buffer,30,"%Y-%m-%d %H:%M:%S%z",std::localtime(&t));
+        std::strftime(buffer,39,"%Y-%m-%d %H:%M:%S%z",std::localtime(&t));
         return buffer;
     }
 
 	mutex_type m_lock;
-	
-    char buffer[30];
+		
+    char buffer[40];
     const level m_static_channels;
     level m_dynamic_channels;
     std::ostream* m_out;

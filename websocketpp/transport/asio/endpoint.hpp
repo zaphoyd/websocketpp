@@ -92,6 +92,7 @@ public:
 	
 	~endpoint() {
 		// clean up our io_service if we were initialized with an internal one.
+        m_acceptor.reset();
 		if (m_state != UNINITIALIZED && !m_external_io_service) {
 			delete m_io_service;
 		}
@@ -241,13 +242,23 @@ public:
 	}
 
 	/// wraps the run method of the internal io_service object
-	void run() {
-		m_io_service->run();
+	std::size_t run() {
+		return m_io_service->run();
 	}
 	
 	/// wraps the stop method of the internal io_service object
 	void stop() {
 		m_io_service->stop();
+	}
+	
+	/// wraps the poll method of the internal io_service object
+	std::size_t poll() {
+		return m_io_service->poll();
+	}
+	
+	/// wraps the poll_one method of the internal io_service object
+	std::size_t poll_one() {
+		return m_io_service->poll_one();
 	}
 	
 	/// wraps the reset method of the internal io_service object
@@ -353,20 +364,33 @@ protected:
             m_resolver.reset(new boost::asio::ip::tcp::resolver(*m_io_service));
         }
         
-        tcp::resolver::query query(u->get_host(),u->get_port_str());
-        /*tcp::resolver::iterator iterator = resolver.resolve(query);
+        std::string proxy = tcon->get_proxy();
+        std::string host;
+        std::string port;
         
-        boost::asio::async_connect(
-            tcon->get_raw_socket(),
-            iterator,
-            lib::bind(
-                &type::handle_connect,
-                this, // shared from this?
-                tcon,
-                cb,
-				lib::placeholders::_1
-            )
-        );*/
+        if (proxy.empty()) {
+            host = u->get_host();
+            port = u->get_port_str();
+        } else {
+            try {
+                lib::error_code ec;
+
+                uri_ptr pu(new uri(proxy));
+                ec = tcon->proxy_init(u->get_host_port());
+                if (ec) {
+                    cb(tcon->get_handle(),ec);
+                    return;
+                }
+
+                host = pu->get_host();
+                port = pu->get_port_str();
+            } catch (uri_exception) {
+                cb(tcon->get_handle(),make_error_code(error::proxy_invalid));
+                return;
+            }
+        }
+        
+        tcp::resolver::query query(host,port);
         
         m_resolver->async_resolve(
             query,
@@ -391,7 +415,7 @@ protected:
 			std::stringstream s;
             s << "asio async_resolve error::pass_through: "
               << "Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog->write(log::elevel::devel,s.str());
+            m_elog->write(log::elevel::info,s.str());
 			callback(tcon->get_handle(),make_error_code(error::pass_through));
 			return;
 		}
@@ -418,7 +442,7 @@ protected:
 			std::stringstream s;
             s << "asio async_connect error::pass_through: "
               << "Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog->write(log::elevel::devel,s.str());
+            m_elog->write(log::elevel::info,s.str());
 			callback(tcon->get_handle(),make_error_code(error::pass_through));
 			return;
 		}

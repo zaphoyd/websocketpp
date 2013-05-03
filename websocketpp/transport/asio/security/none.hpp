@@ -51,28 +51,28 @@ typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
 class connection {
 public:
     /// Type of this connection socket component
-	typedef connection type;
+    typedef connection type;
     /// Type of a shared pointer to this connection socket component
     typedef lib::shared_ptr<type> ptr;
 
     /// Type of a pointer to the ASIO io_service being used
-	typedef boost::asio::io_service* io_service_ptr;
+    typedef boost::asio::io_service* io_service_ptr;
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
-	
-	explicit connection() : m_state(UNINITIALIZED) {
-		//std::cout << "transport::asio::basic_socket::connection constructor" 
+    
+    explicit connection() : m_state(UNINITIALIZED) {
+        //std::cout << "transport::asio::basic_socket::connection constructor" 
         //          << std::endl; 
-	}
-	
+    }
+    
     /// Check whether or not this connection is secure
     /**
      * @return Wether or not this connection is secure
      */
-	bool is_secure() const {
-	    return false;
-	}
-	
+    bool is_secure() const {
+        return false;
+    }
+    
     /// Set the socket initialization handler
     /**
      * The socket initialization handler is called after the socket object is
@@ -85,59 +85,95 @@ public:
         m_socket_init_handler = h;
     }
 
-	/// Retrieve a pointer to the underlying socket
-	/**
-	 * This is used internally. It can also be used to set socket options, etc
-	 */
+    /// Retrieve a pointer to the underlying socket
+    /**
+     * This is used internally. It can also be used to set socket options, etc
+     */
     boost::asio::ip::tcp::socket& get_socket() {
-    	return *m_socket;
+        return *m_socket;
     }
     
     /// Retrieve a pointer to the underlying socket
-	/**
-	 * This is used internally. It can also be used to set socket options, etc
-	 */
+    /**
+     * This is used internally.
+     */
+    boost::asio::ip::tcp::socket& get_next_layer() {
+        return *m_socket;
+    }
+    
+    /// Retrieve a pointer to the underlying socket
+    /**
+     * This is used internally. It can also be used to set socket options, etc
+     */
     boost::asio::ip::tcp::socket& get_raw_socket() {
-    	return *m_socket;
+        return *m_socket;
+    }
+    
+    /// Get the remote endpoint address
+    /**
+     * The iostream transport has no information about the ultimate remote 
+     * endpoint. It will return the string "iostream transport". To indicate 
+     * this.
+     *
+     * TODO: allow user settable remote endpoint addresses if this seems useful
+     *
+     * @return A string identifying the address of the remote endpoint
+     */
+    std::string get_remote_endpoint(lib::error_code &ec) const {
+        std::stringstream s;
+        
+        boost::system::error_code bec;
+        boost::asio::ip::tcp::endpoint ep = m_socket->remote_endpoint(bec);
+        
+        if (bec) {
+            ec = error::make_error_code(error::pass_through);
+            s << "Error getting remote endpoint: " << bec 
+               << " (" << bec.message() << ")";
+            return s.str();
+        } else {
+            ec = lib::error_code();
+            s << ep;
+            return s.str();
+        }
     }
 protected:
-	/// Perform one time initializations
-	/**
-	 * init_asio is called once immediately after construction to initialize
-	 * boost::asio components to the io_service
-	 *
-	 * @param service A pointer to the endpoint's io_service
-	 * @param strand A shared pointer to the connection's asio strand
-	 * @param is_server Whether or not the endpoint is a server or not.
-	 */
+    /// Perform one time initializations
+    /**
+     * init_asio is called once immediately after construction to initialize
+     * boost::asio components to the io_service
+     *
+     * @param service A pointer to the endpoint's io_service
+     * @param strand A shared pointer to the connection's asio strand
+     * @param is_server Whether or not the endpoint is a server or not.
+     */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
-    	if (m_state != UNINITIALIZED) {
-    		return socket::make_error(socket::error::invalid_state);
-    	}
-    	
-    	m_socket.reset(new boost::asio::ip::tcp::socket(*service));
-    	
-    	m_state = READY;
-    	
-    	return lib::error_code();
+        if (m_state != UNINITIALIZED) {
+            return socket::make_error(socket::error::invalid_state);
+        }
+        
+        m_socket.reset(new boost::asio::ip::tcp::socket(*service));
+        
+        m_state = READY;
+        
+        return lib::error_code();
     }
-	
-	/// Initialize security policy for reading
-	void init(init_handler callback) {
-		if (m_state != READY) {
-	 		callback(socket::make_error(socket::error::invalid_state));
-	 		return;
-	 	}
-	 	
+    
+    /// Initialize security policy for reading
+    void init(init_handler callback) {
+        if (m_state != READY) {
+            callback(socket::make_error(socket::error::invalid_state));
+            return;
+        }
+        
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl,*m_socket);
         }
-	 	
-	 	m_state = READING;
-	 	
-	 	callback(lib::error_code());
-	}
-	
+        
+        m_state = READING;
+        
+        callback(lib::error_code());
+    }
+    
     /// Sets the connection handle
     /**
      * The connection handle is passed to any handlers to identify the 
@@ -156,14 +192,14 @@ protected:
         // TODO: handle errors
     }
 private:
-	enum state {
-		UNINITIALIZED = 0,
-		READY = 1,
-		READING = 2
-	};
-	
-	socket_ptr	        m_socket;
-	state		        m_state;
+    enum state {
+        UNINITIALIZED = 0,
+        READY = 1,
+        READING = 2
+    };
+    
+    socket_ptr          m_socket;
+    state               m_state;
 
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
@@ -185,10 +221,7 @@ public:
     /// component.
     typedef socket_con_type::ptr socket_con_ptr;
     
-	explicit endpoint() {
-		std::cout << "transport::asio::basic_socket::endpoint constructor" 
-                  << std::endl; 
-	}
+    explicit endpoint() {}
 
     /// Checks whether the endpoint creates secure connections
     /**

@@ -47,139 +47,226 @@ struct stub_config {
 		con_msg_manager_type;
 };
 
-BOOST_AUTO_TEST_CASE( exact_match ) {
-	stub_config::request_type r;
-    stub_config::response_type response;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
+struct processor_setup {
+    processor_setup(bool server) 
+      : msg_manager(new stub_config::con_msg_manager_type())
+      , p(false,server,msg_manager) {}
+    
     websocketpp::lib::error_code ec;
+	stub_config::con_msg_manager_type::ptr msg_manager;
+	stub_config::request_type req;
+    stub_config::response_type res;
+	websocketpp::processor::hybi00<stub_config> p;
+};
+
+typedef stub_config::message_type::ptr message_ptr;
+
+BOOST_AUTO_TEST_CASE( exact_match ) {
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","WjN}|M(6");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","WjN}|M(6");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK(!ec);
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    env.ec = env.p.validate_handshake(env.req);
+    BOOST_CHECK(!env.ec);
     
     websocketpp::uri_ptr u;
-    bool exception = false;
+
+    BOOST_CHECK_NO_THROW( u = env.p.get_uri(env.req) );
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
+    BOOST_CHECK_EQUAL(u->get_secure(), false);
+    BOOST_CHECK_EQUAL(u->get_host(), "www.example.com");
+    BOOST_CHECK_EQUAL(u->get_resource(), "/");
+    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::URI_DEFAULT_PORT);
     
-    BOOST_CHECK(exception == false);
-    BOOST_CHECK(u->get_secure() == false);
-    BOOST_CHECK(u->get_host() == "www.example.com");
-    BOOST_CHECK(u->get_resource() == "/");
-    BOOST_CHECK(u->get_port() == websocketpp::URI_DEFAULT_PORT);
+    env.p.process_handshake(env.req,"",env.res);
     
-    p.process_handshake(r,response);
-    
-    BOOST_CHECK(response.get_header("Connection") == "Upgrade");
-    BOOST_CHECK(response.get_header("Upgrade") == "websocket");
-    BOOST_CHECK(response.get_header("Sec-WebSocket-Origin") == "http://example.com");
+    BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "Upgrade");
+    BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "WebSocket");
+    BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Origin"), "http://example.com");
         
-    BOOST_CHECK(response.get_header("Sec-WebSocket-Location") == "ws://www.example.com/");
-    BOOST_CHECK(response.get_header("Sec-WebSocket-Key3") == "n`9eBk9z$R8pOtVb");
+    BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Location"), "ws://www.example.com/");
+    BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Key3"), "n`9eBk9z$R8pOtVb");
 }
 
 BOOST_AUTO_TEST_CASE( non_get_method ) {
-	stub_config::request_type r;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","janelle!");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","janelle!");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_http_method );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::invalid_http_method );
 }
 
 BOOST_AUTO_TEST_CASE( old_http_version ) {
-	stub_config::request_type r;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","janelle!");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","janelle!");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::invalid_http_version );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::invalid_http_version );
 }
 
 BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
-	stub_config::request_type r;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","janelle!");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","janelle!");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::missing_required_header );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::missing_required_header );
 }
 
 BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
-	stub_config::request_type r;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
-    websocketpp::lib::error_code ec;
+	processor_setup env(true);
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","janelle!");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","janelle!");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( ec == websocketpp::processor::error::missing_required_header );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK_EQUAL( env.p.validate_handshake(env.req), websocketpp::processor::error::missing_required_header );
 }
 
 BOOST_AUTO_TEST_CASE( bad_host ) {
-	stub_config::request_type r;
-	stub_config::con_msg_manager_type::ptr msg_manager;
-    websocketpp::processor::hybi00<stub_config> p(false,true,msg_manager);
+	processor_setup env(true);
     websocketpp::uri_ptr u;
-    bool exception = false;
-    websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
     
-    r.consume(handshake.c_str(),handshake.size());
-    r.replace_header("Sec-WebSocket-Key3","janelle!");
+    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.replace_header("Sec-WebSocket-Key3","janelle!");
     
-    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(r));
-    BOOST_CHECK(websocketpp::processor::get_websocket_version(r) == p.get_version());
-    ec = p.validate_handshake(r);
-    BOOST_CHECK( !ec );
+    BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
+    BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
+    BOOST_CHECK( !env.p.validate_handshake(env.req) );
+
+    BOOST_CHECK_THROW( u = env.p.get_uri(env.req), websocketpp::uri_exception );
+}
+
+BOOST_AUTO_TEST_CASE( extract_subprotocols ) {
+	processor_setup env(true);
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
+    std::vector<std::string> subps;
+    
+    BOOST_CHECK( !env.p.extract_subprotocols(env.req,subps) );
+    BOOST_CHECK_EQUAL( subps.size(), 0 );
+}
+
+BOOST_AUTO_TEST_CASE( prepare_data_frame_null ) {
+    processor_setup env(true);
+    
+    message_ptr in = env.msg_manager->get_message();
+    message_ptr out = env.msg_manager->get_message();
+    message_ptr invalid;
+
+
+    // empty pointers arguements should return sane error 
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,invalid), websocketpp::processor::error::invalid_arguments );
+
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(in,invalid), websocketpp::processor::error::invalid_arguments );
+
+    BOOST_CHECK_EQUAL( env.p.prepare_data_frame(invalid,out), websocketpp::processor::error::invalid_arguments );
+    
+    // test valid opcodes
+    // text (1) should be the only valid opcode
+    for (int i = 0; i < 0xF; i++) {
+        in->set_opcode(websocketpp::frame::opcode::value(i));
+        
+        env.ec = env.p.prepare_data_frame(in,out);
+        
+        if (i != 1) {
+            BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_opcode );
+        } else {
+            BOOST_CHECK_NE( env.ec, websocketpp::processor::error::invalid_opcode );
+        }
     }
     
-    BOOST_CHECK(exception == true);
+    /*
+     * TODO: tests for invalid UTF8
+    char buf[2] = {0x00, 0x00};
+
+    in->set_opcode(websocketpp::frame::opcode::text);
+    in->set_payload("foo");
+
+    env.ec = env.p.prepare_data_frame(in,out);
+    BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::invalid_payload );
+    */
+}
+
+BOOST_AUTO_TEST_CASE( prepare_data_frame ) {
+    processor_setup env(true);
+    
+    message_ptr in = env.msg_manager->get_message();
+    message_ptr out = env.msg_manager->get_message();
+    
+    in->set_opcode(websocketpp::frame::opcode::text);
+    in->set_payload("foo");
+
+    env.ec = env.p.prepare_data_frame(in,out);
+    
+    unsigned char raw_header[1] = {0x00};
+    unsigned char raw_payload[4] = {0x66,0x6f,0x6f,0xff};
+
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( out->get_header(), std::string(reinterpret_cast<char*>(raw_header),1) );
+    BOOST_CHECK_EQUAL( out->get_payload(), std::string(reinterpret_cast<char*>(raw_payload),4) );
+}
+
+
+BOOST_AUTO_TEST_CASE( empty_consume ) {
+    uint8_t frame[2] = {0x00,0x00};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,0,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 0);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
+}
+
+BOOST_AUTO_TEST_CASE( empty_frame ) {
+    uint8_t frame[2] = {0x00, 0xff};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,2,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 2);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), true );
+    BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "" );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
+}
+
+BOOST_AUTO_TEST_CASE( short_frame ) {
+    uint8_t frame[5] = {0x00, 0x66, 0x6f, 0x6f, 0xff};
+
+    processor_setup env(true);
+
+    size_t ret = env.p.consume(frame,5,env.ec);
+
+    BOOST_CHECK_EQUAL( ret, 5);
+    BOOST_CHECK( !env.ec );
+    BOOST_CHECK_EQUAL( env.p.ready(), true );
+    BOOST_CHECK_EQUAL( env.p.get_message()->get_payload(), "foo" );
+    BOOST_CHECK_EQUAL( env.p.ready(), false );
 }

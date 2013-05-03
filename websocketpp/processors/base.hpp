@@ -154,6 +154,9 @@ enum processor_errors {
     /// Using a reason requires a close code
     reason_requires_code,
 
+    /// Error parsing subprotocols
+    subprotocol_parse_error,
+
     /// Error parsing extensions
     extension_parse_error,
 
@@ -223,6 +226,8 @@ public:
                 return "Invalid close code used";
             case error::reason_requires_code:
                 return "Using a close reason requires a valid close code";
+            case error::subprotocol_parse_error:
+                return "Error parsing subprotocol header";
             case error::extension_parse_error:
                 return "Error parsing extension header";
             case error::extensions_disabled:

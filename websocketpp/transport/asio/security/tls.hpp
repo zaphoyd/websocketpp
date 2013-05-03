@@ -58,51 +58,59 @@ typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)
 class connection {
 public:
     /// Type of this connection socket component
-	typedef connection type;
-	/// Type of a shared pointer to this connection socket component
+    typedef connection type;
+    /// Type of a shared pointer to this connection socket component
     typedef lib::shared_ptr<type> ptr;
     
     /// Type of the ASIO socket being used
-	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_type;
+    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_type;
     /// Type of a shared pointer to the ASIO socket being used
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_service being used
-	typedef boost::asio::io_service* io_service_ptr;
+    typedef boost::asio::io_service* io_service_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
-	typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+    typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
     /// Type of a shared pointer to the ASIO timer being used
-	typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
-	
-	typedef boost::system::error_code boost_error;
-	
-	explicit connection() {
-		//std::cout << "transport::asio::tls_socket::connection constructor" 
+    typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    
+    typedef boost::system::error_code boost_error;
+    
+    explicit connection() {
+        //std::cout << "transport::asio::tls_socket::connection constructor" 
         //          << std::endl; 
-	}
-	
+    }
+    
     /// Check whether or not this connection is secure
     /**
      * @return Wether or not this connection is secure
      */
-	bool is_secure() const {
-	    return true;
-	}
-	
-	/// Retrieve a pointer to the underlying socket
-	/**
-	 * This is used internally. It can also be used to set socket options, etc
-	 */
-	socket_type::lowest_layer_type& get_raw_socket() {
-		return m_socket->lowest_layer();
-	}
-	
-	/// Retrieve a pointer to the wrapped socket
-	/**
-	 * This is used internally.
-	 */
-	socket_type& get_socket() {
-		return *m_socket;
-	}
+    bool is_secure() const {
+        return true;
+    }
+    
+    /// Retrieve a pointer to the underlying socket
+    /**
+     * This is used internally. It can also be used to set socket options, etc
+     */
+    socket_type::lowest_layer_type& get_raw_socket() {
+        return m_socket->lowest_layer();
+    }
+    
+    /// Retrieve a pointer to the layer below the ssl stream
+    /**
+     * This is used internally.
+     */
+    socket_type::next_layer_type& get_next_layer() {
+        return m_socket->next_layer();
+    }
+    
+    /// Retrieve a pointer to the wrapped socket
+    /**
+     * This is used internally.
+     */
+    socket_type& get_socket() {
+        return *m_socket;
+    }
 
     /// Set the socket initialization handler
     /**
@@ -128,51 +136,77 @@ public:
     void set_tls_init_handler(tls_init_handler h) {
         m_tls_init_handler = h;
     }
+    
+    /// Get the remote endpoint address
+    /**
+     * The iostream transport has no information about the ultimate remote 
+     * endpoint. It will return the string "iostream transport". To indicate 
+     * this.
+     *
+     * TODO: allow user settable remote endpoint addresses if this seems useful
+     *
+     * @return A string identifying the address of the remote endpoint
+     */
+    std::string get_remote_endpoint(lib::error_code &ec) const {
+        std::stringstream s;
+        
+        boost::system::error_code bec;
+        boost::asio::ip::tcp::endpoint ep = m_socket->lowest_layer().remote_endpoint(bec);
+        
+        if (bec) {
+            ec = error::make_error_code(error::pass_through);
+            s << "Error getting remote endpoint: " << bec 
+               << " (" << bec.message() << ")";
+            return s.str();
+        } else {
+            ec = lib::error_code();
+            s << ep;
+            return s.str();
+        }
+    }
 protected:
-	/// Perform one time initializations
-	/**
-	 * init_asio is called once immediately after construction to initialize
-	 * boost::asio components to the io_service
-	 *
-	 * @param service A pointer to the endpoint's io_service
-	 * @param strand A shared pointer to the connection's asio strand
-	 * @param is_server Whether or not the endpoint is a server or not.
-	 */
+    /// Perform one time initializations
+    /**
+     * init_asio is called once immediately after construction to initialize
+     * boost::asio components to the io_service
+     *
+     * @param service A pointer to the endpoint's io_service
+     * @param strand A shared pointer to the connection's asio strand
+     * @param is_server Whether or not the endpoint is a server or not.
+     */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
-        std::cout << "transport::security::tls_socket::init_asio" << std::endl;
         if (!m_tls_init_handler) {
-            std::cout << "missing_tls_init_handler" << std::endl;
-			return socket::make_error(socket::error::missing_tls_init_handler);
+            return socket::make_error(socket::error::missing_tls_init_handler);
         }
         m_context = m_tls_init_handler(m_hdl);
-    	
-    	if (!m_context) {
-			return socket::make_error(socket::error::invalid_tls_context);
-		}
-    	
-    	m_socket.reset(new socket_type(*service,*m_context));
-    	
-    	m_timer.reset(new boost::asio::deadline_timer(
-    		*service,
-    		boost::posix_time::seconds(0))
-    	);
-    	
-    	m_io_service = service;
-    	m_is_server = is_server;
-    	
-    	return lib::error_code();
+        
+        if (!m_context) {
+            return socket::make_error(socket::error::invalid_tls_context);
+        }
+        
+        m_socket.reset(new socket_type(*service,*m_context));
+        
+        m_timer.reset(new boost::asio::deadline_timer(
+            *service,
+            boost::posix_time::seconds(0))
+        );
+        
+        m_io_service = service;
+        m_is_server = is_server;
+        
+        return lib::error_code();
     }
-	
-	/// Initialize security policy for reading
-	void init(init_handler callback) {
-		if (m_socket_init_handler) {
+    
+    /// Initialize security policy for reading
+    void init(init_handler callback) {
+        if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl,get_raw_socket());
         }
 
-		// register timeout
-		m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
-		// TEMP
-		m_timer->async_wait(
+        // register timeout
+        m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
+        // TEMP
+        m_timer->async_wait(
             lib::bind(
                 &type::handle_timeout,
                 this,
@@ -180,19 +214,19 @@ protected:
                 lib::placeholders::_1
             )
         );
-		
-		// TLS handshake
-		m_socket->async_handshake(
-			get_handshake_type(),
-			lib::bind(
-				&type::handle_init,
-				this,
-				callback,
-				lib::placeholders::_1
-			)
-		);
-	}
-	
+        
+        // TLS handshake
+        m_socket->async_handshake(
+            get_handshake_type(),
+            lib::bind(
+                &type::handle_init,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+    }
+    
     /// Sets the connection handle
     /**
      * The connection handle is passed to any handlers to identify the 
@@ -204,39 +238,39 @@ protected:
         m_hdl = hdl;
     }
 
-	void handle_timeout(init_handler callback, const 
-		boost::system::error_code& error)
-	{
-		if (error) {
-			if (error.value() == boost::asio::error::operation_aborted) {
-				// The timer was cancelled because the handshake succeeded.
-				return;
-			}
-			
-			// Some other ASIO error, pass it through
-			// TODO: make this error pass through better
-    		callback(socket::make_error(socket::error::pass_through));
-    		return;
-    	}
-    	
-    	callback(socket::make_error(socket::error::tls_handshake_timeout));
-	}
-	
-	void handle_init(init_handler callback, const 
-		boost::system::error_code& error)
-	{
-		/// stop waiting for our handshake timer.
-		m_timer->cancel();
-		
-		if (error) {
-			// TODO: make this error pass through better
-    		callback(socket::make_error(socket::error::pass_through));
-    		return;
-    	}
-		
-		callback(lib::error_code());
-	}
-	
+    void handle_timeout(init_handler callback, const 
+        boost::system::error_code& error)
+    {
+        if (error) {
+            if (error.value() == boost::asio::error::operation_aborted) {
+                // The timer was cancelled because the handshake succeeded.
+                return;
+            }
+            
+            // Some other ASIO error, pass it through
+            // TODO: make this error pass through better
+            callback(socket::make_error(socket::error::pass_through));
+            return;
+        }
+        
+        callback(socket::make_error(socket::error::tls_handshake_timeout));
+    }
+    
+    void handle_init(init_handler callback, const 
+        boost::system::error_code& error)
+    {
+        /// stop waiting for our handshake timer.
+        m_timer->cancel();
+        
+        if (error) {
+            // TODO: make this error pass through better
+            callback(socket::make_error(socket::error::pass_through));
+            return;
+        }
+        
+        callback(lib::error_code());
+    }
+    
     void shutdown() {
         boost::system::error_code ec;
         m_socket->shutdown(ec);
@@ -244,19 +278,19 @@ protected:
         // TODO: error handling
     }
 private:
-	socket_type::handshake_type get_handshake_type() {
+    socket_type::handshake_type get_handshake_type() {
         if (m_is_server) {
             return boost::asio::ssl::stream_base::server;
         } else {
             return boost::asio::ssl::stream_base::client;
         }
     }
-	
-	io_service_ptr	    m_io_service;
-	context_ptr		    m_context;
-	socket_ptr		    m_socket;
-	timer_ptr		    m_timer;
-	bool			    m_is_server;
+    
+    io_service_ptr      m_io_service;
+    context_ptr         m_context;
+    socket_ptr          m_socket;
+    timer_ptr           m_timer;
+    bool                m_is_server;
     
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
@@ -279,10 +313,7 @@ public:
     /// component.
     typedef socket_con_type::ptr socket_con_ptr;
 
-    explicit endpoint() {
-        std::cout << "transport::asio::tls_socket::endpoint constructor"
-                  << std::endl;
-    }
+    explicit endpoint() {}
 
     /// Checks whether the endpoint creates secure connections
     /**
@@ -323,7 +354,6 @@ protected:
      * the socket component of the connection.
      */
     void init(socket_con_ptr scon) {
-        std::cout << "transport::asio::tls_socket::init" << std::endl;
         scon->set_socket_init_handler(m_socket_init_handler);
         scon->set_tls_init_handler(m_tls_init_handler);
     }

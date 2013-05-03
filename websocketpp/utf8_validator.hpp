@@ -55,7 +55,7 @@ public:
     template <typename iterator_type>
     bool decode (iterator_type b, iterator_type e) {
         for (iterator_type i = b; i != e; i++) {
-            if (utf8_validator::decode(&m_state,&m_codepoint,*i) == UTF8_REJECT) {
+            if (utf8_validator::decode(&m_state,&m_codepoint,static_cast<uint8_t>(*i)) == UTF8_REJECT) {
                 return false;
             }
         }
