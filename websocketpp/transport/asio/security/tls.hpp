@@ -96,6 +96,14 @@ public:
         return m_socket->lowest_layer();
     }
     
+    /// Retrieve a pointer to the layer below the ssl stream
+    /**
+     * This is used internally.
+     */
+    socket_type::next_layer_type& get_next_layer() {
+        return m_socket->next_layer();
+    }
+    
     /// Retrieve a pointer to the wrapped socket
     /**
      * This is used internally.

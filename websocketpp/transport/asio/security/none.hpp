@@ -95,6 +95,14 @@ public:
     
     /// Retrieve a pointer to the underlying socket
     /**
+     * This is used internally.
+     */
+    boost::asio::ip::tcp::socket& get_next_layer() {
+        return *m_socket;
+    }
+    
+    /// Retrieve a pointer to the underlying socket
+    /**
      * This is used internally. It can also be used to set socket options, etc
      */
     boost::asio::ip::tcp::socket& get_raw_socket() {
