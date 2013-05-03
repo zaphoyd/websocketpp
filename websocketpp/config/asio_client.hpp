@@ -39,8 +39,8 @@
 namespace websocketpp {
 namespace config {
 
-struct asio_tls : public core_client {
-    typedef asio_tls type;
+struct asio_tls_client : public core_client {
+    typedef asio_tls_client type;
     
 	typedef core_client::concurrency_type concurrency_type;
 	
