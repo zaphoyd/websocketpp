@@ -268,7 +268,7 @@ protected:
         }
         
         boost::asio::async_read_until(
-            socket_con_type::get_socket(),
+            socket_con_type::get_next_layer(),
             m_proxy_data->read_buf,
             "\r\n\r\n",
             lib::bind(
