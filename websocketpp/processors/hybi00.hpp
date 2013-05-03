@@ -265,7 +265,6 @@ public:
 	}
 
 	bool ready() const {
-        std::cout << "state: " << m_state << std::endl;
 		return (m_state == READY);
 	}
 	
