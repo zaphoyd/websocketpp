@@ -373,12 +373,20 @@ protected:
             port = u->get_port_str();
         } else {
             try {
+                lib::error_code ec;
+
                 uri_ptr pu(new uri(proxy));
-                tcon->proxy_init(u->get_host_port());
+                ec = tcon->proxy_init(u->get_host_port());
+                if (ec) {
+                    cb(tcon->get_handle(),ec);
+                    return;
+                }
+
                 host = pu->get_host();
                 port = pu->get_port_str();
             } catch (uri_exception) {
                 cb(tcon->get_handle(),make_error_code(error::proxy_invalid));
+                return;
             }
         }
         
