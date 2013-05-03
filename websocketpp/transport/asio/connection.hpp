@@ -234,7 +234,7 @@ protected:
         m_alog.write(log::alevel::devel,m_proxy_data->write_buf);
 
         boost::asio::async_write(
-            socket_con_type::get_raw_socket(),
+            socket_con_type::get_next_layer(),
             m_bufs,
             lib::bind(
                 &type::handle_proxy_write,
