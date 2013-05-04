@@ -63,14 +63,14 @@ public:
     typedef typename transport_con_type::ptr transport_con_ptr;
     
 	// generate and manage our own io_service
-	explicit endpoint() : output_stream(NULL)
+	explicit endpoint() : m_output_stream(NULL)
 	{
 		//std::cout << "transport::iostream::endpoint constructor" << std::endl; 
 	}
 	
 	void register_ostream(std::ostream* o) {
         m_alog->write(log::alevel::devel,"register_ostream");
-		output_stream = o;
+		m_output_stream = o;
 	}
 	
 	/// Tests whether or not the underlying transport is secure
@@ -112,7 +112,7 @@ protected:
 		tcon->register_ostream(output_stream);
 	}
 private:
-	std::ostream* output_stream;
+	std::ostream* m_output_stream;
     elog_type* m_elog;
     alog_type* m_alog;
 };
