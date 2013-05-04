@@ -242,15 +242,19 @@ public:
     void set_socket_init_handler(socket_init_handler h) {
         m_socket_init_handler = h;
     }
-
 protected:
     /// Initialize a connection
     /**
      * Called by the transport after a new connection is created to initialize
      * the socket component of the connection.
+     * 
+     * @param scon Pointer to the socket component of the connection
+     *
+     * @return Error code (empty on success)
      */
-    void init(socket_con_ptr scon) {
+    lib::error_code init(socket_con_ptr scon) {
         scon->set_socket_init_handler(m_socket_init_handler);
+        return lib::error_code();
     }
 private:
     socket_init_handler m_socket_init_handler;

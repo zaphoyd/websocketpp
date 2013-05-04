@@ -102,14 +102,19 @@ public:
      * TODO: this method is not protected because the endpoint needs to call it.
      * need to figure out if there is a way to friend the endpoint safely across
      * different compilers.
+     *
+     * @param io_service A pointer to the io_service to register with this
+     * connection
+     *
+     * @return Status code for the success or failure of the initialization
      */
-    void init_asio (io_service_ptr io_service) {
+    lib::error_code init_asio (io_service_ptr io_service) {
         // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
         //m_strand.reset(new boost::asio::strand(*io_service));
         
-        socket_con_type::init_asio(io_service, m_is_server);
+        return socket_con_type::init_asio(io_service, m_is_server);
     }
 
     void set_tcp_init_handler(tcp_init_handler h) {

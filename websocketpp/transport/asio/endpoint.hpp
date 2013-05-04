@@ -462,16 +462,24 @@ protected:
      * constructor.
      *
      * @param tcon A pointer to the transport portion of the connection.
+     *
+     * @return A status code indicating the success or failure of the operation
 	 */
-	void init(transport_con_ptr tcon) {
+	lib::error_code init(transport_con_ptr tcon) {
         m_alog->write(log::alevel::devel, "transport::asio::init");
 
         // Initialize the connection socket component
         socket_type::init(lib::static_pointer_cast<socket_con_type,
             transport_con_type>(tcon));
-
-		tcon->init_asio(m_io_service);
+        
+        lib::error_code ec;
+        
+		ec = tcon->init_asio(m_io_service);
+		if (ec) {return ec;}
+		
         tcon->set_tcp_init_handler(m_tcp_init_handler);
+        
+        return lib::error_code();
 	}
 private:
 	enum state {

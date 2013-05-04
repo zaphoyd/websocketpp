@@ -46,7 +46,6 @@ endpoint<connection,config>::create_connection() {
     
     connection_weak_ptr w(con);
     
-
     // Create a weak pointer on the heap using that shared_ptr.
     // Cast that weak pointer to void* and manage it using another shared_ptr
     // connection_hdl hdl(reinterpret_cast<void*>(new connection_weak_ptr(con)));
@@ -75,14 +74,17 @@ endpoint<connection,config>::create_connection() {
 	        lib::placeholders::_1
 	    )
 	);
-	transport_type::init(con);
-
+	
+	lib::error_code ec;
+	
+	ec = transport_type::init(con);
+    if (ec) {
+        m_elog.write(log::elevel::fatal,ec.message());
+        return connection_ptr();
+    }
+    
     scoped_lock_type lock(m_mutex);
 	m_connections.insert(con);
-	
-	
-	//m_alog->at(log::alevel::DEVEL) << "Connection created: count is now: " 
-	//                               << m_connections.size() << log::endl;
 	
 	return con;
 }

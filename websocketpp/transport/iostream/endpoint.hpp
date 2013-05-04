@@ -108,8 +108,20 @@ protected:
         cb(tcon->get_handle(),lib::error_code());
     }
     
-	void init(transport_con_ptr tcon) {
-		tcon->register_ostream(output_stream);
+    /// Initialize a connection
+    /**
+     * Init is called by an endpoint once for each newly created connection. 
+     * It's purpose is to give the transport policy the chance to perform any 
+     * transport specific initialization that couldn't be done via the default 
+     * constructor.
+     *
+     * @param tcon A pointer to the transport portion of the connection.
+     *
+     * @return A status code indicating the success or failure of the operation
+     */
+	lib::error_code init(transport_con_ptr tcon) {
+		tcon->register_ostream(m_output_stream);
+		return lib::error_code();
 	}
 private:
 	std::ostream* m_output_stream;
