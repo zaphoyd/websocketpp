@@ -461,6 +461,7 @@ protected:
      */
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
+        socket_con_type::set_handle(hdl);
     }
     
     /// Trigger the on_interrupt handler
