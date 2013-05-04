@@ -46,7 +46,7 @@ namespace asio {
 namespace tls_socket {
 
 typedef lib::function<void(connection_hdl,boost::asio::ssl::stream<
-    boost::asio::ip::tcp::socket>::lowest_layer_type&)> socket_init_handler;
+    boost::asio::ip::tcp::socket>&)> socket_init_handler;
 typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)>
     tls_init_handler;
 
@@ -200,7 +200,7 @@ protected:
     /// Initialize security policy for reading
     void init(init_handler callback) {
         if (m_socket_init_handler) {
-            m_socket_init_handler(m_hdl,get_raw_socket());
+            m_socket_init_handler(m_hdl,get_socket());
         }
 
         // register timeout
