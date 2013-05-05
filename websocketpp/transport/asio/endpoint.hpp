@@ -392,6 +392,11 @@ protected:
         
         tcp::resolver::query query(host,port);
         
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,
+            	"starting async DNS resolve for "+host+":"+port);
+        }
+        
         m_resolver->async_resolve(
             query,
             lib::bind(
@@ -420,12 +425,28 @@ protected:
             return;
         }
         
+        if (m_alog->static_test(log::alevel::devel)) {
+        	std::stringstream s;
+        	
+        	s << "Async DNS resolve successful. Results: "
+        	
+        	boost::asio::ip::tcp::resolver::iterator it = iterator;
+        	boost::asio::ip::tcp::resolver::iterator end;
+        	
+        	for (it = iterator; it != end, ++it) {
+        		s << (*it).endpoint() << "\n"
+        	}
+        	
+            m_alog->write(log::alevel::devel,s.str());
+        }
+        
+        m_alog->write(log::alevel::devel,"Starting async connect");
         boost::asio::async_connect(
             tcon->get_raw_socket(),
             iterator,
             lib::bind(
                 &type::handle_connect,
-                this, // shared from this?
+                this,
                 tcon,
                 callback,
                 lib::placeholders::_1
@@ -445,6 +466,12 @@ protected:
             m_elog->write(log::elevel::info,s.str());
             callback(tcon->get_handle(),make_error_code(error::pass_through));
             return;
+        }
+        
+        if (m_alog->static_test(log::alevel::devel)) {
+        	lib::error_code ec2;
+            m_alog->write(log::alevel::devel,
+            	"Async connect to "+tcon->get_remote_endpoint(ec2)+" successful.");
         }
         
         callback(tcon->get_handle(),lib::error_code());
