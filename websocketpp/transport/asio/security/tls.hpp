@@ -197,8 +197,58 @@ protected:
         return lib::error_code();
     }
     
+    /// Pre-initialize security policy
+    /**
+     * Called by the transport after a new connection is created to initialize
+     * the socket component of the connection. This method is not allowed to 
+     * write any bytes to the wire. This initialization happens before any 
+     * proxies or other intermediate wrappers are negotiated.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void pre_init(init_handler callback) {
+        if (m_socket_init_handler) {
+            m_socket_init_handler(m_hdl,get_socket());
+        }
+        
+        callback(lib::error_code());
+    }
+    
+    /// Post-initialize security policy
+    /**
+     * Called by the transport after all intermediate proxies have been 
+     * negotiated. This gives the security policy the chance to talk with the
+     * real remote endpoint for a bit before the websocket handshake.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void post_init(init_handler callback) {
+        // register timeout
+        m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
+        // TEMP
+        m_timer->async_wait(
+            lib::bind(
+                &type::handle_timeout,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+        
+        // TLS handshake
+        m_socket->async_handshake(
+            get_handshake_type(),
+            lib::bind(
+                &type::handle_init,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+    }
+    
     /// Initialize security policy for reading
-    void init(init_handler callback) {
+    /*void init(init_handler callback) {
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl,get_socket());
         }
@@ -225,7 +275,7 @@ protected:
                 lib::placeholders::_1
             )
         );
-    }
+    }*/
     
     /// Sets the connection handle
     /**

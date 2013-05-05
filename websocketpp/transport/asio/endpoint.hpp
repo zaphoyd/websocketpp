@@ -433,7 +433,7 @@ protected:
         	boost::asio::ip::tcp::resolver::iterator it, end;
         	
         	for (it = iterator; it != end; ++it) {
-        		s << (*it).endpoint() << "\n";
+        		s << (*it).endpoint() << " ";
         	}
         	
             m_alog->write(log::alevel::devel,s.str());

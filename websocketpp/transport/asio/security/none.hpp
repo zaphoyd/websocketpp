@@ -158,8 +158,16 @@ protected:
         return lib::error_code();
     }
     
-    /// Initialize security policy for reading
-    void init(init_handler callback) {
+    /// Pre-initialize security policy
+    /**
+     * Called by the transport after a new connection is created to initialize
+     * the socket component of the connection. This method is not allowed to 
+     * write any bytes to the wire. This initialization happens before any 
+     * proxies or other intermediate wrappers are negotiated.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void pre_init(init_handler callback) {
         if (m_state != READY) {
             callback(socket::make_error(socket::error::invalid_state));
             return;
@@ -171,6 +179,18 @@ protected:
         
         m_state = READING;
         
+        callback(lib::error_code());
+    }
+    
+    /// Post-initialize security policy
+    /**
+     * Called by the transport after all intermediate proxies have been 
+     * negotiated. This gives the security policy the chance to talk with the
+     * real remote endpoint for a bit before the websocket handshake.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void post_init(init_handler callback) {
         callback(lib::error_code());
     }
     

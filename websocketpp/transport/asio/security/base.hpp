@@ -57,6 +57,8 @@
 
 /// Connection
 /// TODO
+/// pre_init(init_handler);
+/// post_init(init_handler);
 
 namespace websocketpp {
 namespace transport {
