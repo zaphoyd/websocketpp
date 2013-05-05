@@ -247,36 +247,6 @@ protected:
         );
     }
     
-    /// Initialize security policy for reading
-    /*void init(init_handler callback) {
-        if (m_socket_init_handler) {
-            m_socket_init_handler(m_hdl,get_socket());
-        }
-
-        // register timeout
-        m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
-        // TEMP
-        m_timer->async_wait(
-            lib::bind(
-                &type::handle_timeout,
-                this,
-                callback,
-                lib::placeholders::_1
-            )
-        );
-        
-        // TLS handshake
-        m_socket->async_handshake(
-            get_handshake_type(),
-            lib::bind(
-                &type::handle_init,
-                this,
-                callback,
-                lib::placeholders::_1
-            )
-        );
-    }*/
-    
     /// Sets the connection handle
     /**
      * The connection handle is passed to any handlers to identify the 
