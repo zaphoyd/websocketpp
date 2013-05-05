@@ -21,6 +21,7 @@ typedef client::connection_ptr connection_ptr;
 class perftest {
 public:
     typedef perftest type;
+    typedef std::chrono::duration<int,std::micro> dur_type;
     
     perftest () {
         // We expect there to be a lot of errors, so suppress them
@@ -69,7 +70,7 @@ public:
     
     void on_open(websocketpp::connection_hdl hdl) {
         m_open = std::chrono::high_resolution_clock::now();
-        m_endpoint(hdl, "", websocketpp::frame::opcode::text);
+        m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
     }
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
         m_message = std::chrono::high_resolution_clock::now();
@@ -77,12 +78,12 @@ public:
     }
     void on_close(websocketpp::connection_hdl hdl) {
         m_close = std::chrono::high_resolution_clock::now();
-        
-        std::cout << "Socket Init: " << std::chrono::duration_cast<std::micro>(m_socket_init-m_start).count() << std::endl;
-        std::cout << "TLS Init: " << std::chrono::duration_cast<std::micro>(m_tls_init-m_start).count() << std::endl;
-        std::cout << "Open: " << std::chrono::duration_cast<std::micro>(m_open-m_start).count() << std::endl;
-        std::cout << "Message: " << std::chrono::duration_cast<std::micro>(m_message-m_start).count() << std::endl;
-        std::cout << "Close: " << std::chrono::duration_cast<std::micro>(m_close-m_start).count() << std::endl;
+                
+        std::cout << "Socket Init: " << std::chrono::duration_cast<dur_type>(m_socket_init-m_start).count() << std::endl;
+        std::cout << "TLS Init: " << std::chrono::duration_cast<dur_type>(m_tls_init-m_start).count() << std::endl;
+        std::cout << "Open: " << std::chrono::duration_cast<dur_type>(m_open-m_start).count() << std::endl;
+        std::cout << "Message: " << std::chrono::duration_cast<dur_type>(m_message-m_start).count() << std::endl;
+        std::cout << "Close: " << std::chrono::duration_cast<dur_type>(m_close-m_start).count() << std::endl;
     }
 private:
     client m_endpoint;
