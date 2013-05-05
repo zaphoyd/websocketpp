@@ -291,11 +291,19 @@ protected:
         callback(lib::error_code());
     }
     
+    void handle_shutdown(socket_ptr s, const boost::system::error_code& ec) {
+    	// TODO: error handling?
+    }
+    
     void shutdown() {
-        boost::system::error_code ec;
-        m_socket->shutdown(ec);
-
-        // TODO: error handling
+        m_socket->async_shutdown(
+        	lib::bind(
+                &type::handle_shutdown,
+                this,
+                m_socket,
+                lib::placeholders::_1
+            )
+        );
     }
 private:
     socket_type::handshake_type get_handshake_type() {
