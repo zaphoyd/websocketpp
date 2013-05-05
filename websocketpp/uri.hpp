@@ -204,6 +204,12 @@ public:
         }
     }
     
+    std::string get_authority() const {
+        std::stringstream p;
+        p << m_host << ":" << m_port;
+        return p.str();
+    }
+    
     uint16_t get_port() const {
         return m_port;
     }
