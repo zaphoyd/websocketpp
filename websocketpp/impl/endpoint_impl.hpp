@@ -35,11 +35,11 @@ typename endpoint<connection,config>::connection_ptr
 endpoint<connection,config>::create_connection() {
     m_alog.write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
-	
-	/*if (m_state == STOPPING || m_state == STOPPED) {
-		return connection_ptr();
-	}*/
-	
+    
+    /*if (m_state == STOPPING || m_state == STOPPED) {
+        return connection_ptr();
+    }*/
+    
     // Create a connection on the heap and manage it using a shared pointer
     connection_ptr con(new connection_type(m_is_server,m_user_agent,m_alog,
         m_elog, m_rng));
@@ -54,7 +54,7 @@ endpoint<connection,config>::create_connection() {
 
     //
     con->set_handle(w);
-	
+    
     // Copy default handlers from the endpoint
     con->set_open_handler(m_open_handler);
     con->set_close_handler(m_close_handler);
@@ -66,27 +66,27 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
-	
+    
     con->set_termination_handler(
-	    lib::bind(
-	        &type::remove_connection,
-	        this,
-	        lib::placeholders::_1
-	    )
-	);
-	
-	lib::error_code ec;
-	
-	ec = transport_type::init(con);
+        lib::bind(
+            &type::remove_connection,
+            this,
+            lib::placeholders::_1
+        )
+    );
+    
+    lib::error_code ec;
+    
+    ec = transport_type::init(con);
     if (ec) {
         m_elog.write(log::elevel::fatal,ec.message());
         return connection_ptr();
     }
     
     scoped_lock_type lock(m_mutex);
-	m_connections.insert(con);
-	
-	return con;
+    m_connections.insert(con);
+    
+    return con;
 }
 
 template <typename connection, typename config>
@@ -182,16 +182,16 @@ void endpoint<connection,config>::close(connection_hdl hdl,
 
 template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
-	std::stringstream s;
-	s << "remove_connection. New count: " << m_connections.size()-1;
-	m_alog.write(log::alevel::devel,s.str());
-	
+    std::stringstream s;
+    s << "remove_connection. New count: " << m_connections.size()-1;
+    m_alog.write(log::alevel::devel,s.str());
+    
     scoped_lock_type lock(m_mutex);
-		
-	// unregister the termination handler
-	con->set_termination_handler(termination_handler());
-	
-	m_connections.erase(con);
+        
+    // unregister the termination handler
+    con->set_termination_handler(termination_handler());
+    
+    m_connections.erase(con);
 }
 
 } // namespace websocketpp

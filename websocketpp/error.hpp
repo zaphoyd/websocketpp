@@ -105,67 +105,67 @@ enum value {
 
 class category : public lib::error_category {
 public:
-	category() {}
+    category() {}
 
-	const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-		return "websocketpp";
-	}
-	
-	std::string message(int value) const {
-		switch(value) {
-			case error::general:
-				return "Generic error";
-			case error::send_queue_full:
-				return "send queue full";
-			case error::payload_violation:
-				return "payload violation";
-			case error::endpoint_not_secure:
-				return "endpoint not secure";
-			case error::endpoint_unavailable:
-				return "endpoint not available";
-			case error::invalid_uri:
-				return "invalid uri";
-			case error::no_outgoing_buffers:
-				return "no outgoing message buffers";
-			case error::no_incoming_buffers:
-				return "no incoming message buffers";
-			case error::invalid_state:
-				return "invalid state";
-			case error::bad_close_code:
-				return "Unable to extract close code";
-			case error::invalid_close_code:
-				return "Extracted close code is in an invalid range";
-			case error::reserved_close_code:
-				return "Extracted close code is in a reserved range";
-			case error::invalid_utf8:
-				return "Invalid UTF-8";
-			case error::invalid_subprotocol:
-				return "Invalid subprotocol";
-			case error::bad_connection:
-				return "Bad Connection";
-			case error::test:
-				return "Test Error";
-			case error::con_creation_failed:
-				return "Connection creation attempt failed";
-		    case error::unrequested_subprotocol:
-		        return "Selected subprotocol was not requested by the client";
-		    case error::client_only:
-		        return "Feature not available on server endpoints";
-		    case error::server_only:
-		        return "Feature not available on client endpoints";
-			default:
-				return "Unknown";
-		}
-	}
+    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+        return "websocketpp";
+    }
+    
+    std::string message(int value) const {
+        switch(value) {
+            case error::general:
+                return "Generic error";
+            case error::send_queue_full:
+                return "send queue full";
+            case error::payload_violation:
+                return "payload violation";
+            case error::endpoint_not_secure:
+                return "endpoint not secure";
+            case error::endpoint_unavailable:
+                return "endpoint not available";
+            case error::invalid_uri:
+                return "invalid uri";
+            case error::no_outgoing_buffers:
+                return "no outgoing message buffers";
+            case error::no_incoming_buffers:
+                return "no incoming message buffers";
+            case error::invalid_state:
+                return "invalid state";
+            case error::bad_close_code:
+                return "Unable to extract close code";
+            case error::invalid_close_code:
+                return "Extracted close code is in an invalid range";
+            case error::reserved_close_code:
+                return "Extracted close code is in a reserved range";
+            case error::invalid_utf8:
+                return "Invalid UTF-8";
+            case error::invalid_subprotocol:
+                return "Invalid subprotocol";
+            case error::bad_connection:
+                return "Bad Connection";
+            case error::test:
+                return "Test Error";
+            case error::con_creation_failed:
+                return "Connection creation attempt failed";
+            case error::unrequested_subprotocol:
+                return "Selected subprotocol was not requested by the client";
+            case error::client_only:
+                return "Feature not available on server endpoints";
+            case error::server_only:
+                return "Feature not available on client endpoints";
+            default:
+                return "Unknown";
+        }
+    }
 };
 
 inline const lib::error_category& get_category() {
-	static category instance;
-	return instance;
+    static category instance;
+    return instance;
 }
 
 inline lib::error_code make_error_code(error::value e) {
-	return lib::error_code(static_cast<int>(e), get_category());
+    return lib::error_code(static_cast<int>(e), get_category());
 }
 
 } // namespace error

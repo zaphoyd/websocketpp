@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,13 +42,13 @@ namespace none {
  */
 template <typename int_type>
 class int_generator {
-	public:
-		int_generator() {}
-		
-		/// advances the engine's state and returns the generated value
-		int_type operator()() {
-			return 0;
-		}
+    public:
+        int_generator() {}
+        
+        /// advances the engine's state and returns the generated value
+        int_type operator()() {
+            return 0;
+        }
 };
 
 } // namespace none

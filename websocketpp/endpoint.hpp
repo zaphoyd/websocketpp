@@ -42,21 +42,21 @@ static const char user_agent[] = "WebSocket++/0.3.0dev";
 template <typename connection, typename config>
 class endpoint : public config::transport_type, public config::endpoint_base {
 public:
-	// Import appropriate types from our helper class
-	// See endpoint_types for more details.
-	typedef endpoint<connection,config> type;
-	
+    // Import appropriate types from our helper class
+    // See endpoint_types for more details.
+    typedef endpoint<connection,config> type;
+    
     /// Type of the transport component of this endpoint
     typedef typename config::transport_type transport_type;
     /// Type of the concurrency component of this endpoint
-	typedef typename config::concurrency_type concurrency_type;
+    typedef typename config::concurrency_type concurrency_type;
 
     /// Type of the connections that this endpoint creates
-	typedef connection connection_type;
+    typedef connection connection_type;
     /// Shared pointer to connection_type
-	typedef typename connection_type::ptr connection_ptr;
+    typedef typename connection_type::ptr connection_ptr;
     /// Weak pointer to connection type
-	typedef typename connection_type::weak_ptr connection_weak_ptr;
+    typedef typename connection_type::weak_ptr connection_weak_ptr;
     
     /// Type of the transport component of the connections that this endpoint 
     /// creates
@@ -64,7 +64,7 @@ public:
     /// Type of a shared pointer to the transport component of the connections
     /// that this endpoint creates.
     typedef typename transport_con_type::ptr transport_con_ptr;
-	
+    
     /// Type of message_handler
     typedef typename connection_type::message_handler message_handler;
     /// Type of message pointers that this endpoint uses
@@ -73,70 +73,70 @@ public:
     /// Type of error logger
     typedef typename config::elog_type elog_type;
     /// Type of access logger
-	typedef typename config::alog_type alog_type;
+    typedef typename config::alog_type alog_type;
     
     /// Type of our concurrency policy's scoped lock object
-	typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
-	/// Type of our concurrency policy's mutex object
-	typedef typename concurrency_type::mutex_type mutex_type;
+    typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
+    /// Type of our concurrency policy's mutex object
+    typedef typename concurrency_type::mutex_type mutex_type;
     
     /// Type of RNG
     typedef typename config::rng_type rng_type;
     
     // TODO: organize these
-	typedef typename connection_type::termination_handler termination_handler;
-	
+    typedef typename connection_type::termination_handler termination_handler;
+    
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-	explicit endpoint(bool is_server)
- 	  : m_alog(config::alog_level,&std::cout)
- 	  , m_elog(config::elog_level,&std::cerr)
- 	  , m_user_agent(::websocketpp::user_agent)
- 	  , m_is_server(is_server)
-	{
-		m_alog.set_channels(config::alog_level);
-		m_elog.set_channels(config::elog_level);
-		
-		m_alog.write(log::alevel::devel,"endpoint constructor");
+    explicit endpoint(bool is_server)
+      : m_alog(config::alog_level,&std::cout)
+      , m_elog(config::elog_level,&std::cerr)
+      , m_user_agent(::websocketpp::user_agent)
+      , m_is_server(is_server)
+    {
+        m_alog.set_channels(config::alog_level);
+        m_elog.set_channels(config::elog_level);
+        
+        m_alog.write(log::alevel::devel,"endpoint constructor");
 
         transport_type::init_logging(&m_elog,&m_alog);
-	}
-	
-	/// Returns the user agent string that this endpoint will use
-	/**
-	 * Returns the user agent string that this endpoint will use when creating
-	 * new connections. 
-	 *
-	 * The default value for this version is WebSocket++/0.3.0dev
-	 *
-	 * @return The user agent string.
-	 */ 
-	std::string get_user_agent() const {
+    }
+    
+    /// Returns the user agent string that this endpoint will use
+    /**
+     * Returns the user agent string that this endpoint will use when creating
+     * new connections. 
+     *
+     * The default value for this version is WebSocket++/0.3.0dev
+     *
+     * @return The user agent string.
+     */ 
+    std::string get_user_agent() const {
         scoped_lock_type guard(m_mutex);
-		return m_user_agent;
-	}
-	
-	/// Sets the user agent string that this endpoint will use
-	/**
-	 * Sets the user agent string that this endpoint will use when creating
-	 * new connections. Changing this value will only affect future connections.
-	 *
-	 * For best results set this before accepting or opening connections.
-	 *
-	 * The default value for this version is WebSocket++/0.3.0dev
-	 *
-	 * @param ua The string to set the user agent to.
-	 */ 
-	void set_user_agent(const std::string& ua) {
+        return m_user_agent;
+    }
+    
+    /// Sets the user agent string that this endpoint will use
+    /**
+     * Sets the user agent string that this endpoint will use when creating
+     * new connections. Changing this value will only affect future connections.
+     *
+     * For best results set this before accepting or opening connections.
+     *
+     * The default value for this version is WebSocket++/0.3.0dev
+     *
+     * @param ua The string to set the user agent to.
+     */ 
+    void set_user_agent(const std::string& ua) {
         scoped_lock_type guard(m_mutex);
-		m_user_agent = ua;
-	}
-	
+        m_user_agent = ua;
+    }
+    
     /// Returns whether or not this endpoint is a server.
     /**
      * @return Whether or not this endpoint is a server
      */
-	bool is_server() const {
+    bool is_server() const {
         return m_is_server;
     }
     
@@ -323,15 +323,15 @@ public:
         return con;
     }
 protected:
-	connection_ptr create_connection();
-	void remove_connection(connection_ptr con);
+    connection_ptr create_connection();
+    void remove_connection(connection_ptr con);
     
     alog_type m_alog;
     elog_type m_elog;
 private:
-	// dynamic settings
-	std::string					m_user_agent;
-	
+    // dynamic settings
+    std::string                 m_user_agent;
+    
     open_handler                m_open_handler;
     close_handler               m_close_handler;
     fail_handler                m_fail_handler;
@@ -345,14 +345,14 @@ private:
     
     rng_type m_rng;
     
-	// endpoint resources
-	std::set<connection_ptr>	m_connections;
-	
-	// static settings
-	const bool					m_is_server;
-	
-	// endpoint state
-	mutex_type                  m_mutex;
+    // endpoint resources
+    std::set<connection_ptr>    m_connections;
+    
+    // static settings
+    const bool                  m_is_server;
+    
+    // endpoint state
+    mutex_type                  m_mutex;
 };
 
 } // namespace websocketpp

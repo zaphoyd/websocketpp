@@ -72,7 +72,7 @@ typedef lib::function<void(connection_hdl)> http_handler;
 
 namespace session {
 namespace state {
-	// externally visible session state (states based on the RFC)
+    // externally visible session state (states based on the RFC)
     enum value {
         connecting = 0,
         open = 1,
@@ -96,20 +96,20 @@ namespace status {
 } // namespace fail
 
 namespace internal_state {
-	// More granular internal states. These are used for multi-threaded 
-	// connection syncronization and preventing values that are not yet or no
-	// longer avaliable from being used.
-	
-	enum value {
-		USER_INIT = 0,
-		TRANSPORT_INIT = 1,
-		READ_HTTP_REQUEST = 2,
-		WRITE_HTTP_REQUEST = 3,
-		READ_HTTP_RESPONSE = 4,
-		WRITE_HTTP_RESPONSE = 5,
-		PROCESS_HTTP_REQUEST = 6,
-		PROCESS_CONNECTION = 7
-	};
+    // More granular internal states. These are used for multi-threaded 
+    // connection syncronization and preventing values that are not yet or no
+    // longer avaliable from being used.
+    
+    enum value {
+        USER_INIT = 0,
+        TRANSPORT_INIT = 1,
+        READ_HTTP_REQUEST = 2,
+        WRITE_HTTP_REQUEST = 3,
+        READ_HTTP_RESPONSE = 4,
+        WRITE_HTTP_RESPONSE = 5,
+        PROCESS_HTTP_REQUEST = 6,
+        PROCESS_CONNECTION = 7
+    };
 } // namespace internal_state
 } // namespace session
 
@@ -149,10 +149,10 @@ public:
     typedef typename config::request_type request_type;
     typedef typename config::response_type response_type;
     
-	typedef typename config::message_type message_type;
-	typedef typename message_type::ptr message_ptr;
-	
-	typedef typename config::con_msg_manager_type con_msg_manager_type;
+    typedef typename config::message_type message_type;
+    typedef typename message_type::ptr message_ptr;
+    
+    typedef typename config::con_msg_manager_type con_msg_manager_type;
     typedef typename con_msg_manager_type::ptr con_msg_manager_ptr;
     
     /// Type of RNG
@@ -174,14 +174,14 @@ public:
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
-	  , m_send_buffer_size(0)
-	  , m_write_flag(false)
-	  , m_is_server(is_server)
-	  , m_alog(alog)
-	  , m_elog(elog)
-	  , m_rng(rng)
-	  , m_local_close_code(close::status::abnormal_close)
-	  , m_remote_close_code(close::status::abnormal_close)
+      , m_send_buffer_size(0)
+      , m_write_flag(false)
+      , m_is_server(is_server)
+      , m_alog(alog)
+      , m_elog(elog)
+      , m_rng(rng)
+      , m_local_close_code(close::status::abnormal_close)
+      , m_remote_close_code(close::status::abnormal_close)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -322,21 +322,21 @@ public:
     // Uncategorized public methods //
     //////////////////////////////////
     
-	/// Get the size of the outgoing write buffer (in payload bytes)
-	/**
-	 * Retrieves the number of bytes in the outgoing write buffer that have not
+    /// Get the size of the outgoing write buffer (in payload bytes)
+    /**
+     * Retrieves the number of bytes in the outgoing write buffer that have not
      * already been dispatched to the transport layer. This represents the bytes
      * that are presently cancelable without uncleanly ending the websocket 
      * connection
      *
      * This method invokes the m_write_lock mutex
-	 *
-	 * @return The current number of bytes in the outgoing send buffer.
-	 */
-	size_t get_buffered_amount() const;
+     *
+     * @return The current number of bytes in the outgoing send buffer.
+     */
+    size_t get_buffered_amount() const;
 
-	/// DEPRECATED: use get_buffered_amount instead
-	size_t buffered_amount() const {return get_buffered_amount();}
+    /// DEPRECATED: use get_buffered_amount instead
+    size_t buffered_amount() const {return get_buffered_amount();}
     
     ////////////////////
     // Action Methods //
@@ -355,9 +355,9 @@ public:
      * frame::opcode::text
      */
     lib::error_code send(const std::string& payload, frame::opcode::value op = 
-		frame::opcode::TEXT);
-		
-	/// Send a message (raw array overload)
+        frame::opcode::TEXT);
+        
+    /// Send a message (raw array overload)
     /**
      * Convenience method to send a message given a raw array and optionally an 
      * opcode. Default opcode is binary.
@@ -781,7 +781,7 @@ public:
     void handle_write(const lib::error_code& ec);
     
     void handle_handshake_read(const lib::error_code& ec,
-    	size_t bytes_transferred);
+        size_t bytes_transferred);
     void handle_read_http_response(const lib::error_code& ec,
         size_t bytes_transferred);
     
@@ -977,8 +977,8 @@ private:
     void log_close_result();
     
     // static settings
-    const std::string		m_user_agent;
-	
+    const std::string       m_user_agent;
+    
     /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;
 
@@ -1040,13 +1040,13 @@ private:
     /**
      * Lock: m_write_lock
      */
-	std::queue<message_ptr> m_send_queue;
+    std::queue<message_ptr> m_send_queue;
 
     /// Size in bytes of the outstanding payloads in the write queue
     /**
      * Lock: m_write_lock
      */
-	size_t m_send_buffer_size;
+    size_t m_send_buffer_size;
     
     /// buffer holding the various parts of the current message being writen
     /**
@@ -1074,7 +1074,7 @@ private:
     // of the whole connection.
     std::vector<std::string> m_requested_subprotocols;
     
-    const bool				m_is_server;
+    const bool              m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
     

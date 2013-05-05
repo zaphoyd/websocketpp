@@ -44,16 +44,16 @@ template <typename config>
 class client : public endpoint<connection<config>,config> {
 public:
     /// Type of this endpoint
-	typedef client<config> type;	
-	
-	/// Type of the endpoint concurrency component
-	typedef typename config::concurrency_type concurrency_type;
+    typedef client<config> type;    
+    
+    /// Type of the endpoint concurrency component
+    typedef typename config::concurrency_type concurrency_type;
     /// Type of the endpoint transport component
-	typedef typename config::transport_type transport_type;
-	
-	/// Type of the connections this server will create
-	typedef connection<config> connection_type;
-	/// Type of a shared pointer to the connections this server will create
+    typedef typename config::transport_type transport_type;
+    
+    /// Type of the connections this server will create
+    typedef connection<config> connection_type;
+    /// Type of a shared pointer to the connections this server will create
     typedef typename connection_type::ptr connection_ptr;
 
     /// Type of the connection transport component
@@ -61,26 +61,26 @@ public:
     /// Type of a shared pointer to the connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
 
-	/// Type of the endpoint component of this server
-	typedef endpoint<connection_type,config> endpoint_type;
-	
-	explicit client() : endpoint_type(false)
-	{
-		endpoint_type::m_alog.write(log::alevel::devel,
+    /// Type of the endpoint component of this server
+    typedef endpoint<connection_type,config> endpoint_type;
+    
+    explicit client() : endpoint_type(false)
+    {
+        endpoint_type::m_alog.write(log::alevel::devel,
             "client constructor");
-	}
-	
-	/// Get a new connection
-	/**
-	 * Creates and returns a pointer to a new connection to the given URI
-	 * suitable for passing to connect(connection_ptr). This method allows
-	 * applying connection specific settings before performing the opening
-	 * handshake.
-	 * 
-	 * @return A connection_ptr to the new connection
-	 */
-	connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
-	    // parse uri
+    }
+    
+    /// Get a new connection
+    /**
+     * Creates and returns a pointer to a new connection to the given URI
+     * suitable for passing to connect(connection_ptr). This method allows
+     * applying connection specific settings before performing the opening
+     * handshake.
+     * 
+     * @return A connection_ptr to the new connection
+     */
+    connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
+        // parse uri
         try {
             // uri validation
             uri_ptr location(new uri(u));
@@ -107,36 +107,36 @@ public:
             ec = error::make_error_code(error::invalid_uri);
             return connection_ptr();
         }
-	}
-	
-	/// Begin the connection process for the given connection
-	/**
-	 * Initiates the opening connection handshake for connection con. Exact
-	 * behavior depends on the underlying transport policy.
-	 *
+    }
+    
+    /// Begin the connection process for the given connection
+    /**
+     * Initiates the opening connection handshake for connection con. Exact
+     * behavior depends on the underlying transport policy.
+     *
      * @param con The connection to connect
      *
-	 * @return The pointer to the connection originally passed in.
-	 */
-	connection_ptr connect(connection_ptr con) {
-	    // Ask transport to perform a connection
+     * @return The pointer to the connection originally passed in.
+     */
+    connection_ptr connect(connection_ptr con) {
+        // Ask transport to perform a connection
         transport_type::async_connect(
-			lib::static_pointer_cast<transport_con_type>(con),
-			con->get_uri(),
-			lib::bind(
-				&type::handle_connect,
-				this,
-				lib::placeholders::_1,
-				lib::placeholders::_2
-			)
-		);
+            lib::static_pointer_cast<transport_con_type>(con),
+            con->get_uri(),
+            lib::bind(
+                &type::handle_connect,
+                this,
+                lib::placeholders::_1,
+                lib::placeholders::_2
+            )
+        );
         
-	    return con;
-	}
-	
-	
-	
-	// connect(...)
+        return con;
+    }
+    
+    
+    
+    // connect(...)
 private:
     // handle_connect
     void handle_connect(connection_hdl hdl, const lib::error_code & ec) {

@@ -29,34 +29,34 @@
 #define WEBSOCKETPP_COMMON_MEMORY_HPP
 
 #if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_MEMORY_
-	#ifndef _WEBSOCKETPP_CPP11_MEMORY_
-		#define _WEBSOCKETPP_CPP11_MEMORY_
-	#endif
+    #ifndef _WEBSOCKETPP_CPP11_MEMORY_
+        #define _WEBSOCKETPP_CPP11_MEMORY_
+    #endif
 #endif
 
 #ifdef _WEBSOCKETPP_CPP11_MEMORY_
-	#include <memory>
+    #include <memory>
 #else
-	#include <boost/shared_ptr.hpp>
-	#include <boost/scoped_array.hpp>
-	#include <boost/enable_shared_from_this.hpp>
-	#include <boost/pointer_cast.hpp>
+    #include <boost/shared_ptr.hpp>
+    #include <boost/scoped_array.hpp>
+    #include <boost/enable_shared_from_this.hpp>
+    #include <boost/pointer_cast.hpp>
 #endif
 
 namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_MEMORY_
-	using std::shared_ptr;
-	using std::weak_ptr;
-	using std::enable_shared_from_this;
+    using std::shared_ptr;
+    using std::weak_ptr;
+    using std::enable_shared_from_this;
     using std::static_pointer_cast;
 
     typedef std::unique_ptr<unsigned char[]> unique_ptr_uchar_array;
 #else
-	using boost::shared_ptr;
-	using boost::weak_ptr;
-	using boost::enable_shared_from_this;
+    using boost::shared_ptr;
+    using boost::weak_ptr;
+    using boost::enable_shared_from_this;
     using boost::static_pointer_cast;
 
     typedef boost::scoped_array<unsigned char> unique_ptr_uchar_array;

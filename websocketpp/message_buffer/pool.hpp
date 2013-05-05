@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -82,14 +82,14 @@ namespace message_buffer {
  */
 template <typename T>
 void message_deleter(T* msg) {
-	try {
-		if (!msg->recycle()) {
-			delete msg;
-		}
-	} catch (...) {
-		// TODO: is there a better way to ensure this function doesn't throw?
-		delete msg;
-	}
+    try {
+        if (!msg->recycle()) {
+            delete msg;
+        }
+    } catch (...) {
+        // TODO: is there a better way to ensure this function doesn't throw?
+        delete msg;
+    }
 }
 
 /// Represents a buffer for a single WebSocket message.
@@ -100,56 +100,56 @@ void message_deleter(T* msg) {
 template <typename con_msg_manager>
 class message {
 public:
-	typedef lib::shared_ptr<message> ptr;
-	
-	typedef typename con_msg_manager::weak_ptr con_msg_man_ptr;
+    typedef lib::shared_ptr<message> ptr;
+    
+    typedef typename con_msg_manager::weak_ptr con_msg_man_ptr;
 
-	message(con_msg_man_ptr manager, size_t size = 128) 
-	  : m_manager(manager)
-	  , m_payload(size) {}
+    message(con_msg_man_ptr manager, size_t size = 128) 
+      : m_manager(manager)
+      , m_payload(size) {}
 
-	frame::opcode::value get_opcode() const {
-		return m_opcode;
-	}
-	const std::string& get_header() const {
-		return m_header;
-	}
-	const std::string& get_extension_data() const {
-		return m_extension_data;
-	}
-	const std::string& get_payload() const {
-		return m_payload;
-	}
-	
-	/// Recycle the message
-	/**
-	 * A request to recycle this message was received. Forward that request to
-	 * the connection message manager for processing. Errors and exceptions
-	 * from the manager's recycle member function should be passed back up the
-	 * call chain. The caller to message::recycle will deal with them.
-	 *
-	 * Recycle must *only* be called by the message shared_ptr's destructor. 
-	 * Once recycled successfully, ownership of the memory has been passed to 
-	 * another system and must not be accessed again.
-	 * 
-	 * @return true if the message was successfully recycled, false otherwise.
-	 */
-	bool recycle() {
-		typename con_msg_manager::ptr shared = m_manager.lock();
+    frame::opcode::value get_opcode() const {
+        return m_opcode;
+    }
+    const std::string& get_header() const {
+        return m_header;
+    }
+    const std::string& get_extension_data() const {
+        return m_extension_data;
+    }
+    const std::string& get_payload() const {
+        return m_payload;
+    }
+    
+    /// Recycle the message
+    /**
+     * A request to recycle this message was received. Forward that request to
+     * the connection message manager for processing. Errors and exceptions
+     * from the manager's recycle member function should be passed back up the
+     * call chain. The caller to message::recycle will deal with them.
+     *
+     * Recycle must *only* be called by the message shared_ptr's destructor. 
+     * Once recycled successfully, ownership of the memory has been passed to 
+     * another system and must not be accessed again.
+     * 
+     * @return true if the message was successfully recycled, false otherwise.
+     */
+    bool recycle() {
+        typename con_msg_manager::ptr shared = m_manager.lock();
 
-		if (shared) {
-			return shared->(recycle(this));
-		} else {
-			return false;
-		}
-	}
+        if (shared) {
+            return shared->(recycle(this));
+        } else {
+            return false;
+        }
+    }
 private:
-	con_msg_man_ptr				m_manager;
-	
-	frame::opcode::value        m_opcode;
-	std::string					m_header;
-	std::string					m_extension_data;
-	std::string					m_payload;
+    con_msg_man_ptr             m_manager;
+    
+    frame::opcode::value        m_opcode;
+    std::string                 m_header;
+    std::string                 m_extension_data;
+    std::string                 m_payload;
 };
 
 namespace alloc {
@@ -159,34 +159,34 @@ namespace alloc {
 template <typename message>
 class con_msg_manager {
 public:
-	typedef lib::shared_ptr<con_msg_manager> ptr;
-	typedef lib::weak_ptr<con_msg_manager> weak_ptr;
+    typedef lib::shared_ptr<con_msg_manager> ptr;
+    typedef lib::weak_ptr<con_msg_manager> weak_ptr;
 
-	typedef typename message::ptr message_ptr;
-	
-	/// Get a message buffer with specified size
-	/**
-	 * @param size Minimum size in bytes to request for the message payload.
-	 *
-	 * @return A shared pointer to a new message with specified size.
-	 */
-	message_ptr get_message(size_t size) const {
-		return message_ptr(new message(size));
-	}
-	
-	/// Recycle a message
-	/**
-	 * This method shouldn't be called. If it is, return false to indicate an
-	 * error. The rest of the method recycle chain should notice this and free
-	 * the memory.
-	 *
-	 * @param msg The message to be recycled.
-	 *
-	 * @return true if the message was successfully recycled, false otherwse.
-	 */
-	bool recycle(message * msg) {
-		return false;
-	}
+    typedef typename message::ptr message_ptr;
+    
+    /// Get a message buffer with specified size
+    /**
+     * @param size Minimum size in bytes to request for the message payload.
+     *
+     * @return A shared pointer to a new message with specified size.
+     */
+    message_ptr get_message(size_t size) const {
+        return message_ptr(new message(size));
+    }
+    
+    /// Recycle a message
+    /**
+     * This method shouldn't be called. If it is, return false to indicate an
+     * error. The rest of the method recycle chain should notice this and free
+     * the memory.
+     *
+     * @param msg The message to be recycled.
+     *
+     * @return true if the message was successfully recycled, false otherwse.
+     */
+    bool recycle(message * msg) {
+        return false;
+    }
 };
 
 /// An endpoint message manager that allocates a new manager for each
@@ -194,15 +194,15 @@ public:
 template <typename con_msg_manager>
 class endpoint_msg_manager {
 public:
-	typedef typename con_msg_manager::ptr con_msg_man_ptr;
-	
-	/// Get a pointer to a connection message manager
-	/**
-	 * @return A pointer to the requested connection message manager.
-	 */
-	con_msg_man_ptr get_manager() const {
-		return con_msg_man_ptr(new con_msg_manager());
-	}
+    typedef typename con_msg_manager::ptr con_msg_man_ptr;
+    
+    /// Get a pointer to a connection message manager
+    /**
+     * @return A pointer to the requested connection message manager.
+     */
+    con_msg_man_ptr get_manager() const {
+        return con_msg_man_ptr(new con_msg_manager());
+    }
 };
 
 } // namespace alloc
@@ -214,7 +214,7 @@ namespace pool {
 class con_msg_manager {
 
 };
-	
+    
 /// An endpoint manager that maintains a shared pool of connection managers
 /// and returns an appropriate one for the requesting connection.
 class endpoint_msg_manager {

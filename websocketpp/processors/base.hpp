@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,11 +54,11 @@ static const char handshake_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 // Processor class related error codes
 namespace error_cat {
 enum value {
-	BAD_REQUEST = 0, // Error was the result of improperly formatted user input
-	INTERNAL_ERROR = 1, // Error was a logic error internal to WebSocket++
-	PROTOCOL_VIOLATION = 2,
-	MESSAGE_TOO_BIG = 3,
-	PAYLOAD_VIOLATION = 4 // Error was due to receiving invalid payload data
+    BAD_REQUEST = 0, // Error was the result of improperly formatted user input
+    INTERNAL_ERROR = 1, // Error was a logic error internal to WebSocket++
+    PROTOCOL_VIOLATION = 2,
+    MESSAGE_TOO_BIG = 3,
+    PAYLOAD_VIOLATION = 4 // Error was due to receiving invalid payload data
 };
 } // namespace error_cat
 
@@ -166,44 +166,44 @@ enum processor_errors {
 
 class processor_category : public lib::error_category {
 public:
-	processor_category() {}
+    processor_category() {}
 
-	const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-		return "websocketpp.processor";
-	}
-	
-	std::string message(int value) const {
-		switch(value) {
-			case error::general:
-				return "Generic processor error";
-			case error::bad_request:
-				return "invalid user input";
-			case error::protocol_violation:
-				return "Generic protocol violation";
-			case error::message_too_big:
-				return "A message was too large";
-			case error::invalid_payload:
-				return "A payload contained invalid data";
-			case error::invalid_arguments:
-				return "invalid function arguments";
-			case error::invalid_opcode:
-				return "invalid opcode";
-			case error::control_too_big:
-				return "Control messages are limited to fewer than 125 characters";
-			case error::invalid_rsv_bit:
-				return "Invalid use of reserved bits";
-			case error::fragmented_control:
-				return "Control messages cannot be fragmented";
-			case error::invalid_continuation:
-				return "Invalid message continuation";
-			case error::masking_required:
-				return "Clients may not send unmasked frames";
-			case error::masking_forbidden:
-				return "Servers may not send masked frames";
-			case error::non_minimal_encoding:
-				return "Payload length was not minimally encoded";
-			case error::requires_64bit:
-				return "64 bit frames are not supported on 32 bit systems";
+    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+        return "websocketpp.processor";
+    }
+    
+    std::string message(int value) const {
+        switch(value) {
+            case error::general:
+                return "Generic processor error";
+            case error::bad_request:
+                return "invalid user input";
+            case error::protocol_violation:
+                return "Generic protocol violation";
+            case error::message_too_big:
+                return "A message was too large";
+            case error::invalid_payload:
+                return "A payload contained invalid data";
+            case error::invalid_arguments:
+                return "invalid function arguments";
+            case error::invalid_opcode:
+                return "invalid opcode";
+            case error::control_too_big:
+                return "Control messages are limited to fewer than 125 characters";
+            case error::invalid_rsv_bit:
+                return "Invalid use of reserved bits";
+            case error::fragmented_control:
+                return "Control messages cannot be fragmented";
+            case error::invalid_continuation:
+                return "Invalid message continuation";
+            case error::masking_required:
+                return "Clients may not send unmasked frames";
+            case error::masking_forbidden:
+                return "Servers may not send masked frames";
+            case error::non_minimal_encoding:
+                return "Payload length was not minimally encoded";
+            case error::requires_64bit:
+                return "64 bit frames are not supported on 32 bit systems";
             case error::invalid_utf8:
                 return "Invalid UTF8 encoding";
             case error::not_implimented:
@@ -232,19 +232,19 @@ public:
                 return "Error parsing extension header";
             case error::extensions_disabled:
                 return "Extensions are disabled";
-			default:
-				return "Unknown";
-		}
-	}
+            default:
+                return "Unknown";
+        }
+    }
 };
 
 inline const lib::error_category& get_processor_category() {
-	static processor_category instance;
-	return instance;
+    static processor_category instance;
+    return instance;
 }
 
 inline lib::error_code make_error_code(error::processor_errors e) {
-	return lib::error_code(static_cast<int>(e), get_processor_category());
+    return lib::error_code(static_cast<int>(e), get_processor_category());
 }
 
 /// Converts a processor error_code into a websocket close code

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,26 +50,26 @@ namespace random_device {
  */
 template <typename int_type, typename concurrency>
 class int_generator {
-	public:
-		typedef typename concurrency::scoped_lock_type scoped_lock_type;
-	    typedef typename concurrency::mutex_type mutex_type;
-		
-		/// constructor
-		//mac TODO: figure out if signed types present a range problem
-		int_generator() {}
-		
-		/// advances the engine's state and returns the generated value
-		int_type operator()() {
-			scoped_lock_type guard(m_lock);
-			return m_dis(m_rng);
-		}
-	private:
-	    
-	    
-		lib::random_device m_rng;
-		lib::uniform_int_distribution<int_type> m_dis;
-		
-		mutex_type m_lock;
+    public:
+        typedef typename concurrency::scoped_lock_type scoped_lock_type;
+        typedef typename concurrency::mutex_type mutex_type;
+        
+        /// constructor
+        //mac TODO: figure out if signed types present a range problem
+        int_generator() {}
+        
+        /// advances the engine's state and returns the generated value
+        int_type operator()() {
+            scoped_lock_type guard(m_lock);
+            return m_dis(m_rng);
+        }
+    private:
+        
+        
+        lib::random_device m_rng;
+        lib::uniform_int_distribution<int_type> m_dis;
+        
+        mutex_type m_lock;
 };
 
 } // namespace random_device

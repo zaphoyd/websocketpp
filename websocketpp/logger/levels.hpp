@@ -46,23 +46,23 @@ struct elevel {
     static const level all = 0xffffffff;
     
     static const char* channel_name(level channel) {
-	    switch(channel) {
-	        case devel:
-	            return "devel";
-	        case library:
-	            return "library";
-	        case info:
-	            return "info";
-	        case warn:
-	            return "warning";
-	        case rerror:
-	            return "error";
-	        case fatal:
-	            return "fatal";
-	        default:
-	            return "unknown";
-	    }
-	}
+        switch(channel) {
+            case devel:
+                return "devel";
+            case library:
+                return "library";
+            case info:
+                return "info";
+            case warn:
+                return "warning";
+            case rerror:
+                return "error";
+            case fatal:
+                return "fatal";
+            default:
+                return "unknown";
+        }
+    }
 };
 
 struct alevel {
@@ -82,35 +82,35 @@ struct alevel {
     static const level all = 0xffffffff;
     
     static const char* channel_name(level channel) {
-	    switch(channel) {
-	        case connect:
-	            return "connect";
-	        case disconnect:
-	            return "disconnect";
-	        case control:
-	            return "control";
-	        case frame_header:
-	            return "frame_header";
-	        case frame_payload:
-	            return "frame_payload";
-	        case message_header:
-	            return "message_header";
-	        case message_payload:
-	            return "message_payload";
-	        case endpoint:
-	            return "endpoint";
-	        case debug_handshake:
-	            return "debug_handshake";
-	        case debug_close:
-	            return "debug_close";
-	        case devel:
-	            return "devel";
-	        case app:
-	            return "application";
-	        default:
-	            return "unknown";
-	    }
-	}
+        switch(channel) {
+            case connect:
+                return "connect";
+            case disconnect:
+                return "disconnect";
+            case control:
+                return "control";
+            case frame_header:
+                return "frame_header";
+            case frame_payload:
+                return "frame_payload";
+            case message_header:
+                return "message_header";
+            case message_payload:
+                return "message_payload";
+            case endpoint:
+                return "endpoint";
+            case debug_handshake:
+                return "debug_handshake";
+            case debug_close:
+                return "debug_close";
+            case devel:
+                return "devel";
+            case app:
+                return "application";
+            default:
+                return "unknown";
+        }
+    }
 };
 
 } // logger

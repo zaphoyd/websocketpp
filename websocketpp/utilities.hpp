@@ -51,7 +51,7 @@ private:
 // find substring (case insensitive)
 template<typename T>
 typename T::const_iterator ci_find_substr( const T& str1, const T& str2, 
-	const std::locale& loc = std::locale() )
+    const std::locale& loc = std::locale() )
 {
     return std::search( str1.begin(), str1.end(), 
         str2.begin(), str2.end(), my_equal<typename T::value_type>(loc) );
@@ -59,8 +59,8 @@ typename T::const_iterator ci_find_substr( const T& str1, const T& str2,
 
 template<typename T>
 typename T::const_iterator ci_find_substr(const T& str1, 
-	const typename T::value_type* str2, typename T::size_type size, 
-	const std::locale& loc = std::locale())
+    const typename T::value_type* str2, typename T::size_type size, 
+    const std::locale& loc = std::locale())
 {
     return std::search( str1.begin(), str1.end(), 
         str2, str2+size, my_equal<typename T::value_type>(loc) );

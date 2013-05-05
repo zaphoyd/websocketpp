@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,44 +42,44 @@
 
 
 #ifdef _WEBSOCKETPP_CPP11_STL_
-	// This flag indicates that all of the C++11 language features are available
-	// to us.
-	#define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
-	#define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
-	#define _WEBSOCKETPP_INITIALIZER_LISTS_
+    // This flag indicates that all of the C++11 language features are available
+    // to us.
+    #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
+    #define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
+    #define _WEBSOCKETPP_INITIALIZER_LISTS_
 #else
-	// Test for noexcept
-	#ifdef _WEBSOCKETPP_NOEXCEPT_
-		// build system says we have noexcept
-		#define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
-	#else
-		#if __has_feature(cxx_noexcept)
-			// clang feature detect says we have noexcept
-			#define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
-		#else
-			// assume we don't have noexcept
-			#define _WEBSOCKETPP_NOEXCEPT_TOKEN_
-		#endif
-	#endif
-	
-	// Test for constexpr
-	#ifdef _WEBSOCKETPP_CONSTEXPR_
-		// build system says we have constexpr
-		#define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
-	#else
-		#if __has_feature(cxx_constexpr)
-			// clang feature detect says we have constexpr
-			#define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
-		#else
-			// assume we don't have constexpr
-			#define _WEBSOCKETPP_CONSTEXPR_TOKEN_
-		#endif
-	#endif
-	
-	// Enable initializer lists on clang when available.
-	#if __has_feature(cxx_generalized_initializers)
-		#define _WEBSOCKETPP_INITIALIZER_LISTS_
-	#endif
+    // Test for noexcept
+    #ifdef _WEBSOCKETPP_NOEXCEPT_
+        // build system says we have noexcept
+        #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
+    #else
+        #if __has_feature(cxx_noexcept)
+            // clang feature detect says we have noexcept
+            #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
+        #else
+            // assume we don't have noexcept
+            #define _WEBSOCKETPP_NOEXCEPT_TOKEN_
+        #endif
+    #endif
+    
+    // Test for constexpr
+    #ifdef _WEBSOCKETPP_CONSTEXPR_
+        // build system says we have constexpr
+        #define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
+    #else
+        #if __has_feature(cxx_constexpr)
+            // clang feature detect says we have constexpr
+            #define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
+        #else
+            // assume we don't have constexpr
+            #define _WEBSOCKETPP_CONSTEXPR_TOKEN_
+        #endif
+    #endif
+    
+    // Enable initializer lists on clang when available.
+    #if __has_feature(cxx_generalized_initializers)
+        #define _WEBSOCKETPP_INITIALIZER_LISTS_
+    #endif
 #endif
 
 #endif // WEBSOCKETPP_COMMON_CPP11_HPP

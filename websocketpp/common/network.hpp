@@ -30,10 +30,10 @@
 
 // For ntohs and htons
 #if defined(WIN32)
-	#include <winsock2.h>
+    #include <winsock2.h>
 #else
-	//#include <arpa/inet.h>
-	#include <netinet/in.h>
+    //#include <arpa/inet.h>
+    #include <netinet/in.h>
 #endif
 
 namespace websocketpp {
@@ -41,7 +41,7 @@ namespace lib {
 namespace net {
 
 inline bool is_little_endian() {
-	short int val = 0x1;
+    short int val = 0x1;
     char *ptr = (char*)&val;
     return (ptr[0] == 1);
 }
