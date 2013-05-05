@@ -744,6 +744,10 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 return;
             }
         }
+        if (ec.value() == 335544539 /*TLS short read */) {
+			m_alog.write(log::alevel::devel,"got TLS short read, ignore for the moment");
+			return;
+        }
         
         std::stringstream s;
         s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
