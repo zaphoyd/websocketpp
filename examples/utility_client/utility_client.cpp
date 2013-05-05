@@ -3,6 +3,7 @@
 #include <websocketpp/client.hpp>
 
 #include <iostream>
+#include <chrono>
 
 typedef websocketpp::client<websocketpp::config::asio_tls_client> client;
 
@@ -15,34 +16,86 @@ typedef websocketpp::config::asio_tls_client::message_type::ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 typedef client::connection_ptr connection_ptr;
 
-context_ptr on_tls_init(client* c, websocketpp::connection_hdl hdl) {
-    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 
-    try {
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                         boost::asio::ssl::context::no_sslv2 |
-                         boost::asio::ssl::context::single_dh_use);
-        //ctx->set_password_callback(bind(&get_password));
-        //ctx->use_certificate_chain_file("server.pem");
-        //ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
-    } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
+
+class perftest {
+public:
+    typedef perftest type;
+    
+    perftest () {
+        // We expect there to be a lot of errors, so suppress them
+        m_endpoint.set_access_channels(websocketpp::log::alevel::all);
+        m_endpoint.set_error_channels(websocketpp::log::elevel::all);
+        
+        // Initialize ASIO
+        m_endpoint.init_asio();
+        
+        // Register our handlers
+        m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
+        m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
+        m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
     }
-    return ctx;
-}
+    
+    void start(std::string uri) {
+        websocketpp::lib::error_code ec;
+        client::connection_ptr con = m_endpoint.get_connection(uri, ec);
+        
+        //con->set_proxy("http://humupdates.uchicago.edu:8443");
+        
+        endpoint.connect(con);
+	    
+	    // Start the ASIO io_service run loop
+	    m_start = std::chrono::high_resolution_clock::now();
+        endpoint.run();
+    }
+    
+    void on_socket_init(websocketpp::connection_hdl hdl) {
+        m_socket_init = std::chrono::high_resolution_clock::now();
+    }
+    
+    context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+        m_tls_init = std::chrono::high_resolution_clock::now();
+        context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 
-void print_handler(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
-    c->get_alog().write(websocketpp::log::alevel::app,msg->get_payload());
-}
-
-void write_on_open(client* c, websocketpp::connection_hdl hdl) {
-    c->send(hdl, "ping", websocketpp::frame::opcode::text);
-}
+        try {
+            ctx->set_options(boost::asio::ssl::context::default_workarounds |
+                             boost::asio::ssl::context::no_sslv2 |
+                             boost::asio::ssl::context::single_dh_use);
+        } catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+        }
+        return ctx;
+    }
+    
+    void on_open(websocketpp::connection_hdl hdl) {
+        m_open = std::chrono::high_resolution_clock::now();
+        m_endpoint(hdl, "", websocketpp::frame::opcode::text);
+    }
+    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+        m_message = std::chrono::high_resolution_clock::now();
+        m_endpoint.close();
+    }
+    void on_close(websocketpp::connection_hdl hdl) {
+        m_close = std::chrono::high_resolution_clock::now();
+        
+        std::cout << "Socket Init: " << std::chrono::duration_cast<std::micro>(m_socket_init-m_start).count() << std::endl;
+        std::cout << "TLS Init: " << std::chrono::duration_cast<std::micro>(m_tls_init-m_start).count() << std::endl;
+        std::cout << "Open: " << std::chrono::duration_cast<std::micro>(m_open-m_start).count() << std::endl;
+        std::cout << "Message: " << std::chrono::duration_cast<std::micro>(m_message-m_start).count() << std::endl;
+        std::cout << "Close: " << std::chrono::duration_cast<std::micro>(m_close-m_start).count() << std::endl;
+    }
+private:
+    client m_endpoint;
+    
+    std::chrono::high_resolution_clock::time_point m_start;
+    std::chrono::high_resolution_clock::time_point m_socket_init;
+    std::chrono::high_resolution_clock::time_point m_tls_init;
+    std::chrono::high_resolution_clock::time_point m_open;
+    std::chrono::high_resolution_clock::time_point m_message;
+    std::chrono::high_resolution_clock::time_point m_close;
+};
 
 int main(int argc, char* argv[]) {
-	// Create a server endpoint
-    client endpoint;
-	
 	std::string uri = "wss://echo.websocket.org";
 	
 	if (argc == 2) {
@@ -50,27 +103,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 	try {
-        // We expect there to be a lot of errors, so suppress them
-        endpoint.set_access_channels(websocketpp::log::alevel::all);
-        endpoint.set_error_channels(websocketpp::log::elevel::all);
-        
-        // Initialize ASIO
-        endpoint.init_asio();
-        
-        // Register our handlers
-        endpoint.set_message_handler(bind(&print_handler,&endpoint,::_1,::_2));
-        endpoint.set_open_handler(bind(&write_on_open,&endpoint,::_1));
-        endpoint.set_tls_init_handler(bind(&on_tls_init,&endpoint,::_1));
-        
-        websocketpp::lib::error_code ec;
-        client::connection_ptr con = endpoint.get_connection(uri, ec);
-        
-        //con->set_proxy("http://humupdates.uchicago.edu:8443");
-        
-        endpoint.connect(con);
-	    
-	    // Start the ASIO io_service run loop
-        endpoint.run();
+        perftest endpoint(uri);
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
