@@ -73,7 +73,7 @@ public:
     }
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
         m_message = std::chrono::high_resolution_clock::now();
-        m_endpoint.close();
+        m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
     }
     void on_close(websocketpp::connection_hdl hdl) {
         m_close = std::chrono::high_resolution_clock::now();
