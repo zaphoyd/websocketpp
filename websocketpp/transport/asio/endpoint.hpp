@@ -428,13 +428,12 @@ protected:
         if (m_alog->static_test(log::alevel::devel)) {
         	std::stringstream s;
         	
-        	s << "Async DNS resolve successful. Results: "
+        	s << "Async DNS resolve successful. Results: ";
         	
-        	boost::asio::ip::tcp::resolver::iterator it = iterator;
-        	boost::asio::ip::tcp::resolver::iterator end;
+        	boost::asio::ip::tcp::resolver::iterator it, end;
         	
         	for (it = iterator; it != end, ++it) {
-        		s << (*it).endpoint() << "\n"
+        		s << (*it).endpoint() << "\n";
         	}
         	
             m_alog->write(log::alevel::devel,s.str());
