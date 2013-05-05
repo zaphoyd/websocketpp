@@ -376,7 +376,7 @@ protected:
                 lib::error_code ec;
 
                 uri_ptr pu(new uri(proxy));
-                ec = tcon->proxy_init(u->get_host_port());
+                ec = tcon->proxy_init(u->get_authority());
                 if (ec) {
                     cb(tcon->get_handle(),ec);
                     return;
