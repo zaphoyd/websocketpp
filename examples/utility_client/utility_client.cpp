@@ -104,7 +104,8 @@ int main(int argc, char* argv[]) {
 	}
 	
 	try {
-        perftest endpoint(uri);
+        perftest endpoint;
+        endpoint.start(uri);
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
