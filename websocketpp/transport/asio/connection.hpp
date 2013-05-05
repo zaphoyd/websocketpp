@@ -206,7 +206,7 @@ protected:
      */
     void init(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection init");
+            m_alog.write(log::alevel::devel,"asio connection init");
         }
         
         socket_con_type::pre_init(
@@ -221,7 +221,7 @@ protected:
     
     void handle_pre_init(init_handler callback, const lib::error_code& ec) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection handle pre_init");
+            m_alog.write(log::alevel::devel,"asio connection handle pre_init");
         }
         
         if (m_tcp_init_handler) {
@@ -241,10 +241,10 @@ protected:
     }
     
     void post_init(init_handler callback) {
-    	if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection post_init");
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection post_init");
         }
-    	
+        
         socket_con_type::post_init(
             lib::bind(
                 &type::handle_post_init,
@@ -257,7 +257,7 @@ protected:
     
     void handle_post_init(init_handler callback, const lib::error_code& ec) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection handle_post_init");
+            m_alog.write(log::alevel::devel,"asio connection handle_post_init");
         }
         
         callback(ec);
@@ -265,7 +265,7 @@ protected:
     
     void proxy_write(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection proxy_write");
+            m_alog.write(log::alevel::devel,"asio connection proxy_write");
         }
         
         if (!m_proxy_data) {
@@ -298,7 +298,7 @@ protected:
         boost::system::error_code& ec)
     {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection handle_proxy_write");
+            m_alog.write(log::alevel::devel,"asio connection handle_proxy_write");
         }
         
         m_bufs.clear();
@@ -314,7 +314,7 @@ protected:
     
     void proxy_read(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection proxy_read");
+            m_alog.write(log::alevel::devel,"asio connection proxy_read");
         }
         
         if (!m_proxy_data) {
@@ -342,7 +342,7 @@ protected:
         boost::system::error_code& ec, size_t bytes_transferred)
     {
         if (m_alog.static_test(log::alevel::devel)) {
-        	m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
+            m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
         }
         
         if (ec) {

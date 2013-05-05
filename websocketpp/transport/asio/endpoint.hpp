@@ -394,7 +394,7 @@ protected:
         
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
-            	"starting async DNS resolve for "+host+":"+port);
+                "starting async DNS resolve for "+host+":"+port);
         }
         
         m_resolver->async_resolve(
@@ -426,16 +426,16 @@ protected:
         }
         
         if (m_alog->static_test(log::alevel::devel)) {
-        	std::stringstream s;
-        	
-        	s << "Async DNS resolve successful. Results: ";
-        	
-        	boost::asio::ip::tcp::resolver::iterator it, end;
-        	
-        	for (it = iterator; it != end; ++it) {
-        		s << (*it).endpoint() << " ";
-        	}
-        	
+            std::stringstream s;
+            
+            s << "Async DNS resolve successful. Results: ";
+            
+            boost::asio::ip::tcp::resolver::iterator it, end;
+            
+            for (it = iterator; it != end; ++it) {
+                s << (*it).endpoint() << " ";
+            }
+            
             m_alog->write(log::alevel::devel,s.str());
         }
         
@@ -469,7 +469,7 @@ protected:
         
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
-            	"Async connect to "+tcon->get_remote_endpoint()+" successful.");
+                "Async connect to "+tcon->get_remote_endpoint()+" successful.");
         }
         
         callback(tcon->get_handle(),lib::error_code());
