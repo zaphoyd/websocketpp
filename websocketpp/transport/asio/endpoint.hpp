@@ -468,9 +468,8 @@ protected:
         }
         
         if (m_alog->static_test(log::alevel::devel)) {
-        	lib::error_code ec2;
             m_alog->write(log::alevel::devel,
-            	"Async connect to "+tcon->get_remote_endpoint(ec2)+" successful.");
+            	"Async connect to "+tcon->get_remote_endpoint()+" successful.");
         }
         
         callback(tcon->get_handle(),lib::error_code());
