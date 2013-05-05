@@ -432,7 +432,7 @@ protected:
         	
         	boost::asio::ip::tcp::resolver::iterator it, end;
         	
-        	for (it = iterator; it != end, ++it) {
+        	for (it = iterator; it != end; ++it) {
         		s << (*it).endpoint() << "\n";
         	}
         	
