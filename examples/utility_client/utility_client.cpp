@@ -42,11 +42,11 @@ public:
         
         //con->set_proxy("http://humupdates.uchicago.edu:8443");
         
-        endpoint.connect(con);
+        m_endpoint.connect(con);
 	    
 	    // Start the ASIO io_service run loop
 	    m_start = std::chrono::high_resolution_clock::now();
-        endpoint.run();
+        m_endpoint.run();
     }
     
     void on_socket_init(websocketpp::connection_hdl hdl) {
