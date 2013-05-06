@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,16 +53,16 @@ namespace parser {
  */
 class response : public parser {
 public:
-	typedef response type;
+    typedef response type;
     typedef lib::shared_ptr<type> ptr;
-	
-	response() 
+    
+    response() 
       : m_read(0)
       , m_buf(new std::string())
       , m_status_code(status_code::uninitialized)
       , m_state(RESPONSE_LINE) {}
-	
-	/// Process bytes in the input buffer
+    
+    /// Process bytes in the input buffer
     /**
      * Process up to len bytes from input buffer buf. Returns the number of 
      * bytes processed. Bytes left unprocessed means bytes left over after the
@@ -91,12 +91,12 @@ public:
      * @note will never return true if the content length header is not present
      */
     bool ready() const {
-    	return m_state == DONE;
+        return m_state == DONE;
     }
     
     /// Returns true if the response headers are fully parsed.
     bool headers_ready() const {
-    	return (m_state == BODY || m_state == DONE);
+        return (m_state == BODY || m_state == DONE);
     }
     
     /// DEPRECATED parse a complete response from a pre-delimited istream
@@ -130,32 +130,32 @@ public:
     
     /// Return the response status code
     status_code::value get_status_code() const {
-    	return m_status_code;
+        return m_status_code;
     }
     
     /// Return the response status message
     const std::string& get_status_msg() const {
-    	return m_status_msg;
+        return m_status_msg;
     }
 private:
-	/// Helper function for consume. Process response line
-	void process(std::string::iterator begin, std::string::iterator end);
-	
-	/// Helper function for processing body bytes
-	size_t process_body(const char *buf, size_t len);
-	
-	enum state {
-		RESPONSE_LINE = 0,
-		HEADERS = 1,
-		BODY = 2,
-		DONE = 3
-	};
-	
-    std::string         			m_status_msg;
-    size_t							m_read;
-    lib::shared_ptr<std::string>	m_buf;
-    status_code::value  			m_status_code;
-    state							m_state;
+    /// Helper function for consume. Process response line
+    void process(std::string::iterator begin, std::string::iterator end);
+    
+    /// Helper function for processing body bytes
+    size_t process_body(const char *buf, size_t len);
+    
+    enum state {
+        RESPONSE_LINE = 0,
+        HEADERS = 1,
+        BODY = 2,
+        DONE = 3
+    };
+    
+    std::string                     m_status_msg;
+    size_t                          m_read;
+    lib::shared_ptr<std::string>    m_buf;
+    status_code::value              m_status_code;
+    state                           m_state;
     
 };
 

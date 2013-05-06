@@ -2,8 +2,8 @@
 init_target (libwebsocketpp)
 
 # Sources from root dir
-file (GLOB SOURCE_FILES *.cpp)
-file (GLOB HEADER_FILES *.hpp)
+file (GLOB WSPP_SOURCE_FILES *.cpp)
+file (GLOB WSPP_HEADER_FILES *.hpp)
 
 # Sources from subdirectories.
 list_subdirectories (SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
@@ -14,6 +14,11 @@ foreach (SUBDIR ${SUBDIRS})
     endif ()
 endforeach ()
 
-build_library (${TARGET_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+string(TOLOWER "${WEBSOCKETPP_LIB_BUILD_TYPE}" LOWER_WEBSOCKETPP_BUILD_TYPE)
+if ("${LOWER_WEBSOCKETPP_BUILD_TYPE}" STREQUAL "shared" )
+    build_library (${TARGET_NAME} SHARED ${WSPP_SOURCE_FILES} ${WSPP_HEADER_FILES})
+else()
+    build_library (${TARGET_NAME} STATIC ${WSPP_SOURCE_FILES} ${WSPP_HEADER_FILES})
+endif()
 
 final_target ()

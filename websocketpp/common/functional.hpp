@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,35 +29,35 @@
 #define WEBSOCKETPP_COMMON_FUNCTIONAL_HPP
 
 #if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_FUNCTIONAL_
-	#ifndef _WEBSOCKETPP_CPP11_FUNCTIONAL_
-		#define _WEBSOCKETPP_CPP11_FUNCTIONAL_
-	#endif
+    #ifndef _WEBSOCKETPP_CPP11_FUNCTIONAL_
+        #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
+    #endif
 #endif
 
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
-	#include <functional>
+    #include <functional>
 #else
-	#include <boost/bind.hpp>
-	#include <boost/function.hpp>
+    #include <boost/bind.hpp>
+    #include <boost/function.hpp>
 #endif
 
 namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
-	using std::function;
-	using std::bind;
-	using std::ref;
-	namespace placeholders = std::placeholders;
+    using std::function;
+    using std::bind;
+    using std::ref;
+    namespace placeholders = std::placeholders;
 #else
-	using boost::function;
-	using boost::bind;
-	using boost::ref;
-	namespace placeholders {
-		// TODO: there has got to be a better way than this
-		using ::_1;
-		using ::_2;
-	}
+    using boost::function;
+    using boost::bind;
+    using boost::ref;
+    namespace placeholders {
+        // TODO: there has got to be a better way than this
+        using ::_1;
+        using ::_2;
+    }
 #endif
 
 } // namespace lib

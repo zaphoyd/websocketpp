@@ -44,16 +44,16 @@ template <typename config>
 class server : public endpoint<connection<config>,config> {
 public:
     /// Type of this endpoint
-	typedef server<config> type;	
-	
-	/// Type of the endpoint concurrency component
-	typedef typename config::concurrency_type concurrency_type;
+    typedef server<config> type;    
+    
+    /// Type of the endpoint concurrency component
+    typedef typename config::concurrency_type concurrency_type;
     /// Type of the endpoint transport component
-	typedef typename config::transport_type transport_type;
-	
-	/// Type of the connections this server will create
-	typedef connection<config> connection_type;
-	/// Type of a shared pointer to the connections this server will create
+    typedef typename config::transport_type transport_type;
+    
+    /// Type of the connections this server will create
+    typedef connection<config> connection_type;
+    /// Type of a shared pointer to the connections this server will create
     typedef typename connection_type::ptr connection_ptr;
 
     /// Type of the connection transport component
@@ -61,42 +61,42 @@ public:
     /// Type of a shared pointer to the connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
 
-	/// Type of the endpoint component of this server
-	typedef endpoint<connection_type,config> endpoint_type;
-	
-	
-	// TODO: clean up these types
+    /// Type of the endpoint component of this server
+    typedef endpoint<connection_type,config> endpoint_type;
+    
+    
+    // TODO: clean up these types
 
-	explicit server() : endpoint_type(true)
-	{
-		endpoint_type::m_alog.write(log::alevel::devel,
+    explicit server() : endpoint_type(true)
+    {
+        endpoint_type::m_alog.write(log::alevel::devel,
             "server constructor");
-	}
-	
-	// return an initialized connection_ptr. Call start() on this object to 
-	// begin the processing loop.
-	connection_ptr get_connection() {
-		connection_ptr con = endpoint_type::create_connection();
-				
-		return con;
-	}
-	
-	// Starts the server's async connection acceptance loop.
-	void start_accept() {
-		connection_ptr con = get_connection();
-		
-		transport_type::async_accept(
-			lib::static_pointer_cast<transport_con_type>(con),
-			lib::bind(
-				&type::handle_accept,
-				this,
-				lib::placeholders::_1,
-				lib::placeholders::_2
-			)
-		);
-	}
-	
-	void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
+    }
+    
+    // return an initialized connection_ptr. Call start() on this object to 
+    // begin the processing loop.
+    connection_ptr get_connection() {
+        connection_ptr con = endpoint_type::create_connection();
+                
+        return con;
+    }
+    
+    // Starts the server's async connection acceptance loop.
+    void start_accept() {
+        connection_ptr con = get_connection();
+        
+        transport_type::async_accept(
+            lib::static_pointer_cast<transport_con_type>(con),
+            lib::bind(
+                &type::handle_accept,
+                this,
+                lib::placeholders::_1,
+                lib::placeholders::_2
+            )
+        );
+    }
+    
+    void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
         lib::error_code hdl_ec;
         connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
         
@@ -122,10 +122,10 @@ public:
                 con->start();
             }
         }
-		
+        
         // TODO: are there cases where we should terminate this loop?
-		start_accept();
-	}
+        start_accept();
+    }
 private:
 };
 

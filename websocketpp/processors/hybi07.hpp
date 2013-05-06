@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,10 +43,10 @@ public:
     typedef typename config::request_type request_type;
     
     typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
-	typedef typename config::rng_type rng_type;
-	
-	explicit hybi07(bool secure,bool server, msg_manager_ptr manager, 
-	    rng_type& rng) 
+    typedef typename config::rng_type rng_type;
+    
+    explicit hybi07(bool secure,bool server, msg_manager_ptr manager, 
+        rng_type& rng) 
       : hybi08<config>(secure, server, manager, rng) {} 
     
     // outgoing client connection processing is not supported for this version

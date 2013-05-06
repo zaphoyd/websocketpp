@@ -35,7 +35,7 @@ namespace role {
 
 class client {
 public:
-	static bool is_server = false;
+    static bool is_server = false;
 }
 
 } // namespace role

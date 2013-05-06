@@ -57,35 +57,35 @@ public:
 
     /// Type of this endpoint transport component's associated connection
     /// transport component.
-	typedef iostream::connection<config> transport_con_type;
+    typedef iostream::connection<config> transport_con_type;
     /// Type of a shared pointer to this endpoint transport component's 
     /// associated connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
     
-	// generate and manage our own io_service
-	explicit endpoint() : output_stream(NULL)
-	{
-		//std::cout << "transport::iostream::endpoint constructor" << std::endl; 
-	}
-	
-	void register_ostream(std::ostream* o) {
+    // generate and manage our own io_service
+    explicit endpoint() : m_output_stream(NULL)
+    {
+        //std::cout << "transport::iostream::endpoint constructor" << std::endl; 
+    }
+    
+    void register_ostream(std::ostream* o) {
         m_alog->write(log::alevel::devel,"register_ostream");
-		output_stream = o;
-	}
-	
-	/// Tests whether or not the underlying transport is secure
-	/**
-	 * iostream transport will return false always because it has no information
-	 * about the ultimate remote endpoint. This may or may not be accurate 
-	 * depending on the real source of bytes being input.
-	 *
-	 * TODO: allow user settable is_secure flag if this seems useful
-	 *
-	 * @return Whether or not the underlying transport is secure
-	 */
-	bool is_secure() const {
-	    return false;
-	}
+        m_output_stream = o;
+    }
+    
+    /// Tests whether or not the underlying transport is secure
+    /**
+     * iostream transport will return false always because it has no information
+     * about the ultimate remote endpoint. This may or may not be accurate 
+     * depending on the real source of bytes being input.
+     *
+     * TODO: allow user settable is_secure flag if this seems useful
+     *
+     * @return Whether or not the underlying transport is secure
+     */
+    bool is_secure() const {
+        return false;
+    }
 protected:
     /// Initialize logging
     /**
@@ -108,11 +108,23 @@ protected:
         cb(tcon->get_handle(),lib::error_code());
     }
     
-	void init(transport_con_ptr tcon) {
-		tcon->register_ostream(output_stream);
-	}
+    /// Initialize a connection
+    /**
+     * Init is called by an endpoint once for each newly created connection. 
+     * It's purpose is to give the transport policy the chance to perform any 
+     * transport specific initialization that couldn't be done via the default 
+     * constructor.
+     *
+     * @param tcon A pointer to the transport portion of the connection.
+     *
+     * @return A status code indicating the success or failure of the operation
+     */
+    lib::error_code init(transport_con_ptr tcon) {
+        tcon->register_ostream(m_output_stream);
+        return lib::error_code();
+    }
 private:
-	std::ostream* output_stream;
+    std::ostream* m_output_stream;
     elog_type* m_elog;
     alog_type* m_alog;
 };

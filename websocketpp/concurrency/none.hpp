@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,11 +47,11 @@ public:
 
 class fake_lock_guard {
 public:
-	explicit fake_lock_guard(fake_mutex foo) {
-	    //std::cout << "fake_lock_guard constructor: " << this << " mutex: " << &foo << std::endl;
-	}
-	
-	~fake_lock_guard() {
+    explicit fake_lock_guard(fake_mutex foo) {
+        //std::cout << "fake_lock_guard constructor: " << this << " mutex: " << &foo << std::endl;
+    }
+    
+    ~fake_lock_guard() {
         //std::cout << "fake_lock_guard destructor: " << this << std::endl;
     }
 };
@@ -60,8 +60,8 @@ public:
 
 class none {
 public:
-	typedef none_impl::fake_mutex mutex_type;
-	typedef none_impl::fake_lock_guard scoped_lock_type;
+    typedef none_impl::fake_mutex mutex_type;
+    typedef none_impl::fake_lock_guard scoped_lock_type;
 };
 
 } // namespace concurrency

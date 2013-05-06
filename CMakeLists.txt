@@ -39,11 +39,12 @@ set (WEBSOCKETPP_BOOST_LIBS "")
 # VC9 and C++11 reasoning
 if (ENABLE_CPP11 AND MSVC AND MSVC90)
     message("* Detected Visual Studio 9 2008, disabling C++11 support.")
-    set (ENABLE_CPP11 FALSE)        
+    set (ENABLE_CPP11 FALSE)
 endif ()
 
 # Detect clang. Not officially reported by cmake.
-if ("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
+execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "-v" ERROR_VARIABLE CXX_VER_STDERR)
+if ("${CXX_VER_STDERR}" MATCHES ".*clang.*")
     set (CMAKE_COMPILER_IS_CLANGXX 1)
 endif ()
 
@@ -67,7 +68,7 @@ endif ()
 if (CMAKE_COMPILER_IS_GNUCXX)
     set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
     set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
-    set (WEBSOCKETPP_BOOST_LIBS system thread)
+    set (WEBSOCKETPP_BOOST_LIBS system thread regex)
     set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x")
     if (NOT APPLE)
         add_definitions (-DNDEBUG -Wall -Wcast-align) # todo: should we use CMAKE_C_FLAGS for these?
@@ -84,8 +85,13 @@ endif ()
 
 # clang
 if (CMAKE_COMPILER_IS_CLANGXX)
-    set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+    if (NOT APPLE)
+        set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+    else()
+        set (WEBSOCKETPP_PLATFORM_LIBS pthread)
+    endif()
     set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
+    set (WEBSOCKETPP_BOOST_LIBS system thread regex)
     set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
     if (NOT APPLE)
         add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
@@ -94,7 +100,7 @@ endif ()
 
 # OSX, can override above.
 if (APPLE)
-    add_definitions (-DNDEBUG -Wall -O0)
+    add_definitions (-DNDEBUG -Wall)
 endif ()
 
 
@@ -114,6 +120,9 @@ if (MSVC)
 	set (CMAKE_INSTALL_PREFIX ${WEBSOCKETPP_PREFIX})
 endif ()
 
+if (BUILD_EXAMPLES)
+  list (APPEND WEBSOCKETPP_BOOST_LIBS random)
+endif()
 
 ############ Dependencies
 

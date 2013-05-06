@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,16 +29,16 @@
 #define WEBSOCKETPP_COMMON_SYSTEM_ERROR_HPP
 
 #if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_SYSTEM_ERROR_
-	#ifndef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-		#define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-	#endif
+    #ifndef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+        #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+    #endif
 #endif
 
 #ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-	#include <system_error>
+    #include <system_error>
 #else
-	#include <boost/system/error_code.hpp>
-	#include <boost/system/system_error.hpp>
+    #include <boost/system/error_code.hpp>
+    #include <boost/system/system_error.hpp>
 #endif
 
 namespace websocketpp {
