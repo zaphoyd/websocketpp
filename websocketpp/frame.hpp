@@ -47,18 +47,18 @@ static const unsigned int MAX_HEADER_LENGTH = 14;
 static const unsigned int MAX_EXTENDED_HEADER_LENGTH = 12;
 
 union uint16_converter {
-	uint16_t i;
-	uint8_t  c[2];
+    uint16_t i;
+    uint8_t  c[2];
 };
 
 union uint32_converter {
-	uint32_t i;
-	uint8_t c[4];
+    uint32_t i;
+    uint8_t c[4];
 };
 
 union uint64_converter {
-	uint64_t i;
-	uint8_t  c[8];
+    uint64_t i;
+    uint8_t  c[8];
 };
 
 // WebSocket Opcodes are 4 bits. See spec section 5.2
@@ -115,7 +115,7 @@ namespace opcode {
 
 namespace limits {
     /// Maximum size of a basic WebSocket payload
-	static const uint8_t payload_size_basic = 125;
+    static const uint8_t payload_size_basic = 125;
     /// Maximum size of an extended WebSocket payload (basic payload = 126) 
     static const uint16_t payload_size_extended = 0xFFFF; // 2^16, 65535
     /// Maximum size of a jumbo WebSocket payload (basic payload = 127)
@@ -123,7 +123,7 @@ namespace limits {
     /// Maximum size of close frame reason
     /// This is payload_size_basic - 2 bytes (as first two bytes are used for 
     //// the close code
-	static const uint8_t close_reason_size = 123;
+    static const uint8_t close_reason_size = 123;
 }
 
 
@@ -136,97 +136,97 @@ static const uint8_t BHB0_FIN = 0x80;
 
 static const uint8_t BHB1_PAYLOAD = 0x7F;
 static const uint8_t BHB1_MASK = 0x80;
-	
+    
 static const uint8_t payload_size_code_16bit = 0x7E; // 126
 static const uint8_t payload_size_code_64bit = 0x7F; // 127
 
 typedef uint32_converter masking_key_type;
 
 struct basic_header {
-	basic_header() : b0(0x00),b1(0x00) {}
-	
-	basic_header(uint8_t p0, uint8_t p1) : b0(p0), b1(p1) {}
-	
-	basic_header(opcode::value op, uint64_t size, bool fin, bool mask, 
-		bool rsv1 = false, bool rsv2 = false, bool rsv3 = false) : b0(0x00), 
-		b1(0x00)
-	{
-		if (fin) {
-			b0 |= BHB0_FIN;
-		}
-		if (rsv1) {
-			b0 |= BHB0_RSV1;
-		}
-		if (rsv2) {
-			b0 |= BHB0_RSV2;
-		}
-		if (rsv3) {
-			b0 |= BHB0_RSV3;
-		}
-		b0 |= (op & BHB0_OPCODE);
-		
-		if (mask) {
-			b1 |= BHB1_MASK;
-		}
-		
-		uint8_t basic_value;
-		
-		if (size <= limits::payload_size_basic) {
-			basic_value = static_cast<uint8_t>(size);
-		} else if (size <= limits::payload_size_extended) {
-			basic_value = payload_size_code_16bit;
-		} else {
-			basic_value = payload_size_code_64bit;
-		}
-		
-		
-		b1 |= basic_value;
-	}
-	
-	uint8_t b0;
-	uint8_t b1;
+    basic_header() : b0(0x00),b1(0x00) {}
+    
+    basic_header(uint8_t p0, uint8_t p1) : b0(p0), b1(p1) {}
+    
+    basic_header(opcode::value op, uint64_t size, bool fin, bool mask, 
+        bool rsv1 = false, bool rsv2 = false, bool rsv3 = false) : b0(0x00), 
+        b1(0x00)
+    {
+        if (fin) {
+            b0 |= BHB0_FIN;
+        }
+        if (rsv1) {
+            b0 |= BHB0_RSV1;
+        }
+        if (rsv2) {
+            b0 |= BHB0_RSV2;
+        }
+        if (rsv3) {
+            b0 |= BHB0_RSV3;
+        }
+        b0 |= (op & BHB0_OPCODE);
+        
+        if (mask) {
+            b1 |= BHB1_MASK;
+        }
+        
+        uint8_t basic_value;
+        
+        if (size <= limits::payload_size_basic) {
+            basic_value = static_cast<uint8_t>(size);
+        } else if (size <= limits::payload_size_extended) {
+            basic_value = payload_size_code_16bit;
+        } else {
+            basic_value = payload_size_code_64bit;
+        }
+        
+        
+        b1 |= basic_value;
+    }
+    
+    uint8_t b0;
+    uint8_t b1;
 };
 
 struct extended_header {
-	extended_header() {
-		std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
-	}
-	
-	extended_header(uint64_t payload_size) {
-		std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
-		
-		copy_payload(payload_size);
-	}
-	
-	extended_header(uint64_t payload_size, uint32_t masking_key) {
-		std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
-		
-		// Copy payload size
-		int offset = copy_payload(payload_size);
-		
-		// Copy Masking Key
-		uint32_converter temp32;
-		temp32.i = masking_key;
-		std::copy(temp32.c,temp32.c+4,bytes+offset);
-	}
+    extended_header() {
+        std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
+    }
+    
+    extended_header(uint64_t payload_size) {
+        std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
+        
+        copy_payload(payload_size);
+    }
+    
+    extended_header(uint64_t payload_size, uint32_t masking_key) {
+        std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
+        
+        // Copy payload size
+        int offset = copy_payload(payload_size);
+        
+        // Copy Masking Key
+        uint32_converter temp32;
+        temp32.i = masking_key;
+        std::copy(temp32.c,temp32.c+4,bytes+offset);
+    }
 
-	uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
+    uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
 private:
-	int copy_payload(uint64_t payload_size) {
-		int payload_offset = 0;
-		
-		if (payload_size <= limits::payload_size_basic) {
-			payload_offset = 8;
-		} else if (payload_size <= limits::payload_size_extended) {
-			payload_offset = 6;
-		}
-		
-		uint64_converter temp64;
-		temp64.i = lib::net::htonll(payload_size);
-		std::copy(temp64.c+payload_offset,temp64.c+8,bytes);
-		
-		return 8-payload_offset;
-	}
+    int copy_payload(uint64_t payload_size) {
+        int payload_offset = 0;
+        
+        if (payload_size <= limits::payload_size_basic) {
+            payload_offset = 8;
+        } else if (payload_size <= limits::payload_size_extended) {
+            payload_offset = 6;
+        }
+        
+        uint64_converter temp64;
+        temp64.i = lib::net::htonll(payload_size);
+        std::copy(temp64.c+payload_offset,temp64.c+8,bytes);
+        
+        return 8-payload_offset;
+    }
 };
 
 // Forward function declarations
@@ -256,12 +256,12 @@ void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type&
     key, size_t key_offset = 0);
 template <typename iter_type>
 void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
-	size_t key_offset = 0);
+    size_t key_offset = 0);
 void word_mask_exact(uint8_t* input, uint8_t* output, size_t length, 
-	const masking_key_type& key);
+    const masking_key_type& key);
 void word_mask_exact(uint8_t* data, size_t length, const masking_key_type& key);
 size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length, 
-	size_t prepared_key);
+    size_t prepared_key);
 size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key);
 
 
@@ -272,7 +272,7 @@ size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key);
  * @return True if the header's fin bit is set.
  */
 inline bool get_fin(const basic_header &h) {
-	return ((h.b0 & BHB0_FIN) == BHB0_FIN);
+    return ((h.b0 & BHB0_FIN) == BHB0_FIN);
 }
 
 /// Set the frame's FIN bit
@@ -282,7 +282,7 @@ inline bool get_fin(const basic_header &h) {
  * @param value Value to set it to
  */
 inline void set_fin(basic_header &h, bool value) {
-	h.b0 = (value ? h.b0 | BHB0_FIN : h.b0 & ~BHB0_FIN);
+    h.b0 = (value ? h.b0 | BHB0_FIN : h.b0 & ~BHB0_FIN);
 }
 
 /// check whether the frame's RSV1 bit is set
@@ -290,7 +290,7 @@ inline void set_fin(basic_header &h, bool value) {
  * @return True if the header's RSV1 bit is set.
  */
 inline bool get_rsv1(const basic_header &h) {
-	return ((h.b0 & BHB0_RSV1) == BHB0_RSV1);
+    return ((h.b0 & BHB0_RSV1) == BHB0_RSV1);
 }
 
 /// Set the frame's RSV1 bit
@@ -300,7 +300,7 @@ inline bool get_rsv1(const basic_header &h) {
  * @param value Value to set it to
  */
 inline void set_rsv1(basic_header &h, bool value) {
-	h.b0 = (value ? h.b0 | BHB0_RSV1 : h.b0 & ~BHB0_RSV1);
+    h.b0 = (value ? h.b0 | BHB0_RSV1 : h.b0 & ~BHB0_RSV1);
 }
 
 /// check whether the frame's RSV2 bit is set
@@ -308,7 +308,7 @@ inline void set_rsv1(basic_header &h, bool value) {
  * @return True if the header's RSV2 bit is set.
  */
 inline bool get_rsv2(const basic_header &h) {
-	return ((h.b0 & BHB0_RSV2) == BHB0_RSV2);
+    return ((h.b0 & BHB0_RSV2) == BHB0_RSV2);
 }
 
 /// Set the frame's RSV2 bit
@@ -318,7 +318,7 @@ inline bool get_rsv2(const basic_header &h) {
  * @param value Value to set it to
  */
 inline void set_rsv2(basic_header &h, bool value) {
-	h.b0 = (value ? h.b0 | BHB0_RSV2 : h.b0 & ~BHB0_RSV2);
+    h.b0 = (value ? h.b0 | BHB0_RSV2 : h.b0 & ~BHB0_RSV2);
 }
 
 /// check whether the frame's RSV3 bit is set
@@ -326,7 +326,7 @@ inline void set_rsv2(basic_header &h, bool value) {
  * @return True if the header's RSV3 bit is set.
  */
 inline bool get_rsv3(const basic_header &h) {
-	return ((h.b0 & BHB0_RSV3) == BHB0_RSV3);
+    return ((h.b0 & BHB0_RSV3) == BHB0_RSV3);
 }
 
 /// Set the frame's RSV3 bit
@@ -336,12 +336,12 @@ inline bool get_rsv3(const basic_header &h) {
  * @param value Value to set it to
  */
 inline void set_rsv3(basic_header &h, bool value) {
-	h.b0 = (value ? h.b0 | BHB0_RSV3 : h.b0 & ~BHB0_RSV3);
+    h.b0 = (value ? h.b0 | BHB0_RSV3 : h.b0 & ~BHB0_RSV3);
 }
 
 /// Extract opcode from basic header
 inline opcode::value get_opcode(const basic_header &h) {
-	return opcode::value(h.b0 & BHB0_OPCODE);
+    return opcode::value(h.b0 & BHB0_OPCODE);
 }
 
 /// check whether the frame is masked
@@ -349,7 +349,7 @@ inline opcode::value get_opcode(const basic_header &h) {
  * @return True if the header mask bit is set.
  */
 inline bool get_masked(const basic_header &h) {
-	return ((h.b1 & BHB1_MASK) == BHB1_MASK);
+    return ((h.b1 & BHB1_MASK) == BHB1_MASK);
 }
 
 /// Set the frame's MASK bit
@@ -359,7 +359,7 @@ inline bool get_masked(const basic_header &h) {
  * @param value Value to set it to
  */
 inline void set_masked(basic_header &h, bool value) {
-	h.b1 = (value ? h.b1 | BHB1_MASK : h.b1 & ~BHB1_MASK);
+    h.b1 = (value ? h.b1 | BHB1_MASK : h.b1 & ~BHB1_MASK);
 }
 
 /// Extracts the raw payload length specified in the basic header
@@ -380,7 +380,7 @@ inline void set_masked(basic_header &h, bool value) {
  * @return the exact size encoded in h
  */
 inline uint8_t get_basic_size(const basic_header &h) {
-	return h.b1 & BHB1_PAYLOAD;
+    return h.b1 & BHB1_PAYLOAD;
 }
 
 /// Set the frame's MASK bit
@@ -392,23 +392,23 @@ inline uint8_t get_basic_size(const basic_header &h) {
 inline lib::error_code set_size(basic_header &h, extended_header &eh, uint64_t 
     size)
 {
-	// make sure value isn't too big
-	uint8_t basic_value;
-	
-	if (size <= limits::payload_size_basic) {
-		basic_value = static_cast<uint8_t>(size);
-	} else if (size <= limits::payload_size_extended) {
-		basic_value = payload_size_code_16bit;
-	} else if (size <= limits::payload_size_jumbo) {
-		basic_value = payload_size_code_64bit;
-	} else {
-		// error
-		return lib::error_code();
-	}
-	
-	h.b1 = (basic_value & BHB1_PAYLOAD) | (h.b1 & BHB1_MASK);
-	
-	return lib::error_code();
+    // make sure value isn't too big
+    uint8_t basic_value;
+    
+    if (size <= limits::payload_size_basic) {
+        basic_value = static_cast<uint8_t>(size);
+    } else if (size <= limits::payload_size_extended) {
+        basic_value = payload_size_code_16bit;
+    } else if (size <= limits::payload_size_jumbo) {
+        basic_value = payload_size_code_64bit;
+    } else {
+        // error
+        return lib::error_code();
+    }
+    
+    h.b1 = (basic_value & BHB1_PAYLOAD) | (h.b1 & BHB1_MASK);
+    
+    return lib::error_code();
 }
 
 /// Calculates the full length of the header based on the first bytes.
@@ -423,18 +423,18 @@ inline lib::error_code set_size(basic_header &h, extended_header &eh, uint64_t
  * @return Full length of the extended header.
  */
 inline size_t get_header_len(const basic_header &h) {
-	// TODO: check extensions?
-	
-	// masking key offset represents the space used for the extended length
-	// fields
-	size_t size = BASIC_HEADER_LENGTH + get_masking_key_offset(h);
-	
-	// If the header is masked there is a 4 byte masking key
-	if (get_masked(h)) { 
-		size += 4;
-	}
-	
-	return size;
+    // TODO: check extensions?
+    
+    // masking key offset represents the space used for the extended length
+    // fields
+    size_t size = BASIC_HEADER_LENGTH + get_masking_key_offset(h);
+    
+    // If the header is masked there is a 4 byte masking key
+    if (get_masked(h)) { 
+        size += 4;
+    }
+    
+    return size;
 }
 
 /// Calculate the offset location of the masking key within the extended header
@@ -447,13 +447,13 @@ inline size_t get_header_len(const basic_header &h) {
  * @return byte offset of the first byte of the masking key
  */
 inline unsigned int get_masking_key_offset(const basic_header &h) {
-	if (get_basic_size(h) == payload_size_code_16bit) {
-		return 2;
-	} else if (get_basic_size(h) == payload_size_code_64bit) {
-		return 8;
-	} else {
-		return 0;
-	}
+    if (get_basic_size(h) == payload_size_code_16bit) {
+        return 2;
+    } else if (get_basic_size(h) == payload_size_code_64bit) {
+        return 8;
+    } else {
+        return 0;
+    }
 }
 
 /// Generate a properly sized contiguous string that encodes a full frame header
@@ -469,16 +469,16 @@ inline unsigned int get_masking_key_offset(const basic_header &h) {
 inline std::string prepare_header(const basic_header &h, const 
     extended_header &e)
 {
-	std::string ret;
-	
-	ret.push_back(char(h.b0));
-	ret.push_back(char(h.b1));
-	ret.append(
-		reinterpret_cast<const char*>(e.bytes),
-		get_header_len(h)-BASIC_HEADER_LENGTH
-	);
-	
-	return ret;
+    std::string ret;
+    
+    ret.push_back(char(h.b0));
+    ret.push_back(char(h.b1));
+    ret.append(
+        reinterpret_cast<const char*>(e.bytes),
+        get_header_len(h)-BASIC_HEADER_LENGTH
+    );
+    
+    return ret;
 }
 
 /// Extract the masking key from a frame header
@@ -496,16 +496,16 @@ inline std::string prepare_header(const basic_header &h, const
 inline masking_key_type get_masking_key(const basic_header &h, const 
     extended_header &e)
 {
-	masking_key_type temp32;
+    masking_key_type temp32;
 
-	if (!get_masked(h)) {
-		temp32.i = 0;
-	} else {
-		unsigned int offset = get_masking_key_offset(h);
-		std::copy(e.bytes+offset,e.bytes+offset+4,temp32.c);
-	}
+    if (!get_masked(h)) {
+        temp32.i = 0;
+    } else {
+        unsigned int offset = get_masking_key_offset(h);
+        std::copy(e.bytes+offset,e.bytes+offset+4,temp32.c);
+    }
 
-	return temp32;
+    return temp32;
 }
 
 /// Extract the extended size field from an extended header
@@ -518,9 +518,9 @@ inline masking_key_type get_masking_key(const basic_header &h, const
  * @return The size encoded in the extended header in host byte order
  */
 inline uint16_t get_extended_size(const extended_header &e) {
-	uint16_converter temp16;
-	std::copy(e.bytes,e.bytes+2,temp16.c);
-	return ntohs(temp16.i);
+    uint16_converter temp16;
+    std::copy(e.bytes,e.bytes+2,temp16.c);
+    return ntohs(temp16.i);
 }
 
 /// Extract the jumbo size field from an extended header
@@ -533,9 +533,9 @@ inline uint16_t get_extended_size(const extended_header &e) {
  * @return The size encoded in the extended header in host byte order
  */
 inline uint64_t get_jumbo_size(const extended_header &e) {
-	uint64_converter temp64;
-	std::copy(e.bytes,e.bytes+8,temp64.c);
-	return lib::net::ntohll(temp64.i);
+    uint64_converter temp64;
+    std::copy(e.bytes,e.bytes+8,temp64.c);
+    return lib::net::ntohll(temp64.i);
 }
 
 /// Extract the full payload size field from a WebSocket header
@@ -553,15 +553,15 @@ inline uint64_t get_jumbo_size(const extended_header &e) {
 inline uint64_t get_payload_size(const basic_header &h, const 
     extended_header &e)
 {
-	uint8_t val = get_basic_size(h);
+    uint8_t val = get_basic_size(h);
 
-	if (val <= limits::payload_size_basic) {
-		return val;
-	} else if (val == payload_size_code_16bit) {
-		return get_extended_size(e);
-	} else {
-		return get_jumbo_size(e);
-	}
+    if (val <= limits::payload_size_basic) {
+        return val;
+    } else if (val == payload_size_code_16bit) {
+        return get_extended_size(e);
+    } else {
+        return get_jumbo_size(e);
+    }
 }
 
 /// Extract a masking key into a value the size of a machine word.
@@ -573,14 +573,14 @@ inline uint64_t get_payload_size(const basic_header &h, const
  * @return prepared key as a machine word
  */
 inline size_t prepare_masking_key(const masking_key_type& key) {
-	size_t low_bits = static_cast<size_t>(key.i);
-	
-	if (sizeof(size_t) == 8) {
-		uint64_t high_bits = static_cast<size_t>(key.i);
-		return static_cast<size_t>((high_bits << 32) | low_bits);
-	} else {
-		return low_bits;
-	}
+    size_t low_bits = static_cast<size_t>(key.i);
+    
+    if (sizeof(size_t) == 8) {
+        uint64_t high_bits = static_cast<size_t>(key.i);
+        return static_cast<size_t>((high_bits << 32) | low_bits);
+    } else {
+        return low_bits;
+    }
 }
 
 /// circularly shifts the supplied prepared masking key by offset bytes
@@ -648,7 +648,7 @@ void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type&
  */
 template <typename iter_type>
 void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
-	size_t key_offset)
+    size_t key_offset)
 {
     byte_mask(b,e,b,key,key_offset);
 }
@@ -675,7 +675,7 @@ void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
  * @param key Masking key to use
  */
 inline void word_mask_exact(uint8_t* input, uint8_t* output, size_t length, 
-	const masking_key_type& key)
+    const masking_key_type& key)
 {
     size_t prepared_key = prepare_masking_key(key);
     size_t n = length/sizeof(size_t);
@@ -741,26 +741,26 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
  * @return the prepared_key shifted to account for the input length
  */
 inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
-	size_t prepared_key)
+    size_t prepared_key)
 {
     size_t n = length / sizeof(size_t); // whole words
-	size_t l = length - (n * sizeof(size_t)); // remaining bytes
+    size_t l = length - (n * sizeof(size_t)); // remaining bytes
     size_t * input_word = reinterpret_cast<size_t *>(input);
     size_t * output_word = reinterpret_cast<size_t *>(output);
     
-	// mask word by word
+    // mask word by word
     for (size_t i = 0; i < n; i++) {
         output_word[i] = input_word[i] ^ prepared_key;
     }
-   	
-	// mask partial word at the end
+    
+    // mask partial word at the end
     size_t start = length - l;
     uint8_t * byte_key = reinterpret_cast<uint8_t *>(&prepared_key);
     for (size_t i = 0; i < l; ++i) {
         output[start+i] = input[start+i] ^ byte_key[i];
     }
-	
-	return circshift_prepared_key(prepared_key,l);
+    
+    return circshift_prepared_key(prepared_key,l);
 }
 
 /// Circular word aligned mask/unmask (in place)
@@ -778,7 +778,7 @@ inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length,
  * @return the prepared_key shifted to account for the input length
  */
 inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
-	return word_mask_circ(data,data,length,prepared_key);
+    return word_mask_circ(data,data,length,prepared_key);
 }
 
 } // namespace frame

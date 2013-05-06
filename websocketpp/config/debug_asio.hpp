@@ -41,21 +41,21 @@ namespace config {
 
 struct debug_asio_tls : public debug_core {
     typedef debug_asio_tls type;
-	typedef debug_core base;
-	
-	typedef base::concurrency_type concurrency_type;
-	
-	typedef base::request_type request_type;
-	typedef base::response_type response_type;
+    typedef debug_core base;
+    
+    typedef base::concurrency_type concurrency_type;
+    
+    typedef base::request_type request_type;
+    typedef base::response_type response_type;
 
-	typedef base::message_type message_type;
-	typedef base::con_msg_manager_type con_msg_manager_type;
-	typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
-	
-	typedef base::alog_type alog_type;
-	typedef base::elog_type elog_type;
-	
-	typedef base::rng_type rng_type;
+    typedef base::message_type message_type;
+    typedef base::con_msg_manager_type con_msg_manager_type;
+    typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
+    
+    typedef base::alog_type alog_type;
+    typedef base::elog_type elog_type;
+    
+    typedef base::rng_type rng_type;
 
     struct transport_config {
         typedef type::concurrency_type concurrency_type;

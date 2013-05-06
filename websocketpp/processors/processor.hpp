@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,25 +53,25 @@ namespace processor {
  */ 
 template <typename request_type>
 bool is_websocket_handshake(request_type& r) {
-	using utility::ci_find_substr;
-	
-	const std::string& upgrade_header = r.get_header("Upgrade");
-	
-	if (ci_find_substr(upgrade_header, constants::upgrade_token,
-		sizeof(constants::upgrade_token)-1) == upgrade_header.end())
-	{
-		return false;
-	}
-	
-	const std::string& con_header = r.get_header("Connection");
-	
-	if (ci_find_substr(con_header, constants::connection_token,
-		sizeof(constants::connection_token)-1) == con_header.end())
-	{
-		return false;
-	}
+    using utility::ci_find_substr;
+    
+    const std::string& upgrade_header = r.get_header("Upgrade");
+    
+    if (ci_find_substr(upgrade_header, constants::upgrade_token,
+        sizeof(constants::upgrade_token)-1) == upgrade_header.end())
+    {
+        return false;
+    }
+    
+    const std::string& con_header = r.get_header("Connection");
+    
+    if (ci_find_substr(con_header, constants::connection_token,
+        sizeof(constants::connection_token)-1) == con_header.end())
+    {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 /// Extract the version from a WebSocket handshake request
@@ -98,7 +98,7 @@ int get_websocket_version(request_type& r) {
     
     int version;
     std::istringstream ss(r.get_header("Sec-WebSocket-Version"));
-				
+                
     if ((ss >> version).fail()) {
         return -1;
     }
@@ -121,7 +121,7 @@ int get_websocket_version(request_type& r) {
 //
 // while(len = read(buf)) {
 //     if (processor.consume(buf,len) == 0) {
-//			// handle errors
+//          // handle errors
 //     }
 //     if (processor.ready()) {
 //         message_ptr msg = processor.get_message();
@@ -135,18 +135,18 @@ class processor {
 public:
     typedef processor<config> type;
     typedef typename config::request_type request_type;
-	typedef typename config::response_type response_type;
-	typedef typename config::message_type::ptr message_ptr;
+    typedef typename config::response_type response_type;
+    typedef typename config::message_type::ptr message_ptr;
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
     explicit processor(bool secure, bool server)
       : m_secure(secure)
-	  , m_server(server) {}
+      , m_server(server) {}
       
     virtual ~processor() {}
     
     /// Returns the version of the WebSocket protocol that this processor 
-	/// understands.
+    /// understands.
     virtual int get_version() const = 0;
 
     /// Returns whether or not the permessage_compress extension is implimented
@@ -171,8 +171,8 @@ public:
     /// validate a WebSocket handshake request for this version
     /**
      * @param r The WebSocket handshake request to validate. 
-	 * is_websocket_handshake(r) must be true and get_websocket_version(r) 
-	 * must equal this->get_version().
+     * is_websocket_handshake(r) must be true and get_websocket_version(r) 
+     * must equal this->get_version().
      *
      * @return A status code, 0 on success, non-zero for specific sorts of 
      * failure
@@ -218,7 +218,7 @@ public:
     
     /// Return the value of the header containing the CORS origin.
     virtual const std::string& get_origin(const request_type& request) 
-		const = 0;
+        const = 0;
     
     /// Extracts requested subprotocols from a handshake request
     /**
@@ -236,62 +236,62 @@ public:
     /// Extracts client uri from a handshake request
     virtual uri_ptr get_uri(const request_type& request) const = 0;
     
-	/// process new websocket connection bytes
-	/**
-	 * WebSocket connections are a continous stream of bytes that must be 
-	 * interpreted by a protocol processor into discrete frames.
-	 *
-	 * @param buf Buffer from which bytes should be read.
-	 *
-	 * @param len Length of buffer
+    /// process new websocket connection bytes
+    /**
+     * WebSocket connections are a continous stream of bytes that must be 
+     * interpreted by a protocol processor into discrete frames.
+     *
+     * @param buf Buffer from which bytes should be read.
+     *
+     * @param len Length of buffer
      *
      * @param ec Reference to an error code to return any errors in
-	 *
-	 * @return Number of bytes processed
-	 */
-	virtual size_t consume(uint8_t *buf, size_t len, lib::error_code & ec) = 0;
-	
-	/// Checks if there is a message ready
-	/**
-	 * Checks if the most recent consume operation processed enough bytes to 
-	 * complete a new WebSocket message. The message can be retrieved by calling
-	 * get_message() which will reset the internal state to not-ready and allow
-	 * consume to read more bytes.
-	 *
-	 * @return Whether or not a message is ready.
-	 */
-	virtual bool ready() const = 0;
+     *
+     * @return Number of bytes processed
+     */
+    virtual size_t consume(uint8_t *buf, size_t len, lib::error_code & ec) = 0;
+    
+    /// Checks if there is a message ready
+    /**
+     * Checks if the most recent consume operation processed enough bytes to 
+     * complete a new WebSocket message. The message can be retrieved by calling
+     * get_message() which will reset the internal state to not-ready and allow
+     * consume to read more bytes.
+     *
+     * @return Whether or not a message is ready.
+     */
+    virtual bool ready() const = 0;
 
-	/// Retrieves the most recently processed message
-	/**
-	 * Retrieves a shared pointer to the recently completed message if there is
-	 * one. If ready() returns true then there is a message avaliable. 
-	 * Retrieving the message with get_message will reset the state of ready.
-	 * As such, each new message may be retrieved only once. Calling get_message
-	 * when there is no message avaliable will result in a null pointer being
-	 * returned.
-	 *
-	 * @return A pointer to the most recently processed message or a null shared
-	 *         pointer.
-	 */
-	virtual message_ptr get_message() = 0;
-	
-	/// Tests whether the processor is in a fatal error state
-	virtual bool get_error() const = 0;
+    /// Retrieves the most recently processed message
+    /**
+     * Retrieves a shared pointer to the recently completed message if there is
+     * one. If ready() returns true then there is a message avaliable. 
+     * Retrieving the message with get_message will reset the state of ready.
+     * As such, each new message may be retrieved only once. Calling get_message
+     * when there is no message avaliable will result in a null pointer being
+     * returned.
+     *
+     * @return A pointer to the most recently processed message or a null shared
+     *         pointer.
+     */
+    virtual message_ptr get_message() = 0;
+    
+    /// Tests whether the processor is in a fatal error state
+    virtual bool get_error() const = 0;
 
-	/// Retrieves the number of bytes presently needed by the processor
-	/// This value may be used as a hint to the transport layer as to how many 
+    /// Retrieves the number of bytes presently needed by the processor
+    /// This value may be used as a hint to the transport layer as to how many 
     /// bytes to wait for before running consume again.
-	virtual size_t get_bytes_needed() const {
-		return 1;
-	}
-	
-	/// Prepare a data message for writing
-	/**
-	 * Performs validation, masking, compression, etc. will return an error if 
-	 * there was an error, otherwise msg will be ready to be written
-	 */
-	virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) 
+    virtual size_t get_bytes_needed() const {
+        return 1;
+    }
+    
+    /// Prepare a data message for writing
+    /**
+     * Performs validation, masking, compression, etc. will return an error if 
+     * there was an error, otherwise msg will be ready to be written
+     */
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) 
         = 0;
 
     /// Prepare a ping frame
@@ -341,7 +341,7 @@ public:
         const std::string & reason, message_ptr out) const = 0;
 protected:
     const bool m_secure;
-	const bool m_server;
+    const bool m_server;
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,15 +29,15 @@
 #define WEBSOCKETPP_COMMON_REGEX_HPP
 
 #if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_REGEX_
-	#ifndef _WEBSOCKETPP_CPP11_REGEX_
-		#define _WEBSOCKETPP_CPP11_REGEX_
-	#endif
+    #ifndef _WEBSOCKETPP_CPP11_REGEX_
+        #define _WEBSOCKETPP_CPP11_REGEX_
+    #endif
 #endif
 
 #ifdef _WEBSOCKETPP_CPP11_REGEX_
-	#include <regex>
+    #include <regex>
 #else
-	#include <boost/regex.hpp>
+    #include <boost/regex.hpp>
 #endif
 
 namespace websocketpp {

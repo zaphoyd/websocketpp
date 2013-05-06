@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -71,8 +71,8 @@
 //#define _WEBSOCKETPP_CPP11_ALIAS_TEMPLATES_
 
 #ifdef _WEBSOCKETPP_CPP11_
-	#define _WEBSOCKETPP_DELETED_FUNCTIONS_
-	#define _WEBSOCKETPP_RVALUE_REFERENCES_
+    #define _WEBSOCKETPP_DELETED_FUNCTIONS_
+    #define _WEBSOCKETPP_RVALUE_REFERENCES_
 #endif
 
 #include <string>

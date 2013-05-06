@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,12 +39,12 @@ namespace http {
 namespace parser {
 
 namespace state {
-	enum value {
-		method,
-		resource,
-		version,
-		headers
-	};
+    enum value {
+        method,
+        resource,
+        version,
+        headers
+    };
 }
 
 typedef std::map<std::string,std::string> header_list;
@@ -142,7 +142,7 @@ struct attribute {
 typedef std::vector<attribute> attribute_list;
 
 struct parameter {
-	parameter(std::string n) : name(n) {}
+    parameter(std::string n) : name(n) {}
 
     void add_attribute(const attribute& p) {
         attributes.push_back(p);
@@ -353,7 +353,7 @@ public:
     
     /// Get the HTTP version string
     const std::string& get_version() const {
-    	return m_version;
+        return m_version;
     }
     
     /// Get the HTTP header with name `key`
@@ -365,7 +365,7 @@ public:
     
     /// Get the body string
     const std::string& get_body() const {
-    	return m_body;
+        return m_body;
     }
     
     /// Get the HTTP header with name `key`
@@ -417,7 +417,7 @@ public:
      */
     void set_body(const std::string& value);
 protected:
-	/// DEPRECATED Read headers out of an istream
+    /// DEPRECATED Read headers out of an istream
     bool parse_headers(std::istream& s);
     
     /// Helper function for consume. Process header line

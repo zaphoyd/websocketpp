@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,37 +59,37 @@ enum value {
 
 class category : public lib::error_category {
     public:
-	category() {}
+    category() {}
 
-	const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-		return "websocketpp.transport.iostream";
-	}
-	
-	std::string message(int value) const {
-		switch(value) {
-			case general:
-				return "Generic iostream transport policy error";
-			case invalid_num_bytes:
-				return "async_read_at_least call requested more bytes than buffer can store";
-			case double_read:
-				return "Async read already in progress";
-			case output_stream_required:
-				return "An output stream to be set before async_write can be used";
-			case bad_stream:
-				return "A stream operation returned ios::bad";
-			default:
-				return "Unknown";
-		}
-	}
+    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+        return "websocketpp.transport.iostream";
+    }
+    
+    std::string message(int value) const {
+        switch(value) {
+            case general:
+                return "Generic iostream transport policy error";
+            case invalid_num_bytes:
+                return "async_read_at_least call requested more bytes than buffer can store";
+            case double_read:
+                return "Async read already in progress";
+            case output_stream_required:
+                return "An output stream to be set before async_write can be used";
+            case bad_stream:
+                return "A stream operation returned ios::bad";
+            default:
+                return "Unknown";
+        }
+    }
 };
 
 inline const lib::error_category& get_category() {
-	static category instance;
-	return instance;
+    static category instance;
+    return instance;
 }
 
 inline lib::error_code make_error_code(error::value e) {
-	return lib::error_code(static_cast<int>(e), get_category());
+    return lib::error_code(static_cast<int>(e), get_category());
 }
 
 } // namespace error

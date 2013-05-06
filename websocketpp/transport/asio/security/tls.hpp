@@ -46,7 +46,7 @@ namespace asio {
 namespace tls_socket {
 
 typedef lib::function<void(connection_hdl,boost::asio::ssl::stream<
-    boost::asio::ip::tcp::socket>::lowest_layer_type&)> socket_init_handler;
+    boost::asio::ip::tcp::socket>&)> socket_init_handler;
 typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)>
     tls_init_handler;
 
@@ -197,12 +197,32 @@ protected:
         return lib::error_code();
     }
     
-    /// Initialize security policy for reading
-    void init(init_handler callback) {
+    /// Pre-initialize security policy
+    /**
+     * Called by the transport after a new connection is created to initialize
+     * the socket component of the connection. This method is not allowed to 
+     * write any bytes to the wire. This initialization happens before any 
+     * proxies or other intermediate wrappers are negotiated.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void pre_init(init_handler callback) {
         if (m_socket_init_handler) {
-            m_socket_init_handler(m_hdl,get_raw_socket());
+            m_socket_init_handler(m_hdl,get_socket());
         }
-
+        
+        callback(lib::error_code());
+    }
+    
+    /// Post-initialize security policy
+    /**
+     * Called by the transport after all intermediate proxies have been 
+     * negotiated. This gives the security policy the chance to talk with the
+     * real remote endpoint for a bit before the websocket handshake.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void post_init(init_handler callback) {
         // register timeout
         m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
         // TEMP
@@ -271,11 +291,19 @@ protected:
         callback(lib::error_code());
     }
     
+    void handle_shutdown(socket_ptr s, const boost::system::error_code& ec) {
+    	// TODO: error handling?
+    }
+    
     void shutdown() {
-        boost::system::error_code ec;
-        m_socket->shutdown(ec);
-
-        // TODO: error handling
+        m_socket->async_shutdown(
+        	lib::bind(
+                &type::handle_shutdown,
+                this,
+                m_socket,
+                lib::placeholders::_1
+            )
+        );
     }
 private:
     socket_type::handshake_type get_handshake_type() {
@@ -352,10 +380,15 @@ protected:
     /**
      * Called by the transport after a new connection is created to initialize
      * the socket component of the connection.
+     * 
+     * @param scon Pointer to the socket component of the connection
+     *
+     * @return Error code (empty on success)
      */
-    void init(socket_con_ptr scon) {
+    lib::error_code init(socket_con_ptr scon) {
         scon->set_socket_init_handler(m_socket_init_handler);
         scon->set_tls_init_handler(m_tls_init_handler);
+        return lib::error_code();
     }
 
 private:
