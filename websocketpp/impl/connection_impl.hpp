@@ -744,8 +744,8 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 return;
             }
         }
-        if (ec.value() == 335544539 /*TLS short read */) {
-			m_alog.write(log::alevel::devel,"got TLS short read, ignore for the moment");
+        if (ec == transport::error::tls_short_read) {
+			m_elog.write(log::elevel::rerror,"got TLS short read, ignore for the moment");
 			return;
         }
         

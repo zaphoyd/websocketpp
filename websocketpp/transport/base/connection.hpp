@@ -104,7 +104,10 @@ enum value {
     operation_not_supported,
     
     /// End of file
-    eof
+    eof,
+    
+    /// TLS short read
+    tls_short_read
 };
 
 class category : public lib::error_category {
@@ -129,6 +132,8 @@ class category : public lib::error_category {
                 return "The operation is not supported by this transport";
             case eof:
                 return "End of File";
+        	case tls_short_read:
+                return "TLS Short Read";
             default:
                 return "Unknown";
         }

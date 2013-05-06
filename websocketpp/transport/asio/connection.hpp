@@ -449,13 +449,16 @@ protected:
         if (ec == boost::asio::error::eof) {
             handler(make_error_code(transport::error::eof), 
             bytes_transferred); 
+        } else if (ec.value() == 335544539) {
+            handler(make_error_code(transport::error::tls_short_read), 
+            bytes_transferred); 
         } else {
             // other error that we cannot translate into a WebSocket++ 
             // transport error. Use pass through and print an info warning
             // with the original error.
             std::stringstream s;
-            s << "asio async_read_at_least error::pass_through"
-              << ", Original Error: " << ec << " (" << ec.message() << ")";
+            s << "asio async_read_at_least error: " 
+              << ec << " (" << ec.message() << ")";
             m_elog.write(log::elevel::info,s.str());
             handler(make_error_code(transport::error::pass_through), 
                 bytes_transferred);

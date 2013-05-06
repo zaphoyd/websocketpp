@@ -308,8 +308,7 @@ public:
             h(make_error_code(transport::error::operation_aborted));
         } else if (ec) {
             std::stringstream s;
-            s << "asio async_wait error::pass_through"
-              << "Original Error: " << ec << " (" << ec.message() << ")";
+            s << "asio async_wait error: " << ec << " (" << ec.message() << ")";
             m_elog->write(log::elevel::devel,s.str());
             h(make_error_code(transport::error::pass_through));
         } else {
@@ -418,8 +417,8 @@ protected:
             //con->terminate();
             // TODO: Better translation of errors at this point
             std::stringstream s;
-            s << "asio async_resolve error::pass_through: "
-              << "Original Error: " << ec << " (" << ec.message() << ")";
+            s << "asio async_resolve error:" 
+              << ec << " (" << ec.message() << ")";
             m_elog->write(log::elevel::info,s.str());
             callback(tcon->get_handle(),make_error_code(error::pass_through));
             return;
@@ -460,8 +459,8 @@ protected:
             //con->terminate();
             // TODO: Better translation of errors at this point
             std::stringstream s;
-            s << "asio async_connect error::pass_through: "
-              << "Original Error: " << ec << " (" << ec.message() << ")";
+            s << "asio async_connect error: " 
+              << ec << " (" << ec.message() << ")";
             m_elog->write(log::elevel::info,s.str());
             callback(tcon->get_handle(),make_error_code(error::pass_through));
             return;
