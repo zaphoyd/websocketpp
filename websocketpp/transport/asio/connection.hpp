@@ -127,7 +127,7 @@ public:
     }
     void set_proxy_basic_auth(const std::string & u, const std::string & p) {
         if (m_proxy_data) {
-            std::string val = "Basic "+base64_encode(u + ": " + p);
+            std::string val = "Basic "+base64_encode(u + ":" + p);
             m_proxy_data->req.replace_header("Proxy-Authorization",val);
         } else {
             // TODO: should we throw errors with invalid stuff here or just
