@@ -102,14 +102,19 @@ public:
      * TODO: this method is not protected because the endpoint needs to call it.
      * need to figure out if there is a way to friend the endpoint safely across
      * different compilers.
+     *
+     * @param io_service A pointer to the io_service to register with this
+     * connection
+     *
+     * @return Status code for the success or failure of the initialization
      */
-    void init_asio (io_service_ptr io_service) {
+    lib::error_code init_asio (io_service_ptr io_service) {
         // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
         //m_strand.reset(new boost::asio::strand(*io_service));
         
-        socket_con_type::init_asio(io_service, m_is_server);
+        return socket_con_type::init_asio(io_service, m_is_server);
     }
 
     void set_tcp_init_handler(tcp_init_handler h) {
@@ -122,7 +127,7 @@ public:
     }
     void set_proxy_basic_auth(const std::string & u, const std::string & p) {
         if (m_proxy_data) {
-            std::string val = "Basic "+base64_encode(u + ": " + p);
+            std::string val = "Basic "+base64_encode(u + ":" + p);
             m_proxy_data->req.replace_header("Proxy-Authorization",val);
         } else {
             // TODO: should we throw errors with invalid stuff here or just
@@ -186,13 +191,27 @@ protected:
     /**
      * init_asio is called once immediately after construction to initialize
      * boost::asio components to the io_service
+     *
+     * The transport initialization sequence consists of the following steps:
+     * - Pre-init: the underlying socket is initialized to the point where
+     * bytes may be written. No bytes are actually written in this stage
+     * - Proxy negotiation: if a proxy is set, a request is made to it to start 
+     * a tunnel to the final destination. This stage ends when the proxy is 
+     * ready to forward the
+     * next byte to the remote endpoint.
+     * - Post-init: Perform any i/o with the remote endpoint, such as setting up
+     * tunnels for encryption. This stage ends when the connection is ready to 
+     * read or write the WebSocket handshakes. At this point the original 
+     * callback function is called.
      */
     void init(init_handler callback) {
-        m_alog.write(log::alevel::devel,"asio connection init");
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection init");
+        }
         
-        socket_con_type::init(
+        socket_con_type::pre_init(
             lib::bind(
-                &type::handle_init,
+                &type::handle_pre_init,
                 this,
                 callback,
                 lib::placeholders::_1
@@ -200,7 +219,11 @@ protected:
         );
     }
     
-    void handle_init(init_handler callback, const lib::error_code& ec) {
+    void handle_pre_init(init_handler callback, const lib::error_code& ec) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection handle pre_init");
+        }
+        
         if (m_tcp_init_handler) {
             m_tcp_init_handler(m_connection_hdl);
         }
@@ -209,16 +232,42 @@ protected:
             callback(ec);
         }
         
-        // If no error, and we are an insecure connection with a proxy set
-        // issue a proxy connect.
+        // If we have a proxy set issue a proxy connect, otherwise skip to post_init
         if (!m_proxy.empty()) {
             proxy_write(callback);
         } else {
-            callback(ec);
+            post_init(callback);
         }
     }
     
+    void post_init(init_handler callback) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection post_init");
+        }
+        
+        socket_con_type::post_init(
+            lib::bind(
+                &type::handle_post_init,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+    }
+    
+    void handle_post_init(init_handler callback, const lib::error_code& ec) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection handle_post_init");
+        }
+        
+        callback(ec);
+    }
+    
     void proxy_write(init_handler callback) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection proxy_write");
+        }
+        
         if (!m_proxy_data) {
             m_elog.write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_write");
@@ -248,6 +297,10 @@ protected:
     void handle_proxy_write(init_handler callback, const 
         boost::system::error_code& ec)
     {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection handle_proxy_write");
+        }
+        
         m_bufs.clear();
 
         if (ec) {
@@ -260,6 +313,10 @@ protected:
     }
     
     void proxy_read(init_handler callback) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection proxy_read");
+        }
+        
         if (!m_proxy_data) {
             m_elog.write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_read");
@@ -268,7 +325,7 @@ protected:
         }
         
         boost::asio::async_read_until(
-            socket_con_type::get_socket(),
+            socket_con_type::get_next_layer(),
             m_proxy_data->read_buf,
             "\r\n\r\n",
             lib::bind(
@@ -284,6 +341,10 @@ protected:
     void handle_proxy_read(init_handler callback, const 
         boost::system::error_code& ec, size_t bytes_transferred)
     {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
+        }
+        
         if (ec) {
             m_elog.write(log::elevel::info,
                 "asio handle_proxy_read error: "+ec.message());
@@ -335,8 +396,8 @@ protected:
             // anymore
             m_proxy_data.reset();
 
-            // call the original init handler back.
-            callback(lib::error_code());
+            // Continue with post proxy initialization
+            post_init(callback);
         }
     }
     
@@ -388,13 +449,16 @@ protected:
         if (ec == boost::asio::error::eof) {
             handler(make_error_code(transport::error::eof), 
             bytes_transferred); 
+        } else if (ec.value() == 335544539) {
+            handler(make_error_code(transport::error::tls_short_read), 
+            bytes_transferred); 
         } else {
             // other error that we cannot translate into a WebSocket++ 
             // transport error. Use pass through and print an info warning
             // with the original error.
             std::stringstream s;
-            s << "asio async_read_at_least error::pass_through"
-              << ", Original Error: " << ec << " (" << ec.message() << ")";
+            s << "asio async_read_at_least error: " 
+              << ec << " (" << ec.message() << ")";
             m_elog.write(log::elevel::info,s.str());
             handler(make_error_code(transport::error::pass_through), 
                 bytes_transferred);
@@ -456,6 +520,7 @@ protected:
      */
     void set_handle(connection_hdl hdl) {
         m_connection_hdl = hdl;
+        socket_con_type::set_handle(hdl);
     }
     
     /// Trigger the on_interrupt handler

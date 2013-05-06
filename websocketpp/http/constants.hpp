@@ -46,39 +46,39 @@ namespace http {
     // 0x00 - 0x32, 0x7f-0xff
     // ( ) < > @ , ; : \ " / [ ] ? = { }
     static const char header_token[] = {
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..0f
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 10..1f
-    	0,1,0,1,1,1,1,1,0,0,1,1,0,1,1,0, // 20..2f
-    	1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0, // 30..3f
-    	0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 40..4f
-    	1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1, // 50..5f
-    	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 60..6f
-    	1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0, // 70..7f
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 80..8f
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 90..9f
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // a0..af
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // b0..bf
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // c0..cf
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // d0..df
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // e0..ef
-    	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // f0..ff
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..0f
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 10..1f
+        0,1,0,1,1,1,1,1,0,0,1,1,0,1,1,0, // 20..2f
+        1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0, // 30..3f
+        0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 40..4f
+        1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1, // 50..5f
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 60..6f
+        1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0, // 70..7f
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 80..8f
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 90..9f
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // a0..af
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // b0..bf
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // c0..cf
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // d0..df
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // e0..ef
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // f0..ff
     };
     
     inline bool is_token_char(unsigned char c) {
-    	return (header_token[c] == 1);
+        return (header_token[c] == 1);
     }
     
     inline bool is_not_token_char(unsigned char c) {
-    	return !header_token[c];
+        return !header_token[c];
     }
     
     // Space (32) or horizontal tab (9)
     inline bool is_whitespace_char(unsigned char c) {
-    	return (c == 9 || c == 32);
+        return (c == 9 || c == 32);
     }
 
     inline bool is_not_whitespace_char(unsigned char c) {
-    	return (c != 9 && c != 32);
+        return (c != 9 && c != 32);
     }
 
     namespace status_code {
@@ -142,7 +142,7 @@ namespace http {
         inline std::string get_string(value c) {
             switch (c) {
                 case uninitialized:
-                	return "Uninitialized";
+                    return "Uninitialized";
                 case continue_code:
                     return "Continue";
                 case switching_protocols:
@@ -180,7 +180,7 @@ namespace http {
                 case unauthorized:
                     return "Unauthorized";
                 case payment_required:
-                	return "Payment Required";
+                    return "Payment Required";
                 case forbidden:
                     return "Forbidden";
                 case not_found:

@@ -39,22 +39,22 @@
 namespace websocketpp {
 namespace config {
 
-struct asio_tls : public core_client {
-    typedef asio_tls type;
+struct asio_tls_client : public core_client {
+    typedef asio_tls_client type;
     
-	typedef core_client::concurrency_type concurrency_type;
-	
-	typedef core_client::request_type request_type;
-	typedef core_client::response_type response_type;
+    typedef core_client::concurrency_type concurrency_type;
+    
+    typedef core_client::request_type request_type;
+    typedef core_client::response_type response_type;
 
-	typedef core_client::message_type message_type;
-	typedef core_client::con_msg_manager_type con_msg_manager_type;
-	typedef core_client::endpoint_msg_manager_type endpoint_msg_manager_type;
-	
-	typedef core_client::alog_type alog_type;
-	typedef core_client::elog_type elog_type;
-	
-	typedef core_client::rng_type rng_type;
+    typedef core_client::message_type message_type;
+    typedef core_client::con_msg_manager_type con_msg_manager_type;
+    typedef core_client::endpoint_msg_manager_type endpoint_msg_manager_type;
+    
+    typedef core_client::alog_type alog_type;
+    typedef core_client::elog_type elog_type;
+    
+    typedef core_client::rng_type rng_type;
 
     struct transport_config {
         typedef type::concurrency_type concurrency_type;

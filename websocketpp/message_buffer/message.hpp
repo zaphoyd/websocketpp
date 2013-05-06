@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -83,11 +83,11 @@ namespace message_buffer {
 template <template<class> class con_msg_manager>
 class message {
 public:
-	typedef lib::shared_ptr<message> ptr;
-	
-	typedef con_msg_manager<message> con_msg_man_type;
-	typedef typename con_msg_man_type::ptr con_msg_man_ptr;
-	typedef typename con_msg_man_type::weak_ptr con_msg_man_weak_ptr;
+    typedef lib::shared_ptr<message> ptr;
+    
+    typedef con_msg_manager<message> con_msg_man_type;
+    typedef typename con_msg_man_type::ptr con_msg_man_ptr;
+    typedef typename con_msg_man_type::weak_ptr con_msg_man_weak_ptr;
     
     /// Construct an empty message
     /**
@@ -104,17 +104,17 @@ public:
     /**
      * 
      */
-	message(const con_msg_man_ptr manager, frame::opcode::value op, size_t size = 128) 
-	  : m_manager(manager)
-	  , m_opcode(op)
-	  , m_prepared(false)
+    message(const con_msg_man_ptr manager, frame::opcode::value op, size_t size = 128) 
+      : m_manager(manager)
+      , m_opcode(op)
+      , m_prepared(false)
       , m_fin(true)
       , m_terminal(false)
       , m_compressed(false)
-	{
-		m_payload.reserve(size);
-	}
-	
+    {
+        m_payload.reserve(size);
+    }
+    
     /// Return whether or not the message has been prepared for sending
     /**
      * The prepared flag indicates that the message has been prepared by a
@@ -122,17 +122,17 @@ public:
      *
      * @return whether or not the message has been prepared for sending
      */
-	bool get_prepared() const {
-		return m_prepared;
-	}
-	
+    bool get_prepared() const {
+        return m_prepared;
+    }
+    
     /// Set or clear the flag that indicates that the message has been prepared
     /**
      * @param value The value to set the prepared flag to
      */
-	void set_prepared(bool value) {
-		m_prepared = value;
-	}
+    void set_prepared(bool value) {
+        m_prepared = value;
+    }
     
     /// Return whether or not the message is flagged as compressed
     /**
@@ -141,17 +141,17 @@ public:
      *
      * @return whether or not the message is/should be compressed
      */
-	bool get_compressed() const {
-		return m_compressed;
-	}
-	
+    bool get_compressed() const {
+        return m_compressed;
+    }
+    
     /// Set or clear the compression flag
     /**
      * @param value The value to set the compressed flag to
      */
-	void set_compressed(bool value) {
-		m_compressed = value;
-	}
+    void set_compressed(bool value) {
+        m_compressed = value;
+    }
 
     /// Get whether or not the message is terminal
     /**
@@ -197,9 +197,9 @@ public:
     }
 
     /// Return the message opcode
-	frame::opcode::value get_opcode() const {
-		return m_opcode;
-	}
+    frame::opcode::value get_opcode() const {
+        return m_opcode;
+    }
     
     /// Set the opcode
     void set_opcode(frame::opcode::value op) {
@@ -211,9 +211,9 @@ public:
      * This value is typically set by a websocket protocol processor
      * and shouldn't be tampered with.
      */
-	const std::string& get_header() const {
-		return m_header;
-	}
+    const std::string& get_header() const {
+        return m_header;
+    }
 
     /// Set prepared frame header
     /**
@@ -221,78 +221,78 @@ public:
      *
      * @param header A string to set the header to.
      */
-	void set_header(const std::string& header) {
-		m_header = header;
-	}
-	
+    void set_header(const std::string& header) {
+        m_header = header;
+    }
+    
     const std::string& get_extension_data() const {
-		return m_extension_data;
-	}
-	
+        return m_extension_data;
+    }
+    
     /// Get a reference to the payload string
     /**
      * @return A const reference to the message's payload string
      */
     const std::string& get_payload() const {
-		return m_payload;
-	}
-	
+        return m_payload;
+    }
+    
     /// Get a non-const reference to the payload string
     /**
      * @return A reference to the message's payload string
      */
-	std::string& get_raw_payload() {
-		return m_payload;
-	}
+    std::string& get_raw_payload() {
+        return m_payload;
+    }
 
-	void set_payload(const std::string& payload) {
-		m_payload = payload;
-	}
-	
-	void set_payload(const void *payload, size_t len) {
-		m_payload.reserve(len);
-		const char* pl = static_cast<const char *>(payload);
-		m_payload.assign(pl, pl + len);
-	}
-	
-	void append_payload(const std::string& payload) {
-		m_payload.append(payload);
-	}
-	
-	void append_payload(const void *payload, size_t len) {
-	    m_payload.reserve(m_payload.size()+len);
-		m_payload.append(static_cast<const char *>(payload),len);
-	}
+    void set_payload(const std::string& payload) {
+        m_payload = payload;
+    }
+    
+    void set_payload(const void *payload, size_t len) {
+        m_payload.reserve(len);
+        const char* pl = static_cast<const char *>(payload);
+        m_payload.assign(pl, pl + len);
+    }
+    
+    void append_payload(const std::string& payload) {
+        m_payload.append(payload);
+    }
+    
+    void append_payload(const void *payload, size_t len) {
+        m_payload.reserve(m_payload.size()+len);
+        m_payload.append(static_cast<const char *>(payload),len);
+    }
 
-	/// Recycle the message
-	/**
-	 * A request to recycle this message was received. Forward that request to
-	 * the connection message manager for processing. Errors and exceptions
-	 * from the manager's recycle member function should be passed back up the
-	 * call chain. The caller to message::recycle will deal with them.
-	 *
-	 * Recycle must *only* be called by the message shared_ptr's destructor. 
-	 * Once recycled successfully, ownership of the memory has been passed to 
-	 * another system and must not be accessed again.
-	 * 
-	 * @return true if the message was successfully recycled, false otherwise.
-	 */
-	bool recycle() {
-		con_msg_man_ptr shared = m_manager.lock();
+    /// Recycle the message
+    /**
+     * A request to recycle this message was received. Forward that request to
+     * the connection message manager for processing. Errors and exceptions
+     * from the manager's recycle member function should be passed back up the
+     * call chain. The caller to message::recycle will deal with them.
+     *
+     * Recycle must *only* be called by the message shared_ptr's destructor. 
+     * Once recycled successfully, ownership of the memory has been passed to 
+     * another system and must not be accessed again.
+     * 
+     * @return true if the message was successfully recycled, false otherwise.
+     */
+    bool recycle() {
+        con_msg_man_ptr shared = m_manager.lock();
 
-		if (shared) {
-			return shared->recycle(this);
-		} else {
-			return false;
-		}
-	}
+        if (shared) {
+            return shared->recycle(this);
+        } else {
+            return false;
+        }
+    }
 private:
-	con_msg_man_weak_ptr		m_manager;
-	std::string					m_header;
-	std::string					m_extension_data;
-	std::string					m_payload;
-	frame::opcode::value        m_opcode;
-	bool						m_prepared;
+    con_msg_man_weak_ptr        m_manager;
+    std::string                 m_header;
+    std::string                 m_extension_data;
+    std::string                 m_payload;
+    frame::opcode::value        m_opcode;
+    bool                        m_prepared;
     bool                        m_fin;
     bool                        m_terminal;
     bool                        m_compressed;

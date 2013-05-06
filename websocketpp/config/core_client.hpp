@@ -67,29 +67,29 @@ struct core_client {
     
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
-	
+    
     // HTTP Parser Policies
     typedef http::parser::request request_type;
     typedef http::parser::response response_type;
 
     // Message Policies
     typedef message_buffer::message<message_buffer::alloc::con_msg_manager> 
-		message_type;
+        message_type;
     typedef message_buffer::alloc::con_msg_manager<message_type> 
-		con_msg_manager_type;
+        con_msg_manager_type;
     typedef message_buffer::alloc::endpoint_msg_manager<con_msg_manager_type> 
-		endpoint_msg_manager_type;
-	
-	/// Logging policies
-	typedef websocketpp::log::basic<concurrency_type,
-	    websocketpp::log::elevel> elog_type;
-	typedef websocketpp::log::basic<concurrency_type,
-	    websocketpp::log::alevel> alog_type;
-	
-	/// RNG policies
-	typedef websocketpp::random::random_device::int_generator<uint32_t,
-	    concurrency_type> rng_type;
-	
+        endpoint_msg_manager_type;
+    
+    /// Logging policies
+    typedef websocketpp::log::basic<concurrency_type,
+        websocketpp::log::elevel> elog_type;
+    typedef websocketpp::log::basic<concurrency_type,
+        websocketpp::log::alevel> alog_type;
+    
+    /// RNG policies
+    typedef websocketpp::random::random_device::int_generator<uint32_t,
+        concurrency_type> rng_type;
+    
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
@@ -142,7 +142,7 @@ struct core_client {
         websocketpp::log::alevel::all ^ websocketpp::log::alevel::devel;
     
     /// 
-	static const size_t connection_read_buffer_size = 512;
+    static const size_t connection_read_buffer_size = 512;
     
     /// Drop connections immediately on protocol error. 
     /** 

@@ -29,7 +29,7 @@
 #define WEBSOCKETPP_COMMON_STDINT_HPP
 
 #ifndef __STDC_LIMIT_MACROS
-	#define __STDC_LIMIT_MACROS 1
+    #define __STDC_LIMIT_MACROS 1
 #endif
 
 #if WIN32 && (_MSC_VER < 1600)

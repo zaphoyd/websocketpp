@@ -75,28 +75,28 @@ template <typename config>
 lib::error_code connection<config>::send(const std::string& payload, 
     frame::opcode::value op)
 {
-	message_ptr msg = m_msg_manager->get_message(op,payload.size());
-	msg->append_payload(payload);
-	
-	return send(msg);
+    message_ptr msg = m_msg_manager->get_message(op,payload.size());
+    msg->append_payload(payload);
+    
+    return send(msg);
 }
 
 template <typename config>
 lib::error_code connection<config>::send(const void* payload, size_t len,
     frame::opcode::value op)
 {
-	message_ptr msg = m_msg_manager->get_message(op,len);
-	msg->append_payload(payload,len);
-	
-	return send(msg);
+    message_ptr msg = m_msg_manager->get_message(op,len);
+    msg->append_payload(payload,len);
+    
+    return send(msg);
 }
 
 template <typename config>
 lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 {
     m_alog.write(log::alevel::devel,"connection send");
-	// TODO: 
-	
+    // TODO: 
+    
     if (m_state != session::state::open) {
        return error::make_error_code(error::invalid_state);
     }
@@ -111,29 +111,29 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
     } else {
-    	outgoing_msg = m_msg_manager->get_message();
-    	
-    	if (!outgoing_msg) {
-    		return error::make_error_code(error::no_outgoing_buffers);
-    	}
-    	
-    	scoped_lock_type lock(m_write_lock);
-    	lib::error_code ec = m_processor->prepare_data_frame(msg,outgoing_msg);
-    	
-    	if (ec) {
-    		return ec;
-    	}
-    	
+        outgoing_msg = m_msg_manager->get_message();
+        
+        if (!outgoing_msg) {
+            return error::make_error_code(error::no_outgoing_buffers);
+        }
+        
+        scoped_lock_type lock(m_write_lock);
+        lib::error_code ec = m_processor->prepare_data_frame(msg,outgoing_msg);
+        
+        if (ec) {
+            return ec;
+        }
+        
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
     }
     
-	if (needs_writing) {
-		transport_con_type::dispatch(lib::bind(
-			&type::write_frame,
-			type::shared_from_this()
-		));
-	}
+    if (needs_writing) {
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::shared_from_this()
+        ));
+    }
 
     return lib::error_code();
 }
@@ -164,10 +164,10 @@ void connection<config>::ping(const std::string& payload) {
     }
 
     if (needs_writing) {
-		transport_con_type::dispatch(lib::bind(
-			&type::write_frame,
-			type::shared_from_this()
-		));
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::shared_from_this()
+        ));
     }
 }
 
@@ -199,10 +199,10 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     }
 
     if (needs_writing) {
-		transport_con_type::dispatch(lib::bind(
-			&type::write_frame,
-			type::shared_from_this()
-		));
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::shared_from_this()
+        ));
     }
 
     ec = lib::error_code();
@@ -549,7 +549,7 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     
     if (ec) {
         std::stringstream s;
-    	s << "handle_transport_init recieved error: "<< ec.message();
+        s << "handle_transport_init recieved error: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
 
         this->terminate();
@@ -595,7 +595,7 @@ void connection<config>::read(size_t num_bytes) {
 // a new read request with this function as the handler.
 template <typename config>
 void connection<config>::handle_handshake_read(const lib::error_code& ec, 
-	size_t bytes_transferred)
+    size_t bytes_transferred)
 {
     m_alog.write(log::alevel::devel,"connection handle_handshake_read");
     
@@ -606,7 +606,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
     
     if (ec) {
         std::stringstream s;
-    	s << "error in handle_read_handshake: "<< ec.message();
+        s << "error in handle_read_handshake: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -727,7 +727,7 @@ void connection<config>::send_http_response_error() {
 // a new read request with this function as the handler.
 template <typename config>
 void connection<config>::handle_read_frame(const lib::error_code& ec, 
-	size_t bytes_transferred)
+    size_t bytes_transferred)
 {
     //m_alog.write(log::alevel::devel,"connection handle_read_frame");
     
@@ -744,9 +744,13 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 return;
             }
         }
+        if (ec == transport::error::tls_short_read) {
+			m_elog.write(log::elevel::rerror,"got TLS short read, ignore for the moment");
+			return;
+        }
         
         std::stringstream s;
-    	s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
+        s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
         m_elog.write(log::elevel::fatal,s.str());
         this->terminate();
         return;
@@ -762,32 +766,32 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     size_t p = 0;
     
     if (m_alog.static_test(log::alevel::devel)) {
-    	std::stringstream s;
-    	s << "p = " << p << " bytes transferred = " << bytes_transferred;
-    	m_alog.write(log::alevel::devel,s.str());
+        std::stringstream s;
+        s << "p = " << p << " bytes transferred = " << bytes_transferred;
+        m_alog.write(log::alevel::devel,s.str());
     }
     
     while (p < bytes_transferred) {
         if (m_alog.static_test(log::alevel::devel)) {
-        	std::stringstream s;
-        	s << "calling consume with " << bytes_transferred-p << " bytes";
-        	m_alog.write(log::alevel::devel,s.str());
+            std::stringstream s;
+            s << "calling consume with " << bytes_transferred-p << " bytes";
+            m_alog.write(log::alevel::devel,s.str());
         }
         
         lib::error_code ec;
 
-		p += m_processor->consume(
-			reinterpret_cast<uint8_t*>(m_buf)+p,
-			bytes_transferred-p,
+        p += m_processor->consume(
+            reinterpret_cast<uint8_t*>(m_buf)+p,
+            bytes_transferred-p,
             ec
-		);
-		
-		if (m_alog.static_test(log::alevel::devel)) {
-        	std::stringstream s;
-        	s << "bytes left after consume: " << bytes_transferred-p;
-        	m_alog.write(log::alevel::devel,s.str());
-		}
-		if (ec) {
+        );
+        
+        if (m_alog.static_test(log::alevel::devel)) {
+            std::stringstream s;
+            s << "bytes left after consume: " << bytes_transferred-p;
+            m_alog.write(log::alevel::devel,s.str());
+        }
+        if (ec) {
             m_elog.write(log::elevel::rerror,"consume error: "+ec.message());
             
             if (config::drop_on_protocol_error) {
@@ -806,11 +810,11 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 }
             }
             return;
-		}
+        }
 
-		if (m_processor->ready()) {
+        if (m_processor->ready()) {
             //m_alog.write(log::alevel::devel,"consume ended in ready");
-			
+            
             message_ptr msg = m_processor->get_message();
            
             if (!msg) {
@@ -824,7 +828,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             } else {
                 process_control_frame(msg);
             }
-	    }
+        }
     }
     
     transport_con_type::async_read_at_least(
@@ -934,8 +938,8 @@ bool connection<config>::process_handshake_request() {
         // we don't send an empty extensions header because it breaks many
         // clients.
         if (neg_results.second.size() > 0) {
-        	m_response.replace_header("Sec-WebSocket-Extensions",
-            	neg_results.second);
+            m_response.replace_header("Sec-WebSocket-Extensions",
+                neg_results.second);
         }
     }
 
@@ -993,7 +997,7 @@ bool connection<config>::process_handshake_request() {
 // TODO: does this function still need to be here?
 template <typename config>
 void connection<config>::handle_read(const lib::error_code& ec, 
-	size_t bytes_transferred) 
+    size_t bytes_transferred) 
 {
     if (ec) {
         m_elog.write(log::elevel::rerror,"error in handle_read"+ec.message());
@@ -1382,8 +1386,8 @@ void connection<config>::write_frame() {
 
     m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
     m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
-	
-	
+    
+    
     if (m_alog.static_test(log::alevel::frame_header)) {
     if (m_alog.dynamic_test(log::alevel::frame_header)) {
         std::stringstream s;
@@ -1415,10 +1419,10 @@ template <typename config>
 void connection<config>::handle_write_frame(bool terminate, 
     const lib::error_code& ec)
 {
-	m_send_buffer.clear();
-	m_current_msg.reset();
-	
-	if (ec) {
+    m_send_buffer.clear();
+    m_current_msg.reset();
+    
+    if (ec) {
         m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
         this->terminate();
         return;
@@ -1442,10 +1446,10 @@ void connection<config>::handle_write_frame(bool terminate,
     }
 
     if (needs_writing) {
-		transport_con_type::dispatch(lib::bind(
-			&type::write_frame,
-			type::shared_from_this()
-		));
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::shared_from_this()
+        ));
     }
 }
 
@@ -1672,10 +1676,10 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     }
     
     if (needs_writing) {
-		transport_con_type::dispatch(lib::bind(
-			&type::write_frame,
-			type::shared_from_this()
-		));
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::shared_from_this()
+        ));
     }
 
     return lib::error_code();

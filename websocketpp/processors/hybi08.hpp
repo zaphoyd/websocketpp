@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,10 +40,10 @@ namespace processor {
 template <typename config>
 class hybi08 : public hybi13<config> {
 public:
-	typedef hybi08<config> type;
-	typedef typename config::request_type request_type;
-	
-	typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
+    typedef hybi08<config> type;
+    typedef typename config::request_type request_type;
+    
+    typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
     typedef typename config::rng_type rng_type;
 
     explicit hybi08(bool secure, bool server, msg_manager_ptr manager, 

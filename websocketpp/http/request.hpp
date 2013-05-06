@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -84,7 +84,7 @@ public:
     
     /// Returns whether or not the request is ready for reading.
     bool ready() const {
-    	return m_ready;
+        return m_ready;
     }
     
     /// Returns the full raw request
@@ -95,7 +95,7 @@ public:
     
     /// Return the request method
     const std::string& get_method() const {
-    	return m_method;
+        return m_method;
     }
     
     /// Set the HTTP uri. Must be a valid HTTP uri
@@ -103,17 +103,17 @@ public:
     
     /// Return the requested URI
     const std::string& get_uri() const {
-    	return m_uri;
+        return m_uri;
     }
 
 private:
-	/// Helper function for message::consume. Process request line
-	void process(std::string::iterator begin, std::string::iterator end);
-	
-	lib::shared_ptr<std::string>	m_buf;
-	std::string						m_method;
-    std::string						m_uri;
-    bool							m_ready;
+    /// Helper function for message::consume. Process request line
+    void process(std::string::iterator begin, std::string::iterator end);
+    
+    lib::shared_ptr<std::string>    m_buf;
+    std::string                     m_method;
+    std::string                     m_uri;
+    bool                            m_ready;
 };
 
 } // namespace parser

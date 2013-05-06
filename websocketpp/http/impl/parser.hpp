@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -109,16 +109,16 @@ inline void parser::remove_header(const std::string &key) {
 }
 
 inline void parser::set_body(const std::string& value) {
-	if (value.size() == 0) {
-		remove_header("Content-Length");
-		m_body = "";
-		return;
-	}
-	
-	std::stringstream foo;
-	foo << value.size();
-	replace_header("Content-Length", foo.str());
-	m_body = value;
+    if (value.size() == 0) {
+        remove_header("Content-Length");
+        m_body = "";
+        return;
+    }
+    
+    std::stringstream foo;
+    foo << value.size();
+    replace_header("Content-Length", foo.str());
+    m_body = value;
 }
 
 inline bool parser::parse_headers(std::istream& s) {

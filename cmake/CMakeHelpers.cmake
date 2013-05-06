@@ -31,14 +31,14 @@ endmacro ()
 
 # Adds the given folder_name into the source files of the current project. 
 # Use this macro when your module contains .cpp and .h files in several subdirectories.
-# Your sources variable needs to be SOURCE_FILES and headers variable HEADER_FILES.
+# Your sources variable needs to be WSPP_SOURCE_FILES and headers variable WSPP_HEADER_FILES.
 macro(add_source_folder folder_name)
     file(GLOB H_FILES_IN_FOLDER_${folder_name} ${folder_name}/*.hpp ${folder_name}/*.h)
     file(GLOB CPP_FILES_IN_FOLDER_${folder_name} ${folder_name}/*.cpp ${folder_name}/*.c)
     source_group("Header Files\\${folder_name}" FILES ${H_FILES_IN_FOLDER_${folder_name}})
     source_group("Source Files\\${folder_name}" FILES ${CPP_FILES_IN_FOLDER_${folder_name}})
-    set(HEADER_FILES ${HEADER_FILES} ${H_FILES_IN_FOLDER_${folder_name}})
-    set(SOURCE_FILES ${SOURCE_FILES} ${CPP_FILES_IN_FOLDER_${folder_name}})
+    set(WSPP_HEADER_FILES ${WSPP_HEADER_FILES} ${H_FILES_IN_FOLDER_${folder_name}})
+    set(WSPP_SOURCE_FILES ${WSPP_SOURCE_FILES} ${CPP_FILES_IN_FOLDER_${folder_name}})
 endmacro()
 
 # Initialize target.
@@ -56,7 +56,7 @@ macro (build_library TARGET_NAME LIB_TYPE)
     set (TARGET_LIB_TYPE ${LIB_TYPE})
     message (STATUS "-- Build Type:")
     message (STATUS "       " ${TARGET_LIB_TYPE} " library")
-   
+
     add_library (${TARGET_NAME} ${TARGET_LIB_TYPE} ${ARGN})
 
     target_link_libraries (${TARGET_NAME} ${WEBSOCKETPP_PLATFORM_LIBS})
@@ -69,12 +69,10 @@ macro (build_library TARGET_NAME LIB_TYPE)
         endif ()
     endif ()
 
-    if (${TARGET_LIB_TYPE} STREQUAL "STATIC")
-        message (STATUS "-- Build Destination:")
-        message (STATUS "       " ${WEBSOCKETPP_LIB})
-        set_target_properties (${TARGET_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${WEBSOCKETPP_LIB})
-    endif ()
+    message (STATUS "-- Build Destination:")
+    message (STATUS "       " ${WEBSOCKETPP_LIB})
 
+    set_target_properties (${TARGET_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${WEBSOCKETPP_LIB})
     set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
 endmacro ()
 

@@ -29,24 +29,24 @@
 #define WEBSOCKETPP_COMMON_CHRONO_HPP
 
 #if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_CHRONO_
-	#ifndef _WEBSOCKETPP_CPP11_CHRONO_
-		#define _WEBSOCKETPP_CPP11_CHRONO_
-	#endif
+    #ifndef _WEBSOCKETPP_CPP11_CHRONO_
+        #define _WEBSOCKETPP_CPP11_CHRONO_
+    #endif
 #endif
 
 #ifdef _WEBSOCKETPP_CPP11_CHRONO_
-	#include <chrono>
+    #include <chrono>
 #else
-	#include <boost/chrono.hpp>
+    #include <boost/chrono.hpp>
 #endif
 
 namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_CHRONO_
-	using std::chrono::system_clock;
+    using std::chrono::system_clock;
 #else
-	using boost::chrono::system_clock;
+    using boost::chrono::system_clock;
 #endif
 
 } // namespace lib

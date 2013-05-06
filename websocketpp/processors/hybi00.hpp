@@ -32,9 +32,9 @@
 
 // For htonl
 #if defined(WIN32)
-	#include <winsock2.h>
+    #include <winsock2.h>
 #else
-	#include <arpa/inet.h>
+    #include <arpa/inet.h>
 #endif
 
 #include <websocketpp/processors/processor.hpp>
@@ -56,13 +56,13 @@ class hybi00 : public processor<config> {
 public:
     typedef processor<config> base;
     
-	typedef typename config::request_type request_type;
-	typedef typename config::response_type response_type;
-	
-	typedef typename config::message_type message_type;
-	typedef typename message_type::ptr message_ptr;
+    typedef typename config::request_type request_type;
+    typedef typename config::response_type response_type;
+    
+    typedef typename config::message_type message_type;
+    typedef typename message_type::ptr message_ptr;
 
-	typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
+    typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
 
     explicit hybi00(bool secure, bool server, msg_manager_ptr manager) 
       : processor<config>(secure, server)
@@ -206,14 +206,14 @@ public:
         return "";
     }
 
-	/// Process new websocket connection bytes
-	size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
+    /// Process new websocket connection bytes
+    size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
         // if in state header we are expecting a 0x00 byte, if we don't get one
         // it is a fatal error
         size_t p = 0; // bytes processed
         size_t l = 0;
 
-		ec = lib::error_code();
+        ec = lib::error_code();
 
         while (p < len) {
             if (m_state == HEADER) {
@@ -262,63 +262,63 @@ public:
         
         //ec = make_error_code(error::not_implimented);
         return p;
-	}
+    }
 
-	bool ready() const {
-		return (m_state == READY);
-	}
-	
-	bool get_error() const {
-		return false;
-	}
+    bool ready() const {
+        return (m_state == READY);
+    }
+    
+    bool get_error() const {
+        return false;
+    }
 
-	message_ptr get_message() {
-		message_ptr ret = m_msg_ptr;
+    message_ptr get_message() {
+        message_ptr ret = m_msg_ptr;
         m_msg_ptr = message_ptr();
         m_state = HEADER;
         return ret;
-	}
-	
-	/// Prepare a message for writing
-	/**
-	 * Performs validation, masking, compression, etc. will return an error if 
-	 * there was an error, otherwise msg will be ready to be written
-	 */
-	virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
-	{
-		if (!in || !out) {
-			return make_error_code(error::invalid_arguments);
-		}
-		
-		// TODO: check if the message is prepared already
-		
-		// validate opcode
+    }
+    
+    /// Prepare a message for writing
+    /**
+     * Performs validation, masking, compression, etc. will return an error if 
+     * there was an error, otherwise msg will be ready to be written
+     */
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
+    {
+        if (!in || !out) {
+            return make_error_code(error::invalid_arguments);
+        }
+        
+        // TODO: check if the message is prepared already
+        
+        // validate opcode
         if (in->get_opcode() != frame::opcode::text) {
             return make_error_code(error::invalid_opcode);    
         }
         
         std::string& i = in->get_raw_payload();
-		//std::string& o = out->get_raw_payload();
+        //std::string& o = out->get_raw_payload();
 
-		// validate payload utf8
-		if (!utf8_validator::validate(i)) {
+        // validate payload utf8
+        if (!utf8_validator::validate(i)) {
             return make_error_code(error::invalid_payload);
         }
 
-		// generate header
+        // generate header
         out->set_header(std::string(reinterpret_cast<const char*>(&msg_hdr),1));
         
         // process payload
         out->set_payload(i);
         out->append_payload(std::string(reinterpret_cast<const char*>(&msg_ftr),1));
 
-		// hybi00 doesn't support compression
-		// hybi00 doesn't have masking
-		
+        // hybi00 doesn't support compression
+        // hybi00 doesn't have masking
+        
         out->set_prepared(true);
 
-		return lib::error_code();
-	}
+        return lib::error_code();
+    }
 
     lib::error_code prepare_ping(const std::string & in, message_ptr out) const
     {
@@ -372,11 +372,11 @@ private:
     }
     
     enum state {
-		HEADER = 0,
-		PAYLOAD = 1,
-		READY = 2,
-		FATAL_ERROR = 3
-	};
+        HEADER = 0,
+        PAYLOAD = 1,
+        READY = 2,
+        FATAL_ERROR = 3
+    };
     
     const uint8_t msg_hdr;
     const uint8_t msg_ftr;
@@ -384,7 +384,7 @@ private:
     state m_state;
     
     msg_manager_ptr m_msg_manager;
-    message_ptr	m_msg_ptr;
+    message_ptr m_msg_ptr;
     utf8_validator::validator m_validator;
 };
 

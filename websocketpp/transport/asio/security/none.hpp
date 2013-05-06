@@ -158,8 +158,16 @@ protected:
         return lib::error_code();
     }
     
-    /// Initialize security policy for reading
-    void init(init_handler callback) {
+    /// Pre-initialize security policy
+    /**
+     * Called by the transport after a new connection is created to initialize
+     * the socket component of the connection. This method is not allowed to 
+     * write any bytes to the wire. This initialization happens before any 
+     * proxies or other intermediate wrappers are negotiated.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void pre_init(init_handler callback) {
         if (m_state != READY) {
             callback(socket::make_error(socket::error::invalid_state));
             return;
@@ -171,6 +179,18 @@ protected:
         
         m_state = READING;
         
+        callback(lib::error_code());
+    }
+    
+    /// Post-initialize security policy
+    /**
+     * Called by the transport after all intermediate proxies have been 
+     * negotiated. This gives the security policy the chance to talk with the
+     * real remote endpoint for a bit before the websocket handshake.
+     * 
+     * @param callback Handler to call back with completion information
+     */
+    void post_init(init_handler callback) {
         callback(lib::error_code());
     }
     
@@ -242,15 +262,19 @@ public:
     void set_socket_init_handler(socket_init_handler h) {
         m_socket_init_handler = h;
     }
-
 protected:
     /// Initialize a connection
     /**
      * Called by the transport after a new connection is created to initialize
      * the socket component of the connection.
+     * 
+     * @param scon Pointer to the socket component of the connection
+     *
+     * @return Error code (empty on success)
      */
-    void init(socket_con_ptr scon) {
+    lib::error_code init(socket_con_ptr scon) {
         scon->set_socket_init_handler(m_socket_init_handler);
+        return lib::error_code();
     }
 private:
     socket_init_handler m_socket_init_handler;
