@@ -127,7 +127,7 @@ inline size_t response::consume(const char *buf, size_t len) {
             }
         }
         
-        begin = end+sizeof(header_delimiter) - 1;
+        begin = end+(sizeof(header_delimiter) - 1);
     }
 }
 
