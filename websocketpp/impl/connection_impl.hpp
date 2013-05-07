@@ -745,7 +745,8 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             }
         }
         if (ec == transport::error::tls_short_read) {
-			m_elog.write(log::elevel::rerror,"got TLS short read, ignore for the moment");
+			m_elog.write(log::elevel::rerror,"got TLS short read, killing connection for now");
+			this->terminate();
 			return;
         }
         
