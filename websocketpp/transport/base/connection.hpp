@@ -108,7 +108,10 @@ enum value {
     eof,
     
     /// TLS short read
-    tls_short_read
+    tls_short_read,
+    
+    /// Timer expired
+    timeout
 };
 
 class category : public lib::error_category {
@@ -135,6 +138,8 @@ class category : public lib::error_category {
                 return "End of File";
         	case tls_short_read:
                 return "TLS Short Read";
+            case timeout:
+                return "Timer Expired";
             default:
                 return "Unknown";
         }

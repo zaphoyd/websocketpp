@@ -80,7 +80,9 @@ public:
     
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;    
-
+	/// Type of a pointer to the ASIO timer class
+	typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+	
     // generate and manage our own io_service
     explicit connection(bool is_server, alog_type& alog, elog_type& elog)
       : m_is_server(is_server)
@@ -185,7 +187,68 @@ public:
 
         return lib::error_code();
     }
+	
+	/// Call back a function after a period of time.
+	/**
+	 * Sets a timer that calls back a function after the specified period of
+	 * milliseconds. Returns a handle that can be used to cancel the timer.
+	 * A cancelled timer will return the error code error::operation_aborted
+	 * A timer that expired will return no error.
+	 * 
+	 * @param duration Length of time to wait in milliseconds
+	 *
+	 * @param callback The function to call back when the timer has expired
+	 *
+	 * @return A handle that can be used to cancel the timer if it is no longer
+	 * needed.
+	 */
+	timer_ptr set_timer(long duration, timer_handler callback) {
+		timer_ptr new_timer(
+			new boost::asio::deadline_timer(
+				*m_io_service,
+				boost::posix_time::milliseconds(duration)
+			)
+		);
 
+        new_timer->async_wait(
+            lib::bind(
+                &type::handle_timer,
+                this,
+                new_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+        
+        return new_timer;
+	}
+	
+	/// Timer callback
+	/**
+	 * The timer pointer is included to ensure the timer isn't destroyed until
+	 * after it has expired.
+	 * 
+	 * @param t Pointer to the timer in question
+	 *
+	 * @param callback The function to call back
+	 *
+	 * @param ec The status code
+	 */
+	void handle_timer(timer_ptr t, timer_handler callback, const 
+        boost::system::error_code& ec)
+    {
+		if (ec) {
+            if (ec == boost::asio::error::operation_aborted) {
+            	callback(make_error_code(transport::error::operation_aborted)); 
+            } else {
+				m_elog.write(log::elevel::info,
+					"asio handle_timer error: "+ec.message());
+				callback(make_error_code(error::pass_through)); 
+            }
+        } else {
+            callback(lib::error_code());
+        }
+	}
 protected:
     /// Initialize transport for reading
     /**
@@ -281,7 +344,19 @@ protected:
                                              m_proxy_data->write_buf.size()));
         
         m_alog.write(log::alevel::devel,m_proxy_data->write_buf);
-
+		
+		// Set a timer so we don't wait forever for the proxy to respond
+		m_proxy_data->timer = this->set_timer(
+			m_proxy_data->timeout_proxy,
+			lib::bind(
+				&type::handle_proxy_timeout,
+				this,
+				callback,
+				lib::placeholders::_1
+			)
+		);
+		
+		// Send proxy request
         boost::asio::async_write(
             socket_con_type::get_next_layer(),
             m_bufs,
@@ -292,6 +367,19 @@ protected:
                 lib::placeholders::_1
             )
         );
+    }
+    
+    void handle_proxy_timeout(init_handler callback, const lib::error_code & ec) {
+    	if (ec == transport::error::operation_aborted) {
+    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer cancelled");
+    		return;
+    	} else if (ec) {
+    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer error: "+ec.message());
+    		callback(ec);
+    	} else {
+    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer expired");
+    		callback(make_error_code(transport::error::timeout));
+    	}
     }
     
     void handle_proxy_write(init_handler callback, const 
@@ -306,6 +394,7 @@ protected:
         if (ec) {
             m_elog.write(log::elevel::info,
                 "asio handle_proxy_write error: "+ec.message());
+            m_proxy_data->timer->cancel();
             callback(make_error_code(error::pass_through)); 
         } else {
             proxy_read(callback);
@@ -320,6 +409,7 @@ protected:
         if (!m_proxy_data) {
             m_elog.write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_read");
+            m_proxy_data->timer->cancel();
             callback(make_error_code(error::general));
             return;
         }
@@ -344,6 +434,9 @@ protected:
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
         }
+        
+        // At this point there is no need to wait for the timer anymore
+        m_proxy_data->timer->cancel();
         
         if (ec) {
             m_elog.write(log::elevel::info,
@@ -579,40 +672,21 @@ protected:
             h(lib::error_code());
         }
     }
-    
-    typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
-    
-    timer_ptr set_timer(long duration, timer_handler handler) {
-        timer_ptr timer(new boost::asio::deadline_timer(*m_io_service)); 
-        timer->expires_from_now(boost::posix_time::milliseconds(duration));
-        timer->async_wait(lib::bind(&type::timer_handler, this, handler, 
-            lib::placeholders::_1));
-        return timer;
-    }
-    
-    void timer_handler(timer_handler h, const boost::system::error_code& ec) {
-        if (ec == boost::asio::error::operation_aborted) {
-            h(make_error_code(transport::error::operation_aborted));
-        } else if (ec) {
-            std::stringstream s;
-            s << "asio async_wait error: " << ec << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::info,s.str());
-            h(make_error_code(transport::error::pass_through));
-        } else {
-            h(lib::error_code());
-        }
-    }
 private:
     // static settings
-    const bool          m_is_server;
+    const bool m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
     
     struct proxy_data {
+    	proxy_data() : timeout_proxy(config::timeout_proxy) {}
+    	
         request_type req;
         response_type res;
         std::string write_buf;
         boost::asio::streambuf read_buf;
+        long timeout_proxy;
+        timer_ptr timer;
     };
     
     std::string m_proxy;
