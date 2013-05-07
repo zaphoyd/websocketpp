@@ -503,9 +503,12 @@ protected:
         boost::system::error_code& ec)
     {
         m_bufs.clear();
-        // TODO: translate this better
         if (ec) {
-            handler(make_error_code(error::pass_through));  
+            std::stringstream s;
+            s << "asio async_write error: " << ec 
+              << " (" << ec.message() << ")";
+            m_elog.write(log::elevel::info,s.str());
+            handler(make_error_code(transport::error::pass_through));
         } else {
             handler(lib::error_code());
         }
@@ -544,8 +547,37 @@ protected:
     }*/
     
     /// close and clean up the underlying socket
-    void shutdown() {
-        socket_con_type::shutdown();
+    void async_shutdown(shutdown_handler h) {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio connection async_shutdown");
+        }
+        
+        socket_con_type::async_shutdown(
+            lib::bind(
+                &type::handle_async_shutdown,
+                this,
+                h,
+                lib::placeholders::_1
+            )
+        );
+    }
+    
+    void handle_async_shutdown(shutdown_handler h, const 
+        boost::system::error_code & ec)
+    {
+        if (m_alog.static_test(log::alevel::devel)) {
+            m_alog.write(log::alevel::devel,"asio con handle_async_shutdown");
+        }
+        
+        if (ec) {
+            std::stringstream s;
+            s << "asio async_shutdown error: " << ec 
+              << " (" << ec.message() << ")";
+            m_elog.write(log::elevel::info,s.str());
+            h(make_error_code(transport::error::pass_through));
+        } else {
+            h(lib::error_code());
+        }
     }
     
     typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
@@ -563,9 +595,8 @@ protected:
             h(make_error_code(transport::error::operation_aborted));
         } else if (ec) {
             std::stringstream s;
-            s << "asio async_wait error::pass_through"
-              << "Original Error: " << ec << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::devel,s.str());
+            s << "asio async_wait error: " << ec << " (" << ec.message() << ")";
+            m_elog.write(log::elevel::info,s.str());
             h(make_error_code(transport::error::pass_through));
         } else {
             h(lib::error_code());
