@@ -21,89 +21,6 @@ set (CMAKE_CONFIGURATION_TYPES "Release;RelWithDebInfo;Debug" CACHE STRING "Conf
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include (CMakeHelpers)
 
-
-############  Build customization
-
-# Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1"
-option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
-option (BUILD_EXAMPLES "Build websocketpp examples." TRUE)
-option (BUILD_TESTS "Build websocketpp tests." FALSE)
-
-
-############ Compiler specific setup
-
-set (WEBSOCKETPP_PLATFORM_LIBS "")
-set (WEBSOCKETPP_PLATFORM_TSL_LIBS "")
-set (WEBSOCKETPP_BOOST_LIBS "")
-
-# VC9 and C++11 reasoning
-if (ENABLE_CPP11 AND MSVC AND MSVC90)
-    message("* Detected Visual Studio 9 2008, disabling C++11 support.")
-    set (ENABLE_CPP11 FALSE)
-endif ()
-
-# Detect clang. Not officially reported by cmake.
-execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "-v" ERROR_VARIABLE CXX_VER_STDERR)
-if ("${CXX_VER_STDERR}" MATCHES ".*clang.*")
-    set (CMAKE_COMPILER_IS_CLANGXX 1)
-endif ()
-
-# C++11 defines
-if (ENABLE_CPP11)
-    add_definitions (-D_WEBSOCKETPP_CPP11_STL_)
-endif ()
-
-# Visual studio
-if (MSVC)
-    set (WEBSOCKETPP_BOOST_LIBS system thread regex)
-    set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
-    set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
-    add_definitions (/W3 /wd4996 /wd4995 /wd4355)
-    add_definitions (-DUNICODE -D_UNICODE)
-    add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
-    add_definitions (-DNOMINMAX)
-endif ()
-
-# g++
-if (CMAKE_COMPILER_IS_GNUCXX)
-    set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
-    set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
-    set (WEBSOCKETPP_BOOST_LIBS system thread regex)
-    set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x")
-    if (NOT APPLE)
-        add_definitions (-DNDEBUG -Wall -Wcast-align) # todo: should we use CMAKE_C_FLAGS for these?
-    endif ()
-
-    # Try to detect version. Note: Not tested!
-    execute_process (COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion" OUTPUT_VARIABLE GCC_VERSION)
-    if ("${GCC_VERSION}" STRGREATER "4.4.0")
-        message("* C++11 support partially enabled due to GCC version ${GCC_VERSION}")
-        set (WEBSOCKETPP_BOOST_LIBS system thread regex)
-        add_definitions (-D_WEBSOCKETPP_NO_CPP11_REGEX_)
-    endif ()
-endif ()
-
-# clang
-if (CMAKE_COMPILER_IS_CLANGXX)
-    if (NOT APPLE)
-        set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
-    else()
-        set (WEBSOCKETPP_PLATFORM_LIBS pthread)
-    endif()
-    set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
-    set (WEBSOCKETPP_BOOST_LIBS system thread regex)
-    set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
-    if (NOT APPLE)
-        add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
-    endif ()
-endif ()
-
-# OSX, can override above.
-if (APPLE)
-    add_definitions (-DNDEBUG -Wall)
-endif ()
-
-
 ############ Paths
 
 set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -117,74 +34,159 @@ set (WEBSOCKETPP_PREFIX ${WEBSOCKETPP_ROOT}/build)
 # - Windows: Build the INSTALL project in your solution file.
 # - Linux/OSX: make install.
 if (MSVC)
-	set (CMAKE_INSTALL_PREFIX ${WEBSOCKETPP_PREFIX})
+    set (CMAKE_INSTALL_PREFIX ${WEBSOCKETPP_PREFIX})
+else ()
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/websocketpp")
 endif ()
 
-if (BUILD_EXAMPLES)
-  list (APPEND WEBSOCKETPP_BOOST_LIBS random)
-endif()
+############  Build customization
 
-############ Dependencies
+# Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1"
+option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
+option (BUILD_EXAMPLES "Build websocketpp examples." TRUE)
+option (BUILD_TESTS "Build websocketpp tests." FALSE)
 
-# Set BOOST_ROOT env variable or pass with cmake -DBOOST_ROOT=path.
-# BOOST_ROOT can also be defined by a previous run from cmake cache.
-if (NOT "$ENV{BOOST_ROOT_CPP11}" STREQUAL "")
-    # Scons documentation for BOOST_ROOT_CPP11:
-    # "look for optional second boostroot compiled with clang's libc++ STL library
-    # this prevents warnings/errors when linking code built with two different
-    # incompatible STL libraries."
-    file (TO_CMAKE_PATH "$ENV{BOOST_ROOT_CPP11}" BOOST_ROOT)
-    set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
-endif ()
-if ("${BOOST_ROOT}" STREQUAL "")
-    file (TO_CMAKE_PATH "$ENV{BOOST_ROOT}" BOOST_ROOT)
-    # Cache BOOST_ROOT for runs that do not define $ENV{BOOST_ROOT}.
-    set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
-endif ()
+if (BUILD_TESTS OR BUILD_EXAMPLES)
 
-message ("* Configuring Boost")
-message (STATUS "-- Using BOOST_ROOT")
-message (STATUS "       " ${BOOST_ROOT})
+    ############ Compiler specific setup
 
-if (MSVC)
+    set (WEBSOCKETPP_PLATFORM_LIBS "")
+    set (WEBSOCKETPP_PLATFORM_TSL_LIBS "")
+    set (WEBSOCKETPP_BOOST_LIBS "")
+
+    # VC9 and C++11 reasoning
+    if (ENABLE_CPP11 AND MSVC AND MSVC90)
+        message("* Detected Visual Studio 9 2008, disabling C++11 support.")
+        set (ENABLE_CPP11 FALSE)
+    endif ()
+
+    # Detect clang. Not officially reported by cmake.
+    execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "-v" ERROR_VARIABLE CXX_VER_STDERR)
+    if ("${CXX_VER_STDERR}" MATCHES ".*clang.*")
+        set (CMAKE_COMPILER_IS_CLANGXX 1)
+    endif ()
+
+    # C++11 defines
+    if (ENABLE_CPP11)
+        add_definitions (-D_WEBSOCKETPP_CPP11_STL_)
+    endif ()
+
+    # Visual studio
+    if (MSVC)
+        set (WEBSOCKETPP_BOOST_LIBS system thread regex)
+        set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
+        set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
+        add_definitions (/W3 /wd4996 /wd4995 /wd4355)
+        add_definitions (-DUNICODE -D_UNICODE)
+        add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+        add_definitions (-DNOMINMAX)
+    endif ()
+
+    # g++
+    if (CMAKE_COMPILER_IS_GNUCXX)
+        set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
+        set (WEBSOCKETPP_BOOST_LIBS system thread regex)
+        set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x")
+        if (NOT APPLE)
+            add_definitions (-DNDEBUG -Wall -Wcast-align) # todo: should we use CMAKE_C_FLAGS for these?
+        endif ()
+
+        # Try to detect version. Note: Not tested!
+        execute_process (COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion" OUTPUT_VARIABLE GCC_VERSION)
+        if ("${GCC_VERSION}" STRGREATER "4.4.0")
+            message("* C++11 support partially enabled due to GCC version ${GCC_VERSION}")
+            set (WEBSOCKETPP_BOOST_LIBS system thread regex)
+            add_definitions (-D_WEBSOCKETPP_NO_CPP11_REGEX_)
+        endif ()
+    endif ()
+
+    # clang
+    if (CMAKE_COMPILER_IS_CLANGXX)
+        if (NOT APPLE)
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        else()
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread)
+        endif()
+        set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
+        set (WEBSOCKETPP_BOOST_LIBS system thread regex)
+        set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
+        if (NOT APPLE)
+            add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
+        endif ()
+    endif ()
+
+    # OSX, can override above.
+    if (APPLE)
+        add_definitions (-DNDEBUG -Wall)
+    endif ()
+
+    if (BUILD_EXAMPLES)
+        list (APPEND WEBSOCKETPP_BOOST_LIBS random)
+    endif()
+
+    ############ Dependencies
+
+    # Set BOOST_ROOT env variable or pass with cmake -DBOOST_ROOT=path.
+    # BOOST_ROOT can also be defined by a previous run from cmake cache.
+    if (NOT "$ENV{BOOST_ROOT_CPP11}" STREQUAL "")
+        # Scons documentation for BOOST_ROOT_CPP11:
+        # "look for optional second boostroot compiled with clang's libc++ STL library
+        # this prevents warnings/errors when linking code built with two different
+        # incompatible STL libraries."
+        file (TO_CMAKE_PATH "$ENV{BOOST_ROOT_CPP11}" BOOST_ROOT)
+        set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
+    endif ()
+    if ("${BOOST_ROOT}" STREQUAL "")
+        file (TO_CMAKE_PATH "$ENV{BOOST_ROOT}" BOOST_ROOT)
+        # Cache BOOST_ROOT for runs that do not define $ENV{BOOST_ROOT}.
+        set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
+    endif ()
+
+    message ("* Configuring Boost")
+    message (STATUS "-- Using BOOST_ROOT")
+    message (STATUS "       " ${BOOST_ROOT})
+
+    if (MSVC)
+        set (Boost_USE_MULTITHREADED TRUE)
+        set (Boost_USE_STATIC_LIBS TRUE)
+    else ()
+        set (Boost_USE_MULTITHREADED FALSE)
+        set (Boost_USE_STATIC_LIBS FALSE)
+    endif ()
+
+    set (Boost_FIND_REQUIRED TRUE)
+    set (Boost_FIND_QUIETLY TRUE)
+    set (Boost_DEBUG FALSE)
     set (Boost_USE_MULTITHREADED TRUE)
-    set (Boost_USE_STATIC_LIBS TRUE)
-else ()
-    set (Boost_USE_MULTITHREADED FALSE)
-    set (Boost_USE_STATIC_LIBS FALSE)
-endif ()
+    set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
 
-set (Boost_FIND_REQUIRED TRUE)
-set (Boost_FIND_QUIETLY TRUE)
-set (Boost_DEBUG FALSE)
-set (Boost_USE_MULTITHREADED TRUE)
-set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
+    find_package (Boost 1.39.0 COMPONENTS "${WEBSOCKETPP_BOOST_LIBS}")
 
-find_package (Boost 1.39.0 COMPONENTS "${WEBSOCKETPP_BOOST_LIBS}")
+    if (Boost_FOUND)
+        # Boost is a project wide global dependency.
+        include_directories (${Boost_INCLUDE_DIRS})
+        link_directories (${Boost_LIBRARY_DIRS})
 
-if (Boost_FOUND)
-    # Boost is a project wide global dependency.
-    include_directories (${Boost_INCLUDE_DIRS})
-    link_directories (${Boost_LIBRARY_DIRS})
+        # Pretty print status
+        message (STATUS "-- Include Directories")
+        foreach (include_dir ${Boost_INCLUDE_DIRS})
+            message (STATUS "       " ${include_dir})
+        endforeach ()
+        message (STATUS "-- Library Directories")
+        foreach (library_dir ${Boost_LIBRARY_DIRS})
+            message (STATUS "       " ${library_dir})
+        endforeach ()
+        message (STATUS "-- Libraries")
+        foreach (boost_lib ${Boost_LIBRARIES})
+            message (STATUS "       " ${boost_lib})
+        endforeach ()
+        message ("")
+    else ()
+        message (FATAL_ERROR "Failed to find required dependency: boost")
+    endif ()
 
-    # Pretty print status
-    message (STATUS "-- Include Directories")
-    foreach (include_dir ${Boost_INCLUDE_DIRS})
-        message (STATUS "       " ${include_dir})
-    endforeach ()
-    message (STATUS "-- Library Directories")
-    foreach (library_dir ${Boost_LIBRARY_DIRS})
-        message (STATUS "       " ${library_dir})
-    endforeach ()
-    message (STATUS "-- Libraries")
-    foreach (boost_lib ${Boost_LIBRARIES})
-        message (STATUS "       " ${boost_lib})
-    endforeach ()
-    message ("")
-else ()
-    message (FATAL_ERROR "Failed to find required dependency: boost")
-endif ()
-
+endif()
 
 ############ Add projects
 
