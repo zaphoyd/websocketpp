@@ -557,25 +557,18 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
     }
     
     // At this point the transport is ready to read and write bytes.
-    
     if (m_is_server) {
-        this->read(1);
+        this->read_handshake(1);
     } else {
         // We are a client. Set the processor to the version specified in the
         // config file and send a handshake request.
         m_processor = get_processor(config::client_version);
         this->send_http_request();
     }
-    
-    // TODO: Begin websocket handshake
-    // server: read/process/write/go
-    // client: process/write/read/process/go
-    
-    //this->read();
 }
 
 template <typename config>
-void connection<config>::read(size_t num_bytes) {
+void connection<config>::read_handshake(size_t num_bytes) {
     m_alog.write(log::alevel::devel,"connection read");
     
     transport_con_type::async_read_at_least(
@@ -583,7 +576,7 @@ void connection<config>::read(size_t num_bytes) {
         m_buf,
         config::connection_read_buffer_size,
         lib::bind(
-            &type::handle_handshake_read,
+            &type::handle_read_handshake,
             type::shared_from_this(),
             lib::placeholders::_1,
             lib::placeholders::_2
@@ -594,14 +587,14 @@ void connection<config>::read(size_t num_bytes) {
 // All exit paths for this function need to call send_http_response() or submit 
 // a new read request with this function as the handler.
 template <typename config>
-void connection<config>::handle_handshake_read(const lib::error_code& ec, 
+void connection<config>::handle_read_handshake(const lib::error_code& ec, 
     size_t bytes_transferred)
 {
-    m_alog.write(log::alevel::devel,"connection handle_handshake_read");
+    m_alog.write(log::alevel::devel,"connection handle_read_handshake");
     
     this->atomic_state_check(
         istate::READ_HTTP_REQUEST,
-        "handle_handshake_read must be called from READ_HTTP_REQUEST state"
+        "handle_read_handshake must be called from READ_HTTP_REQUEST state"
     );
     
     if (ec) {
@@ -699,7 +692,7 @@ void connection<config>::handle_handshake_read(const lib::error_code& ec,
             m_buf,
             config::connection_read_buffer_size,
             lib::bind(
-                &type::handle_handshake_read,
+                &type::handle_read_handshake,
                 type::shared_from_this(),
                 lib::placeholders::_1,
                 lib::placeholders::_2
@@ -993,62 +986,7 @@ bool connection<config>::process_handshake_request() {
     }
     
     return true;
-}
-
-// TODO: does this function still need to be here?
-template <typename config>
-void connection<config>::handle_read(const lib::error_code& ec, 
-    size_t bytes_transferred) 
-{
-    if (ec) {
-        m_elog.write(log::elevel::rerror,"error in handle_read"+ec.message());
-        return;
-    }
-    
-    // TODO: assert bytes_transferred < m_buf size.
-    
-    m_alog.write(log::alevel::devel,"connection handle_read");
-    
-    std::string foo(m_buf,bytes_transferred);
-    
-    // process bytes
-    
-    if (foo == "close") {
-        this->terminate();
-        return;
-    }
-    
-    //m_handler->on_message(type::shared_from_this(),foo);
-    
-    this->read();
-}
- 
-
-template <typename config>
-void connection<config>::write(std::string msg) {
-    m_alog.write(log::alevel::devel,"connection write");
-    
-    transport_con_type::async_write(
-        msg.data(),
-        msg.size(),
-        lib::bind(
-            &type::handle_write,
-            type::shared_from_this(),
-            lib::placeholders::_1
-        )
-    );
-}
-    
-template <typename config>
-void connection<config>::handle_write(const lib::error_code& ec) {
-    if (ec) {
-        m_elog.write(log::elevel::rerror,
-            "error in handle_write: "+ec.message());
-        return;
-    }
-    
-    m_alog.write(log::alevel::devel,"connection handle_write");
-}
+} 
 
 template <typename config>
 void connection<config>::send_http_response() {

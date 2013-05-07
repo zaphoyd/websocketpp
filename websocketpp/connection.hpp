@@ -773,14 +773,12 @@ public:
     
     void start();
     
-    void read(size_t num_bytes);
-    void handle_read(const lib::error_code& ec, size_t bytes_transferred);
-   
+    void read_handshake(size_t num_bytes);   
 
-    void write(std::string msg);
-    void handle_write(const lib::error_code& ec);
+    //void write(std::string msg);
+    //void handle_write(const lib::error_code& ec);
     
-    void handle_handshake_read(const lib::error_code& ec,
+    void handle_read_handshake(const lib::error_code& ec,
         size_t bytes_transferred);
     void handle_read_http_response(const lib::error_code& ec,
         size_t bytes_transferred);
