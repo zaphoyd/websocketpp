@@ -552,7 +552,7 @@ void connection<config>::handle_transport_init(const lib::error_code& ec) {
         s << "handle_transport_init recieved error: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
 
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     
@@ -601,14 +601,14 @@ void connection<config>::handle_read_handshake(const lib::error_code& ec,
         std::stringstream s;
         s << "error in handle_read_handshake: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
             
     // Boundaries checking. TODO: How much of this should be done?
     if (bytes_transferred > config::connection_read_buffer_size) {
         m_elog.write(log::elevel::fatal,"Fatal boundaries checking error.");
-        this->terminate();
+        this->terminate(make_error_code(error::general));
         return;
     }
     
@@ -627,7 +627,7 @@ void connection<config>::handle_read_handshake(const lib::error_code& ec,
     // TODO: Is this overkill?
     if (bytes_processed > config::connection_read_buffer_size) {
         m_elog.write(log::elevel::fatal,"Fatal boundaries checking error.");
-        this->terminate();
+        this->terminate(make_error_code(error::general));
         return;
     }
     
@@ -739,21 +739,21 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         }
         if (ec == transport::error::tls_short_read) {
 			m_elog.write(log::elevel::rerror,"got TLS short read, killing connection for now");
-			this->terminate();
+			this->terminate(ec);
 			return;
         }
         
         std::stringstream s;
         s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
         m_elog.write(log::elevel::fatal,s.str());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     
     // Boundaries checking. TODO: How much of this should be done?
     if (bytes_transferred > config::connection_read_buffer_size) {
         m_elog.write(log::elevel::fatal,"Fatal boundaries checking error");
-        this->terminate();
+        this->terminate(make_error_code(error::general));
         return;
     }
     
@@ -789,7 +789,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             m_elog.write(log::elevel::rerror,"consume error: "+ec.message());
             
             if (config::drop_on_protocol_error) {
-                this->terminate();
+                this->terminate(ec);
                 return;
             } else {
                 lib::error_code close_ec;
@@ -799,7 +799,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                     m_elog.write(log::elevel::fatal,
                         "Failed to send a close frame after protocol error: "
                         +close_ec.message());
-                    this->terminate();
+                    this->terminate(close_ec);
                     return;
                 }
             }
@@ -1045,7 +1045,7 @@ void connection<config>::handle_send_http_response(
     if (ec) {
         m_elog.write(log::elevel::rerror,
             "error in handle_send_http_response: "+ec.message());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     
@@ -1063,7 +1063,7 @@ void connection<config>::handle_send_http_response(
               << m_response.get_status_code();
             m_elog.write(log::elevel::rerror,s.str());
         }
-        this->terminate();
+        this->terminate(make_error_code(error::http_connection_ended));
         return;
     }
     
@@ -1143,7 +1143,7 @@ void connection<config>::handle_send_http_request(const lib::error_code& ec) {
     if (ec) {
         m_elog.write(log::elevel::rerror,
             "error in handle_send_http_request: "+ec.message());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     
@@ -1182,16 +1182,17 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
     if (ec) {
         m_elog.write(log::elevel::rerror,
             "error in handle_read_http_response: "+ec.message());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     size_t bytes_processed = 0;
+    // TODO: refactor this to use error codes rather than exceptions
     try {
         bytes_processed = m_response.consume(m_buf,bytes_transferred);
     } catch (http::exception & e) {
         m_elog.write(log::elevel::rerror,
             std::string("error in handle_read_http_response: ")+e.what());
-        this->terminate();
+        this->terminate(make_error_code(error::general));
         return;
     }
     
@@ -1207,7 +1208,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
                 std::string("Server handshake response was invalid: ")+
                 ec.message()
             );
-            this->terminate();
+            this->terminate(ec);
             return;
         }
         
@@ -1251,32 +1252,68 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
 }
 
 template <typename config>
-void connection<config>::terminate() {
-    try {
-        m_alog.write(log::alevel::devel,"connection terminate");
-    
-        transport_con_type::shutdown();
-
-        if (m_state == session::state::connecting) {
-            m_state = session::state::closed;
-            if (m_fail_handler) {
-                m_fail_handler(m_connection_hdl);
-            }
-        } else if (m_state != session::state::closed) {
-            m_state = session::state::closed;
-            if (m_close_handler) {
-                m_close_handler(m_connection_hdl);
-            }
-        } else {
-            m_alog.write(log::alevel::devel,"terminate called on connection that was already terminated");
-            return;
-        }
-        
-        log_close_result();
-    } catch (const std::exception& e) {
-        m_elog.write(log::elevel::warn,
-            std::string("terminate failed. Reason was: ") + e.what());
+void connection<config>::terminate(const lib::error_code & ec) {
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection ");
     }
+            
+    terminate_status tstat = unknown;
+    if (ec) {
+        m_local_close_code = close::status::abnormal_close;
+        m_local_close_reason = ec.message();
+    }
+    
+    if (m_state == session::state::connecting) {
+        m_state = session::state::closed;
+        tstat = failed;
+    } else if (m_state != session::state::closed) {
+        m_state = session::state::closed;
+        tstat = closed;
+    } else {
+        m_alog.write(log::alevel::devel,
+            "terminate called on connection that was already terminated");
+        return;
+    }
+    
+    transport_con_type::async_shutdown(
+        lib::bind(
+            &type::handle_terminate,
+            type::shared_from_this(),
+            tstat,
+            lib::placeholders::_1
+        )
+    );
+}
+
+template <typename config>
+void connection<config>::handle_terminate(terminate_status tstat,
+    const lib::error_code& ec)
+{
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection handle_terminate");
+    }
+    
+    if (ec) {
+        // there was an error actually shutting down the connection
+        m_elog.write(log::elevel::rerror,ec.message());
+    }
+    
+    // clean shutdown
+    if (tstat == failed) {
+        if (m_fail_handler) {
+            m_fail_handler(m_connection_hdl);
+        }
+        // TODO: custom fail output log format?
+        log_close_result();
+    } else if (tstat == closed) {
+        if (m_close_handler) {
+            m_close_handler(m_connection_hdl);
+        }
+        log_close_result();
+    } else {
+        m_elog.write(log::elevel::rerror,"Unknown terminate_status");
+    }
+    
     // call the termination handler if it exists
     // if it exists it might (but shouldn't) refer to a bad memory location. 
     // If it does, we don't care and should catch and ignore it.
@@ -1358,19 +1395,21 @@ template <typename config>
 void connection<config>::handle_write_frame(bool terminate, 
     const lib::error_code& ec)
 {
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection handle_write_frame");
+    }
+    
     m_send_buffer.clear();
     m_current_msg.reset();
     
     if (ec) {
         m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
-        this->terminate();
+        this->terminate(ec);
         return;
     }
     
-    m_alog.write(log::alevel::devel,"connection handle_write_frame");
-    
     if (terminate) {
-        this->terminate();
+        this->terminate(lib::error_code());
         return;
     }
 
@@ -1483,7 +1522,7 @@ void connection<config>::process_control_frame(typename
                 s << "Received invalid close code " << m_remote_close_code
                   << " dropping connection per config.";
                 m_elog.write(log::elevel::devel,s.str());
-                this->terminate();
+                this->terminate(ec);
             } else {
                 s << "Received invalid close code " << m_remote_close_code
                   << " sending acknowledgement and closing";
@@ -1503,7 +1542,7 @@ void connection<config>::process_control_frame(typename
             if (config::drop_on_protocol_error) {
                 m_elog.write(log::elevel::devel,
                     "Received invalid close reason. Dropping connection per config");
-                this->terminate();
+                this->terminate(ec);
             } else {
                 m_elog.write(log::elevel::devel,
                     "Received invalid close reason. Sending acknowledgement and closing");
@@ -1531,7 +1570,7 @@ void connection<config>::process_control_frame(typename
         } else if (m_state == session::state::closing) {
             // ack of our close
             m_alog.write(log::alevel::devel,"Got acknowledgement of close");
-            this->terminate();
+            this->terminate(lib::error_code());
         } else {
             // spurious, ignore
             m_elog.write(log::elevel::devel,"Got close frame in wrong state");

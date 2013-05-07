@@ -100,6 +100,9 @@ enum value {
     
     /// Attempted to use a server specific feature on a client endpoint
     server_only,
+    
+    /// HTTP connection ended
+    http_connection_ended
 }; // enum value
 
 
@@ -153,6 +156,8 @@ public:
                 return "Feature not available on server endpoints";
             case error::server_only:
                 return "Feature not available on client endpoints";
+            case error::http_connection_ended:
+                return "HTTP connection ended";
             default:
                 return "Unknown";
         }
