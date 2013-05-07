@@ -35,8 +35,6 @@ set (WEBSOCKETPP_PREFIX ${WEBSOCKETPP_ROOT}/build)
 # - Linux/OSX: make install.
 if (MSVC)
     set (CMAKE_INSTALL_PREFIX ${WEBSOCKETPP_PREFIX})
-else ()
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/websocketpp")
 endif ()
 
 ############  Build customization
