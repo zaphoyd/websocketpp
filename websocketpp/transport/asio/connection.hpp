@@ -123,17 +123,69 @@ public:
         m_tcp_init_handler = h;
     }
     
-    void set_proxy(const std::string & proxy) {
-        m_proxy = proxy;
+    /// Set the proxy to connect through (exception free)
+    /**
+     * The URI passed should be a complete URI including scheme. For example:
+     * http://proxy.example.com:8080/
+     * 
+     * The proxy must be set up as an explicit (CONNECT) proxy allowed to 
+     * connect to the port you specify. Traffic to the proxy is not encrypted.
+     * 
+     * @param uri The full URI of the proxy to connect to.
+     *
+     * @param ec A status value
+     */
+    void set_proxy(const std::string & uri, lib::error_code & ec) {
+    	// TODO: return errors for illegal URIs here?
+    	// TODO: should https urls be illegal for the moment?
+        m_proxy = uri;
         m_proxy_data.reset(new proxy_data());
+        ec = lib::error_code();
     }
-    void set_proxy_basic_auth(const std::string & u, const std::string & p) {
-        if (m_proxy_data) {
-            std::string val = "Basic "+base64_encode(u + ":" + p);
-            m_proxy_data->req.replace_header("Proxy-Authorization",val);
-        } else {
-            // TODO: should we throw errors with invalid stuff here or just
-            // silently ignore?
+    
+    /// Set the proxy to connect through (exception)
+    void set_proxy(const std::string & uri) {
+    	lib::error_code ec;
+    	set_proxy(uri,ec);
+    	if (ec) { throw ec; }
+    }
+    
+    /// Set the basic auth credentials to use (exception free)
+    /**
+     * The URI passed should be a complete URI including scheme. For example:
+     * http://proxy.example.com:8080/
+     * 
+     * The proxy must be set up as an explicit proxy 
+     * 
+     * @param username The username to send
+     * 
+     * @param password The password to send
+     *
+     * @param ec A status value
+     */
+    void set_proxy_basic_auth(const std::string & username, const 
+    	std::string & password, lib::error_code & ec)
+    {
+        if (!m_proxy_data) {
+        	ec = make_error_code(websocketpp::error::invalid_state);
+        	return;
+        }
+		
+		// TODO: username can't contain ':'
+		std::string val = "Basic "+base64_encode(username + ":" + password);
+		m_proxy_data->req.replace_header("Proxy-Authorization",val);
+		ec = lib::error_code();
+    }
+    
+    /// Set the basic auth credentials to use (exception)
+    void set_proxy_basic_auth(const std::string & username, const 
+    	std::string & password)
+    {
+    	lib::error_code ec;
+    	set_proxy_basic_auth(username,password,ec);
+    	if (ec) { throw ec; }
+    }
+    
         }
     }
     
