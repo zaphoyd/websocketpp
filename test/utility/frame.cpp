@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask ) {
 
 	pkey_temp = frame::word_mask_circ(input+7,output+7,8,pkey_temp);
 	BOOST_CHECK( std::equal(output,output+16,masked) );
-	BOOST_CHECK( pkey_temp == frame::circshift_prepared_key(pkey,3) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 }
 
 BOOST_AUTO_TEST_CASE( continuous_word_mask_inplace ) {
@@ -437,11 +437,11 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask_inplace ) {
 	
 	pkey_temp = frame::word_mask_circ(buffer,7,pkey);
 	BOOST_CHECK( std::equal(buffer,buffer+7,masked) );
-	BOOST_CHECK( pkey_temp == frame::circshift_prepared_key(pkey,3) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 
 	pkey_temp = frame::word_mask_circ(buffer+7,8,pkey_temp);
 	BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
-	BOOST_CHECK( pkey_temp == frame::circshift_prepared_key(pkey,3) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 }
 
 BOOST_AUTO_TEST_CASE( continuous_word_mask2 ) {	
