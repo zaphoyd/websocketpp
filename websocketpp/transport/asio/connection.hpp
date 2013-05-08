@@ -80,9 +80,9 @@ public:
     
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;    
-	/// Type of a pointer to the ASIO timer class
-	typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
-	
+    /// Type of a pointer to the ASIO timer class
+    typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    
     // generate and manage our own io_service
     explicit connection(bool is_server, alog_type& alog, elog_type& elog)
       : m_is_server(is_server)
@@ -136,8 +136,8 @@ public:
      * @param ec A status value
      */
     void set_proxy(const std::string & uri, lib::error_code & ec) {
-    	// TODO: return errors for illegal URIs here?
-    	// TODO: should https urls be illegal for the moment?
+        // TODO: return errors for illegal URIs here?
+        // TODO: should https urls be illegal for the moment?
         m_proxy = uri;
         m_proxy_data.reset(new proxy_data());
         ec = lib::error_code();
@@ -145,9 +145,9 @@ public:
     
     /// Set the proxy to connect through (exception)
     void set_proxy(const std::string & uri) {
-    	lib::error_code ec;
-    	set_proxy(uri,ec);
-    	if (ec) { throw ec; }
+        lib::error_code ec;
+        set_proxy(uri,ec);
+        if (ec) { throw ec; }
     }
     
     /// Set the basic auth credentials to use (exception free)
@@ -164,26 +164,26 @@ public:
      * @param ec A status value
      */
     void set_proxy_basic_auth(const std::string & username, const 
-    	std::string & password, lib::error_code & ec)
+        std::string & password, lib::error_code & ec)
     {
         if (!m_proxy_data) {
-        	ec = make_error_code(websocketpp::error::invalid_state);
-        	return;
+            ec = make_error_code(websocketpp::error::invalid_state);
+            return;
         }
-		
-		// TODO: username can't contain ':'
-		std::string val = "Basic "+base64_encode(username + ":" + password);
-		m_proxy_data->req.replace_header("Proxy-Authorization",val);
-		ec = lib::error_code();
+        
+        // TODO: username can't contain ':'
+        std::string val = "Basic "+base64_encode(username + ":" + password);
+        m_proxy_data->req.replace_header("Proxy-Authorization",val);
+        ec = lib::error_code();
     }
     
     /// Set the basic auth credentials to use (exception)
     void set_proxy_basic_auth(const std::string & username, const 
-    	std::string & password)
+        std::string & password)
     {
-    	lib::error_code ec;
-    	set_proxy_basic_auth(username,password,ec);
-    	if (ec) { throw ec; }
+        lib::error_code ec;
+        set_proxy_basic_auth(username,password,ec);
+        if (ec) { throw ec; }
     }
     
     /// Set the proxy timeout duration (exception free)
@@ -198,8 +198,8 @@ public:
      */
     void set_proxy_timeout(long duration, lib::error_code & ec) {
         if (!m_proxy_data) {
-        	ec = make_error_code(websocketpp::error::invalid_state);
-        	return;
+            ec = make_error_code(websocketpp::error::invalid_state);
+            return;
         }
         
         m_proxy_data->timeout_proxy = duration;
@@ -208,9 +208,9 @@ public:
     
     /// Set the proxy timeout duration (exception)
     void set_proxy_timeout(long duration) {
-    	lib::error_code ec;
-    	set_proxy_timeout(duration,ec);
-    	if (ec) { throw ec; }
+        lib::error_code ec;
+        set_proxy_timeout(duration,ec);
+        if (ec) { throw ec; }
     }
     
     const std::string & get_proxy() const {
@@ -253,7 +253,8 @@ public:
      */
     lib::error_code proxy_init(const std::string & authority) {
         if (!m_proxy_data) {
-            return websocketpp::error::make_error_code(websocketpp::error::invalid_state);
+            return websocketpp::error::make_error_code(
+                websocketpp::error::invalid_state);
         }
         m_proxy_data->req.set_version("HTTP/1.1");
         m_proxy_data->req.set_method("CONNECT");
@@ -263,28 +264,28 @@ public:
 
         return lib::error_code();
     }
-	
-	/// Call back a function after a period of time.
-	/**
-	 * Sets a timer that calls back a function after the specified period of
-	 * milliseconds. Returns a handle that can be used to cancel the timer.
-	 * A cancelled timer will return the error code error::operation_aborted
-	 * A timer that expired will return no error.
-	 * 
-	 * @param duration Length of time to wait in milliseconds
-	 *
-	 * @param callback The function to call back when the timer has expired
-	 *
-	 * @return A handle that can be used to cancel the timer if it is no longer
-	 * needed.
-	 */
-	timer_ptr set_timer(long duration, timer_handler callback) {
-		timer_ptr new_timer(
-			new boost::asio::deadline_timer(
-				*m_io_service,
-				boost::posix_time::milliseconds(duration)
-			)
-		);
+    
+    /// Call back a function after a period of time.
+    /**
+     * Sets a timer that calls back a function after the specified period of
+     * milliseconds. Returns a handle that can be used to cancel the timer.
+     * A cancelled timer will return the error code error::operation_aborted
+     * A timer that expired will return no error.
+     * 
+     * @param duration Length of time to wait in milliseconds
+     *
+     * @param callback The function to call back when the timer has expired
+     *
+     * @return A handle that can be used to cancel the timer if it is no longer
+     * needed.
+     */
+    timer_ptr set_timer(long duration, timer_handler callback) {
+        timer_ptr new_timer(
+            new boost::asio::deadline_timer(
+                *m_io_service,
+                boost::posix_time::milliseconds(duration)
+            )
+        );
 
         new_timer->async_wait(
             lib::bind(
@@ -297,34 +298,33 @@ public:
         );
         
         return new_timer;
-	}
-	
-	/// Timer callback
-	/**
-	 * The timer pointer is included to ensure the timer isn't destroyed until
-	 * after it has expired.
-	 * 
-	 * @param t Pointer to the timer in question
-	 *
-	 * @param callback The function to call back
-	 *
-	 * @param ec The status code
-	 */
-	void handle_timer(timer_ptr t, timer_handler callback, const 
+    }
+    
+    /// Timer callback
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     * 
+     * @param t Pointer to the timer in question
+     *
+     * @param callback The function to call back
+     *
+     * @param ec The status code
+     */
+    void handle_timer(timer_ptr t, timer_handler callback, const 
         boost::system::error_code& ec)
     {
-		if (ec) {
+        if (ec) {
             if (ec == boost::asio::error::operation_aborted) {
-            	callback(make_error_code(transport::error::operation_aborted)); 
+                callback(make_error_code(transport::error::operation_aborted)); 
             } else {
-				m_elog.write(log::elevel::info,
-					"asio handle_timer error: "+ec.message());
-				callback(make_error_code(error::pass_through)); 
+                log_err(log::elevel::info,"asio handle_timer",ec);
+                callback(make_error_code(error::pass_through)); 
             }
         } else {
             callback(lib::error_code());
         }
-	}
+    }
 protected:
     /// Initialize transport for reading
     /**
@@ -371,7 +371,8 @@ protected:
             callback(ec);
         }
         
-        // If we have a proxy set issue a proxy connect, otherwise skip to post_init
+        // If we have a proxy set issue a proxy connect, otherwise skip to 
+        // post_init
         if (!m_proxy.empty()) {
             proxy_write(callback);
         } else {
@@ -420,19 +421,19 @@ protected:
                                              m_proxy_data->write_buf.size()));
         
         m_alog.write(log::alevel::devel,m_proxy_data->write_buf);
-		
-		// Set a timer so we don't wait forever for the proxy to respond
-		m_proxy_data->timer = this->set_timer(
-			m_proxy_data->timeout_proxy,
-			lib::bind(
-				&type::handle_proxy_timeout,
-				this,
-				callback,
-				lib::placeholders::_1
-			)
-		);
-		
-		// Send proxy request
+        
+        // Set a timer so we don't wait forever for the proxy to respond
+        m_proxy_data->timer = this->set_timer(
+            m_proxy_data->timeout_proxy,
+            lib::bind(
+                &type::handle_proxy_timeout,
+                this,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+        
+        // Send proxy request
         boost::asio::async_write(
             socket_con_type::get_next_layer(),
             m_bufs,
@@ -446,16 +447,18 @@ protected:
     }
     
     void handle_proxy_timeout(init_handler callback, const lib::error_code & ec) {
-    	if (ec == transport::error::operation_aborted) {
-    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer cancelled");
-    		return;
-    	} else if (ec) {
-    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer error: "+ec.message());
-    		callback(ec);
-    	} else {
-    		m_alog.write(log::alevel::devel,"asio handle_proxy_write timer expired");
-    		callback(make_error_code(transport::error::timeout));
-    	}
+        if (ec == transport::error::operation_aborted) {
+            m_alog.write(log::alevel::devel,
+                "asio handle_proxy_write timer cancelled");
+            return;
+        } else if (ec) {
+            log_err(log::elevel::devel,"asio handle_proxy_write",ec);
+            callback(ec);
+        } else {
+            m_alog.write(log::alevel::devel,
+                "asio handle_proxy_write timer expired");
+            callback(make_error_code(transport::error::timeout));
+        }
     }
     
     void handle_proxy_write(init_handler callback, const 
@@ -468,8 +471,7 @@ protected:
         m_bufs.clear();
 
         if (ec) {
-            m_elog.write(log::elevel::info,
-                "asio handle_proxy_write error: "+ec.message());
+            log_err(log::elevel::info,"asio handle_proxy_write",ec);
             m_proxy_data->timer->cancel();
             callback(make_error_code(error::pass_through)); 
         } else {
@@ -622,13 +624,7 @@ protected:
             handler(make_error_code(transport::error::tls_short_read), 
             bytes_transferred); 
         } else {
-            // other error that we cannot translate into a WebSocket++ 
-            // transport error. Use pass through and print an info warning
-            // with the original error.
-            std::stringstream s;
-            s << "asio async_read_at_least error: " 
-              << ec << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::info,s.str());
+            log_err(log::elevel::info,"asio async_read_at_least",ec);
             handler(make_error_code(transport::error::pass_through), 
                 bytes_transferred);
         }
@@ -673,10 +669,7 @@ protected:
     {
         m_bufs.clear();
         if (ec) {
-            std::stringstream s;
-            s << "asio async_write error: " << ec 
-              << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::info,s.str());
+            log_err(log::elevel::info,"asio async_write",ec);
             handler(make_error_code(transport::error::pass_through));
         } else {
             handler(lib::error_code());
@@ -739,24 +732,29 @@ protected:
         }
         
         if (ec) {
-            std::stringstream s;
-            s << "asio async_shutdown error: " << ec 
-              << " (" << ec.message() << ")";
-            m_elog.write(log::elevel::info,s.str());
+            log_err(log::elevel::info,"asio async_shutdown",ec);
             h(make_error_code(transport::error::pass_through));
         } else {
             h(lib::error_code());
         }
     }
 private:
+    /// Convenience method for logging the code and message for an error_code
+    std::string log_err(log::level l,const char * msg, lib::error_code & ec)
+    {
+        std::stringstream s;
+        s << msg << " error: " << ec << " (" << ec.message() << ")";
+        m_elog->write(l,s.str());
+    }
+    
     // static settings
     const bool m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
     
     struct proxy_data {
-    	proxy_data() : timeout_proxy(config::timeout_proxy) {}
-    	
+        proxy_data() : timeout_proxy(config::timeout_proxy) {}
+        
         request_type req;
         response_type res;
         std::string write_buf;
