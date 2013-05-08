@@ -186,7 +186,31 @@ public:
     	if (ec) { throw ec; }
     }
     
+    /// Set the proxy timeout duration (exception free)
+    /**
+     * Duration is in milliseconds. Default value is based on the transport 
+     * config
+     * 
+     * @param duration The number of milliseconds to wait before aborting the
+     * proxy connection.
+     * 
+     * @param ec A status value
+     */
+    void set_proxy_timeout(long duration, lib::error_code & ec) {
+        if (!m_proxy_data) {
+        	ec = make_error_code(websocketpp::error::invalid_state);
+        	return;
         }
+        
+        m_proxy_data->timeout_proxy = duration;
+        ec = lib::error_code();
+    }
+    
+    /// Set the proxy timeout duration (exception)
+    void set_proxy_timeout(long duration) {
+    	lib::error_code ec;
+    	set_proxy_timeout(duration,ec);
+    	if (ec) { throw ec; }
     }
     
     const std::string & get_proxy() const {
