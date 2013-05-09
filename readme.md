@@ -48,4 +48,4 @@ http://groups.google.com/group/websocketpp/
 
 Author
 ======
-Peter Thorson - websocket@zaphoyd.com
+Peter Thorson - websocketpp@zaphoyd.com
