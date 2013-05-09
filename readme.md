@@ -8,13 +8,13 @@ based on C++ iostreams and one based on Boost Asio.
 
 *This branch is no longer "experimental". It represents the current edge release
 of the WebSocket++ library. The API of 0.3.x has some significant changes from
-0.2.x, so care should be taken when upgrading.
+0.2.x, so care should be taken when upgrading.*
 
-This branch's API is relatively stable now. Features implimented so far are 
+*This branch's API is relatively stable now. Features implimented so far are 
 unlikely to change (except where explicitly noted). New features will be added
-regularly until parity with the 0.2 branch is reached.
+regularly until parity with the 0.2 branch is reached.*
 
-This is the preferred branch for new projects, especially those that involve 
+*This is the preferred branch for new projects, especially those that involve 
 multithreaded servers. It is better tested and documented. The 0.3.x API will 
 be the basis for the 1.0 release.*
 
