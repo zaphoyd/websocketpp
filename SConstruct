@@ -75,7 +75,7 @@ elif env['PLATFORM'] == 'posix':
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
-      env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+      env.Append(CCFLAGS = ['-O1', '-fomit-frame-pointer'])
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
@@ -83,7 +83,7 @@ elif env['PLATFORM'] == 'darwin':
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
-      env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+      env.Append(CCFLAGS = ['-O1', '-fomit-frame-pointer'])
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 
