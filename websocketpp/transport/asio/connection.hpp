@@ -740,11 +740,11 @@ protected:
     }
 private:
     /// Convenience method for logging the code and message for an error_code
-    std::string log_err(log::level l,const char * msg, lib::error_code & ec)
-    {
+    template <typename error_type>
+    void log_err(log::level l, const char * msg, const error_type & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
-        m_elog->write(l,s.str());
+        m_elog.write(l,s.str());
     }
     
     // static settings

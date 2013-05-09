@@ -439,7 +439,7 @@ protected:
         }
         
         timer_ptr dns_timer = tcon->set_timer(
-			config::timeout_dns,
+			config::timeout_dns_resolve,
 			lib::bind(
 				&type::handle_resolve_timeout,
 				this,
@@ -483,8 +483,8 @@ protected:
     	} 
     }
     
-    void handle_resolve(transport_con_ptr tcon, connect_handler callback,
-        timer_ptr dns_timer, const boost::system::error_code& ec, 
+    void handle_resolve(transport_con_ptr tcon, timer_ptr dns_timer,
+    	connect_handler callback, const boost::system::error_code& ec, 
         boost::asio::ip::tcp::resolver::iterator iterator)
     {
         dns_timer->cancel();
@@ -577,8 +577,8 @@ protected:
     }
 private:
     /// Convenience method for logging the code and message for an error_code
-    std::string log_err(log::level l,const char * msg, lib::error_code & ec)
-    {
+    template <typename error_type>
+    void log_err(log::level l,const char * msg, const error_type & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
         m_elog->write(l,s.str());
