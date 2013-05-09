@@ -167,6 +167,14 @@ public:
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
+private:
+    enum terminate_status {
+        failed = 1,
+        closed,
+        unknown
+    };
+public:
+
     explicit connection(bool is_server, const std::string& ua, alog_type& alog, 
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
@@ -773,14 +781,12 @@ public:
     
     void start();
     
-    void read(size_t num_bytes);
-    void handle_read(const lib::error_code& ec, size_t bytes_transferred);
-   
+    void read_handshake(size_t num_bytes);   
 
-    void write(std::string msg);
-    void handle_write(const lib::error_code& ec);
+    //void write(std::string msg);
+    //void handle_write(const lib::error_code& ec);
     
-    void handle_handshake_read(const lib::error_code& ec,
+    void handle_read_handshake(const lib::error_code& ec,
         size_t bytes_transferred);
     void handle_read_http_response(const lib::error_code& ec,
         size_t bytes_transferred);
@@ -798,7 +804,8 @@ public:
     /// internally by the endpoint class.
     void set_termination_handler(termination_handler new_handler);
     
-    void terminate();
+    void terminate(const lib::error_code & ec);
+    void handle_terminate(terminate_status tstat, const lib::error_code& ec);
     
     /// Checks if there are frames in the send queue and if there are sends one
     /**

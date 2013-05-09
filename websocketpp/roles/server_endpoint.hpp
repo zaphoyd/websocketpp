@@ -114,7 +114,7 @@ public:
             //con->terminate();
         } else {
             if (ec) {
-                con->terminate();
+                con->terminate(ec);
 
                 endpoint_type::m_elog.write(log::elevel::rerror,
                     "handle_accept error: "+ec.message());

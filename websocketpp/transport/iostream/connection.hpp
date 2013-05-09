@@ -313,8 +313,8 @@ protected:
         return lib::error_code();
     }
 
-    void shutdown() {
-        // TODO:
+    void async_shutdown(shutdown_handler h) {
+        h(lib::error_code());
     }
 private:
     void read(std::istream &in) {

@@ -52,7 +52,7 @@ struct debug_asio : public debug_core {
     
     typedef base::rng_type rng_type;
     
-    struct transport_config {
+    struct transport_config : public base::transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::alog_type alog_type;
         typedef type::elog_type elog_type;
