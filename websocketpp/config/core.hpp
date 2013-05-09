@@ -97,6 +97,17 @@ struct core {
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
+        
+        /// Default timer values (in ms)
+        
+        /// Length of time to wait before a proxy handshake is aborted
+        static const long timeout_proxy = 5000;
+        /// Length of time to wait before a tls handshake is aborted
+        static const long timeout_tls_handshake = 5000;
+        /// Length of time to wait for dns resolution
+        static const long timeout_dns_resolve = 5000;
+        /// Length of time to wait for socket shutdown
+        static const long timeout_socket_shutdown = 5000;
     };
 
     /// Transport Endpoint Component
@@ -107,6 +118,15 @@ struct core {
     typedef websocketpp::endpoint_base endpoint_base;
     /// User overridable Connection base class
     typedef websocketpp::connection_base connection_base;
+    
+    /// Default timer values (in ms)
+    
+    /// Length of time before an opening handshake is aborted
+    static const long timeout_open_handshake = 5000;
+    /// Length of time before a closing handshake is aborted
+    static const long timeout_close_handshake = 5000;
+    /// Length of time to wait for a pong after a ping
+    static const long timeout_pong = 5000;
     
     /// WebSocket Protocol version to use as a client
     /**

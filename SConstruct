@@ -2,9 +2,11 @@ import os, sys, commands
 env = Environment(ENV = os.environ)
 
 # figure out a better way to configure this
-#env["CXX"] = "clang++"
 if os.environ.has_key('CXX'):
     env['CXX'] = os.environ['CXX']
+
+if os.environ.has_key('DEBUG'):
+    env['DEBUG'] = os.environ['DEBUG']
 
 if os.environ.has_key('CXXFLAGS'):
     #env['CXXFLAGS'] = os.environ['CXXFLAGS']
@@ -69,14 +71,20 @@ if env['PLATFORM'].startswith('win'):
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
 elif env['PLATFORM'] == 'posix':
-   env.Append(CPPDEFINES = ['NDEBUG'])
+   if env.has_key('DEBUG'):
+      env.Append(CCFLAGS = ['-g', '-O0'])
+   else:
+      env.Append(CPPDEFINES = ['NDEBUG'])
+      env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    env.Append(CCFLAGS = ['-Wall'])
-   #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
-   #env.Append(CPPDEFINES = ['NDEBUG'])
-   env.Append(CCFLAGS = ['-Wall','-O0'])
-   #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+   if env.has_key('DEBUG'):
+      env.Append(CCFLAGS = ['-g', '-O0'])
+   else:
+      env.Append(CPPDEFINES = ['NDEBUG'])
+      env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
+   env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 
 if env['PLATFORM'].startswith('win'):

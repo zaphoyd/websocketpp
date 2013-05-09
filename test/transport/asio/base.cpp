@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,17 +33,17 @@
 #include <websocketpp/transport/asio/base.hpp>
 
 BOOST_AUTO_TEST_CASE( blank_error ) {
-	websocketpp::lib::error_code ec;
-		
+    websocketpp::lib::error_code ec;
+        
     BOOST_CHECK( !ec );
 }
 
 BOOST_AUTO_TEST_CASE( asio_error ) {
-	using websocketpp::transport::asio::error::make_error_code;
-	using websocketpp::transport::asio::error::general;
-	
-	websocketpp::lib::error_code ec = make_error_code(general);
-		
+    using websocketpp::transport::asio::error::make_error_code;
+    using websocketpp::transport::asio::error::general;
+    
+    websocketpp::lib::error_code ec = make_error_code(general);
+        
     BOOST_CHECK( ec == general );
     BOOST_CHECK( ec.value() == 1 );
 }

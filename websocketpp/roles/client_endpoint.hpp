@@ -155,7 +155,7 @@ private:
         } else if (ec) {
             // TODO
             // Set connection's failure reasons
-            con->terminate();
+            con->terminate(ec);
             
             endpoint_type::m_elog.write(log::elevel::rerror,
                     "handle_connect error: "+ec.message());

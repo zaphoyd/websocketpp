@@ -28,14 +28,20 @@
 #ifndef WEBSOCKETPP_TRANSPORT_ASIO_BASE_HPP
 #define WEBSOCKETPP_TRANSPORT_ASIO_BASE_HPP
 
-#include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/system_error.hpp>
+
+#include <boost/system/error_code.hpp>
 
 #include <string>
 
 namespace websocketpp {
 namespace transport {
 namespace asio {
+
+typedef lib::function<void(const boost::system::error_code &)> 
+    socket_shutdown_handler;
 
 /**
  * This policy uses a single boost::asio io_service to provide transport

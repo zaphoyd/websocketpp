@@ -43,6 +43,10 @@ public:
         websocketpp::lib::error_code ec;
         client::connection_ptr con = m_endpoint.get_connection(uri, ec);
         
+        if (ec) {
+        	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
+        }
+        
         //con->set_proxy("http://humupdates.uchicago.edu:8443");
         
         m_endpoint.connect(con);

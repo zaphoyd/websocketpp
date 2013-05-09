@@ -70,6 +70,7 @@ typedef lib::function<void(const lib::error_code&)> init_handler;
 typedef lib::function<void(const lib::error_code&,size_t)> read_handler;
 typedef lib::function<void(const lib::error_code&)> write_handler;
 typedef lib::function<void(const lib::error_code&)> timer_handler;
+typedef lib::function<void(const lib::error_code&)> shutdown_handler;
 typedef lib::function<void()> inturrupt_handler;
 typedef lib::function<void()> dispatch_handler;
 
@@ -107,7 +108,10 @@ enum value {
     eof,
     
     /// TLS short read
-    tls_short_read
+    tls_short_read,
+    
+    /// Timer expired
+    timeout
 };
 
 class category : public lib::error_category {
@@ -134,6 +138,8 @@ class category : public lib::error_category {
                 return "End of File";
         	case tls_short_read:
                 return "TLS Short Read";
+            case timeout:
+                return "Timer Expired";
             default:
                 return "Unknown";
         }

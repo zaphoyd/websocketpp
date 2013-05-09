@@ -18,7 +18,7 @@ prgs = env.Program('test_base_boost', ["base_boost.o"], LIBS = BOOST_LIBS)
 #prgs += env.Program('test_utility_boost', ["utilities_boost.o"], LIBS = BOOST_LIBS)
 
 if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
-   BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs]
+   BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework','system'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('base_stl.o', ["base.cpp"], LIBS = BOOST_LIBS_CPP11)
    prgs += env_cpp11.Program('test_base_stl', ["base_stl.o"], LIBS = BOOST_LIBS_CPP11)
 
