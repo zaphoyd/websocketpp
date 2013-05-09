@@ -31,15 +31,19 @@ Get Involved
 ============
 
 **Project Website**
+
 http://www.zaphoyd.com/websocketpp/
 
 **GitHub Repository**
+
 https://github.com/zaphoyd/websocketpp/
 
 **Announcements Mailing List**
+
 http://groups.google.com/group/websocketpp-announcements/
 
 **Discussion / Development / Support Mailing List / Forum**
+
 http://groups.google.com/group/websocketpp/
 
 Author
