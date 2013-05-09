@@ -45,35 +45,10 @@ endmacro()
 macro (init_target NAME)
     set (TARGET_NAME ${NAME})
     message ("** " ${TARGET_NAME})
-    
+
     # Include our own module path. This makes #include "x.h" 
     # work in project subfolders to include the main directory headers.
     include_directories (${CMAKE_CURRENT_SOURCE_DIR})
-endmacro ()
-
-# Build library for static and shared libraries
-macro (build_library TARGET_NAME LIB_TYPE)
-    set (TARGET_LIB_TYPE ${LIB_TYPE})
-    message (STATUS "-- Build Type:")
-    message (STATUS "       " ${TARGET_LIB_TYPE} " library")
-
-    add_library (${TARGET_NAME} ${TARGET_LIB_TYPE} ${ARGN})
-
-    target_link_libraries (${TARGET_NAME} ${WEBSOCKETPP_PLATFORM_LIBS})
-
-    if (MSVC)
-        if (${TARGET_LIB_TYPE} STREQUAL "SHARED")
-            set_target_properties (${TARGET_NAME} PROPERTIES LINK_FLAGS_RELEASE ${CMAKE_SHARED_LINKER_FLAGS_RELEASE})
-        else ()
-            set_target_properties (${TARGET_NAME} PROPERTIES STATIC_LIBRARY_FLAGS_RELEASE "/LTCG")
-        endif ()
-    endif ()
-
-    message (STATUS "-- Build Destination:")
-    message (STATUS "       " ${WEBSOCKETPP_LIB})
-
-    set_target_properties (${TARGET_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${WEBSOCKETPP_LIB})
-    set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
 endmacro ()
 
 # Build executable for executables
@@ -92,24 +67,12 @@ endmacro ()
 
 # Finalize target for all types
 macro (final_target)
-    if (${TARGET_LIB_TYPE} STREQUAL "SHARED")
-        install (TARGETS ${TARGET_NAME} 
-                 LIBRARY DESTINATION "bin" # non DLL platforms shared libs are LIBRARY
-                 RUNTIME DESTINATION "bin" # DLL platforms shared libs are RUNTIME
-                 ARCHIVE DESTINATION "lib" # DLL platforms static link part of the shared lib are ARCHIVE
-                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-    endif ()
-    if (${TARGET_LIB_TYPE} STREQUAL "STATIC")
-        install (TARGETS ${TARGET_NAME} 
-                 ARCHIVE DESTINATION "lib" 
-                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-    endif ()
-    if (${TARGET_LIB_TYPE} STREQUAL "EXECUTABLE")
+    if ("${TARGET_LIB_TYPE}" STREQUAL "EXECUTABLE")
         install (TARGETS ${TARGET_NAME} 
                  RUNTIME DESTINATION "bin" 
                  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
     endif ()
-    
+
     # install headers, directly from current source dir and look for subfolders with headers
     file (GLOB TARGET_INSTALL_HEADERS *.hpp)
     install (FILES ${TARGET_INSTALL_HEADERS} DESTINATION "include/${TARGET_NAME}")
