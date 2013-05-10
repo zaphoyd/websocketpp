@@ -539,7 +539,7 @@ protected:
                 &type::handle_connect,
                 this,
                 tcon,
-                con_timer
+                con_timer,
                 callback,
                 lib::placeholders::_1
             )
@@ -573,7 +573,7 @@ protected:
         connect_handler callback, const boost::system::error_code& ec)
     {
         if (ec == boost::asio::error::operation_aborted || 
-            dns_timer->expires_from_now().is_negative())
+            con_timer->expires_from_now().is_negative())
         {
             m_alog->write(log::alevel::devel,"async_connect cancelled");
             return;
