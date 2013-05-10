@@ -31,6 +31,8 @@ Major Features
 Get Involved
 ============
 
+[![Build Status](https://travis-ci.org/zaphoyd/websocketpp.png)](https://travis-ci.org/zaphoyd/websocketpp)
+
 **Project Website**  
 http://www.zaphoyd.com/websocketpp/
 
