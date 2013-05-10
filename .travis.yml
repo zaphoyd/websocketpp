@@ -2,7 +2,7 @@ language: cpp
 compiler:
   - clang
   - gcc
-before_install
+before_install:
  - sudo apt-get update -qq -y
  - sudo apt-get install libboost1.48-dev -y
 env:
