@@ -457,6 +457,7 @@ protected:
         } else {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer expired");
+            socket_con_type::cancel_socket();
             callback(make_error_code(transport::error::timeout));
         }
     }
@@ -469,14 +470,25 @@ protected:
         }
         
         m_bufs.clear();
-
+        
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == boost::asio::error::operation_aborted || 
+            m_proxy_data->timer->expires_from_now().is_negative())
+        {
+            m_elog.write(log::elevel::devel,"write operation aborted");
+            return;
+        }
+        
         if (ec) {
             log_err(log::elevel::info,"asio handle_proxy_write",ec);
             m_proxy_data->timer->cancel();
-            callback(make_error_code(error::pass_through)); 
-        } else {
-            proxy_read(callback);
+            callback(make_error_code(error::pass_through));
+            return;
         }
+        
+        proxy_read(callback);
     }
     
     void proxy_read(init_handler callback) {
@@ -511,6 +523,16 @@ protected:
     {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
+        }
+        
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == boost::asio::error::operation_aborted || 
+            m_proxy_data->timer->expires_from_now().is_negative())
+        {
+            m_elog.write(log::elevel::devel,"read operation aborted");
+            return;
         }
         
         // At this point there is no need to wait for the timer anymore

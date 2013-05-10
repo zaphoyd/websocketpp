@@ -291,6 +291,11 @@ protected:
         callback(lib::error_code());
     }
     
+    /// Cancel all async operations on this socket
+    void cancel_socket() {
+        get_raw_socket().cancel();
+    }
+    
     void async_shutdown(socket_shutdown_handler h) {
         m_socket->async_shutdown(
             lib::bind(

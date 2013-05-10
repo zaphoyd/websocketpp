@@ -204,7 +204,12 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_hdl = hdl;
     }
-
+    
+    /// Cancel all async operations on this socket
+    void cancel_socket() {
+        m_socket->cancel();
+    }
+    
     void async_shutdown(socket_shutdown_handler h) {
         boost::system::error_code ec;
         m_socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both,ec);
