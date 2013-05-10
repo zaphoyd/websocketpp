@@ -99,13 +99,29 @@ struct debug_core {
         typedef type::response_type response_type;
         
         /// Default timer values (in ms)
+                
+        /// Length of time to wait for socket pre-initialization
+        /**
+         * Exactly what this includes depends on the socket policy in use
+         */
+        static const long timeout_socket_preinit = 5000;
         
         /// Length of time to wait before a proxy handshake is aborted
         static const long timeout_proxy = 5000;
-        /// Length of time to wait before a tls handshake is aborted
-        static const long timeout_tls_handshake = 5000;
+        
+        /// Length of time to wait for socket post-initialization
+        /**
+         * Exactly what this includes depends on the socket policy in use.
+         * Often this means the TLS handshake
+         */
+        static const long timeout_socket_postinit = 5000;
+        
         /// Length of time to wait for dns resolution
         static const long timeout_dns_resolve = 5000;
+        
+        /// Length of time to wait for TCP connect
+        static const long timeout_connect = 5000;
+        
         /// Length of time to wait for socket shutdown
         static const long timeout_socket_shutdown = 5000;
     };
