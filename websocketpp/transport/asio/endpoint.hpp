@@ -296,26 +296,26 @@ public:
     }
     
     /// Call back a function after a period of time.
-	/**
-	 * Sets a timer that calls back a function after the specified period of
-	 * milliseconds. Returns a handle that can be used to cancel the timer.
-	 * A cancelled timer will return the error code error::operation_aborted
-	 * A timer that expired will return no error.
-	 * 
-	 * @param duration Length of time to wait in milliseconds
-	 *
-	 * @param callback The function to call back when the timer has expired
-	 *
-	 * @return A handle that can be used to cancel the timer if it is no longer
-	 * needed.
-	 */
-	timer_ptr set_timer(long duration, timer_handler callback) {
-		timer_ptr new_timer(
-			new boost::asio::deadline_timer(
-				*m_io_service,
-				boost::posix_time::milliseconds(duration)
-			)
-		);
+    /**
+     * Sets a timer that calls back a function after the specified period of
+     * milliseconds. Returns a handle that can be used to cancel the timer.
+     * A cancelled timer will return the error code error::operation_aborted
+     * A timer that expired will return no error.
+     * 
+     * @param duration Length of time to wait in milliseconds
+     *
+     * @param callback The function to call back when the timer has expired
+     *
+     * @return A handle that can be used to cancel the timer if it is no longer
+     * needed.
+     */
+    timer_ptr set_timer(long duration, timer_handler callback) {
+        timer_ptr new_timer(
+            new boost::asio::deadline_timer(
+                *m_io_service,
+                boost::posix_time::milliseconds(duration)
+            )
+        );
 
         new_timer->async_wait(
             lib::bind(
@@ -328,35 +328,35 @@ public:
         );
         
         return new_timer;
-	}
-	
-	/// Timer callback
-	/**
-	 * The timer pointer is included to ensure the timer isn't destroyed until
-	 * after it has expired.
-	 * 
-	 * @param t Pointer to the timer in question
-	 *
-	 * @param callback The function to call back
-	 *
-	 * @param ec The status code
-	 */
-	void handle_timer(timer_ptr t, timer_handler callback, const 
+    }
+    
+    /// Timer callback
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     * 
+     * @param t Pointer to the timer in question
+     *
+     * @param callback The function to call back
+     *
+     * @param ec The status code
+     */
+    void handle_timer(timer_ptr t, timer_handler callback, const 
         boost::system::error_code& ec)
     {
-		if (ec) {
+        if (ec) {
             if (ec == boost::asio::error::operation_aborted) {
-            	callback(make_error_code(transport::error::operation_aborted)); 
+                callback(make_error_code(transport::error::operation_aborted)); 
             } else {
-				m_elog->write(log::elevel::info,
-					"asio handle_timer error: "+ec.message());
-				log_err(log::elevel::info,"asio handle_timer",ec);
-				callback(make_error_code(error::pass_through)); 
+                m_elog->write(log::elevel::info,
+                    "asio handle_timer error: "+ec.message());
+                log_err(log::elevel::info,"asio handle_timer",ec);
+                callback(make_error_code(error::pass_through)); 
             }
         } else {
             callback(lib::error_code());
         }
-	}
+    }
     
     boost::asio::io_service& get_io_service() {
         return *m_io_service;
@@ -439,16 +439,16 @@ protected:
         }
         
         timer_ptr dns_timer = set_timer(
-			config::timeout_dns_resolve,
-			lib::bind(
-				&type::handle_resolve_timeout,
-				this,
-				tcon,
-				dns_timer,
-				cb,
-				lib::placeholders::_1
-			)
-		);
+            config::timeout_dns_resolve,
+            lib::bind(
+                &type::handle_resolve_timeout,
+                this,
+                tcon,
+                dns_timer,
+                cb,
+                lib::placeholders::_1
+            )
+        );
         
         m_resolver->async_resolve(
             query,
@@ -467,35 +467,40 @@ protected:
     void handle_resolve_timeout(transport_con_ptr tcon, timer_ptr dns_timer, 
         connect_handler callback, const lib::error_code & ec)
     {
-        m_resolver->cancel();
-        
-        if (ec == transport::error::operation_aborted) {
-    		m_alog->write(log::alevel::devel,
-    		    "asio handle_resolve_timeout timer cancelled");
-    	} else if (ec) {
-    		log_err(log::elevel::devel,"asio handle_resolve_timeout",ec);
-    		callback(tcon->get_handle(),ec);
-    	} else {
-    		m_alog->write(log::alevel::devel,
-    		    "asio handle_resolve_timeout timer expired");
-    		callback(tcon->get_handle(),
-    		    make_error_code(transport::error::timeout));
-    	} 
-    }
-    
-    void handle_resolve(transport_con_ptr tcon, timer_ptr dns_timer,
-    	connect_handler callback, const boost::system::error_code& ec, 
-        boost::asio::ip::tcp::resolver::iterator iterator)
-    {
-        dns_timer->cancel();
+        lib::error_code ret_ec;
         
         if (ec) {
-            if (ec == boost::asio::error::operation_aborted) {
+            if (ec == transport::error::operation_aborted) {
                 m_alog->write(log::alevel::devel,
-    		        "asio handle_resolve resolve cancelled");
+                    "asio handle_resolve_timeout timer cancelled");
                 return;
             }
             
+            log_err(log::elevel::devel,"asio handle_resolve_timeout",ec);
+            ret_ec = ec;
+        } else {
+            ret_ec = make_error_code(transport::error::timeout);
+        }
+        
+        m_alog->write(log::alevel::devel,"DNS resolution timed out");
+        m_resolver->cancel();
+        callback(tcon->get_handle(),ret_ec);
+    }
+    
+    void handle_resolve(transport_con_ptr tcon, timer_ptr dns_timer,
+        connect_handler callback, const boost::system::error_code& ec, 
+        boost::asio::ip::tcp::resolver::iterator iterator)
+    {
+        if (ec == boost::asio::error::operation_aborted || 
+            dns_timer->expires_from_now().is_negative())
+        {
+            m_alog->write(log::alevel::devel,"async_resolve cancelled");
+            return;
+        }
+        
+        dns_timer->cancel();
+        
+        if (ec) {
             log_err(log::elevel::info,"asio async_resolve",ec);
             callback(tcon->get_handle(),make_error_code(error::pass_through));
             return;
@@ -514,6 +519,19 @@ protected:
         }
         
         m_alog->write(log::alevel::devel,"Starting async connect");
+        
+        timer_ptr con_timer = set_timer(
+            config::timeout_connect,
+            lib::bind(
+                &type::handle_resolve_timeout,
+                this,
+                tcon,
+                con_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+        
         boost::asio::async_connect(
             tcon->get_raw_socket(),
             iterator,
@@ -521,15 +539,48 @@ protected:
                 &type::handle_connect,
                 this,
                 tcon,
+                con_timer
                 callback,
                 lib::placeholders::_1
             )
         );
     }
     
-    void handle_connect(transport_con_ptr tcon, connect_handler callback,
-        const boost::system::error_code& ec)
+    void handle_connect_timeout(transport_con_ptr tcon, timer_ptr con_timer, 
+        connect_handler callback, const lib::error_code & ec)
     {
+        lib::error_code ret_ec;
+        
+        if (ec) {
+            if (ec == transport::error::operation_aborted) {
+                m_alog->write(log::alevel::devel,
+                    "asio handle_connect_timeout timer cancelled");
+                return;
+            }
+            
+            log_err(log::elevel::devel,"asio handle_connect_timeout",ec);
+            ret_ec = ec;
+        } else {
+            ret_ec = make_error_code(transport::error::timeout);
+        }
+        
+        m_alog->write(log::alevel::devel,"TCP connect timed out");
+        tcon->cancel_socket();
+        callback(tcon->get_handle(),ret_ec);
+    }
+    
+    void handle_connect(transport_con_ptr tcon, timer_ptr con_timer, 
+        connect_handler callback, const boost::system::error_code& ec)
+    {
+        if (ec == boost::asio::error::operation_aborted || 
+            dns_timer->expires_from_now().is_negative())
+        {
+            m_alog->write(log::alevel::devel,"async_connect cancelled");
+            return;
+        }
+        
+        con_timer->cancel();
+        
         if (ec) {
             log_err(log::elevel::info,"asio async_connect",ec);
             callback(tcon->get_handle(),make_error_code(error::pass_through));
