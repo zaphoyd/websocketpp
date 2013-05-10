@@ -8,7 +8,7 @@ before_install:
 env:
   global:
     - BOOST_INCLUDES=/usr/include
-    - BOOST_LIBS=/usr/libs
+    - BOOST_LIBS=/usr/lib
 script: scons && scons test
 branches:
   only:
