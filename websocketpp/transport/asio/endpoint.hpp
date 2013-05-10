@@ -438,7 +438,7 @@ protected:
                 "starting async DNS resolve for "+host+":"+port);
         }
         
-        timer_ptr dns_timer = tcon->set_timer(
+        timer_ptr dns_timer = set_timer(
 			config::timeout_dns_resolve,
 			lib::bind(
 				&type::handle_resolve_timeout,
