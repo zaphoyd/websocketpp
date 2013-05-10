@@ -32,5 +32,10 @@
  * This header contains any platform specific preprocessor adjustments that 
  * don't fit somewhere else better.
  */
+ 
+#if defined(WIN32)
+    // don't define min and max macros that conflict with std::min and std::max
+    #define NOMINMAX
+#endif
 
 #endif // WEBSOCKETPP_COMMON_PLATFORMS_HPP
