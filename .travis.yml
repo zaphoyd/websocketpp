@@ -4,7 +4,7 @@ compiler:
   - gcc
 before_install:
  - sudo apt-get update -qq -y
- - sudo apt-get install libboost1.48-dev -y
+ - sudo apt-get install libboost1.48-all-dev -y
 env:
   global:
     - BOOST_INCLUDES=/usr/include
