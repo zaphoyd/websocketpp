@@ -438,7 +438,9 @@ protected:
                 "starting async DNS resolve for "+host+":"+port);
         }
         
-        timer_ptr dns_timer = set_timer(
+        timer_ptr dns_timer;
+        
+        dns_timer = set_timer(
             config::timeout_dns_resolve,
             lib::bind(
                 &type::handle_resolve_timeout,
@@ -491,7 +493,7 @@ protected:
         connect_handler callback, const boost::system::error_code& ec, 
         boost::asio::ip::tcp::resolver::iterator iterator)
     {
-        if (ec == boost::asio::error::operation_aborted || 
+        if (ec == boost::asio::error::operation_aborted ||
             dns_timer->expires_from_now().is_negative())
         {
             m_alog->write(log::alevel::devel,"async_resolve cancelled");
@@ -520,7 +522,9 @@ protected:
         
         m_alog->write(log::alevel::devel,"Starting async connect");
         
-        timer_ptr con_timer = set_timer(
+        timer_ptr con_timer;
+        
+        con_timer = set_timer(
             config::timeout_connect,
             lib::bind(
                 &type::handle_resolve_timeout,

@@ -388,7 +388,8 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection post_init");
         }
         
-        timer_ptr post_timer = set_timer(
+        timer_ptr post_timer;
+        post_timer = set_timer(
             config::timeout_socket_post_init,
             lib::bind(
                 &type::handle_post_init_timeout,
@@ -425,7 +426,11 @@ protected:
             log_err(log::elevel::devel,"asio handle_post_init_timeout",ec);
             ret_ec = ec;
         } else {
-            ret_ec = make_error_code(transport::error::timeout);
+            if (socket_con_type::get_ec()) {
+                ret_ec = socket_con_type::get_ec();
+            } else {
+                ret_ec = make_error_code(transport::error::timeout);
+            }
         }
 
         m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
@@ -785,7 +790,8 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
         
-        timer_ptr shutdown_timer = set_timer(
+        timer_ptr shutdown_timer;
+        shutdown_timer = set_timer(
             config::timeout_socket_shutdown,
             lib::bind(
                 &type::handle_async_shutdown_timeout,
@@ -815,7 +821,7 @@ protected:
         if (ec) {
             if (ec == transport::error::operation_aborted) {
                 m_alog.write(log::alevel::devel, 
-                    "asio socket shutdown cancelled");
+                    "asio socket shutdown timer cancelled");
                 return;
             }
 
