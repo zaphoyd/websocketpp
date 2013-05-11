@@ -131,7 +131,7 @@ inline const lib::error_category& get_socket_category() {
     return instance;
 }
 
-inline lib::error_code make_error(error::value e) {
+inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_socket_category());
 }
 

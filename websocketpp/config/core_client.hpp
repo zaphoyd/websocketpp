@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_CONFIG_CORE_CLIENT_HPP
 
 // Non-Policy common stuff
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 
@@ -99,12 +100,28 @@ struct core_client {
         
         /// Default timer values (in ms)
         
+        /// Length of time to wait for socket pre-initialization
+        /**
+         * Exactly what this includes depends on the socket policy in use
+         */
+        static const long timeout_socket_pre_init = 5000;
+        
         /// Length of time to wait before a proxy handshake is aborted
         static const long timeout_proxy = 5000;
-        /// Length of time to wait before a tls handshake is aborted
-        static const long timeout_tls_handshake = 5000;
+        
+        /// Length of time to wait for socket post-initialization
+        /**
+         * Exactly what this includes depends on the socket policy in use.
+         * Often this means the TLS handshake
+         */
+        static const long timeout_socket_post_init = 5000;
+        
         /// Length of time to wait for dns resolution
         static const long timeout_dns_resolve = 5000;
+        
+        /// Length of time to wait for TCP connect
+        static const long timeout_connect = 5000;
+        
         /// Length of time to wait for socket shutdown
         static const long timeout_socket_shutdown = 5000;
     };

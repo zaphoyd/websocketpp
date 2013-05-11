@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_LOGGER_HPP
-#define WEBSOCKETPP_LOGGER_HPP
+#ifndef WEBSOCKETPP_LOGGER_BASIC_HPP
+#define WEBSOCKETPP_LOGGER_BASIC_HPP
 
 /* Need a way to print a message to the log
  * 
@@ -124,7 +124,7 @@ private:
     std::ostream* m_out;
 };
 
-} // logger
+} // log
 } // websocketpp
 
-#endif //WEBSOCKETPP_LOGGER_HPP
+#endif // WEBSOCKETPP_LOGGER_BASIC_HPP
