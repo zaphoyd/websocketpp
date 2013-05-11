@@ -1,0 +1,21 @@
+language: cpp
+compiler:
+  - gcc
+before_install:
+ - sudo apt-get update -qq -y
+ - sudo apt-get install libboost1.48-all-dev -y
+env:
+  global:
+    - BOOST_INCLUDES=/usr/include
+    - BOOST_LIBS=/usr/lib
+script: scons && scons test
+branches:
+  only:
+    - experimental
+    - 0.3.x-cmake
+notifications:
+  recipients:
+    - travis@zaphoyd.com
+  email:
+    on_success: change
+    on_failure: always

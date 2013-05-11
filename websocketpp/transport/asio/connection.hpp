@@ -31,7 +31,8 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
-
+#include <websocketpp/logger/levels.hpp>
+#include <websocketpp/http/constants.hpp>
 #include <websocketpp/transport/asio/base.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
@@ -348,6 +349,9 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection init");
         }
         
+        // TODO: pre-init timeout. Right now no implimented socket policies
+        // actually have an asyncronous pre-init
+
         socket_con_type::pre_init(
             lib::bind(
                 &type::handle_pre_init,
@@ -385,17 +389,68 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection post_init");
         }
         
+        timer_ptr post_timer;
+        post_timer = set_timer(
+            config::timeout_socket_post_init,
+            lib::bind(
+                &type::handle_post_init_timeout,
+                this,
+                post_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+
         socket_con_type::post_init(
             lib::bind(
                 &type::handle_post_init,
                 this,
+                post_timer,
                 callback,
                 lib::placeholders::_1
             )
         );
     }
     
-    void handle_post_init(init_handler callback, const lib::error_code& ec) {
+    void handle_post_init_timeout(timer_ptr post_timer, init_handler callback, 
+        const lib::error_code& ec) 
+    {
+        lib::error_code ret_ec;
+
+        if (ec) {
+            if (ec == transport::error::operation_aborted) {
+                m_alog.write(log::alevel::devel, 
+                    "asio post init timer cancelled");
+                return;
+            }
+
+            log_err(log::elevel::devel,"asio handle_post_init_timeout",ec);
+            ret_ec = ec;
+        } else {
+            if (socket_con_type::get_ec()) {
+                ret_ec = socket_con_type::get_ec();
+            } else {
+                ret_ec = make_error_code(transport::error::timeout);
+            }
+        }
+
+        m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
+        socket_con_type::cancel_socket();
+        callback(ret_ec);
+    }
+
+    void handle_post_init(timer_ptr post_timer, init_handler callback, const 
+        lib::error_code& ec) 
+    {
+        if (ec == transport::error::operation_aborted || 
+            post_timer->expires_from_now().is_negative())
+        {
+            m_alog.write(log::alevel::devel,"post_init cancelled");
+            return;
+        }
+        
+        post_timer->cancel();
+
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_post_init");
         }
@@ -457,6 +512,7 @@ protected:
         } else {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer expired");
+            socket_con_type::cancel_socket();
             callback(make_error_code(transport::error::timeout));
         }
     }
@@ -469,14 +525,25 @@ protected:
         }
         
         m_bufs.clear();
-
+        
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == boost::asio::error::operation_aborted || 
+            m_proxy_data->timer->expires_from_now().is_negative())
+        {
+            m_elog.write(log::elevel::devel,"write operation aborted");
+            return;
+        }
+        
         if (ec) {
             log_err(log::elevel::info,"asio handle_proxy_write",ec);
             m_proxy_data->timer->cancel();
-            callback(make_error_code(error::pass_through)); 
-        } else {
-            proxy_read(callback);
+            callback(make_error_code(error::pass_through));
+            return;
         }
+        
+        proxy_read(callback);
     }
     
     void proxy_read(init_handler callback) {
@@ -511,6 +578,16 @@ protected:
     {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
+        }
+        
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == boost::asio::error::operation_aborted || 
+            m_proxy_data->timer->expires_from_now().is_negative())
+        {
+            m_elog.write(log::elevel::devel,"read operation aborted");
+            return;
         }
         
         // At this point there is no need to wait for the timer anymore
@@ -709,42 +786,89 @@ protected:
     }*/
     
     /// close and clean up the underlying socket
-    void async_shutdown(shutdown_handler h) {
+    void async_shutdown(shutdown_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
         
+        timer_ptr shutdown_timer;
+        shutdown_timer = set_timer(
+            config::timeout_socket_shutdown,
+            lib::bind(
+                &type::handle_async_shutdown_timeout,
+                this,
+                shutdown_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+
         socket_con_type::async_shutdown(
             lib::bind(
                 &type::handle_async_shutdown,
                 this,
-                h,
+                shutdown_timer,
+                callback,
                 lib::placeholders::_1
             )
         );
     }
     
-    void handle_async_shutdown(shutdown_handler h, const 
-        boost::system::error_code & ec)
+    void handle_async_shutdown_timeout(timer_ptr shutdown_timer, init_handler 
+        callback, const lib::error_code& ec) 
     {
-        if (m_alog.static_test(log::alevel::devel)) {
-            m_alog.write(log::alevel::devel,"asio con handle_async_shutdown");
+        lib::error_code ret_ec;
+
+        if (ec) {
+            if (ec == transport::error::operation_aborted) {
+                m_alog.write(log::alevel::devel, 
+                    "asio socket shutdown timer cancelled");
+                return;
+            }
+
+            log_err(log::elevel::devel,"asio handle_async_socket_shutdown",ec);
+            ret_ec = ec;
+        } else {
+            ret_ec = make_error_code(transport::error::timeout);
+        }
+
+        m_alog.write(log::alevel::devel,
+            "Asio transport socket shutdown timed out");
+        socket_con_type::cancel_socket();
+        callback(ret_ec);
+    }
+
+    void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler 
+        callback, const boost::system::error_code & ec)
+    {
+        if (ec == boost::asio::error::operation_aborted || 
+            shutdown_timer->expires_from_now().is_negative())
+        {
+            m_alog.write(log::alevel::devel,"async_shutdown cancelled");
+            return;
         }
         
+        shutdown_timer->cancel();
+
         if (ec) {
             log_err(log::elevel::info,"asio async_shutdown",ec);
-            h(make_error_code(transport::error::pass_through));
+            callback(make_error_code(transport::error::pass_through));
         } else {
-            h(lib::error_code());
+            if (m_alog.static_test(log::alevel::devel)) {
+                m_alog.write(log::alevel::devel,
+                    "asio con handle_async_shutdown");
+            }
+            
+            callback(lib::error_code());
         }
     }
 private:
     /// Convenience method for logging the code and message for an error_code
-    std::string log_err(log::level l,const char * msg, lib::error_code & ec)
-    {
+    template <typename error_type>
+    void log_err(log::level l, const char * msg, const error_type & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
-        m_elog->write(l,s.str());
+        m_elog.write(l,s.str());
     }
     
     // static settings

@@ -70,8 +70,6 @@ public:
     typedef boost::asio::io_service* io_service_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
-    /// Type of a shared pointer to the ASIO timer being used
-    typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
     
     typedef boost::system::error_code boost_error;
     
@@ -171,25 +169,18 @@ protected:
      * boost::asio components to the io_service
      *
      * @param service A pointer to the endpoint's io_service
-     * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
         if (!m_tls_init_handler) {
-            return socket::make_error(socket::error::missing_tls_init_handler);
+            return socket::make_error_code(socket::error::missing_tls_init_handler);
         }
         m_context = m_tls_init_handler(m_hdl);
         
         if (!m_context) {
-            return socket::make_error(socket::error::invalid_tls_context);
+            return socket::make_error_code(socket::error::invalid_tls_context);
         }
-        
         m_socket.reset(new socket_type(*service,*m_context));
-        
-        m_timer.reset(new boost::asio::deadline_timer(
-            *service,
-            boost::posix_time::seconds(0))
-        );
         
         m_io_service = service;
         m_is_server = is_server;
@@ -223,17 +214,7 @@ protected:
      * @param callback Handler to call back with completion information
      */
     void post_init(init_handler callback) {
-        // register timeout
-        m_timer->expires_from_now(boost::posix_time::milliseconds(5000));
-        // TEMP
-        m_timer->async_wait(
-            lib::bind(
-                &type::handle_timeout,
-                this,
-                callback,
-                lib::placeholders::_1
-            )
-        );
+        m_ec = socket::make_error_code(socket::error::tls_handshake_timeout);
         
         // TLS handshake
         m_socket->async_handshake(
@@ -257,56 +238,30 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_hdl = hdl;
     }
-
-    void handle_timeout(init_handler callback, const 
-        boost::system::error_code& error)
-    {
-        if (error) {
-            if (error.value() == boost::asio::error::operation_aborted) {
-                // The timer was cancelled because the handshake succeeded.
-                return;
-            }
-            
-            // Some other ASIO error, pass it through
-            // TODO: make this error pass through better
-            callback(socket::make_error(socket::error::pass_through));
-            return;
-        }
-        
-        callback(socket::make_error(socket::error::tls_handshake_timeout));
-    }
     
     void handle_init(init_handler callback, const 
-        boost::system::error_code& error)
-    {
-        /// stop waiting for our handshake timer.
-        m_timer->cancel();
-        
-        if (error) {
-            // TODO: make this error pass through better
-            callback(socket::make_error(socket::error::pass_through));
-            return;
-        }
-        
-        callback(lib::error_code());
-    }
-    
-    void async_shutdown(socket_shutdown_handler h) {
-        m_socket->async_shutdown(
-            lib::bind(
-                &type::handle_async_shutdown,
-                this,
-                m_socket,
-                h,
-                lib::placeholders::_1
-            )
-        );
-    }
-    
-    void handle_async_shutdown(socket_ptr s, socket_shutdown_handler h, const 
         boost::system::error_code& ec)
     {
-        h(ec);
+        if (ec) {
+            m_ec = socket::make_error_code(socket::error::pass_through);
+        } else {
+            m_ec = lib::error_code();
+        }
+        
+        callback(m_ec);
+    }
+    
+    lib::error_code get_ec() const {
+        return m_ec;
+    }
+    
+    /// Cancel all async operations on this socket
+    void cancel_socket() {
+        get_raw_socket().cancel();
+    }
+    
+    void async_shutdown(socket_shutdown_handler callback) {
+        m_socket->async_shutdown(callback);
     }
 private:
     socket_type::handshake_type get_handshake_type() {
@@ -320,8 +275,9 @@ private:
     io_service_ptr      m_io_service;
     context_ptr         m_context;
     socket_ptr          m_socket;
-    timer_ptr           m_timer;
     bool                m_is_server;
+    
+    lib::error_code     m_ec;
     
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;

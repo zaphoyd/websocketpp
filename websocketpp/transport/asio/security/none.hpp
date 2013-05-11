@@ -148,7 +148,7 @@ protected:
      */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
         if (m_state != UNINITIALIZED) {
-            return socket::make_error(socket::error::invalid_state);
+            return socket::make_error_code(socket::error::invalid_state);
         }
         
         m_socket.reset(new boost::asio::ip::tcp::socket(*service));
@@ -169,7 +169,7 @@ protected:
      */
     void pre_init(init_handler callback) {
         if (m_state != READY) {
-            callback(socket::make_error(socket::error::invalid_state));
+            callback(socket::make_error_code(socket::error::invalid_state));
             return;
         }
         
@@ -204,11 +204,20 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_hdl = hdl;
     }
-
+    
+    /// Cancel all async operations on this socket
+    void cancel_socket() {
+        m_socket->cancel();
+    }
+    
     void async_shutdown(socket_shutdown_handler h) {
         boost::system::error_code ec;
         m_socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both,ec);
         h(ec);
+    }
+    
+    lib::error_code get_ec() const {
+        return lib::error_code();
     }
 private:
     enum state {
@@ -219,7 +228,7 @@ private:
     
     socket_ptr          m_socket;
     state               m_state;
-
+        
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
 };
