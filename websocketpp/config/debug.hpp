@@ -104,7 +104,7 @@ struct debug_core {
         /**
          * Exactly what this includes depends on the socket policy in use
          */
-        static const long timeout_socket_preinit = 5000;
+        static const long timeout_socket_pre_init = 5000;
         
         /// Length of time to wait before a proxy handshake is aborted
         static const long timeout_proxy = 5000;
@@ -114,7 +114,7 @@ struct debug_core {
          * Exactly what this includes depends on the socket policy in use.
          * Often this means the TLS handshake
          */
-        static const long timeout_socket_postinit = 5000;
+        static const long timeout_socket_post_init = 5000;
         
         /// Length of time to wait for dns resolution
         static const long timeout_dns_resolve = 5000;
