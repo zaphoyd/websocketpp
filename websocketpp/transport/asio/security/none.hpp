@@ -216,7 +216,7 @@ protected:
         h(ec);
     }
     
-    const lib::error_code &get_ec() const {
+    lib::error_code get_ec() const {
         return lib::error_code();
     }
 private:
@@ -228,7 +228,7 @@ private:
     
     socket_ptr          m_socket;
     state               m_state;
-
+        
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
 };

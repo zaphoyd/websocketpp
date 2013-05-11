@@ -251,7 +251,7 @@ protected:
         callback(m_ec);
     }
     
-    const lib::error_code &get_ec() const {
+    lib::error_code get_ec() const {
         return m_ec;
     }
     
