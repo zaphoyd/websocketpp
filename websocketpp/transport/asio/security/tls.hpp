@@ -253,22 +253,8 @@ protected:
         get_raw_socket().cancel();
     }
     
-    void async_shutdown(socket_shutdown_handler h) {
-        m_socket->async_shutdown(
-            lib::bind(
-                &type::handle_async_shutdown,
-                this,
-                m_socket,
-                h,
-                lib::placeholders::_1
-            )
-        );
-    }
-    
-    void handle_async_shutdown(socket_ptr s, socket_shutdown_handler h, const 
-        boost::system::error_code& ec)
-    {
-        h(ec);
+    void async_shutdown(socket_shutdown_handler callback) {
+        m_socket->async_shutdown(callback);
     }
 private:
     socket_type::handshake_type get_handshake_type() {
