@@ -31,7 +31,8 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
-
+#include <websocketpp/logger/levels.hpp>
+#include <websocketpp/http/constants.hpp>
 #include <websocketpp/transport/asio/base.hpp>
 #include <websocketpp/transport/base/connection.hpp>
 
