@@ -173,12 +173,12 @@ protected:
      */
     lib::error_code init_asio (io_service_ptr service, bool is_server) {
         if (!m_tls_init_handler) {
-            return socket::make_error(socket::error::missing_tls_init_handler);
+            return socket::make_error_code(socket::error::missing_tls_init_handler);
         }
         m_context = m_tls_init_handler(m_hdl);
         
         if (!m_context) {
-            return socket::make_error(socket::error::invalid_tls_context);
+            return socket::make_error_code(socket::error::invalid_tls_context);
         }
         m_socket.reset(new socket_type(*service,*m_context));
         
@@ -214,6 +214,8 @@ protected:
      * @param callback Handler to call back with completion information
      */
     void post_init(init_handler callback) {
+        m_ec = socket::make_error_code(socket::error::tls_handshake_timeout);
+        
         // TLS handshake
         m_socket->async_handshake(
             get_handshake_type(),
@@ -241,11 +243,16 @@ protected:
         boost::system::error_code& ec)
     {
         if (ec) {
-        	callback(socket::make_error(socket::error::pass_through));
-            return;
+            m_ec = socket::make_error_code(socket::error::pass_through);
+        } else {
+            m_ec = lib::error_code();
         }
         
-        callback(lib::error_code());
+        callback(m_ec);
+    }
+    
+    const lib::error_code &get_ec() const {
+        return m_ec;
     }
     
     /// Cancel all async operations on this socket
@@ -269,6 +276,8 @@ private:
     context_ptr         m_context;
     socket_ptr          m_socket;
     bool                m_is_server;
+    
+    lib::error_code     m_ec;
     
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
