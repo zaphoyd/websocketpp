@@ -12,6 +12,7 @@ script: scons && scons test
 branches:
   only:
     - experimental
+    - 0.3.x-cmake
 notifications:
   recipients:
     - travis@zaphoyd.com
