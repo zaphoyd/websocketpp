@@ -348,6 +348,9 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection init");
         }
         
+        // TODO: pre-init timeout. Right now no implimented socket policies
+        // actually have an asyncronous pre-init
+
         socket_con_type::pre_init(
             lib::bind(
                 &type::handle_pre_init,
@@ -385,17 +388,63 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection post_init");
         }
         
+        timer_ptr post_timer = set_timer(
+            config::timeout_socket_post_init,
+            lib::bind(
+                &type::handle_post_init_timeout,
+                this,
+                post_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+
         socket_con_type::post_init(
             lib::bind(
                 &type::handle_post_init,
                 this,
+                post_timer,
                 callback,
                 lib::placeholders::_1
             )
         );
     }
     
-    void handle_post_init(init_handler callback, const lib::error_code& ec) {
+    void handle_post_init_timeout(timer_ptr post_timer, init_handler callback, 
+        const lib::error_code& ec) 
+    {
+        lib::error_code ret_ec;
+
+        if (ec) {
+            if (ec == transport::error::operation_aborted) {
+                m_alog.write(log::alevel::devel, 
+                    "asio post init timer cancelled");
+                return;
+            }
+
+            log_err(log::elevel::devel,"asio handle_post_init_timeout",ec);
+            ret_ec = ec;
+        } else {
+            ret_ec = make_error_code(transport::error::timeout);
+        }
+
+        m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
+        socket_con_type::cancel_socket();
+        callback(ret_ec);
+    }
+
+    void handle_post_init(timer_ptr post_timer, init_handler callback, const 
+        lib::error_code& ec) 
+    {
+        if (ec == transport::error::operation_aborted || 
+            post_timer->expires_from_now().is_negative())
+        {
+            m_alog.write(log::alevel::devel,"post_init cancelled");
+            return;
+        }
+        
+        post_timer->cancel();
+
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_post_init");
         }
@@ -731,33 +780,79 @@ protected:
     }*/
     
     /// close and clean up the underlying socket
-    void async_shutdown(shutdown_handler h) {
+    void async_shutdown(shutdown_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
         
+        timer_ptr shutdown_timer = set_timer(
+            config::timeout_socket_shutdown,
+            lib::bind(
+                &type::handle_async_shutdown_timeout,
+                this,
+                shutdown_timer,
+                callback,
+                lib::placeholders::_1
+            )
+        );
+
         socket_con_type::async_shutdown(
             lib::bind(
                 &type::handle_async_shutdown,
                 this,
-                h,
+                shutdown_timer,
+                callback,
                 lib::placeholders::_1
             )
         );
     }
     
-    void handle_async_shutdown(shutdown_handler h, const 
-        boost::system::error_code & ec)
+    void handle_async_shutdown_timeout(timer_ptr shutdown_timer, init_handler 
+        callback, const lib::error_code& ec) 
     {
-        if (m_alog.static_test(log::alevel::devel)) {
-            m_alog.write(log::alevel::devel,"asio con handle_async_shutdown");
+        lib::error_code ret_ec;
+
+        if (ec) {
+            if (ec == transport::error::operation_aborted) {
+                m_alog.write(log::alevel::devel, 
+                    "asio socket shutdown cancelled");
+                return;
+            }
+
+            log_err(log::elevel::devel,"asio handle_async_socket_shutdown",ec);
+            ret_ec = ec;
+        } else {
+            ret_ec = make_error_code(transport::error::timeout);
+        }
+
+        m_alog.write(log::alevel::devel,
+            "Asio transport socket shutdown timed out");
+        socket_con_type::cancel_socket();
+        callback(ret_ec);
+    }
+
+    void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler 
+        callback, const boost::system::error_code & ec)
+    {
+        if (ec == boost::asio::error::operation_aborted || 
+            shutdown_timer->expires_from_now().is_negative())
+        {
+            m_alog.write(log::alevel::devel,"async_shutdown cancelled");
+            return;
         }
         
+        shutdown_timer->cancel();
+
         if (ec) {
             log_err(log::elevel::info,"asio async_shutdown",ec);
-            h(make_error_code(transport::error::pass_through));
+            callback(make_error_code(transport::error::pass_through));
         } else {
-            h(lib::error_code());
+            if (m_alog.static_test(log::alevel::devel)) {
+                m_alog.write(log::alevel::devel,
+                    "asio con handle_async_shutdown");
+            }
+            
+            callback(lib::error_code());
         }
     }
 private:
