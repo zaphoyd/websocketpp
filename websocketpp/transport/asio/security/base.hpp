@@ -70,6 +70,7 @@ namespace socket {
  * policies and support code for the ASIO transport types.
  */
 
+/// Errors related to asio transport sockets
 namespace error {
     enum value {
         /// Catch-all error for security policy errors that don't fit in other
@@ -98,6 +99,7 @@ namespace error {
     };
 } // namespace error
 
+/// Error category related to asio transport socket policies
 class socket_category : public lib::error_category {
 public:
     const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
@@ -135,6 +137,7 @@ inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_socket_category());
 }
 
+/// Type of asio transport socket policy initialization handlers
 typedef lib::function<void(const lib::error_code&)> init_handler;
 
 } // namespace socket
