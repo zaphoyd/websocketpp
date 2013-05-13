@@ -97,7 +97,7 @@ protected:
      * haven't been constructed yet, and cannot be used in the transport 
      * destructor as they will have been destroyed by then.
      */
-    void init_logging(elog_type* e, alog_type* a) {
+    void init_logging(alog_type* a, elog_type* e) {
         m_elog = e;
         m_alog = a;
     }
