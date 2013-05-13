@@ -17,18 +17,6 @@ macro (print_used_build_config)
     message ("") 
 endmacro ()
 
-# Lists all subdirectories to the RESULT variable.
-macro (list_subdirectories RESULT curdir)
-    set (_TEMP_DIRLIST "")
-    file (GLOB children RELATIVE ${curdir} ${curdir}/*)
-    foreach (child ${children})
-        if (IS_DIRECTORY ${curdir}/${child})
-            set (_TEMP_DIRLIST ${_TEMP_DIRLIST} ${child})
-        endif ()
-    endforeach ()
-    set (${RESULT} ${_TEMP_DIRLIST})
-endmacro ()
-
 # Adds the given folder_name into the source files of the current project. 
 # Use this macro when your module contains .cpp and .h files in several subdirectories.
 # Your sources variable needs to be WSPP_SOURCE_FILES and headers variable WSPP_HEADER_FILES.
@@ -74,16 +62,11 @@ macro (final_target)
     endif ()
 
     # install headers, directly from current source dir and look for subfolders with headers
-    file (GLOB TARGET_INSTALL_HEADERS *.hpp)
-    install (FILES ${TARGET_INSTALL_HEADERS} DESTINATION "include/${TARGET_NAME}")
-    list_subdirectories(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
-    foreach (SUBDIR ${SUBDIRS})
-        file (GLOB TARGET_INSTALL_HEADERS_SUBDIR ${SUBDIR}/*.hpp)
-        install (FILES ${TARGET_INSTALL_HEADERS_SUBDIR} DESTINATION "include/${TARGET_NAME}/${SUBDIR}")
-    endforeach ()
-
-    # Pretty printing
-    message ("")
+    file (GLOB_RECURSE TARGET_INSTALL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
+    foreach (hppfile ${TARGET_INSTALL_HEADERS})
+      get_filename_component (currdir ${hppfile} PATH)
+      install (FILES ${hppfile} DESTINATION "include/${TARGET_NAME}/${currdir}")
+    endforeach()
 endmacro ()
 
 macro (link_boost)
