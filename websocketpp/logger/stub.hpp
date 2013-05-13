@@ -25,8 +25,8 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_LOGGER_MOCK_HPP
-#define WEBSOCKETPP_LOGGER_MOCK_HPP
+#ifndef WEBSOCKETPP_LOGGER_STUB_HPP
+#define WEBSOCKETPP_LOGGER_STUB_HPP
 
 #include <iostream>
 
@@ -35,11 +35,11 @@
 namespace websocketpp {
 namespace log {
 
-/// Mock logger that does nothing!
-class mock {
+/// Stub logger that ignores all input!
+class stub {
 public:
-    mock(std::ostream* out = &std::cout) {}
-    mock(level c, std::ostream* out = &std::cout) {}
+    stub(std::ostream* out = &std::cout) {}
+    stub(level c, std::ostream* out = &std::cout) {}
     
     void set_channels(level channels) {}
     void clear_channels(level channels) {}
@@ -54,4 +54,4 @@ public:
 } // log
 } // websocketpp
 
-#endif // WEBSOCKETPP_LOGGER_MOCK_HPP
+#endif // WEBSOCKETPP_LOGGER_STUB_HPP
