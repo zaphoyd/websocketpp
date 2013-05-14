@@ -807,7 +807,11 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         }
 
         if (m_processor->ready()) {
-            //m_alog.write(log::alevel::devel,"consume ended in ready");
+            if (m_alog.static_test(log::alevel::devel)) {
+                std::stringstream s;
+                s << "Complete frame received. Dispatching";
+                m_alog.write(log::alevel::devel,s.str());
+            }
             
             message_ptr msg = m_processor->get_message();
            
