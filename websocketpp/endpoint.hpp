@@ -99,7 +99,7 @@ public:
         
         m_alog.write(log::alevel::devel,"endpoint constructor");
 
-        transport_type::init_logging(&m_elog,&m_alog);
+        transport_type::init_logging(&m_alog,&m_elog);
     }
     
     /// Returns the user agent string that this endpoint will use
