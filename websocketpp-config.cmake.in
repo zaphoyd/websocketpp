@@ -1,0 +1,6 @@
+# - Config file for the websocketpp package
+# It defines the following variables
+#  WEBSOCKETPP_INCLUDE_DIR - include directories
+
+# Compute paths
+set(WEBSOCKETPP_INCLUDE_DIR "@INSTALL_INCLUDE_DIR@")

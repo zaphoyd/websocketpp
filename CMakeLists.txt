@@ -6,7 +6,28 @@ project (websocketpp)
 
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 2.5)
+cmake_minimum_required (VERSION 2.6)
+
+set (WEBSOCKETPP_MAJOR_VERSION 0)
+set (WEBSOCKETPP_MINOR_VERSION 2)
+set (WEBSOCKETPP_PATCH_VERSION 99)
+set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
+
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
+if (WIN32 AND NOT CYGWIN)
+  set (DEF_INSTALL_CMAKE_DIR cmake)
+else ()
+  set (DEF_INSTALL_CMAKE_DIR lib/cmake/websocketpp)
+endif ()
+set (INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH "Installation directory for CMake files")
+
+# Make relative paths absolute (needed later on)
+foreach (p INCLUDE CMAKE)
+  set (var INSTALL_${p}_DIR)
+  if (NOT IS_ABSOLUTE "${${var}}")
+    set (${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif ()
+endforeach ()
 
 # Set CMake library search policy
 if (COMMAND cmake_policy)
@@ -24,24 +45,24 @@ include (CMakeHelpers)
 ############ Paths
 
 set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-set (WEBSOCKETPP_BIN ${WEBSOCKETPP_ROOT}/bin)
-set (WEBSOCKETPP_LIB ${WEBSOCKETPP_ROOT}/lib)
 set (WEBSOCKETPP_INCLUDE ${WEBSOCKETPP_ROOT}/websocketpp)
-set (WEBSOCKETPP_PREFIX ${WEBSOCKETPP_ROOT}/build)
+set (WEBSOCKETPP_BUILD_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+set (WEBSOCKETPP_BIN ${WEBSOCKETPP_BUILD_ROOT}/bin)
+set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
 
-# CMake install step prefix. I assume linux users want the prefix to 
+# CMake install step prefix. I assume linux users want the prefix to
 # be the default /usr or /usr/local so this is only adjusted on Windows.
 # - Windows: Build the INSTALL project in your solution file.
 # - Linux/OSX: make install.
 if (MSVC)
-    set (CMAKE_INSTALL_PREFIX ${WEBSOCKETPP_PREFIX})
+    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install")
 endif ()
 
 ############  Build customization
 
-# Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1"
+# Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1/ON/OFF"
 option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
-option (BUILD_EXAMPLES "Build websocketpp examples." TRUE)
+option (BUILD_EXAMPLES "Build websocketpp examples." FALSE)
 option (BUILD_TESTS "Build websocketpp tests." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
@@ -202,3 +223,15 @@ if (BUILD_TESTS)
 endif ()
 
 print_used_build_config()
+
+export (PACKAGE websocketpp)
+
+configure_file (websocketpp-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake" @ONLY)
+configure_file (websocketpp-configversion.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configversion.cmake" @ONLY)
+
+# Install the websocketpp-config.cmake and websocketpp-configversion.cmake
+install (FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake"
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configversion.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
