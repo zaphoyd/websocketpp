@@ -72,6 +72,7 @@ examples/wsperf/wsperf
 .sconsign.dblite
 
 build/
+doxygen/
 examples/wsperf/wsperf_client
 
 *.out
