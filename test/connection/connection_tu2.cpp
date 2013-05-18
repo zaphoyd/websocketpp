@@ -33,24 +33,7 @@ void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 
 std::string run_server_test(std::string input) {
     server test_server;
-    server::connection_ptr con;
-    
-    test_server.set_message_handler(bind(&echo_func,&test_server,::_1,::_2));
-
-    std::stringstream output;
-	
-	test_server.register_ostream(&output);
-	
-	con = test_server.get_connection();
-	
-	con->start();
-	
-	std::stringstream channel;
-	
-	channel << input;
-	channel >> *con;
-	
-	return output.str();
+    return run_server_test(test_server,input);
 }
 
 std::string run_server_test(server& s, std::string input) {

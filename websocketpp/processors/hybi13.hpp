@@ -291,27 +291,7 @@ public:
     }
     
     uri_ptr get_uri(const request_type& request) const {
-        std::string h = request.get_header("Host");
-        
-        size_t last_colon = h.rfind(":");
-        size_t last_sbrace = h.rfind("]");
-                
-        // no : = hostname with no port
-        // last : before ] = ipv6 literal with no port
-        // : with no ] = hostname with port
-        // : after ] = ipv6 literal with port
-        if (last_colon == std::string::npos || 
-            (last_sbrace != std::string::npos && last_sbrace > last_colon))
-        {
-            return uri_ptr(new uri(base::m_secure,h,request.get_uri()));
-        } else {
-            return uri_ptr(new uri(base::m_secure,
-                                   h.substr(0,last_colon),
-                                   h.substr(last_colon+1),
-                                   request.get_uri()));
-        }
-        
-        // TODO: check if get_uri is a full uri
+        return get_uri_from_host(request,(base::m_secure ? "wss" : "ws"));
     }
 
     /// Process new websocket connection bytes
