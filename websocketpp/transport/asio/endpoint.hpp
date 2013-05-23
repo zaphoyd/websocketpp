@@ -35,8 +35,6 @@
 #include <websocketpp/transport/asio/security/none.hpp>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/system/error_code.hpp>
     
 #include <iostream>
 
@@ -46,7 +44,7 @@ namespace asio {
 
 /// Boost Asio based endpoint transport component
 /**
- * transport::asio::endpoint impliments an endpoint transport component using
+ * transport::asio::endpoint implements an endpoint transport component using
  * Boost ASIO.
  */
 template <typename config>
@@ -104,7 +102,7 @@ public:
     /// transport::asio objects are moveable but not copyable or assignable.
     /// The following code sets this situation up based on whether or not we
     /// have C++11 support or not
-#ifdef _WEBSOCKETPP_DELETED_FUNCTIONS_
+#ifndef BOOST_NO_CXX11_DELETED_FUNCTIONS
     endpoint(const endpoint& src) = delete;
     endpoint& operator= (const endpoint & rhs) = delete;
 #else
@@ -114,7 +112,7 @@ private:
 public:
 #endif
 
-#ifdef _WEBSOCKETPP_RVALUE_REFERENCES_
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     endpoint (endpoint&& src)
       : m_io_service(src.m_io_service)
       , m_external_io_service(src.m_external_io_service)

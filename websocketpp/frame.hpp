@@ -265,7 +265,7 @@ size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length,
 size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key);
 
 
-// Function implimentation
+// Function implementation
 
 /// check whether the frame's FIN bit is set
 /**

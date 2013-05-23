@@ -512,7 +512,7 @@ void connection<config>::start() {
         "Start must be called from user init state"
     );
     
-    // Depending on how the transport impliments init this function may return
+    // Depending on how the transport implements init this function may return
     // immediately and call handle_transport_init later or call 
     // handle_transport_init from this function.
     transport_con_type::init(

@@ -260,7 +260,7 @@ public:
         // 0x00, the message is complete and is dispatched. Then we go back to
         // header state.
         
-        //ec = make_error_code(error::not_implimented);
+        //ec = make_error_code(error::not_implemented);
         return p;
     }
 
@@ -338,8 +338,8 @@ public:
         }
         
         std::string val;
-        val.append(1,0xff);
-        val.append(1,0x00);
+        val.append(1,'\xff');
+        val.append(1,'\x00');
         out->set_payload(val);
         out->set_prepared(true);
 

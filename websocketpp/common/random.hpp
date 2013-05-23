@@ -28,13 +28,9 @@
 #ifndef WEBSOCKETPP_COMMON_RANDOM_DEVICE_HPP
 #define WEBSOCKETPP_COMMON_RANDOM_DEVICE_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_RANDOM_DEVICE_
-    #ifndef _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-        #define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
-    #endif
-#endif
+#include <boost/config.hpp>
 
-#ifdef _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
+#ifndef BOOST_NO_CXX11_HDR_RANDOM
     #include <random>
 #else
     #include <boost/version.hpp>
@@ -52,7 +48,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
+#ifndef BOOST_NO_CXX11_HDR_RANDOM
     using std::random_device;
     using std::uniform_int_distribution;
 #else

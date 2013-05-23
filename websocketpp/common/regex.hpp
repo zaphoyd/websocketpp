@@ -28,13 +28,9 @@
 #ifndef WEBSOCKETPP_COMMON_REGEX_HPP
 #define WEBSOCKETPP_COMMON_REGEX_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_REGEX_
-    #ifndef _WEBSOCKETPP_CPP11_REGEX_
-        #define _WEBSOCKETPP_CPP11_REGEX_
-    #endif
-#endif
+#include <boost/config.hpp>
 
-#ifdef _WEBSOCKETPP_CPP11_REGEX_
+#ifndef BOOST_NO_CXX11_HDR_REGEX
     #include <regex>
 #else
     #include <boost/regex.hpp>
@@ -43,7 +39,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_REGEX_
+#ifndef BOOST_NO_CXX11_HDR_REGEX
     using std::cmatch;
     using std::regex;
     using std::regex_match;

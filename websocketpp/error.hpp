@@ -30,7 +30,6 @@
 
 #include <string>
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
@@ -110,7 +109,7 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp";
     }
     

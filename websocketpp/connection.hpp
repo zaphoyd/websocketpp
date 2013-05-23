@@ -30,7 +30,6 @@
 
 #include <websocketpp/close.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/error.hpp>
 #include <websocketpp/frame.hpp>
@@ -63,7 +62,7 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
 typedef lib::function<void(connection_hdl)> http_handler;
 
 // constants related to the default WebSocket protocol versions available
-#ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
+#ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST // simplified C++11 version
     static const std::vector<int>   VERSIONS_SUPPORTED = {0,7,8,13};
 #else
     static const int HELPER[] = {0,7,8,13};
@@ -113,7 +112,7 @@ namespace internal_state {
 } // namespace internal_state
 } // namespace session
 
-// impliments the websocket state machine
+// implements the websocket state machine
 template <typename config>
 class connection
  : public config::transport_type::transport_con_type
@@ -265,7 +264,7 @@ public:
      * configured timeout period after the application sends a ping.
      *
      * This can be used to probe the health of the remote endpoint's WebSocket 
-     * implimentation. This does not guarantee that the remote application 
+     * implementation. This does not guarantee that the remote application 
      * itself is still healthy but can be a useful diagnostic.
      *
      * @param h The new pong_timeout_handler

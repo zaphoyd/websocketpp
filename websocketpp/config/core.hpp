@@ -29,8 +29,6 @@
 #define WEBSOCKETPP_CONFIG_CORE_HPP
 
 // Non-Policy common stuff
-#include <websocketpp/common/platforms.hpp>
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 
 // Concurrency
@@ -196,7 +194,7 @@ struct core {
      * for debugging and presenting useful errors to end users but may be
      * undesirable for security reasons in some production environments.
      * Close reasons could be used by an attacker to confirm that the endpoint
-     * is out of resources or be used to identify the WebSocket implimentation
+     * is out of resources or be used to identify the WebSocket implementation
      * in use.
      *
      * Note: this will suppress *all* close codes, including those explicitly

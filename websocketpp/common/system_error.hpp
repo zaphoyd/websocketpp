@@ -28,13 +28,7 @@
 #ifndef WEBSOCKETPP_COMMON_SYSTEM_ERROR_HPP
 #define WEBSOCKETPP_COMMON_SYSTEM_ERROR_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_SYSTEM_ERROR_
-    #ifndef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-        #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-    #endif
-#endif
-
-#ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+#ifndef BOOST_NO_CXX11_HDR_SYSTEM_ERROR
     #include <system_error>
 #else
     #include <boost/system/error_code.hpp>
@@ -44,7 +38,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+#ifndef BOOST_NO_CXX11_HDR_SYSTEM_ERROR
     using std::error_code;
     using std::error_category;
     using std::error_condition;

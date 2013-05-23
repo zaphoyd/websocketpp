@@ -28,53 +28,6 @@
 #ifndef WEBSOCKETPP_COMMON_HPP
 #define WEBSOCKETPP_COMMON_HPP
 
-// TODO/NOTE:
-//  _WEBSOCKETPP_CPP11_MEMORY_ and _WEBSOCKETPP_CPP11_FUNCTIONAL_ presently 
-//  only work if either both or neither is defined. It might not make sense to
-//  have separate options for them both.
-// 
-
-
-/**
- * _WEBSOCKETPP_CPP11_STL_ enables the use of a C++11 STL. Doing this requires
- * that you link to a C++11 STL, that your copy of boost be linked to that same
- * STL, and that your compiler supports a minimum set of C++11 features.
- *
- * Required Features:
- * - noexcept
- */
-
-// Optional C++11 support features
-#ifndef __has_feature         // Optional of course.
-  #define __has_feature(x) 0  // Compatibility with non-clang compilers.
-#endif
-#ifndef __has_extension
-  #define __has_extension __has_feature // Compatibility with pre-3.0 compilers.
-#endif
-
-// Enable initializer lists on clang when available.
-#if __has_feature(cxx_generalized_initializers)
-    #define _WEBSOCKETPP_INITIALIZER_LISTS_
-#endif
-
-// Enable deleted functions when available.
-#if __has_feature(cxx_deleted_functions)
-    #define _WEBSOCKETPP_DELETED_FUNCTIONS_
-#endif
-
-// Enable rvalue references when available.
-#if __has_feature(cxx_rvalue_references)
-    #define _WEBSOCKETPP_RVALUE_REFERENCES_
-#endif
-
-// Use C++11 native Alias Templates instead of a hack.
-//#define _WEBSOCKETPP_CPP11_ALIAS_TEMPLATES_
-
-#ifdef _WEBSOCKETPP_CPP11_
-    #define _WEBSOCKETPP_DELETED_FUNCTIONS_
-    #define _WEBSOCKETPP_RVALUE_REFERENCES_
-#endif
-
 #include <string>
 
 namespace websocketpp {

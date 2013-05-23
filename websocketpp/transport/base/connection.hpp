@@ -28,7 +28,6 @@
 #ifndef WEBSOCKETPP_TRANSPORT_BASE_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_BASE_CON_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/memory.hpp>
@@ -118,7 +117,7 @@ class category : public lib::error_category {
     public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.transport";
     }
     
