@@ -33,6 +33,7 @@
 
 #include <websocketpp/extensions/extension.hpp>
 
+#include <boost/config.hpp>
 #include "zlib.h"
 
 #include <string>

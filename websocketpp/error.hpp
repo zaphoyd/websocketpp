@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_ERROR_HPP
 #define WEBSOCKETPP_ERROR_HPP
 
+#include <boost/config.hpp>
 #include <string>
 
 #include <websocketpp/common/system_error.hpp>

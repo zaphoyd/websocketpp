@@ -30,6 +30,7 @@
 
 #include <websocketpp/common/system_error.hpp>
 
+#include <boost/config.hpp>
 #include <string>
 #include <vector>
 

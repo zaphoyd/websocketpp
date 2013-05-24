@@ -31,6 +31,7 @@
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+#include <boost/config.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <string>

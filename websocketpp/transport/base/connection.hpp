@@ -33,6 +33,8 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+#include <boost/config.hpp>
+
 namespace websocketpp {
 namespace transport {
 

@@ -33,6 +33,7 @@
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
+#include <boost/config.hpp>
 #include <boost/asio.hpp>
 
 #include <iostream>

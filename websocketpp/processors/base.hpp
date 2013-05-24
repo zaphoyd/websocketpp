@@ -34,6 +34,7 @@
 #include <websocketpp/utilities.hpp>
 #include <websocketpp/uri.hpp>
 
+#include <boost/config.hpp>
 #include <map>
 #include <string>
 
