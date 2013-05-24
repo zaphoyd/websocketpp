@@ -430,7 +430,7 @@ protected:
             }
         }
         
-        tcp::resolver::query query(host,port);
+        tcp::resolver::query query(host,port,boost::asio::ip::resolver_query_base::flags()); // The default configuration option flag address_configured is not used, since it adds negligible value but breaks resolution of loopback and link-local addresses. See https://svn.boost.org/trac/boost/ticket/8503.
         
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
