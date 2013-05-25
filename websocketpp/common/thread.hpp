@@ -28,13 +28,7 @@
 #ifndef WEBSOCKETPP_COMMON_THREAD_HPP
 #define WEBSOCKETPP_COMMON_THREAD_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_THREAD_
-    #ifndef _WEBSOCKETPP_CPP11_THREAD_
-        #define _WEBSOCKETPP_CPP11_THREAD_
-    #endif
-#endif
-
-#ifdef _WEBSOCKETPP_CPP11_THREAD_
+#ifndef BOOST_NO_CXX11_HDR_THREAD
     #include <thread>
     #include <mutex>
 #else
@@ -46,7 +40,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_THREAD_
+#ifndef BOOST_NO_CXX11_HDR_THREAD
     using std::mutex;
     using std::lock_guard;
     using std::thread;

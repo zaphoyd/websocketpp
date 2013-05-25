@@ -53,7 +53,7 @@ typedef lib::function<void(connection_hdl)> tcp_init_handler;
 
 /// Boost Asio based connection transport component
 /**
- * transport::asio::connection impliments a connection transport component using
+ * transport::asio::connection implements a connection transport component using
  * Boost ASIO that works with the transport::asio::endpoint endpoint transport
  * component.
  */
@@ -349,7 +349,7 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection init");
         }
         
-        // TODO: pre-init timeout. Right now no implimented socket policies
+        // TODO: pre-init timeout. Right now no implemented socket policies
         // actually have an asyncronous pre-init
 
         socket_con_type::pre_init(

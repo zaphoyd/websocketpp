@@ -29,8 +29,8 @@
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_BASE_HPP
 
 #include <websocketpp/common/system_error.hpp>
-#include <websocketpp/common/cpp11.hpp>
 
+#include <boost/config.hpp>
 #include <string>
 
 namespace websocketpp {
@@ -61,7 +61,7 @@ class category : public lib::error_category {
     public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.transport.iostream";
     }
     

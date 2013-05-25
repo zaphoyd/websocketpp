@@ -28,7 +28,6 @@
 #ifndef WEBSOCKETPP_TRANSPORT_BASE_HPP
 #define WEBSOCKETPP_TRANSPORT_BASE_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
@@ -46,7 +45,7 @@ typedef lib::function<void(connection_hdl,const lib::error_code&)> connect_handl
 typedef lib::function<void()> endpoint_lock;
 
 // Endpoint interface
-// Methods a transport endpoint must impliment
+// Methods a transport endpoint must implement
 
 /// Initialize a connection
 /**

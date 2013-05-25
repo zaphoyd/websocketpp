@@ -28,13 +28,13 @@
 #ifndef WEBSOCKETPP_PROCESSOR_BASE_HPP
 #define WEBSOCKETPP_PROCESSOR_BASE_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 #include <websocketpp/close.hpp>
 #include <websocketpp/utilities.hpp>
 #include <websocketpp/uri.hpp>
 
+#include <boost/config.hpp>
 #include <map>
 #include <string>
 
@@ -124,8 +124,8 @@ enum processor_errors {
     /// Invalid UTF-8 encoding
     invalid_utf8,
 
-    /// Operation required not implimented functionality
-    not_implimented,
+    /// Operation required not implemented functionality
+    not_implemented,
 
     /// Invalid HTTP method
     invalid_http_method,
@@ -168,7 +168,7 @@ class processor_category : public lib::error_category {
 public:
     processor_category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.processor";
     }
     
@@ -206,8 +206,8 @@ public:
                 return "64 bit frames are not supported on 32 bit systems";
             case error::invalid_utf8:
                 return "Invalid UTF8 encoding";
-            case error::not_implimented:
-                return "Operation required not implimented functionality";
+            case error::not_implemented:
+                return "Operation required not implemented functionality";
             case error::invalid_http_method:
                 return "Invalid HTTP method.";
             case error::invalid_http_version:

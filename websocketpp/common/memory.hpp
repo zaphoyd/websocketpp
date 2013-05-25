@@ -28,13 +28,11 @@
 #ifndef WEBSOCKETPP_COMMON_MEMORY_HPP
 #define WEBSOCKETPP_COMMON_MEMORY_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_MEMORY_
-    #ifndef _WEBSOCKETPP_CPP11_MEMORY_
-        #define _WEBSOCKETPP_CPP11_MEMORY_
-    #endif
-#endif
+#include <boost/config.hpp>
 
-#ifdef _WEBSOCKETPP_CPP11_MEMORY_
+//  The workarounds for no C++ 11 smart pointers and function wrappers
+//  only work if either both or neither is defined.
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
     #include <memory>
 #else
     #include <boost/shared_ptr.hpp>
@@ -46,7 +44,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_MEMORY_
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
     using std::shared_ptr;
     using std::weak_ptr;
     using std::enable_shared_from_this;

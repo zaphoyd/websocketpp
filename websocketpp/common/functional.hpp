@@ -28,14 +28,17 @@
 #ifndef WEBSOCKETPP_COMMON_FUNCTIONAL_HPP
 #define WEBSOCKETPP_COMMON_FUNCTIONAL_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_FUNCTIONAL_
-    #ifndef _WEBSOCKETPP_CPP11_FUNCTIONAL_
-        #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
-    #endif
-#endif
-
-#ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
+//  The workarounds for no C++ 11 smart pointers and function wrappers
+//  only work if either both or neither is defined.
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
     #include <functional>
+
+    // For Visual Studio 2012 or other compilers that use faux variadics and control it with _VARIADIC_MAX,
+    // this tests that the argument count is sufficient for the websocketpp library.
+    // If not, compilation fails with confusing error messages.
+    #if defined _VARIADIC_MAX && _VARIADIC_MAX < 6
+        #error "_VARIADIC_MAX must be at least 6. Higher values are acceptable, but slow compilation."
+    #endif
 #else
     #include <boost/bind.hpp>
     #include <boost/function.hpp>
@@ -44,7 +47,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
     using std::function;
     using std::bind;
     using std::ref;

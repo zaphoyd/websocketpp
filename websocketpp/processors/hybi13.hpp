@@ -87,7 +87,7 @@ public:
     }
     
     bool has_permessage_deflate() const {
-        return m_permessage_deflate.is_implimented();
+        return m_permessage_deflate.is_implemented();
     }
 
     err_str_pair negotiate_extensions(const request_type& req) {
@@ -116,7 +116,7 @@ public:
         
         typename request_type::parameter_list::const_iterator it;
         
-        if (m_permessage_deflate.is_implimented()) {
+        if (m_permessage_deflate.is_implemented()) {
             err_str_pair neg_ret;
             for (it = p.begin(); it != p.end(); ++it) {
                 // look through each extension, if the key is permessage-deflate

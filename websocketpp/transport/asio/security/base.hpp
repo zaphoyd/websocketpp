@@ -31,15 +31,15 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
+#include <boost/config.hpp>
 #include <boost/asio.hpp>
 
 #include <iostream>
 #include <string>
 
-// Interface that sockets/security policies must impliment
+// Interface that sockets/security policies must implement
 
 /**
  * Endpoint Interface
@@ -102,7 +102,7 @@ namespace error {
 /// Error category related to asio transport socket policies
 class socket_category : public lib::error_category {
 public:
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.transport.asio.socket";
     }
     

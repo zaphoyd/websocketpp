@@ -28,12 +28,12 @@
 #ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 #define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/memory.hpp>
 
 #include <websocketpp/extensions/extension.hpp>
 
+#include <boost/config.hpp>
 #include "zlib.h"
 
 #include <string>
@@ -71,7 +71,7 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.extension.permessage-deflate";
     }
 
@@ -410,7 +410,7 @@ private:
  * Template parameter econfig defines compile time types, constants, and 
  * settings. It should be a struct with the following members:
  *
- * request_type (type) A type that impliments the http::request interface
+ * request_type (type) A type that implements the http::request interface
  * 
  * allow_disabling_context_takeover (static const bool) whether or not to
  * disable context takeover when the other endpoint requests it.
@@ -422,7 +422,7 @@ private:
  *
  *
  * Methods:
- * permessage_deflate::enabled does not define or impliment any methods 
+ * permessage_deflate::enabled does not define or implement any methods 
  * itself. It uses the attribute list to determine
  *
  * 
@@ -533,8 +533,8 @@ public:
         return ret;
     }
     
-    /// Returns true if this object impliments permessage_deflate functionality
-    bool is_implimented() const {
+    /// Returns true if this object implements permessage_deflate functionality
+    bool is_implemented() const {
         return true;
     }
     

@@ -28,9 +28,9 @@
 #ifndef WEBSOCKETPP_EXTENSION_HPP
 #define WEBSOCKETPP_EXTENSION_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+#include <boost/config.hpp>
 #include <string>
 #include <vector>
 
@@ -39,9 +39,9 @@ namespace websocketpp {
 /**
  * Some generic information about extensions
  *
- * Each extension object has an implimented flag. It can be retrieved by calling
- * is_implimented(). This compile time flag indicates whether or not the object 
- * in question actually impliments the extension or if it is a placeholder stub
+ * Each extension object has an implemented flag. It can be retrieved by calling
+ * is_implemented(). This compile time flag indicates whether or not the object 
+ * in question actually implements the extension or if it is a placeholder stub
  *
  * Each extension object also has an enabled flag. It can be retrieved by 
  * calling is_enabled(). This runtime flag indicates whether or not the 
@@ -62,7 +62,7 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const BOOST_NOEXCEPT {
         return "websocketpp.extension";
     }
 
