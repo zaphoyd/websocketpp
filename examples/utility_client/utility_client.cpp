@@ -1,3 +1,8 @@
+/**
+ * This example is presently used as a scratch space. It may or may not be broken
+ * at any given time.
+ */
+
 #include <websocketpp/config/asio_client.hpp>
 
 #include <websocketpp/client.hpp>
@@ -24,7 +29,6 @@ public:
     typedef std::chrono::duration<int,std::micro> dur_type;
     
     perftest () {
-        // We expect there to be a lot of errors, so suppress them
         m_endpoint.set_access_channels(websocketpp::log::alevel::all);
         m_endpoint.set_error_channels(websocketpp::log::elevel::all);
         
