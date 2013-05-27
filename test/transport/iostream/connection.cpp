@@ -52,6 +52,8 @@ typedef websocketpp::transport::iostream::connection<config> iostream_con;
 using websocketpp::transport::iostream::error::make_error_code;
 
 struct stub_con : public iostream_con {
+    typedef iostream_con::timer_ptr timer_ptr;
+
     stub_con(bool is_server, config::alog_type &a, config::elog_type & e) 
         : iostream_con(is_server,a,e)
         // Set the error to a known code that is unused by the library
@@ -267,4 +269,14 @@ BOOST_AUTO_TEST_CASE( async_read_at_least2 ) {
 	BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( std::string(buf,10) == "abcdefgxxx" );
+}
+
+void timer_callback_stub(const websocketpp::lib::error_code & ec) {}
+
+BOOST_AUTO_TEST_CASE( set_timer ) {
+    stub_con con(true,a,e);
+    
+    stub_con::timer_ptr tp = con.set_timer(1000,timer_callback_stub);
+    
+    BOOST_CHECK( !tp );
 }

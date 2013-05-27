@@ -42,6 +42,12 @@ namespace websocketpp {
 namespace transport {
 namespace iostream {
 
+/// Empty timer class to stub out for timer functionality that iostream 
+/// transport doesn't support
+struct timer {
+    void cancel() {}
+};
+
 template <typename config>
 class connection {
 public:
@@ -60,6 +66,8 @@ public:
     // Concurrency policy types
     typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
     typedef typename concurrency_type::mutex_type mutex_type;
+    
+    typedef lib::shared_ptr<timer> timer_ptr;
     
     explicit connection(bool is_server, alog_type& alog, elog_type& elog)
       : m_output_stream(NULL)
@@ -159,6 +167,22 @@ public:
     /// Get the connection handle
     connection_hdl get_handle() const {
         return m_connection_hdl;
+    }
+    
+    /// Call back a function after a period of time.
+    /**
+     * Timers are not implimented in this transport. The timer pointer will 
+     * always be empty. The handler will never be called.
+     * 
+     * @param duration Length of time to wait in milliseconds
+     *
+     * @param callback The function to call back when the timer has expired
+     *
+     * @return A handle that can be used to cancel the timer if it is no longer
+     * needed.
+     */
+    timer_ptr set_timer(long duration, timer_handler callback) {
+        return timer_ptr();
     }
 protected:
     void init(init_handler callback) {
