@@ -139,21 +139,45 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 }
 
 template <typename config>
-void connection<config>::ping(const std::string& payload) {
+void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
     m_alog.write(log::alevel::devel,"connection ping");
 
     if (m_state != session::state::open) {
-        throw error::make_error_code(error::invalid_state);
+        ec = error::make_error_code(error::invalid_state);
+        return;
     }
     
     message_ptr msg = m_msg_manager->get_message();
     if (!msg) {
-        throw error::make_error_code(error::no_outgoing_buffers);
+        ec = error::make_error_code(error::no_outgoing_buffers);
+        return;
     }
 
-    lib::error_code ec = m_processor->prepare_ping(payload,msg);
-    if (ec) {
-        throw ec;
+    ec = m_processor->prepare_ping(payload,msg);
+    if (ec) {return;}
+    
+    // set ping timer if we are listening for one
+    if (m_pong_timeout_handler) {
+        // Cancel any existing timers
+        if (m_ping_timer) {
+            m_ping_timer->cancel();
+        }
+        
+        m_ping_timer = transport_con_type::set_timer(
+            config::timeout_pong,
+            lib::bind(
+                &type::handle_pong_timeout,
+                type::shared_from_this(),
+                payload,
+                lib::placeholders::_1
+            )    
+        );
+    
+        if (!m_ping_timer) {
+            // Our transport doesn't support timers
+            m_elog.write(log::elevel::warn,"Warning: a pong_timeout_handler is \
+                set but the transport in use does not support timeouts.");
+        }
     }
     
     bool needs_writing = false;
@@ -168,6 +192,36 @@ void connection<config>::ping(const std::string& payload) {
             &type::write_frame,
             type::shared_from_this()
         ));
+    }
+    
+    ec = lib::error_code();
+}
+
+template<typename config>
+void connection<config>::ping(const std::string& payload) {
+    lib::error_code ec;
+    ping(payload,ec);
+    if (ec) {
+        throw ec;
+    }
+}
+
+template<typename config>
+void connection<config>::handle_pong_timeout(std::string payload, const lib::error_code & 
+    ec)
+{
+    if (ec) {
+        if (ec == transport::error::operation_aborted) {
+            // ignore, this is expected
+            return;
+        }
+        
+        m_elog.write(log::elevel::devel,"pong_timeout error: "+ec.message());
+        return;
+    }
+    
+    if (m_pong_timeout_handler) {
+        m_pong_timeout_handler(m_connection_hdl,payload);
     }
 }
 
@@ -187,9 +241,7 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     }
 
     ec = m_processor->prepare_pong(payload,msg);
-    if (ec) {
-        return;
-    }
+    if (ec) {return;}
     
     bool needs_writing = false;
     {

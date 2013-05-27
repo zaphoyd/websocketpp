@@ -198,7 +198,7 @@ Export('polyfill_libs')
 
 if not env['PLATFORM'].startswith('win'):
     # Unit tests, add test folders with SConscript files to to_test list.
-    to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/iostream','transport/asio','roles','endpoint','connection'] #,'http','processors','connection'
+    to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/iostream','transport/asio','roles','endpoint','connection','transport'] #,'http','processors','connection'
 
     for t in to_test:
        new_tests = SConscript('#/test/'+t+'/SConscript',variant_dir = testdir + t, duplicate = 0)

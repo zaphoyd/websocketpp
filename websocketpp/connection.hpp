@@ -163,7 +163,10 @@ public:
     
     // Message handler (needs to know message type)
     typedef lib::function<void(connection_hdl,message_ptr)> message_handler;
-
+    
+    /// Type of a pointer to a transport timer handle
+    typedef typename transport_con_type::timer_ptr timer_ptr;
+    
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
@@ -263,10 +266,17 @@ public:
      * If the transport component being used supports timers, the pong timeout 
      * handler is called whenever a pong control frame is not received with the
      * configured timeout period after the application sends a ping.
-     *
+     * 
+     * The config setting `timeout_pong` controls the length of the timeout 
+     * period. It is specified in milliseconds.
+     * 
      * This can be used to probe the health of the remote endpoint's WebSocket 
      * implimentation. This does not guarantee that the remote application 
      * itself is still healthy but can be a useful diagnostic.
+     *
+     * Note: receipt of this callback doesn't mean the pong will never come. 
+     * This functionality will not suppress delivery of the pong in question 
+     * should it arrive after the timeout.
      *
      * @param h The new pong_timeout_handler
      */
@@ -428,7 +438,13 @@ public:
      * @param payload Payload to be used for the ping
      */
     void ping(const std::string& payload);
-
+    
+    /// exception free variant of ping
+    void ping(const std::string & payload, lib::error_code & ec);
+    
+    /// Utility method that gets called back when the ping timer expires
+    void handle_pong_timeout(std::string payload, const lib::error_code & ec);
+    
     /// Send a pong
     /**
      * Initiates a pong with the given payload.
@@ -1027,6 +1043,7 @@ private:
     size_t                  m_buf_cursor;
     termination_handler     m_termination_handler;
     con_msg_manager_ptr     m_msg_manager;
+    timer_ptr               m_ping_timer;
     
     // TODO: this is not memory efficient. this value is not used after the
     // handshake.
