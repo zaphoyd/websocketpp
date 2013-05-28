@@ -79,30 +79,40 @@ public:
      * 
      * @return A connection_ptr to the new connection
      */
+    connection_ptr get_connection(uri_ptr location, lib::error_code &ec) {
+        if (location->get_secure() && !transport_type::is_secure()) {
+            ec = error::make_error_code(error::endpoint_not_secure);
+            return connection_ptr();
+        }
+        
+        // create connection
+        connection_ptr con = endpoint_type::create_connection();
+        
+        if (!con) {
+            ec = error::make_error_code(error::con_creation_failed);
+            return con;
+        }
+        
+        con->set_uri(location);
+        
+        // Success
+        ec = lib::error_code();
+        return con;
+    }
+
+    /// Get a new connection (string version)
+    /**
+     * Creates and returns a pointer to a new connection to the given URI
+     * suitable for passing to connect(connection_ptr). This overload allows
+     * default construction of the uri_ptr from a standard string.
+     * 
+     * @return A connection_ptr to the new connection
+     */
     connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
         // parse uri
         try {
-            // uri validation
             uri_ptr location(new uri(u));
-            
-            if (location->get_secure() && !transport_type::is_secure()) {
-                ec = error::make_error_code(error::endpoint_not_secure);
-                return connection_ptr();
-            }
-            
-            // create connection
-            connection_ptr con = endpoint_type::create_connection();
-            
-            if (!con) {
-                ec = error::make_error_code(error::con_creation_failed);
-                return con;
-            }
-            
-            con->set_uri(location);
-            
-            // Success
-            ec = lib::error_code();
-            return con;
+            return get_connection(location, ec);
         } catch (uri_exception) {
             ec = error::make_error_code(error::invalid_uri);
             return connection_ptr();
