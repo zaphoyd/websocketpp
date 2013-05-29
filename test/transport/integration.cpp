@@ -82,20 +82,14 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 void run_server(server * s, int port) {
-    try {
-        s->clear_access_channels(websocketpp::log::alevel::all);
-        s->clear_error_channels(websocketpp::log::elevel::all);
+    s->clear_access_channels(websocketpp::log::alevel::all);
+    s->clear_error_channels(websocketpp::log::elevel::all);
 
-        s->init_asio();
+    s->init_asio();
 
-        s->listen(port);
-        s->start_accept();
-        s->run();
-    } catch (std::exception & e) {
-        std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
-        std::cout << ec.message() << std::endl;
-    }
+    s->listen(port);
+    s->start_accept();
+    s->run();
 }
 
 void run_client(client & c, std::string uri) {
