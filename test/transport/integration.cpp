@@ -35,8 +35,47 @@
 #include <websocketpp/server.hpp>
 #include <websocketpp/client.hpp>
 
-typedef websocketpp::server<websocketpp::config::asio> server;
-typedef websocketpp::client<websocketpp::config::asio_client> client;
+struct config : public websocketpp::config::asio_client {
+    typedef config type;
+    typedef websocketpp::config::asio base;
+    
+    typedef base::concurrency_type concurrency_type;
+    
+    typedef base::request_type request_type;
+    typedef base::response_type response_type;
+
+    typedef base::message_type message_type;
+    typedef base::con_msg_manager_type con_msg_manager_type;
+    typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
+    
+    typedef base::alog_type alog_type;
+    typedef base::elog_type elog_type;
+    
+    typedef base::rng_type rng_type;
+    
+    struct transport_config : public base::transport_config {
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
+        typedef websocketpp::transport::asio::basic_socket::endpoint 
+            socket_type;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config> 
+        transport_type;
+    
+    /// Length of time before an opening handshake is aborted
+    static const long timeout_open_handshake = 500;
+    /// Length of time before a closing handshake is aborted
+    static const long timeout_close_handshake = 500;
+    /// Length of time to wait for a pong after a ping
+    static const long timeout_pong = 500;
+};
+
+typedef websocketpp::server<config> server;
+typedef websocketpp::client<config> client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
