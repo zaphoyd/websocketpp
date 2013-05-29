@@ -8,7 +8,7 @@ env:
   global:
     - BOOST_INCLUDES=/usr/include
     - BOOST_LIBS=/usr/lib
-script: scons && scons test
+script: scons -j 2 && scons test
 branches:
   only:
     - experimental
