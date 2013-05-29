@@ -42,3 +42,4 @@ Non-release blocking feature roadmap
 - Extension support
 - permessage_compress extension
 - Message buffer pool
+- CMake build/install support
