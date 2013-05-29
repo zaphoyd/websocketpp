@@ -114,6 +114,10 @@ void cancel_on_open(server * s, websocketpp::connection_hdl hdl) {
     s->cancel();
 }
 
+void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
+    s->stop();
+}
+
 template <typename T>
 void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl hdl) {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
@@ -148,7 +152,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     client c;
 
     s.set_ping_handler(on_ping);
-    s.set_open_handler(bind(&cancel_on_open,&s,::_1));
+    s.set_close_handler(bind(&stop_on_close,&s,::_1));
 
     c.set_pong_handler(bind(&fail_on_pong,::_1,::_2));
     c.set_open_handler(bind(&ping_on_open<client>,&c,"foo",::_1));
@@ -156,9 +160,10 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
-    sthread.detach();
     tthread.detach();
     
     run_client(c, "http://localhost:9005");
+    
+    sthread.join();
 }
 
