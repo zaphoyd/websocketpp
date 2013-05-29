@@ -50,10 +50,14 @@ namespace lib {
     using std::mutex;
     using std::lock_guard;
     using std::thread;
+    using std::unique_lock;
+    using std::condition_variable;
 #else
     using boost::mutex;
     using boost::lock_guard;
     using boost::thread;
+    using boost::unique_lock;
+    using boost::condition_variable;
 #endif
 
 } // namespace lib

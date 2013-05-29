@@ -106,6 +106,29 @@ int get_websocket_version(request_type& r) {
     return version;
 }
 
+template <typename request_type>
+uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
+    std::string h = request.get_header("Host");
+        
+    size_t last_colon = h.rfind(":");
+    size_t last_sbrace = h.rfind("]");
+            
+    // no : = hostname with no port
+    // last : before ] = ipv6 literal with no port
+    // : with no ] = hostname with port
+    // : after ] = ipv6 literal with port
+    if (last_colon == std::string::npos || 
+        (last_sbrace != std::string::npos && last_sbrace > last_colon))
+    {
+        return uri_ptr(new uri(scheme, h, request.get_uri()));
+    } else {
+        return uri_ptr(new uri(scheme,
+                               h.substr(0,last_colon),
+                               h.substr(last_colon+1),
+                               request.get_uri()));
+    }
+}
+
 // All other functions are WebSocket version dependent. processor is a base 
 // class for version dependent processing functions.
 

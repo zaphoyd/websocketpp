@@ -859,7 +859,11 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         }
 
         if (m_processor->ready()) {
-            //m_alog.write(log::alevel::devel,"consume ended in ready");
+            if (m_alog.static_test(log::alevel::devel)) {
+                std::stringstream s;
+                s << "Complete frame received. Dispatching";
+                m_alog.write(log::alevel::devel,s.str());
+            }
             
             message_ptr msg = m_processor->get_message();
            
@@ -948,7 +952,17 @@ bool connection<config>::process_handshake_request() {
     if (!processor::is_websocket_handshake(m_request)) {
         // this is not a websocket handshake. Process as plain HTTP
         m_alog.write(log::alevel::devel,"HTTP REQUEST");
-
+        
+        // extract URI from request
+        try { 
+            m_uri = processor::get_uri_from_host(m_request,(transport_con_type::is_secure() ? "https" : "http"));    
+        } catch (const websocketpp::uri_exception& e) {
+            m_alog.write(log::alevel::devel,
+                std::string("BAD REQUEST: uri failed to parse: ")+e.what());
+            m_response.set_status(http::status_code::bad_request);
+            return false;
+        }
+        
         if (m_http_handler) {
             m_http_handler(m_connection_hdl);
         }

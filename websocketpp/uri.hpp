@@ -63,10 +63,11 @@ public:
     explicit uri(const std::string& uri) {
         // TODO: should this split resource into path/query?
         lib::cmatch matches;
-        const lib::regex expression("(http|ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
+        const lib::regex expression("(http|https|ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
         
         if (lib::regex_match(uri.c_str(), matches, expression)) {
-            m_secure = (matches[1] == "wss");
+            m_scheme = matches[1];
+            m_secure = (m_scheme == "wss" || m_scheme == "https");
             m_host = matches[2];
             
             // strip brackets from IPv6 literal URIs
@@ -169,22 +170,47 @@ public:
     }*/
     
     uri(bool secure, const std::string& host, uint16_t port, const std::string& resource)
-      : m_host(host)
+      : m_scheme(secure ? "wss" : "ws")
+      , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(port)
       , m_secure(secure) {}
     
     uri(bool secure, const std::string& host, const std::string& resource)
-      : m_host(host)
+      : m_scheme(secure ? "wss" : "ws")
+      , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(secure ? uri_default_secure_port : uri_default_port)
       , m_secure(secure) {}
       
     uri(bool secure, const std::string& host, const std::string& port, const std::string& resource)
-      : m_host(host)
+      : m_scheme(secure ? "wss" : "ws")
+      , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(get_port_from_string(port))
       , m_secure(secure) {}
+    
+    
+    uri(std::string scheme, const std::string& host, uint16_t port, const std::string& resource)
+      : m_scheme(scheme)
+      , m_host(host)
+      , m_resource(resource == "" ? "/" : resource)
+      , m_port(port)
+      , m_secure(scheme == "wss" || scheme == "https") {}
+    
+    uri(std::string scheme, const std::string& host, const std::string& resource)
+      : m_scheme(scheme)
+      , m_host(host)
+      , m_resource(resource == "" ? "/" : resource)
+      , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
+      , m_secure(scheme == "wss" || scheme == "https") {}
+      
+    uri(std::string scheme, const std::string& host, const std::string& port, const std::string& resource)
+      : m_scheme(scheme)
+      , m_host(host)
+      , m_resource(resource == "" ? "/" : resource)
+      , m_port(get_port_from_string(port))
+      , m_secure(scheme == "wss" || scheme == "https") {}
     
     bool get_secure() const {
         return m_secure;
@@ -227,7 +253,7 @@ public:
     std::string str() const {
         std::stringstream s;
     
-        s << "ws" << (m_secure ? "s" : "") << "://" << m_host;
+        s << m_scheme << "://" << m_host;
         
         if (m_port != (m_secure ? uri_default_secure_port : uri_default_port)) {
             s << ":" << m_port;
@@ -274,8 +300,7 @@ private:
         return static_cast<uint16_t>(t_port);
     }
     
-    
-    
+    std::string m_scheme;
     std::string m_host;
     std::string m_resource;
     uint16_t    m_port;

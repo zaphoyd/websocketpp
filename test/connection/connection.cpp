@@ -100,7 +100,14 @@ void validate_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) 
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-
+void http_func(server* s, websocketpp::connection_hdl hdl) {
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+    
+    std::string res = con->get_resource();
+    
+    con->set_body(res);
+    con->set_status(websocketpp::http::status_code::ok);
+}
 
 BOOST_AUTO_TEST_CASE( connection_extensions ) {
     connection_setup env(true);
@@ -121,6 +128,18 @@ BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
 	s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
 	
     BOOST_CHECK(run_server_test(s,input) == output);
+}
+
+BOOST_AUTO_TEST_CASE( http_request ) {
+    std::string input = "GET /foo/bar HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+    std::string output = "HTTP/1.1 200 OK\r\nContent-Length: 8\r\nServer: ";
+    output+=websocketpp::user_agent;
+    output+="\r\n\r\n/foo/bar";
+	
+	server s;
+	s.set_http_handler(bind(&http_func,&s,::_1));
+	
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
 /*
