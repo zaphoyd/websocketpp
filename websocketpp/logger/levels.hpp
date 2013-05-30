@@ -33,19 +33,43 @@
 namespace websocketpp {
 namespace log {
 
+/// Type of a channel package
 typedef uint32_t level;
 
+/// Package of log levels for logging errors
 struct elevel {
-    static const level none = 0x0;
-    static const level devel = 0x1;
-    static const level library = 0x2;
-    static const level info = 0x4;
-    static const level warn = 0x8;
-    static const level rerror = 0x10;
-    static const level fatal = 0x20;
-    static const level all = 0xffffffff;
+    /// Special aggregate value representing "no levels"
+    static level const none = 0x0;
+    /// Low level debugging information (warning: very chatty)
+    static level const devel = 0x1;
+    /// Information about unusual system states or other minor internal library 
+    /// problems, less chatty than devel.
+    static level const library = 0x2;
+    /// Information about minor configuration problems or additional information
+    /// about other warnings.
+    static level const info = 0x4;
+    /// Information about important problems not severe enough to terminate 
+    /// connections.
+    static level const warn = 0x8;
+    /// Recoverable error. Recovery may mean cleanly closing the connection with
+    /// an appropriate error code to the remote endpoint.
+    static level const rerror = 0x10;
+    /// Unrecoverable error. This error will trigger immediate unclean 
+    /// termination of the connection or endpoint.
+    static level const fatal = 0x20;
+    /// Special aggregate value representing "all levels"
+    static level const all = 0xffffffff;
     
-    static const char* channel_name(level channel) {
+    /// Get the textual name of a channel given a channel id
+    /**
+     * The id must be that of a single channel. Passing an aggregate channel 
+     * package results in undefined behavior.
+     * 
+     * @param channel The channel id to look up.
+     *
+     * @return The name of the specified channel.
+     */
+    static char const * channel_name(level channel) {
         switch(channel) {
             case devel:
                 return "devel";
@@ -65,23 +89,53 @@ struct elevel {
     }
 };
 
+/// Package of log levels for logging access events
 struct alevel {
-    static const level none = 0x0;
-    static const level connect = 0x1;
-    static const level disconnect = 0x2;
-    static const level control = 0x4;
-    static const level frame_header = 0x8;
-    static const level frame_payload = 0x10;
-    static const level message_header = 0x20;
-    static const level message_payload = 0x40;
-    static const level endpoint = 0x80;
-    static const level debug_handshake = 0x100;
-    static const level debug_close = 0x200;
-    static const level devel = 0x400;
-    static const level app = 0x800;
-    static const level all = 0xffffffff;
+    /// Special aggregate value representing "no levels"
+    static level const none = 0x0;
+    /// Information about new connections 
+    /**
+     * One line for each new connection that includes a host of information 
+     * including: the remote address, websocket version, requested resource, 
+     * http code, remote user agent
+     */
+    static level const connect = 0x1;
+    /// One line for each closed connection. Includes closing codes and reasons.
+    static level const disconnect = 0x2;
+    /// One line per control frame
+    static level const control = 0x4;
+    /// One line per frame, includes the full frame header
+    static level const frame_header = 0x8;
+    /// One line per frame, includes the full message payload (warning: chatty)
+    static level const frame_payload = 0x10;
+    /// Reserved
+    static level const message_header = 0x20;
+    /// Reserved
+    static level const message_payload = 0x40;
+    /// Reserved
+    static level const endpoint = 0x80;
+    /// Extra information about opening handshakes
+    static level const debug_handshake = 0x100;
+    /// Extra information about closing handshakes
+    static level const debug_close = 0x200;
+    /// Development messages (warning: very chatty)
+    static level const devel = 0x400;
+    /// Special channel for application specific logs. Not used by the library.
+    static level const app = 0x800;
+    /// Special aggregate value representing "all levels"
+    static level const all = 0xffffffff;
     
-    static const char* channel_name(level channel) {
+    /// Get the textual name of a channel given a channel id
+    /**
+     * Get the textual name of a channel given a channel id. The id must be that
+     * of a single channel. Passing an aggregate channel package results in 
+     * undefined behavior.
+     * 
+     * @param channel The channelid to look up.
+     *
+     * @return The name of the specified channel.
+     */
+    static char const * channel_name(level channel) {
         switch(channel) {
             case connect:
                 return "connect";
