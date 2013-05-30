@@ -113,7 +113,7 @@ namespace internal_state {
 } // namespace internal_state
 } // namespace session
 
-// impliments the websocket state machine
+/// Represents an individual WebSocket connection
 template <typename config>
 class connection
  : public config::transport_type::transport_con_type

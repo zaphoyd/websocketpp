@@ -63,6 +63,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Client config with iostream transport
 struct core_client {
     typedef core_client type;
     

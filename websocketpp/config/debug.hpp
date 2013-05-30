@@ -64,6 +64,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Client/Server debug config with iostream transport
 struct debug_core {
     typedef debug_core type;
     

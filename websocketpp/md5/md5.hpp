@@ -70,6 +70,7 @@
 #include <string>
 #include <cstring>
 
+/// Provides MD5 hashing functionality
 namespace md5 {
 
 typedef unsigned char md5_byte_t; /* 8-bit byte */

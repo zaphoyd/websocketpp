@@ -30,6 +30,7 @@
 
 namespace websocketpp {
 namespace random {
+/// Stub RNG policy that always returns 0
 namespace none {
 
 /// Thread safe stub "random" integer generator.

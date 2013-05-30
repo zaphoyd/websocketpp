@@ -153,6 +153,7 @@ uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
 //     }
 // } 
 
+/// WebSocket protocol processor base class
 template <typename config>
 class processor {
 public:
@@ -193,9 +194,9 @@ public:
 
     /// validate a WebSocket handshake request for this version
     /**
-     * @param r The WebSocket handshake request to validate. 
-     * is_websocket_handshake(r) must be true and get_websocket_version(r) 
-     * must equal this->get_version().
+     * @param request The WebSocket handshake request to validate. 
+     * is_websocket_handshake(request) must be true and 
+     * get_websocket_version(request) must equal this->get_version().
      *
      * @return A status code, 0 on success, non-zero for specific sorts of 
      * failure

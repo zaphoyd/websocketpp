@@ -30,6 +30,7 @@
 
 namespace websocketpp {
 
+/// Provides SHA1 hashing functionality
 class SHA1
 {
     public:

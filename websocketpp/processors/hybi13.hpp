@@ -54,6 +54,7 @@
 namespace websocketpp {
 namespace processor {
 
+/// Processor for Hybi version 13 (RFC6455)
 template <typename config>
 class hybi13 : public processor<config> {
 public:

@@ -34,6 +34,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Server config with asio transport and TLS disabled
 struct asio : public core {
     typedef asio type;
     typedef core base;

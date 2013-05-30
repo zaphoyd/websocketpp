@@ -58,6 +58,7 @@ public:
 
 } // namespace none_impl
 
+/// Stub Concurrency policy to remove locking in single threaded projects
 class none {
 public:
     typedef none_impl::fake_mutex mutex_type;

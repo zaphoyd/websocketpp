@@ -40,7 +40,8 @@ decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
   *state = utf8d[256 + *state*16 + type];
   return *state;
 }
-    
+
+/// Provides streaming UTF8 validation functionality
 class validator {
 public:
     validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}

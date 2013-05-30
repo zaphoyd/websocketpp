@@ -37,6 +37,7 @@
 #include <iostream>
 
 namespace websocketpp {
+/// Transport policies provide network connectivity and timers
 namespace transport {
 
 // Endpoint callbacks
