@@ -1,8 +1,8 @@
 /*
-  md5.hpp is a reformulation of the md5.h and md5.c code (included) to allow it to 
-  function as a component of a header only library. This conversion was done by Peter
-  Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The changes are
-  released under the same license as the original (listed below)
+  md5.hpp is a reformulation of the md5.h and md5.c code to allow it to function
+  as a component of a header only library. This conversion was done by Peter
+  Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The 
+  changes are released under the same license as the original (listed below)
 */
 /*
   Copyright (C) 1999, 2002 Aladdin Enterprises.  All rights reserved.
@@ -53,8 +53,8 @@
   1999-05-03 lpd Original version.
  */
 
-#ifndef md5_INCLUDED
-#  define md5_INCLUDED
+#ifndef WEBSOCKETPP_COMMON_MD5_HPP
+#define WEBSOCKETPP_COMMON_MD5_HPP
 
 /*
  * This package supports both compile-time and run-time determination of CPU
@@ -70,6 +70,7 @@
 #include <string>
 #include <cstring>
 
+namespace websocketpp {
 /// Provides MD5 hashing functionality
 namespace md5 {
 
@@ -87,7 +88,7 @@ typedef struct md5_state_s {
 inline void md5_init(md5_state_t *pms);
 
 /* Append a string to the message. */
-inline void md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes);
+inline void md5_append(md5_state_t *pms, md5_byte_t const * data, size_t nbytes);
 
 /* Finish the message and return the digest. */
 inline void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
@@ -165,9 +166,7 @@ inline void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 #define ZSW_MD5_T63    0x2ad7d2bb
 #define ZSW_MD5_T64 /* 0xeb86d391 */ (ZSW_MD5_T_MASK ^ 0x14792c6e)
 
-static void
-md5_process(md5_state_t *pms, const md5_byte_t *data /*[64]*/)
-{
+static void md5_process(md5_state_t *pms, md5_byte_t const * data /*[64]*/) {
     md5_word_t
 	a = pms->abcd[0], b = pms->abcd[1],
 	c = pms->abcd[2], d = pms->abcd[3];
@@ -178,7 +177,7 @@ md5_process(md5_state_t *pms, const md5_byte_t *data /*[64]*/)
 #else
     /* Define storage for little-endian or both types of CPUs. */
     md5_word_t xbuf[16];
-    const md5_word_t *X;
+    md5_word_t const * X;
 #endif
 
     {
@@ -188,9 +187,9 @@ md5_process(md5_state_t *pms, const md5_byte_t *data /*[64]*/)
 	 * little-endian machine, since we can use a more efficient
 	 * algorithm on the latter.
 	 */
-	static const int w = 1;
+	static int const w = 1;
 
-	if (*((const md5_byte_t *)&w)) /* dynamic little-endian */
+	if (*((md5_byte_t const *)&w)) /* dynamic little-endian */
 #endif
 #if ZSW_MD5_BYTE_ORDER <= 0		/* little-endian */
 	{
@@ -198,9 +197,9 @@ md5_process(md5_state_t *pms, const md5_byte_t *data /*[64]*/)
 	     * On little-endian machines, we can process properly aligned
 	     * data without copying it.
 	     */
-	    if (!((data - (const md5_byte_t *)0) & 3)) {
+	    if (!((data - (md5_byte_t const *)0) & 3)) {
 		/* data are properly aligned */
-		X = (const md5_word_t *)data;
+		X = (md5_word_t const *)data;
 	    } else {
 		/* not aligned */
 		std::memcpy(xbuf, data, 64);
@@ -346,9 +345,7 @@ md5_process(md5_state_t *pms, const md5_byte_t *data /*[64]*/)
     pms->abcd[3] += d;
 }
 
-void
-md5_init(md5_state_t *pms)
-{
+void md5_init(md5_state_t *pms) {
     pms->count[0] = pms->count[1] = 0;
     pms->abcd[0] = 0x67452301;
     pms->abcd[1] = /*0xefcdab89*/ ZSW_MD5_T_MASK ^ 0x10325476;
@@ -356,10 +353,8 @@ md5_init(md5_state_t *pms)
     pms->abcd[3] = 0x10325476;
 }
 
-void
-md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes)
-{
-    const md5_byte_t *p = data;
+void md5_append(md5_state_t *pms, md5_byte_t const * data, size_t nbytes) {
+    md5_byte_t const * p = data;
     size_t left = nbytes;
     int offset = (pms->count[0] >> 3) & 63;
     md5_word_t nbits = (md5_word_t)(nbytes << 3);
@@ -394,10 +389,8 @@ md5_append(md5_state_t *pms, const md5_byte_t *data, size_t nbytes)
 	std::memcpy(pms->buf, p, left);
 }
 
-void
-md5_finish(md5_state_t *pms, md5_byte_t digest[16])
-{
-    static const md5_byte_t pad[64] = {
+void md5_finish(md5_state_t *pms, md5_byte_t digest[16]) {
+    static md5_byte_t const pad[64] = {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -418,13 +411,13 @@ md5_finish(md5_state_t *pms, md5_byte_t digest[16])
 }
 
 // some convenience c++ functions
-inline std::string md5_hash_string(const std::string& s) {
+inline std::string md5_hash_string(std::string const & s) {
 	char digest[16];
 	
 	md5_state_t state;
 	
 	md5_init(&state);
-	md5_append(&state, (const md5_byte_t *)s.c_str(), s.size());
+	md5_append(&state, (md5_byte_t const *)s.c_str(), s.size());
 	md5_finish(&state, (md5_byte_t *)digest);
 	    
     std::string ret;
@@ -436,7 +429,7 @@ inline std::string md5_hash_string(const std::string& s) {
 
 const char hexval[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-inline std::string md5_hash_hex(const std::string& input) {
+inline std::string md5_hash_hex(std::string const & input) {
     std::string hash = md5_hash_string(input);
     std::string hex;
         
@@ -449,5 +442,6 @@ inline std::string md5_hash_hex(const std::string& input) {
 }
 
 } // md5
+} // websocketpp
 
-#endif // md5_INCLUDED
+#endif // WEBSOCKETPP_COMMON_MD5_HPP
