@@ -42,7 +42,7 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 
-#include <websocketpp/md5/md5.hpp>
+#include <websocketpp/common/md5.hpp>
 
 namespace websocketpp {
 namespace processor {
