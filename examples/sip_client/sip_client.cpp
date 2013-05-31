@@ -35,9 +35,16 @@ using websocketpp::client;
 class sip_client_handler : public client::handler {
 public:
 
+    bool received;
+
     void on_open(connection_ptr con) {
         // now it is safe to use the connection
         std::cout << "connection ready" << std::endl;
+
+        received = false;
+
+        std::string SIP_msg="OPTIONS sip:carol@chicago.com SIP/2.0\r\nVia: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKhjhs8ass877\r\nMax-Forwards: 70\r\nTo: <sip:carol@chicago.com>\r\nFrom: Alice <sip:alice@atlanta.com>;tag=1928301774\r\nCall-ID: a84b4c76e66710\r\nCSeq: 63104 OPTIONS\r\nContact: <sip:alice@pc33.atlanta.com>\r\nAccept: application/sdp\r\nContent-Length: 0\r\n\r\n";
+        con->send(SIP_msg.c_str());
     }
 
     void on_close(connection_ptr con) {
@@ -46,19 +53,13 @@ public:
     }
 
     void on_message(connection_ptr con, message_ptr msg) {        
-        if (con->get_resource() == "/getCaseCount") {
-            std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
-            m_case_count = atoi(msg->get_payload().c_str());
-        } else {
-            con->send(msg->get_payload(),msg->get_opcode());
-        }
+        std::cout << msg->get_payload()  << std::endl; 
+        received=true;
     }
     
     void on_fail(connection_ptr con) {
         std::cout << "connection failed" << std::endl;
     }
-    
-    int m_case_count;
 };
 
 
@@ -80,22 +81,18 @@ int main(int argc, char* argv[]) {
         endpoint.alog().unset_level(websocketpp::log::alevel::ALL);
         endpoint.elog().unset_level(websocketpp::log::elevel::ALL);
         
-        con = endpoint.connect(uri+"getCaseCount");
+        con = endpoint.get_connection(uri);
+
+        con->add_subprotocol("sip");
+
+        con->set_origin("http://zaphoyd.com");
+
+        endpoint.connect(con);
                 
         endpoint.run();
         
-        std::cout << "case count: " << boost::dynamic_pointer_cast<sip_client_handler>(handler)->m_case_count << std::endl;
-        
-        for (int i = 1; i <= boost::dynamic_pointer_cast<sip_client_handler>(handler)->m_case_count; i++) {
-            endpoint.reset();
-            
-            std::stringstream url;
-            
-            url << uri << "runCase?case=" << i << "&agent=WebSocket++/0.2.0-dev";
-                        
-            con = endpoint.connect(url.str());
-            
-            endpoint.run();
+        while(!boost::dynamic_pointer_cast<sip_client_handler>(handler)->received) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100)); 
         }
         
         std::cout << "done" << std::endl;
