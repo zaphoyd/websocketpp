@@ -34,6 +34,17 @@ using websocketpp::client;
 
 class sip_client_handler : public client::handler {
 public:
+
+    void on_open(connection_ptr con) {
+        // now it is safe to use the connection
+        std::cout << "connection ready" << std::endl;
+    }
+
+    void on_close(connection_ptr con) {
+        // no longer safe to use the connection
+        std::cout << "connection closed" << std::endl;
+    }
+
     void on_message(connection_ptr con, message_ptr msg) {        
         if (con->get_resource() == "/getCaseCount") {
             std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
