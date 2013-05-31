@@ -28,7 +28,7 @@ void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
 
 int main(int argc, char* argv[]) {
 	// Create a server endpoint
-    client echo_client;
+    client sip_client;
 	
 	std::string uri = "ws://localhost:9001";
 	
@@ -38,36 +38,36 @@ int main(int argc, char* argv[]) {
 	
 	try {
         // We expect there to be a lot of errors, so suppress them
-        echo_client.clear_access_channels(websocketpp::log::alevel::all);
-        echo_client.clear_error_channels(websocketpp::log::elevel::all);
+        sip_client.clear_access_channels(websocketpp::log::alevel::all);
+        sip_client.clear_error_channels(websocketpp::log::elevel::all);
         
         // Initialize ASIO
-        echo_client.init_asio();
+        sip_client.init_asio();
         
         // Register our handlers
-        echo_client.set_message_handler(bind(&on_message,&echo_client,::_1,::_2));
+        sip_client.set_message_handler(bind(&on_message,&sip_client,::_1,::_2));
         
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = echo_client.get_connection(uri+"/getCaseCount", ec);
-        echo_client.connect(con);
+        client::connection_ptr con = sip_client.get_connection(uri+"/getCaseCount", ec);
+        sip_client.connect(con);
 	    
 	    // Start the ASIO io_service run loop
-        echo_client.run();
+        sip_client.run();
         
         std::cout << "case count: " << case_count << std::endl;
         
         for (int i = 1; i <= case_count; i++) {
-            echo_client.reset();
+            sip_client.reset();
             
             std::stringstream url;
             
             url << uri << "/runCase?case=" << i << "&agent=WebSocket++/0.3.0-dev";
             
-            con = echo_client.get_connection(url.str(), ec);
+            con = sip_client.get_connection(url.str(), ec);
                         
-            echo_client.connect(con);
+            sip_client.connect(con);
             
-            echo_client.run();
+            sip_client.run();
         }
         
         std::cout << "done" << std::endl;
