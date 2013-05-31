@@ -1,8 +1,12 @@
+#include <condition_variable>
+
 #include <websocketpp/config/asio_no_tls_client.hpp>
 
 #include <websocketpp/client.hpp>
 
 #include <iostream>
+
+#include <boost/thread/thread.hpp> 
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
@@ -13,22 +17,31 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
 
-int case_count = 0;
+// Create a server endpoint
+client sip_client;
 
-void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
-    client::connection_ptr con = c->get_con_from_hdl(hdl);
+
+bool received; 
+
+void on_open(websocketpp::connection_hdl hdl) {
+    // now it is safe to use the connection
+    std::cout << "connection ready" << std::endl;
     
-    if (con->get_resource() == "/getCaseCount") {
-        std::cout << "Detected " << msg->get_payload() << " test cases." << std::endl;
-        case_count = atoi(msg->get_payload().c_str());
-    } else {
-        c->send(hdl, msg->get_payload(), msg->get_opcode());
-    }
+    received=false;
+    // Send a SIP OPTIONS message to the server:
+    std::string SIP_msg="OPTIONS sip:carol@chicago.com SIP/2.0\r\nVia: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKhjhs8ass877\r\nMax-Forwards: 70\r\nTo: <sip:carol@chicago.com>\r\nFrom: Alice <sip:alice@atlanta.com>;tag=1928301774\r\nCall-ID: a84b4c76e66710\r\nCSeq: 63104 OPTIONS\r\nContact: <sip:alice@pc33.atlanta.com>\r\nAccept: application/sdp\r\nContent-Length: 0\r\n\r\n";
+    sip_client.send(hdl, SIP_msg.c_str(), websocketpp::frame::opcode::text);
+}
+
+void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+    client::connection_ptr con = sip_client.get_con_from_hdl(hdl);
+    
+    std::cout << "Received a reply:" << std::endl;
+    fwrite(msg->get_payload().c_str(), msg->get_payload().size(), 1, stdout);
+    received=true;
 }
 
 int main(int argc, char* argv[]) {
-	// Create a server endpoint
-    client sip_client;
 	
 	std::string uri = "ws://localhost:9001";
 	
@@ -45,29 +58,22 @@ int main(int argc, char* argv[]) {
         sip_client.init_asio();
         
         // Register our handlers
+        sip_client.set_open_handler(bind(&on_open,&sip_client,::_1));
         sip_client.set_message_handler(bind(&on_message,&sip_client,::_1,::_2));
         
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = sip_client.get_connection(uri+"/getCaseCount", ec);
+        client::connection_ptr con = sip_client.get_connection(uri, ec);
+
+        // Specify the SIP subprotocol:
+        con.add_subprotocol("sip");
+
         sip_client.connect(con);
 	    
 	    // Start the ASIO io_service run loop
         sip_client.run();
         
-        std::cout << "case count: " << case_count << std::endl;
-        
-        for (int i = 1; i <= case_count; i++) {
-            sip_client.reset();
-            
-            std::stringstream url;
-            
-            url << uri << "/runCase?case=" << i << "&agent=WebSocket++/0.3.0-dev";
-            
-            con = sip_client.get_connection(url.str(), ec);
-                        
-            sip_client.connect(con);
-            
-            sip_client.run();
+        while(!received) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
         }
         
         std::cout << "done" << std::endl;
