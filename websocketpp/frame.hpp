@@ -36,32 +36,42 @@
 #include <websocketpp/utilities.hpp>
 
 namespace websocketpp {
+/// Data structures and utility functions for manipulating WebSocket frames
 /**
  * namespace frame provides a number of data structures and utility functions 
  * for reading, writing, and manipulating binary encoded WebSocket frames.
  */
 namespace frame {
 
-static const unsigned int BASIC_HEADER_LENGTH = 2;
-static const unsigned int MAX_HEADER_LENGTH = 14;
-static const unsigned int MAX_EXTENDED_HEADER_LENGTH = 12;
+/// Minimum length of a WebSocket frame header.
+static unsigned int const BASIC_HEADER_LENGTH = 2;
+/// Maximum length of a WebSocket header
+static unsigned int const MAX_HEADER_LENGTH = 14;
+/// Maximum length of the variable portion of the WebSocket header
+static unsigned int const MAX_EXTENDED_HEADER_LENGTH = 12;
 
+/// Two byte conversion union
 union uint16_converter {
     uint16_t i;
     uint8_t  c[2];
 };
 
+/// Four byte conversion union
 union uint32_converter {
     uint32_t i;
     uint8_t c[4];
 };
 
+/// Eight byte conversion union
 union uint64_converter {
     uint64_t i;
     uint8_t  c[8];
 };
 
-// WebSocket Opcodes are 4 bits. See spec section 5.2
+/// Constants and utility functions related to WebSocket opcodes
+/**
+ * WebSocket Opcodes are 4 bits. See RFC6455 section 5.2.
+ */
 namespace opcode {
     enum value {
         continuation = 0x0,
@@ -98,50 +108,83 @@ namespace opcode {
         CONTROL_RSVE = 0xE,
         CONTROL_RSVF = 0xF
     };
-        
+
+    /// Check if an opcode is reserved
+    /**
+     * @param v The opcode to test.
+     * @return Whether or not the opcode is reserved.
+     */
     inline bool reserved(value v) {
-        return (v >= RSV3 && v <= RSV7) || 
-               (v >= CONTROL_RSVB && v <= CONTROL_RSVF);
+        return (v >= rsv3 && v <= rsv7) || 
+               (v >= control_rsvb && v <= control_rsvf);
     }
-            
+
+    /// Check if an opcode is invalid
+    /**
+     * Invalid opcodes are negative or require greater than 4 bits to store.
+     * 
+     * @param v The opcode to test.
+     * @return Whether or not the opcode is invalid.
+     */
     inline bool invalid(value v) {
         return (v > 0xF || v < 0);
     }
-            
+
+    /// Check if an opcode is for a control frame
+    /**
+     * @param v The opcode to test.
+     * @return Whether or not the opcode is a control opcode.
+     */
     inline bool is_control(value v) {
         return v >= 0x8;
     }
 }
 
+/// Constants related to frame and payload limits
 namespace limits {
+    /// Minimum length of a WebSocket frame header.
+    static unsigned int const basic_header_length = 2;
+
+    /// Maximum length of a WebSocket header
+    static unsigned int const max_header_length = 14;
+
+    /// Maximum length of the variable portion of the WebSocket header
+    static unsigned int const max_extended_header_length = 12;
+    
     /// Maximum size of a basic WebSocket payload
-    static const uint8_t payload_size_basic = 125;
+    static uint8_t const payload_size_basic = 125;
+    
     /// Maximum size of an extended WebSocket payload (basic payload = 126) 
-    static const uint16_t payload_size_extended = 0xFFFF; // 2^16, 65535
+    static uint16_t const payload_size_extended = 0xFFFF; // 2^16, 65535
+    
     /// Maximum size of a jumbo WebSocket payload (basic payload = 127)
-    static const uint64_t payload_size_jumbo = 0x7FFFFFFFFFFFFFFFLL;//2^63
+    static uint64_t const payload_size_jumbo = 0x7FFFFFFFFFFFFFFFLL;//2^63
+    
     /// Maximum size of close frame reason
-    /// This is payload_size_basic - 2 bytes (as first two bytes are used for 
-    //// the close code
-    static const uint8_t close_reason_size = 123;
+    /** 
+     * This is payload_size_basic - 2 bytes (as first two bytes are used for 
+     * the close code
+     */
+    static uint8_t const close_reason_size = 123;
 }
 
 
 // masks for fields in the basic header
-static const uint8_t BHB0_OPCODE = 0x0F;
-static const uint8_t BHB0_RSV3 = 0x10;
-static const uint8_t BHB0_RSV2 = 0x20;
-static const uint8_t BHB0_RSV1 = 0x40;
-static const uint8_t BHB0_FIN = 0x80;
+static uint8_t const BHB0_OPCODE = 0x0F;
+static uint8_t const BHB0_RSV3 = 0x10;
+static uint8_t const BHB0_RSV2 = 0x20;
+static uint8_t const BHB0_RSV1 = 0x40;
+static uint8_t const BHB0_FIN = 0x80;
 
-static const uint8_t BHB1_PAYLOAD = 0x7F;
-static const uint8_t BHB1_MASK = 0x80;
+static uint8_t const BHB1_PAYLOAD = 0x7F;
+static uint8_t const BHB1_MASK = 0x80;
     
-static const uint8_t payload_size_code_16bit = 0x7E; // 126
-static const uint8_t payload_size_code_64bit = 0x7F; // 127
+static uint8_t const payload_size_code_16bit = 0x7E; // 126
+static uint8_t const payload_size_code_64bit = 0x7F; // 127
 
 typedef uint32_converter masking_key_type;
 
+/// The constant size component of a WebSocket frame header
 struct basic_header {
     basic_header() : b0(0x00),b1(0x00) {}
     
@@ -187,6 +230,7 @@ struct basic_header {
     uint8_t b1;
 };
 
+/// The variable size component of a WebSocket frame header
 struct extended_header {
     extended_header() {
         std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
@@ -229,64 +273,66 @@ private:
     }
 };
 
-// Forward function declarations
-bool get_fin(const basic_header &);
-bool get_rsv1(const basic_header &);
-bool get_rsv2(const basic_header &);
-bool get_rsv3(const basic_header &);
-opcode::value get_opcode(const basic_header &);
-bool get_masked(const basic_header &);
-uint8_t get_basic_size(const basic_header &);
-size_t get_header_len(const basic_header &);
-unsigned int get_masking_key_offset(const basic_header &);
+bool get_fin(basic_header const &h);
+void set_fin(basic_header &h, bool value);
+bool get_rsv1(basic_header const &h);
+void set_rsv1(basic_header &h, bool value);
+bool get_rsv2(basic_header const &h);
+void set_rsv2(basic_header &h, bool value);
+bool get_rsv3(basic_header const &h);
+void set_rsv3(basic_header &h, bool value);
+opcode::value get_opcode(basic_header const &h);
+bool get_masked(basic_header const &h);
+void set_masked(basic_header &h, bool value);
+uint8_t get_basic_size(basic_header const &);
+size_t get_header_len(basic_header const &);
+unsigned int get_masking_key_offset(basic_header const &);
 
-std::string write_header(const basic_header &, const extended_header &);
+std::string write_header(basic_header const &, extended_header const &);
+masking_key_type get_masking_key(basic_header const &, extended_header const &);
+uint16_t get_extended_size(extended_header const &);
+uint64_t get_jumbo_size(extended_header const &);
+uint64_t get_payload_size(basic_header const &, extended_header const &);
 
-masking_key_type get_masking_key(const basic_header &, const extended_header &);
-uint16_t get_extended_size(const extended_header &);
-uint64_t get_jumbo_size(const extended_header &);
-uint64_t get_payload_size(const basic_header &, const extended_header &);
-
-size_t prepare_masking_key(const masking_key_type& key);
+size_t prepare_masking_key(masking_key_type const & key);
 size_t circshift_prepared_key(size_t prepared_key, size_t offset);
 
 // Functions for performing xor based masking and unmasking
 template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type& 
+void byte_mask(iter_type b, iter_type e, iter_type o, masking_key_type const & 
     key, size_t key_offset = 0);
 template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
+void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset = 0);
-void word_mask_exact(uint8_t* input, uint8_t* output, size_t length, 
-    const masking_key_type& key);
-void word_mask_exact(uint8_t* data, size_t length, const masking_key_type& key);
-size_t word_mask_circ(uint8_t* input, uint8_t* output, size_t length, 
+void word_mask_exact(uint8_t * input, uint8_t * output, size_t length, 
+    masking_key_type const & key);
+void word_mask_exact(uint8_t * data, size_t length, masking_key_type const & 
+    key);
+size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
     size_t prepared_key);
-size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key);
+size_t word_mask_circ(uint8_t * data, size_t length, size_t prepared_key);
 
-
-// Function implimentation
-
-/// check whether the frame's FIN bit is set
+/// Check whether the frame's FIN bit is set.
 /**
+ * @param [in] h The basic header to extract from.
  * @return True if the header's fin bit is set.
  */
-inline bool get_fin(const basic_header &h) {
+inline bool get_fin(basic_header const & h) {
     return ((h.b0 & BHB0_FIN) == BHB0_FIN);
 }
 
 /// Set the frame's FIN bit
 /**
- * @param h Header to set
- *
- * @param value Value to set it to
+ * @param [out] h Header to set.
+ * @param [in] value Value to set it to.
  */
-inline void set_fin(basic_header &h, bool value) {
+inline void set_fin(basic_header & h, bool value) {
     h.b0 = (value ? h.b0 | BHB0_FIN : h.b0 & ~BHB0_FIN);
 }
 
 /// check whether the frame's RSV1 bit is set
 /**
+ * @param [in] h The basic header to extract from.
  * @return True if the header's RSV1 bit is set.
  */
 inline bool get_rsv1(const basic_header &h) {
@@ -295,9 +341,8 @@ inline bool get_rsv1(const basic_header &h) {
 
 /// Set the frame's RSV1 bit
 /**
- * @param h Header to set
- *
- * @param value Value to set it to
+ * @param [out] h Header to set.
+ * @param [in] value Value to set it to.
  */
 inline void set_rsv1(basic_header &h, bool value) {
     h.b0 = (value ? h.b0 | BHB0_RSV1 : h.b0 & ~BHB0_RSV1);
@@ -305,6 +350,7 @@ inline void set_rsv1(basic_header &h, bool value) {
 
 /// check whether the frame's RSV2 bit is set
 /**
+ * @param [in] h The basic header to extract from.
  * @return True if the header's RSV2 bit is set.
  */
 inline bool get_rsv2(const basic_header &h) {
@@ -313,9 +359,8 @@ inline bool get_rsv2(const basic_header &h) {
 
 /// Set the frame's RSV2 bit
 /**
- * @param h Header to set
- *
- * @param value Value to set it to
+ * @param [out] h Header to set.
+ * @param [in] value Value to set it to.
  */
 inline void set_rsv2(basic_header &h, bool value) {
     h.b0 = (value ? h.b0 | BHB0_RSV2 : h.b0 & ~BHB0_RSV2);
@@ -323,6 +368,7 @@ inline void set_rsv2(basic_header &h, bool value) {
 
 /// check whether the frame's RSV3 bit is set
 /**
+ * @param [in] h The basic header to extract from.
  * @return True if the header's RSV3 bit is set.
  */
 inline bool get_rsv3(const basic_header &h) {
@@ -331,34 +377,37 @@ inline bool get_rsv3(const basic_header &h) {
 
 /// Set the frame's RSV3 bit
 /**
- * @param h Header to set
- *
- * @param value Value to set it to
+ * @param [out] h Header to set.
+ * @param [in] value Value to set it to.
  */
 inline void set_rsv3(basic_header &h, bool value) {
     h.b0 = (value ? h.b0 | BHB0_RSV3 : h.b0 & ~BHB0_RSV3);
 }
 
 /// Extract opcode from basic header
+/**
+ * @param [in] h The basic header to extract from.
+ * @return The opcode value of the header.
+ */
 inline opcode::value get_opcode(const basic_header &h) {
     return opcode::value(h.b0 & BHB0_OPCODE);
 }
 
 /// check whether the frame is masked
 /**
+ * @param [in] h The basic header to extract from.
  * @return True if the header mask bit is set.
  */
-inline bool get_masked(const basic_header &h) {
+inline bool get_masked(basic_header const & h) {
     return ((h.b1 & BHB1_MASK) == BHB1_MASK);
 }
 
 /// Set the frame's MASK bit
 /**
- * @param h Header to set
- *
- * @param value Value to set it to
+ * @param [out] h Header to set.
+ * @param value Value to set it to.
  */
-inline void set_masked(basic_header &h, bool value) {
+inline void set_masked(basic_header & h, bool value) {
     h.b1 = (value ? h.b1 | BHB1_MASK : h.b1 & ~BHB1_MASK);
 }
 
@@ -375,21 +424,46 @@ inline void set_masked(basic_header &h, bool value) {
  * PAYLOAD_SIZE_CODE_64BIT (0x7F) indicates that the actual payload is less
  * than 63 bit
  *
- * @param h basic header to read value from
- *
- * @return the exact size encoded in h
+ * @param [in] h Basic header to read value from.
+ * @return The exact size encoded in h.
  */
 inline uint8_t get_basic_size(const basic_header &h) {
     return h.b1 & BHB1_PAYLOAD;
 }
 
-/// Set the frame's MASK bit
+/// Calculates the full length of the header based on the first bytes.
 /**
- * @param h Header to set
+ * A WebSocket frame header always has at least two bytes. Encoded within the
+ * first two bytes is all the information necessary to calculate the full
+ * (variable) header length. get_header_len() calculates the full header 
+ * length for the given two byte basic header.
  *
- * @param size 
+ * @param h Basic frame header to extract size from.
+ * @return Full length of the extended header.
  */
-inline lib::error_code set_size(basic_header &h, extended_header &eh, uint64_t 
+inline size_t get_header_len(basic_header const & h) {
+    // TODO: check extensions?
+    
+    // masking key offset represents the space used for the extended length
+    // fields
+    size_t size = BASIC_HEADER_LENGTH + get_masking_key_offset(h);
+    
+    // If the header is masked there is a 4 byte masking key
+    if (get_masked(h)) { 
+        size += 4;
+    }
+    
+    return size;
+}
+
+/// Set the frame's size
+/**
+ * @param [out] h The basic header to set.
+ * @param [out] eh The extended header to set.
+ * @param [in] The size to set.
+ * @return What error occurred, if any.
+ */
+inline lib::error_code set_size(basic_header & h, extended_header & eh, uint64_t 
     size)
 {
     // make sure value isn't too big
@@ -409,32 +483,6 @@ inline lib::error_code set_size(basic_header &h, extended_header &eh, uint64_t
     h.b1 = (basic_value & BHB1_PAYLOAD) | (h.b1 & BHB1_MASK);
     
     return lib::error_code();
-}
-
-/// Calculates the full length of the header based on the first bytes.
-/**
- * A WebSocket frame header always has at least two bytes. Encoded within the
- * first two bytes is all the information necessary to calculate the full
- * (variable) header length. get_header_len() calculates the full header 
- * length for the given two byte basic header.
- *
- * @param h Basic frame header to extract size from
- *
- * @return Full length of the extended header.
- */
-inline size_t get_header_len(const basic_header &h) {
-    // TODO: check extensions?
-    
-    // masking key offset represents the space used for the extended length
-    // fields
-    size_t size = BASIC_HEADER_LENGTH + get_masking_key_offset(h);
-    
-    // If the header is masked there is a 4 byte masking key
-    if (get_masked(h)) { 
-        size += 4;
-    }
-    
-    return size;
 }
 
 /// Calculate the offset location of the masking key within the extended header
