@@ -23,7 +23,7 @@ client sip_client;
 
 bool received; 
 
-void on_open(websocketpp::connection_hdl hdl) {
+void on_open(client* c, websocketpp::connection_hdl hdl) {
     // now it is safe to use the connection
     std::cout << "connection ready" << std::endl;
     
@@ -33,7 +33,7 @@ void on_open(websocketpp::connection_hdl hdl) {
     sip_client.send(hdl, SIP_msg.c_str(), websocketpp::frame::opcode::text);
 }
 
-void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
     client::connection_ptr con = sip_client.get_con_from_hdl(hdl);
     
     std::cout << "Received a reply:" << std::endl;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
         client::connection_ptr con = sip_client.get_connection(uri, ec);
 
         // Specify the SIP subprotocol:
-        con.add_subprotocol("sip");
+        con->add_subprotocol("sip");
 
         sip_client.connect(con);
 	    
