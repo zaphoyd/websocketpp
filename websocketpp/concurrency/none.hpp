@@ -28,34 +28,21 @@
 #ifndef WEBSOCKETPP_CONCURRENCY_NONE_HPP
 #define WEBSOCKETPP_CONCURRENCY_NONE_HPP
 
-//#include <iostream>
-
 namespace websocketpp {
 namespace concurrency {
 
 namespace none_impl {
 class fake_mutex {
 public:
-    fake_mutex() {
-        //std::cout << "fake_mutex constructor: " << this << std::endl;
-    }
-    
-    ~fake_mutex() {
-        //std::cout << "fake_mutex destructor: " << this << std::endl;
-    }
+    fake_mutex() {}
+    ~fake_mutex() {}
 };
 
 class fake_lock_guard {
 public:
-    explicit fake_lock_guard(fake_mutex foo) {
-        //std::cout << "fake_lock_guard constructor: " << this << " mutex: " << &foo << std::endl;
-    }
-    
-    ~fake_lock_guard() {
-        //std::cout << "fake_lock_guard destructor: " << this << std::endl;
-    }
+    explicit fake_lock_guard(fake_mutex foo) {}
+    ~fake_lock_guard() {}
 };
-
 } // namespace none_impl
 
 /// Stub Concurrency policy to remove locking in single threaded projects
