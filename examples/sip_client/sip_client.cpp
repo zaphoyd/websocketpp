@@ -32,7 +32,7 @@
 
 using websocketpp::client;
 
-class echo_client_handler : public client::handler {
+class sip_client_handler : public client::handler {
 public:
     void on_message(connection_ptr con, message_ptr msg) {        
         if (con->get_resource() == "/getCaseCount") {
@@ -58,11 +58,11 @@ int main(int argc, char* argv[]) {
         uri = argv[1];
         
     } else if (argc > 2) {
-        std::cout << "Usage: `echo_client test_url`" << std::endl;
+        std::cout << "Usage: `sip_client test_url`" << std::endl;
     }
     
     try {
-        client::handler::ptr handler(new echo_client_handler());
+        client::handler::ptr handler(new sip_client_handler());
         client::connection_ptr con;
         client endpoint(handler);
         
@@ -73,9 +73,9 @@ int main(int argc, char* argv[]) {
                 
         endpoint.run();
         
-        std::cout << "case count: " << boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count << std::endl;
+        std::cout << "case count: " << boost::dynamic_pointer_cast<sip_client_handler>(handler)->m_case_count << std::endl;
         
-        for (int i = 1; i <= boost::dynamic_pointer_cast<echo_client_handler>(handler)->m_case_count; i++) {
+        for (int i = 1; i <= boost::dynamic_pointer_cast<sip_client_handler>(handler)->m_case_count; i++) {
             endpoint.reset();
             
             std::stringstream url;

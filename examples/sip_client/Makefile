@@ -4,7 +4,7 @@ include ../common.mk
 
 LDFLAGS := $(LDFLAGS) -lpthread
 
-echo_client: echo_client.o
+sip_client: sip_client.o
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 %.o: %.cpp
@@ -14,4 +14,4 @@ echo_client: echo_client.o
 #
 .PHONY:		clean
 clean:
-		rm -f *.o echo_client
+		rm -f *.o sip_client

@@ -1,4 +1,4 @@
-## echo_client
+## sip_client
 ##
 
 Import('env')
@@ -8,7 +8,7 @@ Import('platform_libs')
 
 localenv = env.Clone ()
 
-sources = ["echo_client.cpp"]
+sources = ["sip_client.cpp"]
 
 LIBS = [wslib, platform_libs] + boostlibs(['system',
                                            'date_time',
@@ -16,6 +16,6 @@ LIBS = [wslib, platform_libs] + boostlibs(['system',
                                            'thread',
                                            'random'])
 
-prg = localenv.Program('echo_client', sources, LIBS = LIBS)
+prg = localenv.Program('sip_client', sources, LIBS = LIBS)
 
 Return('prg')
