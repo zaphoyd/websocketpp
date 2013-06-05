@@ -101,7 +101,14 @@ class SHA1
         
             while(length-- && !Corrupted)
             {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(suppress: 6386) // Suppress Visual Studio code analysis for write overrun. It doesn't know the index into Message_Block is protected by checking length.
+#endif
                 Message_Block[Message_Block_Index++] = (*message_array & 0xFF);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
         
                 Length_Low += 8;
                 Length_Low &= 0xFFFFFFFF;               // Force it to 32 bits

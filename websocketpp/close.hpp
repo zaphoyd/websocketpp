@@ -86,8 +86,8 @@ namespace status {
     /// after sending its close frame.
     inline bool terminal(value s) {
         return (s == protocol_error || s == invalid_payload || 
-                policy_violation || message_too_big || 
-                 internal_endpoint_error);
+                s == policy_violation || s == message_too_big || 
+                 s == internal_endpoint_error);
     }
 } // namespace status
 
