@@ -37,6 +37,7 @@
 #ifdef _WEBSOCKETPP_CPP11_THREAD_
     #include <thread>
     #include <mutex>
+    #include <condition_variable>
 #else
     #include <boost/thread.hpp>
     #include <boost/thread/mutex.hpp>
