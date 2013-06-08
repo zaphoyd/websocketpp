@@ -1133,7 +1133,10 @@ void connection<config>::handle_send_http_response(
         return;
     }
     
-    // TODO: cancel handshake timer
+    if (m_handshake_timer) {
+        m_handshake_timer->cancel();
+        m_handshake_timer.reset();
+    }
     
     this->atomic_state_change(
         istate::PROCESS_HTTP_REQUEST,
@@ -1277,7 +1280,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
             this->terminate(ec);
             return;
         }
-        
+
         // response is valid, connection can now be assumed to be open
         this->atomic_state_change(
             istate::READ_HTTP_RESPONSE,
@@ -1287,14 +1290,17 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
             "handle_read_http_response must be called from READ_HTTP_RESPONSE state"
         );
         
+        if (m_handshake_timer) {
+            m_handshake_timer->cancel();
+            m_handshake_timer.reset();
+        }
+
         this->log_open_result();
         
         if (m_open_handler) {
             m_open_handler(m_connection_hdl);
         }
-        
-        // TODO: cancel handshake timer
-        
+
         // The remaining bytes in m_buf are frame data. Copy them to the 
         // beginning of the buffer and note the length. They will be read after
         // the handshake completes and before more bytes are read.
