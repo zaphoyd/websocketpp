@@ -71,7 +71,8 @@ private:
  }
  
  */
-    
+
+
 template <class rng_policy>
 class parser : boost::noncopyable {
 public:
@@ -398,7 +399,9 @@ public:
             *reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH]) = htons(s);
         } else if (s <= limits::PAYLOAD_SIZE_JUMBO) {
             m_header[1] = BASIC_PAYLOAD_64BIT_CODE;
-            *reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH]) = zsutil::htonll(s);
+            uint64_converter temp64;
+            temp64.i = zsutil::htonll(s);
+            std::copy(temp64.c,temp64.c+8,m_header+BASIC_HEADER_LENGTH);
         } else {
             throw processor::exception("payload size limit is 63 bits",processor::error::PROTOCOL_VIOLATION);
         }

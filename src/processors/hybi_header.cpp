@@ -144,7 +144,10 @@ void hybi_header::set_payload_size(uint64_t size) {
             m_header[1] |= BASIC_PAYLOAD_64BIT_CODE;
         }
         m_payload_size = size;
-        *(reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])) = zsutil::htonll(size);
+        
+        uint64_converter temp64;
+        temp64.i = zsutil::htonll(size);
+        std::copy(temp64.c,temp64.c+8,m_header+BASIC_HEADER_LENGTH);
     } else {
         throw processor::exception("set_payload_size called with value that was too large (>2^63)",processor::error::MESSAGE_TOO_BIG);
     }

@@ -53,6 +53,11 @@
 
 // Defaults
 namespace websocketpp {
+    union uint64_converter {
+        uint64_t i;
+        uint8_t c[8];
+    };
+    
     static const std::string USER_AGENT = "WebSocket++/0.2.2dev";
     
     typedef std::vector<unsigned char> binary_string;
