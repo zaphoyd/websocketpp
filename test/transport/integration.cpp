@@ -145,6 +145,35 @@ void run_dummy_server(int port) {
     }
 }
 
+void run_dummy_client(std::string port) {
+    using boost::asio::ip::tcp;
+    
+    try {    
+        boost::asio::io_service io_service;
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query("localhost", port);
+        tcp::resolver::iterator iterator = resolver.resolve(query);
+        tcp::socket socket(io_service);
+    
+        boost::asio::connect(socket, iterator);
+        for (;;) {
+            char data[512];
+            boost::system::error_code ec;
+            socket.read_some(boost::asio::buffer(data), ec);
+            if (ec == boost::asio::error::eof) {
+                break;
+            } else if (ec) {
+                // other error
+                throw ec;
+            }
+        }
+    } catch (std::exception & e) {
+        std::cout << e.what() << std::endl;
+    } catch (boost::system::error_code & ec) {
+        std::cout << ec.message() << std::endl;
+    }
+}
+
 bool on_ping(websocketpp::connection_hdl, std::string payload) {
     return false;
 }
