@@ -843,10 +843,7 @@ public:
     
     void start();
     
-    void read_handshake(size_t num_bytes);   
-
-    //void write(std::string msg);
-    //void handle_write(const lib::error_code& ec);
+    void read_handshake(size_t num_bytes);
     
     void handle_read_handshake(const lib::error_code& ec,
         size_t bytes_transferred);
