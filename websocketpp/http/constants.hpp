@@ -129,7 +129,7 @@ namespace http {
             request_header_fields_too_large = 431,
             
             internal_server_error = 500,
-            not_implimented = 501,
+            not_implemented = 501,
             bad_gateway = 502,
             service_unavailable = 503,
             gateway_timeout = 504,
@@ -223,7 +223,7 @@ namespace http {
                     return "Request Header Fields Too Large";
                 case internal_server_error:
                     return "Internal Server Error";
-                case not_implimented:
+                case not_implemented:
                     return "Not Implimented";
                 case bad_gateway:
                     return "Bad Gateway";

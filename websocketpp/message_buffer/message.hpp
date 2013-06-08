@@ -50,7 +50,7 @@ namespace message_buffer {
  * requested from the manager the requester and it's associated downstream code
  * may keep a pointer to the message indefinitely at a cost of extra resource
  * usage. Once the reference count drops to the point where the manager is the
- * only reference the messages is recycled using whatever method is implimented
+ * only reference the messages is recycled using whatever method is implemented
  * in the manager.
  * 
  * # endpoint_message_manager:
@@ -156,7 +156,7 @@ public:
     /// Get whether or not the message is terminal
     /**
      * Messages can be flagged as terminal, which results in the connection
-     * being close after they are written rather than the implimentation going
+     * being close after they are written rather than the implementation going
      * on to the next message in the queue. This is typically used internally
      * for close messages only.
      */

@@ -124,8 +124,8 @@ enum processor_errors {
     /// Invalid UTF-8 encoding
     invalid_utf8,
 
-    /// Operation required not implimented functionality
-    not_implimented,
+    /// Operation required not implemented functionality
+    not_implemented,
 
     /// Invalid HTTP method
     invalid_http_method,
@@ -206,8 +206,8 @@ public:
                 return "64 bit frames are not supported on 32 bit systems";
             case error::invalid_utf8:
                 return "Invalid UTF8 encoding";
-            case error::not_implimented:
-                return "Operation required not implimented functionality";
+            case error::not_implemented:
+                return "Operation required not implemented functionality";
             case error::invalid_http_method:
                 return "Invalid HTTP method.";
             case error::invalid_http_version:
@@ -256,7 +256,7 @@ inline lib::error_code make_error_code(error::processor_errors e) {
  * returned.
  *
  * If the error isn't normally associated with reasons to close a connection
- * (such as errors intended to be used interally or delivered to client 
+ * (such as errors intended to be used internally or delivered to client 
  * applications, ex: invalid arguments) then 
  * close::status::internal_endpoint_error is returned.
  */

@@ -88,7 +88,7 @@ namespace status {
         GOOD = 0,           // no failure yet!
         SYSTEM = 1,         // system call returned error, check that code
         WEBSOCKET = 2,      // websocket close codes contain error
-        UNKNOWN = 3,        // No failure information is avaliable
+        UNKNOWN = 3,        // No failure information is available
         TIMEOUT_TLS = 4,    // TLS handshake timed out
         TIMEOUT_WS = 5      // WS handshake timed out
     };
@@ -97,8 +97,8 @@ namespace status {
 
 namespace internal_state {
     // More granular internal states. These are used for multi-threaded 
-    // connection syncronization and preventing values that are not yet or no
-    // longer avaliable from being used.
+    // connection synchronization and preventing values that are not yet or no
+    // longer available from being used.
     
     enum value {
         USER_INIT = 0,
@@ -271,7 +271,7 @@ public:
      * period. It is specified in milliseconds.
      * 
      * This can be used to probe the health of the remote endpoint's WebSocket 
-     * implimentation. This does not guarantee that the remote application 
+     * implementation. This does not guarantee that the remote application 
      * itself is still healthy but can be a useful diagnostic.
      *
      * Note: receipt of this callback doesn't mean the pong will never come. 

@@ -773,7 +773,7 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
  * 
  * word_mask returns a copy of prepared_key circularly shifted based on the 
  * length value. The returned value may be fed back into word_mask when more 
- * data is avaliable.
+ * data is available.
  *
  * input and output must both have length at least:
  *    ceil(length/sizeof(size_t))*sizeof(size_t)

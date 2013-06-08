@@ -273,7 +273,7 @@ inline size_t response::process_body(const char *buf, size_t len) {
         to_read = m_read;
         m_state = DONE;
     } else {
-        // we need more bytes than are avaliable, read them all
+        // we need more bytes than are available, read them all
         to_read = len;
     }
     

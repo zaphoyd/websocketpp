@@ -52,7 +52,7 @@ typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)
 
 /// TLS enabled Boost ASIO connection socket component
 /**
- * transport::asio::tls_socket::connection impliments a secure connection socket
+ * transport::asio::tls_socket::connection implements a secure connection socket
  * component that uses Boost ASIO's ssl::stream to wrap an ip::tcp::socket.
  */
 class connection {
@@ -80,7 +80,7 @@ public:
     
     /// Check whether or not this connection is secure
     /**
-     * @return Wether or not this connection is secure
+     * @return Whether or not this connection is secure
      */
     bool is_secure() const {
         return true;
@@ -286,7 +286,7 @@ private:
 
 /// TLS enabled Boost ASIO endpoint socket component
 /**
- * transport::asio::tls_socket::endpoint impliments a secure endpoint socket
+ * transport::asio::tls_socket::endpoint implements a secure endpoint socket
  * component that uses Boost ASIO's ssl::stream to wrap an ip::tcp::socket.
  */
 class endpoint {
@@ -304,7 +304,7 @@ public:
 
     /// Checks whether the endpoint creates secure connections
     /**
-     * @return Wether or not the endpoint creates secure connections
+     * @return Whether or not the endpoint creates secure connections
      */
     bool is_secure() const {
         return true;

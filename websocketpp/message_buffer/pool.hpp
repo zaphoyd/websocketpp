@@ -49,7 +49,7 @@ namespace message_buffer {
  * requested from the manager the requester and it's associated downstream code
  * may keep a pointer to the message indefinitely at a cost of extra resource
  * usage. Once the reference count drops to the point where the manager is the
- * only reference the messages is recycled using whatever method is implimented
+ * only reference the messages is recycled using whatever method is implemented
  * in the manager.
  * 
  * # endpoint_message_manager:

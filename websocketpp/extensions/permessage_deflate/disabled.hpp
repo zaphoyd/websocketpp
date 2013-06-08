@@ -43,7 +43,7 @@ namespace permessage_deflate {
 
 /// Stub class for use when disabling permessage_deflate extension
 /**
- * This class is a stub that impliments the permessage_deflate interface
+ * This class is a stub that implements the permessage_deflate interface
  * with minimal dependencies. It is used to disable permessage_deflate
  * functionality at compile time without loading any unnecessary code.
  */
@@ -59,7 +59,7 @@ public:
     
     /// Returns true if the extension is capable of providing 
     /// permessage_deflate functionality
-    bool is_implimented() const {
+    bool is_implemented() const {
         return false;
     }
     
