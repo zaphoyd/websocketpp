@@ -564,7 +564,7 @@ void connection<config>::start() {
         "Start must be called from user init state"
     );
     
-    // Depending on how the transport impliments init this function may return
+    // Depending on how the transport implements init this function may return
     // immediately and call handle_transport_init later or call 
     // handle_transport_init from this function.
     transport_con_type::init(
@@ -994,7 +994,7 @@ bool connection<config>::process_handshake_request() {
         m_response.set_status(http::status_code::bad_request);
         return false;
     } else {
-        // extension negotiation succeded, set response header accordingly
+        // extension negotiation succeeded, set response header accordingly
         // we don't send an empty extensions header because it breaks many
         // clients.
         if (neg_results.second.size() > 0) {
@@ -1660,7 +1660,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     const std::string &reason, bool ack, bool terminal)
 {
     m_alog.write(log::alevel::devel,"send_close_frame");
-    // If silent close is set, repsect it and blank out close information
+    // If silent close is set, respect it and blank out close information
     // Otherwise use whatever has been specified in the parameters. If
     // parameters specifies close::status::blank then determine what to do
     // based on whether or not this is an ack. If it is not an ack just

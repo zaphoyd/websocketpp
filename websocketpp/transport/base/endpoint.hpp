@@ -47,7 +47,7 @@ typedef lib::function<void(connection_hdl,const lib::error_code&)> connect_handl
 typedef lib::function<void()> endpoint_lock;
 
 // Endpoint interface
-// Methods a transport endpoint must impliment
+// Methods a transport endpoint must implement
 
 /// Initialize a connection
 /**

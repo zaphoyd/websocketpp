@@ -260,7 +260,7 @@ public:
         // 0x00, the message is complete and is dispatched. Then we go back to
         // header state.
         
-        //ec = make_error_code(error::not_implimented);
+        //ec = make_error_code(error::not_implemented);
         return p;
     }
 

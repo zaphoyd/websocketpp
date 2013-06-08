@@ -63,7 +63,7 @@ public:
         if (it == m_connections.end()) {
             // this connection is not in the list. This really shouldn't happen
             // and probably means something else is wrong.
-            throw std::invalid_argument("No data avaliable for session");
+            throw std::invalid_argument("No data available for session");
         }
         
         return it->second;
