@@ -68,6 +68,8 @@ std::string run_server_test(server& s, std::string input) {
     std::stringstream output;
 	
 	s.register_ostream(&output);
+	s.clear_access_channels(websocketpp::log::alevel::all);
+    s.clear_error_channels(websocketpp::log::elevel::all);
 	
 	con = s.get_connection();
 	con->start();
