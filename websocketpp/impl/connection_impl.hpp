@@ -1712,6 +1712,8 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
         msg->set_terminal(true);
     }
     
+    m_state = session::state::closing;
+    
     bool needs_writing = false;
     {
         scoped_lock_type lock(m_write_lock);
