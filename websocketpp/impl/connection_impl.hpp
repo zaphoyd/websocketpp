@@ -1488,16 +1488,16 @@ void connection<config>::handle_write_frame(bool terminate,
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection handle_write_frame");
     }
-    
+
     m_send_buffer.clear();
     m_current_msg.reset();
-    
+
     if (ec) {
         m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
         this->terminate(ec);
         return;
     }
-    
+
     if (terminate) {
         this->terminate(lib::error_code());
         return;
