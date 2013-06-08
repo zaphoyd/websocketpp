@@ -775,6 +775,39 @@ public:
      */
     session::state::value get_state() const;
     
+    
+    /// Get the WebSocket close code sent by this endpoint.
+    /**
+     * @return The WebSocket close code sent by this endpoint.
+     */
+    close::status::value get_local_close_code() const {
+        return m_local_close_code;
+    }
+    
+    /// Get the WebSocket close reason sent by this endpoint.
+    /**
+     * @return The WebSocket close reason sent by this endpoint.
+     */
+    std::string const & get_local_close_reason() const {
+        return m_local_close_reason;
+    }
+    
+    /// Get the WebSocket close code sent by the remote endpoint.
+    /**
+     * @return The WebSocket close code sent by the remote endpoint.
+     */
+    close::status::value get_remote_close_code() const {
+        return m_remote_close_code;
+    }
+    
+    /// Get the WebSocket close reason sent by the remote endpoint.
+    /**
+     * @return The WebSocket close reason sent by the remote endpoint.
+     */
+    std::string const & get_remote_close_reason() const {
+        return m_remote_close_reason;
+    }
+    
     /// Get the internal error code for a closed/failed connection
     /**
      * Retrieves a machine readable detailed error code indicating the reason
