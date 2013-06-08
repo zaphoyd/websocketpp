@@ -1040,10 +1040,15 @@ private:
     
     /// Prints information about a connection being closed to the access log
     /**
-     * Prints information about a connection being closed to the access log.
      * Includes: local and remote close codes and reasons
      */
     void log_close_result();
+    
+    /// Prints information about a connection being failed to the access log
+    /**
+     * Includes: error code and message for why it was failed
+     */
+    void log_fail_result();
     
     // static settings
     const std::string       m_user_agent;

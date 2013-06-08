@@ -1409,8 +1409,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
         if (m_fail_handler) {
             m_fail_handler(m_connection_hdl);
         }
-        // TODO: custom fail output log format?
-        log_close_result();
+        log_fail_result();
     } else if (tstat == closed) {
         if (m_close_handler) {
             m_close_handler(m_connection_hdl);
@@ -1910,6 +1909,14 @@ void connection<config>::log_close_result()
       << (m_remote_close_reason == "" ? "" : ","+m_remote_close_reason) << "]";
     
     m_alog.write(log::alevel::disconnect,s.str());
+}
+
+template <typename config>
+void connection<config>::log_fail_result()
+{
+    // TODO: include more information about the connection?
+    // should this be filed under connect rather than disconnect?
+    m_alog.write(log::alevel::disconnect,"Failed: "+m_ec.message());
 }
 
 } // namespace websocketpp
