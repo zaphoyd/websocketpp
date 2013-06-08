@@ -1349,6 +1349,7 @@ void connection<config>::terminate(const lib::error_code & ec) {
             
     terminate_status tstat = unknown;
     if (ec) {
+        m_ec = ec;
         m_local_close_code = close::status::abnormal_close;
         m_local_close_reason = ec.message();
     }
