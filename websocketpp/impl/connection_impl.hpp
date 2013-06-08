@@ -623,7 +623,14 @@ template <typename config>
 void connection<config>::read_handshake(size_t num_bytes) {
     m_alog.write(log::alevel::devel,"connection read");
     
-    // start timer
+    m_handshake_timer = transport_con_type::set_timer(
+        config::timeout_open_handshake,
+        lib::bind(
+            &type::handle_open_handshake_timeout,
+            type::shared_from_this(),
+            lib::placeholders::_1
+        )    
+    );
     
     transport_con_type::async_read_at_least(
         num_bytes,
@@ -652,6 +659,14 @@ void connection<config>::handle_read_handshake(const lib::error_code& ec,
     );
     
     if (ec) {
+        if (ec == transport::error::eof) {
+            // we expect to get eof if the connection is closed already
+            if (m_state == session::state::closed) {
+                m_alog.write(log::alevel::devel,"got eof from closed con");
+                return;
+            }
+        }
+        
         std::stringstream s;
         s << "error in handle_read_handshake: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
