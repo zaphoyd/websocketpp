@@ -623,6 +623,8 @@ template <typename config>
 void connection<config>::read_handshake(size_t num_bytes) {
     m_alog.write(log::alevel::devel,"connection read");
     
+    // start timer
+    
     transport_con_type::async_read_at_least(
         num_bytes,
         m_buf,
@@ -1189,6 +1191,15 @@ void connection<config>::send_http_request() {
             "Raw Handshake request:\n"+m_handshake_buffer);
     }
     
+    m_handshake_timer = transport_con_type::set_timer(
+        config::timeout_open_handshake,
+        lib::bind(
+            &type::handle_open_handshake_timeout,
+            type::shared_from_this(),
+            lib::placeholders::_1
+        )    
+    );
+    
     transport_con_type::async_write(
         m_handshake_buffer.data(),
         m_handshake_buffer.size(),
@@ -1215,9 +1226,7 @@ void connection<config>::handle_send_http_request(const lib::error_code& ec) {
         this->terminate(ec);
         return;
     }
-    
-    // TODO: start read response timer?
-    
+        
     this->atomic_state_change(
         istate::WRITE_HTTP_REQUEST,
         istate::READ_HTTP_RESPONSE,
