@@ -1344,7 +1344,7 @@ void connection<config>::handle_close_handshake_timeout(
 template <typename config>
 void connection<config>::terminate(const lib::error_code & ec) {
     if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection ");
+        m_alog.write(log::alevel::devel,"connection terminate");
     }
             
     terminate_status tstat = unknown;
