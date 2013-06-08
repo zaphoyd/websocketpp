@@ -58,7 +58,7 @@ namespace websocketpp {
         uint8_t c[8];
     };
     
-    static const std::string USER_AGENT = "WebSocket++/0.2.2dev";
+    static const std::string USER_AGENT = "WebSocket++/0.2.3dev";
     
     typedef std::vector<unsigned char> binary_string;
     typedef boost::shared_ptr<binary_string> binary_string_ptr;
