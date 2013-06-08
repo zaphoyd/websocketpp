@@ -1318,6 +1318,30 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
 }
 
 template <typename config>
+void connection<config>::handle_open_handshake_timeout(
+    lib::error_code const & ec)
+{
+    if (ec == transport::error::operation_aborted) {
+        m_alog.write(log::alevel::devel,
+            "asio open handshake timer cancelled");
+    } else if (ec) {
+        m_alog.write(log::alevel::devel,
+            "asio open handle_open_handshake_timeout error: "+ec.message());
+        // TODO: ignore or fail here?
+    } else {
+        m_alog.write(log::alevel::devel, "asio open handshake timer expired");
+        terminate(make_error_code(error::open_handshake_timeout));
+    }
+}
+
+template <typename config>
+void connection<config>::handle_close_handshake_timeout(
+    lib::error_code const & ec)
+{
+
+}
+
+template <typename config>
 void connection<config>::terminate(const lib::error_code & ec) {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection ");
