@@ -775,6 +775,19 @@ public:
      */
     session::state::value get_state() const;
     
+    /// Get the internal error code for a closed/failed connection
+    /**
+     * Retrieves a machine readable detailed error code indicating the reason
+     * that the connection was closed or failed. Valid only after the close or
+     * fail handler is called.
+     *
+     * @return Error code indicating the reason the connection was closed or 
+     * failed
+     */
+    lib::error_code get_ec() const {
+        return m_ec;
+    }
+    
     ////////////////////////////////////////////////////////////////////////
     // The remaining public member functions are for internal/policy use  //
     // only. Do not call from application code unless you understand what //
@@ -1116,6 +1129,9 @@ private:
 
     /// Close reason that was received on the wire from the remote endpoint
     std::string             m_remote_close_reason;
+    
+    /// Detailed internal error code
+    lib::error_code m_ec;
     
     /// Whether or not this endpoint initiated the closing handshake.
     bool                    m_closed_by_me;
