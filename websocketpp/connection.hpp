@@ -853,6 +853,9 @@ public:
     void handle_send_http_response(const lib::error_code& ec);
     void handle_send_http_request(const lib::error_code& ec);
     
+    void handle_open_handshake_timeout(lib::error_code const & ec);
+    void handle_close_handshake_timeout(lib::error_code const & ec);
+    
     void handle_read_frame(const lib::error_code& ec,
         size_t bytes_transferred);
     
@@ -1086,6 +1089,7 @@ private:
     size_t                  m_buf_cursor;
     termination_handler     m_termination_handler;
     con_msg_manager_ptr     m_msg_manager;
+    timer_ptr               m_handshake_timer;
     timer_ptr               m_ping_timer;
     
     // TODO: this is not memory efficient. this value is not used after the
