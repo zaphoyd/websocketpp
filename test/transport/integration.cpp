@@ -185,6 +185,17 @@ void check_ec(T * c, websocketpp::lib::error_code ec,
 }
 
 template <typename T>
+void check_ec_and_stop(T * c, websocketpp::lib::error_code ec, 
+    websocketpp::connection_hdl hdl)
+{
+    typename T::connection_ptr con = c->get_con_from_hdl(hdl);
+    BOOST_CHECK_EQUAL( con->get_ec(), ec );
+    //BOOST_CHECK_EQUAL( con->get_local_close_code(), websocketpp::close::status::normal );
+    //BOOST_CHECK_EQUAL( con->get_remote_close_code(), websocketpp::close::status::normal );
+    c->stop();
+}
+
+template <typename T>
 void req_pong_timeout(T * c, std::string expected_payload, 
     websocketpp::connection_hdl hdl, std::string payload)
 {
@@ -225,8 +236,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     }
 }
 
-BOOST_AUTO_TEST_CASE( open_handshake_timeout ) {
-    server s;
+BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
     client c;
     
     // set open handler to fail test
@@ -243,3 +253,20 @@ BOOST_AUTO_TEST_CASE( open_handshake_timeout ) {
     run_client(c, "http://localhost:9005");
 }
 
+BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
+    server s;
+    
+    // set open handler to fail test
+    s.set_open_handler(bind(&fail_on_open,::_1));
+    // set fail hander to test for the right fail error code
+    s.set_fail_handler(bind(&check_ec_and_stop<server>,&s,
+        websocketpp::error::open_handshake_timeout,::_1));
+
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    tthread.detach();
+    
+    run_dummy_client("9005");
+    
+    sthread.join();
+}
