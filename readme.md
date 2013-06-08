@@ -1,16 +1,16 @@
 WebSocket++ (0.3.x branch)
 ==========================
 
-WebSocket++ is a header only C++ library that impliments RFC6455 The WebSocket
+WebSocket++ is a header only C++ library that implements RFC6455 The WebSocket
 Protocol. It allows integrating WebSocket client and server functionality into
-C++ programs. It uses interchangable network transport modules including one
+C++ programs. It uses interchangeable network transport modules including one
 based on C++ iostreams and one based on Boost Asio.
 
 *This branch is no longer "experimental". It represents the current edge release
 of the WebSocket++ library. The API of 0.3.x has some significant changes from
 0.2.x, so care should be taken when upgrading.*
 
-*This branch's API is relatively stable now. Features implimented so far are 
+*This branch's API is relatively stable now. Features implemented so far are 
 unlikely to change (except where explicitly noted). New features will be added
 regularly until parity with the 0.2 branch is reached.*
 
@@ -25,7 +25,7 @@ Major Features
 * Message/event based interface
 * Supports secure WebSockets (TLS), IPv6, and explicit proxies.
 * Flexible dependency management (C++11 Standard Library or Boost)
-* Interchangable network transport modules (iostream and Boost Asio)
+* Interchangeable network transport modules (iostream and Boost Asio)
 * Portible, cross platform and architecture design
 
 Get Involved

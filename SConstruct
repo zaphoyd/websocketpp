@@ -128,7 +128,7 @@ env.Append(CPPPATH = ['#'])
 
 ##### Set up C++11 environment
 polyfill_libs = [] # boost libraries used as drop in replacements for incomplete
-				   # C++11 STL implimentations
+				   # C++11 STL implementations
 env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):

@@ -173,9 +173,9 @@ public:
     /// understands.
     virtual int get_version() const = 0;
 
-    /// Returns whether or not the permessage_compress extension is implimented
+    /// Returns whether or not the permessage_compress extension is implemented
     /**
-     * Compile time flag that indicates whether this processor has implimented
+     * Compile time flag that indicates whether this processor has implemented
      * the permessage_compress extension. By default this is false.
      */
     virtual bool has_permessage_compress() const {
@@ -289,10 +289,10 @@ public:
     /// Retrieves the most recently processed message
     /**
      * Retrieves a shared pointer to the recently completed message if there is
-     * one. If ready() returns true then there is a message avaliable. 
+     * one. If ready() returns true then there is a message available. 
      * Retrieving the message with get_message will reset the state of ready.
      * As such, each new message may be retrieved only once. Calling get_message
-     * when there is no message avaliable will result in a null pointer being
+     * when there is no message available will result in a null pointer being
      * returned.
      *
      * @return A pointer to the most recently processed message or a null shared
