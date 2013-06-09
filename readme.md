@@ -26,7 +26,7 @@ Major Features
 * Supports secure WebSockets (TLS), IPv6, and explicit proxies.
 * Flexible dependency management (C++11 Standard Library or Boost)
 * Interchangeable network transport modules (iostream and Boost Asio)
-* Portible, cross platform and architecture design
+* Portable, cross platform and architecture design
 
 Get Involved
 ============
