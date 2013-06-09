@@ -30,13 +30,12 @@
 
 #include <websocketpp/connection.hpp>
 #include <websocketpp/logger/levels.hpp>
+#include <websocketpp/version.hpp>
 
 #include <iostream>
 #include <set>
 
 namespace websocketpp {
-
-static const char user_agent[] = "WebSocket++/0.3.0dev";
 
 /// Creates and manages connections associated with a WebSocket endpoint
 template <typename connection, typename config>
