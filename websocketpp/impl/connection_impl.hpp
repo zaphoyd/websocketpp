@@ -896,7 +896,10 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                     "null message from m_processor");
             } else if (!is_control(msg->get_opcode())) {
                 // data message, dispatch to user
-                if (m_message_handler) {
+                if (m_state != session::state::open) {
+                    m_elog.write(log::elevel::warn,
+                        "got non-close data frame in state closing");
+                } else if (m_message_handler) {
                     m_message_handler(m_connection_hdl, msg);
                 }
             } else {
@@ -1637,7 +1640,16 @@ void connection<config>::process_control_frame(typename
     std::stringstream s;
     s << "Control frame received with opcode " << op;
     m_alog.write(log::alevel::control,s.str());
-
+    
+    if (m_state == session::state::closed) {
+        m_elog.write(log::elevel::warn,"got frame in state closed");
+        return;
+    }
+    if (op != frame::opcode::CLOSE && m_state != session::state::open) {
+        m_elog.write(log::elevel::warn,"got non-close frame in state closing");
+        return;
+    }
+    
     if (op == frame::opcode::PING) {
         bool pong = true;
         
