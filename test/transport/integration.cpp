@@ -214,14 +214,14 @@ void check_ec(T * c, websocketpp::lib::error_code ec,
 }
 
 template <typename T>
-void check_ec_and_stop(T * c, websocketpp::lib::error_code ec, 
+void check_ec_and_stop(T * e, websocketpp::lib::error_code ec, 
     websocketpp::connection_hdl hdl)
 {
-    typename T::connection_ptr con = c->get_con_from_hdl(hdl);
+    typename T::connection_ptr con = e->get_con_from_hdl(hdl);
     BOOST_CHECK_EQUAL( con->get_ec(), ec );
     //BOOST_CHECK_EQUAL( con->get_local_close_code(), websocketpp::close::status::normal );
     //BOOST_CHECK_EQUAL( con->get_remote_close_code(), websocketpp::close::status::normal );
-    c->stop();
+    e->stop();
 }
 
 template <typename T>
@@ -240,7 +240,6 @@ void run_test_timer(long value) {
 }
 
 BOOST_AUTO_TEST_CASE( pong_timeout ) {
-    try{
     server s;
     client c;
 
@@ -260,9 +259,6 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     run_client(c, "http://localhost:9005",false);
     
     sthread.join();
-    } catch (std::exception & ec) {
-        std::cout << ec.what() << std::endl;
-    }
 }
 
 BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
