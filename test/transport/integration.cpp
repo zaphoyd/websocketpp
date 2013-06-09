@@ -203,6 +203,10 @@ void fail_on_open(websocketpp::connection_hdl hdl) {
     BOOST_FAIL( "expected no open handler" );
 }
 
+void delay(websocketpp::connection_hdl hdl, long duration) {
+    sleep(duration);
+}
+
 template <typename T>
 void check_ec(T * c, websocketpp::lib::error_code ec, 
     websocketpp::connection_hdl hdl)
@@ -231,6 +235,11 @@ void req_pong_timeout(T * c, std::string expected_payload,
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
     BOOST_CHECK_EQUAL( payload, expected_payload );
     con->close(websocketpp::close::status::normal,"");
+}
+
+template <typename T>
+void close(T * e, websocketpp::connection_hdl hdl) {
+    e->get_con_from_hdl(hdl)->close(websocketpp::close::status::normal,"");
 }
 
 // Wait for the specified time period then fail the test
