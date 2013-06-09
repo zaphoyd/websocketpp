@@ -1,4 +1,6 @@
 HEAD
+- Fixes a regression that caused servers being sent two close frames in a row
+  to end a connection uncleanly. #259
 - Fixes a regression that caused spurious frames following a legitimate close 
   frames to erroneously trigger handlers. #258
 - Changes default HTTP response error code when no http_handler is defined from

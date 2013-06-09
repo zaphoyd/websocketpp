@@ -193,6 +193,7 @@ public:
       , m_rng(rng)
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
+      , m_was_clean(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -1171,6 +1172,8 @@ private:
     
     /// Detailed internal error code
     lib::error_code m_ec;
+    
+    bool m_was_clean;
     
     /// Whether or not this endpoint initiated the closing handshake.
     bool                    m_closed_by_me;

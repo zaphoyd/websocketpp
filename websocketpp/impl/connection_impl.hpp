@@ -1724,9 +1724,11 @@ void connection<config>::process_control_frame(typename
                 m_elog.write(log::elevel::devel,
                     "send_close_ack error: "+ec.message());
             }
-        } else if (m_state == session::state::closing) {
+        } else if (m_state == session::state::closing && !m_was_clean) {
             // ack of our close
             m_alog.write(log::alevel::devel,"Got acknowledgement of close");
+            
+            m_was_clean = true;
             
             // If we are a server terminate the connection now. Clients should
             // leave the connection open to give the server an opportunity to
@@ -1814,6 +1816,10 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     }
     
     m_state = session::state::closing;
+    
+    if (ack) {
+        m_was_clean = true;
+    }
     
     // Start a timer so we don't wait forever for the acknowledgement close 
     // frame
