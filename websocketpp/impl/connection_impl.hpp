@@ -800,9 +800,16 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     
     if (ec) {
         if (ec == transport::error::eof) {
-            // we expect to get eof if the connection is closed already
             if (m_state == session::state::closed) {
+                // we expect to get eof if the connection is closed already
+                // just ignore it
                 m_alog.write(log::alevel::devel,"got eof from closed con");
+                return;
+            } else if (m_state == session::state::closing && !m_is_server) {
+                // If we are a client we expect to get eof in the closing state, 
+                // this is a signal to terminate our end of the connection after
+                // the closing handshake
+                terminate(lib::error_code());
                 return;
             }
         }
@@ -1706,7 +1713,17 @@ void connection<config>::process_control_frame(typename
         } else if (m_state == session::state::closing) {
             // ack of our close
             m_alog.write(log::alevel::devel,"Got acknowledgement of close");
-            this->terminate(lib::error_code());
+            
+            // If we are a server terminate the connection now. Clients should
+            // leave the connection open to give the server an opportunity to
+            // initiate the TCP close. The client's timer will handle closing
+            // its side of the connection if the server misbehaves.
+            //
+            // TODO: different behavior if the underlying transport doesn't 
+            // support timers?
+            if (m_is_server) {
+                terminate(lib::error_code());
+            }
         } else {
             // spurious, ignore
             m_elog.write(log::elevel::devel,"Got close frame in wrong state");
@@ -1776,7 +1793,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     }
     
     // Messages flagged terminal will result in the TCP connection being dropped
-    // after the message has been written. This is typically used when clients 
+    // after the message has been written. This is typically used when servers 
     // send an ack and when any endpoint encounters a protocol error
     if (terminal) {
         msg->set_terminal(true);
