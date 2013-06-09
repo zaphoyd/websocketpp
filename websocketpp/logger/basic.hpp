@@ -111,17 +111,21 @@ private:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
     typedef typename concurrency::mutex_type mutex_type;
     
-    // The timestamp does not include the time zone, because on Windows with the default registry settings,
-    // the time zone would be written out in full, which would be obnoxiously verbose.
-    std::string get_timestamp() {
+    // The timestamp does not include the time zone, because on Windows with the
+    // default registry settings, the time zone would be written out in full, 
+    // which would be obnoxiously verbose.
+    // 
+    // TODO: find a workaround for this or make this format user settable
+    char const * get_timestamp() {
         std::time_t t = std::time(NULL);
-        char buffer[40];
-        std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",std::localtime(&t));
-        return buffer;
+        std::strftime(m_buffer,sizeof(m_buffer),"%Y-%m-%d %H:%M:%S",
+            std::localtime(&t));
+        return m_buffer;
     }
 
     mutex_type m_lock;
-        
+    
+    char m_buffer[20];
     const level m_static_channels;
     level m_dynamic_channels;
     std::ostream* m_out;
