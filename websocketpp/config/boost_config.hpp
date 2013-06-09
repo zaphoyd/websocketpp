@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,20 +25,47 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_CLIENT_ROLE_HPP
-#define WEBSOCKETPP_CLIENT_ROLE_HPP
+ // This header defines WebSocket++ macros for C++11 compatibility based on the Boost.Config library.
+ // This will correctly configure most target platforms simply by including this header before
+ // any other WebSocket++ header.
 
-#include <iostream>
+#ifndef WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
+#define WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
 
-namespace websocketpp {
-namespace role {
+#include <boost/config.hpp>
 
-class client {
-public:
-    static bool is_server = false;
-}
+//  _WEBSOCKETPP_CPP11_MEMORY_ and _WEBSOCKETPP_CPP11_FUNCTIONAL_ presently 
+//  only work if either both or neither is defined.
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
+    #define _WEBSOCKETPP_CPP11_MEMORY_
+    #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
+#endif
 
-} // namespace role
-} // namespace websocketpp
+#ifndef BOOST_ASIO_HAS_STD_CHRONO
+    #define _WEBSOCKETPP_CPP11_CHRONO_
+#endif
 
-#endif //WEBSOCKETPP_CLIENT_ROLE_HPP
+#ifndef BOOST_NO_CXX11_HDR_RANDOM
+    #define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_REGEX
+    #define _WEBSOCKETPP_CPP11_REGEX_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_SYSTEM_ERROR
+    #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_THREAD
+    #define _WEBSOCKETPP_CPP11_THREAD_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST 
+    #define _WEBSOCKETPP_INITIALIZER_LISTS_ 
+#endif
+
+#define _WEBSOCKETPP_NOEXCEPT_TOKEN_  BOOST_NOEXCEPT 
+#define _WEBSOCKETPP_CONSTEXPR_TOKEN_  BOOST_CONSTEXPR 
+
+#endif // WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP

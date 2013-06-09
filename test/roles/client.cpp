@@ -56,6 +56,9 @@ struct stub_config : public websocketpp::config::core {
     typedef core::transport_type transport_type;
     
     typedef core::endpoint_base endpoint_base;
+    
+    static const websocketpp::log::level elog_level = websocketpp::log::elevel::none;
+    static const websocketpp::log::level alog_level = websocketpp::log::alevel::none;
 };
 
 typedef websocketpp::client<stub_config> client;
@@ -124,9 +127,7 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
     
     // connection should have written out an opening handshake request and be in
     // the read response internal state
-    
-    std::cout << "output: " << out.str() << std::endl;
-    
+        
     // TODO: more tests related to reading the HTTP response
     std::stringstream channel2;
 	channel2 << "e\r\n\r\n";
@@ -185,9 +186,7 @@ BOOST_AUTO_TEST_CASE( add_subprotocols ) {
     o = out.str();
     websocketpp::http::parser::request r;
     r.consume(o.data(),o.size());
-    
-    std::cout << o << std::endl;
-    
+        
     BOOST_CHECK( r.ready() );
     BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "foo, bar");
 }

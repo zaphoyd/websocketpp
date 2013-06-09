@@ -63,6 +63,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Client config with iostream transport
 struct core_client {
     typedef core_client type;
     
@@ -197,7 +198,7 @@ struct core_client {
      * for debugging and presenting useful errors to end users but may be
      * undesirable for security reasons in some production environments.
      * Close reasons could be used by an attacker to confirm that the endpoint
-     * is out of resources or be used to identify the WebSocket implimentation
+     * is out of resources or be used to identify the WebSocket implementation
      * in use.
      *
      * Note: this will suppress *all* close codes, including those explicitly

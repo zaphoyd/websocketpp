@@ -42,6 +42,12 @@ namespace websocketpp {
 namespace transport {
 namespace iostream {
 
+/// Empty timer class to stub out for timer functionality that iostream 
+/// transport doesn't support
+struct timer {
+    void cancel() {}
+};
+
 template <typename config>
 class connection {
 public:
@@ -60,6 +66,8 @@ public:
     // Concurrency policy types
     typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
     typedef typename concurrency_type::mutex_type mutex_type;
+    
+    typedef lib::shared_ptr<timer> timer_ptr;
     
     explicit connection(bool is_server, alog_type& alog, elog_type& elog)
       : m_output_stream(NULL)
@@ -87,7 +95,7 @@ public:
     /// Overloaded stream input operator
     /**
      * Attempts to read input from the given stream into the transport. Bytes
-     * will be extracted from the input stream to fullfill any pending reads.
+     * will be extracted from the input stream to fulfill any pending reads.
      * Input in this manner will only read until the current read buffer has
      * been filled. Then it will signal the library to process the input. If the
      * library's input handler adds a new async_read, additional bytes will be
@@ -95,7 +103,7 @@ public:
      * 
      * When this function returns one of the following conditions is true:
      * - There is no outstanding read operation
-     * - There are no more bytes avaliable in the input stream
+     * - There are no more bytes available in the input stream
      * 
      * You can use tellg() on the input stream to determine if all of the input
      * bytes were read or not.
@@ -115,7 +123,7 @@ public:
     /// Manual input supply
     /**
      * Copies bytes from buf into WebSocket++'s input buffers. Bytes will be 
-     * copied from the supplied buffer to fullfull any pending library reads. It
+     * copied from the supplied buffer to fulfill any pending library reads. It
      * will return the number of bytes successfully processed. If there are no 
      * pending reads readsome will return immediately. Not all of the bytes may
      * be able to be read in one call
@@ -159,6 +167,22 @@ public:
     /// Get the connection handle
     connection_hdl get_handle() const {
         return m_connection_hdl;
+    }
+    
+    /// Call back a function after a period of time.
+    /**
+     * Timers are not implemented in this transport. The timer pointer will 
+     * always be empty. The handler will never be called.
+     * 
+     * @param duration Length of time to wait in milliseconds
+     *
+     * @param callback The function to call back when the timer has expired
+     *
+     * @return A handle that can be used to cancel the timer if it is no longer
+     * needed.
+     */
+    timer_ptr set_timer(long duration, timer_handler callback) {
+        return timer_ptr();
     }
 protected:
     void init(init_handler callback) {

@@ -35,6 +35,7 @@
 
 namespace websocketpp {
 namespace transport {
+/// Transport policy that uses STL iostream for I/O and does not support timers
 namespace iostream {
 
 namespace error {

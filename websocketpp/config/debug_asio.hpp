@@ -39,6 +39,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Client/Server debug config with asio transport and TLS enabled
 struct debug_asio_tls : public debug_core {
     typedef debug_asio_tls type;
     typedef debug_core base;

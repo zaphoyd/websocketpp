@@ -38,6 +38,7 @@
 
 namespace websocketpp {
 namespace transport {
+/// Transport policy that uses boost::asio
 namespace asio {
 
 typedef lib::function<void(const boost::system::error_code &)> 

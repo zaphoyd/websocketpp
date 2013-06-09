@@ -42,7 +42,7 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 
-#include <websocketpp/md5/md5.hpp>
+#include <websocketpp/common/md5.hpp>
 
 namespace websocketpp {
 namespace processor {
@@ -260,7 +260,7 @@ public:
         // 0x00, the message is complete and is dispatched. Then we go back to
         // header state.
         
-        //ec = make_error_code(error::not_implimented);
+        //ec = make_error_code(error::not_implemented);
         return p;
     }
 

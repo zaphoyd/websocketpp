@@ -46,7 +46,7 @@ namespace asio {
 
 /// Boost Asio based endpoint transport component
 /**
- * transport::asio::endpoint impliments an endpoint transport component using
+ * transport::asio::endpoint implements an endpoint transport component using
  * Boost ASIO.
  */
 template <typename config>

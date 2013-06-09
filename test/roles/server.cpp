@@ -68,6 +68,8 @@ std::string run_server_test(server& s, std::string input) {
     std::stringstream output;
 	
 	s.register_ostream(&output);
+	s.clear_access_channels(websocketpp::log::alevel::all);
+    s.clear_error_channels(websocketpp::log::elevel::all);
 	
 	con = s.get_connection();
 	con->start();
@@ -136,7 +138,7 @@ BOOST_AUTO_TEST_CASE( invalid_websocket_version ) {
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
-BOOST_AUTO_TEST_CASE( unimplimented_websocket_version ) {
+BOOST_AUTO_TEST_CASE( unimplemented_websocket_version ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 14\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
 
     std::string output = "HTTP/1.1 400 Bad Request\r\nSec-WebSocket-Version: 0,7,8,13\r\nServer: test\r\n\r\n";

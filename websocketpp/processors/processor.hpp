@@ -153,6 +153,7 @@ uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
 //     }
 // } 
 
+/// WebSocket protocol processor base class
 template <typename config>
 class processor {
 public:
@@ -172,9 +173,9 @@ public:
     /// understands.
     virtual int get_version() const = 0;
 
-    /// Returns whether or not the permessage_compress extension is implimented
+    /// Returns whether or not the permessage_compress extension is implemented
     /**
-     * Compile time flag that indicates whether this processor has implimented
+     * Compile time flag that indicates whether this processor has implemented
      * the permessage_compress extension. By default this is false.
      */
     virtual bool has_permessage_compress() const {
@@ -193,9 +194,9 @@ public:
 
     /// validate a WebSocket handshake request for this version
     /**
-     * @param r The WebSocket handshake request to validate. 
-     * is_websocket_handshake(r) must be true and get_websocket_version(r) 
-     * must equal this->get_version().
+     * @param request The WebSocket handshake request to validate. 
+     * is_websocket_handshake(request) must be true and 
+     * get_websocket_version(request) must equal this->get_version().
      *
      * @return A status code, 0 on success, non-zero for specific sorts of 
      * failure
@@ -288,10 +289,10 @@ public:
     /// Retrieves the most recently processed message
     /**
      * Retrieves a shared pointer to the recently completed message if there is
-     * one. If ready() returns true then there is a message avaliable. 
+     * one. If ready() returns true then there is a message available. 
      * Retrieving the message with get_message will reset the state of ready.
      * As such, each new message may be retrieved only once. Calling get_message
-     * when there is no message avaliable will result in a null pointer being
+     * when there is no message available will result in a null pointer being
      * returned.
      *
      * @return A pointer to the most recently processed message or a null shared

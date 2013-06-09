@@ -41,8 +41,6 @@ BOOST_AUTO_TEST_CASE( basic_http_request ) {
 	
 	std::string o2 = run_server_test(input);
 
-	std::cout << "output: " << o2 << std::endl;
-
     BOOST_CHECK(o2 == output);
 }
 

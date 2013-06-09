@@ -38,7 +38,7 @@ namespace websocketpp {
 
 static const char user_agent[] = "WebSocket++/0.3.0dev";
 
-// creates and manages connections
+/// Creates and manages connections associated with a WebSocket endpoint
 template <typename connection, typename config>
 class endpoint : public config::transport_type, public config::endpoint_base {
 public:

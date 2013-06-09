@@ -49,6 +49,7 @@
 namespace websocketpp {
 namespace log {
 
+/// Basic logger that outputs to an ostream
 template <typename concurrency, typename names>
 class basic {
 public:

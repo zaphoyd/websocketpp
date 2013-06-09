@@ -39,6 +39,7 @@
 namespace websocketpp {
 namespace config {
 
+/// Client config with asio transport and TLS enabled
 struct asio_tls_client : public core_client {
     typedef asio_tls_client type;
     typedef core_client base;

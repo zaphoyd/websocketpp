@@ -35,7 +35,7 @@
 namespace websocketpp {
 namespace log {
 
-/// Stub logger that ignores all input!
+/// Stub logger that ignores all input
 class stub {
 public:
     stub(std::ostream* out = &std::cout) {}
