@@ -399,7 +399,7 @@ public:
      * and then added
      *
      * Errors are returned via an exception
-     * TODO: make exception system_error rather than error_code
+     * \todo make exception system_error rather than error_code
      *
      * This method invokes the m_write_lock mutex
      *
@@ -871,7 +871,7 @@ public:
     
     /// Checks if there are frames in the send queue and if there are sends one
     /**
-     * TODO: unit tests
+     * \todo unit tests
      *
      * This method locks the m_write_lock mutex
      */
@@ -879,7 +879,7 @@ public:
     
     /// Process the results of a frame write operation and start the next write
     /**
-     * TODO: unit tests
+     * \todo unit tests
      *
      * This method locks the m_write_lock mutex
      *
@@ -1011,7 +1011,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * TODO: unit tests
+     * \todo unit tests
      *
      * @param msg The message to push
      */
@@ -1024,7 +1024,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * TODO: unit tests
+     * \todo unit tests
      *
      * @return the message_ptr at the front of the queue
      */
@@ -1097,8 +1097,8 @@ private:
     timer_ptr               m_handshake_timer;
     timer_ptr               m_ping_timer;
     
-    // TODO: this is not memory efficient. this value is not used after the
-    // handshake.
+    /// \todo this is not memory efficient. this value is not used after the
+    /// handshake.
     std::string m_handshake_buffer;
     
     /// Pointer to the processor object for this connection
