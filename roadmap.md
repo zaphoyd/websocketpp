@@ -8,6 +8,8 @@ Complete & Tested:
 - GCC support
 - 64 bit support
 - 32 bit support
+- Logging
+- Client role
 
 Implimented, needs more testing
 - TLS support
@@ -20,26 +22,20 @@ Implimented, needs more testing
 - pong_handler
 - tcp_init_handler
 - exception/error handling
-- Logging
-- Client role
 - Subprotocol negotiation
 - Hybi 00/Hixie 76 legacy protocol support
 - Performance tuning
 - Outgoing Proxy Support
 - PowerPC support
 - Visual Studio / Windows support
-
-Implimented, API not finalized
+- Timeouts
+- CMake build/install support
 - open_handler
 - close_handler
 - validate_handler
 - http_handler
 
-Needs work:
-- Timeouts
-
-Non-release blocking feature roadmap
+Future feature roadmap
 - Extension support
 - permessage_compress extension
 - Message buffer pool
-- CMake build/install support
