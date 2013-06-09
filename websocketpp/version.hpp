@@ -42,9 +42,9 @@ namespace websocketpp {
 static int const major_version = 0;
 static int const minor_version = 3;
 static int const patch_version = 0;
-static char const prerelease_flag[] = "alpha1";
+static char const prerelease_flag[] = "alpha2";
 
-static char const user_agent[] = "WebSocket++/0.3.0-alpha1";
+static char const user_agent[] = "WebSocket++/0.3.0-alpha2";
 
 } // namespace websocketpp
 

@@ -1,4 +1,4 @@
-HEAD
+0.3.0-alpha2 - 2013-06-09
 - Fixes a regression that caused servers being sent two close frames in a row
   to end a connection uncleanly. #259
 - Fixes a regression that caused spurious frames following a legitimate close 
