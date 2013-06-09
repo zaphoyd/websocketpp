@@ -989,6 +989,8 @@ bool connection<config>::process_handshake_request() {
         
         if (m_http_handler) {
             m_http_handler(m_connection_hdl);
+        } else {
+            set_status(http::status_code::upgrade_required);
         }
 
         return true;
