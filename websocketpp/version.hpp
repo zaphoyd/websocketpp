@@ -30,6 +30,15 @@
 
 namespace websocketpp {
 
+/*
+ other places where version information is kept
+ - echo_client
+ - readme.md
+ - changelog.md
+ - Doxyfile
+ - CMakeLists.txt
+*/
+
 static int const major_version = 0;
 static int const minor_version = 3;
 static int const patch_version = 0;
