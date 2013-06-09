@@ -1368,7 +1368,17 @@ template <typename config>
 void connection<config>::handle_close_handshake_timeout(
     lib::error_code const & ec)
 {
-
+    if (ec == transport::error::operation_aborted) {
+        m_alog.write(log::alevel::devel,
+            "asio close handshake timer cancelled");
+    } else if (ec) {
+        m_alog.write(log::alevel::devel,
+            "asio open handle_close_handshake_timeout error: "+ec.message());
+        // TODO: ignore or fail here?
+    } else {
+        m_alog.write(log::alevel::devel, "asio close handshake timer expired");
+        terminate(make_error_code(error::close_handshake_timeout));
+    }
 }
 
 template <typename config>
@@ -1376,7 +1386,13 @@ void connection<config>::terminate(const lib::error_code & ec) {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection terminate");
     }
-            
+
+    // Cancel close handshake timer
+    if (m_handshake_timer) {
+        m_handshake_timer->cancel();
+        m_handshake_timer.reset();
+    }
+
     terminate_status tstat = unknown;
     if (ec) {
         m_ec = ec;
@@ -1767,6 +1783,17 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     }
     
     m_state = session::state::closing;
+    
+    // Start a timer so we don't wait forever for the acknowledgement close 
+    // frame
+    m_handshake_timer = transport_con_type::set_timer(
+        config::timeout_close_handshake,
+        lib::bind(
+            &type::handle_close_handshake_timeout,
+            type::shared_from_this(),
+            lib::placeholders::_1
+        )    
+    );
     
     bool needs_writing = false;
     {

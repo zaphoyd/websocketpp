@@ -299,3 +299,58 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
     
     sthread.join();
 }
+
+BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
+    server s;
+    client c;
+
+    // on open server sleeps for longer than the timeout
+    // on open client sends close handshake
+    // client handshake timer should be triggered
+    s.set_open_handler(bind(&delay,::_1,1));
+    s.set_close_handler(bind(&stop_on_close,&s,::_1));
+
+    c.set_open_handler(bind(&close<client>,&c,::_1));
+    c.set_close_handler(bind(&check_ec<client>,&c,
+        websocketpp::error::close_handshake_timeout,::_1));
+    
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    tthread.detach();
+    
+    run_client(c, "http://localhost:9005",false);
+    
+    sthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( client_peer_initiated_close_handshake_timeout ) {
+    // on open server sends close
+    // client should ack normally and then wait
+    // server leaves TCP connection open
+    // client handshake timer should be triggered
+    
+    // TODO: how to make a mock server that leaves the TCP connection open?
+}
+
+BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
+    server s;
+    client c;
+
+    // on open server sends close
+    // on open client sleeps for longer than the timeout
+    // server handshake timer should be triggered
+
+    s.set_open_handler(bind(&close<server>,&s,::_1));
+    s.set_close_handler(bind(&check_ec_and_stop<server>,&s,
+        websocketpp::error::close_handshake_timeout,::_1));
+
+    c.set_open_handler(bind(&delay,::_1,1));
+    
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
+    tthread.detach();
+
+    run_client(c, "http://localhost:9005",false);
+
+    sthread.join();
+}
