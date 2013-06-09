@@ -35,7 +35,7 @@ https://github.com/zaphoyd/websocketpp/
 http://groups.google.com/group/websocketpp-announcements/
 
 **IRC Channel**  
-#websocketpp (freenode)
+`#websocketpp (freenode)
 
 **Discussion / Development / Support Mailing List / Forum**  
 http://groups.google.com/group/websocketpp/
