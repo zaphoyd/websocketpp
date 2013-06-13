@@ -873,7 +873,17 @@ protected:
         return lib::error_code();
     }
     
-    void masked_copy (const std::string & i, std::string & o,
+    /// Copy and mask/unmask in one operation
+    /**
+     * Reads input from one string and writes unmasked output to another.
+     *
+     * @param [in] i The input string.
+     *
+     * @param [out] o The output string.
+     *
+     * @param [in] key The masking key to use for masking/unmasking
+     */
+    void masked_copy (std::string const & i, std::string & o,
         frame::masking_key_type key) const
     {
         #ifdef WEBSOCKETPP_STRICT_MASKING

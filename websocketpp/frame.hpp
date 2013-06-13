@@ -667,7 +667,7 @@ inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
  * @param key_offset offset value to start masking at.
  */
 template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type& 
+void byte_mask(iter_type b, iter_type e, iter_type o, masking_key_type const & 
     key, size_t key_offset)
 {
     size_t key_index = key_offset%4;
@@ -695,7 +695,7 @@ void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type&
  * @param key_offset offset value to start masking at.
  */
 template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
+void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset)
 {
     byte_mask(b,e,b,key,key_offset);
