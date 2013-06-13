@@ -1,5 +1,6 @@
 HEAD
-- Adds additional macro guards for use with boost_config. Thank you breyed
+- Fix issue compiling with WEBSOCKETPP_STRICT_MASKING
+- Add additional macro guards for use with boost_config. Thank you breyed
   for testing and code. #261
 
 0.3.0-alpha2 - 2013-06-09

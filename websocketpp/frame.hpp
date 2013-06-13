@@ -298,9 +298,9 @@ size_t prepare_masking_key(masking_key_type const & key);
 size_t circshift_prepared_key(size_t prepared_key, size_t offset);
 
 // Functions for performing xor based masking and unmasking
-template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, masking_key_type const & 
-    key, size_t key_offset = 0);
+template <typename input_iter, typename output_iter>
+void byte_mask(input_iter b, input_iter e, output_iter o, masking_key_type 
+    const & key, size_t key_offset = 0);
 template <typename iter_type>
 void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset = 0);
@@ -666,14 +666,16 @@ inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
  * 
  * @param key_offset offset value to start masking at.
  */
-template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, masking_key_type const & 
-    key, size_t key_offset)
+template <typename input_iter, typename output_iter>
+void byte_mask(input_iter first, input_iter last, output_iter result, 
+    masking_key_type const & key, size_t key_offset)
 {
     size_t key_index = key_offset%4;
-    for (iter_type i = b, j = o; i != e; i++, j++) {
-        *j = *i ^ key.c[key_index++];
+    while (first != last) {
+        *result = *first ^ key.c[key_index++];
         key_index %= 4;
+        ++result;
+        ++first;
     }
 }
 
