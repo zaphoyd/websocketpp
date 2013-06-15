@@ -711,11 +711,19 @@ protected:
     {
         // unmask if masked
         if (frame::get_masked(m_basic_header)) {
-            m_current_msg->prepared_key = frame::word_mask_circ(
-                buf,
-                len,
-                m_current_msg->prepared_key
-            );
+            #ifdef WEBSOCKETPP_STRICT_MASKING
+                m_current_msg->prepared_key = frame::byte_mask_circ(
+                    buf,
+                    len,
+                    m_current_msg->prepared_key
+                );
+            #else
+                m_current_msg->prepared_key = frame::word_mask_circ(
+                    buf,
+                    len,
+                    m_current_msg->prepared_key
+                );
+            #endif
         }
         
         std::string& out = m_current_msg->msg_ptr->get_raw_payload();
