@@ -34,7 +34,7 @@
 namespace websocketpp {
 namespace utility {
 
-/// Helper struct for case insensitive find
+/// Helper functor for case insensitive find
 /** 
  * Based on code from
  * http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
@@ -43,12 +43,24 @@ namespace utility {
  */
 template<typename charT>
 struct my_equal {
-    my_equal( const std::locale& loc ) : loc_(loc) {}
+    /// Construct the functor with the given locale
+    /**
+     * @param [in] loc The locale to use for determining the case of values
+     */
+    my_equal(std::locale const & loc ) : m_loc(loc) {}
+    
+    /// Perform a case insensitive comparison
+    /**
+     * @param ch1 The first value to compare
+     * @param ch2 The second value to compare
+     * @return Whether or not the two values are equal when both are converted
+     *         to uppercase using the given locale.
+     */
     bool operator()(charT ch1, charT ch2) {
-        return std::toupper(ch1, loc_) == std::toupper(ch2, loc_);
+        return std::toupper(ch1, m_loc) == std::toupper(ch2, m_loc);
     }
 private:
-    const std::locale& loc_;
+    std::locale const & m_loc;
 };
 
 /// Find substring (case insensitive)
