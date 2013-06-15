@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
             
             std::stringstream url;
             
-            url << uri << "/runCase?case=" << i << "&agent=WebSocketpp/0.3.0-alpha2";
+            url << uri << "/runCase?case=" << i << "&agent=" << websocketpp::user_agent;
             
             con = echo_client.get_connection(url.str(), ec);
                         
