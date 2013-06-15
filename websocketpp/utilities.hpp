@@ -34,10 +34,13 @@
 namespace websocketpp {
 namespace utility {
 
-// case insensitive find
-// http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
-
-// templated version of my_equal so it could work with both char and wchar_t
+/// Helper struct for case insensitive find
+/** 
+ * Based on code from
+ * http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
+ *
+ * templated version of my_equal so it could work with both char and wchar_t
+ */
 template<typename charT>
 struct my_equal {
     my_equal( const std::locale& loc ) : loc_(loc) {}
@@ -48,22 +51,45 @@ private:
     const std::locale& loc_;
 };
 
-// find substring (case insensitive)
+/// Find substring (case insensitive)
+/**
+ * @param [in] haystack The string to search in
+ * @param [in] needle The string to search for
+ * @param [in] loc The locale to use for determining the case of values. 
+ *             Defaults to the current locale.
+ * @return An iterator to the first element of the first occurrance of needle in
+ *         haystack. If the sequence is not found, the function returns 
+ *         haystack.end()
+ */
 template<typename T>
-typename T::const_iterator ci_find_substr( const T& str1, const T& str2, 
-    const std::locale& loc = std::locale() )
+typename T::const_iterator ci_find_substr(T const & haystack, T const & needle, 
+    std::locale const & loc = std::locale())
 {
-    return std::search( str1.begin(), str1.end(), 
-        str2.begin(), str2.end(), my_equal<typename T::value_type>(loc) );
+    return std::search( haystack.begin(), haystack.end(), 
+        needle.begin(), needle.end(), my_equal<typename T::value_type>(loc) );
 }
 
+/// Find substring (case insensitive)
+/**
+ * @todo Is this still used? This method may not make sense.. should use 
+ * iterators or be less generic. As is it is too tightly coupled to std::string
+ *
+ * @param [in] haystack The string to search in
+ * @param [in] needle The string to search for as a char array of values
+ * @param [in] size Length of needle
+ * @param [in] loc The locale to use for determining the case of values. 
+ *             Defaults to the current locale.
+ * @return An iterator to the first element of the first occurrance of needle in
+ *         haystack. If the sequence is not found, the function returns 
+ *         haystack.end()
+ */
 template<typename T>
-typename T::const_iterator ci_find_substr(const T& str1, 
-    const typename T::value_type* str2, typename T::size_type size, 
-    const std::locale& loc = std::locale())
+typename T::const_iterator ci_find_substr(T const & haystack, 
+    typename T::value_type const * needle, typename T::size_type size, 
+    std::locale const & loc = std::locale())
 {
-    return std::search( str1.begin(), str1.end(), 
-        str2, str2+size, my_equal<typename T::value_type>(loc) );
+    return std::search( haystack.begin(), haystack.end(), 
+        needle, needle+size, my_equal<typename T::value_type>(loc) );
 }
 
 
