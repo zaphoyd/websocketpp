@@ -410,6 +410,43 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask ) {
 	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 }
 
+BOOST_AUTO_TEST_CASE( continuous_byte_mask ) {
+	uint8_t input[16];
+	uint8_t output[16];
+	
+	uint8_t masked[16] = {0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x00};
+
+	frame::masking_key_type key;
+	key.c[0] = 0x00;
+	key.c[1] = 0x01;
+	key.c[2] = 0x02;
+	key.c[3] = 0x03;
+
+	// One call
+	size_t pkey,pkey_temp;
+	pkey = frame::prepare_masking_key(key);
+	std::fill_n(input,16,0x00);
+	std::fill_n(output,16,0x00);
+	frame::byte_mask_circ(input,output,15,pkey);
+	BOOST_CHECK( std::equal(output,output+16,masked) );
+
+	// calls not split on word boundaries
+	pkey = frame::prepare_masking_key(key);
+	std::fill_n(input,16,0x00);
+	std::fill_n(output,16,0x00);
+	
+	pkey_temp = frame::byte_mask_circ(input,output,7,pkey);
+	BOOST_CHECK( std::equal(output,output+7,masked) );
+	BOOST_CHECK( pkey_temp == frame::circshift_prepared_key(pkey,3) );
+
+	pkey_temp = frame::byte_mask_circ(input+7,output+7,8,pkey_temp);
+	BOOST_CHECK( std::equal(output,output+16,masked) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
+}
+
 BOOST_AUTO_TEST_CASE( continuous_word_mask_inplace ) {
 	uint8_t buffer[16];
 	
@@ -440,6 +477,40 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask_inplace ) {
 	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 
 	pkey_temp = frame::word_mask_circ(buffer+7,8,pkey_temp);
+	BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
+}
+
+BOOST_AUTO_TEST_CASE( continuous_byte_mask_inplace ) {
+	uint8_t buffer[16];
+	
+	uint8_t masked[16] = {0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x03,
+                          0x00, 0x01, 0x02, 0x00};
+
+	frame::masking_key_type key;
+	key.c[0] = 0x00;
+	key.c[1] = 0x01;
+	key.c[2] = 0x02;
+	key.c[3] = 0x03;
+
+	// One call
+	size_t pkey,pkey_temp;
+	pkey = frame::prepare_masking_key(key);
+	std::fill_n(buffer,16,0x00);
+	frame::byte_mask_circ(buffer,15,pkey);
+	BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
+
+	// calls not split on word boundaries
+	pkey = frame::prepare_masking_key(key);
+	std::fill_n(buffer,16,0x00);
+	
+	pkey_temp = frame::byte_mask_circ(buffer,7,pkey);
+	BOOST_CHECK( std::equal(buffer,buffer+7,masked) );
+	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
+
+	pkey_temp = frame::byte_mask_circ(buffer+7,8,pkey_temp);
 	BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
 	BOOST_CHECK_EQUAL( pkey_temp, frame::circshift_prepared_key(pkey,3) );
 }

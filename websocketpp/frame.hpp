@@ -831,6 +831,58 @@ inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
     return word_mask_circ(data,data,length,prepared_key);
 }
 
+/// Circular byte aligned mask/unmask
+/**
+ * Performs a circular mask/unmask in byte sized chunks using pre-prepared keys
+ * that store state between calls. Best for providing streaming masking or 
+ * unmasking of small chunks at a time of a larger message. Requires that the
+ * underlying allocated size of the data buffer be a multiple of the word size.
+ * Data in the buffer after `length` will be overwritten only with the same 
+ * values that were originally present.
+ * 
+ * word_mask returns a copy of prepared_key circularly shifted based on the 
+ * length value. The returned value may be fed back into byte_mask when more 
+ * data is available.
+ *
+ * @param data Character buffer to mask
+ *
+ * @param length Length of data
+ *
+ * @param prepared_key Prepared key to use.
+ *
+ * @return the prepared_key shifted to account for the input length
+ */
+inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
+    size_t prepared_key)
+{
+    uint32_converter key;
+    key.i = prepared_key;
+    
+    for (size_t i = 0; i < length; ++i) {
+        output[i] = input[i] ^ key.c[i % 4];
+    }
+    
+    return circshift_prepared_key(prepared_key,length % 4);
+}
+
+/// Circular byte aligned mask/unmask (in place)
+/**
+ * In place version of byte_mask_circ
+ *
+ * @see byte_mask_circ
+ *
+ * @param data Character buffer to read from and write to
+ *
+ * @param length Length of data
+ *
+ * @param prepared_key Prepared key to use.
+ *
+ * @return the prepared_key shifted to account for the input length
+ */
+inline size_t byte_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
+    return byte_mask_circ(data,data,length,prepared_key);
+}
+
 } // namespace frame
 } // namespace websocketpp
 
