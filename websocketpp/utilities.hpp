@@ -104,17 +104,42 @@ typename T::const_iterator ci_find_substr(T const & haystack,
         needle, needle+size, my_equal<typename T::value_type>(loc) );
 }
 
-
-
-std::string string_replace_all(std::string subject, const std::string& search,
-                          const std::string& replace);
+/// Replace all occurrances of a substring with another
+/**
+ * @param [in] subject The string to search in
+ * @param [in] search The string to search for
+ * @param [in] replace The string to replace with
+ * @return A copy of `subject` with all occurances of `search` replaced with 
+ *         `replace`
+ */
+std::string string_replace_all(std::string subject, std::string const & search,
+                               std::string const & replace);
 
 /// Convert std::string to ascii printed string of hex digits
-std::string to_hex(const std::string& input);
+/**
+ * @param [in] input The string to print
+ * @return A copy of `input` converted to the printable representation of the 
+ *         hex values of its data.
+ */
+std::string to_hex(std::string const & input);
 
-/// Convert c string to ascii printed string of hex digits
-std::string to_hex(const uint8_t* input, size_t length);
-std::string to_hex(const char* input, size_t length);
+/// Convert byte array (uint8_t) to ascii printed string of hex digits
+/**
+ * @param [in] input The byte array to print
+ * @param [in] length The length of input
+ * @return A copy of `input` converted to the printable representation of the 
+ *         hex values of its data.
+ */
+std::string to_hex(uint8_t const * input, size_t length);
+
+/// Convert char array to ascii printed string of hex digits
+/**
+ * @param [in] input The char array to print
+ * @param [in] length The length of input
+ * @return A copy of `input` converted to the printable representation of the 
+ *         hex values of its data.
+ */
+std::string to_hex(char const * input, size_t length);
 
 } // namespace utility
 } // namespace websocketpp
