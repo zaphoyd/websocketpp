@@ -47,27 +47,125 @@
 
 namespace websocketpp {
 
+/// The type and function signature of an open handler
+/**
+ * The open handler is called once for every successful WebSocket connection 
+ * attempt. Either the fail handler or the open handler will be called for each
+ * WebSocket connection attempt. HTTP Connections that did not attempt to 
+ * upgrade the connection to the WebSocket protocol will trigger the http 
+ * handler instead of fail/open.
+ */
 typedef lib::function<void(connection_hdl)> open_handler;
+
+/// The type and function signature of a close handler
+/**
+ * The close handler is called once for every successfully established 
+ * connection after it is no longer capable of sending or receiving new messages
+ *
+ * The close handler will be called exactly once for every connection for which
+ * the open handler was called.
+ */
 typedef lib::function<void(connection_hdl)> close_handler;
+
+/// The type and function signature of a fail handler
+/**
+ * The fail handler is called once for every unsuccessful WebSocket connection 
+ * attempt. Either the fail handler or the open handler will be called for each
+ * WebSocket connection attempt. HTTP Connections that did not attempt to 
+ * upgrade the connection to the WebSocket protocol will trigger the http 
+ * handler instead of fail/open.
+ */
 typedef lib::function<void(connection_hdl)> fail_handler;
 
+/// The type and function signature of an interrupt handler
+/**
+ * The interrupt handler is called when a connection receives an interrupt 
+ * request from the application. Interrupts allow the application to trigger a
+ * handler to be run in the absense of a WebSocket level handler trigger (like
+ * a new message).
+ *
+ * This is typically used by another application thread to schedule some tasks
+ * that can only be run from within the handler chain for thread safety reasons.
+ */
 typedef lib::function<void(connection_hdl)> interrupt_handler;
 
-typedef lib::function<void(connection_hdl)> handshake_init_handler;
-
+/// The type and function signature of a ping handler
+/**
+ * The ping handler is called when the connection receives a WebSocket ping
+ * control frame. The string argument contains the ping payload. The payload is
+ * a binary string up to 126 bytes in length. The ping handler returns a bool, 
+ * true if a pong response should be sent, false if the pong response should be
+ * suppressed.
+ */
 typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
+
+/// The type and function signature of a pong handler
+/**
+ * The pong handler is called when the connection receives a WebSocket pong
+ * control frame. The string argument contains the pong payload. The payload is
+ * a binary string up to 126 bytes in length.
+ */
 typedef lib::function<void(connection_hdl,std::string)> pong_handler;
+
+/// The type and function signature of a pong timeout handler
+/**
+ * The pong timeout handler is called when a ping goes unanswered by a pong for
+ * longer than the locally specified timeout period.
+ */
 typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
 
+/// The type and function signature of a validate handler
+/**
+ * The validate handler is called after a WebSocket handshake has been received
+ * and processed but before it has been accepted. This gives the application a 
+ * chance to impliment connection details specific policies for accepting 
+ * connections and the ability to negotiate extensions and subprotocols.
+ * 
+ * The validate handler return value indicates whether or not the connection 
+ * should be accepted. Additional methods may be called during the function to
+ * set response headers, set HTTP return/error codes, etc.
+ */
 typedef lib::function<bool(connection_hdl)> validate_handler;
+
+/// The type and function signature of a http handler
+/**
+ * The http handler is called when an HTTP connection is made that does not
+ * attempt to upgrade the connection to the WebSocket protocol. This allows
+ * WebSocket++ servers to respond to these requests with regular HTTP responses.
+ * 
+ * This can be used to deliver error pages & dashboards and to deliver static 
+ * files such as the base HTML & JavaScript for an otherwise single page 
+ * WebSocket application.
+ *
+ * Note: WebSocket++ is designed to be a high performance WebSocket server. It
+ * is not tuned to provide a full featured, high performance, HTTP web server
+ * solution. The HTTP handler is appropriate only for low volume HTTP traffic.
+ * If you expect to serve high volumes of HTTP traffic a dedicated HTTP web 
+ * server is strongly recommended.
+ *
+ * The default HTTP handler will return a 426 Upgrade Required error. Custom
+ * handlers may override the response status code to deliver any type of 
+ * response.
+ */
 typedef lib::function<void(connection_hdl)> http_handler;
 
 // constants related to the default WebSocket protocol versions available
 #ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
-    static const std::vector<int>   VERSIONS_SUPPORTED = {0,7,8,13};
+    /// Container that stores the list of protocol versions supported
+    /**
+     * @todo Move this to configs to allow compile/runtime disabling or enabling
+     * of protocol versions
+     */
+    static std::vector<int> const versions_supported = {0,7,8,13};
 #else
-    static const int HELPER[] = {0,7,8,13};
-    static const std::vector<int>   VERSIONS_SUPPORTED(HELPER,HELPER+4);
+    /// Helper array to get around lack of initializer lists pre C++11
+    static int const helper[] = {0,7,8,13};
+    /// Container that stores the list of protocol versions supported
+    /**
+     * @todo Move this to configs to allow compile/runtime disabling or enabling
+     * of protocol versions
+     */
+    static std::vector<int> const versions_supported(helper,helper+4);
 #endif
 
 namespace session {

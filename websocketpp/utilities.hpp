@@ -32,6 +32,7 @@
 #include <websocketpp/common/stdint.hpp>
 
 namespace websocketpp {
+/// Generic non-websocket specific utility functions and data structures
 namespace utility {
 
 /// Helper functor for case insensitive find

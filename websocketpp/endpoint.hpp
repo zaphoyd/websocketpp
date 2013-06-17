@@ -88,8 +88,8 @@ public:
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
     explicit endpoint(bool is_server)
-      : m_alog(config::alog_level,&std::cout)
-      , m_elog(config::elog_level,&std::cerr)
+      : m_alog(config::alog_level, &std::cout)
+      , m_elog(config::elog_level, &std::cerr)
       , m_user_agent(::websocketpp::user_agent)
       , m_is_server(is_server)
     {
@@ -106,7 +106,7 @@ public:
      * Returns the user agent string that this endpoint will use when creating
      * new connections. 
      *
-     * The default value for this version is WebSocket++/0.3.0dev
+     * The default value for this version is stored in websocketpp::user_agent
      *
      * @return The user agent string.
      */ 
@@ -122,11 +122,11 @@ public:
      *
      * For best results set this before accepting or opening connections.
      *
-     * The default value for this version is WebSocket++/0.3.0dev
+     * The default value for this version is stored in websocketpp::user_agent
      *
      * @param ua The string to set the user agent to.
      */ 
-    void set_user_agent(const std::string& ua) {
+    void set_user_agent(std::string const & ua) {
         scoped_lock_type guard(m_mutex);
         m_user_agent = ua;
     }
@@ -189,21 +189,17 @@ public:
     
     /// Get reference to access logger
     /**
-     * TODO
-     * 
      * @return A reference to the access logger
      */
-    alog_type& get_alog() {
+    alog_type & get_alog() {
         return m_alog;
     }
     
     /// Get reference to error logger
     /**
-     * TODO
-     * 
      * @return A reference to the error logger
      */
-    elog_type& get_elog() {
+    elog_type & get_elog() {
         return m_elog;
     }
     

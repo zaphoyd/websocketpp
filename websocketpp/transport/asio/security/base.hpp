@@ -41,7 +41,7 @@
 
 // Interface that sockets/security policies must implement
 
-/**
+/*
  * Endpoint Interface
  *
  * bool is_secure() const;
@@ -55,10 +55,10 @@
  */
 
 
-/// Connection
-/// TODO
-/// pre_init(init_handler);
-/// post_init(init_handler);
+// Connection
+// TODO
+// pre_init(init_handler);
+// post_init(init_handler);
 
 namespace websocketpp {
 namespace transport {
