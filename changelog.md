@@ -1,5 +1,7 @@
 HEAD
-- Fix issue compiling with WEBSOCKETPP_STRICT_MASKING
+- Add `get_request()` pass through method to connection to allow calling methods
+  specific to the HTTP policy in use.
+- Fix issue compiling with `WEBSOCKETPP_STRICT_MASKING`
 - Add additional macro guards for use with boost_config. Thank you breyed
   for testing and code. #261
 

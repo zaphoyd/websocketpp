@@ -833,6 +833,24 @@ public:
      */
     void remove_header(const std::string &key);
     
+    /// Get request object
+    /**
+     * Direct access to request object. This can be used to call methods of the
+     * request object that are not part of the standard request API that 
+     * connection wraps.
+     *
+     * Note use of this method involves using behavior specific to the 
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @return A const reference to the raw request object
+     */
+    request_type const & get_request() const {
+        return m_request;
+    }
+    
     /////////////////////////////////////////////////////////////
     // Pass-through access to the other connection information //
     /////////////////////////////////////////////////////////////
