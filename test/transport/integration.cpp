@@ -254,7 +254,10 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
 
     s.set_ping_handler(on_ping);
     s.set_close_handler(bind(&stop_on_close,&s,::_1));
-
+    
+    c.set_fail_handler(bind(&check_ec<client>,&c,
+        websocketpp::lib::error_code(),::_1));
+    
     c.set_pong_handler(bind(&fail_on_pong,::_1,::_2));
     c.set_open_handler(bind(&ping_on_open<client>,&c,"foo",::_1));
     c.set_pong_timeout_handler(bind(&req_pong_timeout<client>,&c,"foo",::_1,::_2));
