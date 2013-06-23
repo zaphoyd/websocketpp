@@ -62,7 +62,7 @@ class category : public lib::error_category {
     public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.transport.iostream";
     }
     
@@ -84,7 +84,7 @@ class category : public lib::error_category {
     }
 };
 
-inline const lib::error_category& get_category() {
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
@@ -100,7 +100,7 @@ inline lib::error_code make_error_code(error::value e) {
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum<websocketpp::transport::iostream::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 
