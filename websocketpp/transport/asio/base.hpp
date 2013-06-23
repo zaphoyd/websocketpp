@@ -41,7 +41,7 @@ namespace transport {
 /// Transport policy that uses boost::asio
 namespace asio {
 
-typedef lib::function<void(const boost::system::error_code &)> 
+typedef lib::function<void(boost::system::error_code const &)> 
     socket_shutdown_handler;
 
 /**
@@ -74,7 +74,7 @@ enum value {
 
 class category : public lib::error_category {
 public:
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.transport.asio";
     }
     
