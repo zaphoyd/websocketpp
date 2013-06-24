@@ -186,7 +186,7 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
-    con->ping(code,payload,ec);
+    con->ping(payload,ec);
 }
     
 template <typename connection, typename config>
@@ -194,7 +194,7 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
     payload)
 {
     lib::error_code ec;
-    ping(hdl,code,payload,ec);
+    ping(hdl,payload,ec);
     if (ec) { throw ec; }
 }
 
@@ -204,7 +204,7 @@ void endpoint<connection,config>::pong(connection_hdl hdl, std::string const &
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
-    con->pong(code,payload,ec);
+    con->pong(payload,ec);
 }
     
 template <typename connection, typename config>
@@ -212,7 +212,7 @@ void endpoint<connection,config>::pong(connection_hdl hdl, std::string const &
     payload)
 {
     lib::error_code ec;
-    pong(hdl,code,payload,ec);
+    pong(hdl,payload,ec);
     if (ec) { throw ec; }
 }
 
