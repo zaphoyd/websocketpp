@@ -1,4 +1,6 @@
 HEAD
+- Fix issue where pong timeout handler always fired. Thank you Steven Klassen 
+  for reporting this bug.
 - Add ping and pong endpoint wrapper methods
 - Add `get_request()` pass through method to connection to allow calling methods
   specific to the HTTP policy in use.

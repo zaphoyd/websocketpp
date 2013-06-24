@@ -84,6 +84,12 @@ using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
+template <typename T>
+void close_after_timeout(T & e, websocketpp::connection_hdl hdl, long timeout) {
+    sleep(timeout);
+    e.close(hdl,websocketpp::close::status::normal,"");
+}
+
 void run_server(server * s, int port, bool log = false) {
     if (log) {
         s->set_access_channels(websocketpp::log::alevel::all);
@@ -115,6 +121,34 @@ void run_client(client & c, std::string uri, bool log = false) {
     BOOST_CHECK( !ec );
     c.connect(con);
 
+    c.run();
+}
+
+void run_time_limited_client(client & c, std::string uri, long timeout, 
+    bool log)
+{
+    if (log) {
+        c.set_access_channels(websocketpp::log::alevel::all);
+        c.set_error_channels(websocketpp::log::elevel::all);
+    } else {
+        c.clear_access_channels(websocketpp::log::alevel::all);
+        c.clear_error_channels(websocketpp::log::elevel::all);
+    }
+    c.init_asio();
+    
+    websocketpp::lib::error_code ec;
+    client::connection_ptr con = c.get_connection(uri,ec);
+    BOOST_CHECK( !ec );
+    c.connect(con);
+    
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(
+        &close_after_timeout<client>,
+        websocketpp::lib::ref(c),
+        con->get_handle(),
+        timeout
+    ));
+    tthread.detach();
+    
     c.run();
 }
 
@@ -199,6 +233,16 @@ void fail_on_pong(websocketpp::connection_hdl hdl, std::string payload) {
     BOOST_FAIL( "expected no pong handler" );
 }
 
+void fail_on_pong_timeout(websocketpp::connection_hdl hdl, std::string payload) {
+    BOOST_FAIL( "expected no pong timeout" );
+}
+
+void req_pong(std::string expected_payload, websocketpp::connection_hdl hdl, 
+    std::string payload)
+{
+    BOOST_CHECK_EQUAL( expected_payload, payload );
+}
+
 void fail_on_open(websocketpp::connection_hdl hdl) {
     BOOST_FAIL( "expected no open handler" );
 }
@@ -246,6 +290,27 @@ void close(T * e, websocketpp::connection_hdl hdl) {
 void run_test_timer(long value) {
     sleep(value);
     BOOST_FAIL( "Test timed out" );
+}
+
+BOOST_AUTO_TEST_CASE( pong_no_timeout ) {
+    server s;
+    client c;
+
+    s.set_close_handler(bind(&stop_on_close,&s,::_1));
+    
+    // send a ping when the connection is open
+    c.set_open_handler(bind(&ping_on_open<client>,&c,"foo",::_1));
+    // require that a pong with matching payload is received
+    c.set_pong_handler(bind(&req_pong,"foo",::_1,::_2));
+    // require that a pong timeout is NOT received
+    c.set_pong_timeout_handler(bind(&fail_on_pong_timeout,::_1,::_2));
+    
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    
+    // Run a client that closes the connection after 1 seconds
+    run_time_limited_client(c, "http://localhost:9005", 1, false);
+    
+    sthread.join();
 }
 
 BOOST_AUTO_TEST_CASE( pong_timeout ) {
