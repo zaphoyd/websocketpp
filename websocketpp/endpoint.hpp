@@ -266,23 +266,23 @@ public:
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
-    void send(connection_hdl hdl, const std::string& payload, 
+    void send(connection_hdl hdl, std::string const & payload, 
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, const std::string& payload,
+    void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op);
         
-    void send(connection_hdl hdl, const void* payload, size_t len,
+    void send(connection_hdl hdl, void const * payload, size_t len,
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, const void* payload, size_t len,
+    void send(connection_hdl hdl, void const * payload, size_t len,
         frame::opcode::value op);
 
     void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
     void send(connection_hdl hdl, message_ptr msg);
     
-    void close(connection_hdl hdl, const close::status::value code, 
-        const std::string & reason, lib::error_code & ec);
-    void close(connection_hdl hdl, const close::status::value code, 
-        const std::string & reason);
+    void close(connection_hdl hdl, close::status::value const code, 
+        std::string const & reason, lib::error_code & ec);
+    void close(connection_hdl hdl, close::status::value const code, 
+        std::string const & reason);
 
     /// Send a ping to a specific connection
     /**
@@ -386,7 +386,7 @@ private:
     std::set<connection_ptr>    m_connections;
     
     // static settings
-    const bool                  m_is_server;
+    bool const                  m_is_server;
     
     // endpoint state
     mutex_type                  m_mutex;

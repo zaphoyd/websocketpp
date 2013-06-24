@@ -109,8 +109,8 @@ void endpoint<connection,config>::interrupt(connection_hdl hdl) {
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, 
-    const std::string& payload, frame::opcode::value op, lib::error_code & ec)
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const & 
+    payload, frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
@@ -119,7 +119,7 @@ void endpoint<connection,config>::send(connection_hdl hdl,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, const std::string& 
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const & 
     payload, frame::opcode::value op)
 {
     lib::error_code ec;
@@ -128,7 +128,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, const std::string&
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, const void * payload,
+void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
     size_t len, frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -137,7 +137,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, const void * payload,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, const void * payload,
+void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
     size_t len, frame::opcode::value op)
 {
     lib::error_code ec;
@@ -162,8 +162,8 @@ void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg) {
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::close(connection_hdl hdl, 
-    const close::status::value code, const std::string & reason, 
+void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
+    const code, std::string const & reason, 
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -172,8 +172,8 @@ void endpoint<connection,config>::close(connection_hdl hdl,
 }
     
 template <typename connection, typename config>
-void endpoint<connection,config>::close(connection_hdl hdl, 
-    const close::status::value code, const std::string & reason)
+void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
+    const code, std::string const & reason)
 {
     lib::error_code ec;
     close(hdl,code,reason,ec);
