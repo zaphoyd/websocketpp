@@ -51,8 +51,8 @@ public:
       : hybi13<config>(secure, server, manager, rng) {}
     
     // outgoing client connection processing is not supported for this version
-    lib::error_code client_handshake_request(request_type& req, uri_ptr uri, 
-        const std::vector<std::string> & subprotocols) const
+    lib::error_code client_handshake_request(request_type& req, uri_ptr uri,
+        std::vector<std::string> const & subprotocols) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
@@ -61,12 +61,11 @@ public:
         return 8;
     }
     
-    const std::string& get_origin(const request_type& r) const {
+    const std::string& get_origin(request_type const & r) const {
         return r.get_header("Sec-WebSocket-Origin");
     }
 private:
 };
-
 
 } // namespace processor
 } // namespace websocketpp

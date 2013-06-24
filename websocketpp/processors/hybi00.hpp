@@ -30,19 +30,12 @@
 
 #include <cstdlib>
 
-// For htonl
-#if defined(WIN32)
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-#endif
-
-#include <websocketpp/processors/processor.hpp>
-
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
-
+#include <websocketpp/common/network.hpp>
 #include <websocketpp/common/md5.hpp>
+
+#include <websocketpp/processors/processor.hpp>
 
 namespace websocketpp {
 namespace processor {
@@ -75,7 +68,7 @@ public:
         return 0;
     }
     
-    lib::error_code validate_handshake(const request_type& r) const {
+    lib::error_code validate_handshake(request_type const & r) const {
         if (r.get_method() != "GET") {
             return make_error_code(error::invalid_http_method);
         }
@@ -98,8 +91,8 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code process_handshake(const request_type& req, const
-        std::string & subprotocol, response_type& res) const
+    lib::error_code process_handshake(request_type const & req,
+        std::string const & subprotocol, response_type & res) const
     {
         char key_final[16];
         
@@ -148,36 +141,36 @@ public:
     }
     
     // outgoing client connection processing is not supported for this version
-    lib::error_code client_handshake_request(request_type& req, uri_ptr uri, 
-        const std::vector<std::string> & subprotocols) const
+    lib::error_code client_handshake_request(request_type& req, uri_ptr uri,
+        std::vector<std::string> const & subprotocols) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
     
-    lib::error_code validate_server_handshake_response(const request_type& req,
-        response_type& res) const
+    lib::error_code validate_server_handshake_response(request_type const & req,
+        response_type & res) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
     
-    std::string get_raw(const response_type& res) const {
+    std::string get_raw(response_type const & res) const {
         response_type temp = res;
         temp.remove_header("Sec-WebSocket-Key3");
         return temp.raw() + res.get_header("Sec-WebSocket-Key3");
     }
     
-    const std::string& get_origin(const request_type& r) const {
+    std::string const & get_origin(request_type const & r) const {
         return r.get_header("Origin");
     }
     
     // hybi00 doesn't support subprotocols so there never will be any requested
-    lib::error_code extract_subprotocols(const request_type & req,
+    lib::error_code extract_subprotocols(request_type const & req,
         std::vector<std::string> & subprotocol_list)
     {
         return lib::error_code();
     }
     
-    uri_ptr get_uri(const request_type& request) const {
+    uri_ptr get_uri(request_type const & request) const {
         std::string h = request.get_header("Host");
         
         size_t last_colon = h.rfind(":");
@@ -202,6 +195,11 @@ public:
         // TODO: check if get_uri is a full uri
     }
     
+    /// Get hybi00 handshake key3
+    /**
+     * @todo This doesn't appear to be used anymore. It might be able to be 
+     * removed
+     */
     std::string get_key3() const {
         return "";
     }
@@ -306,11 +304,11 @@ public:
         }
 
         // generate header
-        out->set_header(std::string(reinterpret_cast<const char*>(&msg_hdr),1));
+        out->set_header(std::string(reinterpret_cast<char const *>(&msg_hdr),1));
         
         // process payload
         out->set_payload(i);
-        out->append_payload(std::string(reinterpret_cast<const char*>(&msg_ftr),1));
+        out->append_payload(std::string(reinterpret_cast<char const *>(&msg_ftr),1));
 
         // hybi00 doesn't support compression
         // hybi00 doesn't have masking
@@ -320,7 +318,7 @@ public:
         return lib::error_code();
     }
 
-    lib::error_code prepare_ping(const std::string & in, message_ptr out) const
+    lib::error_code prepare_ping(std::string const & in, message_ptr out) const
     {
         return lib::error_code(error::no_protocol_support);
     }
@@ -330,8 +328,8 @@ public:
         return lib::error_code(error::no_protocol_support);
     }
     
-    lib::error_code prepare_close(close::status::value code, 
-        const std::string & reason, message_ptr out) const
+    lib::error_code prepare_close(close::status::value code,
+        std::string const & reason, message_ptr out) const
     {
         if (!out) {
             return lib::error_code(error::invalid_arguments);
@@ -346,7 +344,7 @@ public:
         return lib::error_code();
     }
 private:
-    void decode_client_key(const std::string& key, char* result) const {
+    void decode_client_key(std::string const & key, char * result) const {
         unsigned int spaces = 0;
         std::string digits = "";
         uint32_t num;
@@ -378,8 +376,8 @@ private:
         FATAL_ERROR = 3
     };
     
-    const uint8_t msg_hdr;
-    const uint8_t msg_ftr;
+    uint8_t const msg_hdr;
+    uint8_t const msg_ftr;
 
     state m_state;
     
@@ -387,7 +385,6 @@ private:
     message_ptr m_msg_ptr;
     utf8_validator::validator m_validator;
 };
-
 
 } // namespace processor
 } // namespace websocketpp

@@ -165,8 +165,7 @@ public:
       
     virtual ~processor() {}
     
-    /// Returns the version of the WebSocket protocol that this processor 
-    /// understands.
+    /// Get the protocol version of this processor
     virtual int get_version() const = 0;
 
     /// Returns whether or not the permessage_compress extension is implemented

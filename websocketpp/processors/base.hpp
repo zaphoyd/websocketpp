@@ -229,7 +229,7 @@ public:
     }
 };
 
-/// Get a reference to a static copy of the processor category
+/// Get a reference to a static copy of the processor error category
 inline lib::error_category const & get_processor_category() {
     static processor_category instance;
     return instance;

@@ -38,6 +38,7 @@ namespace transport {
 /// Transport policy that uses STL iostream for I/O and does not support timers
 namespace iostream {
 
+/// iostream transport errors
 namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
@@ -58,6 +59,7 @@ enum value {
     bad_stream
 };
 
+/// iostream transport error category
 class category : public lib::error_category {
     public:
     category() {}
@@ -84,11 +86,13 @@ class category : public lib::error_category {
     }
 };
 
+/// Get a reference to a static copy of the iostream transport error category
 inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
 
+/// Get an error code with the given value and the iostream transport category
 inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_category());
 }

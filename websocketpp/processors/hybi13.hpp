@@ -28,18 +28,11 @@
 #ifndef WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 #define WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 
-// For htonl
-#if defined(WIN32)
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-#endif
-
 #include <cassert>
 
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
-
+#include <websocketpp/common/network.hpp>
 #include <websocketpp/http/constants.hpp>
 
 #include <websocketpp/processors/processor.hpp>

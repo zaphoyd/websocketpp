@@ -771,7 +771,7 @@ protected:
      *
      * Might need a strand at some point?
      */
-    lib::error_code interrupt(inturrupt_handler handler) {
+    lib::error_code interrupt(interrupt_handler handler) {
         m_io_service->post(handler);
         return lib::error_code();
     }
@@ -781,7 +781,7 @@ protected:
         return lib::error_code();
     }
 
-    /*void handle_inturrupt(inturrupt_handler handler) { 
+    /*void handle_interrupt(interrupt_handler handler) { 
         handler();
     }*/
     

@@ -39,39 +39,36 @@
 namespace websocketpp {
 namespace transport {
 /// Transport policy that uses boost::asio
-namespace asio {
-
-typedef lib::function<void(boost::system::error_code const &)> 
-    socket_shutdown_handler;
-
 /**
  * This policy uses a single boost::asio io_service to provide transport
- * services to a WebSocket++ endpoint. 
- * 
- * 
- * 
- * 
+ * services to a WebSocket++ endpoint.
  */
+namespace asio {
 
+typedef lib::function<void(boost::system::error_code const &)>
+    socket_shutdown_handler;
+
+/// Asio transport errors
 namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
     /// categories
     general = 1,
-    
+
     /// async_read_at_least call requested more bytes than buffer can store
     invalid_num_bytes,
-    
+
     /// there was an error in the underlying transport library
     pass_through,
-    
+
     /// The connection to the requested proxy server failed
     proxy_failed,
-    
+
     /// Invalid Proxy URI
     proxy_invalid
 };
 
+/// Asio transport error category
 class category : public lib::error_category {
 public:
     char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
@@ -96,11 +93,13 @@ public:
     }
 };
 
-inline const lib::error_category& get_category() {
+/// Get a reference to a static copy of the asio transport error category
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
 
+/// Create an error code with the given value and the asio transport category
 inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_category());
 }
