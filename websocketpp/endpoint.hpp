@@ -283,6 +283,48 @@ public:
         const std::string & reason, lib::error_code & ec);
     void close(connection_hdl hdl, const close::status::value code, 
         const std::string & reason);
+
+    /// Send a ping to a specific connection
+    /**
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     * @param [out] ec A reference to an error code to fill in
+     */
+    void ping(connection_hdl hdl, std::string const & payload, 
+        lib::error_code & ec);
+    /// Send a ping to a specific connection
+    /**
+     * Exception variant of `ping`
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     */
+    void ping(connection_hdl hdl, std::string const & payload);
+
+    /// Send a pong to a specific connection
+    /**
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     * @param [out] ec A reference to an error code to fill in
+     */
+    void pong(connection_hdl hdl, std::string const & payload, 
+        lib::error_code & ec);
+    /// Send a pong to a specific connection
+    /**
+     * Exception variant of `pong`
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     */
+    void pong(connection_hdl hdl, std::string const & payload);
         
     /// Retrieves a connection_ptr from a connection_hdl (exception free)
     /**

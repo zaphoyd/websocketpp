@@ -1,4 +1,5 @@
 HEAD
+- Add ping and pong endpoint wrapper methods
 - Add `get_request()` pass through method to connection to allow calling methods
   specific to the HTTP policy in use.
 - Fix issue compiling with `WEBSOCKETPP_STRICT_MASKING`

@@ -181,6 +181,42 @@ void endpoint<connection,config>::close(connection_hdl hdl,
 }
 
 template <typename connection, typename config>
+void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & 
+    payload, lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
+    con->ping(code,payload,ec);
+}
+    
+template <typename connection, typename config>
+void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & 
+    payload)
+{
+    lib::error_code ec;
+    ping(hdl,code,payload,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
+void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & 
+    payload, lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
+    con->pong(code,payload,ec);
+}
+    
+template <typename connection, typename config>
+void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & 
+    payload)
+{
+    lib::error_code ec;
+    pong(hdl,code,payload,ec);
+    if (ec) { throw ec; }
+}
+
+template <typename connection, typename config>
 void endpoint<connection,config>::remove_connection(connection_ptr con) {
     std::stringstream s;
     s << "remove_connection. New count: " << m_connections.size()-1;
