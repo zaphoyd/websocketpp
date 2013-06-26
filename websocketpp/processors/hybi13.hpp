@@ -94,7 +94,7 @@ public:
             return ret;
         }
         
-        typename request_type::parameter_list p;
+        http::parameter_list p;
 
         bool error = req.get_header_as_plist("Sec-WebSocket-Extensions",p);
         
@@ -108,9 +108,9 @@ public:
             return ret;
         }
         
-        typename request_type::parameter_list::const_iterator it;
+        http::parameter_list::const_iterator it;
         
-        if (m_permessage_deflate.is_implemented()) {
+        /*if (m_permessage_deflate.is_implemented()) {
             err_str_pair neg_ret;
             for (it = p.begin(); it != p.end(); ++it) {
                 // look through each extension, if the key is permessage-deflate
@@ -134,7 +134,7 @@ public:
                     }
                 }
             }
-        }
+        }*/
 
         return ret;
     }
@@ -269,10 +269,10 @@ public:
         std::vector<std::string> & subprotocol_list)
     {
         if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
-            typename request_type::parameter_list p;
+            http::parameter_list p;
         
              if (!req.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
-                 typename request_type::parameter_list::const_iterator it;
+                 http::parameter_list::const_iterator it;
 
                  for (it = p.begin(); it != p.end(); ++it) {
                      subprotocol_list.push_back(it->first);

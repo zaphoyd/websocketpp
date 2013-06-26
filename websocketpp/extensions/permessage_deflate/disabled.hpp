@@ -31,6 +31,7 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+#include <websocketpp/http/constants.hpp>
 #include <websocketpp/extensions/extension.hpp>
 
 #include <map>
@@ -49,11 +50,10 @@ namespace permessage_deflate {
  */
 template <typename config>
 class disabled {
-    typedef typename config::request_type::attribute_list attribute_list;
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
 public:
-    err_str_pair negotiate(const attribute_list& attributes) {
+    err_str_pair negotiate(http::attribute_list const & attributes) {
         return make_pair(make_error_code(error::disabled),std::string());
     }
     
@@ -69,17 +69,17 @@ public:
         return false;
     }
 
-    lib::error_code compress(const std::string in, std::string &out) {
+    lib::error_code compress(std::string const & in, std::string & out) {
         return make_error_code(error::disabled);
     }
 
-    lib::error_code decompress(const uint8_t * buf, size_t len,
-        std::string &out)
+    lib::error_code decompress(uint8_t const * buf, size_t len,
+        std::string & out)
     {
         return make_error_code(error::disabled);
     }
 
-    lib::error_code decompress(const std::string in, std::string &out) {
+    lib::error_code decompress(std::string const & in, std::string & out) {
         return make_error_code(error::disabled);
     }
 };
