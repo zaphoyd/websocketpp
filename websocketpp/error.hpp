@@ -35,6 +35,9 @@
 
 namespace websocketpp {
 
+/// Combination error code / string type for returning two values
+typedef std::pair<lib::error_code,std::string> err_str_pair;
+
 // setup for errors that should be propogated back to the user.
 namespace error {
 enum value {
