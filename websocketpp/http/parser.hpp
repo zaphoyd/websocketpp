@@ -49,8 +49,16 @@ namespace state {
 
 typedef std::map<std::string,std::string> header_list;
 
-/// Read until a non-token character is found and then return the token and
-/// iterator to the next character to read
+/// Read and return the next token in the stream
+/**
+ * Read until a non-token character is found and then return the token and
+ * iterator to the next character to read
+ * 
+ * @param begin An iterator to the beginning of the sequence
+ * @param end An iterator to the end of the sequence
+ * @return A pair containing the token and an iterator to the next character in
+ * the stream
+ */
 template <typename InputIterator>
 std::pair<std::string,InputIterator> extract_token(InputIterator begin,
     InputIterator end)
@@ -59,6 +67,17 @@ std::pair<std::string,InputIterator> extract_token(InputIterator begin,
     return std::make_pair(std::string(begin,it),it);
 }
 
+/// Read and return the next quoted string in the stream
+/**
+ * Read a double quoted string starting at `begin`. The quotes themselves are
+ * stripped. The quoted value is returned along with an iterator to the next 
+ * character to read
+ * 
+ * @param begin An iterator to the beginning of the sequence
+ * @param end An iterator to the end of the sequence
+ * @return A pair containing the string read and an iterator to the next 
+ * character in the stream
+ */
 template <typename InputIterator>
 std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
     InputIterator end)
@@ -97,8 +116,15 @@ std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
     return std::make_pair("",begin);
 }
 
-/// Read one unit of linear white space and return the iterator to the character
-/// afterwards. If ret = begin no whitespace was extracted.
+/// Read and discard one unit of linear whitespace
+/**
+ * Read one unit of linear white space and return the iterator to the character
+ * afterwards. If `begin` is returned, no whitespace was extracted. 
+ * 
+ * @param begin An iterator to the beginning of the sequence
+ * @param end An iterator to the end of the sequence
+ * @return An iterator to the character after the linear whitespace read
+ */
 template <typename InputIterator>
 InputIterator extract_lws(InputIterator begin, InputIterator end) {
     InputIterator it = begin;
@@ -114,7 +140,16 @@ InputIterator extract_lws(InputIterator begin, InputIterator end) {
     return it;
 }
 
-/// SImilar to extract_lws but extracts all lws instead of just one line
+/// Read and discard linear whitespace
+/**
+ * Read linear white space until a non-lws character is read and return an 
+ * iterator to that character. If `begin` is returned, no whitespace was 
+ * extracted. 
+ * 
+ * @param begin An iterator to the beginning of the sequence
+ * @param end An iterator to the end of the sequence
+ * @return An iterator to the character after the linear whitespace read
+ */
 template <typename InputIterator>
 InputIterator extract_all_lws(InputIterator begin, InputIterator end) {
     InputIterator old_it;
@@ -131,40 +166,21 @@ InputIterator extract_all_lws(InputIterator begin, InputIterator end) {
     return new_it;
 }
 
-/*
-struct attribute {
-    attribute(const std::string &n, const std::string &v) 
-      : name(n), value(v){}
-    
-    std::string name;
-    std::string value;
-};
-typedef std::vector<attribute> attribute_list;
-
-struct parameter {
-    parameter(std::string n) : name(n) {}
-
-    void add_attribute(const attribute& p) {
-        attributes.push_back(p);
-    }
-    
-    void add_attribute(const std::string& key, const std::string & value) {
-        attributes.push_back(attribute(key,value));
-    }
-    
-    std::string name; 
-    attribute_list attributes;
-};
-typedef std::vector<parameter> parameter_list;
-*/
-
-//typedef std::map<std::string,std::string> string_map;
-//typedef std::vector< std::pair< std::string, attribute_list > > parameter_list;
-
-typedef std::map<std::string,std::string> attribute_list;
-//typedef std::map<std::string,attribute_list> parameter_list;
-typedef std::vector< std::pair< std::string, attribute_list > > parameter_list;
-
+/// Extract HTTP attributes
+/**
+ * An http attributes list is a semicolon delimited list of key value pairs in 
+ * the format: *( ";" attribute "=" value ) where attribute is a token and value
+ * is a token or quoted string.
+ *
+ * Attributes extracted are appended to the supplied attributes list 
+ * `attributes`.
+ * 
+ * @param [in] begin An iterator to the beginning of the sequence
+ * @param [in] end An iterator to the end of the sequence
+ * @param [out] attributes A reference to the attributes list to append 
+ * attribute/value pairs extracted to
+ * @return An iterator to the character after the last atribute read
+ */
 template <typename InputIterator>
 InputIterator extract_attributes(InputIterator begin, InputIterator end,
     attribute_list & attributes)
@@ -249,9 +265,23 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
     return cursor;
 }
 
+/// Extract HTTP parameters
+/**
+ * An http parameters list is a comma delimited list of tokens followed by 
+ * optional semicolon delimited attributes lists.
+ *
+ * Parameters extracted are appended to the supplied parameters list 
+ * `parameters`.
+ * 
+ * @param [in] begin An iterator to the beginning of the sequence
+ * @param [in] end An iterator to the end of the sequence
+ * @param [out] parameters A reference to the parameters list to append 
+ * paramter values extracted to
+ * @return An iterator to the character after the last parameter read
+ */
 template <typename InputIterator>
 InputIterator extract_parameters(InputIterator begin, InputIterator end, 
-    parameter_list &parameters) 
+    parameter_list &parameters)
 {
     InputIterator cursor;
 
@@ -336,76 +366,107 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
     return cursor;
 }
 
+/// Base HTTP parser
+/**
+ * Includes methods and data elements common to all types of HTTP messages such
+ * as headers, versions, bodies, etc.
+ */
 class parser {
-public:
-    typedef http::parser::attribute_list attribute_list;
-    typedef http::parser::parameter_list parameter_list;
-    
-    // Convenience method versions of some of the free utility functions.
-    bool parse_parameter_list(const std::string& in, parameter_list& out) const;
-
-    /// Set the HTTP version string
-    /**
-     * @param version HTTP version string to use. Must be in format HTTP/x.y 
-     *    where x and y are positive integers.
-     */
-    void set_version(const std::string& version);
-    
+public:    
     /// Get the HTTP version string
-    const std::string& get_version() const {
+    /**
+     * @return The version string for this parser
+     */
+    std::string const & get_version() const {
         return m_version;
     }
-    
-    /// Get the HTTP header with name `key`
+
+    /// Set HTTP parser Version
     /**
-     * @param key Name of the header to return
-     * @return Value of the header
+     * Input should be in format: HTTP/x.y where x and y are positive integers.
+     * @todo Does this method need any validation?
+     *
+     * @param [in] version The value to set the HTTP version to.
      */
-    const std::string& get_header(const std::string& key) const;
-    
-    /// Get the body string
-    const std::string& get_body() const {
+    void set_version(std::string const & version);
+
+    /// Get the value of an HTTP header
+    /**
+     * @todo Make this method case insensitive.
+     *
+     * @param [in] key The name/key of the header to get.
+     * @return The value associated with the given HTTP header key.
+     */
+    std::string const & get_header(std::string const & key) const;
+
+    /// Extract an HTTP parameter list from a parser header.
+    /**
+     * If the header requested doesn't exist or exists and is empty the 
+     * parameter list is valid (but empty).
+     *
+     * @param [in] key The name/key of the HTTP header to use as input.
+     * @param [out] out The parameter list to store extracted parameters in.
+     * @return Whether or not the input was a valid parameter list.
+     */
+    bool get_header_as_plist(std::string const & key, parameter_list & out) 
+        const;
+
+    /// Append a value to an existing HTTP header
+    /**
+     * This method will set the value of the HTTP header `key` with the
+     * indicated value. If a header with the name `key` already exists, `val`
+     * will be appended to the existing value.
+     *
+     * @todo Make this method case insensitive.
+     * @todo Should there be any restrictions on which keys are allowed?
+     * @todo Exception free varient
+     *
+     * @see replace_header
+     *
+     * @param [in] key The name/key of the header to append to.
+     * @param [in] val The value to append.
+     */
+    void append_header(std::string const & key, std::string const & val);
+
+    /// Set a value for an HTTP header, replacing an existing value
+    /**
+     * This method will set the value of the HTTP header `key` with the 
+     * indicated value. If a header with the name `key` already exists, `val` 
+     * will replace the existing value.
+     *
+     * @todo Make this method case insensitive.
+     * @todo Should there be any restrictions on which keys are allowed?
+     * @todo Exception free varient
+     *
+     * @see append_header
+     *
+     * @param [in] key The name/key of the header to append to.
+     * @param [in] val The value to append.
+     */
+    void replace_header(std::string const & key, std::string const & val);
+
+    /// Remove a header from the parser
+    /**
+     * Removes the header entirely from the parser. This is different than 
+     * setting the value of the header to blank.
+     *
+     * @todo Make this method case insensitive.
+     *
+     * @param [in] key The name/key of the header to remove.
+     */
+    void remove_header(std::string const & key);
+
+    /// Set HTTP body
+    /**
+     * Sets the body of the HTTP object and fills in the appropriate content 
+     * length header.
+     *
+     * @param [in] value The value to set the body to.
+     */
+    std::string const & get_body() const {
         return m_body;
     }
-    
-    /// Get the HTTP header with name `key`
-    /**
-     * 
-     * @param key The header name to retrieve
-     *
-     * @param out A reference to a parameter list to store any extracted
-     * paramters.
-     *
-     * @return True if the value of this header was not a valid parameter list
-     */
-    bool get_header_as_plist(const std::string& key, parameter_list& out) const;
 
-    /// Append a header
-    /**
-     * If a header with this name already exists the value will be appended to
-     * the existing header to form a comma separated list of values. Use
-     * replace_header to overwrite existing values.
-     * 
-     * @param key Name of the header to set
-     * @param val Value to add
-     * @see replace_header
-     */
-    void append_header(const std::string &key,const std::string &val);
-    
-    /// Replace a header
-    /**
-     * If a header with this name already exists the old value will be replaced
-     * Use add_header to append to a list of existing values.
-     * 
-     * @param key Name of the header to set
-     * @param val Value to set
-     * @see add_header
-     */
-    void replace_header(const std::string &key,const std::string &val);
-    
-    /// Remove a header
-    void remove_header(const std::string &key);
-    
     /// Set body content
     /**
      * Set the body content of the HTTP response to the parameter string. Note
@@ -415,15 +476,41 @@ public:
      * 
      * @param value String data to include as the body content.
      */
-    void set_body(const std::string& value);
+    void set_body(std::string const & value);
+
+    /// Extract an HTTP parameter list from a string.
+    /**
+     * @param [in] in The input string.
+     * @param [out] out The parameter list to store extracted parameters in.
+     * @return Whether or not the input was a valid parameter list.
+     */
+    bool parse_parameter_list(std::string const & in, parameter_list & out)
+        const;
 protected:
-    /// DEPRECATED Read headers out of an istream
-    bool parse_headers(std::istream& s);
-    
-    /// Helper function for consume. Process header line
+    /// Parse headers from an istream
+    /**
+     * @deprecated Use process_header instead.
+     *
+     * @param [in] s The istream to extract headers from.
+     */
+    bool parse_headers(std::istream & s);
+
+    /// Process a header line
+    /**
+     * @todo Update this method to be exception free.
+     *
+     * @param [in] begin An iterator to the beginning of the sequence.
+     * @param [in] end An iterator to the end of the sequence.
+     */
     void process_header(std::string::iterator begin, std::string::iterator end);
-    
-    /// Return headers in raw string form.
+
+    /// Generate and return the HTTP headers as a string
+    /**
+     * Each headers will be followed by the \r\n sequence including the last one.
+     * A second \r\n sequence (blank header) is not appended by this method
+     *
+     * @return The HTTP headers as a string.
+     */
     std::string raw_headers() const;
 
     std::string m_version;

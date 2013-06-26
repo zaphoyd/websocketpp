@@ -35,37 +35,20 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
-/// Extract an HTTP parameter list from a string.
-/**
- * @param [in] in The input string.
- *
- * @param [out] out The parameter list to store extracted parameters in.
- *
- * @return Whether or not the input was a valid parameter list.
- */
-inline bool parser::parse_parameter_list(std::string const & in, 
-    parameter_list & out) const
-{
-    if (in.size() == 0) {
-        return false;
-    }
-    
-    std::string::const_iterator it;
-    it = extract_parameters(in.begin(),in.end(),out);
-    return (it == in.begin());
+inline void parser::set_version(std::string const & version) {
+    m_version = version;
 }
 
-/// Extract an HTTP parameter list from a parser header.
-/**
- * If the header requested doesn't exist or exists and is empty the parameter
- * list is valid (but empty).
- *
- * @param [in] key The name/key of the HTTP header to use as input.
- *
- * @param [out] out The parameter list to store extracted parameters in.
- *
- * @return Whether or not the input was a valid parameter list.
- */
+inline std::string const & parser::get_header(std::string const & key) const {
+    header_list::const_iterator h = m_headers.find(key);
+    
+    if (h == m_headers.end()) {
+        return empty_header;
+    } else {
+        return h->second;
+    }
+}
+
 inline bool parser::get_header_as_plist(std::string const & key, 
     parameter_list & out) const
 {
@@ -78,48 +61,6 @@ inline bool parser::get_header_as_plist(std::string const & key,
     return this->parse_parameter_list(it->second,out);
 }
 
-/// Set HTTP parser Version
-/**
- * \todo Does this method need any validation?
- *
- * @param [in] version The value to set the HTTP version to.
- */
-inline void parser::set_version(std::string const & version) {
-    m_version = version;
-}
-
-/// Get the value of an HTTP header
-/**
- * \todo Make this method case insensitive.
- *
- * @param [in] key The name/key of the header to get.
- *
- * @return The value associated with the given HTTP header key.
- */
-inline std::string const & parser::get_header(std::string const & key) const {
-    header_list::const_iterator h = m_headers.find(key);
-    
-    if (h == m_headers.end()) {
-        return empty_header;
-    } else {
-        return h->second;
-    }
-}
-
-/// Append a value to an existing HTTP header
-/**
- * This method will set the value of the HTTP header `key` with the indicated 
- * value. If a header with the name `key` already exists, `val` will be appended
- * to the existing value.
- *
- * \todo Make this method case insensitive.
- * \todo Should there be any restrictions on which keys are allowed to be set?
- * \todo Exception free varient
- *
- * @param [in] key The name/key of the header to append to.
- *
- * @param [in] val The value to append.
- */
 inline void parser::append_header(std::string const & key, std::string const &
     val)
 {
@@ -134,46 +75,16 @@ inline void parser::append_header(std::string const & key, std::string const &
     }
 }
 
-/// Set a value for an HTTP header, replacing an existing value
-/**
- * This method will set the value of the HTTP header `key` with the indicated 
- * value. If a header with the name `key` already exists, `val` will replace the
- * existing value.
- *
- * \todo Make this method case insensitive.
- * \todo Should there be any restrictions on which keys are allowed to be set?
- * \todo Exception free varient
- *
- * @param [in] key The name/key of the header to append to.
- *
- * @param [in] val The value to append.
- */
 inline void parser::replace_header(std::string const & key, std::string const &
     val)
 {
     m_headers[key] = val;
 }
 
-/// Remove a header from the parser
-/**
- * Removes the header entirely from the parser. This is different than setting
- * the value of the header to blank.
- *
- * \todo Make this method case insensitive.
- *
- * @param [in] key The name/key of the header to remove.
- */
 inline void parser::remove_header(std::string const & key) {
     m_headers.erase(key);
 }
 
-/// Set HTTP body
-/**
- * Sets the body of the HTTP object and fills in the appropriate content length
- * header
- *
- * @param [in] value The value to set the body to.
- */
 inline void parser::set_body(std::string const & value) {
     if (value.size() == 0) {
         remove_header("Content-Length");
@@ -187,11 +98,19 @@ inline void parser::set_body(std::string const & value) {
     m_body = value;
 }
 
-/// Parse headers from an istream
-/**
- * @param [in] s The istream to extract headers from.
- */
-inline bool parser::parse_headers(std::istream& s) {
+inline bool parser::parse_parameter_list(std::string const & in, 
+    parameter_list & out) const
+{
+    if (in.size() == 0) {
+        return false;
+    }
+    
+    std::string::const_iterator it;
+    it = extract_parameters(in.begin(),in.end(),out);
+    return (it == in.begin());
+}
+
+inline bool parser::parse_headers(std::istream & s) {
     std::string header;
     std::string::size_type end;
     
@@ -213,31 +132,6 @@ inline bool parser::parse_headers(std::istream& s) {
     return true;
 }
 
-/// Generate and return the HTTP headers as a string
-/**
- * Each headers will be followed by the \r\n sequence including the last one.
- * A second \r\n sequence (blank header) is not appended by this method
- *
- * @return The HTTP headers as a string.
- */
-inline std::string parser::raw_headers() const {
-    std::stringstream raw;
-    
-    header_list::const_iterator it;
-    for (it = m_headers.begin(); it != m_headers.end(); it++) {
-        raw << it->first << ": " << it->second << "\r\n";
-    }
-    
-    return raw.str();
-}
-
-/// Process a header
-/**
- *
- * \todo Update this method to be exception free.
- *
- * @param [in] s The istream to extract headers from.
- */
 inline void parser::process_header(std::string::iterator begin, 
     std::string::iterator end)
 {
@@ -255,6 +149,19 @@ inline void parser::process_header(std::string::iterator begin,
     append_header(std::string(begin,cursor),
                   std::string(cursor+sizeof(header_separator)-1,end));
 }
+
+inline std::string parser::raw_headers() const {
+    std::stringstream raw;
+    
+    header_list::const_iterator it;
+    for (it = m_headers.begin(); it != m_headers.end(); it++) {
+        raw << it->first << ": " << it->second << "\r\n";
+    }
+    
+    return raw.str();
+}
+
+
 
 } // namespace parser
 } // namespace http

@@ -37,7 +37,7 @@
 #include <websocketpp/http/response.hpp>
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
-#include <websocketpp/random/none.hpp>
+#include <websocketpp/random/none.hpp> 
 
 #include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 #include <websocketpp/extensions/permessage_deflate/enabled.hpp>
