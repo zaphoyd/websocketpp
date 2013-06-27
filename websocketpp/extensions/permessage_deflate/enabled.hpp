@@ -56,6 +56,14 @@ namespace extensions {
  * Returns whether or not the extension was negotiated for the current 
  * connection
  *
+ * **generate_offer**\n
+ * `std::string generate_offer() const`\n
+ * Create an extension offer string based on local policy
+ *
+ * **validate_response**\n
+ * `lib::error_code validate_response(http::attribute_list const & response)`\n
+ * Negotiate the parameters of extension use
+ *
  * **negotiate**\n
  * `err_str_pair negotiate(http::attribute_list const & attributes)`\n
  * Negotiate the parameters of extension use
@@ -77,17 +85,14 @@ enum value {
     /// Catch all
     general = 1,
 
-    /// Invalid extension parameters
-    invalid_parameters,
+    /// Invalid extension attributes
+    invalid_attributes,
 
-    /// Unsupported compression algorithm
-    unsupported_algorithm,
-    
-    /// Unknown method parameter
-    unknown_method_parameter,
+    /// Invalid extension attribute value
+    invalid_attribute_value,
 
-    /// Invalid Algorithm Settings
-    invalid_algorithm_settings,
+    /// Unsupported extension attributes
+    unsupported_attributes,
 
     /// ZLib Error
     zlib_error,
@@ -109,14 +114,12 @@ public:
         switch(value) {
             case general:
                 return "Generic permessage-compress error";
-            case invalid_parameters:
-                return "Invalid extension parameters";
-            case unsupported_algorithm:
-                return "Unsupported algorithm";
-            case unknown_method_parameter:
-                return "Unknown method parameter";
-            case invalid_algorithm_settings:
-                return "invalid algorithm settings";
+            case invalid_attributes:
+                return "Invalid extension attributes";
+            case invalid_attribute_value:
+                return "Invalid extension attribute value";
+            case unsupported_attributes:
+                return "Unsupported extension attributes";
             case zlib_error:
                 return "A zlib function returned an error";
             case uninitialized:
@@ -194,19 +197,61 @@ public:
     bool max_window_bits_support() const {
         return false;
     }
+    
+    /// Generate extension offer
+    /**
+     * Creates an offer string to include in the Sec-WebSocket-Extensions
+     * header of outgoing client requests.
+     *
+     * @return A WebSocket extension offer string for this extension
+     */
+    std::string generate_offer() const {
+        return "";
+    }
+    
+    /// Validate extension response
+    /**
+     * Confirm that the server has negotiated settings compatible with our 
+     * original offer and apply those settings to the extension state.
+     * 
+     * @param response The server response attribute list to validate
+     * @return Validation error or 0 on success
+     */
+    lib::error_code validate_offer(http::attribute_list const & response) {
+        
+    }
 
     /// Negotiate extension
     /**
-     * Negotiate whether or not to use and parameter values for the extension
-     * based on the request from the the remote endpoint and the local policy
+     * Confirm that the client's extension negotiation offer has settings
+     * compatible with local policy. If so, generate a reply and apply those
+     * settings to the extension state.
      *
-     * @param attributes Attribute from remote endpoint's request
+     * @param offer Attribute from client's offer
      * @return Status code and value to return to remote endpoint
      */
-    err_str_pair negotiate(http::attribute_list const & attributes) {
-        std::string neg = "permessage-deflate";
-        //return make_pair(make_error_code(error::zlib_error),std::string());
-        return make_pair(lib::error_code(),neg);
+    err_str_pair negotiate(http::attribute_list const & offer) {
+        err_str_pair ret;
+
+        http::attribute_list::const_iterator it;
+        for (it = offer.begin(); it != offer.end(); ++it) {
+            if (it->first == "s2c_no_context_takeover") {
+                negotiate_s2c_no_context_takeover(it->second,ret.first);
+            } else {
+                ret.first = make_error_code(error::invalid_attributes);
+            }
+
+            if (!ret.first) {
+                break;
+            }
+        }
+        
+        if (ret.first == lib::error_code()) {
+            m_enabled = true;
+            ret.second = generate_response();
+        }
+
+        return ret;
     }
 
     /// Compress bytes
@@ -232,6 +277,39 @@ public:
         return make_error_code(error::uninitialized);
     }
 private:
+    /// Generate negotiation response
+    /**
+     * @return Generate extension negotiation reponse string to send to client
+     */
+    std::string generate_response() {
+        std::string ret = "permessage-deflate";
+
+        if (m_s2c_no_context_takeover) {
+            ret += "; s2c_no_context_takeover";
+        }
+
+        return ret;
+    }
+
+    /// Negotiate s2c_no_context_takeover attribute
+    /** Request formatting is valid, should we accept?
+     *
+     * factors: do we impliment the attribute
+     * does our local policy allow the attribute
+     *
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_s2c_no_context_takeover(std::string const & value, 
+        lib::error_code & ec)
+    {
+        if (!value.empty()) {
+            ec = make_error_code(error::invalid_attribute_value);
+        }
+
+        m_s2c_no_context_takeover = true;
+    }
+
     bool m_enabled;
     bool m_c2s_no_context_takeover;
     bool m_s2c_no_context_takeover;

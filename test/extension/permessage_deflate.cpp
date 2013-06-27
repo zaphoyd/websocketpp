@@ -41,28 +41,76 @@ class config {};
 typedef websocketpp::extensions::permessage_deflate::enabled<config> enabled_type;
 typedef websocketpp::extensions::permessage_deflate::disabled<config> disabled_type;
 
+struct ext_vars {
+    enabled_type exts;
+    enabled_type extc;
+    websocketpp::err_str_pair esp;
+    websocketpp::http::attribute_list attr;
+};
+namespace pmde = websocketpp::extensions::permessage_deflate::error;
+
 // Ensure the disabled extension behaves appropriately disabled
 
 BOOST_AUTO_TEST_CASE( disabled_is_disabled ) {
-    disabled_type ext;
-    BOOST_CHECK( !ext.is_implemented() );
+    disabled_type exts;
+    BOOST_CHECK( !exts.is_implemented() );
 }
 
 BOOST_AUTO_TEST_CASE( disabled_is_off ) {
-    disabled_type ext;
-    BOOST_CHECK( !ext.is_enabled() );
+    disabled_type exts;
+    BOOST_CHECK( !exts.is_enabled() );
 }
 
 // Ensure the enabled version actually works
 
 BOOST_AUTO_TEST_CASE( enabled_is_enabled ) {
-    enabled_type ext;
-    BOOST_CHECK( ext.is_implemented() );
+    ext_vars v;
+    BOOST_CHECK( v.exts.is_implemented() );
+    BOOST_CHECK( v.extc.is_implemented() );
 }
+
 
 BOOST_AUTO_TEST_CASE( enabled_starts_disabled ) {
-    enabled_type ext;
-    BOOST_CHECK( !ext.is_enabled() );
+    ext_vars v;
+    BOOST_CHECK( !v.exts.is_enabled() );
+    BOOST_CHECK( !v.extc.is_enabled() );
 }
 
-// Tests for various negotiations
+BOOST_AUTO_TEST_CASE( negotiation_empty_attr ) {
+    ext_vars v;
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate");
+}
+
+BOOST_AUTO_TEST_CASE( negotiation_invalid_attr ) {
+    ext_vars v;
+    v.attr["foo"] = "bar";
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( !v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, pmde::make_error_code(pmde::invalid_attributes) );
+    BOOST_CHECK_EQUAL( v.esp.second, "");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_s2c_no_context_takeover_invalid ) {
+    ext_vars v;
+    v.attr["s2c_no_context_takeover"] = "foo";
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( !v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, pmde::make_error_code(pmde::invalid_attribute_value) );
+    BOOST_CHECK_EQUAL( v.esp.second, "");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_s2c_no_context_takeover ) {
+    ext_vars v;
+    v.attr["s2c_no_context_takeover"] = "";
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover");
+}
