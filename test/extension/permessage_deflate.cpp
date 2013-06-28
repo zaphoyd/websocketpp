@@ -156,3 +156,16 @@ BOOST_AUTO_TEST_CASE( negotiate_c2s_no_context_takeover_server_initiated ) {
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover");
 }
+
+// Combinations
+BOOST_AUTO_TEST_CASE( negotiate_all_client_initiated ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["c2s_no_context_takeover"] = "";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover");
+}

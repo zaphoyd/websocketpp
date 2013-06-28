@@ -287,7 +287,7 @@ public:
                 ret.first = make_error_code(error::invalid_attributes);
             }
 
-            if (!ret.first) {
+            if (ret.first) {
                 break;
             }
         }
