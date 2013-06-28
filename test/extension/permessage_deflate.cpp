@@ -95,6 +95,7 @@ BOOST_AUTO_TEST_CASE( negotiation_invalid_attr ) {
     BOOST_CHECK_EQUAL( v.esp.second, "");
 }
 
+// Negotiate s2c_no_context_takeover
 BOOST_AUTO_TEST_CASE( negotiate_s2c_no_context_takeover_invalid ) {
     ext_vars v;
     v.attr["s2c_no_context_takeover"] = "foo";
@@ -123,4 +124,35 @@ BOOST_AUTO_TEST_CASE( negotiate_s2c_no_context_takeover_server_initiated ) {
     BOOST_CHECK( v.exts.is_enabled() );
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover");
+}
+
+// Negotiate c2s_no_context_takeover
+BOOST_AUTO_TEST_CASE( negotiate_c2s_no_context_takeover_invalid ) {
+    ext_vars v;
+    v.attr["c2s_no_context_takeover"] = "foo";
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( !v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, pmde::make_error_code(pmde::invalid_attribute_value) );
+    BOOST_CHECK_EQUAL( v.esp.second, "");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_no_context_takeover ) {
+    ext_vars v;
+    v.attr["c2s_no_context_takeover"] = "";
+    
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_no_context_takeover_server_initiated ) {
+    ext_vars v;
+    
+    v.exts.enable_c2s_no_context_takeover();
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover");
 }

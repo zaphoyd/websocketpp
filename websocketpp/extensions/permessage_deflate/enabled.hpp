@@ -223,6 +223,24 @@ public:
         m_s2c_no_context_takeover = true;
     }
 
+    /// Reset client's outgoing LZ77 sliding window for each new message
+    /**
+     * Enabling this setting will cause the client's compressor to reset the
+     * compression state (the LZ77 sliding window) for every message. This 
+     * means that the compressor will not look back to patterns in previous 
+     * messages to improve compression. This will reduce the compression 
+     * efficiency for large messages somewhat and small messages drastically.
+     *
+     * This option may reduce client compressor memory usage and server 
+     * decompressor memory usage.
+     * @todo Document to what extent memory usage will be reduced
+     *
+     * This option is supported by all compliant clients and servers. Enabling
+     * it via either endpoint should be sufficient to ensure it is used.
+     */
+    void enable_c2s_no_context_takeover() {
+        m_c2s_no_context_takeover = true;
+    }
 
     /// Generate extension offer
     /**
@@ -263,6 +281,8 @@ public:
         for (it = offer.begin(); it != offer.end(); ++it) {
             if (it->first == "s2c_no_context_takeover") {
                 negotiate_s2c_no_context_takeover(it->second,ret.first);
+            } else if (it->first == "c2s_no_context_takeover") {
+                negotiate_c2s_no_context_takeover(it->second,ret.first);
             } else {
                 ret.first = make_error_code(error::invalid_attributes);
             }
@@ -314,15 +334,15 @@ private:
             ret += "; s2c_no_context_takeover";
         }
 
+        if (m_c2s_no_context_takeover) {
+            ret += "; c2s_no_context_takeover";
+        }
+
         return ret;
     }
 
     /// Negotiate s2c_no_context_takeover attribute
-    /** Request formatting is valid, should we accept?
-     *
-     * factors: do we impliment the attribute
-     * does our local policy allow the attribute
-     *
+    /** 
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
@@ -334,6 +354,21 @@ private:
         }
 
         m_s2c_no_context_takeover = true;
+    }
+
+    /// Negotiate c2s_no_context_takeover attribute
+    /** 
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_c2s_no_context_takeover(std::string const & value, 
+        lib::error_code & ec)
+    {
+        if (!value.empty()) {
+            ec = make_error_code(error::invalid_attribute_value);
+        }
+
+        m_c2s_no_context_takeover = true;
     }
 
     bool m_enabled;
