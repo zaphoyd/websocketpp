@@ -198,6 +198,32 @@ public:
         return false;
     }
     
+    /// Reset server's outgoing LZ77 sliding window for each new message
+    /**
+     * Enabling this setting will cause the server's compressor to reset the
+     * compression state (the LZ77 sliding window) for every message. This 
+     * means that the compressor will not look back to patterns in previous 
+     * messages to improve compression. This will reduce the compression 
+     * efficiency for large messages somewhat and small messages drastically.
+     *
+     * This option may reduce server compressor memory usage and client 
+     * decompressor memory usage.
+     * @todo Document to what extent memory usage will be reduced
+     *
+     * For clients, this option is dependent on server support. Enabling it
+     * via this method does not guarantee that it will be successfully
+     * negotiated, only that it will be requested.
+     *
+     * For servers, no client support is required. Enabling this option on a
+     * server will result in its use. The server will signal to clients that
+     * the option will be in use so they can optimize resource usage if they
+     * are able.
+     */
+    void enable_s2c_no_context_takeover() {
+        m_s2c_no_context_takeover = true;
+    }
+
+
     /// Generate extension offer
     /**
      * Creates an offer string to include in the Sec-WebSocket-Extensions
