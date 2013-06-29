@@ -37,6 +37,7 @@
 
 #include "zlib.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -91,8 +92,14 @@ enum value {
     /// Invalid extension attribute value
     invalid_attribute_value,
 
+    /// Invalid megotiation mode
+    invalid_mode,
+
     /// Unsupported extension attributes
     unsupported_attributes,
+    
+    /// Invalid value for max_window_bits
+    invalid_max_window_bits,
 
     /// ZLib Error
     zlib_error,
@@ -118,8 +125,12 @@ public:
                 return "Invalid extension attributes";
             case invalid_attribute_value:
                 return "Invalid extension attribute value";
+            case invalid_mode:
+                return "Invalid permessage-deflate negotiation mode";
             case unsupported_attributes:
                 return "Unsupported extension attributes";
+            case invalid_max_window_bits:
+                return "Invalid value for max_window_bits";
             case zlib_error:
                 return "A zlib function returned an error";
             case uninitialized:
@@ -157,15 +168,44 @@ namespace websocketpp {
 namespace extensions {
 namespace permessage_deflate {
 
+/// Default value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const default_s2c_max_window_bits = 15;
+/// Minimum value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const min_s2c_max_window_bits = 8;
+/// Maximum value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const max_s2c_max_window_bits = 15;
+
+/// Default value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const default_c2s_max_window_bits = 15;
+/// Minimum value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const min_c2s_max_window_bits = 8;
+/// Maximum value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const max_c2s_max_window_bits = 15;
+
+namespace mode {
+enum value {
+    /// Accept any value the remote endpoint offers
+    accept = 1,
+    /// Decline any value the remote endpoint offers. Insist on defaults.
+    decline,
+    /// Use the largest value common to both offers
+    largest,
+    /// Use the smallest value common to both offers
+    smallest
+};
+} // namespace mode 
+
 template <typename config>
 class enabled {
 public:
     enabled() 
       : m_enabled(false)
-      , m_c2s_no_context_takeover(false)
       , m_s2c_no_context_takeover(false)
+      , m_c2s_no_context_takeover(false)
+      , m_s2c_max_window_bits(15)
       , m_c2s_max_window_bits(15)
-      , m_s2c_max_window_bits(15) {}
+      , m_s2c_max_window_bits_mode(mode::accept)
+      , m_c2s_max_window_bits_mode(mode::accept) {}
 
     /// Test if this object impliments the permessage-deflate specification
     /**
@@ -242,6 +282,35 @@ public:
         m_c2s_no_context_takeover = true;
     }
 
+    /// Limit server LZ77 sliding window size
+    /**
+     * 
+     *
+     * The bits setting is the base 2 logarithm of the window size to use to
+     * compress outgoing messages. The permitted range is 8 to 15 inclusive.
+     * 8 represents a 256 byte window and 15 a 32KiB window. The default 
+     * setting is 15.
+     *
+     * Mode Options:
+     * - accept: Accept whatever the remote endpoint offers.
+     * - decline: Decline any offers to deviate from the defaults
+     * - largest: Accept largest window size acceptable to both endpoints
+     * - smallest: Accept smallest window size acceptiable to both endpoints
+     *
+     * @param bits The size to request for the outgoing window size
+     * @param mode The mode to use for negotiating this parameter
+     * @return A status code
+     */
+    lib::error_code set_s2c_max_window_bits(uint8_t bits, mode::value mode) {
+        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+            return error::make_error_code(error::invalid_max_window_bits);
+        }
+        m_s2c_max_window_bits = bits;
+        m_s2c_max_window_bits_mode = mode;
+
+        return lib::error_code();
+    }
+
     /// Generate extension offer
     /**
      * Creates an offer string to include in the Sec-WebSocket-Extensions
@@ -283,6 +352,8 @@ public:
                 negotiate_s2c_no_context_takeover(it->second,ret.first);
             } else if (it->first == "c2s_no_context_takeover") {
                 negotiate_c2s_no_context_takeover(it->second,ret.first);
+            } else if (it->first == "s2c_max_window_bits") {
+                negotiate_s2c_max_window_bits(it->second,ret.first);
             } else {
                 ret.first = make_error_code(error::invalid_attributes);
             }
@@ -338,6 +409,11 @@ private:
             ret += "; c2s_no_context_takeover";
         }
 
+        if (m_s2c_max_window_bits < default_s2c_max_window_bits) {
+            std::stringstream s;
+            s << int(m_s2c_max_window_bits);
+            ret += "; s2c_max_window_bits="+s.str();
+        }
         return ret;
     }
 
@@ -351,6 +427,7 @@ private:
     {
         if (!value.empty()) {
             ec = make_error_code(error::invalid_attribute_value);
+            return;
         }
 
         m_s2c_no_context_takeover = true;
@@ -366,16 +443,64 @@ private:
     {
         if (!value.empty()) {
             ec = make_error_code(error::invalid_attribute_value);
+            return;
         }
 
         m_c2s_no_context_takeover = true;
     }
+    
+    /// Negotiate s2c_max_window_bits attribute
+    /**
+     * When this method starts, m_s2c_max_window_bits will contain the server's
+     * preferred value and m_s2c_max_window_bits_mode will contain the mode the
+     * server wants to use to for negotiation
+     *
+     * options:
+     * - decline (refuse to use the attribute)
+     * - accept (use whatever the client says)
+     * - largest value (use largest possible value)
+     * - smallest value (use smallest possible value)
+     *
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_s2c_max_window_bits(std::string const & value,
+        lib::error_code & ec)
+    {
+        uint8_t bits = uint8_t(atoi(value.c_str()));
+        
+        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+            ec = make_error_code(error::invalid_attribute_value);
+            m_s2c_max_window_bits = default_s2c_max_window_bits;
+            return;
+        }
+        
+        switch (m_s2c_max_window_bits_mode) {
+            case mode::decline:
+                m_s2c_max_window_bits = default_s2c_max_window_bits;
+                break;
+            case mode::accept:
+                m_s2c_max_window_bits = bits;
+                break;
+            case mode::largest:
+                m_s2c_max_window_bits = std::min(bits,m_s2c_max_window_bits);
+                break;
+            case mode::smallest:
+                m_s2c_max_window_bits = min_s2c_max_window_bits;
+                break;
+            default:
+                ec = make_error_code(error::invalid_mode);
+                m_s2c_max_window_bits = default_s2c_max_window_bits;
+        }
+    }
 
     bool m_enabled;
-    bool m_c2s_no_context_takeover;
     bool m_s2c_no_context_takeover;
-    uint8_t m_c2s_max_window_bits;
+    bool m_c2s_no_context_takeover;
     uint8_t m_s2c_max_window_bits;
+    uint8_t m_c2s_max_window_bits;
+    mode::value m_s2c_max_window_bits_mode;
+    mode::value m_c2s_max_window_bits_mode;
 };
 
 } // namespace permessage_deflate
