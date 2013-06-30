@@ -255,8 +255,110 @@ BOOST_AUTO_TEST_CASE( negotiate_s2c_max_window_bits_smallest ) {
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_max_window_bits=8");
 }
-// Combinations
-BOOST_AUTO_TEST_CASE( negotiate_all_client_initiated ) {
+
+// Negotiate s2c_max_window_bits
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_invalid ) {
+    ext_vars v;
+    
+    std::vector<std::string> values;
+    values.push_back("foo");
+    values.push_back("7");
+    values.push_back("16");
+
+    std::vector<std::string>::const_iterator it;
+    for (it = values.begin(); it != values.end(); ++it) {
+        v.attr["c2s_max_window_bits"] = *it;
+        
+        v.esp = v.exts.negotiate(v.attr); 
+        BOOST_CHECK( !v.exts.is_enabled() );
+        BOOST_CHECK_EQUAL( v.esp.first, pmde::make_error_code(pmde::invalid_attribute_value) );
+        BOOST_CHECK_EQUAL( v.esp.second, "");
+    }
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_valid ) {
+    ext_vars v;
+
+    v.attr["c2s_max_window_bits"] = "";
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate");
+
+    v.attr["c2s_max_window_bits"] = "8";
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_max_window_bits=8");
+
+    v.attr["c2s_max_window_bits"] = "15";
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate");
+}
+
+BOOST_AUTO_TEST_CASE( invalid_set_c2s_max_window_bits ) {
+    ext_vars v;
+
+    v.ec = v.exts.set_c2s_max_window_bits(7,pmd_mode::decline);
+    BOOST_CHECK_EQUAL(v.ec,pmde::make_error_code(pmde::invalid_max_window_bits));
+
+    v.ec = v.exts.set_c2s_max_window_bits(16,pmd_mode::decline);
+    BOOST_CHECK_EQUAL(v.ec,pmde::make_error_code(pmde::invalid_max_window_bits));
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_decline ) {
+    ext_vars v;
+    v.attr["c2s_max_window_bits"] = "8";
+    
+    v.ec = v.exts.set_c2s_max_window_bits(8,pmd_mode::decline);
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_accept ) {
+    ext_vars v;
+    v.attr["c2s_max_window_bits"] = "8";
+    
+    v.ec = v.exts.set_c2s_max_window_bits(15,pmd_mode::accept);
+    v.esp = v.exts.negotiate(v.attr);
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_max_window_bits=8");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_largest ) {
+    ext_vars v;
+    v.attr["c2s_max_window_bits"] = "8";
+    
+    v.ec = v.exts.set_c2s_max_window_bits(15,pmd_mode::largest);
+    v.esp = v.exts.negotiate(v.attr);
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_max_window_bits=8");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_c2s_max_window_bits_smallest ) {
+    ext_vars v;
+    v.attr["c2s_max_window_bits"] = "8";
+    
+    v.ec = v.exts.set_c2s_max_window_bits(15,pmd_mode::smallest);
+    v.esp = v.exts.negotiate(v.attr);
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_max_window_bits=8");
+}
+
+
+// Combinations with 2
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated1 ) {
     ext_vars v;
     
     v.attr["s2c_no_context_takeover"] = "";
@@ -266,4 +368,130 @@ BOOST_AUTO_TEST_CASE( negotiate_all_client_initiated ) {
     BOOST_CHECK( v.exts.is_enabled() );
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated2 ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; s2c_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated3 ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated4 ) {
+    ext_vars v;
+    
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover; s2c_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated5 ) {
+    ext_vars v;
+    
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated6 ) {
+    ext_vars v;
+    
+    v.attr["s2c_max_window_bits"] = "10";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_max_window_bits=10; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated1 ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover; s2c_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated2 ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated3 ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; s2c_max_window_bits=10; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated4 ) {
+    ext_vars v;
+    
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; c2s_no_context_takeover; s2c_max_window_bits=10; c2s_max_window_bits=10");
+}
+
+BOOST_AUTO_TEST_CASE( negotiate_four_client_initiated ) {
+    ext_vars v;
+    
+    v.attr["s2c_no_context_takeover"] = "";
+    v.attr["c2s_no_context_takeover"] = "";
+    v.attr["s2c_max_window_bits"] = "10";
+    v.attr["c2s_max_window_bits"] = "10";
+
+    v.esp = v.exts.negotiate(v.attr); 
+    BOOST_CHECK( v.exts.is_enabled() );
+    BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover; s2c_max_window_bits=10; c2s_max_window_bits=10");
 }
