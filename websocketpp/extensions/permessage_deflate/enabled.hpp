@@ -284,18 +284,21 @@ public:
 
     /// Limit server LZ77 sliding window size
     /**
-     * 
-     *
-     * The bits setting is the base 2 logarithm of the window size to use to
-     * compress outgoing messages. The permitted range is 8 to 15 inclusive.
-     * 8 represents a 256 byte window and 15 a 32KiB window. The default 
-     * setting is 15.
+     * The bits setting is the base 2 logarithm of the maximum window size that
+     * the server must use to compress outgoing messages. The permitted range
+     * is 8 to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB 
+     * window. The default setting is 15.
      *
      * Mode Options:
      * - accept: Accept whatever the remote endpoint offers.
      * - decline: Decline any offers to deviate from the defaults
      * - largest: Accept largest window size acceptable to both endpoints
      * - smallest: Accept smallest window size acceptiable to both endpoints
+     *
+     * This setting is dependent on server support. A client requesting this
+     * setting may be rejected by the server or have the exact value used
+     * adjusted by the server. A server may unilaterally set this value without
+     * client support.
      *
      * @param bits The size to request for the outgoing window size
      * @param mode The mode to use for negotiating this parameter
