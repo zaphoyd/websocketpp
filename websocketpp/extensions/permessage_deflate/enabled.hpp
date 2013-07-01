@@ -228,16 +228,6 @@ public:
         return m_enabled;
     }
     
-    /// Does this extension support resetting its sliding window?
-    bool no_context_takeover_support() const {
-        return false;
-    }
-
-    /// Does this extension support adjusting its sliding window size
-    bool max_window_bits_support() const {
-        return false;
-    }
-    
     /// Reset server's outgoing LZ77 sliding window for each new message
     /**
      * Enabling this setting will cause the server's compressor to reset the
