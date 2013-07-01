@@ -276,7 +276,7 @@ private:
     };
 public:
 
-    explicit connection(bool is_server, const std::string& ua, alog_type& alog, 
+    explicit connection(bool is_server, std::string const & ua, alog_type& alog, 
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
@@ -296,8 +296,6 @@ public:
         m_alog.write(log::alevel::devel,"connection constructor");
     }
     
-    // Public Interface
-
     ///////////////////////////
     // Set Handler Callbacks //
     ///////////////////////////
@@ -453,7 +451,9 @@ public:
     size_t get_buffered_amount() const;
 
     /// DEPRECATED: use get_buffered_amount instead
-    size_t buffered_amount() const {return get_buffered_amount();}
+    size_t buffered_amount() const {
+        return get_buffered_amount();
+    }
     
     ////////////////////
     // Action Methods //
@@ -471,7 +471,7 @@ public:
      * @param op The opcode to generated the message with. Default is 
      * frame::opcode::text
      */
-    lib::error_code send(const std::string& payload, frame::opcode::value op = 
+    lib::error_code send(std::string const & payload, frame::opcode::value op = 
         frame::opcode::TEXT);
         
     /// Send a message (raw array overload)
@@ -488,7 +488,7 @@ public:
      * @param op The opcode to generated the message with. Default is 
      * frame::opcode::binary
      */
-    lib::error_code send(const void* payload, size_t len, frame::opcode::value 
+    lib::error_code send(void const * payload, size_t len, frame::opcode::value 
         op = frame::opcode::BINARY);
 
     /// Add a message to the outgoing send queue
@@ -536,13 +536,13 @@ public:
      *
      * @param payload Payload to be used for the ping
      */
-    void ping(const std::string& payload);
+    void ping(std::string const & payload);
     
     /// exception free variant of ping
-    void ping(const std::string & payload, lib::error_code & ec);
+    void ping(std::string const & payload, lib::error_code & ec);
     
     /// Utility method that gets called back when the ping timer expires
-    void handle_pong_timeout(std::string payload, const lib::error_code & ec);
+    void handle_pong_timeout(std::string payload, lib::error_code const & ec);
     
     /// Send a pong
     /**
@@ -554,10 +554,10 @@ public:
      *
      * @param payload Payload to be used for the pong
      */
-    void pong(const std::string & payload);
+    void pong(std::string const & payload);
 
     /// exception free variant of pong
-    void pong(const std::string & payload, lib::error_code & ec);
+    void pong(std::string const & payload, lib::error_code & ec);
     
     /// Close the connection
     /**
@@ -577,13 +577,12 @@ public:
      * if necessary.
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
      */
-    void close(const close::status::value code, const std::string & reason);
+    void close(close::status::value const code, std::string const & reason);
     
     /// exception free variant of close
-    void close(const close::status::value code, const std::string & reason, 
+    void close(close::status::value const code, std::string const & reason, 
         lib::error_code & ec);
     
     ////////////////////////////////////////////////
@@ -606,7 +605,7 @@ public:
      *
      * @return The host component of the connection URI
      */
-    const std::string& get_host() const;
+    std::string const & get_host() const;
     
     /// Returns the resource component of the connection URI
     /**
@@ -615,7 +614,7 @@ public:
      *
      * @return The resource component of the connection URI
      */
-    const std::string& get_resource() const;
+    std::string const & get_resource() const;
     
     /// Returns the port component of the connection URI
     /**
@@ -655,7 +654,7 @@ public:
      *
      * @return The negotiated subprotocol
      */
-    const std::string& get_subprotocol() const;
+    std::string const & get_subprotocol() const;
     
     /// Gets all of the subprotocols requested by the client
     /**
@@ -664,7 +663,7 @@ public:
      *
      * @return A vector of the requested subprotocol
      */
-    const std::vector<std::string> & get_requested_subprotocols() const;
+    std::vector<std::string> const & get_requested_subprotocols() const;
     
     /// Adds the given subprotocol string to the request list (exception free)
     /**
@@ -676,11 +675,10 @@ public:
      * preference.
      *
      * @param request The subprotocol to request
-     *
      * @param ec A reference to an error code that will be filled in the case of
      * errors
      */
-    void add_subprotocol(const std::string &request, lib::error_code & ec);
+    void add_subprotocol(std::string const & request, lib::error_code & ec);
     
     /// Adds the given subprotocol string to the request list
     /**
@@ -693,7 +691,7 @@ public:
      *
      * @param request The subprotocol to request
      */
-    void add_subprotocol(const std::string &request);
+    void add_subprotocol(std::string const & request);
     
     /// Select a subprotocol to use (exception free)
     /**
@@ -705,11 +703,10 @@ public:
      * This member function is valid on server endpoints/connections only
      *
      * @param value The subprotocol to select
-     *
      * @param ec A reference to an error code that will be filled in the case of
      * errors
      */
-    void select_subprotocol(const std::string & value, lib::error_code & ec);
+    void select_subprotocol(std::string const & value, lib::error_code & ec);
     
     /// Select a subprotocol to use
     /**
@@ -722,7 +719,7 @@ public:
      *
      * @param value The subprotocol to select
      */
-    void select_subprotocol(const std::string & value);
+    void select_subprotocol(std::string const & value);
     
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
@@ -733,16 +730,18 @@ public:
      * Retrieve the value of a header from the handshake HTTP request.
      * 
      * @param key Name of the header to get
+     * @return The value of the header
      */
-    const std::string & get_request_header(const std::string &key);
+    std::string const & get_request_header(std::string const & key);
     
     /// Retrieve a response header
     /**
      * Retrieve the value of a header from the handshake HTTP request.
      * 
      * @param key Name of the header to get
+     * @return The value of the header
      */
-    const std::string & get_response_header(const std::string &key);
+    std::string const & get_response_header(std::string const & key);
     
     /// Set response status code and message
     /**
@@ -773,7 +772,7 @@ public:
      * @param msg Message to set
      * @see websocketpp::http::response::set_status
      */
-    void set_status(http::status_code::value code, const std::string& msg);
+    void set_status(http::status_code::value code, std::string const & msg);
     
     /// Set response body content
     /**
@@ -788,7 +787,7 @@ public:
      * @param value String data to include as the body content.
      * @see websocketpp::http::response::set_body
      */
-    void set_body(const std::string& value);
+    void set_body(std::string const & value);
     
     /// Append a header
     /**
@@ -804,7 +803,7 @@ public:
      * @see replace_header
      * @see websocketpp::http::parser::append_header
      */
-    void append_header(const std::string &key,const std::string &val);
+    void append_header(std::string const  &key, std::string const & val);
     
     /// Replace a header
     /**
@@ -819,7 +818,7 @@ public:
      * @see add_header
      * @see websocketpp::http::parser::replace_header
      */
-    void replace_header(const std::string &key,const std::string &val);
+    void replace_header(std::string const & key, std::string const & val);
     
     /// Remove a header
     /**
@@ -831,7 +830,7 @@ public:
      * @param key The name of the header to remove
      * @see websocketpp::http::parser::remove_header
      */
-    void remove_header(const std::string &key);
+    void remove_header(std::string const & key);
     
     /// Get request object
     /**
@@ -882,7 +881,7 @@ public:
      *
      * @return The connection's origin value from the opening handshake.
      */
-    const std::string& get_origin() const;
+    std::string const & get_origin() const;
     
     /// Return the connection state.
     /**
@@ -962,18 +961,18 @@ public:
     
     void read_handshake(size_t num_bytes);
     
-    void handle_read_handshake(const lib::error_code& ec,
+    void handle_read_handshake(lib::error_code const & ec,
         size_t bytes_transferred);
-    void handle_read_http_response(const lib::error_code& ec,
+    void handle_read_http_response(lib::error_code const & ec,
         size_t bytes_transferred);
     
-    void handle_send_http_response(const lib::error_code& ec);
-    void handle_send_http_request(const lib::error_code& ec);
+    void handle_send_http_response(lib::error_code const & ec);
+    void handle_send_http_request(lib::error_code const & ec);
     
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
     
-    void handle_read_frame(const lib::error_code& ec,
+    void handle_read_frame(lib::error_code const & ec,
         size_t bytes_transferred);
     
     /// Get array of WebSocket protocol versions that this connection supports.
@@ -983,8 +982,8 @@ public:
     /// internally by the endpoint class.
     void set_termination_handler(termination_handler new_handler);
     
-    void terminate(const lib::error_code & ec);
-    void handle_terminate(terminate_status tstat, const lib::error_code& ec);
+    void terminate(lib::error_code const & ec);
+    void handle_terminate(terminate_status tstat, lib::error_code const & ec);
     
     /// Checks if there are frames in the send queue and if there are sends one
     /**
@@ -1006,9 +1005,9 @@ public:
      * @param ec A status code from the transport layer, zero on success, 
      * non-zero otherwise.
      */
-    void handle_write_frame(bool terminate, const lib::error_code& ec);
+    void handle_write_frame(bool terminate, lib::error_code const & ec);
 protected:
-    void handle_transport_init(const lib::error_code& ec);
+    void handle_transport_init(lib::error_code const & ec);
     
     /// Set m_processor based on information in m_request. Set m_response 
     /// status and return false on error.
@@ -1080,13 +1079,11 @@ private:
      * other settings (such as silent close).
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
-     *
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_ack(close::status::value code = 
-        close::status::blank, const std::string &reason = "");
+        close::status::blank, std::string const & reason = "");
 
     /// Send close frame
     /**
@@ -1099,15 +1096,12 @@ private:
      * whether or not to terminate the TCP connection after sending it.
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
-     *
      * @param ack Whether or not this is an acknowledgement close frame
-     *
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_frame(close::status::value code = 
-        close::status::blank, const std::string &reason = "", bool ack = false,
+        close::status::blank, std::string const & reason = "", bool ack = false,
         bool terminal = false);
 
     /// Get a pointer to a new WebSocket protocol processor for a given version
@@ -1128,7 +1122,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * \todo unit tests
+     * @todo unit tests
      *
      * @param msg The message to push
      */
@@ -1141,7 +1135,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * \todo unit tests
+     * @todo unit tests
      *
      * @return the message_ptr at the front of the queue
      */
@@ -1214,7 +1208,7 @@ private:
     timer_ptr               m_handshake_timer;
     timer_ptr               m_ping_timer;
     
-    /// \todo this is not memory efficient. this value is not used after the
+    /// @todo this is not memory efficient. this value is not used after the
     /// handshake.
     std::string m_handshake_buffer;
     
@@ -1267,7 +1261,7 @@ private:
     // of the whole connection.
     std::vector<std::string> m_requested_subprotocols;
     
-    const bool              m_is_server;
+    bool const              m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
     
