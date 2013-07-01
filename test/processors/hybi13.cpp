@@ -646,10 +646,11 @@ BOOST_AUTO_TEST_CASE( extract_subprotocols_invalid) {
     BOOST_CHECK_EQUAL( subps.size(), 0 );
 }
 
-/*BOOST_AUTO_TEST_CASE( extension_negotiation_permessage_deflate ) {
+BOOST_AUTO_TEST_CASE( extension_negotiation_permessage_deflate ) {
     processor_setup_ext env(true);
 
-    env.req.replace_header("Sec-WebSocket-Extensions","permessage-deflate; foo; bar=\"x x\"");
+    env.req.replace_header("Sec-WebSocket-Extensions",
+        "permessage-deflate; c2s_max_window_bits");
 
     std::pair<websocketpp::lib::error_code,std::string> neg_results;
     neg_results = env.p.negotiate_extensions(env.req);
@@ -658,5 +659,5 @@ BOOST_AUTO_TEST_CASE( extract_subprotocols_invalid) {
 
     BOOST_CHECK( !neg_results.first );
     BOOST_CHECK_EQUAL( neg_results.second, "permessage-deflate" );
-}*/
+}
 
