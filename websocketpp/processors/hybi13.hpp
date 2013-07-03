@@ -115,12 +115,8 @@ public:
             for (it = p.begin(); it != p.end(); ++it) {
                 // look through each extension, if the key is permessage-deflate
                 if (it->first == "permessage-deflate") {
-                    std::cout << "mark3: " << std::endl;
                     neg_ret = m_permessage_deflate.negotiate(it->second);
                     
-                    std::cout << neg_ret.first.message() << " - " 
-                              << neg_ret.second << std::endl;
-
                     if (neg_ret.first) {
                         // Figure out if this is an error that should halt all
                         // extension negotiations or simply cause negotiation of
