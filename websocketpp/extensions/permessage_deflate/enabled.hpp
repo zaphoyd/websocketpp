@@ -205,7 +205,85 @@ public:
       , m_s2c_max_window_bits(15)
       , m_c2s_max_window_bits(15)
       , m_s2c_max_window_bits_mode(mode::accept)
-      , m_c2s_max_window_bits_mode(mode::accept) {}
+      , m_c2s_max_window_bits_mode(mode::accept)
+      , m_initialized(false)
+      , m_compress_buffer_size(16384)
+    {
+        m_dstate.zalloc = Z_NULL;
+        m_dstate.zfree = Z_NULL;
+        m_dstate.opaque = Z_NULL;
+
+        m_istate.zalloc = Z_NULL;
+        m_istate.zfree = Z_NULL;
+        m_istate.opaque = Z_NULL;
+        m_istate.avail_in = 0;
+        m_istate.next_in = Z_NULL;
+    }
+    
+    ~enabled() {
+        if (!m_initialized) {
+            return;
+        }
+
+        int ret = deflateEnd(&m_dstate);
+
+        if (ret != Z_OK) {
+            //std::cout << "error cleaning up zlib compression state" 
+            //          << std::endl;
+        }
+
+        ret = inflateEnd(&m_istate);
+
+        if (ret != Z_OK) {
+            //std::cout << "error cleaning up zlib decompression state" 
+            //          << std::endl;
+        }
+    }
+    
+    /// Initialize zlib state
+    /**
+     *
+     * @todo memory level, strategy, etc are hardcoded
+     * @todo server detection is hardcoded
+     */
+    lib::error_code init() {
+        uint8_t deflate_bits;
+        uint8_t inflate_bits;
+
+        if (true /*is_server*/) {
+            deflate_bits = m_s2c_max_window_bits;
+            inflate_bits = m_c2s_max_window_bits;
+        } else {
+            deflate_bits = m_c2s_max_window_bits;
+            inflate_bits = m_s2c_max_window_bits;
+        }
+
+        int ret = deflateInit2(
+            &m_dstate,
+            Z_DEFAULT_COMPRESSION,
+            Z_DEFLATED,
+            -1*deflate_bits,
+            8, // memory level 1-9
+            /*Z_DEFAULT_STRATEGY*/Z_FIXED
+        );
+
+        if (ret != Z_OK) {
+            return make_error_code(error::zlib_error);
+        }
+
+        ret = inflateInit2(
+            &m_istate,
+            -1*inflate_bits
+        );
+
+        if (ret != Z_OK) {
+            return make_error_code(error::zlib_error);
+        }
+        
+        m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
+        m_initialized = true;
+        return lib::error_code();
+    }
 
     /// Test if this object impliments the permessage-deflate specification
     /**
@@ -404,7 +482,29 @@ public:
      * @return Error or status code
      */
     lib::error_code compress(std::string const & in, std::string & out) {
-        return make_error_code(error::uninitialized);
+        if (!m_initialized) {
+            return make_error_code(error::uninitialized);
+        }
+
+        size_t output;
+        int ret;
+
+        m_dstate.avail_out = m_compress_buffer_size;
+        m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
+
+        do {
+            // Output to local buffer
+            m_dstate.avail_out = m_compress_buffer_size;
+            m_dstate.next_out = m_compress_buffer.get();
+
+            ret = deflate(&m_dstate, Z_SYNC_FLUSH);
+            
+            output = m_compress_buffer_size - m_dstate.avail_out;
+
+            out.append((char *)(m_compress_buffer.get()),output);
+        } while (m_dstate.avail_out == 0);
+
+        return lib::error_code();
     }
 
     /// Decompress bytes
@@ -417,7 +517,32 @@ public:
     lib::error_code decompress(uint8_t const * buf, size_t len, std::string &
         out)
     {
-        return make_error_code(error::uninitialized);
+        if (!m_initialized) {
+            return make_error_code(error::uninitialized);
+        }
+
+        int ret;
+
+        m_istate.avail_in = len;
+        m_istate.next_in = const_cast<unsigned char *>(buf);
+
+        do {
+            m_istate.avail_out = m_compress_buffer_size;
+            m_istate.next_out = m_compress_buffer.get();
+
+            ret = inflate(&m_istate, Z_SYNC_FLUSH);
+
+            if (ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
+                return make_error_code(error::zlib_error);
+            }
+
+            out.append(
+                reinterpret_cast<char *>(m_compress_buffer.get()),
+                m_compress_buffer_size - m_istate.avail_out
+            );
+        } while (m_istate.avail_out == 0);
+
+        return lib::error_code();
     }
 private:
     /// Generate negotiation response
@@ -584,6 +709,12 @@ private:
     uint8_t m_c2s_max_window_bits;
     mode::value m_s2c_max_window_bits_mode;
     mode::value m_c2s_max_window_bits_mode;
+
+    bool m_initialized;
+    size_t m_compress_buffer_size;
+    lib::unique_ptr_uchar_array m_compress_buffer;
+    z_stream m_dstate;
+    z_stream m_istate;
 };
 
 } // namespace permessage_deflate

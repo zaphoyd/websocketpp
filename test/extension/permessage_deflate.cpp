@@ -36,6 +36,9 @@
 
 #include <string>
 
+#include <websocketpp/utilities.hpp>
+#include <iostream>
+
 class config {};
 
 typedef websocketpp::extensions::permessage_deflate::enabled<config> enabled_type;
@@ -495,3 +498,46 @@ BOOST_AUTO_TEST_CASE( negotiate_four_client_initiated ) {
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( v.esp.second, "permessage-deflate; s2c_no_context_takeover; c2s_no_context_takeover; s2c_max_window_bits=10; c2s_max_window_bits=10");
 }
+
+// Compression
+/*
+BOOST_AUTO_TEST_CASE( compress_data ) {
+    ext_vars v;
+    
+    std::string in = "Hello";
+    std::string out;
+    std::string in2;
+    std::string out2;
+    
+    v.exts.init();
+
+    v.ec = v.exts.compress(in,out);
+    
+    std::cout << "in : " << websocketpp::utility::to_hex(in) << std::endl;
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    std::cout << "out: " << websocketpp::utility::to_hex(out) << std::endl;
+
+    in2 = out;
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(in2.data()),in2.size(),out2);
+    
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    std::cout << "out: " << websocketpp::utility::to_hex(out2) << std::endl;
+    BOOST_CHECK_EQUAL( out, out2 );
+}
+
+BOOST_AUTO_TEST_CASE( decompress_data ) {
+    ext_vars v;
+    
+    uint8_t in[12] = {0xf2, 0x48, 0xcd, 0xc9, 0xc9, 0x07, 0x00, 0x00, 0x00, 0xff, 0xff};
+    std::string out;
+    
+    v.exts.init();
+
+    v.ec = v.exts.decompress(in,12,out);
+    
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    std::cout << "out: " << websocketpp::utility::to_hex(out) << std::endl;
+    BOOST_CHECK( false );
+}
+*/
