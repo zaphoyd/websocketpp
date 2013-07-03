@@ -45,7 +45,7 @@ typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
 
 /// Basic Boost ASIO connection socket component
 /**
- * transport::asio::basic_socket::connection impliments a connection socket
+ * transport::asio::basic_socket::connection implements a connection socket
  * component using Boost ASIO ip::tcp::socket.
  */
 class connection {
@@ -67,7 +67,7 @@ public:
     
     /// Check whether or not this connection is secure
     /**
-     * @return Wether or not this connection is secure
+     * @return Whether or not this connection is secure
      */
     bool is_secure() const {
         return false;
@@ -235,7 +235,7 @@ private:
 
 /// Basic ASIO endpoint socket component
 /**
- * transport::asio::basic_socket::endpoint impliments an endpoint socket
+ * transport::asio::basic_socket::endpoint implements an endpoint socket
  * component that uses Boost ASIO's ip::tcp::socket.
  */
 class endpoint {
@@ -253,7 +253,7 @@ public:
 
     /// Checks whether the endpoint creates secure connections
     /**
-     * @return Wether or not the endpoint creates secure connections
+     * @return Whether or not the endpoint creates secure connections
      */
     bool is_secure() const {
         return false;

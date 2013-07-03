@@ -38,8 +38,6 @@
 
 namespace websocketpp {
 
-// WebSocket URI only (not http/etc) 
-
 class uri_exception : public std::exception {
 public: 
     uri_exception(const std::string& msg) : m_msg(msg) {}
@@ -53,10 +51,21 @@ private:
 };
 
 // TODO: figure out why this fixes horrible linking errors.
-static const uint16_t URI_DEFAULT_PORT = 80;
-static const uint16_t uri_default_port = 80;
-static const uint16_t URI_DEFAULT_SECURE_PORT = 443;
-static const uint16_t uri_default_secure_port = 443;
+
+/// Default port for ws:// [deprecated]
+/**
+ * @deprecated Use uri_default_port instead. Will be removed before 1.0.0
+ */
+static uint16_t const URI_DEFAULT_PORT = 80;
+/// Default port for ws:// 
+static uint16_t const uri_default_port = 80;
+/// Default port for wss:// [deprecated]
+/**
+ * @deprecated Use uri_default_secure_port instead. Will be removed before 1.0.0
+ */
+static uint16_t const URI_DEFAULT_SECURE_PORT = 443;
+/// Default port for wss:// 
+static uint16_t const uri_default_secure_port = 443;
 
 class uri {
 public:

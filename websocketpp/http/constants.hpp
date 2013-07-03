@@ -28,24 +28,48 @@
 #ifndef HTTP_CONSTANTS_HPP
 #define HTTP_CONSTANTS_HPP
 
+#include <map>
 #include <string>
+#include <vector>
 
 namespace websocketpp {
 namespace http {
-    static const char header_delimiter[] = "\r\n";
-    static const char header_separator[] = ": ";
-    static const std::string empty_header = "";
+    /// The type of an HTTP attribute list
+    /**
+     * The attribute list is an unordered key/value map. Encoded attribute 
+     * values are delimited by semicolons. 
+     */ 
+    typedef std::map<std::string,std::string> attribute_list;
     
-    // Maximum size in bytes before rejecting an HTTP header as too big.
-    const size_t max_header_size = 16000;
+    /// The type of an HTTP parameter list
+    /**
+     * The parameter list is an ordered pairing of a parameter and its 
+     * associated attribute list. Encoded parameter values are delimited by 
+     * commas.
+     */
+    typedef std::vector< std::pair<std::string,attribute_list> > parameter_list;
     
-    // Number of bytes to use for temporary istream read buffers
-    const size_t istream_buffer = 512;
+    /// Literal value of the HTTP header delimiter
+    static char const header_delimiter[] = "\r\n";
     
-    // invalid HTTP token characters
-    // 0x00 - 0x32, 0x7f-0xff
-    // ( ) < > @ , ; : \ " / [ ] ? = { }
-    static const char header_token[] = {
+    /// Literal value of the HTTP header separator
+    static char const header_separator[] = ": ";
+    
+    /// Literal value of an empty header
+    static std::string const empty_header = "";
+    
+    /// Maximum size in bytes before rejecting an HTTP header as too big.
+    size_t const max_header_size = 16000;
+    
+    /// Number of bytes to use for temporary istream read buffers
+    size_t const istream_buffer = 512;
+    
+    /// invalid HTTP token characters
+    /**
+     * 0x00 - 0x32, 0x7f-0xff
+     * ( ) < > @ , ; : \ " / [ ] ? = { }
+     */
+    static char const header_token[] = {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..0f
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 10..1f
         0,1,0,1,1,1,1,1,0,0,1,1,0,1,1,0, // 20..2f
@@ -64,23 +88,30 @@ namespace http {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // f0..ff
     };
     
+    /// Is the character a token
     inline bool is_token_char(unsigned char c) {
         return (header_token[c] == 1);
     }
     
+    /// Is the character a non-token
     inline bool is_not_token_char(unsigned char c) {
         return !header_token[c];
     }
     
-    // Space (32) or horizontal tab (9)
+    /// Is the character whitespace
+    /**
+     * whitespace is space (32) or horizontal tab (9)
+     */
     inline bool is_whitespace_char(unsigned char c) {
         return (c == 9 || c == 32);
     }
 
+    /// Is the character non-whitespace
     inline bool is_not_whitespace_char(unsigned char c) {
         return (c != 9 && c != 32);
     }
 
+    /// HTTP Status codes
     namespace status_code {
         enum value {
             uninitialized = 0,
@@ -129,7 +160,7 @@ namespace http {
             request_header_fields_too_large = 431,
             
             internal_server_error = 500,
-            not_implimented = 501,
+            not_implemented = 501,
             bad_gateway = 502,
             service_unavailable = 503,
             gateway_timeout = 504,
@@ -223,7 +254,7 @@ namespace http {
                     return "Request Header Fields Too Large";
                 case internal_server_error:
                     return "Internal Server Error";
-                case not_implimented:
+                case not_implemented:
                     return "Not Implimented";
                 case bad_gateway:
                     return "Bad Gateway";

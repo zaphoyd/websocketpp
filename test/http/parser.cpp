@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE( extract_all_lws ) {
 BOOST_AUTO_TEST_CASE( extract_attributes_blank ) {
     std::string s = "";
 
-    websocketpp::http::parser::attribute_list a;
+    websocketpp::http::attribute_list a;
     std::string::const_iterator it;
 
     it = websocketpp::http::parser::extract_attributes(s.begin(),s.end(),a);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE( extract_attributes_blank ) {
 BOOST_AUTO_TEST_CASE( extract_attributes_simple ) {
     std::string s = "foo";
 
-    websocketpp::http::parser::attribute_list a;
+    websocketpp::http::attribute_list a;
     std::string::const_iterator it;
 
     it = websocketpp::http::parser::extract_attributes(s.begin(),s.end(),a);
@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE( extract_parameters ) {
 
 
     std::string sx = "foo;bar=\"a \\\"b\\\" c\"";
-    websocketpp::http::parser::parameter_list p;
-    websocketpp::http::parser::attribute_list a;
+    websocketpp::http::parameter_list p;
+    websocketpp::http::attribute_list a;
     std::string::const_iterator it;
     
     using websocketpp::http::parser::extract_parameters;

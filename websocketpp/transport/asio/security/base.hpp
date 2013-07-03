@@ -39,13 +39,13 @@
 #include <iostream>
 #include <string>
 
-// Interface that sockets/security policies must impliment
+// Interface that sockets/security policies must implement
 
-/**
+/*
  * Endpoint Interface
  *
  * bool is_secure() const;
- * @return Wether or not the endpoint creates secure connections
+ * @return Whether or not the endpoint creates secure connections
  *
  * lib::error_code init(socket_con_ptr scon);
  * Called by the transport after a new connection is created to initialize
@@ -55,10 +55,10 @@
  */
 
 
-/// Connection
-/// TODO
-/// pre_init(init_handler);
-/// post_init(init_handler);
+// Connection
+// TODO
+// pre_init(init_handler);
+// post_init(init_handler);
 
 namespace websocketpp {
 namespace transport {

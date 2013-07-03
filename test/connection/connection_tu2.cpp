@@ -40,6 +40,9 @@ std::string run_server_test(server& s, std::string input) {
     server::connection_ptr con;
     std::stringstream output;
 	
+	s.clear_access_channels(websocketpp::log::alevel::all);
+    s.clear_error_channels(websocketpp::log::elevel::all);
+	
 	s.register_ostream(&output);
 	
 	con = s.get_connection();

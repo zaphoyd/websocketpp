@@ -39,23 +39,34 @@
 #include <string>
 
 namespace websocketpp {
+/// Processors encapsulate the protocol rules specific to each WebSocket version
+/**
+ * The processors namespace includes a number of free functions that operate on
+ * various WebSocket related data structures and perform processing that is not
+ * related to specific versions of the protocol.
+ *
+ * It also includes the abstract interface for the protocol specific processing 
+ * engines. These engines wrap all of the logic necessary for parsing and 
+ * validating WebSocket handshakes and messages of specific protocol version
+ * and set of allowed extensions.
+ *
+ * An instance of a processor represents the state of a single WebSocket 
+ * connection of the associated version. One processor instance is needed per 
+ * logical WebSocket connection. 
+ */
 namespace processor {
 
-// Free functions related to version/protocol independent WebSocket handshake 
-// processing
-
-/// Determine whether or not a generic HTTP request is a WebSocket handshake 
-/// request_type
+/// Determine whether or not a generic HTTP request is a WebSocket handshake
 /**
  * @param r The HTTP request to read.
  * 
- * @return true if the request is a WebSocket handshake, false otherwise
+ * @return True if the request is a WebSocket handshake, false otherwise
  */ 
 template <typename request_type>
 bool is_websocket_handshake(request_type& r) {
     using utility::ci_find_substr;
     
-    const std::string& upgrade_header = r.get_header("Upgrade");
+    std::string const & upgrade_header = r.get_header("Upgrade");
     
     if (ci_find_substr(upgrade_header, constants::upgrade_token,
         sizeof(constants::upgrade_token)-1) == upgrade_header.end())
@@ -63,7 +74,7 @@ bool is_websocket_handshake(request_type& r) {
         return false;
     }
     
-    const std::string& con_header = r.get_header("Connection");
+    std::string const & con_header = r.get_header("Connection");
     
     if (ci_find_substr(con_header, constants::connection_token,
         sizeof(constants::connection_token)-1) == con_header.end())
@@ -106,6 +117,15 @@ int get_websocket_version(request_type& r) {
     return version;
 }
 
+/// Extract a URI ptr from the host header of the request
+/**
+ * @param request The request to extract the Host header from.
+ *
+ * @param scheme The scheme under which this request was received (ws, wss, 
+ * http, https, etc)
+ *
+ * @return A uri_pointer that encodes the value of the host header.
+ */
 template <typename request_type>
 uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
     std::string h = request.get_header("Host");
@@ -129,31 +149,7 @@ uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
     }
 }
 
-// All other functions are WebSocket version dependent. processor is a base 
-// class for version dependent processing functions.
-
-// A processor class collects and wraps all of the logic necessary for parsing
-// and validating WebSocket handshakes and messages of specific protocol version
-// and set of allowed extensions.
-//
-// An instance of a processor represents the state of a single WebSocket 
-// connection of the associated version. One processor instance is needed per 
-// logical WebSocket connection. 
-// 
-// Basic usage pattern:
-//
-// while(len = read(buf)) {
-//     if (processor.consume(buf,len) == 0) {
-//          // handle errors
-//     }
-//     if (processor.ready()) {
-//         message_ptr msg = processor.get_message();
-//
-//         // handle msg;
-//     }
-// } 
-
-/// WebSocket protocol processor base class
+/// WebSocket protocol processor abstract base class
 template <typename config>
 class processor {
 public:
@@ -169,13 +165,12 @@ public:
       
     virtual ~processor() {}
     
-    /// Returns the version of the WebSocket protocol that this processor 
-    /// understands.
+    /// Get the protocol version of this processor
     virtual int get_version() const = 0;
 
-    /// Returns whether or not the permessage_compress extension is implimented
+    /// Returns whether or not the permessage_compress extension is implemented
     /**
-     * Compile time flag that indicates whether this processor has implimented
+     * Compile time flag that indicates whether this processor has implemented
      * the permessage_compress extension. By default this is false.
      */
     virtual bool has_permessage_compress() const {
@@ -188,7 +183,7 @@ public:
      * requested extensions are supported by this processor. If they are their
      * settings data is initialized.
      */
-    virtual err_str_pair negotiate_extensions(const request_type& request) {
+    virtual err_str_pair negotiate_extensions(request_type const & request) {
         return err_str_pair();
     }
 
@@ -201,7 +196,7 @@ public:
      * @return A status code, 0 on success, non-zero for specific sorts of 
      * failure
      */
-    virtual lib::error_code validate_handshake(const request_type& request)
+    virtual lib::error_code validate_handshake(request_type const & request)
         const = 0;
 
     /// Calculate the appropriate response for this websocket request
@@ -214,8 +209,8 @@ public:
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code process_handshake(const request_type& req, const 
-        std::string & subprotocol, response_type& res) const = 0;
+    virtual lib::error_code process_handshake(request_type const & req,
+        std::string const & subprotocol, response_type& res) const = 0;
     
     /// Fill in an HTTP request for an outgoing connection handshake
     /**
@@ -223,8 +218,8 @@ public:
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code client_handshake_request(request_type& req, 
-        uri_ptr uri, const std::vector<std::string> & subprotocols) const = 0;
+    virtual lib::error_code client_handshake_request(request_type & req, 
+        uri_ptr uri, std::vector<std::string> const & subprotocols) const = 0;
         
     /// Validate the server's response to an outgoing handshake request
     /**
@@ -234,14 +229,14 @@ public:
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code validate_server_handshake_response(const 
-        request_type & req, response_type & res) const = 0;
+    virtual lib::error_code validate_server_handshake_response(request_type 
+        const & req, response_type & res) const = 0;
     
     /// Given a completed response, get the raw bytes to put on the wire
-    virtual std::string get_raw(const response_type& request) const = 0;
+    virtual std::string get_raw(response_type const & request) const = 0;
     
     /// Return the value of the header containing the CORS origin.
-    virtual const std::string& get_origin(const request_type& request) 
+    virtual std::string const & get_origin(request_type const & request) 
         const = 0;
     
     /// Extracts requested subprotocols from a handshake request
@@ -258,7 +253,7 @@ public:
         std::vector<std::string> & subprotocol_list) = 0;
     
     /// Extracts client uri from a handshake request
-    virtual uri_ptr get_uri(const request_type& request) const = 0;
+    virtual uri_ptr get_uri(request_type const & request) const = 0;
     
     /// process new websocket connection bytes
     /**
@@ -289,10 +284,10 @@ public:
     /// Retrieves the most recently processed message
     /**
      * Retrieves a shared pointer to the recently completed message if there is
-     * one. If ready() returns true then there is a message avaliable. 
+     * one. If ready() returns true then there is a message available. 
      * Retrieving the message with get_message will reset the state of ready.
      * As such, each new message may be retrieved only once. Calling get_message
-     * when there is no message avaliable will result in a null pointer being
+     * when there is no message available will result in a null pointer being
      * returned.
      *
      * @return A pointer to the most recently processed message or a null shared
@@ -329,7 +324,7 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_ping(const std::string & in, 
+    virtual lib::error_code prepare_ping(std::string const & in, 
         message_ptr out) const = 0;
 
     /// Prepare a pong frame
@@ -343,7 +338,7 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_pong(const std::string & in,
+    virtual lib::error_code prepare_pong(std::string const & in,
         message_ptr out) const = 0;
 
     /// Prepare a close frame
@@ -362,12 +357,11 @@ public:
      * @return Status code, zero on success, non-zero on failure
      */
     virtual lib::error_code prepare_close(close::status::value code, 
-        const std::string & reason, message_ptr out) const = 0;
+        std::string const & reason, message_ptr out) const = 0;
 protected:
-    const bool m_secure;
-    const bool m_server;
+    bool const m_secure;
+    bool const m_server;
 };
-
 
 } // namespace processor
 } // namespace websocketpp

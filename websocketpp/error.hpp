@@ -35,6 +35,9 @@
 
 namespace websocketpp {
 
+/// Combination error code / string type for returning two values
+typedef std::pair<lib::error_code,std::string> err_str_pair;
+
 // setup for errors that should be propogated back to the user.
 namespace error {
 enum value {
@@ -102,7 +105,13 @@ enum value {
     server_only,
     
     /// HTTP connection ended
-    http_connection_ended
+    http_connection_ended,
+    
+    /// WebSocket opening handshake timed out
+    open_handshake_timeout,
+    
+    /// WebSocket close handshake timed out
+    close_handshake_timeout
 }; // enum value
 
 
@@ -158,6 +167,10 @@ public:
                 return "Feature not available on client endpoints";
             case error::http_connection_ended:
                 return "HTTP connection ended";
+            case error::open_handshake_timeout:
+                return "The opening handshake timed out";
+            case error::close_handshake_timeout:
+                return "The closing handshake timed out";
             default:
                 return "Unknown";
         }

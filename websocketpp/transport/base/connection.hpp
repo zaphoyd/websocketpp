@@ -35,51 +35,76 @@
 #include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
+/// Transport policies provide network connectivity and timers
+/**
+ * ### Connection Interface
+ * 
+ * Transport connection components needs to provide:
+ *
+ * *Warning: This documentation section and the transport connection interface 
+ * are not complete.*
+ *
+ * **async_read_at_least**\n
+ * `void async_read_at_least(size_t num_bytes, char *buf, size_t len, 
+ * read_handler handler)`\n
+ * start an async read for at least num_bytes and at most len 
+ * bytes into buf. Call handler when done with number of bytes read. 
+ *   
+ * WebSocket++ promises to have only one async_read_at_least in flight at a 
+ * time. The transport must promise to only call read_handler once per async
+ * read
+ *
+ * **async_write**\n
+ * `void async_write(const char* buf, size_t len, write_handler handler)`\n
+ * `void async_write(std::vector<buffer> & bufs, write_handler handler)`\n
+ * Start a write of all of the data in buf or bufs. In second case data is 
+ * written sequentially and in place without copying anything to a temporary 
+ * location.
+ *
+ * Websocket++ promises to have only one async_write in flight at a time.
+ * The transport must promise to only call the write_handler once per async
+ * write
+ *
+ * **remote_endpoint**\n
+ * `std::string remote_endpoint()`\n
+ * retrieve address of remote endpoint
+ *
+ * **is_secure**\n
+ * `void is_secure()`\n
+ * whether or not the connection to the remote endpoint is secure
+ *
+ * **dispatch**\n
+ * `lib::error_code dispatch(dispatch_handler handler)`: invoke handler within
+ *  the transport's event system if it uses one.
+ */
 namespace transport {
 
-/**
- * Transport needs to provide:
- * - async_read_at_least(size_t num_bytes, char *buf, size_t len, read_handler handler)
- *     start an async read for at least num_bytes and at most len bytes into buf. Call
- *     handler when done with number of bytes read. 
- *     
- *     WebSocket++ promises to have only one async_read_at_least in flight at a 
- *     time. The transport must promise to only call read_handler once per async
- *     read
- *     
- * - async_write(const char* buf, size_t len, write_handler handler)
- * - async_write(std::vector<buffer> & bufs, write_handler handler)
- *     start an async write of all of the data in buf or bufs. In second case data
- *     is written sequentially and in place without copying anything to a temporary
- *     location.
- *
- *     Websocket++ promises to have only one async_write in flight at a time.
- *     The transport must promise to only call the write_handler once per async
- *     write
- * 
- * - std::string remote_endpoint(): retrieve address of remote endpoint
- * - is_secure(): whether or not the connection to the remote endpoint is secure
- * - lib::error_code dispatch(dispatch_handler handler): invoke handler within
- *     the transport's event system if it uses one.
- */
+/// The type and signature of the callback passed to the init hook
+typedef lib::function<void(lib::error_code const &)> init_handler;
 
+/// The type and signature of the callback passed to the read method
+typedef lib::function<void(lib::error_code const &,size_t)> read_handler;
 
+/// The type and signature of the callback passed to the write method
+typedef lib::function<void(lib::error_code const &)> write_handler;
 
-// Connection callbacks
-typedef lib::function<void(const lib::error_code&)> init_handler;
-typedef lib::function<void(const lib::error_code&,size_t)> read_handler;
-typedef lib::function<void(const lib::error_code&)> write_handler;
-typedef lib::function<void(const lib::error_code&)> timer_handler;
-typedef lib::function<void(const lib::error_code&)> shutdown_handler;
-typedef lib::function<void()> inturrupt_handler;
+/// The type and signature of the callback passed to the read method
+typedef lib::function<void(lib::error_code const &)> timer_handler;
+
+/// The type and signature of the callback passed to the shutdown method
+typedef lib::function<void(lib::error_code const &)> shutdown_handler;
+
+/// The type and signature of the callback passed to the interrupt method
+typedef lib::function<void()> interrupt_handler;
+
+/// The type and signature of the callback passed to the dispatch method
 typedef lib::function<void()> dispatch_handler;
 
-typedef lib::function<void()> connection_lock;
-
+/// A simple utility buffer class
 struct buffer {
-    buffer(const char * b, size_t l) : buf(b),len(l) {}
+    buffer(char const * b, size_t l) : buf(b),len(l) {}
 
-    const char* buf;
+    char const * buf;
     size_t len;
 };
 
@@ -118,7 +143,7 @@ class category : public lib::error_category {
     public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.transport";
     }
     
@@ -146,7 +171,7 @@ class category : public lib::error_category {
     }
 };
 
-inline const lib::error_category& get_category() {
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
@@ -161,7 +186,7 @@ inline lib::error_code make_error_code(error::value e) {
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum<websocketpp::transport::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 

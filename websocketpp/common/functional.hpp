@@ -54,7 +54,7 @@ namespace lib {
     using boost::bind;
     using boost::ref;
     namespace placeholders {
-        // TODO: there has got to be a better way than this
+        /// \todo this feels hacky, is there a better way?
         using ::_1;
         using ::_2;
     }

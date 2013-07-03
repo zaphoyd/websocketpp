@@ -148,7 +148,14 @@ inline void request::set_method(const std::string& method) {
 
     m_method = method;
 }
-    
+
+/// Set HTTP body
+/**
+ * Sets the body of the HTTP object and fills in the appropriate content length
+ * header
+ *
+ * @param value The value to set the body to.
+ */
 inline void request::set_uri(const std::string& uri) {
     // TODO: validation?
     m_uri = uri;

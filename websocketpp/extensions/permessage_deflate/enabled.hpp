@@ -29,36 +29,77 @@
 #define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 
 #include <websocketpp/common/cpp11.hpp>
-#include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/system_error.hpp>
+#include <websocketpp/error.hpp>
 
 #include <websocketpp/extensions/extension.hpp>
 
 #include "zlib.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
 namespace websocketpp {
 namespace extensions {
+
+/// Implimentation of the draft permessage-deflate WebSocket extension
+/**
+ * ### permessage-deflate interface
+ *
+ * **is_implimented**\n
+ * `bool is_implimented()`\n
+ * Returns whether or not the object impliments the extension or not
+ *
+ * **is_enabled**\n
+ * `bool is_enabled()`\n
+ * Returns whether or not the extension was negotiated for the current 
+ * connection
+ *
+ * **generate_offer**\n
+ * `std::string generate_offer() const`\n
+ * Create an extension offer string based on local policy
+ *
+ * **validate_response**\n
+ * `lib::error_code validate_response(http::attribute_list const & response)`\n
+ * Negotiate the parameters of extension use
+ *
+ * **negotiate**\n
+ * `err_str_pair negotiate(http::attribute_list const & attributes)`\n
+ * Negotiate the parameters of extension use
+ *
+ * **compress**\n
+ * `lib::error_code compress(std::string const & in, std::string & out)`\n
+ * Compress the bytes in `in` and append them to `out`
+ *
+ * **decompress**\n
+ * `lib::error_code decompress(uint8_t const * buf, size_t len, std::string & 
+ * out)`\n
+ * Decompress `len` bytes from `buf` and append them to string `out`
+ */
 namespace permessage_deflate {
-    
+
+/// Permessage deflate error values
 namespace error {
 enum value {
     /// Catch all
     general = 1,
 
-    /// Invalid extension parameters
-    invalid_parameters,
+    /// Invalid extension attributes
+    invalid_attributes,
 
-    /// Unsupported compression algorithm
-    unsupported_algorithm,
+    /// Invalid extension attribute value
+    invalid_attribute_value,
+
+    /// Invalid megotiation mode
+    invalid_mode,
+
+    /// Unsupported extension attributes
+    unsupported_attributes,
     
-    /// Unknown method parameter
-    unknown_method_parameter,
-
-    /// Invalid Algorithm Settings
-    invalid_algorithm_settings,
+    /// Invalid value for max_window_bits
+    invalid_max_window_bits,
 
     /// ZLib Error
     zlib_error,
@@ -67,11 +108,12 @@ enum value {
     uninitialized,
 };
 
+/// Permessage-deflate error category
 class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.extension.permessage-deflate";
     }
 
@@ -79,14 +121,16 @@ public:
         switch(value) {
             case general:
                 return "Generic permessage-compress error";
-            case invalid_parameters:
-                return "Invalid extension parameters";
-            case unsupported_algorithm:
-                return "Unsupported algorithm";
-            case unknown_method_parameter:
-                return "Unknown method parameter";
-            case invalid_algorithm_settings:
-                return "invalid algorithm settings";
+            case invalid_attributes:
+                return "Invalid extension attributes";
+            case invalid_attribute_value:
+                return "Invalid extension attribute value";
+            case invalid_mode:
+                return "Invalid permessage-deflate negotiation mode";
+            case unsupported_attributes:
+                return "Unsupported extension attributes";
+            case invalid_max_window_bits:
+                return "Invalid value for max_window_bits";
             case zlib_error:
                 return "A zlib function returned an error";
             case uninitialized:
@@ -97,11 +141,13 @@ public:
     }
 };
 
-const lib::error_category& get_category() {
+/// Get a reference to a static copy of the permessage-deflate error category
+lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
 
+/// Create an error code in the permessage-deflate category
 lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_category());
 }
@@ -115,120 +161,53 @@ _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum
     <websocketpp::extensions::permessage_deflate::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 namespace websocketpp {
 namespace extensions {
 namespace permessage_deflate {
 
-template <typename config>
-class method {
-public:
-    typedef typename config::request_type::attribute_list attribute_list;
+/// Default value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const default_s2c_max_window_bits = 15;
+/// Minimum value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const min_s2c_max_window_bits = 8;
+/// Maximum value for s2c_max_window_bits as defined by RFC6455
+static uint8_t const max_s2c_max_window_bits = 15;
 
-    virtual const char* name() const = 0;
-    virtual lib::error_code init(const attribute_list& attributes) = 0;
-    virtual lib::error_code compress(const std::string& in, std::string& out);
-    virtual lib::error_code decompress(const uint8_t * buf, size_t len, 
-        std::string& out);
-    virtual lib::error_code decompress(const std::string& in, std::string& out);
+/// Default value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const default_c2s_max_window_bits = 15;
+/// Minimum value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const min_c2s_max_window_bits = 8;
+/// Maximum value for c2s_max_window_bits as defined by RFC6455
+static uint8_t const max_c2s_max_window_bits = 15;
+
+namespace mode {
+enum value {
+    /// Accept any value the remote endpoint offers
+    accept = 1,
+    /// Decline any value the remote endpoint offers. Insist on defaults.
+    decline,
+    /// Use the largest value common to both offers
+    largest,
+    /// Use the smallest value common to both offers
+    smallest
 };
+} // namespace mode 
 
 template <typename config>
-class deflate_method : public method<config> {
+class enabled {
 public:
-    typedef method<config> base;
-    typedef typename base::attribute_list attribute_list;
-
-    deflate_method(bool is_server) 
-      : m_is_server(is_server)
-      , s2c_no_context_takeover(false)
-      , c2s_no_context_takeover(false)
-      , s2c_max_window_bits(15) 
-      , c2s_max_window_bits(15) {}
-
-    const char* name() const {
-        return "deflate";
-    }
-    
-    lib::error_code init(const attribute_list& attributes) {
-        typename attribute_list::const_iterator it;
-
-        for (it = attributes.begin(); it != attributes.end(); ++it) {
-            if (it->first == "s2c_no_context_takeover") {
-                s2c_no_context_takeover = true;
-            } else if (it->first == "c2s_no_context_takeover") {
-                c2s_no_context_takeover = true;
-            } else if (it->first == "s2c_max_window_bits") {
-                std::istringstream ss(it->second);
-                int temp;
-                if ((ss >> temp).fail() || temp > 15 || temp < 8) {
-                    return make_error_code(error::invalid_algorithm_settings);
-                }
-                s2c_max_window_bits = temp;
-            } else if (it->first == "c2s_max_window_bits") {
-                if (m_is_server) {
-                    // we are allowed to control the max window size of the 
-                    // client by sending back this parameter with a value.
-                } else {
-                    // The server requested that we limit our outgoing window
-                    // size
-                    std::istringstream ss(it->second);
-                    int temp;
-                    if ((ss >> temp).fail() || temp > 15 || temp < 8) {
-                        return make_error_code(error::invalid_algorithm_settings);
-                    }
-                    c2s_max_window_bits = temp;
-                }
-
-            } else {
-                return make_error_code(error::unknown_method_parameter);
-            }
-        }
-        
-        // initialize zlib
-        m_zstream.zalloc = Z_NULL;
-        m_zstream.zfree = Z_NULL;
-        m_zstream.opaque = Z_NULL;
-
-        int ret = deflateInit2(
-            &m_zstream,
-            // This is a CPU vs space tradeoff, TODO: make configurable
-            Z_DEFAULT_COMPRESSION,
-            Z_DEFLATED,
-            // A smaller value here may be chosen to reduce memory usage 
-            (m_is_server ? s2c_max_window_bits : c2s_max_window_bits),
-            // memLevel (1-9), TODO: make configurable
-            8,
-            // strategy. maybe make configurable?
-            Z_DEFAULT_STRATEGY
-        );
-
-        if (ret != Z_OK) {
-            return make_error_code(error::zlib_error);
-        }
-
-        return lib::error_code();
-    }
-
-private:
-    const bool m_is_server;
-
-    bool s2c_no_context_takeover;
-    bool c2s_no_context_takeover;
-    uint8_t s2c_max_window_bits;
-    uint8_t c2s_max_window_bits;
-    
-
-    z_stream m_zstream;
-};
-
-
-class deflate_engine {
-public:
-    deflate_engine()
-      : m_valid(false)
+    enabled() 
+      : m_enabled(false)
+      , m_s2c_no_context_takeover(false)
+      , m_c2s_no_context_takeover(false)
+      , m_s2c_max_window_bits(15)
+      , m_c2s_max_window_bits(15)
+      , m_s2c_max_window_bits_mode(mode::accept)
+      , m_c2s_max_window_bits_mode(mode::accept)
+      , m_initialized(false)
+      , m_compress_buffer_size(16384)
     {
         m_dstate.zalloc = Z_NULL;
         m_dstate.zfree = Z_NULL;
@@ -241,101 +220,276 @@ public:
         m_istate.next_in = Z_NULL;
     }
     
-    ~deflate_engine() {
-        if (!m_valid) {
-            // init was never successfully called, nothing to clean up.
+    ~enabled() {
+        if (!m_initialized) {
             return;
         }
 
         int ret = deflateEnd(&m_dstate);
 
         if (ret != Z_OK) {
-            std::cout << "error cleaning up zlib compression state" 
-                      << std::endl;
+            //std::cout << "error cleaning up zlib compression state" 
+            //          << std::endl;
         }
 
         ret = inflateEnd(&m_istate);
 
         if (ret != Z_OK) {
-            std::cout << "error cleaning up zlib decompression state" 
-                      << std::endl;
+            //std::cout << "error cleaning up zlib decompression state" 
+            //          << std::endl;
         }
     }
     
-    // TODO: delete copy constructor and assignment operator
-
     /// Initialize zlib state
     /**
-     * @param window_bits Sliding window size. Value range from 8-15. Higher 
-     * values use more memory but provide better compression.
      *
-     * @param compress_level How much compression to apply. Values range from 0
-     * to 9. 1 is fastest, 9 is best compression. 0 provides no compression. The
-     * default is ~6.
-     *
-     * @param mem_level How much memory to use for internal compression state
-     * Values range from 1 to 9. 1 is lowest memory, 9 is best compression. 
-     * Default is 8.
-     *
-     * @param strategy Passes through strategy tuning parameter. See zlib 
-     * documentation for more information.
-     *
-     * @return A status code. 0 on success, non-zero otherwise.
+     * @todo memory level, strategy, etc are hardcoded
+     * @todo server detection is hardcoded
      */
-    lib::error_code init(
-        int compress_window_bits = 15, int decompress_window_bits = 15,
-        bool reset_compress = false, bool reset_decompress = false, 
-        int compress_level = Z_DEFAULT_COMPRESSION, int mem_level = 8, 
-        int strategy = Z_DEFAULT_STRATEGY, size_t compress_buffer = 16384)
-    {
+    lib::error_code init() {
+        uint8_t deflate_bits;
+        uint8_t inflate_bits;
+
+        if (true /*is_server*/) {
+            deflate_bits = m_s2c_max_window_bits;
+            inflate_bits = m_c2s_max_window_bits;
+        } else {
+            deflate_bits = m_c2s_max_window_bits;
+            inflate_bits = m_s2c_max_window_bits;
+        }
+
         int ret = deflateInit2(
             &m_dstate,
-            compress_level,
+            Z_DEFAULT_COMPRESSION,
             Z_DEFLATED,
-            -1*compress_window_bits,
-            mem_level,
-            strategy
+            -1*deflate_bits,
+            8, // memory level 1-9
+            /*Z_DEFAULT_STRATEGY*/Z_FIXED
         );
 
         if (ret != Z_OK) {
             return make_error_code(error::zlib_error);
         }
-        
+
         ret = inflateInit2(
             &m_istate,
-            -1*decompress_window_bits
+            -1*inflate_bits
         );
 
         if (ret != Z_OK) {
             return make_error_code(error::zlib_error);
         }
-
-        m_compress_buffer.reset(new unsigned char[compress_buffer]);
-        m_compress_buffer_size = compress_buffer;
-
-        m_valid = true;
+        
+        m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
+        m_initialized = true;
         return lib::error_code();
     }
-    
-    /// Compress a string in one chunk
+
+    /// Test if this object impliments the permessage-deflate specification
     /**
+     * Because this object does impliment it, it will always return true.
      *
-     * Bytes input must be unmasked, output bytes are also unmasked.
-     *
-     * TODO: potential optimization to use copy+mask rather than copy
-     *       is this a bad idea? probably.
-     *
+     * @return Whether or not this object impliments permessage-deflate
      */
-    lib::error_code compress(const std::string& in, std::string& out) {
-        if (!m_valid) {
-            return make_error_code(error::uninitialized);
+    bool is_implemented() const {
+        return true;
+    }
+
+    /// Test if the extension was negotiated for this connection
+    /**
+     * Retrieves whether or not this extension is in use based on the initial
+     * handshake extension negotiations.
+     *
+     * @return Whether or not the extension is in use
+     */
+    bool is_enabled() const {
+        return m_enabled;
+    }
+    
+    /// Reset server's outgoing LZ77 sliding window for each new message
+    /**
+     * Enabling this setting will cause the server's compressor to reset the
+     * compression state (the LZ77 sliding window) for every message. This 
+     * means that the compressor will not look back to patterns in previous 
+     * messages to improve compression. This will reduce the compression 
+     * efficiency for large messages somewhat and small messages drastically.
+     *
+     * This option may reduce server compressor memory usage and client 
+     * decompressor memory usage.
+     * @todo Document to what extent memory usage will be reduced
+     *
+     * For clients, this option is dependent on server support. Enabling it
+     * via this method does not guarantee that it will be successfully
+     * negotiated, only that it will be requested.
+     *
+     * For servers, no client support is required. Enabling this option on a
+     * server will result in its use. The server will signal to clients that
+     * the option will be in use so they can optimize resource usage if they
+     * are able.
+     */
+    void enable_s2c_no_context_takeover() {
+        m_s2c_no_context_takeover = true;
+    }
+
+    /// Reset client's outgoing LZ77 sliding window for each new message
+    /**
+     * Enabling this setting will cause the client's compressor to reset the
+     * compression state (the LZ77 sliding window) for every message. This 
+     * means that the compressor will not look back to patterns in previous 
+     * messages to improve compression. This will reduce the compression 
+     * efficiency for large messages somewhat and small messages drastically.
+     *
+     * This option may reduce client compressor memory usage and server 
+     * decompressor memory usage.
+     * @todo Document to what extent memory usage will be reduced
+     *
+     * This option is supported by all compliant clients and servers. Enabling
+     * it via either endpoint should be sufficient to ensure it is used.
+     */
+    void enable_c2s_no_context_takeover() {
+        m_c2s_no_context_takeover = true;
+    }
+
+    /// Limit server LZ77 sliding window size
+    /**
+     * The bits setting is the base 2 logarithm of the maximum window size that
+     * the server must use to compress outgoing messages. The permitted range
+     * is 8 to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB 
+     * window. The default setting is 15.
+     *
+     * Mode Options:
+     * - accept: Accept whatever the remote endpoint offers.
+     * - decline: Decline any offers to deviate from the defaults
+     * - largest: Accept largest window size acceptable to both endpoints
+     * - smallest: Accept smallest window size acceptiable to both endpoints
+     *
+     * This setting is dependent on server support. A client requesting this
+     * setting may be rejected by the server or have the exact value used
+     * adjusted by the server. A server may unilaterally set this value without
+     * client support.
+     *
+     * @param bits The size to request for the outgoing window size
+     * @param mode The mode to use for negotiating this parameter
+     * @return A status code
+     */
+    lib::error_code set_s2c_max_window_bits(uint8_t bits, mode::value mode) {
+        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+            return error::make_error_code(error::invalid_max_window_bits);
+        }
+        m_s2c_max_window_bits = bits;
+        m_s2c_max_window_bits_mode = mode;
+
+        return lib::error_code();
+    }
+
+    /// Limit client LZ77 sliding window size
+    /**
+     * The bits setting is the base 2 logarithm of the window size that the
+     * client must use to compress outgoing messages. The permitted range is 8
+     * to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB window.
+     * The default setting is 15.
+     *
+     * Mode Options:
+     * - accept: Accept whatever the remote endpoint offers.
+     * - decline: Decline any offers to deviate from the defaults
+     * - largest: Accept largest window size acceptable to both endpoints
+     * - smallest: Accept smallest window size acceptiable to both endpoints
+     *
+     * This setting is dependent on client support. A client may limit its own
+     * outgoing window size unilaterally. A server may only limit the client's
+     * window size if the remote client supports that feature.
+     *
+     * @param bits The size to request for the outgoing window size
+     * @param mode The mode to use for negotiating this parameter
+     * @return A status code
+     */
+    lib::error_code set_c2s_max_window_bits(uint8_t bits, mode::value mode) {
+        if (bits < min_c2s_max_window_bits || bits > max_c2s_max_window_bits) {
+            return error::make_error_code(error::invalid_max_window_bits);
+        }
+        m_c2s_max_window_bits = bits;
+        m_c2s_max_window_bits_mode = mode;
+
+        return lib::error_code();
+    }
+
+    /// Generate extension offer
+    /**
+     * Creates an offer string to include in the Sec-WebSocket-Extensions
+     * header of outgoing client requests.
+     *
+     * @return A WebSocket extension offer string for this extension
+     */
+    std::string generate_offer() const {
+        return "";
+    }
+    
+    /// Validate extension response
+    /**
+     * Confirm that the server has negotiated settings compatible with our 
+     * original offer and apply those settings to the extension state.
+     * 
+     * @param response The server response attribute list to validate
+     * @return Validation error or 0 on success
+     */
+    lib::error_code validate_offer(http::attribute_list const & response) {
+        
+    }
+
+    /// Negotiate extension
+    /**
+     * Confirm that the client's extension negotiation offer has settings
+     * compatible with local policy. If so, generate a reply and apply those
+     * settings to the extension state.
+     *
+     * @param offer Attribute from client's offer
+     * @return Status code and value to return to remote endpoint
+     */
+    err_str_pair negotiate(http::attribute_list const & offer) {
+        err_str_pair ret;
+
+        http::attribute_list::const_iterator it;
+        for (it = offer.begin(); it != offer.end(); ++it) {
+            if (it->first == "s2c_no_context_takeover") {
+                negotiate_s2c_no_context_takeover(it->second,ret.first);
+            } else if (it->first == "c2s_no_context_takeover") {
+                negotiate_c2s_no_context_takeover(it->second,ret.first);
+            } else if (it->first == "s2c_max_window_bits") {
+                negotiate_s2c_max_window_bits(it->second,ret.first);
+            } else if (it->first == "c2s_max_window_bits") {
+                negotiate_c2s_max_window_bits(it->second,ret.first);
+            } else {
+                ret.first = make_error_code(error::invalid_attributes);
+            }
+
+            if (ret.first) {
+                break;
+            }
         }
         
+        if (ret.first == lib::error_code()) {
+            m_enabled = true;
+            ret.second = generate_response();
+        }
+
+        return ret;
+    }
+
+    /// Compress bytes
+    /**
+     * @param [in] in String to compress
+     * @param [out] out String to append compressed bytes to
+     * @return Error or status code
+     */
+    lib::error_code compress(std::string const & in, std::string & out) {
+        if (!m_initialized) {
+            return make_error_code(error::uninitialized);
+        }
+
         size_t output;
         int ret;
 
-        // Read from input string
-        m_dstate.avail_in = in.size();
+        m_dstate.avail_out = m_compress_buffer_size;
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
 
         do {
@@ -343,44 +497,41 @@ public:
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();
 
-            ret = deflate(&m_dstate,Z_SYNC_FLUSH);
-            // assert(ret != Z_STREAM_ERROR);
-            //
+            ret = deflate(&m_dstate, Z_SYNC_FLUSH);
+            
             output = m_compress_buffer_size - m_dstate.avail_out;
 
             out.append((char *)(m_compress_buffer.get()),output);
         } while (m_dstate.avail_out == 0);
-        // assert(m_zlib_state.avail_in == 0); // all input should be used
 
         return lib::error_code();
     }
-    
-    lib::error_code decompress(const std::string& in, std::string& out) {
-        return this->decompress(
-            reinterpret_cast<const uint8_t *>(in.data()),
-            in.size(),
-            out
-        );
-    }
 
-    lib::error_code decompress(const uint8_t * buf, size_t len, 
-        std::string & out)
+    /// Decompress bytes
+    /**
+     * @param buf Byte buffer to decompress
+     * @param len Length of buf
+     * @param out String to append decompressed bytes to
+     * @return Error or status code
+     */
+    lib::error_code decompress(uint8_t const * buf, size_t len, std::string &
+        out)
     {
-        if (!m_valid) {
+        if (!m_initialized) {
             return make_error_code(error::uninitialized);
         }
-        
+
         int ret;
 
         m_istate.avail_in = len;
         m_istate.next_in = const_cast<unsigned char *>(buf);
-        
+
         do {
             m_istate.avail_out = m_compress_buffer_size;
             m_istate.next_out = m_compress_buffer.get();
 
-            ret = inflate(&m_istate,Z_SYNC_FLUSH);
-            
+            ret = inflate(&m_istate, Z_SYNC_FLUSH);
+
             if (ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
                 return make_error_code(error::zlib_error);
             }
@@ -394,181 +545,176 @@ public:
         return lib::error_code();
     }
 private:
-    bool m_valid;
-    
-    lib::unique_ptr_uchar_array m_compress_buffer;
-
-    size_t  m_compress_buffer_size;
-
-    z_stream m_dstate; // deflate state
-    z_stream m_istate; // inflate state
-};
-
-/// Impliments the permessage_deflate extension interface
-/**
- * 
- * Template parameter econfig defines compile time types, constants, and 
- * settings. It should be a struct with the following members:
- *
- * request_type (type) A type that impliments the http::request interface
- * 
- * allow_disabling_context_takeover (static const bool) whether or not to
- * disable context takeover when the other endpoint requests it.
- * 
- * 
- * Parses the attribute list and determines if there are any errors based on
- * permessage_compress spec. If there are, init will fail. init
- * 
- *
- *
- * Methods:
- * permessage_deflate::enabled does not define or impliment any methods 
- * itself. It uses the attribute list to determine
- *
- * 
- *
- *
- */
-template <typename econfig>
-class enabled {
-    typedef std::map<std::string,std::string> string_map;
-
-    typedef typename econfig::request_type::attribute_list attribute_list;
-    typedef typename attribute_list::const_iterator attribute_iterator;
-    typedef lib::shared_ptr< method<econfig> > method_ptr;
-    
-    typedef typename econfig::request_type request_type;
-    
-    typedef std::pair<lib::error_code,std::string> err_str_pair;
-
-public:
-    enabled() : m_enabled(false) {}
-    
-    /// Attempt to negotiate the permessage_deflate extension
+    /// Generate negotiation response
     /**
-     * Parses the attribute list for this extension and attempts to negotiate
-     * the extension. Returns a pair<lib::error_code, std::string>. On success
-     * the error code is zero and the string contains the negotated parameters
-     * to return in the handshake response. On error
-     *
-     * @param attributes A list of attributes extracted from the 
-     * 'permessage_deflate' extension parameter from the original handshake.
-     * 
-     * @return A pair<lib::error_code, std::string> containing a status code
-     * and a value whose interpretation is dependent on the status code.
+     * @return Generate extension negotiation reponse string to send to client
      */
-    err_str_pair negotiate(const string_map& attributes) {
-        err_str_pair ret;
-        
-        std::cout << "foo: " << attributes.size() << std::endl;
+    std::string generate_response() {
+        std::string ret = "permessage-deflate";
 
-        string_map::const_iterator it;
-        
-        for (it = attributes.begin(); it != attributes.end(); ++it) {
-            std::cout << it->first << ": " << it->second << std::endl;
-        }
-        
-        // start by not accepting any parameters
-        if (attributes.size() == 0) {
-            ret.second = "permessage-deflate";
-        } else {
-            ret.first = make_error_code(error::invalid_parameters);
+        if (m_s2c_no_context_takeover) {
+            ret += "; s2c_no_context_takeover";
         }
 
-        /*
-         *
-         * Sec-WebSocket-Extensions: foo; bar; baz=5, foo2; bar2; baz2=5
-         * 
-         * map<string,map<string,string>>
-         * 
-         * vector<pair<string,vector<pair<string,string>>>>
-         *
-         */
-
-        
-        /*
-        // Exactly one parameter is required
-        if (attributes.size() != 1) {
-            ret.first = make_error_code(error::invalid_parameters);
-            return ret;
-        }
-        
-        attribute_iterator method = attributes.find("method");
-        
-        // That one parameter must be 'method'
-        if (method == attributes.end()) {
-            ret.first = make_error_code(error::invalid_parameters);
-            return ret;
-        }
-        
-        // It's value must be a valid parameter list
-        request_type parameter_parser;
-        typename request_type::parameter_list plist;
-        
-        if (parameter_parser.parse_parameter_list(method->second,plist)) {
-            ret.first = make_error_code(error::invalid_parameters);
-            return ret;
+        if (m_c2s_no_context_takeover) {
+            ret += "; c2s_no_context_takeover";
         }
 
-        // This represents a list of potential parameter sets that we could use
-        // in order of client preference. We need to validate the options to
-        // make sure none are illegal. Then one of these needs to be chosen as
-        // the actual value set to be used for the connection.
-        
-        typename request_type::parameter_list::const_iterator it;
-
-        for (it = plist.begin(); it != plist.end(); ++it)
-        {
-            if (it->first == "deflate") {
-                // we can do deflate
-                //method_ptr new_method(new deflate_method<econfig>(true));
-
-                //new_method->init(it->second);
-            } else {
-                // unsupported algorithm, ignore
-            }
+        if (m_s2c_max_window_bits < default_s2c_max_window_bits) {
+            std::stringstream s;
+            s << int(m_s2c_max_window_bits);
+            ret += "; s2c_max_window_bits="+s.str();
         }
-        
-        m_enabled = true;*/
+
+        if (m_c2s_max_window_bits < default_c2s_max_window_bits) {
+            std::stringstream s;
+            s << int(m_c2s_max_window_bits);
+            ret += "; c2s_max_window_bits="+s.str();
+        }
+
         return ret;
     }
-    
-    /// Returns true if this object impliments permessage_deflate functionality
-    bool is_implimented() const {
-        return true;
-    }
-    
-    /// returns true if this object is initialized and ready to provide 
-    /// permessage_deflate functionality.
-    bool is_enabled() const {
-        return m_enabled;
-    }
 
-    lib::error_code compress(const std::string in, std::string &out) {
-        if (!m_enabled) {
-            return make_error_code(error::uninitialized);
-        }
-        return m_method->compress(in,out);
-    }
-
-    lib::error_code decompress(const uint8_t * buf, size_t len, 
-        std::string &out)
+    /// Negotiate s2c_no_context_takeover attribute
+    /** 
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_s2c_no_context_takeover(std::string const & value, 
+        lib::error_code & ec)
     {
-        if (!m_enabled) {
-            return make_error_code(error::uninitialized);
+        if (!value.empty()) {
+            ec = make_error_code(error::invalid_attribute_value);
+            return;
         }
-        return m_method->decompress(buf,len,out);
+
+        m_s2c_no_context_takeover = true;
     }
 
-    lib::error_code decompress(const std::string in, std::string &out) {
-        if (!m_enabled) {
-            return make_error_code(error::uninitialized);
+    /// Negotiate c2s_no_context_takeover attribute
+    /** 
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_c2s_no_context_takeover(std::string const & value, 
+        lib::error_code & ec)
+    {
+        if (!value.empty()) {
+            ec = make_error_code(error::invalid_attribute_value);
+            return;
         }
-        return m_method->decompress(in,out);
+
+        m_c2s_no_context_takeover = true;
     }
-private:
+    
+    /// Negotiate s2c_max_window_bits attribute
+    /**
+     * When this method starts, m_s2c_max_window_bits will contain the server's
+     * preferred value and m_s2c_max_window_bits_mode will contain the mode the
+     * server wants to use to for negotiation. `value` contains the value the
+     * client requested that we use.
+     *
+     * options:
+     * - decline (refuse to use the attribute)
+     * - accept (use whatever the client says)
+     * - largest (use largest possible value)
+     * - smallest (use smallest possible value)
+     *
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_s2c_max_window_bits(std::string const & value,
+        lib::error_code & ec)
+    {
+        uint8_t bits = uint8_t(atoi(value.c_str()));
+        
+        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+            ec = make_error_code(error::invalid_attribute_value);
+            m_s2c_max_window_bits = default_s2c_max_window_bits;
+            return;
+        }
+        
+        switch (m_s2c_max_window_bits_mode) {
+            case mode::decline:
+                m_s2c_max_window_bits = default_s2c_max_window_bits;
+                break;
+            case mode::accept:
+                m_s2c_max_window_bits = bits;
+                break;
+            case mode::largest:
+                m_s2c_max_window_bits = std::min(bits,m_s2c_max_window_bits);
+                break;
+            case mode::smallest:
+                m_s2c_max_window_bits = min_s2c_max_window_bits;
+                break;
+            default:
+                ec = make_error_code(error::invalid_mode);
+                m_s2c_max_window_bits = default_s2c_max_window_bits;
+        }
+    }
+
+    /// Negotiate c2s_max_window_bits attribute
+    /**
+     * When this method starts, m_c2s_max_window_bits and m_c2s_max_window_mode
+     * will contain the server's preferred values for window size and 
+     * negotiation mode.
+     *
+     * options:
+     * - decline (refuse to use the attribute)
+     * - accept (use whatever the client says)
+     * - largest (use largest possible value)
+     * - smallest (use smallest possible value)
+     *
+     * @param [in] value The value of the attribute from the offer
+     * @param [out] ec A reference to the error code to return errors via
+     */
+    void negotiate_c2s_max_window_bits(std::string const & value,
+            lib::error_code & ec)
+    {
+        uint8_t bits = uint8_t(atoi(value.c_str()));
+        
+        if (value.empty()) {
+            bits = default_c2s_max_window_bits;
+        } else if (bits < min_c2s_max_window_bits || 
+                   bits > max_c2s_max_window_bits)
+        {
+            ec = make_error_code(error::invalid_attribute_value);
+            m_c2s_max_window_bits = default_c2s_max_window_bits;
+            return;
+        }
+
+        switch (m_c2s_max_window_bits_mode) {
+            case mode::decline:
+                m_c2s_max_window_bits = default_c2s_max_window_bits;
+                break;
+            case mode::accept:
+                m_c2s_max_window_bits = bits;
+                break;
+            case mode::largest:
+                m_c2s_max_window_bits = std::min(bits,m_c2s_max_window_bits);
+                break;
+            case mode::smallest:
+                m_c2s_max_window_bits = min_c2s_max_window_bits;
+                break;
+            default:
+                ec = make_error_code(error::invalid_mode);
+                m_c2s_max_window_bits = default_c2s_max_window_bits;
+        }
+    }
+
     bool m_enabled;
-    method_ptr m_method;
+    bool m_s2c_no_context_takeover;
+    bool m_c2s_no_context_takeover;
+    uint8_t m_s2c_max_window_bits;
+    uint8_t m_c2s_max_window_bits;
+    mode::value m_s2c_max_window_bits_mode;
+    mode::value m_c2s_max_window_bits_mode;
+
+    bool m_initialized;
+    size_t m_compress_buffer_size;
+    lib::unique_ptr_uchar_array m_compress_buffer;
+    z_stream m_dstate;
+    z_stream m_istate;
 };
 
 } // namespace permessage_deflate

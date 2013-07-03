@@ -42,6 +42,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <iomanip>
 
 #include <websocketpp/common/stdint.hpp>
 #include <websocketpp/logger/levels.hpp>
@@ -85,7 +86,7 @@ public:
     void write(level channel, const std::string& msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
-        *m_out << "[" << get_timestamp() << "] " 
+        *m_out << "[" << timestamp << "] " 
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
         m_out->flush();
@@ -94,7 +95,7 @@ public:
     void write(level channel, const char* msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
-        *m_out << "[" << get_timestamp() << "] "
+        *m_out << "[" << timestamp << "] "
                   << "[" << names::channel_name(channel) << "] " 
                   << msg << "\n";
         m_out->flush();
@@ -111,15 +112,25 @@ private:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
     typedef typename concurrency::mutex_type mutex_type;
     
-    const char* get_timestamp() {
+    // The timestamp does not include the time zone, because on Windows with the
+    // default registry settings, the time zone would be written out in full, 
+    // which would be obnoxiously verbose.
+    // 
+    // TODO: find a workaround for this or make this format user settable
+    static std::ostream& timestamp(std::ostream& os) {
         std::time_t t = std::time(NULL);
-        std::strftime(buffer,39,"%Y-%m-%d %H:%M:%S%z",std::localtime(&t));
-        return buffer;
+        std::tm* lt = std::localtime(&t);
+        #ifdef _WEBSOCKETPP_CPP11_CHRONO_
+            return os << std::put_time(lt,"%Y-%m-%d %H:%M:%S");
+        #else // Falls back to strftime, which requires a temporary copy of the string.
+            char buffer[20];
+            std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",lt);
+            return os << buffer;
+        #endif
     }
 
     mutex_type m_lock;
-        
-    char buffer[40];
+    
     const level m_static_channels;
     level m_dynamic_channels;
     std::ostream* m_out;

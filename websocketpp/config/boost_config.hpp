@@ -25,17 +25,47 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_COMMON_PLATFORMS_HPP
-#define WEBSOCKETPP_COMMON_PLATFORMS_HPP
+ // This header defines WebSocket++ macros for C++11 compatibility based on the Boost.Config library.
+ // This will correctly configure most target platforms simply by including this header before
+ // any other WebSocket++ header.
 
-/**
- * This header contains any platform specific preprocessor adjustments that 
- * don't fit somewhere else better.
- */
- 
-#if defined(WIN32) && !defined(NOMINMAX)
-    // don't define min and max macros that conflict with std::min and std::max
-    #define NOMINMAX
+#ifndef WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
+#define WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
+
+#include <boost/config.hpp>
+
+//  _WEBSOCKETPP_CPP11_MEMORY_ and _WEBSOCKETPP_CPP11_FUNCTIONAL_ presently 
+//  only work if either both or neither is defined.
+#if !defined BOOST_NO_CXX11_SMART_PTR && !defined BOOST_NO_CXX11_HDR_FUNCTIONAL
+    #define _WEBSOCKETPP_CPP11_MEMORY_
+    #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #endif
 
-#endif // WEBSOCKETPP_COMMON_PLATFORMS_HPP
+#ifndef BOOST_ASIO_HAS_STD_CHRONO
+    #define _WEBSOCKETPP_CPP11_CHRONO_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_RANDOM
+    #define _WEBSOCKETPP_CPP11_RANDOM_DEVICE_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_REGEX
+    #define _WEBSOCKETPP_CPP11_REGEX_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_SYSTEM_ERROR
+    #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_THREAD
+    #define _WEBSOCKETPP_CPP11_THREAD_
+#endif
+
+#ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST 
+    #define _WEBSOCKETPP_INITIALIZER_LISTS_ 
+#endif
+
+#define _WEBSOCKETPP_NOEXCEPT_TOKEN_  BOOST_NOEXCEPT 
+#define _WEBSOCKETPP_CONSTEXPR_TOKEN_  BOOST_CONSTEXPR 
+
+#endif // WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP

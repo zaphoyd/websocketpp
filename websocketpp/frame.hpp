@@ -298,9 +298,9 @@ size_t prepare_masking_key(masking_key_type const & key);
 size_t circshift_prepared_key(size_t prepared_key, size_t offset);
 
 // Functions for performing xor based masking and unmasking
-template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, masking_key_type const & 
-    key, size_t key_offset = 0);
+template <typename input_iter, typename output_iter>
+void byte_mask(input_iter b, input_iter e, output_iter o, masking_key_type 
+    const & key, size_t key_offset = 0);
 template <typename iter_type>
 void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset = 0);
@@ -666,14 +666,16 @@ inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
  * 
  * @param key_offset offset value to start masking at.
  */
-template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type& 
-    key, size_t key_offset)
+template <typename input_iter, typename output_iter>
+void byte_mask(input_iter first, input_iter last, output_iter result, 
+    masking_key_type const & key, size_t key_offset)
 {
     size_t key_index = key_offset%4;
-    for (iter_type i = b, j = o; i != e; i++, j++) {
-        *j = *i ^ key.c[key_index++];
+    while (first != last) {
+        *result = *first ^ key.c[key_index++];
         key_index %= 4;
+        ++result;
+        ++first;
     }
 }
 
@@ -695,7 +697,7 @@ void byte_mask(iter_type b, iter_type e, iter_type o, const masking_key_type&
  * @param key_offset offset value to start masking at.
  */
 template <typename iter_type>
-void byte_mask(iter_type b, iter_type e, const masking_key_type& key,
+void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset)
 {
     byte_mask(b,e,b,key,key_offset);
@@ -773,7 +775,7 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
  * 
  * word_mask returns a copy of prepared_key circularly shifted based on the 
  * length value. The returned value may be fed back into word_mask when more 
- * data is avaliable.
+ * data is available.
  *
  * input and output must both have length at least:
  *    ceil(length/sizeof(size_t))*sizeof(size_t)
@@ -827,6 +829,58 @@ inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length,
  */
 inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
     return word_mask_circ(data,data,length,prepared_key);
+}
+
+/// Circular byte aligned mask/unmask
+/**
+ * Performs a circular mask/unmask in byte sized chunks using pre-prepared keys
+ * that store state between calls. Best for providing streaming masking or 
+ * unmasking of small chunks at a time of a larger message. Requires that the
+ * underlying allocated size of the data buffer be a multiple of the word size.
+ * Data in the buffer after `length` will be overwritten only with the same 
+ * values that were originally present.
+ * 
+ * word_mask returns a copy of prepared_key circularly shifted based on the 
+ * length value. The returned value may be fed back into byte_mask when more 
+ * data is available.
+ *
+ * @param data Character buffer to mask
+ *
+ * @param length Length of data
+ *
+ * @param prepared_key Prepared key to use.
+ *
+ * @return the prepared_key shifted to account for the input length
+ */
+inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
+    size_t prepared_key)
+{
+    uint32_converter key;
+    key.i = prepared_key;
+    
+    for (size_t i = 0; i < length; ++i) {
+        output[i] = input[i] ^ key.c[i % 4];
+    }
+    
+    return circshift_prepared_key(prepared_key,length % 4);
+}
+
+/// Circular byte aligned mask/unmask (in place)
+/**
+ * In place version of byte_mask_circ
+ *
+ * @see byte_mask_circ
+ *
+ * @param data Character buffer to read from and write to
+ *
+ * @param length Length of data
+ *
+ * @param prepared_key Prepared key to use.
+ *
+ * @return the prepared_key shifted to account for the input length
+ */
+inline size_t byte_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
+    return byte_mask_circ(data,data,length,prepared_key);
 }
 
 } // namespace frame

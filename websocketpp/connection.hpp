@@ -47,27 +47,125 @@
 
 namespace websocketpp {
 
+/// The type and function signature of an open handler
+/**
+ * The open handler is called once for every successful WebSocket connection 
+ * attempt. Either the fail handler or the open handler will be called for each
+ * WebSocket connection attempt. HTTP Connections that did not attempt to 
+ * upgrade the connection to the WebSocket protocol will trigger the http 
+ * handler instead of fail/open.
+ */
 typedef lib::function<void(connection_hdl)> open_handler;
+
+/// The type and function signature of a close handler
+/**
+ * The close handler is called once for every successfully established 
+ * connection after it is no longer capable of sending or receiving new messages
+ *
+ * The close handler will be called exactly once for every connection for which
+ * the open handler was called.
+ */
 typedef lib::function<void(connection_hdl)> close_handler;
+
+/// The type and function signature of a fail handler
+/**
+ * The fail handler is called once for every unsuccessful WebSocket connection 
+ * attempt. Either the fail handler or the open handler will be called for each
+ * WebSocket connection attempt. HTTP Connections that did not attempt to 
+ * upgrade the connection to the WebSocket protocol will trigger the http 
+ * handler instead of fail/open.
+ */
 typedef lib::function<void(connection_hdl)> fail_handler;
 
+/// The type and function signature of an interrupt handler
+/**
+ * The interrupt handler is called when a connection receives an interrupt 
+ * request from the application. Interrupts allow the application to trigger a
+ * handler to be run in the absense of a WebSocket level handler trigger (like
+ * a new message).
+ *
+ * This is typically used by another application thread to schedule some tasks
+ * that can only be run from within the handler chain for thread safety reasons.
+ */
 typedef lib::function<void(connection_hdl)> interrupt_handler;
 
-typedef lib::function<void(connection_hdl)> handshake_init_handler;
-
+/// The type and function signature of a ping handler
+/**
+ * The ping handler is called when the connection receives a WebSocket ping
+ * control frame. The string argument contains the ping payload. The payload is
+ * a binary string up to 126 bytes in length. The ping handler returns a bool, 
+ * true if a pong response should be sent, false if the pong response should be
+ * suppressed.
+ */
 typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
+
+/// The type and function signature of a pong handler
+/**
+ * The pong handler is called when the connection receives a WebSocket pong
+ * control frame. The string argument contains the pong payload. The payload is
+ * a binary string up to 126 bytes in length.
+ */
 typedef lib::function<void(connection_hdl,std::string)> pong_handler;
+
+/// The type and function signature of a pong timeout handler
+/**
+ * The pong timeout handler is called when a ping goes unanswered by a pong for
+ * longer than the locally specified timeout period.
+ */
 typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
 
+/// The type and function signature of a validate handler
+/**
+ * The validate handler is called after a WebSocket handshake has been received
+ * and processed but before it has been accepted. This gives the application a 
+ * chance to impliment connection details specific policies for accepting 
+ * connections and the ability to negotiate extensions and subprotocols.
+ * 
+ * The validate handler return value indicates whether or not the connection 
+ * should be accepted. Additional methods may be called during the function to
+ * set response headers, set HTTP return/error codes, etc.
+ */
 typedef lib::function<bool(connection_hdl)> validate_handler;
+
+/// The type and function signature of a http handler
+/**
+ * The http handler is called when an HTTP connection is made that does not
+ * attempt to upgrade the connection to the WebSocket protocol. This allows
+ * WebSocket++ servers to respond to these requests with regular HTTP responses.
+ * 
+ * This can be used to deliver error pages & dashboards and to deliver static 
+ * files such as the base HTML & JavaScript for an otherwise single page 
+ * WebSocket application.
+ *
+ * Note: WebSocket++ is designed to be a high performance WebSocket server. It
+ * is not tuned to provide a full featured, high performance, HTTP web server
+ * solution. The HTTP handler is appropriate only for low volume HTTP traffic.
+ * If you expect to serve high volumes of HTTP traffic a dedicated HTTP web 
+ * server is strongly recommended.
+ *
+ * The default HTTP handler will return a 426 Upgrade Required error. Custom
+ * handlers may override the response status code to deliver any type of 
+ * response.
+ */
 typedef lib::function<void(connection_hdl)> http_handler;
 
 // constants related to the default WebSocket protocol versions available
 #ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
-    static const std::vector<int>   VERSIONS_SUPPORTED = {0,7,8,13};
+    /// Container that stores the list of protocol versions supported
+    /**
+     * @todo Move this to configs to allow compile/runtime disabling or enabling
+     * of protocol versions
+     */
+    static std::vector<int> const versions_supported = {0,7,8,13};
 #else
-    static const int HELPER[] = {0,7,8,13};
-    static const std::vector<int>   VERSIONS_SUPPORTED(HELPER,HELPER+4);
+    /// Helper array to get around lack of initializer lists pre C++11
+    static int const helper[] = {0,7,8,13};
+    /// Container that stores the list of protocol versions supported
+    /**
+     * @todo Move this to configs to allow compile/runtime disabling or enabling
+     * of protocol versions
+     */
+    static std::vector<int> const versions_supported(helper,helper+4);
 #endif
 
 namespace session {
@@ -88,7 +186,7 @@ namespace status {
         GOOD = 0,           // no failure yet!
         SYSTEM = 1,         // system call returned error, check that code
         WEBSOCKET = 2,      // websocket close codes contain error
-        UNKNOWN = 3,        // No failure information is avaliable
+        UNKNOWN = 3,        // No failure information is available
         TIMEOUT_TLS = 4,    // TLS handshake timed out
         TIMEOUT_WS = 5      // WS handshake timed out
     };
@@ -97,8 +195,8 @@ namespace status {
 
 namespace internal_state {
     // More granular internal states. These are used for multi-threaded 
-    // connection syncronization and preventing values that are not yet or no
-    // longer avaliable from being used.
+    // connection synchronization and preventing values that are not yet or no
+    // longer available from being used.
     
     enum value {
         USER_INIT = 0,
@@ -178,7 +276,7 @@ private:
     };
 public:
 
-    explicit connection(bool is_server, const std::string& ua, alog_type& alog, 
+    explicit connection(bool is_server, std::string const & ua, alog_type& alog, 
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
       , m_user_agent(ua)
@@ -193,12 +291,11 @@ public:
       , m_rng(rng)
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
+      , m_was_clean(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
     
-    // Public Interface
-
     ///////////////////////////
     // Set Handler Callbacks //
     ///////////////////////////
@@ -271,7 +368,7 @@ public:
      * period. It is specified in milliseconds.
      * 
      * This can be used to probe the health of the remote endpoint's WebSocket 
-     * implimentation. This does not guarantee that the remote application 
+     * implementation. This does not guarantee that the remote application 
      * itself is still healthy but can be a useful diagnostic.
      *
      * Note: receipt of this callback doesn't mean the pong will never come. 
@@ -354,7 +451,9 @@ public:
     size_t get_buffered_amount() const;
 
     /// DEPRECATED: use get_buffered_amount instead
-    size_t buffered_amount() const {return get_buffered_amount();}
+    size_t buffered_amount() const {
+        return get_buffered_amount();
+    }
     
     ////////////////////
     // Action Methods //
@@ -372,7 +471,7 @@ public:
      * @param op The opcode to generated the message with. Default is 
      * frame::opcode::text
      */
-    lib::error_code send(const std::string& payload, frame::opcode::value op = 
+    lib::error_code send(std::string const & payload, frame::opcode::value op = 
         frame::opcode::TEXT);
         
     /// Send a message (raw array overload)
@@ -389,7 +488,7 @@ public:
      * @param op The opcode to generated the message with. Default is 
      * frame::opcode::binary
      */
-    lib::error_code send(const void* payload, size_t len, frame::opcode::value 
+    lib::error_code send(void const * payload, size_t len, frame::opcode::value 
         op = frame::opcode::BINARY);
 
     /// Add a message to the outgoing send queue
@@ -399,7 +498,7 @@ public:
      * and then added
      *
      * Errors are returned via an exception
-     * TODO: make exception system_error rather than error_code
+     * \todo make exception system_error rather than error_code
      *
      * This method invokes the m_write_lock mutex
      *
@@ -437,13 +536,13 @@ public:
      *
      * @param payload Payload to be used for the ping
      */
-    void ping(const std::string& payload);
+    void ping(std::string const & payload);
     
     /// exception free variant of ping
-    void ping(const std::string & payload, lib::error_code & ec);
+    void ping(std::string const & payload, lib::error_code & ec);
     
     /// Utility method that gets called back when the ping timer expires
-    void handle_pong_timeout(std::string payload, const lib::error_code & ec);
+    void handle_pong_timeout(std::string payload, lib::error_code const & ec);
     
     /// Send a pong
     /**
@@ -455,10 +554,10 @@ public:
      *
      * @param payload Payload to be used for the pong
      */
-    void pong(const std::string & payload);
+    void pong(std::string const & payload);
 
     /// exception free variant of pong
-    void pong(const std::string & payload, lib::error_code & ec);
+    void pong(std::string const & payload, lib::error_code & ec);
     
     /// Close the connection
     /**
@@ -478,13 +577,12 @@ public:
      * if necessary.
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
      */
-    void close(const close::status::value code, const std::string & reason);
+    void close(close::status::value const code, std::string const & reason);
     
     /// exception free variant of close
-    void close(const close::status::value code, const std::string & reason, 
+    void close(close::status::value const code, std::string const & reason, 
         lib::error_code & ec);
     
     ////////////////////////////////////////////////
@@ -507,7 +605,7 @@ public:
      *
      * @return The host component of the connection URI
      */
-    const std::string& get_host() const;
+    std::string const & get_host() const;
     
     /// Returns the resource component of the connection URI
     /**
@@ -516,7 +614,7 @@ public:
      *
      * @return The resource component of the connection URI
      */
-    const std::string& get_resource() const;
+    std::string const & get_resource() const;
     
     /// Returns the port component of the connection URI
     /**
@@ -556,7 +654,7 @@ public:
      *
      * @return The negotiated subprotocol
      */
-    const std::string& get_subprotocol() const;
+    std::string const & get_subprotocol() const;
     
     /// Gets all of the subprotocols requested by the client
     /**
@@ -565,7 +663,7 @@ public:
      *
      * @return A vector of the requested subprotocol
      */
-    const std::vector<std::string> & get_requested_subprotocols() const;
+    std::vector<std::string> const & get_requested_subprotocols() const;
     
     /// Adds the given subprotocol string to the request list (exception free)
     /**
@@ -577,11 +675,10 @@ public:
      * preference.
      *
      * @param request The subprotocol to request
-     *
      * @param ec A reference to an error code that will be filled in the case of
      * errors
      */
-    void add_subprotocol(const std::string &request, lib::error_code & ec);
+    void add_subprotocol(std::string const & request, lib::error_code & ec);
     
     /// Adds the given subprotocol string to the request list
     /**
@@ -594,7 +691,7 @@ public:
      *
      * @param request The subprotocol to request
      */
-    void add_subprotocol(const std::string &request);
+    void add_subprotocol(std::string const & request);
     
     /// Select a subprotocol to use (exception free)
     /**
@@ -606,11 +703,10 @@ public:
      * This member function is valid on server endpoints/connections only
      *
      * @param value The subprotocol to select
-     *
      * @param ec A reference to an error code that will be filled in the case of
      * errors
      */
-    void select_subprotocol(const std::string & value, lib::error_code & ec);
+    void select_subprotocol(std::string const & value, lib::error_code & ec);
     
     /// Select a subprotocol to use
     /**
@@ -623,7 +719,7 @@ public:
      *
      * @param value The subprotocol to select
      */
-    void select_subprotocol(const std::string & value);
+    void select_subprotocol(std::string const & value);
     
     /////////////////////////////////////////////////////////////
     // Pass-through access to the request and response objects //
@@ -634,16 +730,18 @@ public:
      * Retrieve the value of a header from the handshake HTTP request.
      * 
      * @param key Name of the header to get
+     * @return The value of the header
      */
-    const std::string & get_request_header(const std::string &key);
+    std::string const & get_request_header(std::string const & key);
     
     /// Retrieve a response header
     /**
      * Retrieve the value of a header from the handshake HTTP request.
      * 
      * @param key Name of the header to get
+     * @return The value of the header
      */
-    const std::string & get_response_header(const std::string &key);
+    std::string const & get_response_header(std::string const & key);
     
     /// Set response status code and message
     /**
@@ -674,7 +772,7 @@ public:
      * @param msg Message to set
      * @see websocketpp::http::response::set_status
      */
-    void set_status(http::status_code::value code, const std::string& msg);
+    void set_status(http::status_code::value code, std::string const & msg);
     
     /// Set response body content
     /**
@@ -689,7 +787,7 @@ public:
      * @param value String data to include as the body content.
      * @see websocketpp::http::response::set_body
      */
-    void set_body(const std::string& value);
+    void set_body(std::string const & value);
     
     /// Append a header
     /**
@@ -705,7 +803,7 @@ public:
      * @see replace_header
      * @see websocketpp::http::parser::append_header
      */
-    void append_header(const std::string &key,const std::string &val);
+    void append_header(std::string const  &key, std::string const & val);
     
     /// Replace a header
     /**
@@ -720,7 +818,7 @@ public:
      * @see add_header
      * @see websocketpp::http::parser::replace_header
      */
-    void replace_header(const std::string &key,const std::string &val);
+    void replace_header(std::string const & key, std::string const & val);
     
     /// Remove a header
     /**
@@ -732,7 +830,25 @@ public:
      * @param key The name of the header to remove
      * @see websocketpp::http::parser::remove_header
      */
-    void remove_header(const std::string &key);
+    void remove_header(std::string const & key);
+    
+    /// Get request object
+    /**
+     * Direct access to request object. This can be used to call methods of the
+     * request object that are not part of the standard request API that 
+     * connection wraps.
+     *
+     * Note use of this method involves using behavior specific to the 
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @return A const reference to the raw request object
+     */
+    request_type const & get_request() const {
+        return m_request;
+    }
     
     /////////////////////////////////////////////////////////////
     // Pass-through access to the other connection information //
@@ -765,7 +881,7 @@ public:
      *
      * @return The connection's origin value from the opening handshake.
      */
-    const std::string& get_origin() const;
+    std::string const & get_origin() const;
     
     /// Return the connection state.
     /**
@@ -774,6 +890,52 @@ public:
      * @return The connection's current state.
      */
     session::state::value get_state() const;
+    
+    
+    /// Get the WebSocket close code sent by this endpoint.
+    /**
+     * @return The WebSocket close code sent by this endpoint.
+     */
+    close::status::value get_local_close_code() const {
+        return m_local_close_code;
+    }
+    
+    /// Get the WebSocket close reason sent by this endpoint.
+    /**
+     * @return The WebSocket close reason sent by this endpoint.
+     */
+    std::string const & get_local_close_reason() const {
+        return m_local_close_reason;
+    }
+    
+    /// Get the WebSocket close code sent by the remote endpoint.
+    /**
+     * @return The WebSocket close code sent by the remote endpoint.
+     */
+    close::status::value get_remote_close_code() const {
+        return m_remote_close_code;
+    }
+    
+    /// Get the WebSocket close reason sent by the remote endpoint.
+    /**
+     * @return The WebSocket close reason sent by the remote endpoint.
+     */
+    std::string const & get_remote_close_reason() const {
+        return m_remote_close_reason;
+    }
+    
+    /// Get the internal error code for a closed/failed connection
+    /**
+     * Retrieves a machine readable detailed error code indicating the reason
+     * that the connection was closed or failed. Valid only after the close or
+     * fail handler is called.
+     *
+     * @return Error code indicating the reason the connection was closed or 
+     * failed
+     */
+    lib::error_code get_ec() const {
+        return m_ec;
+    }
     
     ////////////////////////////////////////////////////////////////////////
     // The remaining public member functions are for internal/policy use  //
@@ -797,20 +959,20 @@ public:
     
     void start();
     
-    void read_handshake(size_t num_bytes);   
-
-    //void write(std::string msg);
-    //void handle_write(const lib::error_code& ec);
+    void read_handshake(size_t num_bytes);
     
-    void handle_read_handshake(const lib::error_code& ec,
+    void handle_read_handshake(lib::error_code const & ec,
         size_t bytes_transferred);
-    void handle_read_http_response(const lib::error_code& ec,
+    void handle_read_http_response(lib::error_code const & ec,
         size_t bytes_transferred);
     
-    void handle_send_http_response(const lib::error_code& ec);
-    void handle_send_http_request(const lib::error_code& ec);
+    void handle_send_http_response(lib::error_code const & ec);
+    void handle_send_http_request(lib::error_code const & ec);
     
-    void handle_read_frame(const lib::error_code& ec,
+    void handle_open_handshake_timeout(lib::error_code const & ec);
+    void handle_close_handshake_timeout(lib::error_code const & ec);
+    
+    void handle_read_frame(lib::error_code const & ec,
         size_t bytes_transferred);
     
     /// Get array of WebSocket protocol versions that this connection supports.
@@ -820,12 +982,12 @@ public:
     /// internally by the endpoint class.
     void set_termination_handler(termination_handler new_handler);
     
-    void terminate(const lib::error_code & ec);
-    void handle_terminate(terminate_status tstat, const lib::error_code& ec);
+    void terminate(lib::error_code const & ec);
+    void handle_terminate(terminate_status tstat, lib::error_code const & ec);
     
     /// Checks if there are frames in the send queue and if there are sends one
     /**
-     * TODO: unit tests
+     * \todo unit tests
      *
      * This method locks the m_write_lock mutex
      */
@@ -833,7 +995,7 @@ public:
     
     /// Process the results of a frame write operation and start the next write
     /**
-     * TODO: unit tests
+     * \todo unit tests
      *
      * This method locks the m_write_lock mutex
      *
@@ -843,9 +1005,9 @@ public:
      * @param ec A status code from the transport layer, zero on success, 
      * non-zero otherwise.
      */
-    void handle_write_frame(bool terminate, const lib::error_code& ec);
+    void handle_write_frame(bool terminate, lib::error_code const & ec);
 protected:
-    void handle_transport_init(const lib::error_code& ec);
+    void handle_transport_init(lib::error_code const & ec);
     
     /// Set m_processor based on information in m_request. Set m_response 
     /// status and return false on error.
@@ -917,13 +1079,11 @@ private:
      * other settings (such as silent close).
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
-     *
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_ack(close::status::value code = 
-        close::status::blank, const std::string &reason = "");
+        close::status::blank, std::string const & reason = "");
 
     /// Send close frame
     /**
@@ -936,15 +1096,12 @@ private:
      * whether or not to terminate the TCP connection after sending it.
      *
      * @param code The close code to send
-     *
      * @param reason The close reason to send
-     *
      * @param ack Whether or not this is an acknowledgement close frame
-     *
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_frame(close::status::value code = 
-        close::status::blank, const std::string &reason = "", bool ack = false,
+        close::status::blank, std::string const & reason = "", bool ack = false,
         bool terminal = false);
 
     /// Get a pointer to a new WebSocket protocol processor for a given version
@@ -965,7 +1122,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * TODO: unit tests
+     * @todo unit tests
      *
      * @param msg The message to push
      */
@@ -978,7 +1135,7 @@ private:
      *
      * Must be called while holding m_write_lock
      *
-     * TODO: unit tests
+     * @todo unit tests
      *
      * @return the message_ptr at the front of the queue
      */
@@ -994,10 +1151,15 @@ private:
     
     /// Prints information about a connection being closed to the access log
     /**
-     * Prints information about a connection being closed to the access log.
      * Includes: local and remote close codes and reasons
      */
     void log_close_result();
+    
+    /// Prints information about a connection being failed to the access log
+    /**
+     * Includes: error code and message for why it was failed
+     */
+    void log_fail_result();
     
     // static settings
     const std::string       m_user_agent;
@@ -1043,10 +1205,11 @@ private:
     size_t                  m_buf_cursor;
     termination_handler     m_termination_handler;
     con_msg_manager_ptr     m_msg_manager;
+    timer_ptr               m_handshake_timer;
     timer_ptr               m_ping_timer;
     
-    // TODO: this is not memory efficient. this value is not used after the
-    // handshake.
+    /// @todo this is not memory efficient. this value is not used after the
+    /// handshake.
     std::string m_handshake_buffer;
     
     /// Pointer to the processor object for this connection
@@ -1098,7 +1261,7 @@ private:
     // of the whole connection.
     std::vector<std::string> m_requested_subprotocols;
     
-    const bool              m_is_server;
+    bool const              m_is_server;
     alog_type& m_alog;
     elog_type& m_elog;
     
@@ -1116,6 +1279,11 @@ private:
 
     /// Close reason that was received on the wire from the remote endpoint
     std::string             m_remote_close_reason;
+    
+    /// Detailed internal error code
+    lib::error_code m_ec;
+    
+    bool m_was_clean;
     
     /// Whether or not this endpoint initiated the closing handshake.
     bool                    m_closed_by_me;

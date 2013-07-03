@@ -35,8 +35,71 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
-inline bool parser::parse_parameter_list(const std::string& in, 
-    parameter_list& out) const
+inline void parser::set_version(std::string const & version) {
+    m_version = version;
+}
+
+inline std::string const & parser::get_header(std::string const & key) const {
+    header_list::const_iterator h = m_headers.find(key);
+    
+    if (h == m_headers.end()) {
+        return empty_header;
+    } else {
+        return h->second;
+    }
+}
+
+inline bool parser::get_header_as_plist(std::string const & key, 
+    parameter_list & out) const
+{
+    header_list::const_iterator it = m_headers.find(key);
+    
+    if (it == m_headers.end() || it->second.size() == 0) {
+        return false;
+    }
+
+    return this->parse_parameter_list(it->second,out);
+}
+
+inline void parser::append_header(std::string const & key, std::string const &
+    val)
+{
+    if (std::find_if(key.begin(),key.end(),is_not_token_char) != key.end()) {
+        throw exception("Invalid header name",status_code::bad_request);
+    }
+    
+    if (this->get_header(key) == "") {
+        m_headers[key] = val;
+    } else {
+        m_headers[key] += ", " + val;
+    }
+}
+
+inline void parser::replace_header(std::string const & key, std::string const &
+    val)
+{
+    m_headers[key] = val;
+}
+
+inline void parser::remove_header(std::string const & key) {
+    m_headers.erase(key);
+}
+
+inline void parser::set_body(std::string const & value) {
+    if (value.size() == 0) {
+        remove_header("Content-Length");
+        m_body = "";
+        return;
+    }
+    
+    std::stringstream len;
+    len << value.size();
+    replace_header("Content-Length", len.str());
+    m_body = value;
+}
+
+inline bool parser::parse_parameter_list(std::string const & in, 
+    parameter_list & out) const
 {
     if (in.size() == 0) {
         return false;
@@ -47,81 +110,7 @@ inline bool parser::parse_parameter_list(const std::string& in,
     return (it == in.begin());
 }
 
-inline bool parser::get_header_as_plist(const std::string& key, 
-    parameter_list& out) const
-{
-    header_list::const_iterator it = m_headers.find(key);
-    
-    // If this header doesn't exist it is valid
-    if (it == m_headers.end()) {
-        return false;
-    }
-    
-    // If this header exists but is empty it is valid
-    if (it->second.size() == 0) {
-        return false;
-    }
-
-    return this->parse_parameter_list(it->second,out);
-}
-
-inline void parser::set_version(const std::string& version) {
-    // TODO: validation?
-    
-    // first four chars == HTTP/
-    
-    m_version = version;
-}
-    
-inline const std::string& parser::get_header(const std::string& key) const {
-    header_list::const_iterator h = m_headers.find(key);
-    
-    if (h == m_headers.end()) {
-        return empty_header;
-    } else {
-        return h->second;
-    }
-}
-    
-inline void parser::append_header(const std::string &key,const std::string 
-    &val)
-{
-    if (std::find_if(key.begin(),key.end(),is_not_token_char) != key.end()) {
-        throw exception("Invalid header name",status_code::bad_request);
-    }
-    
-    // TODO: prevent use of reserved headers?
-    if (this->get_header(key) == "") {
-        m_headers[key] = val;
-    } else {
-        m_headers[key] += ", " + val;
-    }
-}
-
-inline void parser::replace_header(const std::string &key,const std::string 
-    &val)
-{
-    m_headers[key] = val;
-}
-
-inline void parser::remove_header(const std::string &key) {
-    m_headers.erase(key);
-}
-
-inline void parser::set_body(const std::string& value) {
-    if (value.size() == 0) {
-        remove_header("Content-Length");
-        m_body = "";
-        return;
-    }
-    
-    std::stringstream foo;
-    foo << value.size();
-    replace_header("Content-Length", foo.str());
-    m_body = value;
-}
-
-inline bool parser::parse_headers(std::istream& s) {
+inline bool parser::parse_headers(std::istream & s) {
     std::string header;
     std::string::size_type end;
     
@@ -143,17 +132,6 @@ inline bool parser::parse_headers(std::istream& s) {
     return true;
 }
 
-inline std::string parser::raw_headers() const {
-    std::stringstream raw;
-    
-    header_list::const_iterator it;
-    for (it = m_headers.begin(); it != m_headers.end(); it++) {
-        raw << it->first << ": " << it->second << "\r\n";
-    }
-    
-    return raw.str();
-}
-
 inline void parser::process_header(std::string::iterator begin, 
     std::string::iterator end)
 {
@@ -171,6 +149,19 @@ inline void parser::process_header(std::string::iterator begin,
     append_header(std::string(begin,cursor),
                   std::string(cursor+sizeof(header_separator)-1,end));
 }
+
+inline std::string parser::raw_headers() const {
+    std::stringstream raw;
+    
+    header_list::const_iterator it;
+    for (it = m_headers.begin(); it != m_headers.end(); it++) {
+        raw << it->first << ": " << it->second << "\r\n";
+    }
+    
+    return raw.str();
+}
+
+
 
 } // namespace parser
 } // namespace http

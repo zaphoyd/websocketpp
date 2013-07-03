@@ -25,17 +25,37 @@
  * 
  */
 
-#ifndef WEBSOCKETPP_COMMON_PLATFORMS_HPP
-#define WEBSOCKETPP_COMMON_PLATFORMS_HPP
+#ifndef WEBSOCKETPP_VERSION_HPP
+#define WEBSOCKETPP_VERSION_HPP
 
+/// Namespace for the WebSocket++ project
+namespace websocketpp {
+
+/*
+ other places where version information is kept
+ - echo_client
+ - readme.md
+ - changelog.md
+ - Doxyfile
+ - CMakeLists.txt
+*/
+
+/// Library major version number
+static int const major_version = 0;
+/// Library minor version number
+static int const minor_version = 3;
+/// Library patch version number
+static int const patch_version = 0;
+/// Library pre-release flag
 /**
- * This header contains any platform specific preprocessor adjustments that 
- * don't fit somewhere else better.
+ * This is a textual flag indicating the type and number for pre-release 
+ * versions (dev, alpha, beta, rc). This will be blank for release versions.
  */
- 
-#if defined(WIN32) && !defined(NOMINMAX)
-    // don't define min and max macros that conflict with std::min and std::max
-    #define NOMINMAX
-#endif
+static char const prerelease_flag[] = "alpha2";
 
-#endif // WEBSOCKETPP_COMMON_PLATFORMS_HPP
+/// Default user agent string
+static char const user_agent[] = "WebSocket++/0.3.0-alpha2";
+
+} // namespace websocketpp
+
+#endif // WEBSOCKETPP_VERSION_HPP

@@ -30,13 +30,12 @@
 
 #include <websocketpp/connection.hpp>
 #include <websocketpp/logger/levels.hpp>
+#include <websocketpp/version.hpp>
 
 #include <iostream>
 #include <set>
 
 namespace websocketpp {
-
-static const char user_agent[] = "WebSocket++/0.3.0dev";
 
 /// Creates and manages connections associated with a WebSocket endpoint
 template <typename connection, typename config>
@@ -89,8 +88,8 @@ public:
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
     explicit endpoint(bool is_server)
-      : m_alog(config::alog_level,&std::cout)
-      , m_elog(config::elog_level,&std::cerr)
+      : m_alog(config::alog_level, &std::cout)
+      , m_elog(config::elog_level, &std::cerr)
       , m_user_agent(::websocketpp::user_agent)
       , m_is_server(is_server)
     {
@@ -107,7 +106,7 @@ public:
      * Returns the user agent string that this endpoint will use when creating
      * new connections. 
      *
-     * The default value for this version is WebSocket++/0.3.0dev
+     * The default value for this version is stored in websocketpp::user_agent
      *
      * @return The user agent string.
      */ 
@@ -123,11 +122,11 @@ public:
      *
      * For best results set this before accepting or opening connections.
      *
-     * The default value for this version is WebSocket++/0.3.0dev
+     * The default value for this version is stored in websocketpp::user_agent
      *
      * @param ua The string to set the user agent to.
      */ 
-    void set_user_agent(const std::string& ua) {
+    void set_user_agent(std::string const & ua) {
         scoped_lock_type guard(m_mutex);
         m_user_agent = ua;
     }
@@ -190,21 +189,17 @@ public:
     
     /// Get reference to access logger
     /**
-     * TODO
-     * 
      * @return A reference to the access logger
      */
-    alog_type& get_alog() {
+    alog_type & get_alog() {
         return m_alog;
     }
     
     /// Get reference to error logger
     /**
-     * TODO
-     * 
      * @return A reference to the error logger
      */
-    elog_type& get_elog() {
+    elog_type & get_elog() {
         return m_elog;
     }
     
@@ -271,23 +266,65 @@ public:
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
-    void send(connection_hdl hdl, const std::string& payload, 
+    void send(connection_hdl hdl, std::string const & payload, 
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, const std::string& payload,
+    void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op);
         
-    void send(connection_hdl hdl, const void* payload, size_t len,
+    void send(connection_hdl hdl, void const * payload, size_t len,
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, const void* payload, size_t len,
+    void send(connection_hdl hdl, void const * payload, size_t len,
         frame::opcode::value op);
 
     void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
     void send(connection_hdl hdl, message_ptr msg);
     
-    void close(connection_hdl hdl, const close::status::value code, 
-        const std::string & reason, lib::error_code & ec);
-    void close(connection_hdl hdl, const close::status::value code, 
-        const std::string & reason);
+    void close(connection_hdl hdl, close::status::value const code, 
+        std::string const & reason, lib::error_code & ec);
+    void close(connection_hdl hdl, close::status::value const code, 
+        std::string const & reason);
+
+    /// Send a ping to a specific connection
+    /**
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     * @param [out] ec A reference to an error code to fill in
+     */
+    void ping(connection_hdl hdl, std::string const & payload, 
+        lib::error_code & ec);
+    /// Send a ping to a specific connection
+    /**
+     * Exception variant of `ping`
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     */
+    void ping(connection_hdl hdl, std::string const & payload);
+
+    /// Send a pong to a specific connection
+    /**
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     * @param [out] ec A reference to an error code to fill in
+     */
+    void pong(connection_hdl hdl, std::string const & payload, 
+        lib::error_code & ec);
+    /// Send a pong to a specific connection
+    /**
+     * Exception variant of `pong`
+     *
+     * @since 0.3.0-alpha3
+     *
+     * @param [in] hdl The connection_hdl of the connection to send to.
+     * @param [in] payload The payload string to send.
+     */
+    void pong(connection_hdl hdl, std::string const & payload);
         
     /// Retrieves a connection_ptr from a connection_hdl (exception free)
     /**
@@ -349,7 +386,7 @@ private:
     std::set<connection_ptr>    m_connections;
     
     // static settings
-    const bool                  m_is_server;
+    bool const                  m_is_server;
     
     // endpoint state
     mutex_type                  m_mutex;

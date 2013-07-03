@@ -10,6 +10,8 @@ env:
 script: scons -j 2 && scons test
 branches:
   only:
+    - master
+    - permessage-deflate
     - experimental
     - 0.3.x-cmake
 notifications:

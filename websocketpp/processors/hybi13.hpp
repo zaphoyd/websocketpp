@@ -28,18 +28,11 @@
 #ifndef WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 #define WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 
-// For htonl
-#if defined(WIN32)
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-#endif
-
 #include <cassert>
 
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
-
+#include <websocketpp/common/network.hpp>
 #include <websocketpp/http/constants.hpp>
 
 #include <websocketpp/processors/processor.hpp>
@@ -88,10 +81,10 @@ public:
     }
     
     bool has_permessage_deflate() const {
-        return m_permessage_deflate.is_implimented();
+        return m_permessage_deflate.is_implemented();
     }
 
-    err_str_pair negotiate_extensions(const request_type& req) {
+    err_str_pair negotiate_extensions(request_type const & req) {
         err_str_pair ret;
 
         // Respect blanket disabling of all extensions and don't even parse
@@ -101,7 +94,7 @@ public:
             return ret;
         }
         
-        typename request_type::parameter_list p;
+        http::parameter_list p;
 
         bool error = req.get_header_as_plist("Sec-WebSocket-Extensions",p);
         
@@ -115,18 +108,15 @@ public:
             return ret;
         }
         
-        typename request_type::parameter_list::const_iterator it;
+        http::parameter_list::const_iterator it;
         
-        if (m_permessage_deflate.is_implimented()) {
+        if (m_permessage_deflate.is_implemented()) {
             err_str_pair neg_ret;
             for (it = p.begin(); it != p.end(); ++it) {
                 // look through each extension, if the key is permessage-deflate
                 if (it->first == "permessage-deflate") {
-                    std::cout << "mark3: " << std::endl;
                     neg_ret = m_permessage_deflate.negotiate(it->second);
                     
-                    std::cout << neg_ret.first.message() << " - " << neg_ret.second << std::endl;
-
                     if (neg_ret.first) {
                         // Figure out if this is an error that should halt all
                         // extension negotiations or simply cause negotiation of
@@ -146,7 +136,7 @@ public:
         return ret;
     }
 
-    lib::error_code validate_handshake(const request_type& r) const {
+    lib::error_code validate_handshake(request_type const & r) const {
         if (r.get_method() != "GET") {
             return make_error_code(error::invalid_http_method);
         }
@@ -170,7 +160,7 @@ public:
      * generic struct if other user input parameters to the processed handshake
      * are found.
      */
-    lib::error_code process_handshake(const request_type& request, const
+    lib::error_code process_handshake(request_type const & request, const
         std::string & subprotocol, response_type& response) const
     {
         std::string server_key = request.get_header("Sec-WebSocket-Key");
@@ -193,7 +183,7 @@ public:
     }
     
     lib::error_code client_handshake_request(request_type& req, uri_ptr 
-        uri, const std::vector<std::string> & subprotocols) const
+        uri, std::vector<std::string> const & subprotocols) const
     {
         req.set_method("GET");
         req.set_uri(uri->get_resource());
@@ -229,7 +219,7 @@ public:
         return lib::error_code();
     }
     
-    lib::error_code validate_server_handshake_response(const request_type& req,
+    lib::error_code validate_server_handshake_response(request_type const & req,
         response_type& res) const
     {
         // A valid response has an HTTP 101 switching protocols code
@@ -238,7 +228,7 @@ public:
         }
         
         // And the upgrade token in an upgrade header
-        const std::string& upgrade_header = res.get_header("Upgrade");
+        std::string const & upgrade_header = res.get_header("Upgrade");
         if (utility::ci_find_substr(upgrade_header, constants::upgrade_token,
             sizeof(constants::upgrade_token)-1) == upgrade_header.end())
         {
@@ -246,7 +236,7 @@ public:
         }
         
         // And the websocket token in the connection header
-        const std::string& con_header = res.get_header("Connection");
+        std::string const & con_header = res.get_header("Connection");
         if (utility::ci_find_substr(con_header, constants::connection_token,
             sizeof(constants::connection_token)-1) == con_header.end())
         {
@@ -264,22 +254,22 @@ public:
         return lib::error_code();
     }
     
-    std::string get_raw(const response_type& res) const {
+    std::string get_raw(response_type const & res) const {
         return res.raw();
     }
     
-    const std::string& get_origin(const request_type& r) const {
+    std::string const & get_origin(request_type const & r) const {
         return r.get_header("Origin");
     }
     
-    lib::error_code extract_subprotocols(const request_type & req,
+    lib::error_code extract_subprotocols(request_type const & req,
         std::vector<std::string> & subprotocol_list)
     {
         if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
-            typename request_type::parameter_list p;
+            http::parameter_list p;
         
              if (!req.get_header_as_plist("Sec-WebSocket-Protocol",p)) {
-                 typename request_type::parameter_list::const_iterator it;
+                 http::parameter_list::const_iterator it;
 
                  for (it = p.begin(); it != p.end(); ++it) {
                      subprotocol_list.push_back(it->first);
@@ -291,7 +281,7 @@ public:
         return lib::error_code();
     }
     
-    uri_ptr get_uri(const request_type& request) const {
+    uri_ptr get_uri(request_type const & request) const {
         return get_uri_from_host(request,(base::m_secure ? "wss" : "ws"));
     }
 
@@ -503,9 +493,7 @@ public:
      * TODO: tests
      * 
      * @param in An unprepared message to prepare
-     *
      * @param out A message to be overwritten with the prepared message
-     *
      * @return error code
      */
     virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
@@ -577,16 +565,17 @@ public:
         return lib::error_code();
     }
 
-    lib::error_code prepare_ping(const std::string& in, message_ptr out) const {
+    /// Get URI
+    lib::error_code prepare_ping(std::string const & in, message_ptr out) const {
         return this->prepare_control(frame::opcode::PING,in,out);
     }
 
-    lib::error_code prepare_pong(const std::string& in, message_ptr out) const {
+    lib::error_code prepare_pong(std::string const & in, message_ptr out) const {
         return this->prepare_control(frame::opcode::PONG,in,out);
     }
 
     virtual lib::error_code prepare_close(close::status::value code, 
-        const std::string & reason, message_ptr out) const
+        std::string const & reason, message_ptr out) const
     {
         if (close::status::reserved(code)) {
             return make_error_code(error::reserved_close_code);
@@ -638,7 +627,7 @@ protected:
             }
             
             key = base64_encode(
-                reinterpret_cast<const unsigned char*>(message_digest),
+                reinterpret_cast<unsigned char const *>(message_digest),
                 20
             );
             
@@ -649,7 +638,7 @@ protected:
     }
     
     /// Reads bytes from buf into m_basic_header
-    size_t copy_basic_header_bytes(const uint8_t * buf, size_t len) {
+    size_t copy_basic_header_bytes(uint8_t const * buf, size_t len) {
         if (len == 0 || m_bytes_needed == 0) {
             return 0;
         }
@@ -681,7 +670,7 @@ protected:
     }
 
     /// Reads bytes from buf into m_extended_header
-    size_t copy_extended_header_bytes(const uint8_t * buf, size_t len) {
+    size_t copy_extended_header_bytes(uint8_t const * buf, size_t len) {
         size_t bytes_to_read = std::min(m_bytes_needed,len);
         
         std::copy(buf,buf+bytes_to_read,m_extended_header.bytes+m_cursor);
@@ -701,24 +690,29 @@ protected:
      * bytes actually needed. At most min(m_bytes_needed,len) will be processed.
      * 
      * @param buf Input/working buffer
-     *
      * @param len Length of buf
-     *
      * @return Number of bytes processed or zero in case of an error
-     * 
      */
     size_t process_payload_bytes(uint8_t * buf, size_t len, lib::error_code& ec)
     {
         // unmask if masked
         if (frame::get_masked(m_basic_header)) {
-            m_current_msg->prepared_key = frame::word_mask_circ(
-                buf,
-                len,
-                m_current_msg->prepared_key
-            );
+            #ifdef WEBSOCKETPP_STRICT_MASKING
+                m_current_msg->prepared_key = frame::byte_mask_circ(
+                    buf,
+                    len,
+                    m_current_msg->prepared_key
+                );
+            #else
+                m_current_msg->prepared_key = frame::word_mask_circ(
+                    buf,
+                    len,
+                    m_current_msg->prepared_key
+                );
+            #endif
         }
         
-        std::string& out = m_current_msg->msg_ptr->get_raw_payload();
+        std::string & out = m_current_msg->msg_ptr->get_raw_payload();
         size_t offset = out.size();
 
         // decompress message if needed.
@@ -758,15 +752,12 @@ protected:
      * Validates an incoming hybi13 basic header.
      * 
      * @param h The basic header to validate
-     *
      * @param is_server Whether or not the endpoint that received this frame
      * is a server.
-     *
      * @param new_msg Whether or not this is the first frame of the message
-     *
      * @return 0 on success or a non-zero error code on failure
      */
-    lib::error_code validate_incoming_basic_header(const frame::basic_header &h, 
+    lib::error_code validate_incoming_basic_header(frame::basic_header const & h, 
         bool is_server, bool new_msg) const
     {
         frame::opcode::value op = frame::get_opcode(h);
@@ -837,15 +828,15 @@ protected:
     /**
      * Validates an incoming hybi13 full header.
      *
+     * @todo unit test for the >32 bit frames on 32 bit systems case
+     *
      * @param h The basic header to validate
-     *
      * @param e The extended header to validate
-     *
      * @return An error_code, non-zero values indicate why the validation 
      * failed
      */
-    lib::error_code validate_incoming_extended_header(const frame::basic_header h, 
-        const frame::extended_header e) const
+    lib::error_code validate_incoming_extended_header(frame::basic_header h, 
+        frame::extended_header e) const
     {
         uint8_t basic_size = frame::get_basic_size(h);
         uint64_t payload_size = frame::get_payload_size(h,e);
@@ -864,7 +855,6 @@ protected:
         }
 
         // Check for >32bit frames on 32 bit systems
-        // TODO: unit test for this case
         if (sizeof(size_t) == 4 && (payload_size >> 32)) {
             return make_error_code(error::requires_64bit);
         }
@@ -872,15 +862,23 @@ protected:
         return lib::error_code();
     }
     
-    void masked_copy (const std::string & i, std::string & o,
+    /// Copy and mask/unmask in one operation
+    /**
+     * Reads input from one string and writes unmasked output to another.
+     *
+     * @param [in] i The input string.
+     * @param [out] o The output string.
+     * @param [in] key The masking key to use for masking/unmasking
+     */
+    void masked_copy (std::string const & i, std::string & o,
         frame::masking_key_type key) const
     {
         #ifdef WEBSOCKETPP_STRICT_MASKING
             frame::byte_mask(i.begin(),i.end(),o.begin(),key);
         #else
             websocketpp::frame::word_mask_exact(
-                reinterpret_cast<uint8_t*>(const_cast<char*>(i.data())),
-                reinterpret_cast<uint8_t*>(const_cast<char*>(o.data())),
+                reinterpret_cast<uint8_t *>(const_cast<char *>(i.data())),
+                reinterpret_cast<uint8_t *>(const_cast<char *>(o.data())),
                 i.size(),
                 key
             );
@@ -892,15 +890,12 @@ protected:
      * Internal control frame building method. Handles validation, masking, etc
      *
      * @param op The control opcode to use
-     *
      * @param payload The payload to use
-     *
      * @param out The message buffer to store the prepared frame in
-     *
      * @return Status code, zero on success, non-zero on error
      */
     lib::error_code prepare_control(frame::opcode::value op,
-        const std::string & payload, message_ptr out) const
+        std::string const & payload, message_ptr out) const
     {
         if (!out) {
             return make_error_code(error::invalid_arguments);
@@ -984,7 +979,7 @@ protected:
     msg_metadata m_control_msg;
 
     // Pointer to the metadata associated with the frame being read
-    msg_metadata *m_current_msg;
+    msg_metadata * m_current_msg;
     
     // Extended header of current frame
     frame::extended_header m_extended_header;
@@ -995,7 +990,7 @@ protected:
     // utf8 validator
     // compression state
 
-    rng_type& m_rng;
+    rng_type & m_rng;
 
     // Overall state of the processor
     state m_state;

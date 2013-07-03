@@ -36,12 +36,10 @@
 
 BOOST_AUTO_TEST_CASE( basic_http_request ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
-    std::string output = "HTTP/1.1 500 Internal Server Error\r\nServer: " + 
+    std::string output = "HTTP/1.1 426 Upgrade Required\r\nServer: " + 
 		                 std::string(websocketpp::user_agent)+"\r\n\r\n";
 	
 	std::string o2 = run_server_test(input);
-
-	std::cout << "output: " << o2 << std::endl;
 
     BOOST_CHECK(o2 == output);
 }
