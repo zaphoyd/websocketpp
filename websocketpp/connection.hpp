@@ -968,8 +968,10 @@ public:
      * 
      * @return A new message.
      */
-    message_ptr get_message() const {
-        return m_msg_manager->get_message();
+    message_ptr get_message(websocketpp::frame::opcode::value op, size_t size) 
+        const
+    {
+        return m_msg_manager->get_message(op, size);
     }
     
     void start();
