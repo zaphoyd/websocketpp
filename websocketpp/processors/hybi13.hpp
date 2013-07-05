@@ -108,7 +108,7 @@ public:
             return ret;
         }
         
-        http::parameter_list::const_iterator it;
+        http::parameter_list::const_iterator it; 
         
         if (m_permessage_deflate.is_implemented()) {
             err_str_pair neg_ret;
