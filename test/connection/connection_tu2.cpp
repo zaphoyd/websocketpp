@@ -36,7 +36,7 @@ std::string run_server_test(std::string input) {
     return run_server_test(test_server,input);
 }
 
-std::string run_server_test(server& s, std::string input) {
+std::string run_server_test(server & s, std::string input) {
     server::connection_ptr con;
     std::stringstream output;
 	

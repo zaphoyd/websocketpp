@@ -117,12 +117,23 @@ public:
     
     /// Sets the user agent string that this endpoint will use
     /**
-     * Sets the user agent string that this endpoint will use when creating
-     * new connections. Changing this value will only affect future connections.
+     * Sets the identifier that this endpoint will use when creating new 
+     * connections. Changing this value will only affect future connections.
+     * For client endpoints this will be sent as the "User-Agent" header in
+     * outgoing requests. For server endpoints this will be sent in the "Server"
+     * response header.
+     *
+     * Setting this value to the empty string will suppress the use of the
+     * Server and User-Agent headers. This is typically done to hide 
+     * implementation details for security purposes.
      *
      * For best results set this before accepting or opening connections.
      *
      * The default value for this version is stored in websocketpp::user_agent
+     *
+     * This can be overridden on an individual connection basis by setting a 
+     * custom "Server" header during the validate handler or "User-Agent" 
+     * header on a connection before calling connect().
      *
      * @param ua The string to set the user agent to.
      */ 

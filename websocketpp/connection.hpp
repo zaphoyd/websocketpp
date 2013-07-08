@@ -957,6 +957,23 @@ public:
         transport_con_type::set_handle(hdl);
     }
     
+    /// Get a message buffer
+    /**
+     * @internal
+     * 
+     * Warning: This is not guaranteed to be part of the public release API
+     *
+     * Message buffers are used to store message payloads and other message 
+     * metadata.
+     * 
+     * @return A new message.
+     */
+    message_ptr get_message(websocketpp::frame::opcode::value op, size_t size) 
+        const
+    {
+        return m_msg_manager->get_message(op, size);
+    }
+    
     void start();
     
     void read_handshake(size_t num_bytes);
