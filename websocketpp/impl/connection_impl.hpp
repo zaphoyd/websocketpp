@@ -77,6 +77,7 @@ lib::error_code connection<config>::send(const std::string& payload,
 {
     message_ptr msg = m_msg_manager->get_message(op,payload.size());
     msg->append_payload(payload);
+    msg->set_compressed(true);
     
     return send(msg);
 }
