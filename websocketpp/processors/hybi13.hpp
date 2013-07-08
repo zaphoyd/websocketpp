@@ -405,15 +405,10 @@ public:
                 // If this was the last frame in the message set the ready flag.
                 // Otherwise, reset processor state to read additional frames.
                 if (frame::get_fin(m_basic_header)) {
-                    // ensure that text messages end on a valid UTF8 code point
-                    if (frame::get_opcode(m_basic_header) == frame::opcode::TEXT) {
-                        if (!m_current_msg->validator.complete()) {
-                            ec = make_error_code(error::invalid_utf8);
-                            break;
-                        }
+                    ec = finalize_message();
+                    if (ec) {
+                        break;
                     }
-
-                    m_state = READY;
                 } else {
                     this->reset_headers();
                 }
@@ -425,6 +420,27 @@ public:
         }
         
         return p;
+    }
+    
+    /// Perform any finalization actions on an incoming message
+    /**
+     * Called after the full message is received. Provides the opportunity for
+     * extensions to complete any data post processing as well as final UTF8 
+     * validation checks for text messages.
+     *
+     * @return A code indicating errors, if any
+     */
+    lib::error_code finalize_message() {
+        // ensure that text messages end on a valid UTF8 code point
+        if (frame::get_opcode(m_basic_header) == frame::opcode::TEXT) {
+            if (!m_current_msg->validator.complete()) {
+                return make_error_code(error::invalid_utf8);
+            }
+        }
+
+        m_state = READY;
+        
+        return lib::error_code();
     }
     
     void reset_headers() {
