@@ -138,7 +138,7 @@ public:
             case zlib_error:
                 return "A zlib function returned an error";
             case uninitialized:
-                return "Object must be initialized before use";
+                return "Deflate extension must be initialized before use";
             default:
                 return "Unknown permessage-compress error";
         }
