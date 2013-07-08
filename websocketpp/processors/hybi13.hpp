@@ -557,6 +557,11 @@ public:
                           && in->get_compressed();
         bool fin = in->get_fin();
         
+        if (masked) {
+            // Generate masking key.
+            key.i = m_rng();
+        }
+        
         // prepare payload
         if (compressed) {
             // compress and store in o after header.
@@ -586,11 +591,8 @@ public:
         
         // generate header
         frame::basic_header h(op,o.size(),fin,masked,compressed);
-        
+
         if (masked) {
-            // Generate masking key.
-            key.i = m_rng();
-            
             frame::extended_header e(o.size(),key.i);
             out->set_header(frame::prepare_header(h,e));
         } else {
