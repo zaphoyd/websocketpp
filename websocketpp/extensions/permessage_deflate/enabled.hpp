@@ -437,7 +437,7 @@ public:
      * @return Validation error or 0 on success
      */
     lib::error_code validate_offer(http::attribute_list const & response) {
-        
+        return lib::error_code();
     }
 
     /// Negotiate extension
