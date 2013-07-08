@@ -524,24 +524,14 @@ public:
                           && in->get_compressed();
         bool fin = in->get_fin();
         
-        // generate header
-        frame::basic_header h(op,i.size(),fin,masked,compressed);
-        
-        if (masked) {
-            // Generate masking key.
-            key.i = m_rng();
-            
-            frame::extended_header e(i.size(),key.i);
-            out->set_header(frame::prepare_header(h,e));
-        } else {
-            frame::extended_header e(i.size());
-            out->set_header(frame::prepare_header(h,e));
-        }
-                
         // prepare payload
         if (compressed) {
             // compress and store in o after header.
             m_permessage_deflate.compress(i,o);
+
+            // Strip trailing 4 0x00 0x00 0xff 0xff bytes before writing to the
+            // wire
+            o.resize(o.size()-4);
 
             // mask in place if necessary
             if (masked) {
@@ -559,6 +549,20 @@ public:
             } else {
                 std::copy(i.begin(),i.end(),o.begin());
             }
+        }
+        
+        // generate header
+        frame::basic_header h(op,o.size(),fin,masked,compressed);
+        
+        if (masked) {
+            // Generate masking key.
+            key.i = m_rng();
+            
+            frame::extended_header e(o.size(),key.i);
+            out->set_header(frame::prepare_header(h,e));
+        } else {
+            frame::extended_header e(o.size());
+            out->set_header(frame::prepare_header(h,e));
         }
 
         out->set_prepared(true);
