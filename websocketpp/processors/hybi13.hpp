@@ -560,6 +560,8 @@ public:
         if (masked) {
             // Generate masking key.
             key.i = m_rng();
+        } else {
+            key.i = 0;
         }
         
         // prepare payload
