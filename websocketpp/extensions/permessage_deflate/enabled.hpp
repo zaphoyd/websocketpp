@@ -48,6 +48,10 @@ namespace extensions {
 /**
  * ### permessage-deflate interface
  *
+ * **init**\n
+ * `lib::error_code init()`\n
+ * Performs initialization
+ *
  * **is_implimented**\n
  * `bool is_implimented()`\n
  * Returns whether or not the object impliments the extension or not

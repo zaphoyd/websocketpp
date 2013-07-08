@@ -57,6 +57,11 @@ public:
         return make_pair(make_error_code(error::disabled),std::string());
     }
     
+    /// Initialize state
+    lib::error_code init() {
+        return lib::error_code();
+    }
+    
     /// Returns true if the extension is capable of providing 
     /// permessage_deflate functionality
     bool is_implemented() const {
