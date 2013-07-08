@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE( compress_data ) {
     std::string compress_out;
     std::string decompress_out;
     
-    v.exts.init();
+    v.exts.init(true);
 
     v.ec = v.exts.compress(compress_in,compress_out);
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE( compress_data ) {
 BOOST_AUTO_TEST_CASE( compress_data_multiple ) {
     ext_vars v;
     
-    v.exts.init();
+    v.exts.init(true);
     
     for (int i = 0; i < 2; i++) {
         std::string compress_in = "Hello";
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE( decompress_data ) {
     std::string out = "";
     std::string reference = "Hello";
     
-    v.exts.init();
+    v.exts.init(true);
 
     v.ec = v.exts.decompress(in,11,out);
     

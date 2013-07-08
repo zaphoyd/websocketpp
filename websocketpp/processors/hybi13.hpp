@@ -127,7 +127,7 @@ public:
                         // Note: this list will need commas if WebSocket++ ever
                         // supports more than one extension
                         ret.second += neg_ret.second;
-                        m_permessage_deflate.init();
+                        m_permessage_deflate.init(base::m_server);
                         continue;
                     }
                 }

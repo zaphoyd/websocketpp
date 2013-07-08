@@ -58,7 +58,7 @@ public:
     }
     
     /// Initialize state
-    lib::error_code init() {
+    lib::error_code init(bool is_server) {
         return lib::error_code();
     }
     

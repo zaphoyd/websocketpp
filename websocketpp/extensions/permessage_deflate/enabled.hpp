@@ -49,7 +49,7 @@ namespace extensions {
  * ### permessage-deflate interface
  *
  * **init**\n
- * `lib::error_code init()`\n
+ * `lib::error_code init(bool is_server)`\n
  * Performs initialization
  *
  * **is_implimented**\n
@@ -246,15 +246,20 @@ public:
     
     /// Initialize zlib state
     /**
+     * Note: this should be called *after* the negotiation methods. It will use
+     * information from the negotiation to determine how to initialize the zlib
+     * data structures.
      *
      * @todo memory level, strategy, etc are hardcoded
-     * @todo server detection is hardcoded
+     *
+     * @param is_server Whether or not to initialize as a server or client.
+     * @return A code representing the error that occurred, if any
      */
-    lib::error_code init() {
+    lib::error_code init(bool is_server) {
         uint8_t deflate_bits;
         uint8_t inflate_bits;
 
-        if (true /*is_server*/) {
+        if (is_server) {
             deflate_bits = m_s2c_max_window_bits;
             inflate_bits = m_c2s_max_window_bits;
         } else {
