@@ -577,7 +577,7 @@ void connection<config>::start() {
 }
 
 template <typename config>
-void connection<config>::handle_transport_init(const lib::error_code& ec) {
+void connection<config>::handle_transport_init(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"connection handle_transport_init");
     
     {
@@ -1093,10 +1093,14 @@ void connection<config>::send_http_response() {
     
     m_response.set_version("HTTP/1.1");
     
-    // Set some common headers
-    m_response.replace_header("Server",m_user_agent);
-    
-    
+    // Set server header based on the user agent settings
+    if (m_response.get_header("Server") == "") {
+        if (!m_user_agent.empty()) {
+            m_response.replace_header("Server",m_user_agent);
+        } else {
+            m_response.remove_header("Server");
+        }
+    }
     
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
@@ -1206,9 +1210,13 @@ void connection<config>::send_http_request() {
         return;
     }
     
-    // Unless the user has overridden the user agent, send generic WS++
+    // Unless the user has overridden the user agent, send generic WS++ UA.
     if (m_request.get_header("User-Agent") == "") {
-        m_request.replace_header("User-Agent",m_user_agent);
+        if (!m_user_agent.empty()) {
+            m_request.replace_header("User-Agent",m_user_agent);
+        } else {
+            m_request.remove_header("User-Agent");
+        }
     }
         
     m_handshake_buffer = m_request.raw();
