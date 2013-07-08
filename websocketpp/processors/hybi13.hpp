@@ -718,10 +718,13 @@ protected:
         // decompress message if needed.
         if (m_permessage_deflate.is_enabled() 
             && frame::get_rsv1(m_basic_header))
-        {
+        {            
             // Decompress current buffer into the message buffer
-            m_permessage_deflate.decompress(buf,len,out);
-            
+            ec = m_permessage_deflate.decompress(buf,len,out);
+            if (ec) {
+                return 0;
+            }
+                          
             // get the length of the newly uncompressed output
             offset = out.size() - offset;
         } else {
