@@ -431,6 +431,23 @@ public:
      * @return A code indicating errors, if any
      */
     lib::error_code finalize_message() {
+        std::string & out = m_current_msg->msg_ptr->get_raw_payload();
+
+        // if the frame is compressed, append the compression
+        // trailer and flush the compression buffer.
+        if (m_permessage_deflate.is_enabled() 
+            && frame::get_rsv1(m_basic_header))
+        {
+            uint8_t trailer[4] = {0x00, 0x00, 0xff, 0xff};
+            
+            // Decompress current buffer into the message buffer
+            lib::error_code ec;
+            ec = m_permessage_deflate.decompress(trailer,4,out);
+            if (ec) {
+                return ec;
+            }
+        }
+        
         // ensure that text messages end on a valid UTF8 code point
         if (frame::get_opcode(m_basic_header) == frame::opcode::TEXT) {
             if (!m_current_msg->validator.complete()) {
