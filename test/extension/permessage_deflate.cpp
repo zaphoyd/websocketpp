@@ -500,44 +500,44 @@ BOOST_AUTO_TEST_CASE( negotiate_four_client_initiated ) {
 }
 
 // Compression
-/*
 BOOST_AUTO_TEST_CASE( compress_data ) {
     ext_vars v;
     
-    std::string in = "Hello";
-    std::string out;
-    std::string in2;
-    std::string out2;
+    std::string compress_in = "Hello";
+    std::string compress_out;
+    std::string decompress_out;
     
     v.exts.init();
 
-    v.ec = v.exts.compress(in,out);
-    
-    std::cout << "in : " << websocketpp::utility::to_hex(in) << std::endl;
-    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
-    std::cout << "out: " << websocketpp::utility::to_hex(out) << std::endl;
-
-    in2 = out;
-
-    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(in2.data()),in2.size(),out2);
+    v.ec = v.exts.compress(compress_in,compress_out);
     
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
-    std::cout << "out: " << websocketpp::utility::to_hex(out2) << std::endl;
-    BOOST_CHECK_EQUAL( out, out2 );
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+    
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( compress_in, decompress_out );
 }
+/// @todo: more compression tests
+/**
+ * - compress two messages in a row
+ * - compress a message larger than the compression buffer
+ * - compress when no context takeover is enabled
+ * - compress at different compression levels
+ */
 
+// Decompression
 BOOST_AUTO_TEST_CASE( decompress_data ) {
     ext_vars v;
     
-    uint8_t in[12] = {0xf2, 0x48, 0xcd, 0xc9, 0xc9, 0x07, 0x00, 0x00, 0x00, 0xff, 0xff};
-    std::string out;
+    uint8_t in[11] = {0xf2, 0x48, 0xcd, 0xc9, 0xc9, 0x07, 0x00, 0x00, 0x00, 0xff, 0xff};
+    std::string out = "";
+    std::string reference = "Hello";
     
     v.exts.init();
 
-    v.ec = v.exts.decompress(in,12,out);
+    v.ec = v.exts.decompress(in,11,out);
     
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
-    std::cout << "out: " << websocketpp::utility::to_hex(out) << std::endl;
-    BOOST_CHECK( false );
+    BOOST_CHECK_EQUAL( out, reference );
 }
-*/
