@@ -493,14 +493,14 @@ public:
         size_t output;
         int ret;
 
-        m_dstate.avail_out = m_compress_buffer_size;
+        m_dstate.avail_in = in.size();
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
 
         do {
             // Output to local buffer
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();
-
+                        
             ret = deflate(&m_dstate, Z_SYNC_FLUSH);
             
             output = m_compress_buffer_size - m_dstate.avail_out;
