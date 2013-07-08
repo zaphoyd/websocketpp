@@ -510,17 +510,33 @@ BOOST_AUTO_TEST_CASE( compress_data ) {
     v.exts.init();
 
     v.ec = v.exts.compress(compress_in,compress_out);
-    
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
 
     v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
-    
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( compress_in, decompress_out );
 }
+
+BOOST_AUTO_TEST_CASE( compress_data_multiple ) {
+    ext_vars v;
+    
+    v.exts.init();
+    
+    for (int i = 0; i < 2; i++) {
+        std::string compress_in = "Hello";
+        std::string compress_out;
+        std::string decompress_out;
+
+        v.ec = v.exts.compress(compress_in,compress_out);
+        BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+        v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+        BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+        BOOST_CHECK_EQUAL( compress_in, decompress_out );
+    }
+}
 /// @todo: more compression tests
 /**
- * - compress two messages in a row
  * - compress a message larger than the compression buffer
  * - compress when no context takeover is enabled
  * - compress at different compression levels
