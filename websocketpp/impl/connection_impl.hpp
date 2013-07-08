@@ -850,6 +850,12 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         
         lib::error_code ec;
 
+        if (m_alog.static_test(log::alevel::devel)) {
+            std::stringstream s;
+            s << "Processing Bytes: " << utility::to_hex(reinterpret_cast<uint8_t*>(m_buf)+p,bytes_transferred-p);
+            m_alog.write(log::alevel::devel,s.str());
+        }
+
         p += m_processor->consume(
             reinterpret_cast<uint8_t*>(m_buf)+p,
             bytes_transferred-p,
