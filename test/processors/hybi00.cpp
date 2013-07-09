@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK_EQUAL(u->get_secure(), false);
     BOOST_CHECK_EQUAL(u->get_host(), "www.example.com");
     BOOST_CHECK_EQUAL(u->get_resource(), "/");
-    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::URI_DEFAULT_PORT);
+    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::uri_default_port);
     
     env.p.process_handshake(env.req,"",env.res);
     
