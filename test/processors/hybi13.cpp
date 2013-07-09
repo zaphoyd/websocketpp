@@ -655,8 +655,6 @@ BOOST_AUTO_TEST_CASE( extension_negotiation_permessage_deflate ) {
     std::pair<websocketpp::lib::error_code,std::string> neg_results;
     neg_results = env.p.negotiate_extensions(env.req);
     
-    std::cout << neg_results.first.message() << neg_results.second << std::endl;
-
     BOOST_CHECK( !neg_results.first );
     BOOST_CHECK_EQUAL( neg_results.second, "permessage-deflate" );
 }
