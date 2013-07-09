@@ -1,4 +1,5 @@
 HEAD
+- Updates handling of Server and User-Agent headers
 - Fix issue where pong timeout handler always fired. Thank you Steven Klassen 
   for reporting this bug.
 - Add ping and pong endpoint wrapper methods
