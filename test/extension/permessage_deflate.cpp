@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -535,9 +535,74 @@ BOOST_AUTO_TEST_CASE( compress_data_multiple ) {
         BOOST_CHECK_EQUAL( compress_in, decompress_out );
     }
 }
+
+BOOST_AUTO_TEST_CASE( compress_data_large ) {
+    ext_vars v;
+    
+    std::string compress_in(600,'*');
+    std::string compress_out;
+    std::string decompress_out;
+    
+    websocketpp::http::attribute_list alist;
+
+    alist["s2c_max_window_bits"] = "8";
+    v.exts.set_s2c_max_window_bits(8,websocketpp::extensions::permessage_deflate::mode::smallest);
+
+    v.exts.negotiate(alist);
+    v.exts.init(true);
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( compress_in, decompress_out );
+}
+
+BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
+    ext_vars v;
+    
+    std::string compress_in = "Hello";
+    std::string compress_out1;
+    std::string compress_out2;
+    std::string decompress_out;
+    
+    websocketpp::http::attribute_list alist;
+
+    alist["s2c_no_context_takeover"] = "";
+    v.exts.enable_s2c_no_context_takeover();
+
+    v.exts.negotiate(alist);
+    v.exts.init(true);
+
+    v.ec = v.exts.compress(compress_in,compress_out1);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out1.data()),
+        compress_out1.size(),
+        decompress_out
+    );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( compress_in, decompress_out );
+
+    decompress_out = "";
+
+    v.ec = v.exts.compress(compress_in,compress_out2);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out2.data()),
+        compress_out2.size(),
+        decompress_out
+    );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( compress_in, decompress_out );
+
+    BOOST_CHECK_NE( compress_out1, compress_out2 );
+}
 /// @todo: more compression tests
 /**
- * - compress a message larger than the compression buffer
  * - compress when no context takeover is enabled
  * - compress at different compression levels
  */
