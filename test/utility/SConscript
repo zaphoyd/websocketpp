@@ -10,7 +10,7 @@ Import('polyfill_libs')
 env = env.Clone ()
 env_cpp11 = env_cpp11.Clone ()
 
-BOOST_LIBS = boostlibs(['unit_test_framework','regex','system'],env) + [platform_libs]
+BOOST_LIBS = boostlibs(['unit_test_framework','system'],env) + [platform_libs]
 
 objs = env.Object('uri_boost.o', ["uri.cpp"], LIBS = BOOST_LIBS)
 objs += env.Object('utilities_boost.o', ["utilities.cpp"], LIBS = BOOST_LIBS)

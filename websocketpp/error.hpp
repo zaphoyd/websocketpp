@@ -111,7 +111,10 @@ enum value {
     open_handshake_timeout,
     
     /// WebSocket close handshake timed out
-    close_handshake_timeout
+    close_handshake_timeout,
+
+    /// Invalid port in URI
+    invalid_port
 }; // enum value
 
 
@@ -171,6 +174,8 @@ public:
                 return "The opening handshake timed out";
             case error::close_handshake_timeout:
                 return "The closing handshake timed out";
+            case error::invalid_port:
+                return "Invalid URI port";
             default:
                 return "Unknown";
         }

@@ -82,15 +82,10 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK(!ec);
     
     websocketpp::uri_ptr u;
-    bool exception = false;
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
+    u = p.get_uri(r);
     
-    BOOST_CHECK(exception == false);
+    BOOST_CHECK(u->get_valid() == true);
     BOOST_CHECK(u->get_secure() == false);
     BOOST_CHECK(u->get_host() == "www.example.com");
     BOOST_CHECK(u->get_resource() == "/");
@@ -182,7 +177,6 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 	stub_config::rng_type rng;
     websocketpp::processor::hybi08<stub_config> p(false,true,msg_manager,rng);
     websocketpp::uri_ptr u;
-    bool exception = false;
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 8\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -194,12 +188,8 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
     ec = p.validate_handshake(r);
     BOOST_CHECK( !ec );
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
+    u = p.get_uri(r);
     
-    BOOST_CHECK(exception == true);
+    BOOST_CHECK( !u->get_valid() );
 }
 

@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
     BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
     BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
     BOOST_CHECK( !env.p.validate_handshake(env.req) );    
-    BOOST_CHECK_THROW( env.p.get_uri(env.req), websocketpp::uri_exception );
+    BOOST_CHECK( !env.p.get_uri(env.req)->get_valid() );
 }
 
 // FRAME TESTS TO DO

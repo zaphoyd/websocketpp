@@ -10,7 +10,7 @@ Import('polyfill_libs')
 env = env.Clone ()
 env_cpp11 = env_cpp11.Clone ()
 
-BOOST_LIBS = boostlibs(['unit_test_framework','system','regex'],env) + [platform_libs] + ['z']
+BOOST_LIBS = boostlibs(['unit_test_framework','system'],env) + [platform_libs] + ['z']
 
 objs = env.Object('extension_boost.o', ["extension.cpp"], LIBS = BOOST_LIBS)
 objs += env.Object('permessage_deflate_boost.o', ["permessage_deflate.cpp"], LIBS = BOOST_LIBS)

@@ -1,4 +1,6 @@
 HEAD
+- Refactors URI to be exception free and not use the regular expressions. This
+  eliminates the dependency on boost or C++11 regex libraries.
 - Updates handling of Server and User-Agent headers
 - Fix issue where pong timeout handler always fired. Thank you Steven Klassen 
   for reporting this bug.

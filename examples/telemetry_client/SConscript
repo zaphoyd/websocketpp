@@ -17,7 +17,7 @@ if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    ALL_LIBS = boostlibs(['system'],env_cpp11) + [platform_libs] + [polyfill_libs]
    prgs += env_cpp11.Program('telemetry_client', ["telemetry_client.cpp"], LIBS = ALL_LIBS)
 else:
-   ALL_LIBS = boostlibs(['system','regex','random'],env) + [platform_libs] + [polyfill_libs]
+   ALL_LIBS = boostlibs(['system','random'],env) + [platform_libs] + [polyfill_libs]
    prgs += env.Program('telemetry_client', ["telemetry_client.cpp"], LIBS = ALL_LIBS)
 
 Return('prgs')
