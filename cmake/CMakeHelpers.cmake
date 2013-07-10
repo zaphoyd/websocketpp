@@ -72,3 +72,7 @@ endmacro ()
 macro (link_boost)
     target_link_libraries (${TARGET_NAME} ${Boost_LIBRARIES})
 endmacro ()
+
+macro (link_openssl)
+    target_link_libraries (${TARGET_NAME} ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+endmacro ()
