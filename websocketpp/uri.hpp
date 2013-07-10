@@ -31,7 +31,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/error.hpp>
 
-#include <exception>
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -83,7 +83,18 @@ public:
             ++it;
             // IPv6 literal
             // extract IPv6 digits until ]
-            temp = std::find(it,uri.end(),']');
+            
+            // TODO: this doesn't work on g++... not sure why
+            //temp = std::find(it,it2,']');
+            
+            temp = it;
+            while (temp != uri.end()) {
+                if (*temp == ']') {
+                    break;
+                }
+                ++temp;
+            }
+
             if (temp == uri.end()) {
                 return;
             } else {
