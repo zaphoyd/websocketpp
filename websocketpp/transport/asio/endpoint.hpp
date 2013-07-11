@@ -414,22 +414,23 @@ protected:
             host = u->get_host();
             port = u->get_port_str();
         } else {
-            try {
-                lib::error_code ec;
+            lib::error_code ec;
 
-                uri_ptr pu(new uri(proxy));
-                ec = tcon->proxy_init(u->get_authority());
-                if (ec) {
-                    cb(tcon->get_handle(),ec);
-                    return;
-                }
-
-                host = pu->get_host();
-                port = pu->get_port_str();
-            } catch (uri_exception) {
+            uri_ptr pu(new uri(proxy));
+            
+            if (!pu->get_valid()) {
                 cb(tcon->get_handle(),make_error_code(error::proxy_invalid));
                 return;
             }
+
+            ec = tcon->proxy_init(u->get_authority());
+            if (ec) {
+                cb(tcon->get_handle(),ec);
+                return;
+            }
+
+            host = pu->get_host();
+            port = pu->get_port_str();
         }
         
         tcp::resolver::query query(host,port);

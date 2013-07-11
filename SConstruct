@@ -133,17 +133,11 @@ env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
    # TODO: check g++ version
-
-   # g++ STL lacks support for <regex>
-
    GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
 
    if GCC_VERSION > "4.4.0":
       print "C++11 build environment partially enabled"
-      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_','_WEBSOCKETPP_NO_CPP11_REGEX_'])
-      # libstdc++ does not yet support <regex>
-      # boost regex is a drop in replacement
-      polyfill_libs += boostlibs(['regex'],env_cpp11)
+      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
    else:
       print "C++11 build environment is not supported on this version of G++"
 elif env_cpp11['CXX'].startswith('clang++'):

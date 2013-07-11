@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK_EQUAL(u->get_secure(), false);
     BOOST_CHECK_EQUAL(u->get_host(), "www.example.com");
     BOOST_CHECK_EQUAL(u->get_resource(), "/");
-    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::URI_DEFAULT_PORT);
+    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::uri_default_port);
     
     env.p.process_handshake(env.req,"",env.res);
     
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
     BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
     BOOST_CHECK( !env.p.validate_handshake(env.req) );
 
-    BOOST_CHECK_THROW( u = env.p.get_uri(env.req), websocketpp::uri_exception );
+    BOOST_CHECK( !env.p.get_uri(env.req)->get_valid() );
 }
 
 BOOST_AUTO_TEST_CASE( extract_subprotocols ) {

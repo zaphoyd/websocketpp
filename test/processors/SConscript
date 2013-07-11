@@ -10,7 +10,7 @@ Import('polyfill_libs')
 env = env.Clone ()
 env_cpp11 = env_cpp11.Clone ()
 
-BOOST_LIBS = boostlibs(['unit_test_framework','regex','system'],env) + [platform_libs] + ['z']
+BOOST_LIBS = boostlibs(['unit_test_framework','system'],env) + [platform_libs] + ['z']
 
 objs = env.Object('test_processor_boost.o', ["processor.cpp"], LIBS = BOOST_LIBS)
 objs += env.Object('test_hybi13_boost.o', ["hybi13.cpp"], LIBS = BOOST_LIBS)

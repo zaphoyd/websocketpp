@@ -110,13 +110,14 @@ public:
      */
     connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
         // parse uri
-        try {
-            uri_ptr location(new uri(u));
-            return get_connection(location, ec);
-        } catch (uri_exception) {
+        uri_ptr location(new uri(u));
+        
+        if (!location->get_valid()) {
             ec = error::make_error_code(error::invalid_uri);
             return connection_ptr();
         }
+
+        return get_connection(location, ec);
     }
     
     /// Begin the connection process for the given connection

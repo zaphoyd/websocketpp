@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2013, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -82,25 +82,20 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     BOOST_CHECK(!ec);
     
     websocketpp::uri_ptr u;
-    bool exception = false;
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
+    u = p.get_uri(r);
     
-    BOOST_CHECK(exception == false);
-    BOOST_CHECK(u->get_secure() == false);
-    BOOST_CHECK(u->get_host() == "www.example.com");
-    BOOST_CHECK(u->get_resource() == "/");
-    BOOST_CHECK(u->get_port() == websocketpp::uri_default_port);
+    BOOST_CHECK(u->get_valid());
+    BOOST_CHECK(!u->get_secure());
+    BOOST_CHECK_EQUAL(u->get_host(), "www.example.com");
+    BOOST_CHECK_EQUAL(u->get_resource(), "/");
+    BOOST_CHECK_EQUAL(u->get_port(), websocketpp::uri_default_port);
     
     p.process_handshake(r,"",response);
     
-    BOOST_CHECK(response.get_header("Connection") == "upgrade");
-    BOOST_CHECK(response.get_header("Upgrade") == "websocket");
-    BOOST_CHECK(response.get_header("Sec-WebSocket-Accept") == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+    BOOST_CHECK_EQUAL(response.get_header("Connection"), "upgrade");
+    BOOST_CHECK_EQUAL(response.get_header("Upgrade"), "websocket");
+    BOOST_CHECK_EQUAL(response.get_header("Sec-WebSocket-Accept"), "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 }
 
 BOOST_AUTO_TEST_CASE( non_get_method ) {
@@ -181,8 +176,6 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 	stub_config::con_msg_manager_type::ptr msg_manager;
 	stub_config::rng_type rng;
     websocketpp::processor::hybi07<stub_config> p(false,true,msg_manager,rng);
-    websocketpp::uri_ptr u;
-    bool exception = false;
     websocketpp::lib::error_code ec;
     
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 7\r\nSec-WebSocket-Key: foo\r\n\r\n";
@@ -194,11 +187,5 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
     ec = p.validate_handshake(r);
     BOOST_CHECK( !ec );
     
-    try {
-    	u = p.get_uri(r);
-    } catch (const websocketpp::uri_exception& e) {
-    	exception = true;
-    }
-    
-    BOOST_CHECK(exception == true);
+    BOOST_CHECK( !p.get_uri(r)->get_valid() );
 }

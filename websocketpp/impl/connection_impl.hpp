@@ -988,11 +988,14 @@ bool connection<config>::process_handshake_request() {
         m_alog.write(log::alevel::devel,"HTTP REQUEST");
         
         // extract URI from request
-        try { 
-            m_uri = processor::get_uri_from_host(m_request,(transport_con_type::is_secure() ? "https" : "http"));    
-        } catch (const websocketpp::uri_exception& e) {
+        m_uri = processor::get_uri_from_host(
+            m_request,
+            (transport_con_type::is_secure() ? "https" : "http")
+        );
+        
+        if (!m_uri->get_valid()) {
             m_alog.write(log::alevel::devel,
-                std::string("BAD REQUEST: uri failed to parse: ")+e.what());
+                std::string("Bad request: failed to parse uri"));
             m_response.set_status(http::status_code::bad_request);
             return false;
         }
@@ -1040,11 +1043,12 @@ bool connection<config>::process_handshake_request() {
     }
 
     // extract URI from request
-    try { 
-        m_uri = m_processor->get_uri(m_request);    
-    } catch (const websocketpp::uri_exception& e) {
+    m_uri = m_processor->get_uri(m_request);    
+
+
+    if (!m_uri->get_valid()) {
         m_alog.write(log::alevel::devel,
-            std::string("BAD REQUEST: uri failed to parse: ")+e.what());
+            std::string("Bad request: failed to parse uri"));
         m_response.set_status(http::status_code::bad_request);
         return false;
     }

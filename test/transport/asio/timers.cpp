@@ -146,6 +146,7 @@ struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
         m_con.reset(new mock_con(false,alog,elog));
         websocketpp::uri_ptr uri(new websocketpp::uri(u));
         
+        BOOST_CHECK( uri->get_valid() );
         BOOST_CHECK_EQUAL( base::init(m_con), websocketpp::lib::error_code() );
         
         base::async_connect(

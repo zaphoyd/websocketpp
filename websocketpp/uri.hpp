@@ -29,98 +29,50 @@
 #define WEBSOCKETPP_URI_HPP
 
 #include <websocketpp/common/memory.hpp>
-#include <websocketpp/common/regex.hpp>
+#include <websocketpp/error.hpp>
 
-#include <exception>
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 namespace websocketpp {
 
-class uri_exception : public std::exception {
-public: 
-    uri_exception(const std::string& msg) : m_msg(msg) {}
-    ~uri_exception() throw() {}
-
-    virtual const char* what() const throw() {
-        return m_msg.c_str();
-    }
-private:
-    std::string m_msg;
-};
-
 // TODO: figure out why this fixes horrible linking errors.
 
-/// Default port for ws:// [deprecated]
-/**
- * @deprecated Use uri_default_port instead. Will be removed before 1.0.0
- */
-static uint16_t const URI_DEFAULT_PORT = 80;
 /// Default port for ws:// 
 static uint16_t const uri_default_port = 80;
-/// Default port for wss:// [deprecated]
-/**
- * @deprecated Use uri_default_secure_port instead. Will be removed before 1.0.0
- */
-static uint16_t const URI_DEFAULT_SECURE_PORT = 443;
 /// Default port for wss:// 
 static uint16_t const uri_default_secure_port = 443;
 
 class uri {
 public:
-    explicit uri(const std::string& uri) {
-        // TODO: should this split resource into path/query?
-        lib::cmatch matches;
-        const lib::regex expression("(http|https|ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
-        
-        if (lib::regex_match(uri.c_str(), matches, expression)) {
-            m_scheme = matches[1];
-            m_secure = (m_scheme == "wss" || m_scheme == "https");
-            m_host = matches[2];
-            
-            // strip brackets from IPv6 literal URIs
-            if (m_host[0] == '[') {
-                m_host = m_host.substr(1,m_host.size()-2);
-            }
-            
-            std::string port(matches[3]);
-            
-            if (port != "") {
-                // strip off the :
-                // this could probably be done with a better regex.
-                port = port.substr(1);
-            }
-            
-            m_port = get_port_from_string(port);
-            
-            m_resource = matches[4];
-            
-            if (m_resource == "") {
-                m_resource = "/";
-            }
-            
-            return;
-        }
-        
-        throw websocketpp::uri_exception("Error parsing WebSocket URI");
-    }
-    
-    /*explicit uri(const std::string& uri) {
-        // test for ws or wss
+    explicit uri(std::string const & uri) : m_valid(false) {
         std::string::const_iterator it;
         std::string::const_iterator temp;
         
+        int state = 0;
+
         it = uri.begin();
         
         if (std::equal(it,it+6,"wss://")) {
             m_secure = true;
+            m_scheme = "wss";
             it += 6;
         } else if (std::equal(it,it+5,"ws://")) {
             m_secure = false;
+            m_scheme = "ws";
             it += 5;
+        } else if (std::equal(it,it+7,"http://")) {
+            m_secure = false;
+            m_scheme = "http";
+            it += 7;
+        } else if (std::equal(it,it+8,"https://")) {
+            m_secure = true;
+            m_scheme = "https";
+            it += 8;
         } else {
-            // error
+            return;
         }
         
         // extract host.
@@ -131,101 +83,156 @@ public:
             ++it;
             // IPv6 literal
             // extract IPv6 digits until ]
-            temp = std::find(it,uri.end(),']');
+            
+            // TODO: this doesn't work on g++... not sure why
+            //temp = std::find(it,it2,']');
+            
+            temp = it;
+            while (temp != uri.end()) {
+                if (*temp == ']') {
+                    break;
+                }
+                ++temp;
+            }
+
             if (temp == uri.end()) {
-                // error
+                return;
             } else {
                 // validate IPv6 literal parts
                 // can contain numbers, a-f and A-F
+                m_host.append(it,temp);
+            }
+            it = temp+1;
+            if (it == uri.end()) {
+                state = 2;
+            } else if (*it == '/') {
+                state = 2;
+                ++it;
+            } else if (*it == ':') {
+                state = 1;
+                ++it;
+            } else {
+                // problem
+                return;
             }
         } else {
             // IPv4 or hostname
+            // extract until : or /
+            while (state == 0) {
+                if (it == uri.end()) {
+                    state = 2;
+                    break;
+                } else if (*it == '/') {
+                    state = 2;
+                } else if (*it == ':') {
+                    // end hostname start port
+                    state = 1;
+                } else {
+                    m_host += *it;
+                }
+                ++it;
+            }
         }
-        
-        // TODO: should this split resource into path/query?
-        lib::cmatch matches;
-        const lib::regex expression("(ws|wss)://([^/:\\[]+|\\[[0-9a-fA-F:.]+\\])(:\\d{1,5})?(/[^#]*)?");
-        
-        if (lib::regex_match(uri.c_str(), matches, expression)) {
-            m_secure = (matches[1] == "wss");
-            m_host = matches[2];
-            
-            // strip brackets from IPv6 literal URIs
-            if (m_host[0] == '[') {
-                m_host = m_host.substr(1,m_host.size()-2);
+
+        // parse port
+        std::string port = "";
+        while (state == 1) {
+            if (it == uri.end()) {
+                state = 3;
+                break;
+            } else if (*it == '/') {
+                state = 3;
+            } else {
+                port += *it;
             }
-            
-            std::string port(matches[3]);
-            
-            if (port != "") {
-                // strip off the :
-                // this could probably be done with a better regex.
-                port = port.substr(1);
-            }
-            
-            m_port = get_port_from_string(port);
-            
-            m_resource = matches[4];
-            
-            if (m_resource == "") {
-                m_resource = "/";
-            }
-            
+            ++it;
+        }
+
+        lib::error_code ec;
+        m_port = get_port_from_string(port, ec);
+
+        if (ec) {
             return;
         }
-        
-        throw websocketpp::uri_exception("Error parsing WebSocket URI");
 
-    }*/
+        m_resource = "/";
+        m_resource.append(it,uri.end());
+
+
+        m_valid = true;
+    }
     
-    uri(bool secure, const std::string& host, uint16_t port, const std::string& resource)
+    uri(bool secure, std::string const & host, uint16_t port, 
+        std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(port)
-      , m_secure(secure) {}
+      , m_secure(secure)
+      , m_valid(true) {}
     
-    uri(bool secure, const std::string& host, const std::string& resource)
+    uri(bool secure, std::string const & host, std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(secure ? uri_default_secure_port : uri_default_port)
-      , m_secure(secure) {}
+      , m_secure(secure)
+      , m_valid(true) {}
       
-    uri(bool secure, const std::string& host, const std::string& port, const std::string& resource)
+    uri(bool secure, std::string const & host, std::string const & port, 
+        std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
-      , m_port(get_port_from_string(port))
-      , m_secure(secure) {}
+      , m_secure(secure)
+    {
+        lib::error_code ec;
+        m_port = get_port_from_string(port,ec);
+        m_valid = !ec;
+    }
     
-    
-    uri(std::string scheme, const std::string& host, uint16_t port, const std::string& resource)
+    uri(std::string const & scheme, std::string const & host, uint16_t port, 
+        std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port(port)
-      , m_secure(scheme == "wss" || scheme == "https") {}
+      , m_secure(scheme == "wss" || scheme == "https")
+      , m_valid(true) {}
     
-    uri(std::string scheme, const std::string& host, const std::string& resource)
+    uri(std::string scheme, std::string const & host, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
       , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
-      , m_secure(scheme == "wss" || scheme == "https") {}
+      , m_secure(scheme == "wss" || scheme == "https")
+      , m_valid(true) {}
       
-    uri(std::string scheme, const std::string& host, const std::string& port, const std::string& resource)
+    uri(std::string const & scheme, std::string const & host, 
+        std::string const & port, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
       , m_resource(resource == "" ? "/" : resource)
-      , m_port(get_port_from_string(port))
-      , m_secure(scheme == "wss" || scheme == "https") {}
+      , m_secure(scheme == "wss" || scheme == "https")
+    {
+        lib::error_code ec;
+        m_port = get_port_from_string(port,ec);
+        m_valid = !ec;
+    }
+
+    bool get_valid() const {
+        return m_valid;
+    }
     
     bool get_secure() const {
         return m_secure;
     }
     
-    const std::string& get_host() const {
+    std::string const & get_scheme() const {
+        return m_scheme;
+    }
+
+    std::string const & get_host() const {
         return m_host;
     }
     
@@ -255,7 +262,7 @@ public:
         return p.str();
     }
     
-    const std::string& get_resource() const {
+    std::string const & get_resource() const {
         return m_resource;
     }
     
@@ -291,7 +298,11 @@ public:
     void set_port(const std::string& port);
     void set_resource(const std::string& resource);*/
 private:
-    uint16_t get_port_from_string(const std::string& port) const {
+    uint16_t get_port_from_string(std::string const & port, lib::error_code & 
+        ec) const
+    {
+        ec = lib::error_code();
+
         if (port == "") {
             return (m_secure ? uri_default_secure_port : uri_default_port);
         }
@@ -299,11 +310,11 @@ private:
         unsigned int t_port = static_cast<unsigned int>(atoi(port.c_str()));
                 
         if (t_port > 65535) {
-            throw websocketpp::uri_exception("Port must be less than 65535");
+            ec = error::make_error_code(error::invalid_port);
         }
         
         if (t_port == 0) {
-            throw websocketpp::uri_exception("Error parsing port string: "+port);
+            ec = error::make_error_code(error::invalid_port);
         }
         
         return static_cast<uint16_t>(t_port);
@@ -314,6 +325,7 @@ private:
     std::string m_resource;
     uint16_t    m_port;
     bool        m_secure;
+    bool        m_valid;
 };
 
 typedef lib::shared_ptr<uri> uri_ptr;

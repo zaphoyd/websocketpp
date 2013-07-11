@@ -18,7 +18,7 @@ if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    ALL_LIBS = boostlibs(['system'],env_cpp11) + [platform_libs] + [polyfill_libs] + [tls_libs]
    prgs += env_cpp11.Program('echo_server_tls', ["echo_server_tls.cpp"], LIBS = ALL_LIBS)
 else:
-   ALL_LIBS = boostlibs(['system','regex'],env) + [platform_libs] + [polyfill_libs] + [tls_libs]
+   ALL_LIBS = boostlibs(['system'],env) + [platform_libs] + [polyfill_libs] + [tls_libs]
    prgs += env.Program('echo_server_tls', ["echo_server_tls.cpp"], LIBS = ALL_LIBS)
 
 Return('prgs')
