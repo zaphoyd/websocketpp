@@ -290,6 +290,13 @@ public:
         }
         
         m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
+        if ((m_s2c_no_context_takeover && is_server) ||
+            (m_c2s_no_context_takeover && !is_server))
+        {
+            m_flush = Z_FULL_FLUSH;
+        } else {
+            m_flush = Z_SYNC_FLUSH;
+        }
         m_initialized = true;
         return lib::error_code();
     }
@@ -504,9 +511,8 @@ public:
             // Output to local buffer
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();
-                        
-            deflate(&m_dstate, Z_SYNC_FLUSH);
-            
+                 
+            deflate(&m_dstate, m_flush);
             output = m_compress_buffer_size - m_dstate.avail_out;
 
             out.append((char *)(m_compress_buffer.get()),output);
@@ -719,6 +725,7 @@ private:
     mode::value m_c2s_max_window_bits_mode;
 
     bool m_initialized;
+    int m_flush;
     size_t m_compress_buffer_size;
     lib::unique_ptr_uchar_array m_compress_buffer;
     z_stream m_dstate;

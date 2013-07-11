@@ -599,11 +599,10 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( compress_in, decompress_out );
 
-    BOOST_CHECK_NE( compress_out1, compress_out2 );
+    BOOST_CHECK_EQUAL( compress_out1, compress_out2 );
 }
 /// @todo: more compression tests
 /**
- * - compress when no context takeover is enabled
  * - compress at different compression levels
  */
 
