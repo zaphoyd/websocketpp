@@ -569,6 +569,10 @@ public:
             // compress and store in o after header.
             m_permessage_deflate.compress(i,o);
 
+            if (o.size() < 4) {
+                return make_error_code(error::general);
+            }
+
             // Strip trailing 4 0x00 0x00 0xff 0xff bytes before writing to the
             // wire
             o.resize(o.size()-4);
