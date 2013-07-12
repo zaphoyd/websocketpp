@@ -601,6 +601,32 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
 
     BOOST_CHECK_EQUAL( compress_out1, compress_out2 );
 }
+
+BOOST_AUTO_TEST_CASE( compress_empty ) {
+    ext_vars v;
+    
+    std::string compress_in = "";
+    std::string compress_out;
+    std::string decompress_out;
+    
+    v.exts.init(true);
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+    
+    compress_out = "";
+    decompress_out = "";
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( compress_in, decompress_out );
+}
+
 /// @todo: more compression tests
 /**
  * - compress at different compression levels
