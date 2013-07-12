@@ -493,6 +493,9 @@ public:
 
     /// Compress bytes
     /**
+     * @todo: avail_in/out is 32 bit, need to fix for cases of >32 bit frames
+     * on 64 bit machines.
+     *
      * @param [in] in String to compress
      * @param [out] out String to append compressed bytes to
      * @return Error or status code
@@ -503,6 +506,12 @@ public:
         }
 
         size_t output;
+        
+        if (in.empty()) {
+            uint8_t buf[6] = {0x02, 0x00, 0x00, 0x00, 0xff, 0xff};
+            out.append((char *)(buf),6);
+            return lib::error_code();
+        }
 
         m_dstate.avail_in = in.size();
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
