@@ -66,14 +66,19 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     }
 }
 
-int main() {
+int main(int argc, char * argv[]) {
 	// Create a server endpoint
     server echo_server;
 	
 	try {
-        // Set logging settings
-        echo_server.set_access_channels(websocketpp::log::alevel::none);
-        echo_server.set_error_channels(websocketpp::log::elevel::none);
+        // Set logging settings        
+        if (argc > 1 && std::string(argv[1]) == "-d") {
+            echo_server.set_access_channels(websocketpp::log::alevel::all);
+            echo_server.set_error_channels(websocketpp::log::elevel::all);
+        } else {
+            echo_server.set_access_channels(websocketpp::log::alevel::none);
+            echo_server.set_error_channels(websocketpp::log::elevel::none);
+        }
         
         // Initialize ASIO
         echo_server.init_asio();
