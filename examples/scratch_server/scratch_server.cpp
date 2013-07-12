@@ -54,10 +54,10 @@ typedef server::message_ptr message_ptr;
 
 // Define a callback to handle incoming messages
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-    std::cout << "on_message called with hdl: " << hdl.lock().get() 
-              << " and message: " << msg->get_payload()
+    /*std::cout << "on_message called with hdl: " << hdl.lock().get() 
+              << " and message (" << msg->get_payload().size() << "): " << msg->get_payload()
               << std::endl;
-
+*/
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
     } catch (const websocketpp::lib::error_code& e) {
@@ -72,8 +72,8 @@ int main() {
 	
 	try {
         // Set logging settings
-        echo_server.set_access_channels(websocketpp::log::alevel::all);
-        echo_server.set_error_channels(websocketpp::log::elevel::all);
+        echo_server.set_access_channels(websocketpp::log::alevel::none);
+        echo_server.set_error_channels(websocketpp::log::elevel::none);
         
         // Initialize ASIO
         echo_server.init_asio();
