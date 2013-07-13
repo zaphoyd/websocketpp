@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <string>
 
 namespace websocketpp {
 namespace http {
@@ -41,7 +42,7 @@ inline void parser::set_version(std::string const & version) {
 
 inline std::string const & parser::get_header(std::string const & key) const {
     header_list::const_iterator h = m_headers.find(key);
-    
+
     if (h == m_headers.end()) {
         return empty_header;
     } else {
@@ -53,7 +54,7 @@ inline bool parser::get_header_as_plist(std::string const & key,
     parameter_list & out) const
 {
     header_list::const_iterator it = m_headers.find(key);
-    
+
     if (it == m_headers.end() || it->second.size() == 0) {
         return false;
     }
@@ -67,7 +68,7 @@ inline void parser::append_header(std::string const & key, std::string const &
     if (std::find_if(key.begin(),key.end(),is_not_token_char) != key.end()) {
         throw exception("Invalid header name",status_code::bad_request);
     }
-    
+
     if (this->get_header(key) == "") {
         m_headers[key] = val;
     } else {
@@ -91,7 +92,7 @@ inline void parser::set_body(std::string const & value) {
         m_body = "";
         return;
     }
-    
+
     std::stringstream len;
     len << value.size();
     replace_header("Content-Length", len.str());
@@ -104,7 +105,7 @@ inline bool parser::parse_parameter_list(std::string const & in,
     if (in.size() == 0) {
         return false;
     }
-    
+
     std::string::const_iterator it;
     it = extract_parameters(in.begin(),in.end(),out);
     return (it == in.begin());
@@ -113,7 +114,7 @@ inline bool parser::parse_parameter_list(std::string const & in,
 inline bool parser::parse_headers(std::istream & s) {
     std::string header;
     std::string::size_type end;
-    
+
     // get headers
     while (std::getline(s, header) && header != "\r") {
         if (header[header.size()-1] != '\r') {
@@ -121,9 +122,9 @@ inline bool parser::parse_headers(std::istream & s) {
         } else {
             header.erase(header.end()-1);
         }
-        
+
         end = header.find(header_separator,0);
-        
+
         if (end != std::string::npos) {         
             append_header(header.substr(0,end),header.substr(end+2));
         }
