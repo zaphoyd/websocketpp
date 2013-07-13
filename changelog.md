@@ -1,4 +1,5 @@
 HEAD
+- HTTP header comparisons are now case insensitive. #220, #275
 - Refactors URI to be exception free and not use the regular expressions. This
   eliminates the dependency on boost or C++11 regex libraries.
 - Updates handling of Server and User-Agent headers
