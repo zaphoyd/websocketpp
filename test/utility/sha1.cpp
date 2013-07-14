@@ -25,49 +25,60 @@
  * 
  */
 //#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE utility
+#define BOOST_TEST_MODULE sha1
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
 #include <string>
 
+#include <websocketpp/sha1/sha1.hpp>
 #include <websocketpp/utilities.hpp>
 
-BOOST_AUTO_TEST_SUITE ( utility )
+BOOST_AUTO_TEST_SUITE ( sha1 )
 
-BOOST_AUTO_TEST_CASE( substr_found ) {
-    std::string haystack = "abc123";
-    std::string needle = "abc";
-    
-    BOOST_CHECK(websocketpp::utility::ci_find_substr(haystack,needle) ==haystack.begin());
+BOOST_AUTO_TEST_CASE( sha1_test_a ) {
+    websocketpp::sha1 sha;
+    uint32_t digest[5];
+
+    sha << "abc";
+    BOOST_CHECK(sha.get_raw_digest(digest));
+
+    BOOST_CHECK_EQUAL( digest[0], 0xa9993e36 );
+    BOOST_CHECK_EQUAL( digest[1], 0x4706816a );
+    BOOST_CHECK_EQUAL( digest[2], 0xba3e2571 );
+    BOOST_CHECK_EQUAL( digest[3], 0x7850c26c );
+    BOOST_CHECK_EQUAL( digest[4], 0x9cd0d89d );
 }
 
-BOOST_AUTO_TEST_CASE( substr_found_ci ) {
-    std::string haystack = "abc123";
-    std::string needle = "aBc";
-    
-    BOOST_CHECK(websocketpp::utility::ci_find_substr(haystack,needle) ==haystack.begin());
+BOOST_AUTO_TEST_CASE( sha1_test_b ) {
+    websocketpp::sha1 sha;
+    uint32_t digest[5];
+
+    sha << "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+    BOOST_CHECK(sha.get_raw_digest(digest));
+
+    BOOST_CHECK_EQUAL( digest[0], 0x84983e44 );
+    BOOST_CHECK_EQUAL( digest[1], 0x1c3bd26e );
+    BOOST_CHECK_EQUAL( digest[2], 0xbaae4aa1 );
+    BOOST_CHECK_EQUAL( digest[3], 0xf95129e5 );
+    BOOST_CHECK_EQUAL( digest[4], 0xe54670f1 );
 }
 
-BOOST_AUTO_TEST_CASE( substr_not_found ) {
-    std::string haystack = "abd123";
-    std::string needle = "abcd";
+BOOST_AUTO_TEST_CASE( sha1_test_c ) {
+    websocketpp::sha1 sha;
+    uint32_t digest[5];
     
-    BOOST_CHECK(websocketpp::utility::ci_find_substr(haystack,needle) == haystack.end());
-}
+    for (int i = 1; i <= 1000000; i++) {
+        sha.input('a');
+    }
 
-BOOST_AUTO_TEST_CASE( to_lower ) {
-    std::string in = "AbCd";
-    
-    BOOST_CHECK_EQUAL(websocketpp::utility::to_lower(in), "abcd");
-}
+    BOOST_CHECK(sha.get_raw_digest(digest));
 
-BOOST_AUTO_TEST_CASE( string_replace_all ) {
-    std::string source = "foo \"bar\" baz";
-    std::string dest = "foo \\\"bar\\\" baz";
-    
-    using websocketpp::utility::string_replace_all;
-    BOOST_CHECK_EQUAL(string_replace_all(source,"\"","\\\""),dest);
+    BOOST_CHECK_EQUAL( digest[0], 0x34aa973c );
+    BOOST_CHECK_EQUAL( digest[1], 0xd4c4daa4 );
+    BOOST_CHECK_EQUAL( digest[2], 0xf61eeb2b );
+    BOOST_CHECK_EQUAL( digest[3], 0xdbad2731 );
+    BOOST_CHECK_EQUAL( digest[4], 0x6534016f );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

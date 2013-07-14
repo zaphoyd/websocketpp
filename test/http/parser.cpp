@@ -355,6 +355,34 @@ BOOST_AUTO_TEST_CASE( extract_parameters ) {
     BOOST_CHECK_EQUAL( a.find("bar")->second, "a \"b\" c" );
 }
 
+BOOST_AUTO_TEST_CASE( case_insensitive_headers ) {
+    websocketpp::http::parser::parser r;
+    
+    r.replace_header("foo","bar");
+
+    BOOST_CHECK_EQUAL( r.get_header("foo"), "bar" );
+    BOOST_CHECK_EQUAL( r.get_header("FOO"), "bar" );
+    BOOST_CHECK_EQUAL( r.get_header("Foo"), "bar" );
+}
+
+BOOST_AUTO_TEST_CASE( case_insensitive_headers_overwrite ) {
+    websocketpp::http::parser::parser r;
+    
+    r.replace_header("foo","bar");
+
+    BOOST_CHECK_EQUAL( r.get_header("foo"), "bar" );
+    BOOST_CHECK_EQUAL( r.get_header("Foo"), "bar" );
+    
+    r.replace_header("Foo","baz");
+    
+    BOOST_CHECK_EQUAL( r.get_header("foo"), "baz" );
+    BOOST_CHECK_EQUAL( r.get_header("Foo"), "baz" );
+    
+    r.remove_header("FoO");
+    
+    BOOST_CHECK_EQUAL( r.get_header("foo"), "" );
+    BOOST_CHECK_EQUAL( r.get_header("Foo"), "" );
+}
 
 BOOST_AUTO_TEST_CASE( blank_consume ) {
     websocketpp::http::parser::request r;

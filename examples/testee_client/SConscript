@@ -1,4 +1,4 @@
-## Main development example
+## Autobahn test client example
 ##
 
 Import('env')
@@ -15,9 +15,9 @@ prgs = []
 # if a C++11 environment is available build using that, otherwise use boost
 if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    ALL_LIBS = boostlibs(['system'],env_cpp11) + [platform_libs] + [polyfill_libs]
-   prgs += env_cpp11.Program('echo_client', ["echo_client.cpp"], LIBS = ALL_LIBS)
+   prgs += env_cpp11.Program('testee_client', ["testee_client.cpp"], LIBS = ALL_LIBS)
 else:
    ALL_LIBS = boostlibs(['system','random'],env) + [platform_libs] + [polyfill_libs]
-   prgs += env.Program('echo_client', ["echo_client.cpp"], LIBS = ALL_LIBS)
+   prgs += env.Program('testee_client', ["testee_client.cpp"], LIBS = ALL_LIBS)
 
 Return('prgs')

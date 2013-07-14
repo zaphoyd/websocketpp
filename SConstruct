@@ -203,21 +203,21 @@ if not env['PLATFORM'].startswith('win'):
 # Main test application
 #main = SConscript('#/examples/dev/SConscript',variant_dir = builddir + 'dev',duplicate = 0)
 
-# testee_server
-testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = builddir + 'testee_server',duplicate = 0)
-
 # echo_server
 echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = builddir + 'echo_server',duplicate = 0)
 
 # echo_server_tls
-if not env['PLATFORM'].startswith('win'):
+if tls_build:
     echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
 
-# echo_client
-echo_client = SConscript('#/examples/echo_client/SConscript',variant_dir = builddir + 'echo_client',duplicate = 0)
+# testee_server
+testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = builddir + 'testee_server',duplicate = 0)
+
+# testee_client
+testee_client = SConscript('#/examples/testee_client/SConscript',variant_dir = builddir + 'testee_client',duplicate = 0)
 
 # scratch_client
 scratch_client = SConscript('#/examples/scratch_client/SConscript',variant_dir = builddir + 'scratch_client',duplicate = 0)
@@ -238,33 +238,3 @@ if not env['PLATFORM'].startswith('win'):
 
     # print_server
     print_server = SConscript('#/examples/print_server/SConscript',variant_dir = builddir + 'print_server',duplicate = 0)
-
-#
-#wsperf = SConscript('#/examples/wsperf/SConscript',
-#                    variant_dir = builddir + 'wsperf',
-#                    duplicate = 0)
-
-#echo_server = SConscript('#/examples/echo_server/SConscript',
-#                         variant_dir = builddir + 'echo_server',
-#                         duplicate = 0)
-
-#if tls_build:
-#   echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',
-#                            variant_dir = builddir + 'echo_server_tls',
-#                            duplicate = 0)
-
-#echo_client = SConscript('#/examples/echo_client/SConscript',
-#                         variant_dir = builddir + 'echo_client',
-#                         duplicate = 0)
-
-#chat_client = SConscript('#/examples/chat_client/SConscript',
-#                         variant_dir = builddir + 'chat_client',
-#                         duplicate = 0)
-
-#chat_server = SConscript('#/examples/chat_server/SConscript',
-#                         variant_dir = builddir + 'chat_server',
-#                         duplicate = 0)
-
-#concurrent_server = SConscript('#/examples/concurrent_server/SConscript',
-#                         variant_dir = builddir + 'concurrent_server',
-#                         duplicate = 0)

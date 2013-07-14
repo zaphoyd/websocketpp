@@ -28,8 +28,10 @@
 #ifndef WEBSOCKETPP_UTILITIES_HPP
 #define WEBSOCKETPP_UTILITIES_HPP
 
-#include <algorithm>
 #include <websocketpp/common/stdint.hpp>
+
+#include <algorithm>
+#include <string>
 
 namespace websocketpp {
 /// Generic non-websocket specific utility functions and data structures
@@ -62,6 +64,28 @@ struct my_equal {
     }
 private:
     std::locale const & m_loc;
+};
+
+/// Helper less than functor for case insensitive find
+/** 
+ * Based on code from
+ * http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
+ */
+struct ci_less : std::binary_function<std::string, std::string, bool> {
+    // case-independent (ci) compare_less binary function
+    struct nocase_compare 
+      : public std::binary_function<unsigned char,unsigned char,bool>
+    {
+        bool operator() (unsigned char const & c1, unsigned char const & c2) const {
+            return std::tolower (c1) < std::tolower (c2); 
+        }
+    };
+    bool operator() (std::string const & s1, std::string const & s2) const {
+        return std::lexicographical_compare 
+            (s1.begin (), s1.end (),   // source range
+            s2.begin (), s2.end (),   // dest range
+            nocase_compare ());  // comparison
+    }
 };
 
 /// Find substring (case insensitive)
@@ -104,6 +128,13 @@ typename T::const_iterator ci_find_substr(T const & haystack,
     return std::search( haystack.begin(), haystack.end(), 
         needle, needle+size, my_equal<typename T::value_type>(loc) );
 }
+
+/// Convert a string to lowercase
+/**
+ * @param [in] in The string to convert
+ * @return The converted string
+ */
+std::string to_lower(std::string const & in);
 
 /// Replace all occurrances of a substring with another
 /**

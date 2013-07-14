@@ -660,12 +660,12 @@ protected:
     lib::error_code process_handshake_key(std::string & key) const {
         key.append(constants::handshake_guid);
                 
-        SHA1        sha;
-        uint32_t    message_digest[5];
+        sha1 sha;
+        uint32_t message_digest[5];
         
         sha << key.c_str();
                 
-        if (sha.Result(message_digest)){
+        if (sha.get_raw_digest(message_digest)){
             // convert sha1 hash bytes to network byte order because this sha1
             //  library works on ints rather than bytes
             for (int i = 0; i < 5; i++) {
