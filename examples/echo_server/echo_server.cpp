@@ -34,7 +34,7 @@ int main() {
 	try {
         // Set logging settings
         echo_server.set_access_channels(websocketpp::log::alevel::all);
-        // echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
         
         // Initialize ASIO
         echo_server.init_asio();
