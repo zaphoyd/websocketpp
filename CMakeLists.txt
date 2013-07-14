@@ -204,7 +204,8 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     else ()
         message (FATAL_ERROR "Failed to find required dependency: boost")
     endif ()
-
+    
+    find_package(OpenSSL)
 endif()
 
 ############ Add projects
