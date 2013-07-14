@@ -1,16 +1,27 @@
 /*
- *  sha1.hpp
+ * sha1.hpp
  *
- *  Copyright (C) 1998, 2009
- *  Paul E. Jones <paulej@packetizer.com>
- *  All Rights Reserved.
+ * Copyright (C) 1998, 2009
+ * Paul E. Jones <paulej@packetizer.com>
+ * All Rights Reserved.
  *
- *  Modifications were done in 2012 by Peter Thorson (webmaster@zaphoyd.com) to allow 
- *  header only usage of the library. These changes are distributed under the original
- *  freeware license.
+ * Modifications were done in 2012-13 by Peter Thorson (webmaster@zaphoyd.com)
+ * to allow header only usage of the library and use C++ features to better 
+ * support C++ usage. These changes are distributed under the original freeware
+ * license included below
  *
- *****************************************************************************
- *  $Id: sha1.h 12 2009-06-22 19:34:25Z paulej $
+ * Freeware Public License (FPL)
+ *
+ * This software is licensed as "freeware."  Permission to distribute
+ * this software in source and binary forms, including incorporation 
+ * into other products, is hereby granted without a fee.  THIS SOFTWARE 
+ * IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESSED OR IMPLIED WARRANTIES, 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE AUTHOR SHALL NOT BE HELD 
+ * LIABLE FOR ANY DAMAGES RESULTING FROM THE USE OF THIS SOFTWARE, EITHER 
+ * DIRECTLY OR INDIRECTLY, INCLUDING, BUT NOT LIMITED TO, LOSS OF DATA 
+ * OR DATA BEING RENDERED INACCURATE.
+ *
  *****************************************************************************
  *
  *  Description:
@@ -21,8 +32,29 @@
  *      character names, were used because those were the names used
  *      in the publication.
  *
- *      Please read the file sha1.cpp for more information.
+ *      The Secure Hashing Standard, which uses the Secure Hashing
+ *      Algorithm (SHA), produces a 160-bit message digest for a
+ *      given data stream.  In theory, it is highly improbable that
+ *      two messages will produce the same message digest.  Therefore,
+ *      this algorithm can serve as a means of providing a "fingerprint"
+ *      for a message.
  *
+ *  Portability Issues:
+ *      SHA-1 is defined in terms of 32-bit "words".  This code was
+ *      written with the expectation that the processor has at least
+ *      a 32-bit machine word size.  If the machine word size is larger,
+ *      the code should still function properly.  One caveat to that
+ *      is that the input functions taking characters and character arrays
+ *      assume that only 8 bits of information are stored in each character.
+ *
+ *  Caveats:
+ *      SHA-1 is designed to work with messages less than 2^64 bits long.
+ *      Although SHA-1 allows a message digest to be generated for
+ *      messages of any number of bits less than 2^64, this implementation
+ *      only works with messages with a length that is a multiple of 8
+ *      bits.
+ *
+ *****************************************************************************
  */
 
 #ifndef _SHA1_H_
@@ -217,6 +249,11 @@ public:
     }
 private:
     /// Process the next 512 bits of the message
+    /**
+     * Many of the variable names in this function, especially the single
+     * character names, were used because those were the names used
+     * in the publication.
+     */
     void process_message_block() {
         // Constants defined for SHA-1
         uint32_t const K[] = { 0x5A827999,
@@ -296,6 +333,15 @@ private:
     }
 
     /// Pads the current message block to 512 bits
+    /**
+     * According to the standard, the message must be padded to an even
+     * 512 bits.  The first padding bit must be a '1'.  The last 64 bits
+     * represent the length of the original message.  All bits in between
+     * should be 0.  This function will pad the message according to those
+     * rules by filling the message_block array accordingly.  It will also
+     * call ProcessMessageBlock() appropriately.  When it returns, it
+     * can be assumed that the message digest has been computed.
+     */
     void pad_message() {
         // Check to see if the current message block is too small to hold
         // the initial padding bits and length.  If so, we will pad the
