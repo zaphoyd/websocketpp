@@ -57,7 +57,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     /*std::cout << "on_message called with hdl: " << hdl.lock().get() 
               << " and message (" << msg->get_payload().size() << "): " << msg->get_payload()
               << std::endl;
-*/
+    */
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
     } catch (const websocketpp::lib::error_code& e) {
