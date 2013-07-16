@@ -1,15 +1,22 @@
 HEAD
+
+0.3.0-alpha3 - 2013-07-16
 - Minor refactor to bundled sha1 library
 - HTTP header comparisons are now case insensitive. #220, #275
-- Refactors URI to be exception free and not use the regular expressions. This
-  eliminates the dependency on boost or C++11 regex libraries.
-- Updates handling of Server and User-Agent headers
+- Refactors URI to be exception free and not use regular expressions. This
+  eliminates the dependency on boost or C++11 regex libraries allowing native
+  C++11 usage on GCC 4.4 and higher and significantly reduces staticly built
+  binary sizes.
+- Updates handling of Server and User-Agent headers to better handle custom
+  settings and allow suppression of these headers for security purposes.
 - Fix issue where pong timeout handler always fired. Thank you Steven Klassen 
   for reporting this bug.
 - Add ping and pong endpoint wrapper methods
 - Add `get_request()` pass through method to connection to allow calling methods
   specific to the HTTP policy in use.
-- Fix issue compiling with `WEBSOCKETPP_STRICT_MASKING`
+- Fix issue compile error with `WEBSOCKETPP_STRICT_MASKING` enabled and another
+  issue where `WEBSOCKETPP_STRICT_MASKING` was not applied to incoming messages.
+  Thank you Petter Norby for reporting and testing these bugs. #264
 - Add additional macro guards for use with boost_config. Thank you breyed
   for testing and code. #261
 

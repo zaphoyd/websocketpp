@@ -33,7 +33,6 @@ namespace websocketpp {
 
 /*
  other places where version information is kept
- - echo_client
  - readme.md
  - changelog.md
  - Doxyfile
@@ -51,10 +50,10 @@ static int const patch_version = 0;
  * This is a textual flag indicating the type and number for pre-release 
  * versions (dev, alpha, beta, rc). This will be blank for release versions.
  */
-static char const prerelease_flag[] = "alpha2";
+static char const prerelease_flag[] = "alpha3";
 
 /// Default user agent string
-static char const user_agent[] = "WebSocket++/0.3.0-alpha2";
+static char const user_agent[] = "WebSocket++/0.3.0-alpha3";
 
 } // namespace websocketpp
 
