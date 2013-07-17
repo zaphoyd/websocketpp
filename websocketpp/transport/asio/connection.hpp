@@ -852,7 +852,15 @@ protected:
 
         if (ec) {
             log_err(log::elevel::info,"asio async_shutdown",ec);
-            callback(make_error_code(transport::error::pass_through));
+            if (ec == boost::asio::error::not_connected) {
+                // The socket was already closed when we tried to close it. This
+                // happens periodically (usually if a read or write fails 
+                // earlier and if it is a real error will be caught at another
+                // level of the stack.
+                callback(lib::error_code());
+            } else {
+                callback(make_error_code(transport::error::pass_through));
+            }
         } else {
             if (m_alog.static_test(log::alevel::devel)) {
                 m_alog.write(log::alevel::devel,

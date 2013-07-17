@@ -1,4 +1,5 @@
 HEAD
+- Suppress error when trying to shut down a connection that was already closed
 
 0.3.0-alpha3 - 2013-07-16
 - Minor refactor to bundled sha1 library
