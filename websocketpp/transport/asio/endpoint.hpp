@@ -249,6 +249,11 @@ public:
         return m_io_service->run();
     }
     
+    /// wraps the run_one method of the internal io_service object
+    std::size_t run_one() {
+        return m_io_service->run_one();
+    }
+    
     /// wraps the stop method of the internal io_service object
     void stop() {
         m_io_service->stop();
