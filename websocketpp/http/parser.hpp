@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef HTTP_PARSER_HPP
@@ -54,7 +54,7 @@ typedef std::map<std::string, std::string, utility::ci_less > header_list;
 /**
  * Read until a non-token character is found and then return the token and
  * iterator to the next character to read
- * 
+ *
  * @param begin An iterator to the beginning of the sequence
  * @param end An iterator to the end of the sequence
  * @return A pair containing the token and an iterator to the next character in
@@ -71,12 +71,12 @@ std::pair<std::string,InputIterator> extract_token(InputIterator begin,
 /// Read and return the next quoted string in the stream
 /**
  * Read a double quoted string starting at `begin`. The quotes themselves are
- * stripped. The quoted value is returned along with an iterator to the next 
+ * stripped. The quoted value is returned along with an iterator to the next
  * character to read
- * 
+ *
  * @param begin An iterator to the beginning of the sequence
  * @param end An iterator to the end of the sequence
- * @return A pair containing the string read and an iterator to the next 
+ * @return A pair containing the string read and an iterator to the next
  * character in the stream
  */
 template <typename InputIterator>
@@ -84,7 +84,7 @@ std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
     InputIterator end)
 {
     std::string s;
-    
+
     if (end == begin) {
         return std::make_pair(s,begin);
     }
@@ -97,7 +97,7 @@ std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
     InputIterator marker = cursor;
 
     cursor = std::find(cursor,end,'"');
-    
+
     while (cursor != end) {
         // either this is the end or a quoted string
         if (*(cursor-1) == '\\') {
@@ -110,7 +110,7 @@ std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
             ++cursor;
             return std::make_pair(s,cursor);
         }
-        
+
         cursor = std::find(cursor,end,'"');
     }
 
@@ -120,8 +120,8 @@ std::pair<std::string,InputIterator> extract_quoted_string(InputIterator begin,
 /// Read and discard one unit of linear whitespace
 /**
  * Read one unit of linear white space and return the iterator to the character
- * afterwards. If `begin` is returned, no whitespace was extracted. 
- * 
+ * afterwards. If `begin` is returned, no whitespace was extracted.
+ *
  * @param begin An iterator to the beginning of the sequence
  * @param end An iterator to the end of the sequence
  * @return An iterator to the character after the linear whitespace read
@@ -131,7 +131,7 @@ InputIterator extract_lws(InputIterator begin, InputIterator end) {
     InputIterator it = begin;
 
     // strip leading CRLF
-    if (end-begin > 2 && *begin == '\r' && *(begin+1) == '\n' && 
+    if (end-begin > 2 && *begin == '\r' && *(begin+1) == '\n' &&
         is_whitespace_char(static_cast<unsigned char>(*(begin+2))))
     {
         it+=3;
@@ -143,10 +143,10 @@ InputIterator extract_lws(InputIterator begin, InputIterator end) {
 
 /// Read and discard linear whitespace
 /**
- * Read linear white space until a non-lws character is read and return an 
- * iterator to that character. If `begin` is returned, no whitespace was 
- * extracted. 
- * 
+ * Read linear white space until a non-lws character is read and return an
+ * iterator to that character. If `begin` is returned, no whitespace was
+ * extracted.
+ *
  * @param begin An iterator to the beginning of the sequence
  * @param end An iterator to the end of the sequence
  * @return An iterator to the character after the linear whitespace read
@@ -159,7 +159,7 @@ InputIterator extract_all_lws(InputIterator begin, InputIterator end) {
     do {
         // Pull value from previous iteration
         old_it = new_it;
-        
+
         // look ahead another pass
         new_it = extract_lws(old_it,end);
     } while (new_it != end && old_it != new_it);
@@ -169,16 +169,16 @@ InputIterator extract_all_lws(InputIterator begin, InputIterator end) {
 
 /// Extract HTTP attributes
 /**
- * An http attributes list is a semicolon delimited list of key value pairs in 
+ * An http attributes list is a semicolon delimited list of key value pairs in
  * the format: *( ";" attribute "=" value ) where attribute is a token and value
  * is a token or quoted string.
  *
- * Attributes extracted are appended to the supplied attributes list 
+ * Attributes extracted are appended to the supplied attributes list
  * `attributes`.
- * 
+ *
  * @param [in] begin An iterator to the beginning of the sequence
  * @param [in] end An iterator to the end of the sequence
- * @param [out] attributes A reference to the attributes list to append 
+ * @param [out] attributes A reference to the attributes list to append
  * attribute/value pairs extracted to
  * @return An iterator to the character after the last atribute read
  */
@@ -198,7 +198,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
 
     while (cursor != end) {
         std::string name;
-        
+
         cursor = http::parser::extract_all_lws(cursor,end);
         if (cursor == end) {
             break;
@@ -206,7 +206,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
 
         if (first) {
             // ignore this check for the very first pass
-            first = false;  
+            first = false;
         } else {
             if (*cursor == ';') {
                 // advance past the ';'
@@ -236,7 +236,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
             attributes[name] = "";
             continue;
         }
-        
+
         // advance past the '='
         ++cursor;
 
@@ -245,7 +245,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
             // error: expected a token or quoted string
             return begin;
         }
-        
+
         ret = http::parser::extract_quoted_string(cursor,end);
         if (ret.second != cursor) {
             attributes[name] = ret.first;
@@ -262,26 +262,26 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
             cursor = ret.second;
         }
     }
-    
+
     return cursor;
 }
 
 /// Extract HTTP parameters
 /**
- * An http parameters list is a comma delimited list of tokens followed by 
+ * An http parameters list is a comma delimited list of tokens followed by
  * optional semicolon delimited attributes lists.
  *
- * Parameters extracted are appended to the supplied parameters list 
+ * Parameters extracted are appended to the supplied parameters list
  * `parameters`.
- * 
+ *
  * @param [in] begin An iterator to the beginning of the sequence
  * @param [in] end An iterator to the end of the sequence
- * @param [out] parameters A reference to the parameters list to append 
+ * @param [out] parameters A reference to the parameters list to append
  * paramter values extracted to
  * @return An iterator to the character after the last parameter read
  */
 template <typename InputIterator>
-InputIterator extract_parameters(InputIterator begin, InputIterator end, 
+InputIterator extract_parameters(InputIterator begin, InputIterator end,
     parameter_list &parameters)
 {
     InputIterator cursor;
@@ -293,7 +293,7 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
 
     cursor = begin;
     std::pair<std::string,InputIterator> ret;
-    
+
     /**
      * LWS
      * token
@@ -319,7 +319,7 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
             parameter_name = ret.first;
             cursor = ret.second;
         }
-        
+
         // Safe break point, insert parameter with blank attributes and exit
         cursor = http::parser::extract_all_lws(cursor,end);
         if (cursor == end) {
@@ -342,14 +342,14 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
 
             cursor = acursor;
         }
-        
+
         // insert parameter into output list
         //parameters[parameter_name] = attributes;
         parameters.push_back(std::make_pair(parameter_name,attributes));
-        
+
         cursor = http::parser::extract_all_lws(cursor,end);
         if (cursor == end) {break;}
-        
+
         // if next char is ',' then read another parameter, else stop
         if (*cursor != ',') {
             break;
@@ -363,7 +363,7 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
             return begin;
         }
     }
-    
+
     return cursor;
 }
 
@@ -373,7 +373,7 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
  * as headers, versions, bodies, etc.
  */
 class parser {
-public:    
+public:
     /// Get the HTTP version string
     /**
      * @return The version string for this parser
@@ -402,14 +402,14 @@ public:
 
     /// Extract an HTTP parameter list from a parser header.
     /**
-     * If the header requested doesn't exist or exists and is empty the 
+     * If the header requested doesn't exist or exists and is empty the
      * parameter list is valid (but empty).
      *
      * @param [in] key The name/key of the HTTP header to use as input.
      * @param [out] out The parameter list to store extracted parameters in.
      * @return Whether or not the input was a valid parameter list.
      */
-    bool get_header_as_plist(std::string const & key, parameter_list & out) 
+    bool get_header_as_plist(std::string const & key, parameter_list & out)
         const;
 
     /// Append a value to an existing HTTP header
@@ -431,8 +431,8 @@ public:
 
     /// Set a value for an HTTP header, replacing an existing value
     /**
-     * This method will set the value of the HTTP header `key` with the 
-     * indicated value. If a header with the name `key` already exists, `val` 
+     * This method will set the value of the HTTP header `key` with the
+     * indicated value. If a header with the name `key` already exists, `val`
      * will replace the existing value.
      *
      * @todo Make this method case insensitive.
@@ -448,7 +448,7 @@ public:
 
     /// Remove a header from the parser
     /**
-     * Removes the header entirely from the parser. This is different than 
+     * Removes the header entirely from the parser. This is different than
      * setting the value of the header to blank.
      *
      * @todo Make this method case insensitive.
@@ -459,7 +459,7 @@ public:
 
     /// Set HTTP body
     /**
-     * Sets the body of the HTTP object and fills in the appropriate content 
+     * Sets the body of the HTTP object and fills in the appropriate content
      * length header.
      *
      * @param [in] value The value to set the body to.
@@ -474,7 +474,7 @@ public:
      * set_body will also set the Content-Length HTTP header to the appropriate
      * value. If you want the Content-Length header to be something else, do so
      * via replace_header("Content-Length") after calling set_body()
-     * 
+     *
      * @param value String data to include as the body content.
      */
     void set_body(std::string const & value);

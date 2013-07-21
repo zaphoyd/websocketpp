@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_URI_HPP
@@ -40,9 +40,9 @@ namespace websocketpp {
 
 // TODO: figure out why this fixes horrible linking errors.
 
-/// Default port for ws:// 
+/// Default port for ws://
 static uint16_t const uri_default_port = 80;
-/// Default port for wss:// 
+/// Default port for wss://
 static uint16_t const uri_default_secure_port = 443;
 
 class uri {
@@ -50,11 +50,11 @@ public:
     explicit uri(std::string const & uri) : m_valid(false) {
         std::string::const_iterator it;
         std::string::const_iterator temp;
-        
+
         int state = 0;
 
         it = uri.begin();
-        
+
         if (std::equal(it,it+6,"wss://")) {
             m_secure = true;
             m_scheme = "wss";
@@ -74,7 +74,7 @@ public:
         } else {
             return;
         }
-        
+
         // extract host.
         // either a host string
         // an IPv4 address
@@ -83,10 +83,10 @@ public:
             ++it;
             // IPv6 literal
             // extract IPv6 digits until ]
-            
+
             // TODO: this doesn't work on g++... not sure why
             //temp = std::find(it,it2,']');
-            
+
             temp = it;
             while (temp != uri.end()) {
                 if (*temp == ']') {
@@ -161,8 +161,8 @@ public:
 
         m_valid = true;
     }
-    
-    uri(bool secure, std::string const & host, uint16_t port, 
+
+    uri(bool secure, std::string const & host, uint16_t port,
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
@@ -170,7 +170,7 @@ public:
       , m_port(port)
       , m_secure(secure)
       , m_valid(true) {}
-    
+
     uri(bool secure, std::string const & host, std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
@@ -178,8 +178,8 @@ public:
       , m_port(secure ? uri_default_secure_port : uri_default_port)
       , m_secure(secure)
       , m_valid(true) {}
-      
-    uri(bool secure, std::string const & host, std::string const & port, 
+
+    uri(bool secure, std::string const & host, std::string const & port,
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
@@ -190,8 +190,8 @@ public:
         m_port = get_port_from_string(port,ec);
         m_valid = !ec;
     }
-    
-    uri(std::string const & scheme, std::string const & host, uint16_t port, 
+
+    uri(std::string const & scheme, std::string const & host, uint16_t port,
         std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
@@ -199,7 +199,7 @@ public:
       , m_port(port)
       , m_secure(scheme == "wss" || scheme == "https")
       , m_valid(true) {}
-    
+
     uri(std::string scheme, std::string const & host, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
@@ -207,8 +207,8 @@ public:
       , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
       , m_secure(scheme == "wss" || scheme == "https")
       , m_valid(true) {}
-      
-    uri(std::string const & scheme, std::string const & host, 
+
+    uri(std::string const & scheme, std::string const & host,
         std::string const & port, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
@@ -223,11 +223,11 @@ public:
     bool get_valid() const {
         return m_valid;
     }
-    
+
     bool get_secure() const {
         return m_secure;
     }
-    
+
     std::string const & get_scheme() const {
         return m_scheme;
     }
@@ -235,7 +235,7 @@ public:
     std::string const & get_host() const {
         return m_host;
     }
-    
+
     std::string get_host_port() const {
         if (m_port == (m_secure ? uri_default_secure_port : uri_default_port)) {
             return m_host;
@@ -245,60 +245,60 @@ public:
             return p.str();
         }
     }
-    
+
     std::string get_authority() const {
         std::stringstream p;
         p << m_host << ":" << m_port;
         return p.str();
     }
-    
+
     uint16_t get_port() const {
         return m_port;
     }
-    
+
     std::string get_port_str() const {
         std::stringstream p;
         p << m_port;
         return p.str();
     }
-    
+
     std::string const & get_resource() const {
         return m_resource;
     }
-    
+
     std::string str() const {
         std::stringstream s;
-    
+
         s << m_scheme << "://" << m_host;
-        
+
         if (m_port != (m_secure ? uri_default_secure_port : uri_default_port)) {
             s << ":" << m_port;
         }
-        
+
         s << m_resource;
         return s.str();
     }
-    
+
     // get query?
     // get fragment
-    
+
     // hi <3
-    
+
     // get the string representation of this URI
-    
+
     //std::string base() const; // is this still needed?
-    
+
     // setter methods set some or all (in the case of parse) based on the input.
     // These functions throw a uri_exception on failure.
     /*void set_uri(const std::string& uri);
-    
+
     void set_secure(bool secure);
     void set_host(const std::string& host);
     void set_port(uint16_t port);
     void set_port(const std::string& port);
     void set_resource(const std::string& resource);*/
 private:
-    uint16_t get_port_from_string(std::string const & port, lib::error_code & 
+    uint16_t get_port_from_string(std::string const & port, lib::error_code &
         ec) const
     {
         ec = lib::error_code();
@@ -306,20 +306,20 @@ private:
         if (port == "") {
             return (m_secure ? uri_default_secure_port : uri_default_port);
         }
-        
+
         unsigned int t_port = static_cast<unsigned int>(atoi(port.c_str()));
-                
+
         if (t_port > 65535) {
             ec = error::make_error_code(error::invalid_port);
         }
-        
+
         if (t_port == 0) {
             ec = error::make_error_code(error::invalid_port);
         }
-        
+
         return static_cast<uint16_t>(t_port);
     }
-    
+
     std::string m_scheme;
     std::string m_host;
     std::string m_resource;

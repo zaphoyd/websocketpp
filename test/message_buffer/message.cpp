@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE message
@@ -37,7 +37,7 @@ template <typename message>
 struct stub {
 	typedef websocketpp::lib::weak_ptr<stub> weak_ptr;
 	typedef websocketpp::lib::shared_ptr<stub> ptr;
-	
+
 	stub() : recycled(false) {}
 
 	bool recycle(message * msg) {
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( basic_size_check ) {
 
 	stub_type::ptr s(new stub_type());
 	message_type::ptr msg(new message_type(s,websocketpp::frame::opcode::TEXT,500));
-	
+
 	BOOST_CHECK(msg->get_payload().capacity() >= 500);
 }
 

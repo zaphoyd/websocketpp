@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE close
@@ -62,25 +62,25 @@ BOOST_AUTO_TEST_CASE( invalid_values ) {
 BOOST_AUTO_TEST_CASE( value_extraction ) {
 	lib::error_code ec;
 	std::string payload = "oo";
-	
+
 	// Value = 1000
 	payload[0] = 0x03;
 	payload[1] = char(0xe8);
 	BOOST_CHECK( close::extract_code(payload,ec) == close::status::normal );
 	BOOST_CHECK( !ec );
-	
+
 	// Value = 1004
 	payload[0] = 0x03;
 	payload[1] = char(0xec);
 	BOOST_CHECK( close::extract_code(payload,ec) == 1004 );
 	BOOST_CHECK( ec == error::reserved_close_code );
-	
+
 	// Value = 1005
 	payload[0] = 0x03;
 	payload[1] = char(0xed);
 	BOOST_CHECK( close::extract_code(payload,ec) == close::status::no_status );
 	BOOST_CHECK( ec == error::invalid_close_code );
-	
+
 	// Value = 3000
 	payload[0] = 0x0b;
 	payload[1] = char(0xb8);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( value_extraction ) {
 BOOST_AUTO_TEST_CASE( extract_empty ) {
 	lib::error_code ec;
 	std::string payload = "";
-	
+
 	BOOST_CHECK( close::extract_code(payload,ec) == close::status::no_status );
 	BOOST_CHECK( !ec );
 }
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE( extract_empty ) {
 BOOST_AUTO_TEST_CASE( extract_short ) {
 	lib::error_code ec;
 	std::string payload = "0";
-	
+
 	BOOST_CHECK( close::extract_code(payload,ec) == close::status::protocol_error );
 	BOOST_CHECK( ec == error::bad_close_code );
 }
@@ -107,21 +107,21 @@ BOOST_AUTO_TEST_CASE( extract_short ) {
 BOOST_AUTO_TEST_CASE( extract_reason ) {
 	lib::error_code ec;
 	std::string payload = "00Foo";
-	
+
 	BOOST_CHECK( close::extract_reason(payload,ec) == "Foo" );
 	BOOST_CHECK( !ec );
-	
+
 	payload = "";
 	BOOST_CHECK( close::extract_reason(payload,ec) == "" );
 	BOOST_CHECK( !ec );
-	
+
 	payload = "00";
 	BOOST_CHECK( close::extract_reason(payload,ec) == "" );
 	BOOST_CHECK( !ec );
-	
+
 	payload = "000";
 	payload[2] = char(0xFF);
-	
+
 	close::extract_reason(payload,ec);
 	BOOST_CHECK( ec == error::invalid_utf8 );
 }

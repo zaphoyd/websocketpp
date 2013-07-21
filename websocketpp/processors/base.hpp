@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_PROCESSOR_BASE_HPP
@@ -68,19 +68,19 @@ enum processor_errors {
     /// Catch-all error for processor policy errors that don't fit in other
     /// categories
     general = 1,
-    
+
     /// Error was the result of improperly formatted user input
     bad_request,
-    
+
     /// Processor encountered a protocol violation in an incoming message
     protocol_violation,
-    
+
     /// Processor encountered a message that was too large
     message_too_big,
-    
+
     /// Processor encountered invalid payload data.
     invalid_payload,
-    
+
     /// The processor method was called with invalid arguments
     invalid_arguments,
 
@@ -92,7 +92,7 @@ enum processor_errors {
 
     /// Illegal use of reserved bit
     invalid_rsv_bit,
-    
+
     /// Fragmented control message
     fragmented_control,
 
@@ -122,7 +122,7 @@ enum processor_errors {
 
     /// Invalid HTTP version
     invalid_http_version,
-    
+
     /// Invalid HTTP status
     invalid_http_status,
 
@@ -162,7 +162,7 @@ public:
     char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.processor";
     }
-    
+
     std::string message(int value) const {
         switch(value) {
             case error::general:
@@ -242,22 +242,22 @@ inline lib::error_code make_error_code(error::processor_errors e) {
 
 /// Converts a processor error_code into a websocket close code
 /**
- * Looks up the appropriate WebSocket close code that should be sent after an 
+ * Looks up the appropriate WebSocket close code that should be sent after an
  * error of this sort occurred.
- * 
- * If the error is not in the processor category close::status::blank is 
+ *
+ * If the error is not in the processor category close::status::blank is
  * returned.
  *
  * If the error isn't normally associated with reasons to close a connection
- * (such as errors intended to be used internally or delivered to client 
- * applications, ex: invalid arguments) then 
+ * (such as errors intended to be used internally or delivered to client
+ * applications, ex: invalid arguments) then
  * close::status::internal_endpoint_error is returned.
  */
 inline close::status::value to_ws(lib::error_code ec) {
     if (ec.category() != get_processor_category()) {
         return close::status::blank;
     }
-    
+
     switch (ec.value()) {
         case error::protocol_violation:
         case error::control_too_big:

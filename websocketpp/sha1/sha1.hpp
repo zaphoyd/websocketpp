@@ -6,20 +6,20 @@
  * All Rights Reserved.
  *
  * Modifications were done in 2012-13 by Peter Thorson (webmaster@zaphoyd.com)
- * to allow header only usage of the library and use C++ features to better 
+ * to allow header only usage of the library and use C++ features to better
  * support C++ usage. These changes are distributed under the original freeware
  * license included below
  *
  * Freeware Public License (FPL)
  *
  * This software is licensed as "freeware."  Permission to distribute
- * this software in source and binary forms, including incorporation 
- * into other products, is hereby granted without a fee.  THIS SOFTWARE 
- * IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESSED OR IMPLIED WARRANTIES, 
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE.  THE AUTHOR SHALL NOT BE HELD 
- * LIABLE FOR ANY DAMAGES RESULTING FROM THE USE OF THIS SOFTWARE, EITHER 
- * DIRECTLY OR INDIRECTLY, INCLUDING, BUT NOT LIMITED TO, LOSS OF DATA 
+ * this software in source and binary forms, including incorporation
+ * into other products, is hereby granted without a fee.  THIS SOFTWARE
+ * IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESSED OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE AUTHOR SHALL NOT BE HELD
+ * LIABLE FOR ANY DAMAGES RESULTING FROM THE USE OF THIS SOFTWARE, EITHER
+ * DIRECTLY OR INDIRECTLY, INCLUDING, BUT NOT LIMITED TO, LOSS OF DATA
  * OR DATA BEING RENDERED INACCURATE.
  *
  *****************************************************************************
@@ -78,20 +78,20 @@ public:
         length_low = 0;
         length_high = 0;
         message_block_index = 0;
-    
+
         H[0] = 0x67452301;
         H[1] = 0xEFCDAB89;
         H[2] = 0x98BADCFE;
         H[3] = 0x10325476;
         H[4] = 0xC3D2E1F0;
-    
+
         computed = false;
         corrupted = false;
     }
 
     /// Extract the message digest as a raw integer array
     /**
-     * @param [out] message_digest_array Integer array to store the message in 
+     * @param [out] message_digest_array Integer array to store the message in
      * @return Whether or not the extraction was sucessful
      */
     bool get_raw_digest(uint32_t * message_digest_array) {
@@ -107,7 +107,7 @@ public:
         for (int i = 0; i < 5; i++) {
             message_digest_array[i] = H[i];
         }
- 
+
         return true;
     }
 
@@ -120,16 +120,16 @@ public:
         if (!length) {
             return;
         }
-    
+
         if (computed || corrupted) {
             corrupted = true;
             return;
         }
-    
+
         while (length-- && !corrupted) {
 // Suppresses Visual Studio code analysis for write overrun. It doesn't know the
 // index into Message_Block is protected by checking length.
-// 
+//
 // TODO: is there a more compatible way to write the original code to avoid
 //       this sort of warning?
 #ifdef _MSC_VER
@@ -140,7 +140,7 @@ public:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-    
+
             length_low += 8;
             length_low &= 0xFFFFFFFF;               // Force it to 32 bits
             if (length_low == 0) {
@@ -150,15 +150,15 @@ public:
                     corrupted = true;               // Message is too long
                 }
             }
-    
+
             if (message_block_index == 64) {
                 process_message_block();
             }
-    
+
             message_array++;
         }
     }
-    
+
     /// Provide input to SHA1
     /**
      * Overload with signed message array
@@ -179,7 +179,7 @@ public:
     void input(unsigned char message_element) {
         input(&message_element, 1);
     }
-    
+
     /// Provide input to SHA1
     /**
      * Overload with a single signed char
@@ -198,12 +198,12 @@ public:
      */
     sha1& operator<<(char const * message_array) {
         char const * p = message_array;
-    
+
         while(*p) {
             input(*p);
             p++;
         }
-    
+
         return *this;
     }
 
@@ -220,7 +220,7 @@ public:
             input(*p);
             p++;
         }
-    
+
         return *this;
     }
 
@@ -263,7 +263,7 @@ private:
         uint32_t temp;          // Temporary word value
         uint32_t W[80];         // Word sequence
         uint32_t A, B, C, D, E; // Word buffers
-    
+
         // Initialize the first 16 words in the array W
         for (int t = 0; t < 16; t++) {
             W[t] = ((uint32_t) message_block[t * 4]) << 24;
@@ -271,17 +271,17 @@ private:
             W[t] |= ((uint32_t) message_block[t * 4 + 2]) << 8;
             W[t] |= ((uint32_t) message_block[t * 4 + 3]);
         }
-    
+
         for (int t = 16; t < 80; t++) {
            W[t] = CircularShift(1,W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16]);
         }
-    
+
         A = H[0];
         B = H[1];
         C = H[2];
         D = H[3];
         E = H[4];
-    
+
         for (int t = 0; t < 20; t++) {
             temp = CircularShift(5,A) + ((B & C) | ((~B) & D)) + E + W[t] + K[0];
             temp &= 0xFFFFFFFF;
@@ -291,7 +291,7 @@ private:
             B = A;
             A = temp;
         }
-    
+
         for (int t = 20; t < 40; t++) {
             temp = CircularShift(5,A) + (B ^ C ^ D) + E + W[t] + K[1];
             temp &= 0xFFFFFFFF;
@@ -301,7 +301,7 @@ private:
             B = A;
             A = temp;
         }
-    
+
         for (int t = 40; t < 60; t++) {
             temp = CircularShift(5,A) +
                    ((B & C) | (B & D) | (C & D)) + E + W[t] + K[2];
@@ -312,7 +312,7 @@ private:
             B = A;
             A = temp;
         }
-    
+
         for (int t = 60; t < 80; t++) {
             temp = CircularShift(5,A) + (B ^ C ^ D) + E + W[t] + K[3];
             temp &= 0xFFFFFFFF;
@@ -322,13 +322,13 @@ private:
             B = A;
             A = temp;
         }
-    
+
         H[0] = (H[0] + A) & 0xFFFFFFFF;
         H[1] = (H[1] + B) & 0xFFFFFFFF;
         H[2] = (H[2] + C) & 0xFFFFFFFF;
         H[3] = (H[3] + D) & 0xFFFFFFFF;
         H[4] = (H[4] + E) & 0xFFFFFFFF;
-    
+
         message_block_index = 0;
     }
 
@@ -351,9 +351,9 @@ private:
             while(message_block_index < 64) {
                 message_block[message_block_index++] = 0;
             }
-    
+
             process_message_block();
-    
+
             while(message_block_index < 56) {
                 message_block[message_block_index++] = 0;
             }
@@ -362,9 +362,9 @@ private:
             while(message_block_index < 56) {
                 message_block[message_block_index++] = 0;
             }
-    
+
         }
-    
+
         // Store the message length as the last 8 octets
         message_block[56] = (length_high >> 24) & 0xFF;
         message_block[57] = (length_high >> 16) & 0xFF;
@@ -374,7 +374,7 @@ private:
         message_block[61] = (length_low >> 16) & 0xFF;
         message_block[62] = (length_low >> 8) & 0xFF;
         message_block[63] = (length_low) & 0xFF;
-    
+
         process_message_block();
     }
 

@@ -28,7 +28,7 @@ prgs += env.Program('test_extension_permessage_compress_boost', ["test_extension
 
 if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs] + ['z']
-   # no C++11 features are used in processor so there are no C++11 versions of 
+   # no C++11 features are used in processor so there are no C++11 versions of
    # these tests.
    objs += env_cpp11.Object('test_processor_stl.o', ["processor.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('test_hybi13_stl.o', ["hybi13.cpp"], LIBS = BOOST_LIBS_CPP11)
@@ -36,7 +36,7 @@ if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    objs += env_cpp11.Object('test_hybi07_stl.o', ["hybi07.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('test_hybi00_stl.o', ["hybi00.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('test_extension_permessage_compress_stl.o', ["extension_permessage_compress.cpp"], LIBS = BOOST_LIBS_CPP11 + ['z'])
-   
+
    prgs += env_cpp11.Program('test_processor_stl', ["test_processor_stl.o"], LIBS = BOOST_LIBS_CPP11)
    prgs += env_cpp11.Program('test_hybi13_stl', ["test_hybi13_stl.o"], LIBS = BOOST_LIBS_CPP11)
    prgs += env_cpp11.Program('test_hybi08_stl', ["test_hybi08_stl.o"], LIBS = BOOST_LIBS_CPP11)

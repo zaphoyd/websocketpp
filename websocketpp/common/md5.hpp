@@ -1,7 +1,7 @@
 /*
   md5.hpp is a reformulation of the md5.h and md5.c code to allow it to function
   as a component of a header only library. This conversion was done by Peter
-  Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The 
+  Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The
   changes are released under the same license as the original (listed below)
 */
 /*
@@ -413,17 +413,17 @@ void md5_finish(md5_state_t *pms, md5_byte_t digest[16]) {
 // some convenience c++ functions
 inline std::string md5_hash_string(std::string const & s) {
 	char digest[16];
-	
+
 	md5_state_t state;
-	
+
 	md5_init(&state);
 	md5_append(&state, (md5_byte_t const *)s.c_str(), s.size());
 	md5_finish(&state, (md5_byte_t *)digest);
-	    
+
     std::string ret;
     ret.resize(16);
     std::copy(digest,digest+16,ret.begin());
-    
+
 	return ret;
 }
 
@@ -432,12 +432,12 @@ const char hexval[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 
 inline std::string md5_hash_hex(std::string const & input) {
     std::string hash = md5_hash_string(input);
     std::string hex;
-        
+
     for (size_t i = 0; i < hash.size(); i++) {
         hex.push_back(hexval[((hash[i] >> 4) & 0xF)]);
         hex.push_back(hexval[(hash[i]) & 0x0F]);
     }
-    
+
     return hex;
 }
 

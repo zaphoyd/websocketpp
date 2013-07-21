@@ -22,22 +22,22 @@ Get Involved
 
 [![Build Status](https://travis-ci.org/zaphoyd/websocketpp.png)](https://travis-ci.org/zaphoyd/websocketpp)
 
-**Project Website**  
+**Project Website**
 http://www.zaphoyd.com/websocketpp/
 
-**User Manual**  
+**User Manual**
 http://www.zaphoyd.com/websocketpp/manual/
 
-**GitHub Repository**  
+**GitHub Repository**
 https://github.com/zaphoyd/websocketpp/
 
-**Announcements Mailing List**  
+**Announcements Mailing List**
 http://groups.google.com/group/websocketpp-announcements/
 
-**IRC Channel**  
+**IRC Channel**
  #websocketpp (freenode)
 
-**Discussion / Development / Support Mailing List / Forum**  
+**Discussion / Development / Support Mailing List / Forum**
 http://groups.google.com/group/websocketpp/
 
 Author

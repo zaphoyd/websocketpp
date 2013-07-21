@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_asio_timers
@@ -52,12 +52,12 @@
 // Accept a connection, read data, and discard until EOF
 void run_dummy_server(int port) {
     using boost::asio::ip::tcp;
-    
-    try {    
+
+    try {
         boost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
-    
+
         acceptor.accept(socket);
         for (;;) {
             char data[512];
@@ -94,7 +94,7 @@ struct config {
     typedef websocketpp::http::parser::request request_type;
     typedef websocketpp::http::parser::response response_type;
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
-    
+
     static const long timeout_socket_pre_init = 1000;
     static const long timeout_proxy = 1000;
     static const long timeout_socket_post_init = 1000;
@@ -112,20 +112,20 @@ context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
 // Mock connection
 struct mock_con: public websocketpp::transport::asio::connection<config> {
     typedef websocketpp::transport::asio::connection<config> base;
-    
+
     mock_con(bool a, config::alog_type& b, config::elog_type& c) : base(a,b,c) {}
-    
+
     void start() {
         base::init(websocketpp::lib::bind(&mock_con::handle_start,this,
             websocketpp::lib::placeholders::_1));
     }
-    
+
     void handle_start(const websocketpp::lib::error_code& ec) {
         using websocketpp::transport::asio::socket::make_error_code;
         using websocketpp::transport::asio::socket::error::tls_handshake_timeout;
-        
+
         BOOST_CHECK_EQUAL( ec, make_error_code(tls_handshake_timeout) );
-        
+
         base::cancel_socket();
     }
 };
@@ -135,20 +135,20 @@ typedef websocketpp::lib::shared_ptr<mock_con> connection_ptr;
 
 struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
     typedef websocketpp::transport::asio::endpoint<config> base;
-    
+
     mock_endpoint() {
         alog.set_channels(websocketpp::log::alevel::all);
         base::init_logging(&alog,&elog);
         init_asio();
     }
-    
+
     void connect(std::string u) {
         m_con.reset(new mock_con(false,alog,elog));
         websocketpp::uri_ptr uri(new websocketpp::uri(u));
-        
+
         BOOST_CHECK( uri->get_valid() );
         BOOST_CHECK_EQUAL( base::init(m_con), websocketpp::lib::error_code() );
-        
+
         base::async_connect(
             m_con,
             uri,
@@ -161,14 +161,14 @@ struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
             )
         );
     }
-    
-    void handle_connect(connection_ptr con, websocketpp::connection_hdl, 
+
+    void handle_connect(connection_ptr con, websocketpp::connection_hdl,
         const websocketpp::lib::error_code & ec)
     {
         BOOST_CHECK( !ec );
         con->start();
     }
-    
+
     connection_ptr m_con;
     config::alog_type alog;
     config::elog_type elog;
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
     websocketpp::lib::thread timer(websocketpp::lib::bind(&run_test_timer,5000));
     dummy_server.detach();
     timer.detach();
-    
+
     mock_endpoint endpoint;
     endpoint.set_tls_init_handler(&on_tls_init);
     endpoint.connect("wss://localhost:9005");

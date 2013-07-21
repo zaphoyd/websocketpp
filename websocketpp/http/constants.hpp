@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef HTTP_CONSTANTS_HPP
@@ -36,34 +36,34 @@ namespace websocketpp {
 namespace http {
     /// The type of an HTTP attribute list
     /**
-     * The attribute list is an unordered key/value map. Encoded attribute 
-     * values are delimited by semicolons. 
-     */ 
+     * The attribute list is an unordered key/value map. Encoded attribute
+     * values are delimited by semicolons.
+     */
     typedef std::map<std::string,std::string> attribute_list;
-    
+
     /// The type of an HTTP parameter list
     /**
-     * The parameter list is an ordered pairing of a parameter and its 
-     * associated attribute list. Encoded parameter values are delimited by 
+     * The parameter list is an ordered pairing of a parameter and its
+     * associated attribute list. Encoded parameter values are delimited by
      * commas.
      */
     typedef std::vector< std::pair<std::string,attribute_list> > parameter_list;
-    
+
     /// Literal value of the HTTP header delimiter
     static char const header_delimiter[] = "\r\n";
-    
+
     /// Literal value of the HTTP header separator
     static char const header_separator[] = ": ";
-    
+
     /// Literal value of an empty header
     static std::string const empty_header = "";
-    
+
     /// Maximum size in bytes before rejecting an HTTP header as too big.
     size_t const max_header_size = 16000;
-    
+
     /// Number of bytes to use for temporary istream read buffers
     size_t const istream_buffer = 512;
-    
+
     /// invalid HTTP token characters
     /**
      * 0x00 - 0x32, 0x7f-0xff
@@ -87,17 +87,17 @@ namespace http {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // e0..ef
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // f0..ff
     };
-    
+
     /// Is the character a token
     inline bool is_token_char(unsigned char c) {
         return (header_token[c] == 1);
     }
-    
+
     /// Is the character a non-token
     inline bool is_not_token_char(unsigned char c) {
         return !header_token[c];
     }
-    
+
     /// Is the character whitespace
     /**
      * whitespace is space (32) or horizontal tab (9)
@@ -115,10 +115,10 @@ namespace http {
     namespace status_code {
         enum value {
             uninitialized = 0,
-            
+
             continue_code = 100,
             switching_protocols = 101,
-            
+
             ok = 200,
             created = 201,
             accepted = 202,
@@ -126,7 +126,7 @@ namespace http {
             no_content = 204,
             reset_content = 205,
             partial_content = 206,
-            
+
             multiple_choices = 300,
             moved_permanently = 301,
             found = 302,
@@ -134,7 +134,7 @@ namespace http {
             not_modified = 304,
             use_proxy = 305,
             temporary_redirect = 307,
-            
+
             bad_request = 400,
             unauthorized = 401,
             payment_required = 402,
@@ -158,7 +158,7 @@ namespace http {
             precondition_required = 428,
             too_many_requests = 429,
             request_header_fields_too_large = 431,
-            
+
             internal_server_error = 500,
             not_implemented = 501,
             bad_gateway = 502,
@@ -168,7 +168,7 @@ namespace http {
             not_extended = 510,
             network_authentication_required = 511
         };
-        
+
         // TODO: should this be inline?
         inline std::string get_string(value c) {
             switch (c) {
@@ -273,9 +273,9 @@ namespace http {
             }
         }
     }
-    
+
     class exception : public std::exception {
-    public: 
+    public:
         exception(const std::string& log_msg,
                   status_code::value error_code,
                   const std::string& error_msg = "",
@@ -284,13 +284,13 @@ namespace http {
           , m_error_msg(error_msg)
           , m_body(body)
           , m_error_code(error_code) {}
-        
+
         ~exception() throw() {}
-        
+
         virtual const char* what() const throw() {
             return m_msg.c_str();
         }
-        
+
         std::string         m_msg;
         std::string         m_error_msg;
         std::string         m_body;

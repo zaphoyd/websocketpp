@@ -45,14 +45,14 @@ decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
 class validator {
 public:
     validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}
-    
+
     bool consume (uint32_t byte) {
         if (utf8_validator::decode(&m_state,&m_codepoint,static_cast<uint8_t>(byte)) == UTF8_REJECT) {
             return false;
         }
         return true;
     }
-    
+
     template <typename iterator_type>
     bool decode (iterator_type b, iterator_type e) {
         for (iterator_type i = b; i != e; i++) {
@@ -62,11 +62,11 @@ public:
         }
         return true;
     }
-    
+
     bool complete() {
         return m_state == UTF8_ACCEPT;
     }
-    
+
     void reset() {
         m_state = UTF8_ACCEPT;
         m_codepoint = 0;
@@ -76,7 +76,7 @@ private:
     uint32_t    m_codepoint;
 };
 
-// convenience function that creates a validator, validates a complete string 
+// convenience function that creates a validator, validates a complete string
 // and returns the result.
 // TODO: should this be inline?
 inline bool validate(const std::string& s) {
@@ -86,7 +86,7 @@ inline bool validate(const std::string& s) {
     }
     return v.complete();
 }
-    
+
 } // namespace utf8_validator
 } // namespace websocketpp
 

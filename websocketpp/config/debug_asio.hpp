@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_CONFIG_ASIO_TLS_DEBUG_HPP
@@ -43,19 +43,19 @@ namespace config {
 struct debug_asio_tls : public debug_core {
     typedef debug_asio_tls type;
     typedef debug_core base;
-    
+
     typedef base::concurrency_type concurrency_type;
-    
+
     typedef base::request_type request_type;
     typedef base::response_type response_type;
 
     typedef base::message_type message_type;
     typedef base::con_msg_manager_type con_msg_manager_type;
     typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
-    
+
     typedef base::alog_type alog_type;
     typedef base::elog_type elog_type;
-    
+
     typedef base::rng_type rng_type;
 
     struct transport_config : public base::transport_config {
@@ -67,7 +67,7 @@ struct debug_asio_tls : public debug_core {
         typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
     };
 
-    typedef websocketpp::transport::asio::endpoint<transport_config> 
+    typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
 };
 

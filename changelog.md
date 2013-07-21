@@ -11,7 +11,7 @@ HEAD
   binary sizes.
 - Updates handling of Server and User-Agent headers to better handle custom
   settings and allow suppression of these headers for security purposes.
-- Fix issue where pong timeout handler always fired. Thank you Steven Klassen 
+- Fix issue where pong timeout handler always fired. Thank you Steven Klassen
   for reporting this bug.
 - Add ping and pong endpoint wrapper methods
 - Add `get_request()` pass through method to connection to allow calling methods
@@ -25,7 +25,7 @@ HEAD
 0.3.0-alpha2 - 2013-06-09
 - Fix a regression that caused servers being sent two close frames in a row
   to end a connection uncleanly. #259
-- Fix a regression that caused spurious frames following a legitimate close 
+- Fix a regression that caused spurious frames following a legitimate close
   frames to erroneously trigger handlers. #258
 - Change default HTTP response error code when no http_handler is defined from
   500/Internal Server Error to 426/Upgrade Required

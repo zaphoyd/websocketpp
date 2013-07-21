@@ -12,10 +12,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -23,7 +23,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_CLOSE_HPP
@@ -33,10 +33,10 @@
  * A package of types and methods for manipulating WebSocket close codes.
  */
 
-#include <websocketpp/error.hpp> 
+#include <websocketpp/error.hpp>
 #include <websocketpp/common/network.hpp>
 #include <websocketpp/common/stdint.hpp>
-#include <websocketpp/utf8_validator.hpp> 
+#include <websocketpp/utf8_validator.hpp>
 
 #include <string>
 
@@ -47,7 +47,7 @@ namespace close {
 namespace status {
     /// The type of a close code value.
     typedef uint16_t value;
-    
+
     /// A blank value for internal use.
     static value const blank = 0;
 
@@ -62,7 +62,7 @@ namespace status {
     /// A protocol error occurred.
     static value const protocol_error = 1002;
 
-    /// The connection was terminated because an endpoint received a type of 
+    /// The connection was terminated because an endpoint received a type of
     /// data it cannot accept.
     /**
      * (e.g., an endpoint that understands only text data MAY send this if it
@@ -160,8 +160,8 @@ namespace status {
      * determine if the system has the capability of waiting for a close
      * acknowledgement or if it should drop the TCP connection immediately
      * after sending its close frame.
-     * 
-     * @param [in] code The value to test. 
+     *
+     * @param [in] code The value to test.
      * @return True if the code represents an unrecoverable error
      */
     inline bool terminal(value code) {
@@ -208,7 +208,7 @@ inline status::value extract_code(std::string const & payload, lib::error_code
     val.c[0] = payload[0];
     val.c[1] = payload[1];
 
-    status::value code(ntohs(val.i));    
+    status::value code(ntohs(val.i));
 
     if (status::invalid(code)) {
         ec = make_error_code(error::invalid_close_code);

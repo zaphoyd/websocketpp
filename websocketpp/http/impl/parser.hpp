@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef HTTP_PARSER_IMPL_HPP
@@ -50,7 +50,7 @@ inline std::string const & parser::get_header(std::string const & key) const {
     }
 }
 
-inline bool parser::get_header_as_plist(std::string const & key, 
+inline bool parser::get_header_as_plist(std::string const & key,
     parameter_list & out) const
 {
     header_list::const_iterator it = m_headers.find(key);
@@ -99,7 +99,7 @@ inline void parser::set_body(std::string const & value) {
     m_body = value;
 }
 
-inline bool parser::parse_parameter_list(std::string const & in, 
+inline bool parser::parse_parameter_list(std::string const & in,
     parameter_list & out) const
 {
     if (in.size() == 0) {
@@ -125,15 +125,15 @@ inline bool parser::parse_headers(std::istream & s) {
 
         end = header.find(header_separator,0);
 
-        if (end != std::string::npos) {         
+        if (end != std::string::npos) {
             append_header(header.substr(0,end),header.substr(end+2));
         }
     }
-    
+
     return true;
 }
 
-inline void parser::process_header(std::string::iterator begin, 
+inline void parser::process_header(std::string::iterator begin,
     std::string::iterator end)
 {
     std::string::iterator cursor = std::search(
@@ -142,23 +142,23 @@ inline void parser::process_header(std::string::iterator begin,
         header_separator,
         header_separator + sizeof(header_separator) - 1
     );
-    
+
     if (cursor == end) {
         throw exception("Invalid header line",status_code::bad_request);
     }
-    
+
     append_header(std::string(begin,cursor),
                   std::string(cursor+sizeof(header_separator)-1,end));
 }
 
 inline std::string parser::raw_headers() const {
     std::stringstream raw;
-    
+
     header_list::const_iterator it;
     for (it = m_headers.begin(); it != m_headers.end(); it++) {
         raw << it->first << ": " << it->second << "\r\n";
     }
-    
+
     return raw.str();
 }
 

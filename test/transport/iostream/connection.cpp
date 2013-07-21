@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_iostream_connection
@@ -54,13 +54,13 @@ using websocketpp::transport::iostream::error::make_error_code;
 struct stub_con : public iostream_con {
     typedef iostream_con::timer_ptr timer_ptr;
 
-    stub_con(bool is_server, config::alog_type &a, config::elog_type & e) 
+    stub_con(bool is_server, config::alog_type &a, config::elog_type & e)
         : iostream_con(is_server,a,e)
         // Set the error to a known code that is unused by the library
         // This way we can easily confirm that the handler was run at all.
         , ec(websocketpp::error::make_error_code(websocketpp::error::test))
     {}
-    
+
     void write(std::string msg) {
         iostream_con::async_write(
             msg.data(),
@@ -72,7 +72,7 @@ struct stub_con : public iostream_con {
             )
         );
     }
-    
+
     void write(std::vector<websocketpp::transport::buffer> & bufs) {
         iostream_con::async_write(
             bufs,
@@ -83,7 +83,7 @@ struct stub_con : public iostream_con {
             )
         );
     }
-    
+
     void async_read_at_least(size_t num_bytes, char *buf, size_t len)
 	{
         iostream_con::async_read_at_least(
@@ -97,11 +97,11 @@ struct stub_con : public iostream_con {
             )
         );
     }
-    
+
     void handle_op(const websocketpp::lib::error_code& e) {
         ec = e;
     }
-    
+
     websocketpp::lib::error_code ec;
 };
 
@@ -111,17 +111,17 @@ config::elog_type e;
 
 BOOST_AUTO_TEST_CASE( const_methods ) {
     iostream_con con(true,a,e);
-		
+
     BOOST_CHECK( con.is_secure() == false );
     BOOST_CHECK( con.get_remote_endpoint() == "iostream transport" );
 }
 
 BOOST_AUTO_TEST_CASE( write_before_ostream_set ) {
     stub_con con(true,a,e);
-        
+
     con.write("foo");
     BOOST_CHECK( con.ec == make_error_code(websocketpp::transport::iostream::error::output_stream_required) );
-    
+
     std::vector<websocketpp::transport::buffer> bufs;
     con.write(bufs);
     BOOST_CHECK( con.ec == make_error_code(websocketpp::transport::iostream::error::output_stream_required) );
@@ -129,83 +129,83 @@ BOOST_AUTO_TEST_CASE( write_before_ostream_set ) {
 
 BOOST_AUTO_TEST_CASE( async_write ) {
     stub_con con(true,a,e);
-    
+
     std::stringstream output;
-    
+
     con.register_ostream(&output);
-        
+
     con.write("foo");
-    
+
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( output.str() == "foo" );
 }
 
 BOOST_AUTO_TEST_CASE( async_write_vector_0 ) {
     std::stringstream output;
-    
+
     stub_con con(true,a,e);
     con.register_ostream(&output);
-        
+
     std::vector<websocketpp::transport::buffer> bufs;
-    
+
     con.write(bufs);
-    
+
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( output.str() == "" );
 }
 
 BOOST_AUTO_TEST_CASE( async_write_vector_1 ) {
     std::stringstream output;
-    
+
     stub_con con(true,a,e);
     con.register_ostream(&output);
-        
+
     std::vector<websocketpp::transport::buffer> bufs;
-    
+
     std::string foo = "foo";
-    
+
     bufs.push_back(websocketpp::transport::buffer(foo.data(),foo.size()));
-    
+
     con.write(bufs);
-    
+
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( output.str() == "foo" );
 }
 
 BOOST_AUTO_TEST_CASE( async_write_vector_2 ) {
     std::stringstream output;
-    
+
     stub_con con(true,a,e);
     con.register_ostream(&output);
-        
+
     std::vector<websocketpp::transport::buffer> bufs;
-    
+
     std::string foo = "foo";
     std::string bar = "bar";
-    
+
     bufs.push_back(websocketpp::transport::buffer(foo.data(),foo.size()));
     bufs.push_back(websocketpp::transport::buffer(bar.data(),bar.size()));
-    
+
     con.write(bufs);
-    
+
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( output.str() == "foobar" );
 }
 
 BOOST_AUTO_TEST_CASE( async_read_at_least_too_much ) {
     stub_con con(true,a,e);
-    
+
     char buf[10];
-        
+
     con.async_read_at_least(11,buf,10);
     BOOST_CHECK( con.ec == make_error_code(websocketpp::transport::iostream::error::invalid_num_bytes) );
 }
 
 BOOST_AUTO_TEST_CASE( async_read_at_least_double_read ) {
     stub_con con(true,a,e);
-    
+
     char buf[10];
-        
+
     con.async_read_at_least(5,buf,10);
     con.async_read_at_least(5,buf,10);
     BOOST_CHECK( con.ec == make_error_code(websocketpp::transport::iostream::error::double_read) );
@@ -213,27 +213,27 @@ BOOST_AUTO_TEST_CASE( async_read_at_least_double_read ) {
 
 BOOST_AUTO_TEST_CASE( async_read_at_least ) {
     stub_con con(true,a,e);
-    
+
     char buf[10];
-    
+
     memset(buf,'x',10);
-    
+
     con.async_read_at_least(5,buf,10);
     BOOST_CHECK( con.ec == make_error_code(websocketpp::error::test) );
-    
+
     std::stringstream channel;
 	channel << "abcd";
 	channel >> con;
 	BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( con.ec == make_error_code(websocketpp::error::test) );
-    
+
     std::stringstream channel2;
 	channel2 << "e";
 	channel2 >> con;
 	BOOST_CHECK( channel2.tellg() == -1 );
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
-    
+
     std::stringstream channel3;
 	channel3 << "f";
 	channel3 >> con;
@@ -249,21 +249,21 @@ BOOST_AUTO_TEST_CASE( async_read_at_least ) {
 
 BOOST_AUTO_TEST_CASE( async_read_at_least2 ) {
     stub_con con(true,a,e);
-    
+
     char buf[10];
-    
+
     memset(buf,'x',10);
-    
+
     con.async_read_at_least(5,buf,5);
     BOOST_CHECK( con.ec == make_error_code(websocketpp::error::test) );
-    
+
     std::stringstream channel;
 	channel << "abcdefg";
 	channel >> con;
     BOOST_CHECK( channel.tellg() == 5 );
     BOOST_CHECK( !con.ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
-    
+
     con.async_read_at_least(1,buf+5,5);
 	channel >> con;
 	BOOST_CHECK( channel.tellg() == -1 );
@@ -275,8 +275,8 @@ void timer_callback_stub(const websocketpp::lib::error_code & ec) {}
 
 BOOST_AUTO_TEST_CASE( set_timer ) {
     stub_con con(true,a,e);
-    
+
     stub_con::timer_ptr tp = con.set_timer(1000,timer_callback_stub);
-    
+
     BOOST_CHECK( !tp );
 }

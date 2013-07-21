@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
@@ -40,7 +40,7 @@ namespace transport {
 namespace asio {
 namespace basic_socket {
 
-typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)> 
+typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
     socket_init_handler;
 
 /// Basic Boost ASIO connection socket component
@@ -59,12 +59,12 @@ public:
     typedef boost::asio::io_service* io_service_ptr;
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
-    
+
     explicit connection() : m_state(UNINITIALIZED) {
-        //std::cout << "transport::asio::basic_socket::connection constructor" 
-        //          << std::endl; 
+        //std::cout << "transport::asio::basic_socket::connection constructor"
+        //          << std::endl;
     }
-    
+
     /// Check whether or not this connection is secure
     /**
      * @return Whether or not this connection is secure
@@ -72,7 +72,7 @@ public:
     bool is_secure() const {
         return false;
     }
-    
+
     /// Set the socket initialization handler
     /**
      * The socket initialization handler is called after the socket object is
@@ -92,7 +92,7 @@ public:
     boost::asio::ip::tcp::socket& get_socket() {
         return *m_socket;
     }
-    
+
     /// Retrieve a pointer to the underlying socket
     /**
      * This is used internally.
@@ -100,7 +100,7 @@ public:
     boost::asio::ip::tcp::socket& get_next_layer() {
         return *m_socket;
     }
-    
+
     /// Retrieve a pointer to the underlying socket
     /**
      * This is used internally. It can also be used to set socket options, etc
@@ -108,11 +108,11 @@ public:
     boost::asio::ip::tcp::socket& get_raw_socket() {
         return *m_socket;
     }
-    
+
     /// Get the remote endpoint address
     /**
-     * The iostream transport has no information about the ultimate remote 
-     * endpoint. It will return the string "iostream transport". To indicate 
+     * The iostream transport has no information about the ultimate remote
+     * endpoint. It will return the string "iostream transport". To indicate
      * this.
      *
      * TODO: allow user settable remote endpoint addresses if this seems useful
@@ -121,13 +121,13 @@ public:
      */
     std::string get_remote_endpoint(lib::error_code &ec) const {
         std::stringstream s;
-        
+
         boost::system::error_code bec;
         boost::asio::ip::tcp::endpoint ep = m_socket->remote_endpoint(bec);
-        
+
         if (bec) {
             ec = error::make_error_code(error::pass_through);
-            s << "Error getting remote endpoint: " << bec 
+            s << "Error getting remote endpoint: " << bec
                << " (" << bec.message() << ")";
             return s.str();
         } else {
@@ -150,21 +150,21 @@ protected:
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
         }
-        
+
         m_socket.reset(new boost::asio::ip::tcp::socket(*service));
-        
+
         m_state = READY;
-        
+
         return lib::error_code();
     }
-    
+
     /// Pre-initialize security policy
     /**
      * Called by the transport after a new connection is created to initialize
-     * the socket component of the connection. This method is not allowed to 
-     * write any bytes to the wire. This initialization happens before any 
+     * the socket component of the connection. This method is not allowed to
+     * write any bytes to the wire. This initialization happens before any
      * proxies or other intermediate wrappers are negotiated.
-     * 
+     *
      * @param callback Handler to call back with completion information
      */
     void pre_init(init_handler callback) {
@@ -172,31 +172,31 @@ protected:
             callback(socket::make_error_code(socket::error::invalid_state));
             return;
         }
-        
+
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl,*m_socket);
         }
-        
+
         m_state = READING;
-        
+
         callback(lib::error_code());
     }
-    
+
     /// Post-initialize security policy
     /**
-     * Called by the transport after all intermediate proxies have been 
+     * Called by the transport after all intermediate proxies have been
      * negotiated. This gives the security policy the chance to talk with the
      * real remote endpoint for a bit before the websocket handshake.
-     * 
+     *
      * @param callback Handler to call back with completion information
      */
     void post_init(init_handler callback) {
         callback(lib::error_code());
     }
-    
+
     /// Sets the connection handle
     /**
-     * The connection handle is passed to any handlers to identify the 
+     * The connection handle is passed to any handlers to identify the
      * connection
      *
      * @param hdl The new handle
@@ -204,18 +204,18 @@ protected:
     void set_handle(connection_hdl hdl) {
         m_hdl = hdl;
     }
-    
+
     /// Cancel all async operations on this socket
     void cancel_socket() {
         m_socket->cancel();
     }
-    
+
     void async_shutdown(socket_shutdown_handler h) {
         boost::system::error_code ec;
         m_socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both,ec);
         h(ec);
     }
-    
+
     lib::error_code get_ec() const {
         return lib::error_code();
     }
@@ -225,10 +225,10 @@ private:
         READY = 1,
         READING = 2
     };
-    
+
     socket_ptr          m_socket;
     state               m_state;
-        
+
     connection_hdl      m_hdl;
     socket_init_handler m_socket_init_handler;
 };
@@ -242,13 +242,13 @@ class endpoint {
 public:
     /// The type of this endpoint socket component
     typedef endpoint type;
-    
+
     /// The type of the corresponding connection socket component
     typedef connection socket_con_type;
     /// The type of a shared pointer to the corresponding connection socket
     /// component.
     typedef socket_con_type::ptr socket_con_ptr;
-    
+
     explicit endpoint() {}
 
     /// Checks whether the endpoint creates secure connections
@@ -262,7 +262,7 @@ public:
     /// Set socket init handler
     /**
      * The socket init handler is called after a connection's socket is created
-     * but before it is used. This gives the end application an opportunity to 
+     * but before it is used. This gives the end application an opportunity to
      * set asio socket specific parameters.
      *
      * @param h The new socket_init_handler
@@ -275,7 +275,7 @@ protected:
     /**
      * Called by the transport after a new connection is created to initialize
      * the socket component of the connection.
-     * 
+     *
      * @param scon Pointer to the socket component of the connection
      *
      * @return Error code (empty on success)

@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_COMMON_NETWORK_HPP
@@ -46,32 +46,32 @@ inline bool is_little_endian() {
     return (ptr[0] == 1);
 }
 
-#define TYP_INIT 0 
-#define TYP_SMLE 1 
-#define TYP_BIGE 2 
+#define TYP_INIT 0
+#define TYP_SMLE 1
+#define TYP_BIGE 2
 
-inline uint64_t htonll(uint64_t src) { 
-    static int typ = TYP_INIT; 
-    unsigned char c; 
-    union { 
-        uint64_t ull; 
-        unsigned char c[8]; 
-    } x; 
-    if (typ == TYP_INIT) { 
-        x.ull = 0x01; 
-        typ = (x.c[7] == 0x01ULL) ? TYP_BIGE : TYP_SMLE; 
-    } 
-    if (typ == TYP_BIGE) 
+inline uint64_t htonll(uint64_t src) {
+    static int typ = TYP_INIT;
+    unsigned char c;
+    union {
+        uint64_t ull;
+        unsigned char c[8];
+    } x;
+    if (typ == TYP_INIT) {
+        x.ull = 0x01;
+        typ = (x.c[7] == 0x01ULL) ? TYP_BIGE : TYP_SMLE;
+    }
+    if (typ == TYP_BIGE)
         return src;
-    x.ull = src; 
-    c = x.c[0]; x.c[0] = x.c[7]; x.c[7] = c; 
-    c = x.c[1]; x.c[1] = x.c[6]; x.c[6] = c; 
-    c = x.c[2]; x.c[2] = x.c[5]; x.c[5] = c; 
-    c = x.c[3]; x.c[3] = x.c[4]; x.c[4] = c; 
-    return x.ull; 
+    x.ull = src;
+    c = x.c[0]; x.c[0] = x.c[7]; x.c[7] = c;
+    c = x.c[1]; x.c[1] = x.c[6]; x.c[6] = c;
+    c = x.c[2]; x.c[2] = x.c[5]; x.c[5] = c;
+    c = x.c[3]; x.c[3] = x.c[4]; x.c[4] = c;
+    return x.ull;
 }
 
-inline uint64_t ntohll(uint64_t src) { 
+inline uint64_t ntohll(uint64_t src) {
     return htonll(src);
 }
 

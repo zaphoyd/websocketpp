@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_LOGGER_LEVELS_HPP
@@ -42,29 +42,29 @@ struct elevel {
     static level const none = 0x0;
     /// Low level debugging information (warning: very chatty)
     static level const devel = 0x1;
-    /// Information about unusual system states or other minor internal library 
+    /// Information about unusual system states or other minor internal library
     /// problems, less chatty than devel.
     static level const library = 0x2;
     /// Information about minor configuration problems or additional information
     /// about other warnings.
     static level const info = 0x4;
-    /// Information about important problems not severe enough to terminate 
+    /// Information about important problems not severe enough to terminate
     /// connections.
     static level const warn = 0x8;
     /// Recoverable error. Recovery may mean cleanly closing the connection with
     /// an appropriate error code to the remote endpoint.
     static level const rerror = 0x10;
-    /// Unrecoverable error. This error will trigger immediate unclean 
+    /// Unrecoverable error. This error will trigger immediate unclean
     /// termination of the connection or endpoint.
     static level const fatal = 0x20;
     /// Special aggregate value representing "all levels"
     static level const all = 0xffffffff;
-    
+
     /// Get the textual name of a channel given a channel id
     /**
-     * The id must be that of a single channel. Passing an aggregate channel 
+     * The id must be that of a single channel. Passing an aggregate channel
      * package results in undefined behavior.
-     * 
+     *
      * @param channel The channel id to look up.
      *
      * @return The name of the specified channel.
@@ -93,10 +93,10 @@ struct elevel {
 struct alevel {
     /// Special aggregate value representing "no levels"
     static level const none = 0x0;
-    /// Information about new connections 
+    /// Information about new connections
     /**
-     * One line for each new connection that includes a host of information 
-     * including: the remote address, websocket version, requested resource, 
+     * One line for each new connection that includes a host of information
+     * including: the remote address, websocket version, requested resource,
      * http code, remote user agent
      */
     static level const connect = 0x1;
@@ -124,13 +124,13 @@ struct alevel {
     static level const app = 0x800;
     /// Special aggregate value representing "all levels"
     static level const all = 0xffffffff;
-    
+
     /// Get the textual name of a channel given a channel id
     /**
      * Get the textual name of a channel given a channel id. The id must be that
-     * of a single channel. Passing an aggregate channel package results in 
+     * of a single channel. Passing an aggregate channel package results in
      * undefined behavior.
-     * 
+     *
      * @param channel The channelid to look up.
      *
      * @return The name of the specified channel.

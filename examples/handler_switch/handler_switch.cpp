@@ -17,12 +17,12 @@ void custom_on_msg(server & s, connection_hdl hdl, server::message_ptr msg) {
 
 void default_on_msg(server & s, connection_hdl hdl, server::message_ptr msg) {
     std::cout << "Message sent to default handler" << std::endl;
-    
+
     if (msg->get_payload() == "upgrade") {
         // Upgrade our connection_hdl to a full connection_ptr
         server::connection_ptr con = s.get_con_from_hdl(hdl);
-        
-        // Change the on message handler for this connection only to 
+
+        // Change the on message handler for this connection only to
         // custom_on_mesage
         con->set_message_handler(bind(&custom_on_msg,ref(s),::_1,::_2));
         std::cout << "Upgrading connection to custom handler" << std::endl;

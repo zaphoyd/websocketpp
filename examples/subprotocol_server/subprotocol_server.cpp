@@ -14,20 +14,20 @@ using websocketpp::lib::ref;
 
 bool validate(server & s, connection_hdl hdl) {
     server::connection_ptr con = s.get_con_from_hdl(hdl);
-    
+
     std::cout << "Cache-Control: " << con->get_request_header("Cache-Control") << std::endl;
-    
+
     const std::vector<std::string> & subp_requests = con->get_requested_subprotocols();
     std::vector<std::string>::const_iterator it;
-    
+
     for (it = subp_requests.begin(); it != subp_requests.end(); ++it) {
         std::cout << "Requested: " << *it << std::endl;
     }
-    
+
     if (subp_requests.size() > 0) {
         con->select_subprotocol(subp_requests[0]);
     }
-    
+
     return true;
 }
 

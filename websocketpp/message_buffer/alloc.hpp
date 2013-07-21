@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_MESSAGE_BUFFER_ALLOC_HPP
@@ -38,8 +38,8 @@ namespace alloc {
 /// A connection message manager that allocates a new message for each
 /// request.
 template <typename message>
-class con_msg_manager 
-  : public lib::enable_shared_from_this<con_msg_manager<message> > 
+class con_msg_manager
+  : public lib::enable_shared_from_this<con_msg_manager<message> >
 {
 public:
     typedef con_msg_manager<message> type;
@@ -47,8 +47,8 @@ public:
     typedef lib::weak_ptr<con_msg_manager> weak_ptr;
 
     typedef typename message::ptr message_ptr;
-    
-    /// Get an empty message buffer 
+
+    /// Get an empty message buffer
     /**
      * @return A shared pointer to an empty new message
      */
@@ -88,7 +88,7 @@ template <typename con_msg_manager>
 class endpoint_msg_manager {
 public:
     typedef typename con_msg_manager::ptr con_msg_man_ptr;
-    
+
     /// Get a pointer to a connection message manager
     /**
      * @return A pointer to the requested connection message manager.
