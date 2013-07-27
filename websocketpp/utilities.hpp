@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <string>
+#include <locale>
 
 namespace websocketpp {
 /// Generic non-websocket specific utility functions and data structures
