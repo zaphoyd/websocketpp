@@ -1,7 +1,7 @@
 # Lineendings
 *.sln       eol=crlf
 *.vcproj    eol=crlf
-*.vcxproj*  eol=crfl
+*.vcxproj*  eol=crlf
 
 # Whitespace rules
 # strict (no trailing, no tabs)

@@ -1,4 +1,5 @@
 HEAD
+- Fix typo in .gitattributes file. Thank you jstarasov for reporting this. #280
 - Add missing locale include. Thank you Toninoso for reporting this. #281
 - Refactors `asio_transport` endpoint and adds full documentation and exception
   free varients of all methods.
