@@ -213,7 +213,7 @@ bool on_ping(websocketpp::connection_hdl, std::string payload) {
 }
 
 void cancel_on_open(server * s, websocketpp::connection_hdl hdl) {
-    s->cancel();
+    s->stop_listening();
 }
 
 void stop_on_close(server * s, websocketpp::connection_hdl hdl) {

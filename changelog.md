@@ -1,4 +1,7 @@
 HEAD
+- Refactors `asio_transport` endpoint and adds full documentation and exception
+  free varients of all methods.
+- Removes `asio_transport` endpoint method cancel(). Use `stop_listen()` instead
 - Wrap internal `io_service` `run_one()` method
 - Suppress error when trying to shut down a connection that was already closed
 

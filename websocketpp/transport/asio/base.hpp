@@ -65,7 +65,10 @@ enum value {
     proxy_failed,
 
     /// Invalid Proxy URI
-    proxy_invalid
+    proxy_invalid,
+
+    /// Invalid host or service
+    invalid_host_service
 };
 
 /// Asio transport error category
@@ -87,6 +90,8 @@ public:
                 return "Proxy connection failed";
             case error::proxy_invalid:
                 return "Invalid proxy URI";
+            case error::invalid_host_service:
+                return "Invalid host or service";
             default:
                 return "Unknown";
         }
