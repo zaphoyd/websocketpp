@@ -122,7 +122,7 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp";
     }
 
@@ -197,7 +197,7 @@ inline lib::error_code make_error_code(error::value e) {
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum<websocketpp::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 
@@ -205,12 +205,12 @@ namespace websocketpp {
 
 class exception : public std::exception {
 public:
-    exception(const std::string& msg,
+    exception(std::string const & msg,
               error::value code = error::general)
     : m_msg(msg),m_code(code) {}
     ~exception() throw() {}
 
-    virtual const char* what() const throw() {
+    virtual char const * what() const throw() {
         return m_msg.c_str();
     }
 

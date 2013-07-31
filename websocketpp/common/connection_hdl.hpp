@@ -32,6 +32,19 @@
 
 namespace websocketpp {
 
+/// A handle to uniquely identify a connection.
+/**
+ * This type uniquely identifies a connection. It is implimented as a weak
+ * pointer to the connection in question. This provides uniqueness across
+ * multiple endpoints and ensures that IDs never conflict or run out.
+ *
+ * It is safe to make copies of this handle, store those copies in containers,
+ * and use them from other threads.
+ *
+ * This handle can be upgraded to a full shared_ptr using
+ * `endpoint::get_con_from_hdl()` from within a handler fired by the connection
+ * that owns the handler.
+ */
 typedef lib::weak_ptr<void> connection_hdl;
 
 } // namespace websocketpp
