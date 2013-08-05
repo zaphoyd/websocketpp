@@ -55,17 +55,17 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(std::ostream* out = &std::cout)
+    basic<concurrency,names>(std::ostream * out = &std::cout)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, std::ostream* out = &std::cout)
+    basic<concurrency,names>(level c, std::ostream * out = &std::cout)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    void set_ostream(std::ostream* out) {
+    void set_ostream(std::ostream * out = &std::cout) {
         m_out = out;
     }
 
@@ -84,7 +84,7 @@ public:
         m_dynamic_channels &= ~channels;
     }
 
-    void write(level channel, const std::string& msg) {
+    void write(level channel, std::string const & msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -93,7 +93,7 @@ public:
         m_out->flush();
     }
 
-    void write(level channel, const char* msg) {
+    void write(level channel, char const * msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -118,7 +118,7 @@ private:
     // which would be obnoxiously verbose.
     //
     // TODO: find a workaround for this or make this format user settable
-    static std::ostream& timestamp(std::ostream& os) {
+    static std::ostream & timestamp(std::ostream & os) {
         std::time_t t = std::time(NULL);
         std::tm* lt = std::localtime(&t);
         #ifdef _WEBSOCKETPP_CPP11_CHRONO_
@@ -132,9 +132,9 @@ private:
 
     mutex_type m_lock;
 
-    const level m_static_channels;
+    level const m_static_channels;
     level m_dynamic_channels;
-    std::ostream* m_out;
+    std::ostream * m_out;
 };
 
 } // log

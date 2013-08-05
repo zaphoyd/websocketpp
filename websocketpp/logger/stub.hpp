@@ -39,8 +39,6 @@ namespace log {
 /// Stub logger that ignores all input
 class stub {
 public:
-    stub(std::ostream* out = &std::cout) {}
-    stub(level c, std::ostream* out = &std::cout) {}
     explicit stub(std::ostream * out) {}
     stub(level c, std::ostream * out) {}
     _WEBSOCKETPP_CONSTEXPR_TOKEN_ stub() {}
@@ -48,11 +46,13 @@ public:
     void set_channels(level channels) {}
     void clear_channels(level channels) {}
 
-    void write(level channel, const std::string& msg) {}
-    void write(level channel, const char* msg) {}
+    void write(level channel, std::string const & msg) {}
+    void write(level channel, char const * msg) {}
 
-    bool dynamic_test(level channel) {return false;}
     _WEBSOCKETPP_CONSTEXPR_TOKEN_ bool static_test(level channel) const {
+        return false;
+    }
+    bool dynamic_test(level channel) {
         return false;
     }
 };
