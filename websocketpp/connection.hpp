@@ -793,7 +793,7 @@ public:
     /**
      * If a header with this name already exists the value will be appended to
      * the existing header to form a comma separated list of values. Use
-     * replace_header to overwrite existing values.
+     * `connection::replace_header` to overwrite existing values.
      *
      * This member function is valid only from the http() and validate() handler
      * callbacks, or to a client connection before connect has been called.
@@ -808,14 +808,14 @@ public:
     /// Replace a header
     /**
      * If a header with this name already exists the old value will be replaced
-     * Use append_header to append to a list of existing values.
+     * Use `connection::append_header` to append to a list of existing values.
      *
      * This member function is valid only from the http() and validate() handler
      * callbacks, or to a client connection before connect has been called.
      *
      * @param key Name of the header to set
      * @param val Value to set
-     * @see add_header
+     * @see append_header
      * @see websocketpp::http::parser::replace_header
      */
     void replace_header(std::string const & key, std::string const & val);
