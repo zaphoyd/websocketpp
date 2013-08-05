@@ -424,6 +424,7 @@ public:
      * Stop listening and accepting new connections. This will not end any
      * existing connections.
      *
+     * @since 0.3.0-alpha4
      * @param ec A status code indicating an error, if any.
      */
     void stop_listening(lib::error_code & ec) {
@@ -444,6 +445,8 @@ public:
     /**
      * Stop listening and accepting new connections. This will not end any
      * existing connections.
+     *
+     * @since 0.3.0-alpha4
      */
     void stop_listening() {
         lib::error_code ec;
@@ -459,6 +462,9 @@ public:
     }
 
     /// wraps the run_one method of the internal io_service object
+    /**
+     * @since 0.3.0-alpha4
+     */
     std::size_t run_one() {
         return m_io_service->run_one();
     }
@@ -859,7 +865,7 @@ protected:
 private:
     /// Convenience method for logging the code and message for an error_code
     template <typename error_type>
-    void log_err(log::level l,const char * msg, const error_type & ec) {
+    void log_err(log::level l, char const * msg, error_type const & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
         m_elog->write(l,s.str());
