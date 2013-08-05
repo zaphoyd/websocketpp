@@ -30,6 +30,7 @@
 
 #include <iostream>
 
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 namespace websocketpp {
@@ -40,6 +41,9 @@ class stub {
 public:
     stub(std::ostream* out = &std::cout) {}
     stub(level c, std::ostream* out = &std::cout) {}
+    explicit stub(std::ostream * out) {}
+    stub(level c, std::ostream * out) {}
+    _WEBSOCKETPP_CONSTEXPR_TOKEN_ stub() {}
 
     void set_channels(level channels) {}
     void clear_channels(level channels) {}
@@ -47,8 +51,10 @@ public:
     void write(level channel, const std::string& msg) {}
     void write(level channel, const char* msg) {}
 
-    bool static_test(level channel) const {return false;}
     bool dynamic_test(level channel) {return false;}
+    _WEBSOCKETPP_CONSTEXPR_TOKEN_ bool static_test(level channel) const {
+        return false;
+    }
 };
 
 } // log

@@ -44,6 +44,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 #include <websocketpp/logger/levels.hpp>
 
@@ -101,7 +102,7 @@ public:
         m_out->flush();
     }
 
-    bool static_test(level channel) const {
+    _WEBSOCKETPP_CONSTEXPR_TOKEN_ bool static_test(level channel) const {
         return ((channel & m_static_channels) != 0);
     }
 
