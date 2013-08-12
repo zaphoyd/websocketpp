@@ -73,6 +73,7 @@ public:
       : m_output_stream(NULL)
       , m_reading(false)
       , m_is_server(is_server)
+      , m_is_secure(false)
       , m_alog(alog)
       , m_elog(elog)
     {
@@ -135,19 +136,36 @@ public:
         return this->readsome_impl(buf,len);
     }
 
+    /// Set whether or not this connection is secure
+    /**
+     * The iostream transport does not provide any security features. As such
+     * it defaults to returning false when `is_secure` is called. However, the
+     * iostream transport may be used to wrap an external socket API that may
+     * provide secure transport. This method allows that external API to flag
+     * whether or not this connection is secure so that users of the WebSocket++
+     * API will get more accurate information.
+     *
+     * @since 0.3.0-alpha4
+     *
+     * @param value Whether or not this connection is secure.
+     */
+    void set_secure(bool value) {
+        m_is_secure = value;
+    }
 
     /// Tests whether or not the underlying transport is secure
     /**
      * iostream transport will return false always because it has no information
      * about the ultimate remote endpoint. This may or may not be accurate
-     * depending on the real source of bytes being input.
-     *
-     * TODO: allow user settable is_secure flag if this seems useful
+     * depending on the real source of bytes being input. The `set_secure`
+     * method may be used to flag connections that are secured by an external
+     * API
      *
      * @return Whether or not the underlying transport is secure
      */
     bool is_secure() const {
-        return false;
+        return m_is_secure;
+    }
     }
 
     /// Get the remote endpoint address
@@ -414,9 +432,10 @@ private:
     connection_hdl  m_connection_hdl;
 
     bool            m_reading;
-    const bool      m_is_server;
-    alog_type& m_alog;
-    elog_type& m_elog;
+    bool const      m_is_server;
+    bool            m_is_secure;
+    alog_type &     m_alog;
+    elog_type &     m_elog;
 
     // This lock ensures that only one thread can edit read data for this
     // connection. This is a very coarse lock that is basically locked all the
