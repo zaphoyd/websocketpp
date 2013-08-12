@@ -49,6 +49,24 @@ namespace websocketpp {
  * It's purpose is to give the transport policy the chance to perform any
  * transport specific initialization that couldn't be done via the default
  * constructor.
+ *
+ * **is_secure**\n
+ * `bool is_secure() const`\n
+ * Test whether the transport component of this endpoint is capable of secure
+ * connections.
+ *
+ * **async_connect**\n
+ * `void async_connect(transport_con_ptr tcon, uri_ptr location,
+ *  connect_handler handler)`\n
+ * Initiate a connection to `location` using the given connection `tcon`. `tcon`
+ * is a pointer to the transport connection component of the connection. When
+ * complete, `handler` should be called with the the connection's
+ * `connection_hdl` and any error that occurred.
+ *
+ * **init_logging**
+ * `void init_logging(alog_type * a, elog_type * e)`\n
+ * Called once after construction to provide pointers to the endpoint's access
+ * and error loggers. These may be stored and used to log messages or ignored.
  */
 namespace transport {
 

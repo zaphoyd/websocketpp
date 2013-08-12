@@ -41,8 +41,16 @@ namespace websocketpp {
  *
  * Transport connection components needs to provide:
  *
- * *Warning: This documentation section and the transport connection interface
- * are not complete.*
+ * **init**\n
+ * `void init(init_handler handler)`\n
+ * Called once shortly after construction to give the policy the chance to
+ * perform one time initialization. When complete, the policy must call the
+ * supplied `init_handler` to continue setup. The handler takes one argument
+ * with the error code if any. If an error is returned here setup will fail and
+ * the connection will be aborted or terminated.
+ *
+ * WebSocket++ will call init only once. The transport must call `handler`
+ * exactly once.
  *
  * **async_read_at_least**\n
  * `void async_read_at_least(size_t num_bytes, char *buf, size_t len,
@@ -52,7 +60,7 @@ namespace websocketpp {
  *
  * WebSocket++ promises to have only one async_read_at_least in flight at a
  * time. The transport must promise to only call read_handler once per async
- * read
+ * read.
  *
  * **async_write**\n
  * `void async_write(const char* buf, size_t len, write_handler handler)`\n
@@ -65,8 +73,28 @@ namespace websocketpp {
  * The transport must promise to only call the write_handler once per async
  * write
  *
- * **remote_endpoint**\n
- * `std::string remote_endpoint()`\n
+ * **set_handle**\n
+ * `void set_handle(connection_hdl hdl)`\n
+ * Called by WebSocket++ to let this policy know the hdl to the connection. It
+ * may be stored for later use or ignored/discarded. This handle should be used
+ * if the policy adds any connection handlers. Connection handlers must be
+ * called with the handle as the first argument so that the handler code knows
+ * which connection generated the callback.
+ *
+ * **set_timer**\n
+ * `timer_ptr set_timer(long duration, timer_handler handler)`\n
+ * WebSocket++ uses the timers provided by the transport policy as the
+ * implementation of timers is often highly coupled with the implementation of
+ * the networking event loops.
+ *
+ * Transport timer support is an optional feature. A transport method may elect
+ * to implement a dummy timer object and have this method return an empty
+ * pointer. If so, all timer related features of WebSocket++ core will be
+ * disabled. This includes many security features designed to prevent denial of
+ * service attacks. Use timer-free transport policies with caution.
+ *
+ * **get_remote_endpoint**\n
+ * `std::string get_remote_endpoint()`\n
  * retrieve address of remote endpoint
  *
  * **is_secure**\n
@@ -75,7 +103,12 @@ namespace websocketpp {
  *
  * **dispatch**\n
  * `lib::error_code dispatch(dispatch_handler handler)`: invoke handler within
- *  the transport's event system if it uses one.
+ * the transport's event system if it uses one. Otherwise, this method should
+ * simply call `handler` immediately.
+ *
+ * **async_shutdown**\n
+ * `void async_shutdown(shutdown_handler handler)`\n
+ * Perform any cleanup necessary (if any). Call `handler` when complete.
  */
 namespace transport {
 
