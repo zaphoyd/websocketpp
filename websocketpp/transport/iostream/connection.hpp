@@ -76,6 +76,7 @@ public:
       , m_is_secure(false)
       , m_alog(alog)
       , m_elog(elog)
+      , m_remote_endpoint("iostream transport")
     {
         m_alog.write(log::alevel::devel,"iostream con transport constructor");
     }
@@ -166,20 +167,39 @@ public:
     bool is_secure() const {
         return m_is_secure;
     }
+
+    /// Set human readable remote endpoint address
+    /**
+     * Sets the remote endpoint address returned by `get_remote_endpoint`. This
+     * value should be a human readable string that describes the remote
+     * endpoint. Typically an IP address or hostname, perhaps with a port. But
+     * may be something else depending on the nature of the underlying
+     * transport.
+     *
+     * If none is set the default is "iostream transport".
+     *
+     * @since 0.3.0-alpha4
+     *
+     * @param value The remote endpoint address to set.
+     */
+    void set_remote_endpoint(std::string value) {
+        m_remote_endpoint = value;
     }
 
-    /// Get the remote endpoint address
+    /// Get human readable remote endpoint address
     /**
      * The iostream transport has no information about the ultimate remote
-     * endpoint. It will return the string "iostream transport". To indicate
-     * this.
+     * endpoint. It will return the string "iostream transport". The
+     * `set_remote_endpoint` method may be used by external network code to set
+     * a more accurate value.
      *
-     * TODO: allow user settable remote endpoint addresses if this seems useful
+     * This value is used in access and error logs and is available to the end
+     * application for including in user facing interfaces and messages.
      *
      * @return A string identifying the address of the remote endpoint
      */
     std::string get_remote_endpoint() const {
-        return "iostream transport";
+        return m_remote_endpoint;
     }
 
     /// Get the connection handle
@@ -436,6 +456,7 @@ private:
     bool            m_is_secure;
     alog_type &     m_alog;
     elog_type &     m_elog;
+    std::string     m_remote_endpoint;
 
     // This lock ensures that only one thread can edit read data for this
     // connection. This is a very coarse lock that is basically locked all the
