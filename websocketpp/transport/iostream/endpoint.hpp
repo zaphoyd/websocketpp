@@ -68,7 +68,14 @@ public:
         //std::cout << "transport::iostream::endpoint constructor" << std::endl;
     }
 
-    void register_ostream(std::ostream* o) {
+    /// Register a default output stream
+    /**
+     * The specified output stream will be assigned to future connections as the
+     * default output stream.
+     *
+     * @param o The ostream to use as the default output stream.
+     */
+    void register_ostream(std::ostream * o) {
         m_alog->write(log::alevel::devel,"register_ostream");
         m_output_stream = o;
     }
