@@ -69,7 +69,7 @@ public:
 
     typedef lib::shared_ptr<timer> timer_ptr;
 
-    explicit connection(bool is_server, alog_type& alog, elog_type& elog)
+    explicit connection(bool is_server, alog_type & alog, elog_type & elog)
       : m_output_stream(NULL)
       , m_reading(false)
       , m_is_server(is_server)
@@ -86,7 +86,7 @@ public:
      *
      * @param o A pointer to the ostream to use for output.
      */
-    void register_ostream(std::ostream* o) {
+    void register_ostream(std::ostream * o) {
         // TODO: lock transport state?
         scoped_lock_type lock(m_read_mutex);
         m_output_stream = o;
@@ -111,7 +111,7 @@ public:
      * If there is no pending read operation when the input method is called, it
      * will return immediately and tellg() will not have changed.
      */
-    friend std::istream& operator>> (std::istream &in, type &t) {
+    friend std::istream & operator>> (std::istream & in, type & t) {
         // this serializes calls to external read.
         scoped_lock_type lock(t.m_read_mutex);
 
@@ -128,7 +128,7 @@ public:
      * pending reads readsome will return immediately. Not all of the bytes may
      * be able to be read in one call
      */
-    size_t readsome(const char *buf, size_t len) {
+    size_t readsome(char const * buf, size_t len) {
         // this serializes calls to external read.
         scoped_lock_type lock(m_read_mutex);
 
@@ -165,6 +165,9 @@ public:
     }
 
     /// Get the connection handle
+    /**
+     * @return The handle for this connection.
+     */
     connection_hdl get_handle() const {
         return m_connection_hdl;
     }
@@ -175,19 +178,23 @@ public:
      * always be empty. The handler will never be called.
      *
      * @param duration Length of time to wait in milliseconds
-     *
      * @param callback The function to call back when the timer has expired
-     *
      * @return A handle that can be used to cancel the timer if it is no longer
      * needed.
      */
-    timer_ptr set_timer(long duration, timer_handler callback) {
+    timer_ptr set_timer(long duration, timer_handler handler) {
         return timer_ptr();
     }
 protected:
-    void init(init_handler callback) {
+    /// Initialize the connection transport
+    /**
+     * Initialize the connection's transport component.
+     *
+     * @param handler The `init_handler` to call when initialization is done
+     */
+    void init(init_handler handler) {
         m_alog.write(log::alevel::devel,"iostream connection init");
-        callback(lib::error_code());
+        handler(lib::error_code());
     }
 
     /// Initiate an async_read for at least num_bytes bytes into buf
@@ -209,11 +216,8 @@ protected:
      *
      * @param num_bytes Don't call handler until at least this many bytes have
      * been read.
-     *
      * @param buf The buffer to read bytes into
-     *
      * @param len The size of buf. At maximum, this many bytes will be read.
-     *
      * @param handler The callback to invoke when the operation is complete or
      * ends in an error
      */
@@ -261,7 +265,7 @@ protected:
      * @param len number of bytes to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(const char* buf, size_t len, write_handler handler) {
+    void async_write(char const * buf, size_t len, write_handler handler) {
         m_alog.write(log::alevel::devel,"iostream_con async_write");
         // TODO: lock transport state?
 
@@ -292,7 +296,7 @@ protected:
      * @param bufs vector of buffers to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(const std::vector<buffer>& bufs, write_handler handler) {
+    void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
         // TODO: lock transport state?
 
@@ -337,8 +341,12 @@ protected:
         return lib::error_code();
     }
 
-    void async_shutdown(shutdown_handler h) {
-        h(lib::error_code());
+    /// Perform cleanup on socket shutdown_handler
+    /**
+     * @param h The `shutdown_handler` to call back when complete
+     */
+    void async_shutdown(shutdown_handler handler) {
+        handler(lib::error_code());
     }
 private:
     void read(std::istream &in) {
@@ -372,7 +380,7 @@ private:
         }
     }
 
-    size_t readsome_impl(const char * buf, size_t len) {
+    size_t readsome_impl(char const * buf, size_t len) {
         m_alog.write(log::alevel::devel,"iostream_con readsome");
 
         if (!m_reading) {
@@ -395,14 +403,14 @@ private:
     }
 
     // Read space (Protected by m_read_mutex)
-    char*           m_buf;
+    char *          m_buf;
     size_t          m_len;
     size_t          m_bytes_needed;
     read_handler    m_read_handler;
     size_t          m_cursor;
 
     // transport resources
-    std::ostream*   m_output_stream;
+    std::ostream *  m_output_stream;
     connection_hdl  m_connection_hdl;
 
     bool            m_reading;

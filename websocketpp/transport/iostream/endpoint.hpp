@@ -63,7 +63,7 @@ public:
     typedef typename transport_con_type::ptr transport_con_ptr;
 
     // generate and manage our own io_service
-    explicit endpoint() : m_output_stream(NULL)
+    explicit endpoint() : m_output_stream(NULL), is_secure(false)
     {
         //std::cout << "transport::iostream::endpoint constructor" << std::endl;
     }
@@ -96,15 +96,23 @@ protected:
      * In particular, they cannot be used in the transport constructor as they
      * haven't been constructed yet, and cannot be used in the transport
      * destructor as they will have been destroyed by then.
+     *
+     * @param a A pointer to the access logger to use.
+     * @param e A pointer to the error logger to use.
      */
-    void init_logging(alog_type* a, elog_type* e) {
+    void init_logging(alog_type * a, elog_type * e) {
         m_elog = e;
         m_alog = a;
     }
 
     /// Initiate a new connection
+    /**
+     * @param tcon A pointer to the transport connection component of the
+     * connection to connect.
+     * @param u A URI pointer to the URI to connect to.
+     * @param cb The function to call back with the results when complete.
+     */
     void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
-        // Do we need to do anything here?
         cb(tcon->get_handle(),lib::error_code());
     }
 
@@ -116,7 +124,6 @@ protected:
      * constructor.
      *
      * @param tcon A pointer to the transport portion of the connection.
-     *
      * @return A status code indicating the success or failure of the operation
      */
     lib::error_code init(transport_con_ptr tcon) {
