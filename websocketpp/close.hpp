@@ -112,6 +112,16 @@ namespace status {
     /// fulfilling the request.
     static value const internal_endpoint_error = 1011;
 
+    /// Indicates that the service is restarted. A client may reconnect and if
+    /// if it chooses to do so, should reconnect using a randomized delay of
+    /// 5-30s
+    static value const service_restart = 1012;
+
+    /// Indicates that the service is experiencing overload. A client should
+    /// only connect to a different IP (when there are multiple for the target)
+    /// or reconnect to the same IP upon user action.
+    static value const try_again_later = 1013;
+
     /// An endpoint failed to perform a TLS handshake
     /**
      * Designated for use in applications expecting a status code to indicate
@@ -133,7 +143,7 @@ namespace status {
      */
     inline bool reserved(value code) {
         return ((code >= rsv_start && code <= rsv_end) ||
-                code == 1004 || code == 1012 || code == 1013 || code == 1014);
+                code == 1004 || code == 1014);
     }
 
     /// First value in range that is always invalid on the wire
