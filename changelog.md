@@ -1,5 +1,7 @@
 HEAD
 - Adds new 1012 and 1013 close codes per IANA registry
+- Add `set_remote_endpoint` method to iostream transport.
+- Add `set_secure` method to iostream transport.
 - Fix typo in .gitattributes file. Thank you jstarasov for reporting this. #280
 - Add missing locale include. Thank you Toninoso for reporting this. #281
 - Refactors `asio_transport` endpoint and adds full documentation and exception

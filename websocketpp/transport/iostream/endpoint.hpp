@@ -63,28 +63,56 @@ public:
     typedef typename transport_con_type::ptr transport_con_ptr;
 
     // generate and manage our own io_service
-    explicit endpoint() : m_output_stream(NULL)
+    explicit endpoint() : m_output_stream(NULL), m_is_secure(false)
     {
         //std::cout << "transport::iostream::endpoint constructor" << std::endl;
     }
 
-    void register_ostream(std::ostream* o) {
+    /// Register a default output stream
+    /**
+     * The specified output stream will be assigned to future connections as the
+     * default output stream.
+     *
+     * @param o The ostream to use as the default output stream.
+     */
+    void register_ostream(std::ostream * o) {
         m_alog->write(log::alevel::devel,"register_ostream");
         m_output_stream = o;
     }
 
+    /// Set whether or not endpoint can create secure connections
+    /**
+     * The iostream transport does not provide any security features. As such
+     * it defaults to returning false when `is_secure` is called. However, the
+     * iostream transport may be used to wrap an external socket API that may
+     * provide secure transport. This method allows that external API to flag
+     * whether or not it can create secure connections so that users of the
+     * WebSocket++ API will get more accurate information.
+     *
+     * Setting this value only indicates whether or not the endpoint is capable
+     * of producing and managing secure connections. Connections produced by
+     * this endpoint must also be individually flagged as secure if they are.
+     *
+     * @since 0.3.0-alpha4
+     *
+     * @param value Whether or not the endpoint can create secure connections.
+     */
+    void set_secure(bool value) {
+        m_is_secure = value;
+    }
+
     /// Tests whether or not the underlying transport is secure
     /**
-     * iostream transport will return false always because it has no information
-     * about the ultimate remote endpoint. This may or may not be accurate
-     * depending on the real source of bytes being input.
-     *
-     * TODO: allow user settable is_secure flag if this seems useful
+     * iostream transport will return false by default because it has no
+     * information about the ultimate remote endpoint. This may or may not be
+     * accurate depending on the real source of bytes being input. `set_secure`
+     * may be used by a wrapper API to correct the return value in the case that
+     * secure connections are in fact possible.
      *
      * @return Whether or not the underlying transport is secure
      */
     bool is_secure() const {
-        return false;
+        return m_is_secure;
     }
 protected:
     /// Initialize logging
@@ -96,15 +124,23 @@ protected:
      * In particular, they cannot be used in the transport constructor as they
      * haven't been constructed yet, and cannot be used in the transport
      * destructor as they will have been destroyed by then.
+     *
+     * @param a A pointer to the access logger to use.
+     * @param e A pointer to the error logger to use.
      */
-    void init_logging(alog_type* a, elog_type* e) {
+    void init_logging(alog_type * a, elog_type * e) {
         m_elog = e;
         m_alog = a;
     }
 
     /// Initiate a new connection
+    /**
+     * @param tcon A pointer to the transport connection component of the
+     * connection to connect.
+     * @param u A URI pointer to the URI to connect to.
+     * @param cb The function to call back with the results when complete.
+     */
     void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
-        // Do we need to do anything here?
         cb(tcon->get_handle(),lib::error_code());
     }
 
@@ -116,7 +152,6 @@ protected:
      * constructor.
      *
      * @param tcon A pointer to the transport portion of the connection.
-     *
      * @return A status code indicating the success or failure of the operation
      */
     lib::error_code init(transport_con_ptr tcon) {
@@ -124,9 +159,10 @@ protected:
         return lib::error_code();
     }
 private:
-    std::ostream* m_output_stream;
-    elog_type* m_elog;
-    alog_type* m_alog;
+    std::ostream *  m_output_stream;
+    elog_type *     m_elog;
+    alog_type *     m_alog;
+    bool            m_is_secure;
 };
 
 
