@@ -959,14 +959,22 @@ public:
 
     /// Get a message buffer
     /**
-     * @internal
-     *
-     * Warning: This is not guaranteed to be part of the public release API
+     * Warning: The API related to directly sending message buffers may change
+     * before the 1.0 release. If you plan to use it, please keep an eye on any
+     * breaking changes notifications in future release notes. Also if you have
+     * any feedback about usage and capabilities now is a great time to provide
+     * it.
      *
      * Message buffers are used to store message payloads and other message
      * metadata.
      *
-     * @return A new message.
+     * The size parameter is a hint only. Your final payload does not need to
+     * match it. There may be some performance benefits if the initial size
+     * guess is equal to or slightly higher than the final payload size.
+     *
+     * @param op The opcode for the new message
+     * @param size A hint to optimize the initial allocation of payload space.
+     * @return A new message buffer
      */
     message_ptr get_message(websocketpp::frame::opcode::value op, size_t size)
         const

@@ -118,7 +118,7 @@ public:
     /// Return whether or not the message has been prepared for sending
     /**
      * The prepared flag indicates that the message has been prepared by a
-     * websocket protocol processor and is ready to be written to the wire
+     * websocket protocol processor and is ready to be written to the wire.
      *
      * @return whether or not the message has been prepared for sending
      */
@@ -128,6 +128,8 @@ public:
 
     /// Set or clear the flag that indicates that the message has been prepared
     /**
+     * This flag should not be set by end user code without a very good reason.
+     *
      * @param value The value to set the prepared flag to
      */
     void set_prepared(bool value) {
@@ -136,9 +138,6 @@ public:
 
     /// Return whether or not the message is flagged as compressed
     /**
-     * The compression flag is used to indicate whether or not the message is
-     * or should be compressed.
-     *
      * @return whether or not the message is/should be compressed
      */
     bool get_compressed() const {
@@ -147,6 +146,11 @@ public:
 
     /// Set or clear the compression flag
     /**
+     * The compression flag is used to indicate whether or not the message is
+     * or should be compressed. Compression is not guaranteed. Both endpoints
+     * must support a compression extension and the connection must have had
+     * that extension negotiated in its handshake.
+     *
      * @param value The value to set the compressed flag to
      */
     void set_compressed(bool value) {
@@ -159,6 +163,8 @@ public:
      * being close after they are written rather than the implementation going
      * on to the next message in the queue. This is typically used internally
      * for close messages only.
+     *
+     * @return Whether or not this message is marked terminal
      */
     bool get_terminal() const {
         return m_terminal;
@@ -166,7 +172,11 @@ public:
 
     /// Set the terminal flag
     /**
+     * This flag should not be set by end user code without a very good reason.
+     *
      * @see get_terminal()
+     *
+     * @param value The value to set the terminal flag to.
      */
     void set_terminal(bool value) {
         m_terminal = value;
@@ -211,7 +221,7 @@ public:
      * This value is typically set by a websocket protocol processor
      * and shouldn't be tampered with.
      */
-    const std::string& get_header() const {
+    std::string const & get_header() const {
         return m_header;
     }
 
@@ -221,11 +231,11 @@ public:
      *
      * @param header A string to set the header to.
      */
-    void set_header(const std::string& header) {
+    void set_header(std::string const & header) {
         m_header = header;
     }
 
-    const std::string& get_extension_data() const {
+    std::string const & get_extension_data() const {
         return m_extension_data;
     }
 
@@ -233,7 +243,7 @@ public:
     /**
      * @return A const reference to the message's payload string
      */
-    const std::string& get_payload() const {
+    std::string const & get_payload() const {
         return m_payload;
     }
 
@@ -241,27 +251,53 @@ public:
     /**
      * @return A reference to the message's payload string
      */
-    std::string& get_raw_payload() {
+    std::string & get_raw_payload() {
         return m_payload;
     }
 
-    void set_payload(const std::string& payload) {
+    /// Set payload data
+    /**
+     * Set the message buffer's payload to the given value.
+     *
+     * @param payload A string to set the payload to.
+     */
+    void set_payload(std::string const & payload) {
         m_payload = payload;
     }
 
-    void set_payload(const void *payload, size_t len) {
+    /// Set payload data
+    /**
+     * Set the message buffer's payload to the given value.
+     *
+     * @param payload A pointer to a data array to set to.
+     * @param len The length of new payload in bytes.
+     */
+    void set_payload(void const * payload, size_t len) {
         m_payload.reserve(len);
-        const char* pl = static_cast<const char *>(payload);
+        char const * pl = static_cast<char const *>(payload);
         m_payload.assign(pl, pl + len);
     }
 
-    void append_payload(const std::string& payload) {
+    /// Append payload data
+    /**
+     * Append data to the message buffer's payload.
+     *
+     * @param payload A string containing the data array to append.
+     */
+    void append_payload(std::string const & payload) {
         m_payload.append(payload);
     }
 
-    void append_payload(const void *payload, size_t len) {
+    /// Append payload data
+    /**
+     * Append data to the message buffer's payload.
+     *
+     * @param payload A pointer to a data array to append
+     * @param len The length of payload in bytes
+     */
+    void append_payload(void const * payload, size_t len) {
         m_payload.reserve(m_payload.size()+len);
-        m_payload.append(static_cast<const char *>(payload),len);
+        m_payload.append(static_cast<char const *>(payload),len);
     }
 
     /// Recycle the message
