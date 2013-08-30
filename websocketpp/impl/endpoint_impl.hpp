@@ -96,7 +96,7 @@ void endpoint<connection,config>::interrupt(connection_hdl hdl,
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
 
-    m_alog.write(log::alevel::devel,"Interrupting connection"+con.get());
+    m_alog.write(log::alevel::devel,"Interrupting connection");
 
     ec = con->interrupt();
 }
