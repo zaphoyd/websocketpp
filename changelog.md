@@ -1,5 +1,6 @@
 HEAD
-- Fixes a compile error on visual studio when using interrupts
+- Fixes a compile error on visual studio when using interrupts. Thank you Javier
+  Rey Neira for reporting this.
 - Adds new 1012 and 1013 close codes per IANA registry
 - Add `set_remote_endpoint` method to iostream transport.
 - Add `set_secure` method to iostream transport.
