@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_LOGGER_STUB_HPP
@@ -30,6 +30,7 @@
 
 #include <iostream>
 
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 namespace websocketpp {
@@ -38,17 +39,22 @@ namespace log {
 /// Stub logger that ignores all input
 class stub {
 public:
-    stub(std::ostream* out = &std::cout) {}
-    stub(level c, std::ostream* out = &std::cout) {}
-    
+    explicit stub(std::ostream * out) {}
+    stub(level c, std::ostream * out) {}
+    _WEBSOCKETPP_CONSTEXPR_TOKEN_ stub() {}
+
     void set_channels(level channels) {}
     void clear_channels(level channels) {}
-    
-    void write(level channel, const std::string& msg) {}
-    void write(level channel, const char* msg) {}
-    
-    bool static_test(level channel) const {return false;}
-    bool dynamic_test(level channel) {return false;}
+
+    void write(level channel, std::string const & msg) {}
+    void write(level channel, char const * msg) {}
+
+    _WEBSOCKETPP_CONSTEXPR_TOKEN_ bool static_test(level channel) const {
+        return false;
+    }
+    bool dynamic_test(level channel) {
+        return false;
+    }
 };
 
 } // log

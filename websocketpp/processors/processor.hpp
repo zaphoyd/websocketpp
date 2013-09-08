@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_PROCESSOR_HPP
@@ -45,37 +45,37 @@ namespace websocketpp {
  * various WebSocket related data structures and perform processing that is not
  * related to specific versions of the protocol.
  *
- * It also includes the abstract interface for the protocol specific processing 
- * engines. These engines wrap all of the logic necessary for parsing and 
+ * It also includes the abstract interface for the protocol specific processing
+ * engines. These engines wrap all of the logic necessary for parsing and
  * validating WebSocket handshakes and messages of specific protocol version
  * and set of allowed extensions.
  *
- * An instance of a processor represents the state of a single WebSocket 
- * connection of the associated version. One processor instance is needed per 
- * logical WebSocket connection. 
+ * An instance of a processor represents the state of a single WebSocket
+ * connection of the associated version. One processor instance is needed per
+ * logical WebSocket connection.
  */
 namespace processor {
 
 /// Determine whether or not a generic HTTP request is a WebSocket handshake
 /**
  * @param r The HTTP request to read.
- * 
+ *
  * @return True if the request is a WebSocket handshake, false otherwise
- */ 
+ */
 template <typename request_type>
 bool is_websocket_handshake(request_type& r) {
     using utility::ci_find_substr;
-    
+
     std::string const & upgrade_header = r.get_header("Upgrade");
-    
+
     if (ci_find_substr(upgrade_header, constants::upgrade_token,
         sizeof(constants::upgrade_token)-1) == upgrade_header.end())
     {
         return false;
     }
-    
+
     std::string const & con_header = r.get_header("Connection");
-    
+
     if (ci_find_substr(con_header, constants::connection_token,
         sizeof(constants::connection_token)-1) == con_header.end())
     {
@@ -88,17 +88,17 @@ bool is_websocket_handshake(request_type& r) {
 /// Extract the version from a WebSocket handshake request
 /**
  * A blank version header indicates a spec before versions were introduced.
- * The only such versions in shipping products are Hixie Draft 75 and Hixie 
+ * The only such versions in shipping products are Hixie Draft 75 and Hixie
  * Draft 76. Draft 75 is present in Chrome 4-5 and Safari 5.0.0, Draft 76 (also
- * known as hybi 00 is present in Chrome 6-13 and Safari 5.0.1+. As 
- * differentiating between these two sets of browsers is very difficult and 
- * Safari 5.0.1+ accounts for the vast majority of cases in the wild this 
- * function assumes that all handshakes without a valid version header are 
+ * known as hybi 00 is present in Chrome 6-13 and Safari 5.0.1+. As
+ * differentiating between these two sets of browsers is very difficult and
+ * Safari 5.0.1+ accounts for the vast majority of cases in the wild this
+ * function assumes that all handshakes without a valid version header are
  * Hybi 00.
  *
- * @param r The WebSocket handshake request to read.  
+ * @param r The WebSocket handshake request to read.
  *
- * @return The WebSocket handshake version or -1 if there was an extraction 
+ * @return The WebSocket handshake version or -1 if there was an extraction
  * error.
  */
 template <typename request_type>
@@ -106,14 +106,14 @@ int get_websocket_version(request_type& r) {
     if (r.get_header("Sec-WebSocket-Version") == "") {
         return 0;
     }
-    
+
     int version;
     std::istringstream ss(r.get_header("Sec-WebSocket-Version"));
-                
+
     if ((ss >> version).fail()) {
         return -1;
     }
-    
+
     return version;
 }
 
@@ -121,7 +121,7 @@ int get_websocket_version(request_type& r) {
 /**
  * @param request The request to extract the Host header from.
  *
- * @param scheme The scheme under which this request was received (ws, wss, 
+ * @param scheme The scheme under which this request was received (ws, wss,
  * http, https, etc)
  *
  * @return A uri_pointer that encodes the value of the host header.
@@ -129,15 +129,15 @@ int get_websocket_version(request_type& r) {
 template <typename request_type>
 uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
     std::string h = request.get_header("Host");
-        
+
     size_t last_colon = h.rfind(":");
     size_t last_sbrace = h.rfind("]");
-            
+
     // no : = hostname with no port
     // last : before ] = ipv6 literal with no port
     // : with no ] = hostname with port
     // : after ] = ipv6 literal with port
-    if (last_colon == std::string::npos || 
+    if (last_colon == std::string::npos ||
         (last_sbrace != std::string::npos && last_sbrace > last_colon))
     {
         return uri_ptr(new uri(scheme, h, request.get_uri()));
@@ -162,9 +162,9 @@ public:
     explicit processor(bool secure, bool server)
       : m_secure(secure)
       , m_server(server) {}
-      
+
     virtual ~processor() {}
-    
+
     /// Get the protocol version of this processor
     virtual int get_version() const = 0;
 
@@ -189,11 +189,11 @@ public:
 
     /// validate a WebSocket handshake request for this version
     /**
-     * @param request The WebSocket handshake request to validate. 
-     * is_websocket_handshake(request) must be true and 
+     * @param request The WebSocket handshake request to validate.
+     * is_websocket_handshake(request) must be true and
      * get_websocket_version(request) must equal this->get_version().
      *
-     * @return A status code, 0 on success, non-zero for specific sorts of 
+     * @return A status code, 0 on success, non-zero for specific sorts of
      * failure
      */
     virtual lib::error_code validate_handshake(request_type const & request)
@@ -211,16 +211,16 @@ public:
      */
     virtual lib::error_code process_handshake(request_type const & req,
         std::string const & subprotocol, response_type& res) const = 0;
-    
+
     /// Fill in an HTTP request for an outgoing connection handshake
     /**
      * @param req The request to process.
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code client_handshake_request(request_type & req, 
+    virtual lib::error_code client_handshake_request(request_type & req,
         uri_ptr uri, std::vector<std::string> const & subprotocols) const = 0;
-        
+
     /// Validate the server's response to an outgoing handshake request
     /**
      * @param req The original request sent
@@ -229,21 +229,21 @@ public:
      *
      * @return An error code, 0 on success, non-zero for other errors
      */
-    virtual lib::error_code validate_server_handshake_response(request_type 
+    virtual lib::error_code validate_server_handshake_response(request_type
         const & req, response_type & res) const = 0;
-    
+
     /// Given a completed response, get the raw bytes to put on the wire
     virtual std::string get_raw(response_type const & request) const = 0;
-    
+
     /// Return the value of the header containing the CORS origin.
-    virtual std::string const & get_origin(request_type const & request) 
+    virtual std::string const & get_origin(request_type const & request)
         const = 0;
-    
+
     /// Extracts requested subprotocols from a handshake request
     /**
      * Extracts a list of all subprotocols that the client has requested in the
      * given opening handshake request.
-     * 
+     *
      * @param req The request to extract from
      *
      * @param subprotocol_list A reference to a vector of strings to store the
@@ -251,13 +251,13 @@ public:
      */
     virtual lib::error_code extract_subprotocols(const request_type & req,
         std::vector<std::string> & subprotocol_list) = 0;
-    
+
     /// Extracts client uri from a handshake request
     virtual uri_ptr get_uri(request_type const & request) const = 0;
-    
+
     /// process new websocket connection bytes
     /**
-     * WebSocket connections are a continous stream of bytes that must be 
+     * WebSocket connections are a continous stream of bytes that must be
      * interpreted by a protocol processor into discrete frames.
      *
      * @param buf Buffer from which bytes should be read.
@@ -269,10 +269,10 @@ public:
      * @return Number of bytes processed
      */
     virtual size_t consume(uint8_t *buf, size_t len, lib::error_code & ec) = 0;
-    
+
     /// Checks if there is a message ready
     /**
-     * Checks if the most recent consume operation processed enough bytes to 
+     * Checks if the most recent consume operation processed enough bytes to
      * complete a new WebSocket message. The message can be retrieved by calling
      * get_message() which will reset the internal state to not-ready and allow
      * consume to read more bytes.
@@ -284,7 +284,7 @@ public:
     /// Retrieves the most recently processed message
     /**
      * Retrieves a shared pointer to the recently completed message if there is
-     * one. If ready() returns true then there is a message available. 
+     * one. If ready() returns true then there is a message available.
      * Retrieving the message with get_message will reset the state of ready.
      * As such, each new message may be retrieved only once. Calling get_message
      * when there is no message available will result in a null pointer being
@@ -294,23 +294,23 @@ public:
      *         pointer.
      */
     virtual message_ptr get_message() = 0;
-    
+
     /// Tests whether the processor is in a fatal error state
     virtual bool get_error() const = 0;
 
     /// Retrieves the number of bytes presently needed by the processor
-    /// This value may be used as a hint to the transport layer as to how many 
+    /// This value may be used as a hint to the transport layer as to how many
     /// bytes to wait for before running consume again.
     virtual size_t get_bytes_needed() const {
         return 1;
     }
-    
+
     /// Prepare a data message for writing
     /**
-     * Performs validation, masking, compression, etc. will return an error if 
+     * Performs validation, masking, compression, etc. will return an error if
      * there was an error, otherwise msg will be ready to be written
      */
-    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) 
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
         = 0;
 
     /// Prepare a ping frame
@@ -324,7 +324,7 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_ping(std::string const & in, 
+    virtual lib::error_code prepare_ping(std::string const & in,
         message_ptr out) const = 0;
 
     /// Prepare a pong frame
@@ -356,7 +356,7 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_close(close::status::value code, 
+    virtual lib::error_code prepare_close(close::status::value code,
         std::string const & reason, message_ptr out) const = 0;
 protected:
     bool const m_secure;

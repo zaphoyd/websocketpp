@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
@@ -58,7 +58,7 @@ namespace extensions {
  *
  * **is_enabled**\n
  * `bool is_enabled()`\n
- * Returns whether or not the extension was negotiated for the current 
+ * Returns whether or not the extension was negotiated for the current
  * connection
  *
  * **generate_offer**\n
@@ -78,7 +78,7 @@ namespace extensions {
  * Compress the bytes in `in` and append them to `out`
  *
  * **decompress**\n
- * `lib::error_code decompress(uint8_t const * buf, size_t len, std::string & 
+ * `lib::error_code decompress(uint8_t const * buf, size_t len, std::string &
  * out)`\n
  * Decompress `len` bytes from `buf` and append them to string `out`
  */
@@ -101,7 +101,7 @@ enum value {
 
     /// Unsupported extension attributes
     unsupported_attributes,
-    
+
     /// Invalid value for max_window_bits
     invalid_max_window_bits,
 
@@ -197,12 +197,12 @@ enum value {
     /// Use the smallest value common to both offers
     smallest
 };
-} // namespace mode 
+} // namespace mode
 
 template <typename config>
 class enabled {
 public:
-    enabled() 
+    enabled()
       : m_enabled(false)
       , m_s2c_no_context_takeover(false)
       , m_c2s_no_context_takeover(false)
@@ -223,7 +223,7 @@ public:
         m_istate.avail_in = 0;
         m_istate.next_in = Z_NULL;
     }
-    
+
     ~enabled() {
         if (!m_initialized) {
             return;
@@ -232,18 +232,18 @@ public:
         int ret = deflateEnd(&m_dstate);
 
         if (ret != Z_OK) {
-            //std::cout << "error cleaning up zlib compression state" 
+            //std::cout << "error cleaning up zlib compression state"
             //          << std::endl;
         }
 
         ret = inflateEnd(&m_istate);
 
         if (ret != Z_OK) {
-            //std::cout << "error cleaning up zlib decompression state" 
+            //std::cout << "error cleaning up zlib decompression state"
             //          << std::endl;
         }
     }
-    
+
     /// Initialize zlib state
     /**
      * Note: this should be called *after* the negotiation methods. It will use
@@ -288,7 +288,7 @@ public:
         if (ret != Z_OK) {
             return make_error_code(error::zlib_error);
         }
-        
+
         m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
         if ((m_s2c_no_context_takeover && is_server) ||
             (m_c2s_no_context_takeover && !is_server))
@@ -321,16 +321,16 @@ public:
     bool is_enabled() const {
         return m_enabled;
     }
-    
+
     /// Reset server's outgoing LZ77 sliding window for each new message
     /**
      * Enabling this setting will cause the server's compressor to reset the
-     * compression state (the LZ77 sliding window) for every message. This 
-     * means that the compressor will not look back to patterns in previous 
-     * messages to improve compression. This will reduce the compression 
+     * compression state (the LZ77 sliding window) for every message. This
+     * means that the compressor will not look back to patterns in previous
+     * messages to improve compression. This will reduce the compression
      * efficiency for large messages somewhat and small messages drastically.
      *
-     * This option may reduce server compressor memory usage and client 
+     * This option may reduce server compressor memory usage and client
      * decompressor memory usage.
      * @todo Document to what extent memory usage will be reduced
      *
@@ -350,12 +350,12 @@ public:
     /// Reset client's outgoing LZ77 sliding window for each new message
     /**
      * Enabling this setting will cause the client's compressor to reset the
-     * compression state (the LZ77 sliding window) for every message. This 
-     * means that the compressor will not look back to patterns in previous 
-     * messages to improve compression. This will reduce the compression 
+     * compression state (the LZ77 sliding window) for every message. This
+     * means that the compressor will not look back to patterns in previous
+     * messages to improve compression. This will reduce the compression
      * efficiency for large messages somewhat and small messages drastically.
      *
-     * This option may reduce client compressor memory usage and server 
+     * This option may reduce client compressor memory usage and server
      * decompressor memory usage.
      * @todo Document to what extent memory usage will be reduced
      *
@@ -370,7 +370,7 @@ public:
     /**
      * The bits setting is the base 2 logarithm of the maximum window size that
      * the server must use to compress outgoing messages. The permitted range
-     * is 8 to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB 
+     * is 8 to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB
      * window. The default setting is 15.
      *
      * Mode Options:
@@ -439,12 +439,12 @@ public:
     std::string generate_offer() const {
         return "";
     }
-    
+
     /// Validate extension response
     /**
-     * Confirm that the server has negotiated settings compatible with our 
+     * Confirm that the server has negotiated settings compatible with our
      * original offer and apply those settings to the extension state.
-     * 
+     *
      * @param response The server response attribute list to validate
      * @return Validation error or 0 on success
      */
@@ -482,7 +482,7 @@ public:
                 break;
             }
         }
-        
+
         if (ret.first == lib::error_code()) {
             m_enabled = true;
             ret.second = generate_response();
@@ -506,7 +506,7 @@ public:
         }
 
         size_t output;
-        
+
         if (in.empty()) {
             uint8_t buf[6] = {0x02, 0x00, 0x00, 0x00, 0xff, 0xff};
             out.append((char *)(buf),6);
@@ -520,7 +520,7 @@ public:
             // Output to local buffer
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();
-                 
+
             deflate(&m_dstate, m_flush);
             output = m_compress_buffer_size - m_dstate.avail_out;
 
@@ -599,11 +599,11 @@ private:
     }
 
     /// Negotiate s2c_no_context_takeover attribute
-    /** 
+    /**
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_s2c_no_context_takeover(std::string const & value, 
+    void negotiate_s2c_no_context_takeover(std::string const & value,
         lib::error_code & ec)
     {
         if (!value.empty()) {
@@ -615,11 +615,11 @@ private:
     }
 
     /// Negotiate c2s_no_context_takeover attribute
-    /** 
+    /**
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_c2s_no_context_takeover(std::string const & value, 
+    void negotiate_c2s_no_context_takeover(std::string const & value,
         lib::error_code & ec)
     {
         if (!value.empty()) {
@@ -629,7 +629,7 @@ private:
 
         m_c2s_no_context_takeover = true;
     }
-    
+
     /// Negotiate s2c_max_window_bits attribute
     /**
      * When this method starts, m_s2c_max_window_bits will contain the server's
@@ -650,13 +650,13 @@ private:
         lib::error_code & ec)
     {
         uint8_t bits = uint8_t(atoi(value.c_str()));
-        
+
         if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
             ec = make_error_code(error::invalid_attribute_value);
             m_s2c_max_window_bits = default_s2c_max_window_bits;
             return;
         }
-        
+
         switch (m_s2c_max_window_bits_mode) {
             case mode::decline:
                 m_s2c_max_window_bits = default_s2c_max_window_bits;
@@ -679,7 +679,7 @@ private:
     /// Negotiate c2s_max_window_bits attribute
     /**
      * When this method starts, m_c2s_max_window_bits and m_c2s_max_window_mode
-     * will contain the server's preferred values for window size and 
+     * will contain the server's preferred values for window size and
      * negotiation mode.
      *
      * options:
@@ -695,10 +695,10 @@ private:
             lib::error_code & ec)
     {
         uint8_t bits = uint8_t(atoi(value.c_str()));
-        
+
         if (value.empty()) {
             bits = default_c2s_max_window_bits;
-        } else if (bits < min_c2s_max_window_bits || 
+        } else if (bits < min_c2s_max_window_bits ||
                    bits > max_c2s_max_window_bits)
         {
             ec = make_error_code(error::invalid_attribute_value);

@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_ERROR_HPP
@@ -55,7 +55,7 @@ enum value {
     endpoint_not_secure,
 
     /// Attempted an operation that required an endpoint that is no longer
-    /// available. This is usually because the endpoint went out of scope 
+    /// available. This is usually because the endpoint went out of scope
     /// before a connection that it created.
     endpoint_unavailable,
 
@@ -64,52 +64,52 @@ enum value {
 
     /// The endpoint is out of outgoing message buffers
     no_outgoing_buffers,
-    
+
     /// The endpoint is out of incoming message buffers
     no_incoming_buffers,
 
     /// The connection was in the wrong state for this operation
     invalid_state,
-    
+
     /// Unable to parse close code
     bad_close_code,
-    
+
     /// Close code is in a reserved range
     reserved_close_code,
 
     /// Close code is invalid
     invalid_close_code,
-    
+
     /// Invalid UTF-8
     invalid_utf8,
-    
+
     /// Invalid subprotocol
     invalid_subprotocol,
-    
+
     /// Bad or unknown connection
     bad_connection,
-    
+
     /// Unit testing utility error code
     test,
-    
+
     /// Connection creation attempted failed
     con_creation_failed,
-    
+
     /// Selected subprotocol was not requested by the client
     unrequested_subprotocol,
-    
+
     /// Attempted to use a client specific feature on a server endpoint
     client_only,
-    
+
     /// Attempted to use a server specific feature on a client endpoint
     server_only,
-    
+
     /// HTTP connection ended
     http_connection_ended,
-    
+
     /// WebSocket opening handshake timed out
     open_handshake_timeout,
-    
+
     /// WebSocket close handshake timed out
     close_handshake_timeout,
 
@@ -122,10 +122,10 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp";
     }
-    
+
     std::string message(int value) const {
         switch(value) {
             case error::general:
@@ -197,27 +197,27 @@ inline lib::error_code make_error_code(error::value e) {
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
 template<> struct is_error_code_enum<websocketpp::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 
 namespace websocketpp {
 
 class exception : public std::exception {
-public: 
-    exception(const std::string& msg,
-              error::value code = error::general) 
+public:
+    exception(std::string const & msg,
+              error::value code = error::general)
     : m_msg(msg),m_code(code) {}
     ~exception() throw() {}
-    
-    virtual const char* what() const throw() {
+
+    virtual char const * what() const throw() {
         return m_msg.c_str();
     }
-    
+
     error::value code() const throw() {
         return m_code;
     }
-    
+
     std::string m_msg;
     error::value m_code;
 };

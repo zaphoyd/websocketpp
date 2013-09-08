@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_SERVER_ENDPOINT_HPP
@@ -44,13 +44,13 @@ template <typename config>
 class server : public endpoint<connection<config>,config> {
 public:
     /// Type of this endpoint
-    typedef server<config> type;    
-    
+    typedef server<config> type;
+
     /// Type of the endpoint concurrency component
     typedef typename config::concurrency_type concurrency_type;
     /// Type of the endpoint transport component
     typedef typename config::transport_type transport_type;
-    
+
     /// Type of the connections this server will create
     typedef connection<config> connection_type;
     /// Type of a shared pointer to the connections this server will create
@@ -63,8 +63,8 @@ public:
 
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
-    
-    
+
+
     // TODO: clean up these types
 
     explicit server() : endpoint_type(true)
@@ -72,19 +72,19 @@ public:
         endpoint_type::m_alog.write(log::alevel::devel,
             "server constructor");
     }
-    
-    // return an initialized connection_ptr. Call start() on this object to 
+
+    // return an initialized connection_ptr. Call start() on this object to
     // begin the processing loop.
     connection_ptr get_connection() {
         connection_ptr con = endpoint_type::create_connection();
-                
+
         return con;
     }
-    
+
     // Starts the server's async connection acceptance loop.
     void start_accept() {
         connection_ptr con = get_connection();
-        
+
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(
@@ -95,11 +95,11 @@ public:
             )
         );
     }
-    
+
     void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
         lib::error_code hdl_ec;
         connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
-        
+
         if (hdl_ec == error::bad_connection) {
             // The connection we were trying to connect went out of scope
             // This really shouldn't happen
@@ -122,7 +122,7 @@ public:
                 con->start();
             }
         }
-        
+
         // TODO: are there cases where we should terminate this loop?
         start_accept();
     }

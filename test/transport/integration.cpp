@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_integration
@@ -38,37 +38,37 @@
 struct config : public websocketpp::config::asio_client {
     typedef config type;
     typedef websocketpp::config::asio base;
-    
+
     typedef base::concurrency_type concurrency_type;
-    
+
     typedef base::request_type request_type;
     typedef base::response_type response_type;
 
     typedef base::message_type message_type;
     typedef base::con_msg_manager_type con_msg_manager_type;
     typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
-    
+
     typedef base::alog_type alog_type;
     typedef base::elog_type elog_type;
-    
+
     typedef base::rng_type rng_type;
-    
+
     struct transport_config : public base::transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::alog_type alog_type;
         typedef type::elog_type elog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
-        typedef websocketpp::transport::asio::basic_socket::endpoint 
+        typedef websocketpp::transport::asio::basic_socket::endpoint
             socket_type;
     };
 
-    typedef websocketpp::transport::asio::endpoint<transport_config> 
+    typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
-    
+
     //static const websocketpp::log::level elog_level = websocketpp::log::elevel::all;
     //static const websocketpp::log::level alog_level = websocketpp::log::alevel::all;
-    
+
     /// Length of time before an opening handshake is aborted
     static const long timeout_open_handshake = 500;
     /// Length of time before a closing handshake is aborted
@@ -115,7 +115,7 @@ void run_client(client & c, std::string uri, bool log = false) {
         c.clear_error_channels(websocketpp::log::elevel::all);
     }
     c.init_asio();
-    
+
     websocketpp::lib::error_code ec;
     client::connection_ptr con = c.get_connection(uri,ec);
     BOOST_CHECK( !ec );
@@ -124,7 +124,7 @@ void run_client(client & c, std::string uri, bool log = false) {
     c.run();
 }
 
-void run_time_limited_client(client & c, std::string uri, long timeout, 
+void run_time_limited_client(client & c, std::string uri, long timeout,
     bool log)
 {
     if (log) {
@@ -135,12 +135,12 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
         c.clear_error_channels(websocketpp::log::elevel::all);
     }
     c.init_asio();
-    
+
     websocketpp::lib::error_code ec;
     client::connection_ptr con = c.get_connection(uri,ec);
     BOOST_CHECK( !ec );
     c.connect(con);
-    
+
     websocketpp::lib::thread tthread(websocketpp::lib::bind(
         &close_after_timeout<client>,
         websocketpp::lib::ref(c),
@@ -148,18 +148,18 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
         timeout
     ));
     tthread.detach();
-    
+
     c.run();
 }
 
 void run_dummy_server(int port) {
     using boost::asio::ip::tcp;
-    
-    try {    
+
+    try {
         boost::asio::io_service io_service;
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_service);
-    
+
         acceptor.accept(socket);
         for (;;) {
             char data[512];
@@ -181,14 +181,14 @@ void run_dummy_server(int port) {
 
 void run_dummy_client(std::string port) {
     using boost::asio::ip::tcp;
-    
-    try {    
+
+    try {
         boost::asio::io_service io_service;
         tcp::resolver resolver(io_service);
         tcp::resolver::query query("localhost", port);
         tcp::resolver::iterator iterator = resolver.resolve(query);
         tcp::socket socket(io_service);
-    
+
         boost::asio::connect(socket, iterator);
         for (;;) {
             char data[512];
@@ -213,7 +213,7 @@ bool on_ping(websocketpp::connection_hdl, std::string payload) {
 }
 
 void cancel_on_open(server * s, websocketpp::connection_hdl hdl) {
-    s->cancel();
+    s->stop_listening();
 }
 
 void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
@@ -237,7 +237,7 @@ void fail_on_pong_timeout(websocketpp::connection_hdl hdl, std::string payload) 
     BOOST_FAIL( "expected no pong timeout" );
 }
 
-void req_pong(std::string expected_payload, websocketpp::connection_hdl hdl, 
+void req_pong(std::string expected_payload, websocketpp::connection_hdl hdl,
     std::string payload)
 {
     BOOST_CHECK_EQUAL( expected_payload, payload );
@@ -252,7 +252,7 @@ void delay(websocketpp::connection_hdl hdl, long duration) {
 }
 
 template <typename T>
-void check_ec(T * c, websocketpp::lib::error_code ec, 
+void check_ec(T * c, websocketpp::lib::error_code ec,
     websocketpp::connection_hdl hdl)
 {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
@@ -262,7 +262,7 @@ void check_ec(T * c, websocketpp::lib::error_code ec,
 }
 
 template <typename T>
-void check_ec_and_stop(T * e, websocketpp::lib::error_code ec, 
+void check_ec_and_stop(T * e, websocketpp::lib::error_code ec,
     websocketpp::connection_hdl hdl)
 {
     typename T::connection_ptr con = e->get_con_from_hdl(hdl);
@@ -273,7 +273,7 @@ void check_ec_and_stop(T * e, websocketpp::lib::error_code ec,
 }
 
 template <typename T>
-void req_pong_timeout(T * c, std::string expected_payload, 
+void req_pong_timeout(T * c, std::string expected_payload,
     websocketpp::connection_hdl hdl, std::string payload)
 {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
@@ -297,19 +297,19 @@ BOOST_AUTO_TEST_CASE( pong_no_timeout ) {
     client c;
 
     s.set_close_handler(bind(&stop_on_close,&s,::_1));
-    
+
     // send a ping when the connection is open
     c.set_open_handler(bind(&ping_on_open<client>,&c,"foo",::_1));
     // require that a pong with matching payload is received
     c.set_pong_handler(bind(&req_pong,"foo",::_1,::_2));
     // require that a pong timeout is NOT received
     c.set_pong_timeout_handler(bind(&fail_on_pong_timeout,::_1,::_2));
-    
+
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    
+
     // Run a client that closes the connection after 1 seconds
     run_time_limited_client(c, "http://localhost:9005", 1, false);
-    
+
     sthread.join();
 }
 
@@ -319,28 +319,28 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
 
     s.set_ping_handler(on_ping);
     s.set_close_handler(bind(&stop_on_close,&s,::_1));
-    
+
     c.set_fail_handler(bind(&check_ec<client>,&c,
         websocketpp::lib::error_code(),::_1));
-    
+
     c.set_pong_handler(bind(&fail_on_pong,::_1,::_2));
     c.set_open_handler(bind(&ping_on_open<client>,&c,"foo",::_1));
     c.set_pong_timeout_handler(bind(&req_pong_timeout<client>,&c,"foo",::_1,::_2));
     c.set_close_handler(bind(&check_ec<client>,&c,
         websocketpp::lib::error_code(),::_1));
-    
+
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();
-    
+
     run_client(c, "http://localhost:9005",false);
-    
+
     sthread.join();
 }
 
 BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
     client c;
-    
+
     // set open handler to fail test
     c.set_open_handler(bind(&fail_on_open,::_1));
     // set fail hander to test for the right fail error code
@@ -351,13 +351,13 @@ BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     sthread.detach();
     tthread.detach();
-    
+
     run_client(c, "http://localhost:9005");
 }
 
 BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
     server s;
-    
+
     // set open handler to fail test
     s.set_open_handler(bind(&fail_on_open,::_1));
     // set fail hander to test for the right fail error code
@@ -367,9 +367,9 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();
-    
+
     run_dummy_client("9005");
-    
+
     sthread.join();
 }
 
@@ -386,13 +386,13 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
     c.set_close_handler(bind(&check_ec<client>,&c,
         websocketpp::error::close_handshake_timeout,::_1));
-    
+
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();
-    
+
     run_client(c, "http://localhost:9005",false);
-    
+
     sthread.join();
 }
 
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE( client_peer_initiated_close_handshake_timeout ) {
     // client should ack normally and then wait
     // server leaves TCP connection open
     // client handshake timer should be triggered
-    
+
     // TODO: how to make a mock server that leaves the TCP connection open?
 }
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
         websocketpp::error::close_handshake_timeout,::_1));
 
     c.set_open_handler(bind(&delay,::_1,1));
-    
+
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();

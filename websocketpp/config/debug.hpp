@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_CONFIG_DEBUG_HPP
@@ -67,130 +67,130 @@ namespace config {
 /// Client/Server debug config with iostream transport
 struct debug_core {
     typedef debug_core type;
-    
+
     // Concurrency policy
     typedef websocketpp::concurrency::basic concurrency_type;
-    
+
     // HTTP Parser Policies
     typedef http::parser::request request_type;
     typedef http::parser::response response_type;
 
     // Message Policies
-    typedef message_buffer::message<message_buffer::alloc::con_msg_manager> 
+    typedef message_buffer::message<message_buffer::alloc::con_msg_manager>
         message_type;
-    typedef message_buffer::alloc::con_msg_manager<message_type> 
+    typedef message_buffer::alloc::con_msg_manager<message_type>
         con_msg_manager_type;
-    typedef message_buffer::alloc::endpoint_msg_manager<con_msg_manager_type> 
+    typedef message_buffer::alloc::endpoint_msg_manager<con_msg_manager_type>
         endpoint_msg_manager_type;
-    
+
     /// Logging policies
     typedef websocketpp::log::basic<concurrency_type,
         websocketpp::log::elevel> elog_type;
     typedef websocketpp::log::basic<concurrency_type,
         websocketpp::log::alevel> alog_type;
-    
+
     /// RNG policies
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
-    
+
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
-        
+
         /// Default timer values (in ms)
-                
+
         /// Length of time to wait for socket pre-initialization
         /**
          * Exactly what this includes depends on the socket policy in use
          */
         static const long timeout_socket_pre_init = 5000;
-        
+
         /// Length of time to wait before a proxy handshake is aborted
         static const long timeout_proxy = 5000;
-        
+
         /// Length of time to wait for socket post-initialization
         /**
          * Exactly what this includes depends on the socket policy in use.
          * Often this means the TLS handshake
          */
         static const long timeout_socket_post_init = 5000;
-        
+
         /// Length of time to wait for dns resolution
         static const long timeout_dns_resolve = 5000;
-        
+
         /// Length of time to wait for TCP connect
         static const long timeout_connect = 5000;
-        
+
         /// Length of time to wait for socket shutdown
         static const long timeout_socket_shutdown = 5000;
     };
 
     /// Transport Endpoint Component
-    typedef websocketpp::transport::iostream::endpoint<transport_config> 
+    typedef websocketpp::transport::iostream::endpoint<transport_config>
         transport_type;
-    
+
     /// User overridable Endpoint base class
     typedef websocketpp::endpoint_base endpoint_base;
     /// User overridable Connection base class
     typedef websocketpp::connection_base connection_base;
-    
+
     /// Default timer values (in ms)
-    
+
     /// Length of time before an opening handshake is aborted
     static const long timeout_open_handshake = 5000;
     /// Length of time before a closing handshake is aborted
     static const long timeout_close_handshake = 5000;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 5000;
-    
+
     /// WebSocket Protocol version to use as a client
     /**
-     * What version of the WebSocket Protocol to use for outgoing client 
+     * What version of the WebSocket Protocol to use for outgoing client
      * connections. Setting this to a value other than 13 (RFC6455) is not
      * recommended.
-     */ 
+     */
     static const int client_version = 13; // RFC6455
-    
+
     /// Default static error logging channels
     /**
      * Which error logging channels to enable at compile time. Channels not
      * enabled here will be unable to be selected by programs using the library.
-     * This option gives an optimizing compiler the ability to remove entirely 
-     * code to test whether or not to print out log messages on a certain 
-     * channel 
-     * 
+     * This option gives an optimizing compiler the ability to remove entirely
+     * code to test whether or not to print out log messages on a certain
+     * channel
+     *
      * Default is all except for development/debug level errors
-     */ 
-    static const websocketpp::log::level elog_level = 
+     */
+    static const websocketpp::log::level elog_level =
         websocketpp::log::elevel::all;
-        
+
     /// Default static access logging channels
     /**
      * Which access logging channels to enable at compile time. Channels not
      * enabled here will be unable to be selected by programs using the library.
-     * This option gives an optimizing compiler the ability to remove entirely 
-     * code to test whether or not to print out log messages on a certain 
-     * channel 
-     * 
+     * This option gives an optimizing compiler the ability to remove entirely
+     * code to test whether or not to print out log messages on a certain
+     * channel
+     *
      * Default is all except for development/debug level access messages
-     */ 
-    static const websocketpp::log::level alog_level = 
+     */
+    static const websocketpp::log::level alog_level =
         websocketpp::log::alevel::all;
-    
-    /// 
+
+    ///
     static const size_t connection_read_buffer_size = 512;
-    
-    /// Drop connections immediately on protocol error. 
-    /** 
+
+    /// Drop connections immediately on protocol error.
+    /**
      * Drop connections on protocol error rather than sending a close frame.
      * Off by default. This may result in legit messages near the error being
-     * dropped as well. It may free up resources otherwise spent dealing with 
+     * dropped as well. It may free up resources otherwise spent dealing with
      * misbehaving clients.
      */
     static const bool drop_on_protocol_error = false;
-    
+
     /// Suppresses the return of detailed connection close information
     /**
      * Silence close suppresses the return of detailed connection close
@@ -205,20 +205,20 @@ struct debug_core {
      * sent by local applications.
      */
     static const bool silent_close = false;
-    
+
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;
-    
+
     /// Extension specific settings:
 
     /// permessage_compress extension
     struct permessage_deflate_config {
         typedef type::request_type request_type;
-        
+
         /// If the remote endpoint requests that we reset the compression
         /// context after each message should we honor the request?
         static const bool allow_disabling_context_takeover = true;
-        
+
         /// If the remote endpoint requests that we reduce the size of the
         /// LZ77 sliding window size this is the lowest value that will be
         /// allowed. Values range from 8 to 15. A value of 8 means we will
@@ -232,14 +232,14 @@ struct debug_core {
 
     /// Autonegotiate permessage-deflate
     /**
-     * Automatically enables the permessage-deflate extension. 
+     * Automatically enables the permessage-deflate extension.
      *
      * For clients this results in a permessage-deflate extension request being
      * sent with every request rather than requiring it to be requested manually
-     * 
+     *
      * For servers this results in accepting the first set of extension settings
      * requested by the client that we understand being used. The alternative is
-     * requiring the extension to be manually negotiated in `validate`. With 
+     * requiring the extension to be manually negotiated in `validate`. With
      * auto-negotiate on, you may still override the auto-negotiate manually if
      * needed.
      */

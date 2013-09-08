@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_MESSAGE_BUFFER_ALLOC_HPP
@@ -39,30 +39,30 @@ namespace message_buffer {
  * object that stores a message while it is being sent or received. Contains
  * the message payload itself, the message header, the extension data, and the
  * opcode.
- * 
+ *
  * # connection_message_manager:
  * An object that manages all of the message_buffers associated with a given
  * connection. Impliments the get_message_buffer(size) method that returns
  * a message buffer at least size bytes long.
- * 
- * Message buffers are reference counted with shared ownership semantics. Once 
+ *
+ * Message buffers are reference counted with shared ownership semantics. Once
  * requested from the manager the requester and it's associated downstream code
  * may keep a pointer to the message indefinitely at a cost of extra resource
  * usage. Once the reference count drops to the point where the manager is the
  * only reference the messages is recycled using whatever method is implemented
  * in the manager.
- * 
+ *
  * # endpoint_message_manager:
- * An object that manages connection_message_managers. Impliments the 
- * get_message_manager() method. This is used once by each connection to 
+ * An object that manages connection_message_managers. Impliments the
+ * get_message_manager() method. This is used once by each connection to
  * request the message manager that they are supposed to use to manage message
  * buffers for their own use.
- * 
+ *
  * TYPES OF CONNECTION_MESSAGE_MANAGERS
  * - allocate a message with the exact size every time one is requested
- * - maintain a pool of pre-allocated messages and return one when needed. 
+ * - maintain a pool of pre-allocated messages and return one when needed.
  *   Recycle previously used messages back into the pool
- * 
+ *
  * TYPES OF ENDPOINT_MESSAGE_MANAGERS
  *  - allocate a new connection manager for each connection. Message pools
  *    become connection specific. This increases memory usage but improves
@@ -74,7 +74,7 @@ namespace message_buffer {
  */
 
 /// Custom deleter for use in shared_ptrs to message.
-/** 
+/**
  * This is used to catch messages about to be deleted and offer the manager the
  * ability to recycle them instead. Message::recycle will return true if it was
  * successfully recycled and false otherwise. In the case of exceptions or error
@@ -101,10 +101,10 @@ template <typename con_msg_manager>
 class message {
 public:
     typedef lib::shared_ptr<message> ptr;
-    
+
     typedef typename con_msg_manager::weak_ptr con_msg_man_ptr;
 
-    message(con_msg_man_ptr manager, size_t size = 128) 
+    message(con_msg_man_ptr manager, size_t size = 128)
       : m_manager(manager)
       , m_payload(size) {}
 
@@ -120,7 +120,7 @@ public:
     const std::string& get_payload() const {
         return m_payload;
     }
-    
+
     /// Recycle the message
     /**
      * A request to recycle this message was received. Forward that request to
@@ -128,10 +128,10 @@ public:
      * from the manager's recycle member function should be passed back up the
      * call chain. The caller to message::recycle will deal with them.
      *
-     * Recycle must *only* be called by the message shared_ptr's destructor. 
-     * Once recycled successfully, ownership of the memory has been passed to 
+     * Recycle must *only* be called by the message shared_ptr's destructor.
+     * Once recycled successfully, ownership of the memory has been passed to
      * another system and must not be accessed again.
-     * 
+     *
      * @return true if the message was successfully recycled, false otherwise.
      */
     bool recycle() {
@@ -145,7 +145,7 @@ public:
     }
 private:
     con_msg_man_ptr             m_manager;
-    
+
     frame::opcode::value        m_opcode;
     std::string                 m_header;
     std::string                 m_extension_data;
@@ -163,7 +163,7 @@ public:
     typedef lib::weak_ptr<con_msg_manager> weak_ptr;
 
     typedef typename message::ptr message_ptr;
-    
+
     /// Get a message buffer with specified size
     /**
      * @param size Minimum size in bytes to request for the message payload.
@@ -173,7 +173,7 @@ public:
     message_ptr get_message(size_t size) const {
         return message_ptr(new message(size));
     }
-    
+
     /// Recycle a message
     /**
      * This method shouldn't be called. If it is, return false to indicate an
@@ -195,7 +195,7 @@ template <typename con_msg_manager>
 class endpoint_msg_manager {
 public:
     typedef typename con_msg_manager::ptr con_msg_man_ptr;
-    
+
     /// Get a pointer to a connection message manager
     /**
      * @return A pointer to the requested connection message manager.
@@ -214,7 +214,7 @@ namespace pool {
 class con_msg_manager {
 
 };
-    
+
 /// An endpoint manager that maintains a shared pool of connection managers
 /// and returns an appropriate one for the requesting connection.
 class endpoint_msg_manager {

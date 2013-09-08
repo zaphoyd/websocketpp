@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE endpoint
@@ -59,15 +59,15 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
 
 struct endpoint_extension {
     endpoint_extension() : extension_value(5) {}
-    
+
     int extension_method() {
         return extension_value;
     }
-    
+
     bool is_server() const {
         return false;
     }
-    
+
     int extension_value;
 };
 
@@ -85,17 +85,17 @@ struct stub_config : public websocketpp::config::core {
     typedef core::elog_type elog_type;
 
     typedef core::rng_type rng_type;
-    
+
     typedef core::transport_type transport_type;
-    
+
     typedef endpoint_extension endpoint_base;
 };
 
 BOOST_AUTO_TEST_CASE( endpoint_extensions ) {
     websocketpp::server<stub_config> s;
-    
+
     BOOST_CHECK( s.extension_value == 5 );
     BOOST_CHECK( s.extension_method() == 5 );
-    
+
     BOOST_CHECK( s.is_server() == true );
 }

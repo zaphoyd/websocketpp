@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_UTILITIES_IMPL_HPP
@@ -40,26 +40,26 @@ inline std::string to_lower(std::string const & in) {
 inline std::string to_hex(const std::string& input) {
     std::string output;
     std::string hex = "0123456789ABCDEF";
-    
+
     for (size_t i = 0; i < input.size(); i++) {
         output += hex[(input[i] & 0xF0) >> 4];
         output += hex[input[i] & 0x0F];
         output += " ";
     }
-    
+
     return output;
 }
 
 inline std::string to_hex(const uint8_t* input,size_t length) {
     std::string output;
     std::string hex = "0123456789ABCDEF";
-    
+
     for (size_t i = 0; i < length; i++) {
         output += hex[(input[i] & 0xF0) >> 4];
         output += hex[input[i] & 0x0F];
         output += " ";
     }
-    
+
     return output;
 }
 
@@ -67,7 +67,7 @@ inline std::string to_hex(const char* input,size_t length) {
     return to_hex(reinterpret_cast<const uint8_t*>(input),length);
 }
 
-inline std::string string_replace_all(std::string subject, const std::string& 
+inline std::string string_replace_all(std::string subject, const std::string&
     search, const std::string& replace)
 {
     size_t pos = 0;

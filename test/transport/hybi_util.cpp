@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE hybi_util
@@ -36,15 +36,15 @@
 BOOST_AUTO_TEST_CASE( circshift_0 ) {
     if (sizeof(size_t) == 8) {
         size_t test = 0x0123456789abcdef;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,0);
-        
+
         BOOST_CHECK( test == 0x0123456789abcdef);
     } else {
         size_t test = 0x01234567;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,0);
-        
+
         BOOST_CHECK( test == 0x01234567);
     }
 }
@@ -52,15 +52,15 @@ BOOST_AUTO_TEST_CASE( circshift_0 ) {
 BOOST_AUTO_TEST_CASE( circshift_1 ) {
     if (sizeof(size_t) == 8) {
         size_t test = 0x0123456789abcdef;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,1);
-        
+
         BOOST_CHECK( test == 0xef0123456789abcd);
     } else {
         size_t test = 0x01234567;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,1);
-        
+
         BOOST_CHECK( test == 0x67012345);
     }
 }
@@ -68,15 +68,15 @@ BOOST_AUTO_TEST_CASE( circshift_1 ) {
 BOOST_AUTO_TEST_CASE( circshift_2 ) {
     if (sizeof(size_t) == 8) {
         size_t test = 0x0123456789abcdef;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,2);
-        
+
         BOOST_CHECK( test == 0xcdef0123456789ab);
     } else {
         size_t test = 0x01234567;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,2);
-        
+
         BOOST_CHECK( test == 0x45670123);
     }
 }
@@ -84,15 +84,15 @@ BOOST_AUTO_TEST_CASE( circshift_2 ) {
 BOOST_AUTO_TEST_CASE( circshift_3 ) {
     if (sizeof(size_t) == 8) {
         size_t test = 0x0123456789abcdef;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,3);
-        
+
         BOOST_CHECK( test == 0xabcdef0123456789);
     } else {
         size_t test = 0x01234567;
-        
+
         test = websocketpp::processor::hybi_util::circshift_prepared_key(test,3);
-        
+
         BOOST_CHECK( test == 0x23456701);
     }
 }

@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_ENDPOINT_IMPL_HPP
@@ -35,17 +35,17 @@ typename endpoint<connection,config>::connection_ptr
 endpoint<connection,config>::create_connection() {
     m_alog.write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
-    
+
     /*if (m_state == STOPPING || m_state == STOPPED) {
         return connection_ptr();
     }*/
-    
+
     // Create a connection on the heap and manage it using a shared pointer
     connection_ptr con(new connection_type(m_is_server,m_user_agent,m_alog,
         m_elog, m_rng));
-    
+
     connection_weak_ptr w(con);
-    
+
     // Create a weak pointer on the heap using that shared_ptr.
     // Cast that weak pointer to void* and manage it using another shared_ptr
     // connection_hdl hdl(reinterpret_cast<void*>(new connection_weak_ptr(con)));
@@ -54,7 +54,7 @@ endpoint<connection,config>::create_connection() {
 
     //
     con->set_handle(w);
-    
+
     // Copy default handlers from the endpoint
     con->set_open_handler(m_open_handler);
     con->set_close_handler(m_close_handler);
@@ -66,7 +66,7 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
-    
+
     con->set_termination_handler(
         lib::bind(
             &type::remove_connection,
@@ -74,30 +74,30 @@ endpoint<connection,config>::create_connection() {
             lib::placeholders::_1
         )
     );
-    
+
     lib::error_code ec;
-    
+
     ec = transport_type::init(con);
     if (ec) {
         m_elog.write(log::elevel::fatal,ec.message());
         return connection_ptr();
     }
-    
+
     scoped_lock_type lock(m_mutex);
     m_connections.insert(con);
-    
+
     return con;
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::interrupt(connection_hdl hdl, 
+void endpoint<connection,config>::interrupt(connection_hdl hdl,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
-    
-    m_alog.write(log::alevel::devel,"Interrupting connection"+con.get());
-    
+
+    m_alog.write(log::alevel::devel,"Interrupting connection");
+
     ec = con->interrupt();
 }
 
@@ -109,7 +109,7 @@ void endpoint<connection,config>::interrupt(connection_hdl hdl) {
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const &
     payload, frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -119,7 +119,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, std::string const &
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const &
     payload, frame::opcode::value op)
 {
     lib::error_code ec;
@@ -146,7 +146,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg, 
+void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -163,14 +163,14 @@ void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg) {
 
 template <typename connection, typename config>
 void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
-    const code, std::string const & reason, 
+    const code, std::string const & reason,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
     con->close(code,reason,ec);
 }
-    
+
 template <typename connection, typename config>
 void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
     const code, std::string const & reason)
@@ -181,16 +181,16 @@ void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
     payload, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
     con->ping(payload,ec);
 }
-    
+
 template <typename connection, typename config>
-void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
     payload)
 {
     lib::error_code ec;
@@ -199,16 +199,16 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::pong(connection_hdl hdl, std::string const &
     payload, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
     con->pong(payload,ec);
 }
-    
+
 template <typename connection, typename config>
-void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & 
+void endpoint<connection,config>::pong(connection_hdl hdl, std::string const &
     payload)
 {
     lib::error_code ec;
@@ -221,12 +221,12 @@ void endpoint<connection,config>::remove_connection(connection_ptr con) {
     std::stringstream s;
     s << "remove_connection. New count: " << m_connections.size()-1;
     m_alog.write(log::alevel::devel,s.str());
-    
+
     scoped_lock_type lock(m_mutex);
-        
+
     // unregister the termination handler
     con->set_termination_handler(termination_handler());
-    
+
     m_connections.erase(con);
 }
 

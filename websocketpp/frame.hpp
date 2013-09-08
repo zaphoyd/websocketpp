@@ -11,10 +11,10 @@
  *     * Neither the name of the WebSocket++ Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef WEBSOCKETPP_FRAME_HPP
@@ -38,7 +38,7 @@
 namespace websocketpp {
 /// Data structures and utility functions for manipulating WebSocket frames
 /**
- * namespace frame provides a number of data structures and utility functions 
+ * namespace frame provides a number of data structures and utility functions
  * for reading, writing, and manipulating binary encoded WebSocket frames.
  */
 namespace frame {
@@ -90,7 +90,7 @@ namespace opcode {
         control_rsvd = 0xD,
         control_rsve = 0xE,
         control_rsvf = 0xF,
-        
+
         CONTINUATION = 0x0,
         TEXT = 0x1,
         BINARY = 0x2,
@@ -115,14 +115,14 @@ namespace opcode {
      * @return Whether or not the opcode is reserved.
      */
     inline bool reserved(value v) {
-        return (v >= rsv3 && v <= rsv7) || 
+        return (v >= rsv3 && v <= rsv7) ||
                (v >= control_rsvb && v <= control_rsvf);
     }
 
     /// Check if an opcode is invalid
     /**
      * Invalid opcodes are negative or require greater than 4 bits to store.
-     * 
+     *
      * @param v The opcode to test.
      * @return Whether or not the opcode is invalid.
      */
@@ -150,19 +150,19 @@ namespace limits {
 
     /// Maximum length of the variable portion of the WebSocket header
     static unsigned int const max_extended_header_length = 12;
-    
+
     /// Maximum size of a basic WebSocket payload
     static uint8_t const payload_size_basic = 125;
-    
-    /// Maximum size of an extended WebSocket payload (basic payload = 126) 
+
+    /// Maximum size of an extended WebSocket payload (basic payload = 126)
     static uint16_t const payload_size_extended = 0xFFFF; // 2^16, 65535
-    
+
     /// Maximum size of a jumbo WebSocket payload (basic payload = 127)
     static uint64_t const payload_size_jumbo = 0x7FFFFFFFFFFFFFFFLL;//2^63
-    
+
     /// Maximum size of close frame reason
-    /** 
-     * This is payload_size_basic - 2 bytes (as first two bytes are used for 
+    /**
+     * This is payload_size_basic - 2 bytes (as first two bytes are used for
      * the close code
      */
     static uint8_t const close_reason_size = 123;
@@ -178,7 +178,7 @@ static uint8_t const BHB0_FIN = 0x80;
 
 static uint8_t const BHB1_PAYLOAD = 0x7F;
 static uint8_t const BHB1_MASK = 0x80;
-    
+
 static uint8_t const payload_size_code_16bit = 0x7E; // 126
 static uint8_t const payload_size_code_64bit = 0x7F; // 127
 
@@ -187,11 +187,11 @@ typedef uint32_converter masking_key_type;
 /// The constant size component of a WebSocket frame header
 struct basic_header {
     basic_header() : b0(0x00),b1(0x00) {}
-    
+
     basic_header(uint8_t p0, uint8_t p1) : b0(p0), b1(p1) {}
-    
-    basic_header(opcode::value op, uint64_t size, bool fin, bool mask, 
-        bool rsv1 = false, bool rsv2 = false, bool rsv3 = false) : b0(0x00), 
+
+    basic_header(opcode::value op, uint64_t size, bool fin, bool mask,
+        bool rsv1 = false, bool rsv2 = false, bool rsv3 = false) : b0(0x00),
         b1(0x00)
     {
         if (fin) {
@@ -207,13 +207,13 @@ struct basic_header {
             b0 |= BHB0_RSV3;
         }
         b0 |= (op & BHB0_OPCODE);
-        
+
         if (mask) {
             b1 |= BHB1_MASK;
         }
-        
+
         uint8_t basic_value;
-        
+
         if (size <= limits::payload_size_basic) {
             basic_value = static_cast<uint8_t>(size);
         } else if (size <= limits::payload_size_extended) {
@@ -221,11 +221,11 @@ struct basic_header {
         } else {
             basic_value = payload_size_code_64bit;
         }
-        
-        
+
+
         b1 |= basic_value;
     }
-    
+
     uint8_t b0;
     uint8_t b1;
 };
@@ -235,19 +235,19 @@ struct extended_header {
     extended_header() {
         std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
     }
-    
+
     extended_header(uint64_t payload_size) {
         std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
-        
+
         copy_payload(payload_size);
     }
-    
+
     extended_header(uint64_t payload_size, uint32_t masking_key) {
         std::fill_n(this->bytes,MAX_EXTENDED_HEADER_LENGTH,0x00);
-        
+
         // Copy payload size
         int offset = copy_payload(payload_size);
-        
+
         // Copy Masking Key
         uint32_converter temp32;
         temp32.i = masking_key;
@@ -258,17 +258,17 @@ struct extended_header {
 private:
     int copy_payload(uint64_t payload_size) {
         int payload_offset = 0;
-        
+
         if (payload_size <= limits::payload_size_basic) {
             payload_offset = 8;
         } else if (payload_size <= limits::payload_size_extended) {
             payload_offset = 6;
         }
-        
+
         uint64_converter temp64;
         temp64.i = lib::net::htonll(payload_size);
         std::copy(temp64.c+payload_offset,temp64.c+8,bytes);
-        
+
         return 8-payload_offset;
     }
 };
@@ -299,16 +299,16 @@ size_t circshift_prepared_key(size_t prepared_key, size_t offset);
 
 // Functions for performing xor based masking and unmasking
 template <typename input_iter, typename output_iter>
-void byte_mask(input_iter b, input_iter e, output_iter o, masking_key_type 
+void byte_mask(input_iter b, input_iter e, output_iter o, masking_key_type
     const & key, size_t key_offset = 0);
 template <typename iter_type>
 void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
     size_t key_offset = 0);
-void word_mask_exact(uint8_t * input, uint8_t * output, size_t length, 
+void word_mask_exact(uint8_t * input, uint8_t * output, size_t length,
     masking_key_type const & key);
-void word_mask_exact(uint8_t * data, size_t length, masking_key_type const & 
+void word_mask_exact(uint8_t * data, size_t length, masking_key_type const &
     key);
-size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
+size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key);
 size_t word_mask_circ(uint8_t * data, size_t length, size_t prepared_key);
 
@@ -413,12 +413,12 @@ inline void set_masked(basic_header & h, bool value) {
 
 /// Extracts the raw payload length specified in the basic header
 /**
- * A basic WebSocket frame header contains a 7 bit value that represents the 
- * payload size. There are two reserved values that are used to indicate that 
- * the actual payload size will not fit in 7 bits and that the full payload 
+ * A basic WebSocket frame header contains a 7 bit value that represents the
+ * payload size. There are two reserved values that are used to indicate that
+ * the actual payload size will not fit in 7 bits and that the full payload
  * size is included in a separate field. The values are as follows:
  *
- * PAYLOAD_SIZE_CODE_16BIT (0x7E) indicates that the actual payload is less 
+ * PAYLOAD_SIZE_CODE_16BIT (0x7E) indicates that the actual payload is less
  * than 16 bit
  *
  * PAYLOAD_SIZE_CODE_64BIT (0x7F) indicates that the actual payload is less
@@ -435,7 +435,7 @@ inline uint8_t get_basic_size(const basic_header &h) {
 /**
  * A WebSocket frame header always has at least two bytes. Encoded within the
  * first two bytes is all the information necessary to calculate the full
- * (variable) header length. get_header_len() calculates the full header 
+ * (variable) header length. get_header_len() calculates the full header
  * length for the given two byte basic header.
  *
  * @param h Basic frame header to extract size from.
@@ -443,16 +443,16 @@ inline uint8_t get_basic_size(const basic_header &h) {
  */
 inline size_t get_header_len(basic_header const & h) {
     // TODO: check extensions?
-    
+
     // masking key offset represents the space used for the extended length
     // fields
     size_t size = BASIC_HEADER_LENGTH + get_masking_key_offset(h);
-    
+
     // If the header is masked there is a 4 byte masking key
-    if (get_masked(h)) { 
+    if (get_masked(h)) {
         size += 4;
     }
-    
+
     return size;
 }
 
@@ -463,12 +463,12 @@ inline size_t get_header_len(basic_header const & h) {
  * @param [in] The size to set.
  * @return What error occurred, if any.
  */
-inline lib::error_code set_size(basic_header & h, extended_header & eh, uint64_t 
+inline lib::error_code set_size(basic_header & h, extended_header & eh, uint64_t
     size)
 {
     // make sure value isn't too big
     uint8_t basic_value;
-    
+
     if (size <= limits::payload_size_basic) {
         basic_value = static_cast<uint8_t>(size);
     } else if (size <= limits::payload_size_extended) {
@@ -479,9 +479,9 @@ inline lib::error_code set_size(basic_header & h, extended_header & eh, uint64_t
         // error
         return lib::error_code();
     }
-    
+
     h.b1 = (basic_value & BHB1_PAYLOAD) | (h.b1 & BHB1_MASK);
-    
+
     return lib::error_code();
 }
 
@@ -510,22 +510,22 @@ inline unsigned int get_masking_key_offset(const basic_header &h) {
  * contiguous frame header string for the purposes of writing out to the wire.
  *
  * @param h The basic header to include
- * @param e The extended header to include 
+ * @param e The extended header to include
  *
  * @return A contiguous string containing h and e
  */
-inline std::string prepare_header(const basic_header &h, const 
+inline std::string prepare_header(const basic_header &h, const
     extended_header &e)
 {
     std::string ret;
-    
+
     ret.push_back(char(h.b0));
     ret.push_back(char(h.b1));
     ret.append(
         reinterpret_cast<const char*>(e.bytes),
         get_header_len(h)-BASIC_HEADER_LENGTH
     );
-    
+
     return ret;
 }
 
@@ -541,7 +541,7 @@ inline std::string prepare_header(const basic_header &h, const
  *
  * @return The masking key as an integer.
  */
-inline masking_key_type get_masking_key(const basic_header &h, const 
+inline masking_key_type get_masking_key(const basic_header &h, const
     extended_header &e)
 {
     masking_key_type temp32;
@@ -598,7 +598,7 @@ inline uint64_t get_jumbo_size(const extended_header &e) {
  *
  * @return The size encoded in the combined header in host byte order.
  */
-inline uint64_t get_payload_size(const basic_header &h, const 
+inline uint64_t get_payload_size(const basic_header &h, const
     extended_header &e)
 {
     uint8_t val = get_basic_size(h);
@@ -613,7 +613,7 @@ inline uint64_t get_payload_size(const basic_header &h, const
 }
 
 /// Extract a masking key into a value the size of a machine word.
-/** 
+/**
  * Machine word size must be 4 or 8.
  *
  * @param key Masking key to extract from
@@ -622,7 +622,7 @@ inline uint64_t get_payload_size(const basic_header &h, const
  */
 inline size_t prepare_masking_key(const masking_key_type& key) {
     size_t low_bits = static_cast<size_t>(key.i);
-    
+
     if (sizeof(size_t) == 8) {
         uint64_t high_bits = static_cast<size_t>(key.i);
         return static_cast<size_t>((high_bits << 32) | low_bits);
@@ -632,9 +632,9 @@ inline size_t prepare_masking_key(const masking_key_type& key) {
 }
 
 /// circularly shifts the supplied prepared masking key by offset bytes
-/** 
+/**
  * Prepared_key must be the output of prepare_masking_key with the associated
- * restrictions on the machine word size. offset must be greater than or equal 
+ * restrictions on the machine word size. offset must be greater than or equal
  * to zero and less than sizeof(size_t).
  */
 inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
@@ -653,21 +653,21 @@ inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
  * Performs masking in place using the supplied key offset by the supplied
  * offset number of bytes.
  *
- * This function is simple and can be done in place on input with arbitrary 
+ * This function is simple and can be done in place on input with arbitrary
  * lengths and does not vary based on machine word size. It is slow.
  *
  * @param b Beginning iterator to start masking
- * 
+ *
  * @param e Ending iterator to end masking
  *
  * @param o Beginning iterator to store masked results
  *
  * @param key 32 bit key to mask with.
- * 
+ *
  * @param key_offset offset value to start masking at.
  */
 template <typename input_iter, typename output_iter>
-void byte_mask(input_iter first, input_iter last, output_iter result, 
+void byte_mask(input_iter first, input_iter last, output_iter result,
     masking_key_type const & key, size_t key_offset)
 {
     size_t key_index = key_offset%4;
@@ -685,15 +685,15 @@ void byte_mask(input_iter first, input_iter last, output_iter result,
  * Performs masking in place using the supplied key offset by the supplied
  * offset number of bytes.
  *
- * This function is simple and can be done in place on input with arbitrary 
+ * This function is simple and can be done in place on input with arbitrary
  * lengths and does not vary based on machine word size. It is slow.
  *
  * @param b Beginning iterator to start masking
- * 
+ *
  * @param e Ending iterator to end masking
  *
  * @param key 32 bit key to mask with.
- * 
+ *
  * @param key_offset offset value to start masking at.
  */
 template <typename iter_type>
@@ -713,9 +713,9 @@ void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
  * Masking is done in word by word chunks with the remainder not divisible by
  * the word size done byte by byte.
  *
- * input and output must both be at least length bytes. Exactly length bytes 
+ * input and output must both be at least length bytes. Exactly length bytes
  * will be written.
- * 
+ *
  * @param input buffer to mask or unmask
  *
  * @param output buffer to store the output. May be the same as input.
@@ -724,18 +724,18 @@ void byte_mask(iter_type b, iter_type e, masking_key_type const & key,
  *
  * @param key Masking key to use
  */
-inline void word_mask_exact(uint8_t* input, uint8_t* output, size_t length, 
+inline void word_mask_exact(uint8_t* input, uint8_t* output, size_t length,
     const masking_key_type& key)
 {
     size_t prepared_key = prepare_masking_key(key);
     size_t n = length/sizeof(size_t);
     size_t* input_word = reinterpret_cast<size_t*>(input);
     size_t* output_word = reinterpret_cast<size_t*>(output);
-    
+
     for (size_t i = 0; i < n; i++) {
         output_word[i] = input_word[i] ^ prepared_key;
     }
-    
+
     for (size_t i = n*sizeof(size_t); i < length; i++) {
         output[i] = input[i] ^ key.c[i%4];
     }
@@ -746,14 +746,14 @@ inline void word_mask_exact(uint8_t* input, uint8_t* output, size_t length,
  * In place version of word_mask_exact
  *
  * @see word_mask_exact
- * 
+ *
  * @param data buffer to read and write from
  *
  * @param length length of data buffer
  *
  * @param key Masking key to use
  */
-inline void word_mask_exact(uint8_t* data, size_t length, const 
+inline void word_mask_exact(uint8_t* data, size_t length, const
     masking_key_type& key)
 {
     word_mask_exact(data,data,length,key);
@@ -762,24 +762,24 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
 /// Circular word aligned mask/unmask
 /**
  * Performs a circular mask/unmask in word sized chunks using pre-prepared keys
- * that store state between calls. Best for providing streaming masking or 
+ * that store state between calls. Best for providing streaming masking or
  * unmasking of small chunks at a time of a larger message. Requires that the
  * underlying allocated size of the data buffer be a multiple of the word size.
- * Data in the buffer after `length` will be overwritten only with the same 
+ * Data in the buffer after `length` will be overwritten only with the same
  * values that were originally present.
  *
  * Buffer based word by word masking and unmasking for WebSocket payloads.
  * Performs masking in place using the supplied key. Casts the data buffer to
- * an array of size_t's and performs masking word by word. The underlying 
+ * an array of size_t's and performs masking word by word. The underlying
  * buffer size must be a muliple of the word size.
- * 
- * word_mask returns a copy of prepared_key circularly shifted based on the 
- * length value. The returned value may be fed back into word_mask when more 
+ *
+ * word_mask returns a copy of prepared_key circularly shifted based on the
+ * length value. The returned value may be fed back into word_mask when more
  * data is available.
  *
  * input and output must both have length at least:
  *    ceil(length/sizeof(size_t))*sizeof(size_t)
- * Exactly that many bytes will be written, although only exactly length bytes 
+ * Exactly that many bytes will be written, although only exactly length bytes
  * will be changed (trailing bytes will be replaced without masking)
  *
  * @param data Character buffer to mask
@@ -790,26 +790,26 @@ inline void word_mask_exact(uint8_t* data, size_t length, const
  *
  * @return the prepared_key shifted to account for the input length
  */
-inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
+inline size_t word_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key)
 {
     size_t n = length / sizeof(size_t); // whole words
     size_t l = length - (n * sizeof(size_t)); // remaining bytes
     size_t * input_word = reinterpret_cast<size_t *>(input);
     size_t * output_word = reinterpret_cast<size_t *>(output);
-    
+
     // mask word by word
     for (size_t i = 0; i < n; i++) {
         output_word[i] = input_word[i] ^ prepared_key;
     }
-    
+
     // mask partial word at the end
     size_t start = length - l;
     uint8_t * byte_key = reinterpret_cast<uint8_t *>(&prepared_key);
     for (size_t i = 0; i < l; ++i) {
         output[start+i] = input[start+i] ^ byte_key[i];
     }
-    
+
     return circshift_prepared_key(prepared_key,l);
 }
 
@@ -834,14 +834,14 @@ inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
 /// Circular byte aligned mask/unmask
 /**
  * Performs a circular mask/unmask in byte sized chunks using pre-prepared keys
- * that store state between calls. Best for providing streaming masking or 
+ * that store state between calls. Best for providing streaming masking or
  * unmasking of small chunks at a time of a larger message. Requires that the
  * underlying allocated size of the data buffer be a multiple of the word size.
- * Data in the buffer after `length` will be overwritten only with the same 
+ * Data in the buffer after `length` will be overwritten only with the same
  * values that were originally present.
- * 
- * word_mask returns a copy of prepared_key circularly shifted based on the 
- * length value. The returned value may be fed back into byte_mask when more 
+ *
+ * word_mask returns a copy of prepared_key circularly shifted based on the
+ * length value. The returned value may be fed back into byte_mask when more
  * data is available.
  *
  * @param data Character buffer to mask
@@ -852,16 +852,16 @@ inline size_t word_mask_circ(uint8_t* data, size_t length, size_t prepared_key){
  *
  * @return the prepared_key shifted to account for the input length
  */
-inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length, 
+inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key)
 {
     uint32_converter key;
     key.i = prepared_key;
-    
+
     for (size_t i = 0; i < length; ++i) {
         output[i] = input[i] ^ key.c[i % 4];
     }
-    
+
     return circshift_prepared_key(prepared_key,length % 4);
 }
 

@@ -20,55 +20,55 @@ class print_server {
 public:
     print_server() : m_next_sessionid(1) {
         m_server.init_asio();
-                
+
         m_server.set_open_handler(bind(&print_server::on_open,this,::_1));
         m_server.set_close_handler(bind(&print_server::on_close,this,::_1));
         m_server.set_message_handler(bind(&print_server::on_message,this,::_1,::_2));
     }
-    
+
     void on_open(connection_hdl hdl) {
         connection_data data;
-        
+
         data.sessionid = m_next_sessionid++;
         data.name = "";
-        
+
         m_connections[hdl] = data;
     }
-    
+
     void on_close(connection_hdl hdl) {
         connection_data& data = get_data_from_hdl(hdl);
-        
-        std::cout << "Closing connection " << data.name 
+
+        std::cout << "Closing connection " << data.name
                   << " with sessionid " << data.sessionid << std::endl;
-        
+
         m_connections.erase(hdl);
     }
-    
+
     void on_message(connection_hdl hdl, server::message_ptr msg) {
         connection_data& data = get_data_from_hdl(hdl);
-        
+
         if (data.name == "") {
             data.name = msg->get_payload();
-            std::cout << "Setting name of connection with sessionid " 
+            std::cout << "Setting name of connection with sessionid "
                       << data.sessionid << " to " << data.name << std::endl;
         } else {
-            std::cout << "Got a message from connection " << data.name 
+            std::cout << "Got a message from connection " << data.name
                       << " with sessionid " << data.sessionid << std::endl;
         }
     }
-    
+
     connection_data& get_data_from_hdl(connection_hdl hdl) {
         auto it = m_connections.find(hdl);
-        
+
         if (it == m_connections.end()) {
             // this connection is not in the list. This really shouldn't happen
             // and probably means something else is wrong.
             throw std::invalid_argument("No data available for session");
         }
-        
+
         return it->second;
     }
-    
+
     void run(uint16_t port) {
         m_server.listen(port);
         m_server.start_accept();

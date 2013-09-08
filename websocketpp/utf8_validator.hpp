@@ -9,10 +9,13 @@
 namespace websocketpp {
 namespace utf8_validator {
 
-static const unsigned int UTF8_ACCEPT = 0;
-static const unsigned int UTF8_REJECT = 1;
+/// State that represents a valid utf8 input sequence
+static unsigned int const utf8_accept = 0;
+/// State that represents an invalid utf8 input sequence
+static unsigned int const utf8_reject = 1;
 
-static const uint8_t utf8d[] = {
+/// Lookup table for the UTF8 decode state machine
+static uint8_t const utf8d[] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40..5f
@@ -29,11 +32,17 @@ static const uint8_t utf8d[] = {
   1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
 };
 
-uint32_t inline
-decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
+/// Decode the next byte of a UTF8 sequence
+/**
+ * @param [out] state The decoder state to advance
+ * @param [out] codep The codepoint to fill in
+ * @param [in] byte The byte to input
+ * @return The ending state of the decode operation
+ */
+inline uint32_t decode(uint32_t * state, uint32_t * codep, uint8_t byte) {
   uint32_t type = utf8d[byte];
 
-  *codep = (*state != UTF8_ACCEPT) ?
+  *codep = (*state != utf8_accept) ?
     (byte & 0x3fu) | (*codep << 6) :
     (0xff >> type) & (byte);
 
@@ -44,31 +53,54 @@ decode(uint32_t* state, uint32_t* codep, uint8_t byte) {
 /// Provides streaming UTF8 validation functionality
 class validator {
 public:
-    validator() : m_state(UTF8_ACCEPT),m_codepoint(0) {}
-    
-    bool consume (uint32_t byte) {
-        if (utf8_validator::decode(&m_state,&m_codepoint,static_cast<uint8_t>(byte)) == UTF8_REJECT) {
+    /// Construct and initialize the validator
+    validator() : m_state(utf8_accept),m_codepoint(0) {}
+
+    /// Advance the state of the validator with the next input byte
+    /**
+     * @param byte The byte to advance the validation state with
+     * @return Whether or not the byte resulted in a validation error.
+     */
+    bool consume (uint8_t byte) {
+        if (utf8_validator::decode(&m_state,&m_codepoint,byte) == utf8_reject) {
             return false;
         }
         return true;
     }
-    
+
+    /// Advance validator state with input from an iterator pair
+    /**
+     * @param begin Input iterator to the start of the input range
+     * @param end Input iterator to the end of the input range
+     * @return Whether or not decoding the bytes resulted in a validation error.
+     */
     template <typename iterator_type>
-    bool decode (iterator_type b, iterator_type e) {
-        for (iterator_type i = b; i != e; i++) {
-            if (utf8_validator::decode(&m_state,&m_codepoint,static_cast<uint8_t>(*i)) == UTF8_REJECT) {
+    bool decode (iterator_type begin, iterator_type end) {
+        for (iterator_type it = begin; it != end; ++it) {
+            unsigned int result = utf8_validator::decode(
+                &m_state,
+                &m_codepoint,
+                static_cast<uint8_t>(*it)
+            );
+
+            if (result == utf8_reject) {
                 return false;
             }
         }
         return true;
     }
-    
+
+    /// Return whether the input sequence ended on a valid utf8 codepoint
+    /**
+     * @return Whether or not the input sequence ended on a valid codepoint.
+     */
     bool complete() {
-        return m_state == UTF8_ACCEPT;
+        return m_state == utf8_accept;
     }
-    
+
+    /// Reset the validator to decode another message
     void reset() {
-        m_state = UTF8_ACCEPT;
+        m_state = utf8_accept;
         m_codepoint = 0;
     }
 private:
@@ -76,17 +108,19 @@ private:
     uint32_t    m_codepoint;
 };
 
-// convenience function that creates a validator, validates a complete string 
-// and returns the result.
-// TODO: should this be inline?
-inline bool validate(const std::string& s) {
+/// Validate a UTF8 string
+/**
+ * convenience function that creates a validator, validates a complete string
+ * and returns the result.
+ */
+inline bool validate(std::string const & s) {
     validator v;
     if (!v.decode(s.begin(),s.end())) {
         return false;
     }
     return v.complete();
 }
-    
+
 } // namespace utf8_validator
 } // namespace websocketpp
 
