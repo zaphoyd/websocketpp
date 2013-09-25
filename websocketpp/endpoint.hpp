@@ -277,8 +277,26 @@ public:
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
+    /// Create a message and add it to the outgoing send queue (exception free)
+    /**
+     * Convenience method to send a message given a payload string and an opcode
+     *
+     * @param [in] hdl The handle identifying the connection to send via.
+     * @param [in] payload The payload string to generated the message with
+     * @param [in] op The opcode to generated the message with.
+     * @param [out] ec A code to fill in for errors
+     */
     void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op, lib::error_code & ec);
+    /// Create a message and add it to the outgoing send queue
+    /**
+     * Convenience method to send a message given a payload string and an opcode
+     *
+     * @param [in] hdl The handle identifying the connection to send via.
+     * @param [in] payload The payload string to generated the message with
+     * @param [in] op The opcode to generated the message with.
+     * @param [out] ec A code to fill in for errors
+     */
     void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op);
 

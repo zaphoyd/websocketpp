@@ -1,4 +1,6 @@
 HEAD
+- Fixes an issue where custom headers couldn't be set for client connections
+  Thank you Jerry Win and Wolfram Schroers for reporting.
 - Fixes a compile error on visual studio when using interrupts. Thank you Javier
   Rey Neira for reporting this.
 - Adds new 1012 and 1013 close codes per IANA registry

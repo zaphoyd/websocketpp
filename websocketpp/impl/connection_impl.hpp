@@ -465,8 +465,7 @@ connection<config>::get_response_header(const std::string &key) {
 }
 
 template <typename config>
-void connection<config>::set_status(
-    http::status_code::value code)
+void connection<config>::set_status(http::status_code::value code)
 {
     //scoped_lock_type lock(m_connection_state_lock);
 
@@ -479,8 +478,8 @@ void connection<config>::set_status(
     m_response.set_status(code);
 }
 template <typename config>
-void connection<config>::set_status(
-    http::status_code::value code, const std::string& msg)
+void connection<config>::set_status(http::status_code::value code,
+    std::string const & msg)
 {
     //scoped_lock_type lock(m_connection_state_lock);
 
@@ -493,7 +492,7 @@ void connection<config>::set_status(
     m_response.set_status(code,msg);
 }
 template <typename config>
-void connection<config>::set_body(const std::string& value) {
+void connection<config>::set_body(std::string const & value) {
     //scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -504,47 +503,71 @@ void connection<config>::set_body(const std::string& value) {
 
     m_response.set_body(value);
 }
+
 template <typename config>
-void connection<config>::append_header(
-    const std::string &key, const std::string &val)
+void connection<config>::append_header(std::string const & key,
+    std::string const & val)
 {
     //scoped_lock_type lock(m_connection_state_lock);
 
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //                error::INVALID_STATE);
+    if (m_is_server) {
+        if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
+            // we are setting response headers for an incoming server connection
+            m_response.append_header(key,val);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
+    } else {
+        if (m_internal_state == istate::USER_INIT) {
+            // we are setting initial headers for an outgoing client connection
+            m_request.append_header(key,val);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
     }
-
-    m_response.append_header(key,val);
 }
 template <typename config>
-void connection<config>::replace_header(
-    const std::string &key, const std::string &val)
+void connection<config>::replace_header(std::string const & key,
+    std::string const & val)
 {
    // scoped_lock_type lock(m_connection_state_lock);
 
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //                error::INVALID_STATE);
+    if (m_is_server) {
+        if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
+            // we are setting response headers for an incoming server connection
+            m_response.replace_header(key,val);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
+    } else {
+        if (m_internal_state == istate::USER_INIT) {
+            // we are setting initial headers for an outgoing client connection
+            m_request.replace_header(key,val);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
     }
-
-    m_response.replace_header(key,val);
 }
 template <typename config>
-void connection<config>::remove_header(
-    const std::string &key)
+void connection<config>::remove_header(std::string const & key)
 {
     //scoped_lock_type lock(m_connection_state_lock);
 
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //                error::INVALID_STATE);
+    if (m_is_server) {
+        if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
+            // we are setting response headers for an incoming server connection
+            m_response.remove_header(key);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
+    } else {
+        if (m_internal_state == istate::USER_INIT) {
+            // we are setting initial headers for an outgoing client connection
+            m_request.remove_header(key);
+        } else {
+            throw error::make_error_code(error::invalid_state);
+        }
     }
-
-    m_response.remove_header(key);
 }
 
 

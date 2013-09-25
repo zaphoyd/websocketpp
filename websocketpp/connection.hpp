@@ -472,7 +472,7 @@ public:
      * frame::opcode::text
      */
     lib::error_code send(std::string const & payload, frame::opcode::value op =
-        frame::opcode::TEXT);
+        frame::opcode::text);
 
     /// Send a message (raw array overload)
     /**
@@ -489,7 +489,7 @@ public:
      * frame::opcode::binary
      */
     lib::error_code send(void const * payload, size_t len, frame::opcode::value
-        op = frame::opcode::BINARY);
+        op = frame::opcode::binary);
 
     /// Add a message to the outgoing send queue
     /**
@@ -803,7 +803,7 @@ public:
      * @see replace_header
      * @see websocketpp::http::parser::append_header
      */
-    void append_header(std::string const  &key, std::string const & val);
+    void append_header(std::string const & key, std::string const & val);
 
     /// Replace a header
     /**
