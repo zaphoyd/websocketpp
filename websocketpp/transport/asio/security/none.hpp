@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 #define WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 
+#include <websocketpp/common/memory.hpp>
 #include <websocketpp/transport/asio/security/base.hpp>
 
 #include <boost/asio.hpp>
@@ -48,7 +49,7 @@ typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
  * transport::asio::basic_socket::connection implements a connection socket
  * component using Boost ASIO ip::tcp::socket.
  */
-class connection {
+class connection : public lib::enable_shared_from_this<connection> {
 public:
     /// Type of this connection socket component
     typedef connection type;
@@ -63,6 +64,11 @@ public:
     explicit connection() : m_state(UNINITIALIZED) {
         //std::cout << "transport::asio::basic_socket::connection constructor"
         //          << std::endl;
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return shared_from_this();
     }
 
     /// Check whether or not this connection is secure

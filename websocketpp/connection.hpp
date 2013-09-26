@@ -216,7 +216,6 @@ template <typename config>
 class connection
  : public config::transport_type::transport_con_type
  , public config::connection_base
- , public lib::enable_shared_from_this< connection<config> >
 {
 public:
     /// Type of this connection
@@ -294,6 +293,11 @@ public:
       , m_was_clean(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return lib::static_pointer_cast<type>(transport_con_type::get_shared());
     }
 
     ///////////////////////////

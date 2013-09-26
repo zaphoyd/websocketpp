@@ -55,7 +55,7 @@ typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)
  * transport::asio::tls_socket::connection implements a secure connection socket
  * component that uses Boost ASIO's ssl::stream to wrap an ip::tcp::socket.
  */
-class connection {
+class connection : public lib::enable_shared_from_this<connection> {
 public:
     /// Type of this connection socket component
     typedef connection type;
@@ -76,6 +76,11 @@ public:
     explicit connection() {
         //std::cout << "transport::asio::tls_socket::connection constructor"
         //          << std::endl;
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return shared_from_this();
     }
 
     /// Check whether or not this connection is secure
@@ -221,7 +226,7 @@ protected:
             get_handshake_type(),
             lib::bind(
                 &type::handle_init,
-                this,
+                get_shared(),
                 callback,
                 lib::placeholders::_1
             )

@@ -49,7 +49,7 @@ struct timer {
 };
 
 template <typename config>
-class connection {
+class connection : public lib::enable_shared_from_this< connection<config> > {
 public:
     /// Type of this connection transport component
     typedef connection<config> type;
@@ -79,6 +79,11 @@ public:
       , m_remote_endpoint("iostream transport")
     {
         m_alog.write(log::alevel::devel,"iostream con transport constructor");
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return type::shared_from_this();
     }
 
     /// Register a std::ostream with the transport for writing output

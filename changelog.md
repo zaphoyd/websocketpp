@@ -1,4 +1,7 @@
 HEAD
+- Updates transport code to use shared pointers rather than raw pointers to
+  prevent asio from retaining pointers to connection methods after the
+  connection goes out of scope. #293 Thank you otaras for reporting.
 - Fixes an issue where custom headers couldn't be set for client connections
   Thank you Jerry Win and Wolfram Schroers for reporting.
 - Fixes a compile error on visual studio when using interrupts. Thank you Javier

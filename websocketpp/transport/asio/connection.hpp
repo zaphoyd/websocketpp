@@ -93,6 +93,11 @@ public:
         m_alog.write(log::alevel::devel,"asio con transport constructor");
     }
 
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return lib::static_pointer_cast<type>(socket_con_type::get_shared());
+    }
+
     bool is_secure() const {
         return socket_con_type::is_secure();
     }
@@ -291,7 +296,7 @@ public:
         new_timer->async_wait(
             lib::bind(
                 &type::handle_timer,
-                this,
+                get_shared(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
@@ -355,7 +360,7 @@ protected:
         socket_con_type::pre_init(
             lib::bind(
                 &type::handle_pre_init,
-                this,
+                get_shared(),
                 callback,
                 lib::placeholders::_1
             )
@@ -394,7 +399,7 @@ protected:
             config::timeout_socket_post_init,
             lib::bind(
                 &type::handle_post_init_timeout,
-                this,
+                get_shared(),
                 post_timer,
                 callback,
                 lib::placeholders::_1
@@ -404,7 +409,7 @@ protected:
         socket_con_type::post_init(
             lib::bind(
                 &type::handle_post_init,
-                this,
+                get_shared(),
                 post_timer,
                 callback,
                 lib::placeholders::_1
@@ -482,7 +487,7 @@ protected:
             m_proxy_data->timeout_proxy,
             lib::bind(
                 &type::handle_proxy_timeout,
-                this,
+                get_shared(),
                 callback,
                 lib::placeholders::_1
             )
@@ -494,7 +499,7 @@ protected:
             m_bufs,
             lib::bind(
                 &type::handle_proxy_write,
-                this,
+                get_shared(),
                 callback,
                 lib::placeholders::_1
             )
@@ -565,7 +570,7 @@ protected:
             "\r\n\r\n",
             lib::bind(
                 &type::handle_proxy_read,
-                this,
+                get_shared(),
                 callback,
                 lib::placeholders::_1,
                 lib::placeholders::_2
@@ -677,7 +682,7 @@ protected:
             boost::asio::transfer_at_least(num_bytes),
             lib::bind(
                 &type::handle_async_read,
-                this,
+                get_shared(),
                 handler,
                 lib::placeholders::_1,
                 lib::placeholders::_2
@@ -715,7 +720,7 @@ protected:
             m_bufs,
             lib::bind(
                 &type::handle_async_write,
-                this,
+                get_shared(),
                 handler,
                 lib::placeholders::_1
             )
@@ -734,7 +739,7 @@ protected:
             m_bufs,
             lib::bind(
                 &type::handle_async_write,
-                this,
+                get_shared(),
                 handler,
                 lib::placeholders::_1
             )
@@ -796,7 +801,7 @@ protected:
             config::timeout_socket_shutdown,
             lib::bind(
                 &type::handle_async_shutdown_timeout,
-                this,
+                get_shared(),
                 shutdown_timer,
                 callback,
                 lib::placeholders::_1
@@ -806,7 +811,7 @@ protected:
         socket_con_type::async_shutdown(
             lib::bind(
                 &type::handle_async_shutdown,
-                this,
+                get_shared(),
                 shutdown_timer,
                 callback,
                 lib::placeholders::_1

@@ -131,7 +131,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
-            type::shared_from_this()
+            type::get_shared()
         ));
     }
 
@@ -167,7 +167,7 @@ void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
             config::timeout_pong,
             lib::bind(
                 &type::handle_pong_timeout,
-                type::shared_from_this(),
+                type::get_shared(),
                 payload,
                 lib::placeholders::_1
             )
@@ -190,7 +190,7 @@ void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
-            type::shared_from_this()
+            type::get_shared()
         ));
     }
 
@@ -253,7 +253,7 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
-            type::shared_from_this()
+            type::get_shared()
         ));
     }
 
@@ -308,7 +308,7 @@ lib::error_code connection<config>::interrupt() {
     return transport_con_type::interrupt(
         lib::bind(
             &type::handle_interrupt,
-            type::shared_from_this()
+            type::get_shared()
         )
     );
 }
@@ -593,7 +593,7 @@ void connection<config>::start() {
     transport_con_type::init(
         lib::bind(
             &type::handle_transport_init,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -650,7 +650,7 @@ void connection<config>::read_handshake(size_t num_bytes) {
         config::timeout_open_handshake,
         lib::bind(
             &type::handle_open_handshake_timeout,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -661,7 +661,7 @@ void connection<config>::read_handshake(size_t num_bytes) {
         config::connection_read_buffer_size,
         lib::bind(
             &type::handle_read_handshake,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1,
             lib::placeholders::_2
         )
@@ -785,7 +785,7 @@ void connection<config>::handle_read_handshake(const lib::error_code& ec,
             config::connection_read_buffer_size,
             lib::bind(
                 &type::handle_read_handshake,
-                type::shared_from_this(),
+                type::get_shared(),
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
@@ -944,7 +944,7 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         config::connection_read_buffer_size,
         lib::bind(
             &type::handle_read_frame,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1,
             lib::placeholders::_2
         )
@@ -1151,7 +1151,7 @@ void connection<config>::send_http_response() {
         m_handshake_buffer.size(),
         lib::bind(
             &type::handle_send_http_response,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -1257,7 +1257,7 @@ void connection<config>::send_http_request() {
         config::timeout_open_handshake,
         lib::bind(
             &type::handle_open_handshake_timeout,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -1267,7 +1267,7 @@ void connection<config>::send_http_request() {
         m_handshake_buffer.size(),
         lib::bind(
             &type::handle_send_http_request,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -1301,7 +1301,7 @@ void connection<config>::handle_send_http_request(const lib::error_code& ec) {
         config::connection_read_buffer_size,
         lib::bind(
             &type::handle_read_http_response,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1,
             lib::placeholders::_2
         )
@@ -1386,7 +1386,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
             config::connection_read_buffer_size,
             lib::bind(
                 &type::handle_read_http_response,
-                type::shared_from_this(),
+                type::get_shared(),
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
@@ -1462,7 +1462,7 @@ void connection<config>::terminate(const lib::error_code & ec) {
     transport_con_type::async_shutdown(
         lib::bind(
             &type::handle_terminate,
-            type::shared_from_this(),
+            type::get_shared(),
             tstat,
             lib::placeholders::_1
         )
@@ -1502,7 +1502,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
     // If it does, we don't care and should catch and ignore it.
     if (m_termination_handler) {
         try {
-            m_termination_handler(type::shared_from_this());
+            m_termination_handler(type::get_shared());
         } catch (const std::exception& e) {
             m_elog.write(log::elevel::warn,
                 std::string("termination_handler call failed. Reason was: ")
@@ -1567,7 +1567,7 @@ void connection<config>::write_frame() {
         m_send_buffer,
         lib::bind(
             &type::handle_write_frame,
-            type::shared_from_this(),
+            type::get_shared(),
             m_current_msg->get_terminal(),
             lib::placeholders::_1
         )
@@ -1609,7 +1609,7 @@ void connection<config>::handle_write_frame(bool terminate,
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
-            type::shared_from_this()
+            type::get_shared()
         ));
     }
 }
@@ -1865,7 +1865,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
         config::timeout_close_handshake,
         lib::bind(
             &type::handle_close_handshake_timeout,
-            type::shared_from_this(),
+            type::get_shared(),
             lib::placeholders::_1
         )
     );
@@ -1880,7 +1880,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
-            type::shared_from_this()
+            type::get_shared()
         ));
     }
 
