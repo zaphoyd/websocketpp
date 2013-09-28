@@ -132,14 +132,30 @@ public:
      * Copies bytes from buf into WebSocket++'s input buffers. Bytes will be
      * copied from the supplied buffer to fulfill any pending library reads. It
      * will return the number of bytes successfully processed. If there are no
-     * pending reads readsome will return immediately. Not all of the bytes may
+     * pending reads read_some will return immediately. Not all of the bytes may
      * be able to be read in one call
+     *
+     *
+     * @since 0.3.0-alpha4
+     *
+     * @param buf Char buffer to read into the websocket
+     * @param len Length of buf
+     * @return The number of characters from buf actually read.
      */
-    size_t readsome(char const * buf, size_t len) {
+    size_t read_some(char const * buf, size_t len) {
         // this serializes calls to external read.
         scoped_lock_type lock(m_read_mutex);
 
-        return this->readsome_impl(buf,len);
+        return this->read_some_impl(buf,len);
+    }
+
+    /// Manual input supply (DEPRECATED)
+    /**
+     * @deprecated DEPRECATED in favor of read_some()
+     * @see read_some()
+     */
+    size_t readsome(char const * buf, size_t len) {
+        return this->read_some(buf,len);
     }
 
     /// Signal EOF
@@ -453,8 +469,8 @@ private:
         }
     }
 
-    size_t readsome_impl(char const * buf, size_t len) {
-        m_alog.write(log::alevel::devel,"iostream_con readsome");
+    size_t read_some_impl(char const * buf, size_t len) {
+        m_alog.write(log::alevel::devel,"iostream_con read_some");
 
         if (!m_reading) {
             m_elog.write(log::elevel::devel,"write while not reading");

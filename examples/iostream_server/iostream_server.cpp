@@ -77,7 +77,7 @@ int main() {
         } else {
             char a;
             while(std::cin.get(a)) {
-                con->readsome(&a,1);
+                con->read_some(&a,1);
             }
         }
     } catch (const std::exception & e) {

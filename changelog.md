@@ -1,4 +1,6 @@
 HEAD
+- Deprecates iostream transport `readsome` in favor of `read_some` which is more
+  consistent with the naming of the rest of the library.
 - Adds preliminary signaling to iostream transport of eof and fatal transport
   errors
 - Updates transport code to use shared pointers rather than raw pointers to
