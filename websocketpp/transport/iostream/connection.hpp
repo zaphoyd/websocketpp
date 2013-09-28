@@ -162,6 +162,8 @@ public:
     /**
      * Signals to the transport that data stream being read has reached EOF and
      * that no more bytes may be read or written to/from the transport.
+     *
+     * @since 0.3.0-alpha4
      */
     void eof() {
         // this serializes calls to external read.
@@ -177,6 +179,8 @@ public:
     /**
      * Signals to the transport that a fatal data stream error has occurred and
      * that no more bytes may be read or written to/from the transport.
+     *
+     * @since 0.3.0-alpha4
      */
     void fatal_error() {
         // this serializes calls to external read.
