@@ -74,11 +74,13 @@ int main() {
 
         if (buffered_io) {
             std::cin >> *con;
+            con->eof();
         } else {
             char a;
             while(std::cin.get(a)) {
                 con->read_some(&a,1);
             }
+            con->eof();
         }
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;

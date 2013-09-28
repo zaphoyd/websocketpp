@@ -170,8 +170,7 @@ public:
         scoped_lock_type lock(m_read_mutex);
 
         if (m_reading) {
-            m_reading = false;
-            m_read_handler(make_error_code(transport::error::eof), m_cursor);
+            complete_read(make_error_code(transport::error::eof));
         }
     }
 
@@ -187,8 +186,7 @@ public:
         scoped_lock_type lock(m_read_mutex);
 
         if (m_reading) {
-            m_reading = false;
-            m_read_handler(make_error_code(transport::error::pass_through), m_cursor);
+            complete_read(make_error_code(transport::error::pass_through));
         }
     }
 
@@ -463,12 +461,12 @@ private:
             // TODO: error handling
             if (in.bad()) {
                 m_reading = false;
-                m_read_handler(make_error_code(error::bad_stream), m_cursor);
+                complete_read(make_error_code(error::bad_stream));
             }
 
             if (m_cursor >= m_bytes_needed) {
                 m_reading = false;
-                m_read_handler(lib::error_code(), m_cursor);
+                complete_read(lib::error_code());
             }
         }
     }
@@ -483,16 +481,40 @@ private:
 
         size_t bytes_to_copy = std::min(len,m_len-m_cursor);
 
-        std::copy(buf,buf+bytes_to_copy,m_buf);
+        std::copy(buf,buf+bytes_to_copy,m_buf+m_cursor);
 
         m_cursor += bytes_to_copy;
 
         if (m_cursor >= m_bytes_needed) {
-            m_reading = false;
-            m_read_handler(lib::error_code(), m_cursor);
+            complete_read(lib::error_code());
         }
 
         return bytes_to_copy;
+    }
+
+    /// Signal that a requested read is complete
+    /**
+     * Sets the reading flag to false and returns the handler that should be
+     * called back with the result of the read. The cursor position that is sent
+     * is whatever the value of m_cursor is.
+     *
+     * It MUST NOT be called when m_reading is false.
+     * it MUST be called while holding the read lock
+     *
+     * It is important to use this method rather than directly setting/calling
+     * m_read_handler back because this function makes sure to delete the
+     * locally stored handler which contains shared pointers that will otherwise
+     * cause circular reference based memory leaks.
+     *
+     * @param ec The error code to forward to the read handler
+     */
+    void complete_read(lib::error_code const & ec) {
+        m_reading = false;
+
+        read_handler handler = m_read_handler;
+        m_read_handler = read_handler();
+
+        handler(ec,m_cursor);
     }
 
     // Read space (Protected by m_read_mutex)
