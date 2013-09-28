@@ -142,6 +142,36 @@ public:
         return this->readsome_impl(buf,len);
     }
 
+    /// Signal EOF
+    /**
+     * Signals to the transport that data stream being read has reached EOF and
+     * that no more bytes may be read or written to/from the transport.
+     */
+    void eof() {
+        // this serializes calls to external read.
+        scoped_lock_type lock(m_read_mutex);
+
+        if (m_reading) {
+            m_reading = false;
+            m_read_handler(make_error_code(transport::error::eof), m_cursor);
+        }
+    }
+
+    /// Signal transport error
+    /**
+     * Signals to the transport that a fatal data stream error has occurred and
+     * that no more bytes may be read or written to/from the transport.
+     */
+    void fatal_error() {
+        // this serializes calls to external read.
+        scoped_lock_type lock(m_read_mutex);
+
+        if (m_reading) {
+            m_reading = false;
+            m_read_handler(make_error_code(transport::error::pass_through), m_cursor);
+        }
+    }
+
     /// Set whether or not this connection is secure
     /**
      * The iostream transport does not provide any security features. As such

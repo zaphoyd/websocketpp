@@ -1,4 +1,6 @@
 HEAD
+- Adds preliminary signaling to iostream transport of eof and fatal transport
+  errors
 - Updates transport code to use shared pointers rather than raw pointers to
   prevent asio from retaining pointers to connection methods after the
   connection goes out of scope. #293 Thank you otaras for reporting.
