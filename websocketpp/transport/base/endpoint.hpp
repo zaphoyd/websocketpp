@@ -71,12 +71,10 @@ namespace websocketpp {
 namespace transport {
 
 /// The type and signature of the callback passed to the accept method
-typedef lib::function<void(connection_hdl, lib::error_code const &)>
-    accept_handler;
+typedef lib::function<void(lib::error_code const &)> accept_handler;
 
 /// The type and signature of the callback passed to the connect method
-typedef lib::function<void(connection_hdl, lib::error_code const &)>
-    connect_handler;
+typedef lib::function<void(lib::error_code const &)> connect_handler;
 
 } // namespace transport
 } // namespace websocketpp

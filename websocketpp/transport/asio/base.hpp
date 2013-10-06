@@ -45,6 +45,11 @@ namespace transport {
  */
 namespace asio {
 
+// Forward declaration of class endpoint so that it can be friended/referenced
+// before being included.
+template <typename config>
+class endpoint;
+
 typedef lib::function<void(boost::system::error_code const &)>
     socket_shutdown_handler;
 

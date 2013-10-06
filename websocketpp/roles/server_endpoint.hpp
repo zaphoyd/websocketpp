@@ -90,37 +90,20 @@ public:
             lib::bind(
                 &type::handle_accept,
                 this,
-                lib::placeholders::_1,
-                lib::placeholders::_2
+                con,
+                lib::placeholders::_1
             )
         );
     }
 
-    void handle_accept(connection_hdl hdl, const lib::error_code& ec) {
-        lib::error_code hdl_ec;
-        connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
+    void handle_accept(connection_ptr con, const lib::error_code& ec) {
+        if (ec) {
+            con->terminate(ec);
 
-        if (hdl_ec == error::bad_connection) {
-            // The connection we were trying to connect went out of scope
-            // This really shouldn't happen
-            endpoint_type::m_elog.write(log::elevel::fatal,
-                "handle_accept got an invalid handle back");
-            //con->terminate();
-        } else if (hdl_ec) {
-            // There was some other unknown error attempting to convert the hdl
-            // to a connection.
-            endpoint_type::m_elog.write(log::elevel::fatal,
-                "handle_accept error in get_con_from_hdl: "+hdl_ec.message());
-            //con->terminate();
+            endpoint_type::m_elog.write(log::elevel::rerror,
+                "handle_accept error: "+ec.message());
         } else {
-            if (ec) {
-                con->terminate(ec);
-
-                endpoint_type::m_elog.write(log::elevel::rerror,
-                    "handle_accept error: "+ec.message());
-            } else {
-                con->start();
-            }
+            con->start();
         }
 
         // TODO: are there cases where we should terminate this loop?

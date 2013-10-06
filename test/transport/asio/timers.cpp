@@ -156,14 +156,12 @@ struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
                 &mock_endpoint::handle_connect,
                 this,
                 m_con,
-                websocketpp::lib::placeholders::_1,
-                websocketpp::lib::placeholders::_2
+                websocketpp::lib::placeholders::_1
             )
         );
     }
 
-    void handle_connect(connection_ptr con, websocketpp::connection_hdl,
-        const websocketpp::lib::error_code & ec)
+    void handle_connect(connection_ptr con, websocketpp::lib::error_code const & ec)
     {
         BOOST_CHECK( !ec );
         con->start();

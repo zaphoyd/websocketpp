@@ -84,6 +84,11 @@ public:
     /// Type of a pointer to the ASIO timer class
     typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
 
+    // connection is friends with its associated endpoint to allow the endpoint
+    // to call private/protected utility methods that we don't want to expose
+    // to the public api.
+    friend class endpoint<config>;
+
     // generate and manage our own io_service
     explicit connection(bool is_server, alog_type& alog, elog_type& elog)
       : m_is_server(is_server)
@@ -102,29 +107,13 @@ public:
         return socket_con_type::is_secure();
     }
 
-    /// Finish constructing the transport
+    /// Sets the tcp init handler
     /**
-     * init_asio is called once immediately after construction to initialize
-     * boost::asio components to the io_service
+     * The tcp init handler is called after the tcp connection has been
+     * established.
      *
-     * TODO: this method is not protected because the endpoint needs to call it.
-     * need to figure out if there is a way to friend the endpoint safely across
-     * different compilers.
-     *
-     * @param io_service A pointer to the io_service to register with this
-     * connection
-     *
-     * @return Status code for the success or failure of the initialization
+     * @param h The handler to call on tcp init.
      */
-    lib::error_code init_asio (io_service_ptr io_service) {
-        // do we need to store or use the io_service at this level?
-        m_io_service = io_service;
-
-        //m_strand.reset(new boost::asio::strand(*io_service));
-
-        return socket_con_type::init_asio(io_service, m_is_server);
-    }
-
     void set_tcp_init_handler(tcp_init_handler h) {
         m_tcp_init_handler = h;
     }
@@ -251,26 +240,6 @@ public:
         return m_connection_hdl;
     }
 
-    /// initialize the proxy buffers and http parsers
-    /**
-     *
-     * @param authority The address of the server we want the proxy to tunnel to
-     * in the format of a URI authority (host:port)
-     */
-    lib::error_code proxy_init(const std::string & authority) {
-        if (!m_proxy_data) {
-            return websocketpp::error::make_error_code(
-                websocketpp::error::invalid_state);
-        }
-        m_proxy_data->req.set_version("HTTP/1.1");
-        m_proxy_data->req.set_method("CONNECT");
-
-        m_proxy_data->req.set_uri(authority);
-        m_proxy_data->req.replace_header("Host",authority);
-
-        return lib::error_code();
-    }
-
     /// Call back a function after a period of time.
     /**
      * Sets a timer that calls back a function after the specified period of
@@ -311,10 +280,10 @@ public:
      * The timer pointer is included to ensure the timer isn't destroyed until
      * after it has expired.
      *
+     * TODO: candidate for protected status
+     *
      * @param t Pointer to the timer in question
-     *
      * @param callback The function to call back
-     *
      * @param ec The status code
      */
     void handle_timer(timer_ptr t, timer_handler callback, const
@@ -365,6 +334,47 @@ protected:
                 lib::placeholders::_1
             )
         );
+    }
+
+    /// initialize the proxy buffers and http parsers
+    /**
+     *
+     * @param authority The address of the server we want the proxy to tunnel to
+     * in the format of a URI authority (host:port)
+     *
+     * @return Status code indicating what errors occurred, if any
+     */
+    lib::error_code proxy_init(std::string const & authority) {
+        if (!m_proxy_data) {
+            return websocketpp::error::make_error_code(
+                websocketpp::error::invalid_state);
+        }
+        m_proxy_data->req.set_version("HTTP/1.1");
+        m_proxy_data->req.set_method("CONNECT");
+
+        m_proxy_data->req.set_uri(authority);
+        m_proxy_data->req.replace_header("Host",authority);
+
+        return lib::error_code();
+    }
+
+    /// Finish constructing the transport
+    /**
+     * init_asio is called once immediately after construction to initialize
+     * boost::asio components to the io_service
+     *
+     * @param io_service A pointer to the io_service to register with this
+     * connection
+     *
+     * @return Status code for the success or failure of the initialization
+     */
+    lib::error_code init_asio (io_service_ptr io_service) {
+        // do we need to store or use the io_service at this level?
+        m_io_service = io_service;
+
+        //m_strand.reset(new boost::asio::strand(*io_service));
+
+        return socket_con_type::init_asio(io_service, m_is_server);
     }
 
     void handle_pre_init(init_handler callback, const lib::error_code& ec) {
