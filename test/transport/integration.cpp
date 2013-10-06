@@ -87,7 +87,10 @@ using websocketpp::lib::bind;
 template <typename T>
 void close_after_timeout(T & e, websocketpp::connection_hdl hdl, long timeout) {
     sleep(timeout);
-    e.close(hdl,websocketpp::close::status::normal,"");
+
+    websocketpp::lib::error_code ec;
+    e.close(hdl,websocketpp::close::status::normal,"",ec);
+    BOOST_CHECK(!ec);
 }
 
 void run_server(server * s, int port, bool log = false) {
