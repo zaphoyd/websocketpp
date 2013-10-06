@@ -81,6 +81,8 @@ public:
 
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a pointer to the ASIO io_service::strand being used
+    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
     /// Type of a pointer to the ASIO timer class
     typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
 
@@ -263,13 +265,13 @@ public:
         );
 
         new_timer->async_wait(
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_timer,
                 get_shared(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
-            )
+            ))
         );
 
         return new_timer;
@@ -301,6 +303,11 @@ public:
         }
     }
 protected:
+    /// Get a pointer to this connection's strand
+    strand_ptr get_strand() {
+        return m_strand;
+    }
+
     /// Initialize transport for reading
     /**
      * init_asio is called once immediately after construction to initialize
@@ -372,9 +379,9 @@ protected:
         // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
-        //m_strand.reset(new boost::asio::strand(*io_service));
+        m_strand.reset(new boost::asio::strand(*io_service));
 
-        return socket_con_type::init_asio(io_service, m_is_server);
+        return socket_con_type::init_asio(io_service, m_strand, m_is_server);
     }
 
     void handle_pre_init(init_handler callback, const lib::error_code& ec) {
@@ -507,12 +514,12 @@ protected:
         boost::asio::async_write(
             socket_con_type::get_next_layer(),
             m_bufs,
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_proxy_write,
                 get_shared(),
                 callback,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 
@@ -578,13 +585,13 @@ protected:
             socket_con_type::get_next_layer(),
             m_proxy_data->read_buf,
             "\r\n\r\n",
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_proxy_read,
                 get_shared(),
                 callback,
                 lib::placeholders::_1,
                 lib::placeholders::_2
-            )
+            ))
         );
     }
 
@@ -690,13 +697,13 @@ protected:
             socket_con_type::get_socket(),
             boost::asio::buffer(buf,len),
             boost::asio::transfer_at_least(num_bytes),
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_async_read,
                 get_shared(),
                 handler,
                 lib::placeholders::_1,
                 lib::placeholders::_2
-            )
+            ))
         );
     }
 
@@ -728,12 +735,12 @@ protected:
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_async_write,
                 get_shared(),
                 handler,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 
@@ -747,12 +754,12 @@ protected:
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_async_write,
                 get_shared(),
                 handler,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 
@@ -783,16 +790,14 @@ protected:
     /// Trigger the on_interrupt handler
     /**
      * This needs to be thread safe
-     *
-     * Might need a strand at some point?
      */
     lib::error_code interrupt(interrupt_handler handler) {
-        m_io_service->post(handler);
+        m_io_service->post(m_strand->wrap(handler));
         return lib::error_code();
     }
 
     lib::error_code dispatch(dispatch_handler handler) {
-        m_io_service->post(handler);
+        m_io_service->post(m_strand->wrap(handler));
         return lib::error_code();
     }
 
@@ -914,8 +919,10 @@ private:
     lib::shared_ptr<proxy_data> m_proxy_data;
 
     // transport resources
-    io_service_ptr      m_io_service;
-    connection_hdl      m_connection_hdl;
+    io_service_ptr  m_io_service;
+    strand_ptr      m_strand;
+    connection_hdl  m_connection_hdl;
+
     std::vector<boost::asio::const_buffer> m_bufs;
 
     // Handlers

@@ -58,6 +58,8 @@ public:
 
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a pointer to the ASIO io_service strand being used
+    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
 
@@ -152,7 +154,9 @@ protected:
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, bool is_server) {
+    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+        bool is_server)
+    {
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
         }

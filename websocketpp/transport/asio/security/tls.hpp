@@ -68,6 +68,8 @@ public:
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a pointer to the ASIO io_service strand being used
+    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 
@@ -174,9 +176,12 @@ protected:
      * boost::asio components to the io_service
      *
      * @param service A pointer to the endpoint's io_service
+     * @param strand A pointer to the connection's strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, bool is_server) {
+    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+        bool is_server)
+    {
         if (!m_tls_init_handler) {
             return socket::make_error_code(socket::error::missing_tls_init_handler);
         }
@@ -188,6 +193,7 @@ protected:
         m_socket.reset(new socket_type(*service,*m_context));
 
         m_io_service = service;
+        m_strand = strand;
         m_is_server = is_server;
 
         return lib::error_code();
@@ -224,12 +230,12 @@ protected:
         // TLS handshake
         m_socket->async_handshake(
             get_handshake_type(),
-            lib::bind(
+            m_strand->wrap(lib::bind(
                 &type::handle_init,
                 get_shared(),
                 callback,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 
@@ -278,6 +284,7 @@ private:
     }
 
     io_service_ptr      m_io_service;
+    strand_ptr          m_strand;
     context_ptr         m_context;
     socket_ptr          m_socket;
     bool                m_is_server;

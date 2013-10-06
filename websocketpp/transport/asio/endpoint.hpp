@@ -574,12 +574,12 @@ public:
 
         m_acceptor->async_accept(
             tcon->get_raw_socket(),
-            lib::bind(
+            tcon->get_strand()->wrap(lib::bind(
                 &type::handle_accept,
                 this,
                 callback,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 
@@ -672,7 +672,7 @@ protected:
 
         timer_ptr dns_timer;
 
-        dns_timer = set_timer(
+        dns_timer = tcon->set_timer(
             config::timeout_dns_resolve,
             lib::bind(
                 &type::handle_resolve_timeout,
@@ -685,7 +685,7 @@ protected:
 
         m_resolver->async_resolve(
             query,
-            lib::bind(
+            tcon->get_strand()->wrap(lib::bind(
                 &type::handle_resolve,
                 this,
                 tcon,
@@ -693,7 +693,7 @@ protected:
                 cb,
                 lib::placeholders::_1,
                 lib::placeholders::_2
-            )
+            ))
         );
     }
 
@@ -755,7 +755,7 @@ protected:
 
         timer_ptr con_timer;
 
-        con_timer = set_timer(
+        con_timer = tcon->set_timer(
             config::timeout_connect,
             lib::bind(
                 &type::handle_connect_timeout,
@@ -770,14 +770,14 @@ protected:
         boost::asio::async_connect(
             tcon->get_raw_socket(),
             iterator,
-            lib::bind(
+            tcon->get_strand()->wrap(lib::bind(
                 &type::handle_connect,
                 this,
                 tcon,
                 con_timer,
                 callback,
                 lib::placeholders::_1
-            )
+            ))
         );
     }
 

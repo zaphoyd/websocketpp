@@ -1,4 +1,6 @@
 HEAD
+- Re-introduces strands to asio transport, allowing `io_service` thread pools to
+  be used (with some limitations).
 - Removes endpoint code that kept track of a connection list that was never used
   anywhere. Removes a lock and reduces connection creation/deletion complexity
   from O(log n) to O(1) in the number of connections.
