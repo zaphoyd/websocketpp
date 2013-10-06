@@ -1,4 +1,8 @@
 HEAD
+- Removes endpoint code that kept track of a connection list that was never used
+  anywhere. Removes a lock and reduces connection creation/deletion complexity
+  from O(log n) to O(1) in the number of connections.
+- A number of internal changes to transport APIs
 - Deprecates iostream transport `readsome` in favor of `read_some` which is more
   consistent with the naming of the rest of the library.
 - Adds preliminary signaling to iostream transport of eof and fatal transport
