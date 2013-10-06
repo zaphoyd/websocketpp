@@ -50,9 +50,6 @@ endpoint<connection,config>::create_connection() {
     // Cast that weak pointer to void* and manage it using another shared_ptr
     // connection_hdl hdl(reinterpret_cast<void*>(new connection_weak_ptr(con)));
 
-    // con->set_handle(hdl);
-
-    //
     con->set_handle(w);
 
     // Copy default handlers from the endpoint
@@ -67,14 +64,6 @@ endpoint<connection,config>::create_connection() {
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
 
-    con->set_termination_handler(
-        lib::bind(
-            &type::remove_connection,
-            this,
-            lib::placeholders::_1
-        )
-    );
-
     lib::error_code ec;
 
     ec = transport_type::init(con);
@@ -82,9 +71,6 @@ endpoint<connection,config>::create_connection() {
         m_elog.write(log::elevel::fatal,ec.message());
         return connection_ptr();
     }
-
-    scoped_lock_type lock(m_mutex);
-    m_connections.insert(con);
 
     return con;
 }
@@ -214,20 +200,6 @@ void endpoint<connection,config>::pong(connection_hdl hdl, std::string const &
     lib::error_code ec;
     pong(hdl,payload,ec);
     if (ec) { throw ec; }
-}
-
-template <typename connection, typename config>
-void endpoint<connection,config>::remove_connection(connection_ptr con) {
-    std::stringstream s;
-    s << "remove_connection. New count: " << m_connections.size()-1;
-    m_alog.write(log::alevel::devel,s.str());
-
-    scoped_lock_type lock(m_mutex);
-
-    // unregister the termination handler
-    con->set_termination_handler(termination_handler());
-
-    m_connections.erase(con);
 }
 
 } // namespace websocketpp

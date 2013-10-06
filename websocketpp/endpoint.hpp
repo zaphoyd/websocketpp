@@ -397,7 +397,6 @@ public:
     }
 protected:
     connection_ptr create_connection();
-    void remove_connection(connection_ptr con);
 
     alog_type m_alog;
     elog_type m_elog;
@@ -417,9 +416,6 @@ private:
     message_handler             m_message_handler;
 
     rng_type m_rng;
-
-    // endpoint resources
-    std::set<connection_ptr>    m_connections;
 
     // static settings
     bool const                  m_is_server;
