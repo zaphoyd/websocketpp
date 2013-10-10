@@ -1,4 +1,6 @@
 HEAD
+- Eliminates spurious expired timers in certain error conditions. Thank you
+  Banaan for reporting. #295
 - Consolidates all bundled library licenses into the COPYING file.
 - Updates bundled sha1 library to one with a cleaner interface and more
   straight-forward license.
