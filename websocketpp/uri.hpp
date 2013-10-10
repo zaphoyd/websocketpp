@@ -144,7 +144,7 @@ public:
                 //state = 3;
                 break;
             } else if (*it == '/') {
-                //state = 3;
+                state = 3;
             } else {
                 port += *it;
             }
