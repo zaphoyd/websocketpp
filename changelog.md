@@ -1,4 +1,7 @@
 HEAD
+- Consolidates all bundled library licenses into the COPYING file.
+- Updates bundled sha1 library to one with a cleaner interface and more
+  straight-forward license.
 - Re-introduces strands to asio transport, allowing `io_service` thread pools to
   be used (with some limitations).
 - Removes endpoint code that kept track of a connection list that was never used
