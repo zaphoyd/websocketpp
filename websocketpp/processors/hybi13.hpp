@@ -614,27 +614,11 @@ protected:
     lib::error_code process_handshake_key(std::string & key) const {
         key.append(constants::handshake_guid);
 
-        sha1 sha;
-        uint32_t message_digest[5];
+        unsigned char message_digest[20];
+        sha1::calc(key.c_str(),key.length(),message_digest);
+        key = base64_encode(message_digest,20);
 
-        sha << key.c_str();
-
-        if (sha.get_raw_digest(message_digest)){
-            // convert sha1 hash bytes to network byte order because this sha1
-            //  library works on ints rather than bytes
-            for (int i = 0; i < 5; i++) {
-                message_digest[i] = htonl(message_digest[i]);
-            }
-
-            key = base64_encode(
-                reinterpret_cast<unsigned char const *>(message_digest),
-                20
-            );
-
-            return lib::error_code();
-        } else {
-            return error::make_error_code(error::sha1_library);
-        }
+        return lib::error_code();
     }
 
     /// Reads bytes from buf into m_basic_header

@@ -1,12 +1,4 @@
 /*
-*****
-sha1.hpp is a repackaging of the sha1.cpp and sha1.h files from the shallsha1
-library (http://code.google.com/p/smallsha1/) into a single header suitable for
-use as a header only library. This conversion was done by Peter Thorson
-(webmaster@zaphoyd.com) in 2013. All modifications to the code are redistributed
-under the same license as the original, which is listed below.
-*****
-
  Copyright (c) 2011, Micael Hildenborg
  All rights reserved.
 
@@ -33,12 +25,17 @@ under the same license as the original, which is listed below.
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SHA1_DEFINED
-#define SHA1_DEFINED
+/*
+ Contributors:
+ Gustav
+ Several members in the gamedev.se forum.
+ Gregory Petrosyan
+ */
 
-namespace websocketpp {
-namespace sha1 {
+#include "sha1.h"
 
+namespace sha1
+{
     namespace // local
     {
         // Rotate an integer value to left.
@@ -58,7 +55,7 @@ namespace sha1 {
             }
         }
 
-        inline void innerHash(unsigned int* result, unsigned int* w)
+        void innerHash(unsigned int* result, unsigned int* w)
         {
             unsigned int a = result[0];
             unsigned int b = result[1];
@@ -118,12 +115,8 @@ namespace sha1 {
         }
     } // namespace
 
-    /**
-     @param src points to any kind of data to be hashed.
-     @param bytelength the number of bytes to hash from the src pointer.
-     @param hash should point to a buffer of at least 20 bytes of size for storing the sha1 result in.
-     */
-    inline void calc(const void* src, const int bytelength, unsigned char* hash) {
+    void calc(const void* src, const int bytelength, unsigned char* hash)
+    {
         // Init the result array.
         unsigned int result[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 
@@ -178,7 +171,15 @@ namespace sha1 {
         }
     }
 
-} // namespace sha1
-} // namespace websocketpp
+    void toHexString(const unsigned char* hash, char* hexstring)
+    {
+        const char hexDigits[] = { "0123456789abcdef" };
 
-#endif // SHA1_DEFINED
+        for (int hashByte = 20; --hashByte >= 0;)
+        {
+            hexstring[hashByte << 1] = hexDigits[(hash[hashByte] >> 4) & 0xf];
+            hexstring[(hashByte << 1) + 1] = hexDigits[hash[hashByte] & 0xf];
+        }
+        hexstring[40] = 0;
+    }
+} // namespace sha1
