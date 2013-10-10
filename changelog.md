@@ -3,9 +3,10 @@ HEAD
   for reporting. #294
 - Eliminates spurious expired timers in certain error conditions. Thank you
   Banaan for reporting. #295
-- Consolidates all bundled library licenses into the COPYING file.
+- Consolidates all bundled library licenses into the COPYING file. #294
 - Updates bundled sha1 library to one with a cleaner interface and more
-  straight-forward license.
+  straight-forward license. Thank you lotodore for reporting and Evgeni Golov
+  for reviewing. #294
 - Re-introduces strands to asio transport, allowing `io_service` thread pools to
   be used (with some limitations).
 - Removes endpoint code that kept track of a connection list that was never used
