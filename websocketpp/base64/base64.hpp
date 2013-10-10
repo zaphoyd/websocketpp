@@ -1,7 +1,7 @@
 /*
     ******
     base64.hpp is a repackaging of the base64.cpp and base64.h files into a
-    single headersuitable for use as a header only library. This conversion was
+    single header suitable for use as a header only library. This conversion was
     done by Peter Thorson (webmaster@zaphoyd.com) in 2012. All modifications to
     the code are redistributed under the same license as the original, which is
     listed below.

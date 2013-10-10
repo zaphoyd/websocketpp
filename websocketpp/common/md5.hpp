@@ -1,7 +1,8 @@
 /*
-  md5.hpp is a reformulation of the md5.h and md5.c code to allow it to function
-  as a component of a header only library. This conversion was done by Peter
-  Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The
+  md5.hpp is a reformulation of the md5.h and md5.c code from
+  http://www.opensource.apple.com/source/cups/cups-59/cups/md5.c to allow it to
+  function as a component of a header only library. This conversion was done by
+  Peter Thorson (webmaster@zaphoyd.com) in 2012 for the WebSocket++ project. The
   changes are released under the same license as the original (listed below)
 */
 /*
