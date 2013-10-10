@@ -1185,14 +1185,14 @@ void connection<config>::handle_send_http_response(
     if (m_response.get_status_code() != http::status_code::switching_protocols)
     {
         if (m_processor) {
-            // if this was not a websocket connection, we have written
-            // the expected response and the connection can be closed.
-        } else {
             // this was a websocket connection that ended in an error
             std::stringstream s;
             s << "Handshake ended with HTTP error: "
               << m_response.get_status_code();
             m_elog.write(log::elevel::rerror,s.str());
+        } else {
+            // if this was not a websocket connection, we have written
+            // the expected response and the connection can be closed.
         }
         this->terminate(make_error_code(error::http_connection_ended));
         return;

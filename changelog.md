@@ -1,4 +1,6 @@
 HEAD
+- HTTP requests ending normally are no longer logged as errors. Thank you Banaan
+  for reporting. #294
 - Eliminates spurious expired timers in certain error conditions. Thank you
   Banaan for reporting. #295
 - Consolidates all bundled library licenses into the COPYING file.
