@@ -138,10 +138,13 @@ public:
         std::string port = "";
         while (state == 1) {
             if (it == uri.end()) {
-                state = 3;
+                // state is not used after this point presently.
+                // this should be re-enabled if it ever is needed in a future
+                // refactoring
+                //state = 3;
                 break;
             } else if (*it == '/') {
-                state = 3;
+                //state = 3;
             } else {
                 port += *it;
             }
