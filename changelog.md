@@ -1,4 +1,6 @@
 HEAD
+
+0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan
   for reporting. #294
 - Eliminates spurious expired timers in certain error conditions. Thank you
