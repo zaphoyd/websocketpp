@@ -91,12 +91,22 @@ struct core {
     /// RNG policies
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 
+    /// Controls compile time enabling/disabling of thread syncronization
+    /// code Disabling can provide a minor performance improvement to single
+    /// threaded applications
+    static bool const enable_multithreading = true;
+
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
+
+        /// Controls compile time enabling/disabling of thread syncronization
+        /// code Disabling can provide a minor performance improvement to single
+        /// threaded applications
+        static bool const enable_multithreading = true;
 
         /// Default timer values (in ms)
 
