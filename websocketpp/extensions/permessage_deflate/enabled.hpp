@@ -272,8 +272,8 @@ public:
             Z_DEFAULT_COMPRESSION,
             Z_DEFLATED,
             -1*deflate_bits,
-            8, // memory level 1-9
-            /*Z_DEFAULT_STRATEGY*/Z_FIXED
+            4, // memory level 1-9
+            Z_DEFAULT_STRATEGY
         );
 
         if (ret != Z_OK) {
