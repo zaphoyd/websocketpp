@@ -53,6 +53,9 @@ class endpoint;
 typedef lib::function<void(boost::system::error_code const &)>
     socket_shutdown_handler;
 
+typedef lib::function<void (const boost::system::error_code & ec,
+    size_t bytes_transferred)> async_read_handler;
+
 /// Asio transport errors
 namespace error {
 enum value {

@@ -381,6 +381,18 @@ protected:
 
         m_strand.reset(new boost::asio::strand(*io_service));
 
+        if (config::enable_multithreading) {
+            m_async_read_handler = m_strand->wrap(lib::bind(
+                &type::handle_async_read, get_shared(),
+                lib::placeholders::_1, lib::placeholders::_2
+            ));
+        } else {
+            m_async_read_handler = lib::bind(
+                &type::handle_async_read, get_shared(),
+                lib::placeholders::_1, lib::placeholders::_2
+            );
+        }
+
         return socket_con_type::init_asio(io_service, m_strand, m_is_server);
     }
 
@@ -693,38 +705,41 @@ protected:
             return;
         }
 
+        m_read_handler = handler;
+
         boost::asio::async_read(
             socket_con_type::get_socket(),
             boost::asio::buffer(buf,len),
             boost::asio::transfer_at_least(num_bytes),
-            m_strand->wrap(lib::bind(
+            /*m_strand->wrap(lib::bind(
                 &type::handle_async_read,
                 get_shared(),
                 handler,
                 lib::placeholders::_1,
                 lib::placeholders::_2
-            ))
+            ))*/
+            m_async_read_handler
         );
     }
 
-    void handle_async_read(read_handler handler, const
-        boost::system::error_code& ec, size_t bytes_transferred)
+    void handle_async_read(const boost::system::error_code& ec,
+        size_t bytes_transferred)
     {
         if (!ec) {
-            handler(lib::error_code(), bytes_transferred);
+            m_read_handler(lib::error_code(), bytes_transferred);
             return;
         }
 
         // translate boost error codes into more lib::error_codes
         if (ec == boost::asio::error::eof) {
-            handler(make_error_code(transport::error::eof),
+            m_read_handler(make_error_code(transport::error::eof),
             bytes_transferred);
         } else if (ec.value() == 335544539) {
-            handler(make_error_code(transport::error::tls_short_read),
+            m_read_handler(make_error_code(transport::error::tls_short_read),
             bytes_transferred);
         } else {
             log_err(log::elevel::info,"asio async_read_at_least",ec);
-            handler(make_error_code(transport::error::pass_through),
+            m_read_handler(make_error_code(transport::error::pass_through),
                 bytes_transferred);
         }
     }
@@ -927,6 +942,10 @@ private:
 
     // Handlers
     tcp_init_handler    m_tcp_init_handler;
+
+    read_handler        m_read_handler;
+
+    async_read_handler  m_async_read_handler;
 };
 
 
