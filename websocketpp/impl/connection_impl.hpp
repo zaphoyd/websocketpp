@@ -942,12 +942,13 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         1,
         m_buf,
         config::connection_read_buffer_size,
-        lib::bind(
+        /*lib::bind(
             &type::handle_read_frame,
             type::get_shared(),
             lib::placeholders::_1,
             lib::placeholders::_2
-        )
+        )*/
+        m_handle_read_frame
     );
 }
 
@@ -1540,8 +1541,8 @@ void connection<config>::write_frame() {
         m_write_flag = true;
     }
 
-    const std::string& header = m_current_msg->get_header();
-    const std::string& payload = m_current_msg->get_payload();
+    std::string const & header = m_current_msg->get_header();
+    std::string const & payload = m_current_msg->get_payload();
 
     m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
     m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
@@ -1563,24 +1564,27 @@ void connection<config>::write_frame() {
     }
     }
 
+
     transport_con_type::async_write(
         m_send_buffer,
-        lib::bind(
+        /*lib::bind(
             &type::handle_write_frame,
             type::get_shared(),
             m_current_msg->get_terminal(),
             lib::placeholders::_1
-        )
+        )*/
+        m_write_frame_handler
     );
 }
 
 template <typename config>
-void connection<config>::handle_write_frame(bool terminate,
-    const lib::error_code& ec)
+void connection<config>::handle_write_frame(lib::error_code const & ec)
 {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection handle_write_frame");
     }
+
+    bool terminate = m_current_msg->get_terminal();
 
     m_send_buffer.clear();
     m_current_msg.reset();

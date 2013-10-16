@@ -149,6 +149,10 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
+//
+typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
+typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
+
 // constants related to the default WebSocket protocol versions available
 #ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
     /// Container that stores the list of protocol versions supported
@@ -278,6 +282,17 @@ public:
     explicit connection(bool is_server, std::string const & ua, alog_type& alog,
         elog_type& elog, rng_type & rng)
       : transport_con_type(is_server,alog,elog)
+      , m_handle_read_frame(lib::bind(
+            &type::handle_read_frame,
+            this,
+            lib::placeholders::_1,
+            lib::placeholders::_2
+        ))
+      , m_write_frame_handler(lib::bind(
+            &type::handle_write_frame,
+            this,
+            lib::placeholders::_1
+        ))
       , m_user_agent(ua)
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
@@ -1034,7 +1049,7 @@ public:
      * @param ec A status code from the transport layer, zero on success,
      * non-zero otherwise.
      */
-    void handle_write_frame(bool terminate, lib::error_code const & ec);
+    void handle_write_frame(lib::error_code const & ec);
 protected:
     void handle_transport_init(lib::error_code const & ec);
 
@@ -1189,6 +1204,10 @@ private:
      * Includes: error code and message for why it was failed
      */
     void log_fail_result();
+
+    // internal handler functions
+    read_handler            m_handle_read_frame;
+    write_frame_handler     m_write_frame_handler;
 
     // static settings
     const std::string       m_user_agent;
