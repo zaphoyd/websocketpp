@@ -66,6 +66,13 @@ int main() {
 
 	    // Start the ASIO io_service run loop
         testee_server.run();
+
+        /*websocketpp::lib::thread t1(&server::run, &testee_server);
+        websocketpp::lib::thread t2(&server::run, &testee_server);
+
+        t1.join();
+        t2.join();*/
+
     } catch (const std::exception & e) {
         std::cout << "exception: " << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
