@@ -67,9 +67,9 @@ int main() {
 	    // Start the ASIO io_service run loop
         testee_server.run();
     } catch (const std::exception & e) {
-        std::cout << e.what() << std::endl;
+        std::cout << "exception: " << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
-        std::cout << e.message() << std::endl;
+        std::cout << "error code: " << e.message() << std::endl;
     } catch (...) {
         std::cout << "other exception" << std::endl;
     }
