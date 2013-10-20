@@ -190,7 +190,7 @@ struct debug_core {
         websocketpp::log::alevel::all;
 
     ///
-    static const size_t connection_read_buffer_size = 512;
+    static const size_t connection_read_buffer_size = 16384;
 
     /// Drop connections immediately on protocol error.
     /**
