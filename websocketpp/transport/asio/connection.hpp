@@ -294,8 +294,8 @@ public:
      * @param callback The function to call back
      * @param ec The status code
      */
-    void handle_timer(timer_ptr t, timer_handler callback, const
-        boost::system::error_code& ec)
+    void handle_timer(timer_ptr t, timer_handler callback,
+        boost::system::error_code const & ec)
     {
         if (ec) {
             if (ec == boost::asio::error::operation_aborted) {
@@ -339,11 +339,12 @@ protected:
         // TODO: pre-init timeout. Right now no implemented socket policies
         // actually have an asyncronous pre-init
 
+        m_init_handler = callback;
+
         socket_con_type::pre_init(
             lib::bind(
                 &type::handle_pre_init,
                 get_shared(),
-                callback,
                 lib::placeholders::_1
             )
         );
@@ -398,6 +399,9 @@ protected:
                 lib::placeholders::_1, lib::placeholders::_2
             ));
         } else {
+            // TODO: goal: not have this line here
+            //m_strand.reset(new boost::asio::strand(*io_service));
+
             m_async_read_handler = lib::bind(
                 &type::handle_async_read, get_shared(),
                 lib::placeholders::_1, lib::placeholders::_2
@@ -410,7 +414,7 @@ protected:
         return socket_con_type::init_asio(io_service, m_strand, m_is_server);
     }
 
-    void handle_pre_init(init_handler callback, const lib::error_code& ec) {
+    void handle_pre_init(lib::error_code const & ec) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle pre_init");
         }
@@ -420,19 +424,19 @@ protected:
         }
 
         if (ec) {
-            callback(ec);
+            m_init_handler(ec);
         }
 
         // If we have a proxy set issue a proxy connect, otherwise skip to
         // post_init
         if (!m_proxy.empty()) {
-            proxy_write(callback);
+            proxy_write();
         } else {
-            post_init(callback);
+            post_init();
         }
     }
 
-    void post_init(init_handler callback) {
+    void post_init() {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection post_init");
         }
@@ -444,7 +448,7 @@ protected:
                 &type::handle_post_init_timeout,
                 get_shared(),
                 post_timer,
-                callback,
+                m_init_handler,
                 lib::placeholders::_1
             )
         );
@@ -454,7 +458,7 @@ protected:
                 &type::handle_post_init,
                 get_shared(),
                 post_timer,
-                callback,
+                m_init_handler,
                 lib::placeholders::_1
             )
         );
@@ -506,7 +510,7 @@ protected:
         callback(ec);
     }
 
-    void proxy_write(init_handler callback) {
+    void proxy_write() {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection proxy_write");
         }
@@ -514,7 +518,7 @@ protected:
         if (!m_proxy_data) {
             m_elog.write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_write");
-            callback(make_error_code(error::general));
+            m_init_handler(make_error_code(error::general));
             return;
         }
 
@@ -531,7 +535,7 @@ protected:
             lib::bind(
                 &type::handle_proxy_timeout,
                 get_shared(),
-                callback,
+                m_init_handler,
                 lib::placeholders::_1
             )
         );
@@ -560,7 +564,8 @@ protected:
         }
     }
 
-    void handle_proxy_timeout(init_handler callback, const lib::error_code & ec) {
+    void handle_proxy_timeout(init_handler callback, lib::error_code const & ec)
+    {
         if (ec == transport::error::operation_aborted) {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer cancelled");
@@ -576,8 +581,8 @@ protected:
         }
     }
 
-    void handle_proxy_write(init_handler callback, const
-        boost::system::error_code& ec)
+    void handle_proxy_write(init_handler callback,
+        boost::system::error_code const & ec)
     {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_proxy_write");
@@ -643,8 +648,8 @@ protected:
         }
     }
 
-    void handle_proxy_read(init_handler callback, const
-        boost::system::error_code& ec, size_t bytes_transferred)
+    void handle_proxy_read(init_handler callback,
+        boost::system::error_code const & ec, size_t bytes_transferred)
     {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
@@ -715,7 +720,7 @@ protected:
             m_proxy_data.reset();
 
             // Continue with post proxy initialization
-            post_init(callback);
+            post_init();
         }
     }
 
@@ -783,6 +788,8 @@ protected:
     void async_write(const char* buf, size_t len, write_handler handler) {
         m_bufs.push_back(boost::asio::buffer(buf,len));
 
+        m_write_handler = handler;
+
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
@@ -802,6 +809,8 @@ protected:
             m_bufs.push_back(boost::asio::buffer((*it).buf,(*it).len));
         }
 
+        m_write_handler = handler;
+
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
@@ -814,8 +823,8 @@ protected:
         );
     }
 
-    void handle_async_write(write_handler handler, const
-        boost::system::error_code& ec)
+    void handle_async_write(boost::system::error_code const & ec,
+        size_t bytes_transferred)
     {
         m_bufs.clear();
         if (ec) {
