@@ -738,13 +738,15 @@ protected:
             m_alog.write(log::alevel::devel,s.str());
         }
 
-        if (num_bytes > len) {
+        // TODO: safety vs speed ?
+        // maybe move into an if devel block
+        /*if (num_bytes > len) {
             m_elog.write(log::elevel::devel,
                 "asio async_read_at_least error::invalid_num_bytes");
             handler(make_error_code(transport::error::invalid_num_bytes),
                 size_t(0));
             return;
-        }
+        }*/
 
         m_read_handler = handler;
 
