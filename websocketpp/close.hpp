@@ -197,7 +197,7 @@ union code_converter {
  *
  * If the value is in an invalid or reserved range ec is set accordingly.
  *
- * @param [in] payload Close frame payload value recieved over the wire.
+ * @param [in] payload Close frame payload value received over the wire.
  * @param [out] ec Set to indicate what error occurred, if any.
  * @return The extracted value
  */

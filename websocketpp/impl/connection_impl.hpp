@@ -624,7 +624,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 
     if (ec) {
         std::stringstream s;
-        s << "handle_transport_init recieved error: "<< ec.message();
+        s << "handle_transport_init received error: "<< ec.message();
         m_elog.write(log::elevel::fatal,s.str());
 
         this->terminate(ec);
