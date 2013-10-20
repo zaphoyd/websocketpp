@@ -264,15 +264,21 @@ public:
             )
         );
 
-        new_timer->async_wait(
-            m_strand->wrap(lib::bind(
-                &type::handle_timer,
-                get_shared(),
+        if (config::enable_multithreading) {
+            new_timer->async_wait(m_strand->wrap(lib::bind(
+                &type::handle_timer, get_shared(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
-            ))
-        );
+            )));
+        } else {
+            new_timer->async_wait(lib::bind(
+                &type::handle_timer, get_shared(),
+                new_timer,
+                callback,
+                lib::placeholders::_1
+            ));
+        }
 
         return new_timer;
     }
@@ -379,9 +385,9 @@ protected:
         // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
-        m_strand.reset(new boost::asio::strand(*io_service));
-
         if (config::enable_multithreading) {
+            m_strand.reset(new boost::asio::strand(*io_service));
+
             m_async_read_handler = m_strand->wrap(lib::bind(
                 &type::handle_async_read, get_shared(),
                 lib::placeholders::_1, lib::placeholders::_2
@@ -523,16 +529,27 @@ protected:
         );
 
         // Send proxy request
-        boost::asio::async_write(
-            socket_con_type::get_next_layer(),
-            m_bufs,
-            m_strand->wrap(lib::bind(
-                &type::handle_proxy_write,
-                get_shared(),
-                callback,
-                lib::placeholders::_1
-            ))
-        );
+        if (config::enable_multithreading) {
+            boost::asio::async_write(
+                socket_con_type::get_next_layer(),
+                m_bufs,
+                m_strand->wrap(lib::bind(
+                    &type::handle_proxy_write, get_shared(),
+                    m_init_handler,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            boost::asio::async_write(
+                socket_con_type::get_next_layer(),
+                m_bufs,
+                lib::bind(
+                    &type::handle_proxy_write, get_shared(),
+                    m_init_handler,
+                    lib::placeholders::_1
+                )
+            );
+        }
     }
 
     void handle_proxy_timeout(init_handler callback, const lib::error_code & ec) {
@@ -593,18 +610,29 @@ protected:
             return;
         }
 
-        boost::asio::async_read_until(
-            socket_con_type::get_next_layer(),
-            m_proxy_data->read_buf,
-            "\r\n\r\n",
-            m_strand->wrap(lib::bind(
-                &type::handle_proxy_read,
-                get_shared(),
-                callback,
-                lib::placeholders::_1,
-                lib::placeholders::_2
-            ))
-        );
+        if (config::enable_multithreading) {
+            boost::asio::async_read_until(
+                socket_con_type::get_next_layer(),
+                m_proxy_data->read_buf,
+                "\r\n\r\n",
+                m_strand->wrap(lib::bind(
+                    &type::handle_proxy_read, get_shared(),
+                    callback,
+                    lib::placeholders::_1, lib::placeholders::_2
+                ))
+            );
+        } else {
+            boost::asio::async_read_until(
+                socket_con_type::get_next_layer(),
+                m_proxy_data->read_buf,
+                "\r\n\r\n",
+                lib::bind(
+                    &type::handle_proxy_read, get_shared(),
+                    callback,
+                    lib::placeholders::_1, lib::placeholders::_2
+                )
+            );
+        }
     }
 
     void handle_proxy_read(init_handler callback, const
@@ -807,12 +835,20 @@ protected:
      * This needs to be thread safe
      */
     lib::error_code interrupt(interrupt_handler handler) {
-        m_io_service->post(m_strand->wrap(handler));
+        if (config::enable_multithreading) {
+            m_io_service->post(m_strand->wrap(handler));
+        } else {
+            m_io_service->post(handler);
+        }
         return lib::error_code();
     }
 
     lib::error_code dispatch(dispatch_handler handler) {
-        m_io_service->post(m_strand->wrap(handler));
+        if (config::enable_multithreading) {
+            m_io_service->post(m_strand->wrap(handler));
+        } else {
+            m_io_service->post(handler);
+        }
         return lib::error_code();
     }
 

@@ -228,15 +228,25 @@ protected:
         m_ec = socket::make_error_code(socket::error::tls_handshake_timeout);
 
         // TLS handshake
-        m_socket->async_handshake(
-            get_handshake_type(),
-            m_strand->wrap(lib::bind(
-                &type::handle_init,
-                get_shared(),
-                callback,
-                lib::placeholders::_1
-            ))
-        );
+        if (m_strand) {
+            m_socket->async_handshake(
+                get_handshake_type(),
+                m_strand->wrap(lib::bind(
+                    &type::handle_init, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            m_socket->async_handshake(
+                get_handshake_type(),
+                lib::bind(
+                    &type::handle_init, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                )
+            );
+        }
     }
 
     /// Sets the connection handle
