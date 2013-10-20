@@ -281,6 +281,14 @@ public:
         s << m_resource;
         return s.str();
     }
+    
+    std::string const get_query() const {
+    	std::size_t found =  m_resource.find("?");
+    	if (found > 0)
+    		return m_resource.substr(found + 1);
+    	else
+            return "";
+    }
 
     // get query?
     // get fragment
