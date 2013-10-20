@@ -392,11 +392,19 @@ protected:
                 &type::handle_async_read, get_shared(),
                 lib::placeholders::_1, lib::placeholders::_2
             ));
+
+            m_async_write_handler = m_strand->wrap(lib::bind(
+                &type::handle_async_write, get_shared(),
+                lib::placeholders::_1, lib::placeholders::_2
+            ));
         } else {
             m_async_read_handler = lib::bind(
                 &type::handle_async_read, get_shared(),
                 lib::placeholders::_1, lib::placeholders::_2
             );
+
+            m_async_write_handler = lib::bind(&type::handle_async_write,
+                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
 
         return socket_con_type::init_asio(io_service, m_strand, m_is_server);
@@ -812,9 +820,9 @@ protected:
         m_bufs.clear();
         if (ec) {
             log_err(log::elevel::info,"asio async_write",ec);
-            handler(make_error_code(transport::error::pass_through));
+            m_write_handler(make_error_code(transport::error::pass_through));
         } else {
-            handler(lib::error_code());
+            m_write_handler(lib::error_code());
         }
     }
 
@@ -980,8 +988,11 @@ private:
     tcp_init_handler    m_tcp_init_handler;
 
     read_handler        m_read_handler;
+    write_handler        m_write_handler;
+    init_handler        m_init_handler;
 
     async_read_handler  m_async_read_handler;
+    async_write_handler m_async_write_handler;
 };
 
 

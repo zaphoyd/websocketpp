@@ -53,8 +53,20 @@ class endpoint;
 typedef lib::function<void(boost::system::error_code const &)>
     socket_shutdown_handler;
 
-typedef lib::function<void (const boost::system::error_code & ec,
+typedef lib::function<void (boost::system::error_code const & ec,
     size_t bytes_transferred)> async_read_handler;
+
+typedef lib::function<void (boost::system::error_code const & ec,
+    size_t bytes_transferred)> async_write_handler;
+
+typedef lib::function<void (lib::error_code const & ec)> pre_init_handler;
+
+// handle_timer: dynamic parameters, multiple copies
+// handle_proxy_write
+// handle_proxy_read
+// handle_async_write
+// handle_pre_init
+
 
 /// Asio transport errors
 namespace error {
