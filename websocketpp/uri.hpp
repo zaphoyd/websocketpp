@@ -281,16 +281,23 @@ public:
         s << m_resource;
         return s.str();
     }
-    
-    std::string const get_query() const {
-    	std::size_t found =  m_resource.find("?");
-    	if (found > 0)
+
+    /// Return the query portion
+    /**
+     * Returns the query portion (after the ?) of the URI or an empty string if
+     * there is none.
+     *
+     * @return query portion of the URI.
+     */
+    std::string get_query() const {
+    	std::size_t found = m_resource.find('?');
+    	if (found != std::string::npos) {
     		return m_resource.substr(found + 1);
-    	else
+    	} else {
             return "";
+        }
     }
 
-    // get query?
     // get fragment
 
     // hi <3

@@ -1,4 +1,5 @@
 HEAD
+- Adds URI method to extract query string from URI.
 - Numerous performance improvements. Including: tuned default buffer sizes based
   on profiling, caching of handler binding for async reads/writes, non-malloc
   allocators for read/write handlers, disabling of a number of questionably
