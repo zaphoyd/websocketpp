@@ -97,6 +97,8 @@ public:
         websocketpp::lib::error_code ec;
 
         while(1) {
+            bool wait = false;
+
             {
                 scoped_lock guard(m_lock);
                 // If the connection has been closed, stop generating telemetry
@@ -104,9 +106,13 @@ public:
 
                 // If the connection hasn't been opened yet wait a bit and retry
                 if (!m_open) {
-                    sleep(1);
-                    continue;
+                    wait = true;
                 }
+            }
+
+            if (wait) {
+                sleep(1);
+                continue;
             }
 
             val.str("");
