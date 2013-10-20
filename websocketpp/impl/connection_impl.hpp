@@ -850,11 +850,11 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
     }
 
     // Boundaries checking. TODO: How much of this should be done?
-    if (bytes_transferred > config::connection_read_buffer_size) {
+    /*if (bytes_transferred > config::connection_read_buffer_size) {
         m_elog.write(log::elevel::fatal,"Fatal boundaries checking error");
         this->terminate(make_error_code(error::general));
         return;
-    }
+    }*/
 
     size_t p = 0;
 
