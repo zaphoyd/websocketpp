@@ -43,6 +43,7 @@ BOOST_AUTO_TEST_CASE( uri_valid ) {
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
+    BOOST_CHECK_EQUAL( uri.get_query(), "" );
 }
 
 // Test a regular valid ws URI
@@ -201,6 +202,7 @@ BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat/foo/bar?foo=bar" );
+    BOOST_CHECK_EQUAL( uri.get_query(), "foo=bar" );
 }
 
 // Valid URI with a mapped v4 ipv6 literal

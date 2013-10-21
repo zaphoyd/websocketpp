@@ -572,15 +572,27 @@ public:
 
         m_alog->write(log::alevel::devel, "asio::async_accept");
 
-        m_acceptor->async_accept(
-            tcon->get_raw_socket(),
-            tcon->get_strand()->wrap(lib::bind(
-                &type::handle_accept,
-                this,
-                callback,
-                lib::placeholders::_1
-            ))
-        );
+        if (config::enable_multithreading) {
+            m_acceptor->async_accept(
+                tcon->get_raw_socket(),
+                tcon->get_strand()->wrap(lib::bind(
+                    &type::handle_accept,
+                    this,
+                    callback,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            m_acceptor->async_accept(
+                tcon->get_raw_socket(),
+                lib::bind(
+                    &type::handle_accept,
+                    this,
+                    callback,
+                    lib::placeholders::_1
+                )
+            );
+        }
     }
 
     /// Accept the next connection attempt and assign it to con.
@@ -683,18 +695,33 @@ protected:
             )
         );
 
-        m_resolver->async_resolve(
-            query,
-            tcon->get_strand()->wrap(lib::bind(
-                &type::handle_resolve,
-                this,
-                tcon,
-                dns_timer,
-                cb,
-                lib::placeholders::_1,
-                lib::placeholders::_2
-            ))
-        );
+        if (config::enable_multithreading) {
+            m_resolver->async_resolve(
+                query,
+                tcon->get_strand()->wrap(lib::bind(
+                    &type::handle_resolve,
+                    this,
+                    tcon,
+                    dns_timer,
+                    cb,
+                    lib::placeholders::_1,
+                    lib::placeholders::_2
+                ))
+            );
+        } else {
+            m_resolver->async_resolve(
+                query,
+                lib::bind(
+                    &type::handle_resolve,
+                    this,
+                    tcon,
+                    dns_timer,
+                    cb,
+                    lib::placeholders::_1,
+                    lib::placeholders::_2
+                )
+            );
+        }
     }
 
     void handle_resolve_timeout(timer_ptr dns_timer, connect_handler callback,
@@ -767,18 +794,33 @@ protected:
             )
         );
 
-        boost::asio::async_connect(
-            tcon->get_raw_socket(),
-            iterator,
-            tcon->get_strand()->wrap(lib::bind(
-                &type::handle_connect,
-                this,
-                tcon,
-                con_timer,
-                callback,
-                lib::placeholders::_1
-            ))
-        );
+        if (config::enable_multithreading) {
+            boost::asio::async_connect(
+                tcon->get_raw_socket(),
+                iterator,
+                tcon->get_strand()->wrap(lib::bind(
+                    &type::handle_connect,
+                    this,
+                    tcon,
+                    con_timer,
+                    callback,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            boost::asio::async_connect(
+                tcon->get_raw_socket(),
+                iterator,
+                lib::bind(
+                    &type::handle_connect,
+                    this,
+                    tcon,
+                    con_timer,
+                    callback,
+                    lib::placeholders::_1
+                )
+            );
+        }
     }
 
     void handle_connect_timeout(transport_con_ptr tcon, timer_ptr con_timer,

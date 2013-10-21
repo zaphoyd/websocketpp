@@ -95,6 +95,8 @@ struct config {
     typedef websocketpp::http::parser::response response_type;
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
 
+    static const bool enable_multithreading = true;
+
     static const long timeout_socket_pre_init = 1000;
     static const long timeout_proxy = 1000;
     static const long timeout_socket_post_init = 1000;

@@ -29,7 +29,43 @@
 #include <websocketpp/server.hpp>
 #include <iostream>
 
-typedef websocketpp::server<websocketpp::config::asio> server;
+struct testee_config : public websocketpp::config::asio {
+    // pull default settings from our core config
+    typedef websocketpp::config::asio core;
+
+    typedef core::concurrency_type concurrency_type;
+    typedef core::request_type request_type;
+    typedef core::response_type response_type;
+    typedef core::message_type message_type;
+    typedef core::con_msg_manager_type con_msg_manager_type;
+    typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
+    typedef core::alog_type alog_type;
+    typedef core::elog_type elog_type;
+    typedef core::rng_type rng_type;
+    typedef core::endpoint_base endpoint_base;
+
+    static bool const enable_multithreading = false;
+
+    struct transport_config : public core::transport_config {
+        typedef core::concurrency_type concurrency_type;
+        typedef core::elog_type elog_type;
+        typedef core::alog_type alog_type;
+        typedef core::request_type request_type;
+        typedef core::response_type response_type;
+
+        static bool const enable_multithreading = false;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config>
+        transport_type;
+
+    static const websocketpp::log::level elog_level =
+        websocketpp::log::elevel::none;
+    static const websocketpp::log::level alog_level =
+        websocketpp::log::alevel::none;
+};
+
+typedef websocketpp::server<testee_config> server;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -66,10 +102,17 @@ int main() {
 
 	    // Start the ASIO io_service run loop
         testee_server.run();
+
+        /*websocketpp::lib::thread t1(&server::run, &testee_server);
+        websocketpp::lib::thread t2(&server::run, &testee_server);
+
+        t1.join();
+        t2.join();*/
+
     } catch (const std::exception & e) {
-        std::cout << e.what() << std::endl;
+        std::cout << "exception: " << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
-        std::cout << e.message() << std::endl;
+        std::cout << "error code: " << e.message() << std::endl;
     } catch (...) {
         std::cout << "other exception" << std::endl;
     }
