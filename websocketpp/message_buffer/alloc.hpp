@@ -67,6 +67,22 @@ public:
         return message_ptr(new message(type::shared_from_this(),op,size));
     }
 
+    message_ptr get_incoming_data_message() {
+        return get_message();
+    }
+
+    message_ptr get_outgoing_data_message() {
+        return get_message();
+    }
+
+    message_ptr get_incoming_data_message(frame::opcode::value op, size_t size) {
+        return get_message(op,size);
+    }
+
+    message_ptr get_outgoing_data_message(frame::opcode::value op, size_t size) {
+        return get_message(op,size);
+    }
+
     /// Recycle a message
     /**
      * This method shouldn't be called. If it is, return false to indicate an
