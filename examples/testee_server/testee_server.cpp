@@ -27,6 +27,9 @@
 
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+
+#include <websocketpp/message_buffer/fixed.hpp>
+
 #include <iostream>
 
 struct testee_config : public websocketpp::config::asio {
@@ -36,9 +39,12 @@ struct testee_config : public websocketpp::config::asio {
     typedef core::concurrency_type concurrency_type;
     typedef core::request_type request_type;
     typedef core::response_type response_type;
-    typedef core::message_type message_type;
-    typedef core::con_msg_manager_type con_msg_manager_type;
-    typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
+    //typedef core::message_type message_type;
+    //typedef core::con_msg_manager_type con_msg_manager_type;
+    //typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
+    typedef websocketpp::message_buffer::fixed::policy::message message_type;
+    typedef websocketpp::message_buffer::fixed::policy::con_msg_manager con_msg_manager_type;
+    typedef websocketpp::message_buffer::fixed::policy::endpoint_msg_manager endpoint_msg_manager_type;
     typedef core::alog_type alog_type;
     typedef core::elog_type elog_type;
     typedef core::rng_type rng_type;
