@@ -88,7 +88,7 @@ public:
     /**
      * Construct an empty message
      */
-    message()
+    fixed_message()
       : m_prepared(false)
       , m_fin(true)
       , m_terminal(false)
@@ -98,7 +98,7 @@ public:
     /**
      *
      */
-    message(frame::opcode::value op, size_t size = 128)
+    fixed_message(frame::opcode::value op, size_t size = 128)
       : m_opcode(op)
       , m_prepared(false)
       , m_fin(true)

@@ -28,12 +28,16 @@
 #ifndef WEBSOCKETPP_MESSAGE_BUFFER_FIXED_HPP
 #define WEBSOCKETPP_MESSAGE_BUFFER_FIXED_HPP
 
+#include <websocketpp/message_buffer/fixed_message.hpp>
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/frame.hpp>
 
 namespace websocketpp {
 namespace message_buffer {
 namespace fixed {
+
+class con_msg_manager;
+class endpoint_msg_manager;
 
 struct policy {
     typedef websocketpp::message_buffer::fixed_message message;
@@ -49,7 +53,8 @@ public:
 
     typedef std::shared_ptr<type> ptr;
 
-    typedef typename policy::message::ptr message_ptr;
+    typedef policy::message message;
+    typedef policy::message::ptr message_ptr;
 
     con_msg_manager()
       : m_incoming_message(new message())
@@ -62,60 +67,51 @@ public:
      * @return A shared pointer to an empty new message
      */
     message_ptr get_message() {
-        return message_ptr(new message(type::shared_from_this()));
+        return message_ptr(new message());
     }
 
-    message_ptr get_incoming_data_message() {
-        if (m_incoming_message_busy) {
-            return message_ptr();
+    message_ptr get_incoming_message(frame::opcode::value op, size_t size) {
+        if (frame::opcode::is_control(op)) {
+            return message_ptr(new message(op, size));
         } else {
-            return m_incoming_message;
+            if (m_incoming_message_busy) {
+                return message_ptr();
+            } else {
+                m_incoming_message->set_opcode(op);
+                m_incoming_message->reserve(size);
+                return m_incoming_message;
+            }
         }
     }
 
-    message_ptr get_incoming_data_message(frame::opcode::value op, size_t size) {
-        if (m_incoming_message_busy) {
-            return message_ptr();
+    message_ptr get_outgoing_message(frame::opcode::value op, size_t size) {
+        if (frame::opcode::is_control(op)) {
+            return message_ptr(new message(op, size));
         } else {
-            m_incoming_message.set_opcode(op);
-            m_incoming_message.reserve(size);
-            return m_incoming_message;
+            if (m_outgoing_message_busy) {
+                return message_ptr();
+            } else {
+                m_outgoing_message->set_opcode(op);
+                m_outgoing_message->reserve(size);
+                return m_outgoing_message;
+            }
         }
     }
 
-    message_ptr get_outgoing_data_message() {
-        if (m_outgoing_message_busy) {
-            return message_ptr();
-        } else {
-            return m_outgoing_message;
-        }
-    }
-
-    message_ptr get_outgoing_data_message(frame::opcode::value op, size_t size) {
-        if (m_outgoing_message_busy) {
-            return message_ptr();
-        } else {
-            m_outgoing_message.set_opcode(op);
-            m_outgoing_message.reserve(size);
-            return m_outgoing_message;
-        }
-    }
-
-    message_ptr get_incoming_control_message(frame::opcode::value op, size_t size) {
-        return message_ptr(new message(op,size));
-    }
-
-    message_ptr get_outgoing_control_message(frame::opcode::value op, size_t size) {
-        return message_ptr(new message(op,size));
+    void message_handler_hook(message_ptr msg) {
+        recycle(msg);
     }
 
     bool recycle(message_ptr msg) {
         if (msg == m_incoming_message) {
             m_incoming_message_busy = false;
+            return true;
         } else if (msg == m_outgoing_message) {
             m_outgoing_message_busy = false;
+            return true;
         } else {
-            // error
+            // not a message we are managing, ignore
+            return false;
         }
     }
 private:

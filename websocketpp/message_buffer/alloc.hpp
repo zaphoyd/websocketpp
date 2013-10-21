@@ -67,20 +67,24 @@ public:
         return message_ptr(new message(type::shared_from_this(),op,size));
     }
 
-    message_ptr get_incoming_data_message() {
+    /*message_ptr get_incoming_message() {
         return get_message();
     }
 
-    message_ptr get_outgoing_data_message() {
+    message_ptr get_outgoing_message() {
         return get_message();
-    }
+    }*/
 
-    message_ptr get_incoming_data_message(frame::opcode::value op, size_t size) {
+    message_ptr get_incoming_message(frame::opcode::value op, size_t size) {
         return get_message(op,size);
     }
 
-    message_ptr get_outgoing_data_message(frame::opcode::value op, size_t size) {
+    message_ptr get_outgoing_message(frame::opcode::value op, size_t size) {
         return get_message(op,size);
+    }
+
+    void message_handler_hook(message_ptr msg) {
+        // nothing to do here
     }
 
     /// Recycle a message
