@@ -307,9 +307,9 @@ public:
 
         	if (query.size() > 0 && query.find('&') == std::string::npos)
         	{
-        		if (query.find("=") != std::string::npos) {
-        			token = query.substr(0,query.find("="));
-        			returnV.push_back(std::make_pair(token, query.substr(query.find("=")+1)));
+        		if (query.find('=') != std::string::npos) {
+        			token = query.substr(0,query.find('='));
+        			returnV.push_back(std::make_pair(token, query.substr(query.find('=')+1)));
         		}
         	}
         	else {
@@ -336,9 +336,9 @@ public:
 
 		if (query.size() > 0 && query.find('&') == std::string::npos)
 		{
-			if (query.find("=") != std::string::npos) {
-				token = query.substr(0,query.find("="));
-				return query.substr(query.find("=")+1);
+			if (query.find('=') != std::string::npos) {
+				token = query.substr(0,query.find('='));
+				return query.substr(query.find('=')+1);
 			}
 		}
 		else {
