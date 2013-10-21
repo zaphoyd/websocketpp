@@ -362,7 +362,7 @@ public:
 
                 if (frame::opcode::is_control(op)) {
                     m_control_msg = msg_metadata(
-                        m_msg_manager->get_incoming_control_message(op,m_bytes_needed),
+                        m_msg_manager->get_incoming_message(op,m_bytes_needed),
                         frame::get_masking_key(m_basic_header,m_extended_header)
                     );
 
@@ -370,7 +370,7 @@ public:
                 } else {
                     if (!m_data_msg.msg_ptr) {
                         m_data_msg = msg_metadata(
-                            m_msg_manager->get_incoming_data_message(op,m_bytes_needed),
+                            m_msg_manager->get_incoming_message(op,m_bytes_needed),
                             frame::get_masking_key(m_basic_header,m_extended_header)
                         );
                     } else {

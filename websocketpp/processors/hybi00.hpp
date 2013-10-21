@@ -217,7 +217,7 @@ public:
             if (m_state == HEADER) {
                 if (buf[p] == msg_hdr) {
                     p++;
-                    m_msg_ptr = m_msg_manager->get_message(frame::opcode::text,1);
+                    m_msg_ptr = m_msg_manager->get_incoming_message(frame::opcode::text,1);
 
                     if (!m_msg_ptr) {
                         ec = make_error_code(websocketpp::error::no_incoming_buffers);

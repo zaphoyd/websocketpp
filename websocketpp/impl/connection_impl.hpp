@@ -75,17 +75,17 @@ template <typename config>
 lib::error_code connection<config>::send(const std::string& payload,
     frame::opcode::value op)
 {
-    message_ptr msg = m_msg_manager->get_message(op,payload.size());
+    message_ptr msg = m_msg_manager->get_outgoing_message(op,payload.size());
     msg->append_payload(payload);
 
     return send(msg);
 }
 
 template <typename config>
-lib::error_code connection<config>::send(const void* payload, size_t len,
+lib::error_code connection<config>::send(void const * payload, size_t len,
     frame::opcode::value op)
 {
-    message_ptr msg = m_msg_manager->get_message(op,len);
+    message_ptr msg = m_msg_manager->get_outgoing_message(op,len);
     msg->append_payload(payload,len);
 
     return send(msg);
@@ -111,7 +111,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
     } else {
-        outgoing_msg = m_msg_manager->get_message();
+        outgoing_msg = m_msg_manager->get_outgoing_message(msg->get_opcode(),0);
 
         if (!outgoing_msg) {
             return error::make_error_code(error::no_outgoing_buffers);
@@ -139,7 +139,8 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 }
 
 template <typename config>
-void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
+void connection<config>::ping(std::string const & payload, lib::error_code & ec)
+{
     m_alog.write(log::alevel::devel,"connection ping");
 
     if (m_state != session::state::open) {
@@ -147,7 +148,7 @@ void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
         return;
     }
 
-    message_ptr msg = m_msg_manager->get_message();
+    message_ptr msg = m_msg_manager->get_outgoing_message(frame::opcode::ping, payload.size());
     if (!msg) {
         ec = error::make_error_code(error::no_outgoing_buffers);
         return;
@@ -207,8 +208,8 @@ void connection<config>::ping(const std::string& payload) {
 }
 
 template<typename config>
-void connection<config>::handle_pong_timeout(std::string payload, const lib::error_code &
-    ec)
+void connection<config>::handle_pong_timeout(std::string payload,
+    lib::error_code const & ec)
 {
     if (ec) {
         if (ec == transport::error::operation_aborted) {
@@ -226,7 +227,8 @@ void connection<config>::handle_pong_timeout(std::string payload, const lib::err
 }
 
 template <typename config>
-void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
+void connection<config>::pong(std::string const & payload, lib::error_code & ec)
+{
     m_alog.write(log::alevel::devel,"connection pong");
 
     if (m_state != session::state::open) {
@@ -234,7 +236,7 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
         return;
     }
 
-    message_ptr msg = m_msg_manager->get_message();
+    message_ptr msg = m_msg_manager->get_outgoing_message(frame::opcode::pong, payload.size());
     if (!msg) {
         ec = error::make_error_code(error::no_outgoing_buffers);
         return;
@@ -261,7 +263,7 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
 }
 
 template<typename config>
-void connection<config>::pong(const std::string& payload) {
+void connection<config>::pong(std::string const & payload) {
     lib::error_code ec;
     pong(payload,ec);
     if (ec) {
@@ -270,8 +272,8 @@ void connection<config>::pong(const std::string& payload) {
 }
 
 template <typename config>
-void connection<config>::close(const close::status::value code,
-    const std::string & reason, lib::error_code & ec)
+void connection<config>::close(close::status::value const code,
+    std::string const & reason, lib::error_code & ec)
 {
     m_alog.write(log::alevel::devel,"connection close");
 
@@ -288,7 +290,7 @@ void connection<config>::close(const close::status::value code,
 }
 
 template<typename config>
-void connection<config>::close(const close::status::value code,
+void connection<config>::close(close::status::value const code,
     const std::string & reason)
 {
     lib::error_code ec;
@@ -914,6 +916,9 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
 
             message_ptr msg = m_processor->get_message();
 
+            // TODO: do we need to catch exceptions here and call the message
+            // handler hook. WebSocket++ doesn't throw any exceptions here, is
+            // there anything that could be thrown that could be recovered from?
             if (!msg) {
                 m_alog.write(log::alevel::devel,
                     "null message from m_processor");
@@ -925,8 +930,10 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
                 } else if (m_message_handler) {
                     m_message_handler(m_connection_hdl, msg);
                 }
+                m_msg_manager->message_handler_hook(msg);
             } else {
                 process_control_frame(msg);
+                m_msg_manager->message_handler_hook(msg);
             }
         }
     }
