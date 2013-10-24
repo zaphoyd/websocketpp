@@ -47,7 +47,7 @@ struct policy {
 
 /// A connection message manager that allocates a new message for each
 /// request.
-class con_msg_manager {
+class con_msg_manager : public lib::enable_shared_from_this<con_msg_manager> {
 public:
     typedef con_msg_manager type;
 
@@ -120,6 +120,14 @@ public:
             // not a message we are managing, ignore
             return false;
         }
+    }
+
+    /// Get a pointer to a connection message manager
+    /**
+     * @return A pointer to the requested connection message manager.
+     */
+    ptr get_manager() {
+        return shared_from_this();
     }
 private:
     message_ptr m_incoming_message;
