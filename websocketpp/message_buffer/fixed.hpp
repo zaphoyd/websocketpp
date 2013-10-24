@@ -112,9 +112,11 @@ public:
     bool recycle(message_ptr msg) {
         if (msg == m_incoming_message) {
             m_incoming_message_busy = false;
+            msg->reset();
             return true;
         } else if (msg == m_outgoing_message) {
             m_outgoing_message_busy = false;
+            msg->reset();
             return true;
         } else {
             // not a message we are managing, ignore
