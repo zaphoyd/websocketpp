@@ -108,6 +108,14 @@ public:
         m_payload.reserve(size);
     }
 
+    void reset() {
+        m_payload.clear();
+        m_prepared = false;
+        m_fin = true;
+        m_terminal = false;
+        m_compressed = false;
+    }
+
     /// Return whether or not the message has been prepared for sending
     /**
      * The prepared flag indicates that the message has been prepared by a
