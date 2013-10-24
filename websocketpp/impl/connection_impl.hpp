@@ -1594,6 +1594,7 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
     bool terminate = m_current_msg->get_terminal();
 
     m_send_buffer.clear();
+    m_msg_manager->write_handler_hook(m_current_msg);
     m_current_msg.reset();
 
     if (ec) {

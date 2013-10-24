@@ -87,6 +87,10 @@ public:
         // nothing to do here
     }
 
+    void write_handler_hook(message_ptr msg) {
+        // nothing to do here
+    }
+
     /// Recycle a message
     /**
      * This method shouldn't be called. If it is, return false to indicate an

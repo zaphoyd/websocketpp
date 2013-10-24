@@ -102,6 +102,13 @@ public:
         recycle(msg);
     }
 
+    void write_handler_hook(message_ptr msg) {
+        // TODO: we shouldn't recycle a message every time it is written. If a
+        // message is queued for writing multiple times... Needs a reference
+        // count in the message to deal with this.
+        recycle(msg);
+    }
+
     bool recycle(message_ptr msg) {
         if (msg == m_incoming_message) {
             m_incoming_message_busy = false;
