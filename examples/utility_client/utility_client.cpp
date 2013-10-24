@@ -29,15 +29,18 @@ public:
     typedef std::chrono::duration<int,std::micro> dur_type;
 
     perftest () {
-        m_endpoint.set_access_channels(websocketpp::log::alevel::all);
-        m_endpoint.set_error_channels(websocketpp::log::elevel::all);
+        m_endpoint.set_access_channels(websocketpp::log::alevel::none);
+        m_endpoint.set_error_channels(websocketpp::log::elevel::none);
 
         // Initialize ASIO
         m_endpoint.init_asio();
 
         // Register our handlers
-        m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
         m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
+
+        m_endpoint.set_tcp_pre_init_handler(bind(&type::on_tcp_pre_init,this,::_1));
+        m_endpoint.set_tcp_post_init_handler(bind(&type::on_tcp_post_init,this,::_1));
+        m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
         m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
         m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
         m_endpoint.set_close_handler(bind(&type::on_close,this,::_1));
@@ -60,12 +63,17 @@ public:
         m_endpoint.run();
     }
 
+    void on_tcp_pre_init(websocketpp::connection_hdl hdl) {
+        m_tcp_pre_init = std::chrono::high_resolution_clock::now();
+    }
+    void on_tcp_post_init(websocketpp::connection_hdl hdl) {
+        m_tcp_post_init = std::chrono::high_resolution_clock::now();
+    }
     void on_socket_init(websocketpp::connection_hdl hdl) {
         m_socket_init = std::chrono::high_resolution_clock::now();
     }
 
     context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
-        m_tls_init = std::chrono::high_resolution_clock::now();
         context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 
         try {
@@ -80,27 +88,59 @@ public:
 
     void on_open(websocketpp::connection_hdl hdl) {
         m_open = std::chrono::high_resolution_clock::now();
-        m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
+
+        client::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
+
+        m_msg = con->get_message(websocketpp::frame::opcode::text,64);
+        m_msg->append_payload(std::string(60,'*'));
+        m_msg_count = 1;
+
+        //m_message_stamps.reserve(1000);
+
+        m_con_start = std::chrono::high_resolution_clock::now();
+
+        m_endpoint.send(hdl, m_msg);
+        //m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
     }
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
-        m_message = std::chrono::high_resolution_clock::now();
-        m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
+        if (m_msg_count == 1000) {
+            m_message = std::chrono::high_resolution_clock::now();
+            m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
+        } else {
+            m_msg_count++;
+            m_endpoint.send(hdl, m_msg);
+        }
     }
     void on_close(websocketpp::connection_hdl hdl) {
         m_close = std::chrono::high_resolution_clock::now();
 
+
+
         std::cout << "Socket Init: " << std::chrono::duration_cast<dur_type>(m_socket_init-m_start).count() << std::endl;
-        std::cout << "TLS Init: " << std::chrono::duration_cast<dur_type>(m_tls_init-m_start).count() << std::endl;
+        std::cout << "TCP Pre Init: " << std::chrono::duration_cast<dur_type>(m_tcp_pre_init-m_start).count() << std::endl;
+        std::cout << "TCP Post Init: " << std::chrono::duration_cast<dur_type>(m_tcp_post_init-m_start).count() << std::endl;
         std::cout << "Open: " << std::chrono::duration_cast<dur_type>(m_open-m_start).count() << std::endl;
+        std::cout << "Start: " << std::chrono::duration_cast<dur_type>(m_con_start-m_start).count() << std::endl;
         std::cout << "Message: " << std::chrono::duration_cast<dur_type>(m_message-m_start).count() << std::endl;
         std::cout << "Close: " << std::chrono::duration_cast<dur_type>(m_close-m_start).count() << std::endl;
+        std::cout << std::endl;
+        std::cout << "Message: " << std::chrono::duration_cast<dur_type>(m_message-m_con_start).count() << std::endl;
+        std::cout << "Close: " << std::chrono::duration_cast<dur_type>(m_close-m_message).count() << std::endl;
     }
 private:
     client m_endpoint;
 
+    client::message_ptr m_msg;
+    size_t m_msg_count;
+
     std::chrono::high_resolution_clock::time_point m_start;
+    std::chrono::high_resolution_clock::time_point m_tcp_pre_init;
+    std::chrono::high_resolution_clock::time_point m_tcp_post_init;
     std::chrono::high_resolution_clock::time_point m_socket_init;
-    std::chrono::high_resolution_clock::time_point m_tls_init;
+
+    std::vector<std::chrono::high_resolution_clock::time_point> m_message_stamps;
+
+    std::chrono::high_resolution_clock::time_point m_con_start;
     std::chrono::high_resolution_clock::time_point m_open;
     std::chrono::high_resolution_clock::time_point m_message;
     std::chrono::high_resolution_clock::time_point m_close;
