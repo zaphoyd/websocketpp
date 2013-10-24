@@ -1847,7 +1847,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
       << m_local_close_reason;
     m_alog.write(log::alevel::devel,s.str());
 
-    message_ptr msg = m_msg_manager->get_message();
+    message_ptr msg = m_msg_manager->get_outgoing_message(frame::opcode::close,m_local_close_reason.size());
     if (!msg) {
         return error::make_error_code(error::no_outgoing_buffers);
     }

@@ -998,7 +998,7 @@ public:
     message_ptr get_message(websocketpp::frame::opcode::value op, size_t size)
         const
     {
-        return m_msg_manager->get_message(op, size);
+        return m_msg_manager->get_outgoing_message(op, size);
     }
 
     void start();
