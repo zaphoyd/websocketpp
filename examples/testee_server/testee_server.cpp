@@ -25,16 +25,40 @@
  *
  */
 
-#include <websocketpp/config/asio_no_tls.hpp>
+//#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
 
 #include <websocketpp/message_buffer/fixed.hpp>
 
 #include <iostream>
 
-struct testee_config : public websocketpp::config::asio {
+typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+
+std::string get_password() {
+    return "test";
+}
+
+context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+    //std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
+    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+
+    try {
+        ctx->set_options(boost::asio::ssl::context::default_workarounds |
+                         boost::asio::ssl::context::no_sslv2 |
+                         boost::asio::ssl::context::single_dh_use);
+        ctx->set_password_callback(bind(&get_password));
+        ctx->use_certificate_chain_file("server.pem");
+        ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
+    } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+    }
+    return ctx;
+}
+
+struct testee_config : public websocketpp::config::asio_tls {
     // pull default settings from our core config
-    typedef websocketpp::config::asio core;
+    typedef websocketpp::config::asio_tls core;
 
     typedef core::concurrency_type concurrency_type;
     typedef core::request_type request_type;
@@ -44,6 +68,7 @@ struct testee_config : public websocketpp::config::asio {
     //typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
     typedef websocketpp::message_buffer::fixed::policy::message message_type;
     typedef websocketpp::message_buffer::fixed::policy::con_msg_manager con_msg_manager_type;
+    //typedef websocketpp::message_buffer::fixed::policy::con_msg_manager endpoint_msg_manager_type;
     typedef websocketpp::message_buffer::fixed::policy::endpoint_msg_manager endpoint_msg_manager_type;
     typedef core::alog_type alog_type;
     typedef core::elog_type elog_type;
@@ -91,14 +116,16 @@ int main() {
 
 	try {
         // Total silence
-        testee_server.clear_access_channels(websocketpp::log::alevel::all);
-        testee_server.clear_error_channels(websocketpp::log::alevel::all);
+        //testee_server.clear_access_channels(websocketpp::log::alevel::all);
+        //testee_server.clear_error_channels(websocketpp::log::alevel::all);
 
         // Initialize ASIO
         testee_server.init_asio();
 
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));
+        testee_server.set_tls_init_handler(bind(&on_tls_init,::_1));
+
 
         // Listen on port 9002
         testee_server.listen(9002);
