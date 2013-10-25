@@ -367,6 +367,13 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
     return cursor;
 }
 
+inline std::string strip_lws(std::string const & input) {
+    std::string::const_iterator begin = extract_all_lws(input.begin(),input.end());
+    std::string::const_reverse_iterator end = extract_all_lws(input.rbegin(),input.rend());
+
+    return std::string(begin,end.base());
+}
+
 /// Base HTTP parser
 /**
  * Includes methods and data elements common to all types of HTTP messages such
