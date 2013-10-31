@@ -797,7 +797,7 @@ protected:
                 lib::placeholders::_1,
                 lib::placeholders::_2
             ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_read_handler)
+            make_custom_alloc_handler(m_read_handler_allocator,m_async_read_handler)
         );
     }
 
@@ -837,7 +837,7 @@ protected:
                 handler,
                 lib::placeholders::_1
             ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_write_handler)
+            make_custom_alloc_handler(m_write_handler_allocator,m_async_write_handler)
         );
     }
 
@@ -859,7 +859,7 @@ protected:
                 handler,
                 lib::placeholders::_1
             ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_write_handler)
+            make_custom_alloc_handler(m_write_handler_allocator,m_async_write_handler)
         );
     }
 
@@ -1037,7 +1037,8 @@ private:
     tcp_init_handler    m_tcp_pre_init_handler;
     tcp_init_handler    m_tcp_post_init_handler;
 
-    handler_allocator   m_handler_allocator;
+    handler_allocator   m_read_handler_allocator;
+    handler_allocator   m_write_handler_allocator;
 
     read_handler        m_read_handler;
     write_handler        m_write_handler;
