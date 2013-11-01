@@ -229,6 +229,13 @@ BOOST_AUTO_TEST_CASE( uri_valid_v6_mixed_case ) {
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
 }
 
+// Valid URI with a v6 address with mixed case
+BOOST_AUTO_TEST_CASE( uri_invalid_no_scheme ) {
+    websocketpp::uri uri("myserver.com");
+
+    BOOST_CHECK( !uri.get_valid() );
+}
+
 // Invalid IPv6 literal
 /*BOOST_AUTO_TEST_CASE( uri_invalid_v6_nonhex ) {
     websocketpp::uri uri("wss://[g::1]:9000/");
