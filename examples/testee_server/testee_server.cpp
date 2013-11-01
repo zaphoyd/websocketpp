@@ -56,9 +56,9 @@ context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
     return ctx;
 }
 
-struct testee_config : public websocketpp::config::asio_tls {
+struct testee_config : public websocketpp::config::asio {
     // pull default settings from our core config
-    typedef websocketpp::config::asio_tls core;
+    typedef websocketpp::config::asio core;
 
     typedef core::concurrency_type concurrency_type;
     typedef core::request_type request_type;
