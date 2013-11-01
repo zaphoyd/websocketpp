@@ -306,7 +306,7 @@ public:
         m_acceptor->open(ep.protocol());
         m_acceptor->set_option(boost::asio::socket_base::reuse_address(true));
         m_acceptor->bind(ep);
-        m_acceptor->listen();
+        m_acceptor->listen(8192); // this should be a settable parameter
         m_state = LISTENING;
         ec = lib::error_code();
     }
