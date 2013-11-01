@@ -110,9 +110,17 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-int main() {
+int main(int argc, char * argv[]) {
 	// Create a server endpoint
     server testee_server;
+
+    short port = 9002;
+    size_t num_threads = 1;
+
+    if (argc == 3) {
+        port = atoi(argv[1]);
+        num_threads = atoi(argv[2]);
+    }
 
 	try {
         // Total silence
@@ -124,24 +132,29 @@ int main() {
 
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));
-        testee_server.set_tls_init_handler(bind(&on_tls_init,::_1));
+        //testee_server.set_tls_init_handler(bind(&on_tls_init,::_1));
 
 
-        // Listen on port 9002
-        testee_server.listen(9002);
+        // Listen on port
+        testee_server.listen(port);
 
         // Start the server accept loop
         testee_server.start_accept();
 
 	    // Start the ASIO io_service run loop
-        testee_server.run();
+        if (num_threads == 1) {
+            testee_server.run();
+        } else {
+            typedef websocketpp::lib::shared_ptr<websocketpp::lib::thread> thread_ptr;
+            std::vector<thread_ptr> ts;
+            for (size_t i = 0; i < num_threads; i++) {
+                ts.push_back(thread_ptr(new websocketpp::lib::thread(&server::run, &testee_server)));
+            }
 
-        /*websocketpp::lib::thread t1(&server::run, &testee_server);
-        websocketpp::lib::thread t2(&server::run, &testee_server);
-
-        t1.join();
-        t2.join();*/
-
+            for (size_t i = 0; i < num_threads; i++) {
+                ts[i]->join();
+            }
+        }
     } catch (const std::exception & e) {
         std::cout << "exception: " << e.what() << std::endl;
     } catch (websocketpp::lib::error_code e) {
