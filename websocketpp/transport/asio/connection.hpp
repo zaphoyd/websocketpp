@@ -109,15 +109,47 @@ public:
         return socket_con_type::is_secure();
     }
 
-    /// Sets the tcp init handler
+    /// Sets the tcp pre init handler
     /**
-     * The tcp init handler is called after the tcp connection has been
-     * established.
+     * The tcp pre init handler is called after the raw tcp connection has been
+     * established but before any additional wrappers (proxy connects, TLS
+     * handshakes, etc) have been performed.
      *
-     * @param h The handler to call on tcp init.
+     * @since 0.4.0-alpha1
+     *
+     * @param h The handler to call on tcp pre init.
+     */
+    void set_tcp_pre_init_handler(tcp_init_handler h) {
+        m_tcp_pre_init_handler = h;
+    }
+
+     /// Sets the tcp pre init handler (deprecated)
+    /**
+     * The tcp pre init handler is called after the raw tcp connection has been
+     * established but before any additional wrappers (proxy connects, TLS
+     * handshakes, etc) have been performed.
+     *
+     * @deprecated Use set_tcp_pre_init_handler instead
+     *
+     * @param h The handler to call on tcp pre init.
      */
     void set_tcp_init_handler(tcp_init_handler h) {
-        m_tcp_init_handler = h;
+        set_tcp_pre_init_handler(h);
+    }
+
+    /// Sets the tcp post init handler
+    /**
+     * The tcp post init handler is called after the tcp connection has been
+     * established and all additional wrappers (proxy connects, TLS handshakes,
+     * etc have been performed. This is fired before any bytes are read or any
+     * WebSocket specific handshake logic has been performed.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param h The handler to call on tcp post init.
+     */
+    void set_tcp_post_init_handler(tcp_init_handler h) {
+        m_tcp_post_init_handler = h;
     }
 
     /// Set the proxy to connect through (exception free)
@@ -419,8 +451,8 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection handle pre_init");
         }
 
-        if (m_tcp_init_handler) {
-            m_tcp_init_handler(m_connection_hdl);
+        if (m_tcp_pre_init_handler) {
+            m_tcp_pre_init_handler(m_connection_hdl);
         }
 
         if (ec) {
@@ -505,6 +537,10 @@ protected:
 
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_post_init");
+        }
+
+		if (m_tcp_post_init_handler) {
+            m_tcp_post_init_handler(m_connection_hdl);
         }
 
         callback(ec);
@@ -988,9 +1024,11 @@ private:
     std::vector<boost::asio::const_buffer> m_bufs;
 
     // Handlers
-    tcp_init_handler    m_tcp_init_handler;
+    tcp_init_handler    m_tcp_pre_init_handler;
+    tcp_init_handler    m_tcp_post_init_handler;
 
-    handler_allocator   m_handler_allocator;
+    handler_allocator   m_read_handler_allocator;
+    handler_allocator   m_write_handler_allocator;
 
     read_handler        m_read_handler;
     write_handler       m_write_handler;

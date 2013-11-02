@@ -1,4 +1,5 @@
 HEAD
+- Split tcp init into pre and post init.
 - Adds URI method to extract query string from URI. Thank you Banaan for code.
   #298
 - Numerous performance improvements. Including: tuned default buffer sizes based
