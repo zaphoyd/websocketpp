@@ -754,14 +754,10 @@ protected:
             socket_con_type::get_socket(),
             boost::asio::buffer(buf,len),
             boost::asio::transfer_at_least(num_bytes),
-            /*m_strand->wrap(lib::bind(
-                &type::handle_async_read,
-                get_shared(),
-                handler,
-                lib::placeholders::_1,
-                lib::placeholders::_2
-            ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_read_handler)
+            make_custom_alloc_handler(
+            	m_read_handler_allocator,
+            	m_async_read_handler
+            )
         );
     }
 
@@ -795,13 +791,10 @@ protected:
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
-            /*m_strand->wrap(lib::bind(
-                &type::handle_async_write,
-                get_shared(),
-                handler,
-                lib::placeholders::_1
-            ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_write_handler)
+            make_custom_alloc_handler(
+            	m_write_handler_allocator,
+            	m_async_write_handler
+            )
         );
     }
 
@@ -817,13 +810,10 @@ protected:
         boost::asio::async_write(
             socket_con_type::get_socket(),
             m_bufs,
-            /*m_strand->wrap(lib::bind(
-                &type::handle_async_write,
-                get_shared(),
-                handler,
-                lib::placeholders::_1
-            ))*/
-            make_custom_alloc_handler(m_handler_allocator,m_async_write_handler)
+            make_custom_alloc_handler(
+            	m_write_handler_allocator,
+            	m_async_write_handler
+            )
         );
     }
 
@@ -1003,7 +993,7 @@ private:
     handler_allocator   m_handler_allocator;
 
     read_handler        m_read_handler;
-    write_handler        m_write_handler;
+    write_handler       m_write_handler;
     init_handler        m_init_handler;
 
     async_read_handler  m_async_read_handler;
