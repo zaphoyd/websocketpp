@@ -80,7 +80,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-int main() {
+int main(int argc, char * argv[]) {
     // Create a server endpoint
     server testee_server;
 
