@@ -53,7 +53,7 @@ namespace http {
     static char const header_delimiter[] = "\r\n";
 
     /// Literal value of the HTTP header separator
-    static char const header_separator[] = ": ";
+    static char const header_separator[] = ":";
 
     /// Literal value of an empty header
     static std::string const empty_header = "";

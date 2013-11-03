@@ -2,6 +2,8 @@ HEAD
 - Allows changing the listen backlog queue length.
 - Fix handler allocation crash with multithreaded io_service.
 - Split tcp init into pre and post init.
+- Fixes incorrect whitespace handling in header parsing. #301 Thank you Wolfram
+  Schroers for reporting
 - Adds URI method to extract query string from URI. Thank you Banaan for code.
   #298
 - Numerous performance improvements. Including: tuned default buffer sizes based
