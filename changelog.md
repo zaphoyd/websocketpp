@@ -1,4 +1,5 @@
 HEAD
+- Feature: Allow setting pong and handshake timeouts at runtime.
 - Allows changing the listen backlog queue length.
 - Fix handler allocation crash with multithreaded io_service.
 - Split tcp init into pre and post init.
