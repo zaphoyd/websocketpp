@@ -220,6 +220,49 @@ public:
         m_external_io_service = false;
     }
 
+    /// Sets the tcp pre init handler
+    /**
+     * The tcp pre init handler is called after the raw tcp connection has been
+     * established but before any additional wrappers (proxy connects, TLS
+     * handshakes, etc) have been performed.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param h The handler to call on tcp pre init.
+     */
+    void set_tcp_pre_init_handler(tcp_init_handler h) {
+        m_tcp_pre_init_handler = h;
+    }
+
+    /// Sets the tcp pre init handler (deprecated)
+    /**
+     * The tcp pre init handler is called after the raw tcp connection has been
+     * established but before any additional wrappers (proxy connects, TLS
+     * handshakes, etc) have been performed.
+     *
+     * @deprecated Use set_tcp_pre_init_handler instead
+     *
+     * @param h The handler to call on tcp pre init.
+     */
+    void set_tcp_init_handler(tcp_init_handler h) {
+        set_tcp_pre_init_handler(h);
+    }
+
+    /// Sets the tcp post init handler
+    /**
+     * The tcp post init handler is called after the tcp connection has been
+     * established and all additional wrappers (proxy connects, TLS handshakes,
+     * etc have been performed. This is fired before any bytes are read or any
+     * WebSocket specific handshake logic has been performed.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param h The handler to call on tcp post init.
+     */
+    void set_tcp_post_init_handler(tcp_init_handler h) {
+        m_tcp_post_init_handler = h;
+    }
+
     /// Sets the maximum length of the queue of pending connections.
     /**
      * Sets the maximum length of the queue of pending connections. Increasing
@@ -256,20 +299,6 @@ public:
      */
     boost::asio::io_service & get_io_service() {
         return *m_io_service;
-    }
-
-    /// Sets the tcp init handler
-    /**
-     * The tcp init handler is called after the tcp connection has been
-     * established.
-     *
-     * @see WebSocket++ handler documentation for more information about
-     * handlers.
-     *
-     * @param h The handler to call on tcp init.
-     */
-    void set_tcp_init_handler(tcp_init_handler h) {
-        m_tcp_init_handler = h;
     }
 
     /// Set up endpoint for listening manually (exception free)
@@ -930,7 +959,8 @@ protected:
         ec = tcon->init_asio(m_io_service);
         if (ec) {return ec;}
 
-        tcon->set_tcp_init_handler(m_tcp_init_handler);
+        tcon->set_tcp_pre_init_handler(m_tcp_pre_init_handler);
+        tcon->set_tcp_post_init_handler(m_tcp_post_init_handler);
 
         return lib::error_code();
     }
@@ -950,7 +980,8 @@ private:
     };
 
     // Handlers
-    tcp_init_handler    m_tcp_init_handler;
+    tcp_init_handler    m_tcp_pre_init_handler;
+    tcp_init_handler    m_tcp_post_init_handler;
 
     // Network Resources
     io_service_ptr      m_io_service;
@@ -959,7 +990,7 @@ private:
     resolver_ptr        m_resolver;
 
     // Network constants
-    int                m_listen_backlog;
+    int                 m_listen_backlog;
 
     elog_type* m_elog;
     alog_type* m_alog;
