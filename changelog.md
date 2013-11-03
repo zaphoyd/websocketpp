@@ -1,18 +1,18 @@
 HEAD
 - Feature: Allow setting pong and handshake timeouts at runtime.
-- Allows changing the listen backlog queue length.
-- Fix handler allocation crash with multithreaded io_service.
-- Split tcp init into pre and post init.
-- Fixes incorrect whitespace handling in header parsing. #301 Thank you Wolfram
-  Schroers for reporting
-- Adds URI method to extract query string from URI. Thank you Banaan for code.
-  #298
-- Numerous performance improvements. Including: tuned default buffer sizes based
-  on profiling, caching of handler binding for async reads/writes, non-malloc
-  allocators for read/write handlers, disabling of a number of questionably
-  useful range sanity checks in tight inner loops.
-- Adds a compile time switch to asio transport config to disable certain
-  multithreading features (some locks, asio strands)
+- Feature: Allows changing the listen backlog queue length.
+- Feature: Split tcp init into pre and post init.
+- Feature: Adds URI method to extract query string from URI. Thank you Banaan
+  for code. #298
+- Feature: Adds a compile time switch to asio transport config to disable
+  certain multithreading features (some locks, asio strands)
+- Improvement: Numerous performance improvements. Including: tuned default
+  buffer sizes based on profiling, caching of handler binding for async
+  reads/writes, non-malloc allocators for read/write handlers, disabling of a
+  number of questionably useful range sanity checks in tight inner loops.
+- Bug: Fix handler allocation crash with multithreaded io_service.
+- Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
+  Wolfram Schroers for reporting
 
 0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan
