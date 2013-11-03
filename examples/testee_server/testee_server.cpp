@@ -103,7 +103,8 @@ int main(int argc, char * argv[]) {
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));
 
-        // Listen on port port
+        // Listen on specified port with extended listen backlog
+        testee_server.set_listen_backlog(8192);
         testee_server.listen(port);
 
         // Start the server accept loop
