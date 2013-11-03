@@ -40,6 +40,7 @@ endpoint<connection,config>::create_connection() {
         return connection_ptr();
     }*/
 
+    //scoped_lock_type guard(m_mutex);
     // Create a connection on the heap and manage it using a shared pointer
     connection_ptr con(new connection_type(m_is_server,m_user_agent,m_alog,
         m_elog, m_rng));
@@ -73,7 +74,7 @@ endpoint<connection,config>::create_connection() {
     if (m_pong_timeout_dur == config::timeout_pong) {
         con->set_pong_timeout(m_pong_timeout_dur);
     }
-    
+
     lib::error_code ec;
 
     ec = transport_type::init(con);

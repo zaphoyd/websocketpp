@@ -123,7 +123,7 @@ public:
         m_tcp_pre_init_handler = h;
     }
 
-     /// Sets the tcp pre init handler (deprecated)
+    /// Sets the tcp pre init handler (deprecated)
     /**
      * The tcp pre init handler is called after the raw tcp connection has been
      * established but before any additional wrappers (proxy connects, TLS

@@ -297,6 +297,7 @@ public:
      * @param dur The length of the open handshake timeout in ms 
      */
     void set_open_handshake_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
         m_open_handshake_timeout_dur = dur;
     }
 
@@ -321,6 +322,7 @@ public:
      * @param dur The length of the close handshake timeout in ms 
      */
     void set_close_handshake_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
         m_close_handshake_timeout_dur = dur;
     }
 
@@ -342,6 +344,7 @@ public:
      * @param dur The length of the pong timeout in ms 
      */
     void set_pong_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
         m_pong_timeout_dur = dur;
     }
 
