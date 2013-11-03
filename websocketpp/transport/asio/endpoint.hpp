@@ -88,6 +88,7 @@ public:
     // generate and manage our own io_service
     explicit endpoint()
       : m_external_io_service(false)
+      , m_listen_backlog(0)
       , m_state(UNINITIALIZED)
     {
         //std::cout << "transport::asio::endpoint constructor" << std::endl;
@@ -119,6 +120,7 @@ public:
       : m_io_service(src.m_io_service)
       , m_external_io_service(src.m_external_io_service)
       , m_acceptor(src.m_acceptor)
+      , m_listen_backlog(0)
       , m_state(src.m_state)
     {
         src.m_io_service = NULL;
@@ -132,11 +134,13 @@ public:
             m_io_service = rhs.m_io_service;
             m_external_io_service = rhs.m_external_io_service;
             m_acceptor = rhs.m_acceptor;
+            m_listen_backlog = rhs.m_listen_backlog
             m_state = rhs.m_state;
 
             rhs.m_io_service = NULL;
             rhs.m_external_io_service = false;
             rhs.m_acceptor = NULL;
+            rhs.m_listen_backlog = 0;
             rhs.m_state = UNINITIALIZED;
         }
         return *this;
@@ -216,6 +220,29 @@ public:
         m_external_io_service = false;
     }
 
+    /// Sets the maximum length of the queue of pending connections.
+    /**
+     * Sets the maximum length of the queue of pending connections. Increasing
+     * this will allow WebSocket++ to queue additional incoming connections.
+     * Setting it higher may prevent failed connections at high connection rates
+     * but may cause additional latency.
+     *
+     * For this value to take effect you may need to adjust operating system
+     * settings.
+     *
+     * New values affect future calls to listen only.
+     *
+     * A value of zero will use the operating system default. This is the
+     * default value.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param backlog The maximum length of the queue of pending connections
+     */
+    void set_listen_backlog(int backlog) {
+        m_listen_backlog = backlog;
+    }
+
     /// Retrieve a reference to the endpoint's io_service
     /**
      * The io_service may be an internal or external one. This may be used to
@@ -268,7 +295,11 @@ public:
         m_acceptor->open(ep.protocol());
         m_acceptor->set_option(boost::asio::socket_base::reuse_address(true));
         m_acceptor->bind(ep);
-        m_acceptor->listen();
+        if (m_listen_backlog == 0) {
+            m_acceptor->listen();
+        } else {
+            m_acceptor->listen(m_listen_backlog);
+        }
         m_state = LISTENING;
         ec = lib::error_code();
     }
@@ -926,6 +957,9 @@ private:
     bool                m_external_io_service;
     acceptor_ptr        m_acceptor;
     resolver_ptr        m_resolver;
+
+    // Network constants
+    int                m_listen_backlog;
 
     elog_type* m_elog;
     alog_type* m_alog;
