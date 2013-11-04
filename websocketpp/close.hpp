@@ -51,6 +51,26 @@ namespace status {
     /// A blank value for internal use.
     static value const blank = 0;
 
+    /// Close the connection without a WebSocket close handshake.
+    /**
+     * This special value requests that the WebSocket connection be closed
+     * without performing the WebSocket closing handshake. This does not comply
+     * with RFC6455, but should be safe to do if necessary. This could be useful
+     * for clients that need to disconnect quickly and cannot afford the
+     * complete handshake.
+     */
+    static value const omit_handshake = 1;
+
+    /// Close the connection with a forced TCP drop.
+    /**
+     * This special value requests that the WebSocket connection be closed by
+     * forcibly dropping the TCP connection. This will leave the other side of
+     * the connection with a broken connection and some expensive timeouts. this
+     * should not be done except in extreme cases or in cases of malicious
+     * remote endpoints.
+     */
+    static value const force_tcp_drop = 2;
+
     /// Normal closure, meaning that the purpose for which the connection was
     /// established has been fulfilled.
     static value const normal = 1000;

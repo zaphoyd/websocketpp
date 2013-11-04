@@ -1460,6 +1460,8 @@ void connection<config>::terminate(const lib::error_code & ec) {
         return;
     }
 
+    // TODO: choose between shutdown and close based on error code sent
+
     transport_con_type::async_shutdown(
         lib::bind(
             &type::handle_terminate,
@@ -1805,6 +1807,9 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     const std::string &reason, bool ack, bool terminal)
 {
     m_alog.write(log::alevel::devel,"send_close_frame");
+
+    // check for special codes
+
     // If silent close is set, respect it and blank out close information
     // Otherwise use whatever has been specified in the parameters. If
     // parameters specifies close::status::blank then determine what to do
