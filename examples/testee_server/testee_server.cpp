@@ -80,6 +80,11 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
+void on_socket_init(connection_hdl hdl, boost::asio::ip::tcp::socket & s) {
+    boost::asio::ip::tcp::no_delay option(true);
+    s.set_option(option);
+}
+
 int main(int argc, char * argv[]) {
     // Create a server endpoint
     server testee_server;
@@ -102,6 +107,7 @@ int main(int argc, char * argv[]) {
 
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));
+        testee_server.set_socket_init_handler(bind(&on_socket_init,::_1,::_2));
 
         // Listen on specified port with extended listen backlog
         testee_server.set_listen_backlog(8192);
