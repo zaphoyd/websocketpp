@@ -270,8 +270,8 @@ void connection<config>::pong(const std::string& payload) {
 }
 
 template <typename config>
-void connection<config>::close(const close::status::value code,
-    const std::string & reason, lib::error_code & ec)
+void connection<config>::close(close::status::value const code,
+    std::string const & reason, lib::error_code & ec)
 {
     m_alog.write(log::alevel::devel,"connection close");
 
@@ -288,8 +288,8 @@ void connection<config>::close(const close::status::value code,
 }
 
 template<typename config>
-void connection<config>::close(const close::status::value code,
-    const std::string & reason)
+void connection<config>::close(close::status::value const code,
+    std::string const & reason)
 {
     lib::error_code ec;
     close(code,reason,ec);
@@ -1430,7 +1430,7 @@ void connection<config>::handle_close_handshake_timeout(
 }
 
 template <typename config>
-void connection<config>::terminate(const lib::error_code & ec) {
+void connection<config>::terminate(lib::error_code const & ec) {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection terminate");
     }
@@ -1474,7 +1474,7 @@ void connection<config>::terminate(const lib::error_code & ec) {
 
 template <typename config>
 void connection<config>::handle_terminate(terminate_status tstat,
-    const lib::error_code& ec)
+    lib::error_code const & ec)
 {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection handle_terminate");
@@ -1797,14 +1797,14 @@ void connection<config>::process_control_frame(typename
 
 template <typename config>
 lib::error_code connection<config>::send_close_ack(close::status::value code,
-    const std::string &reason)
+    std::string const & reason)
 {
     return send_close_frame(code,reason,true,m_is_server);
 }
 
 template <typename config>
 lib::error_code connection<config>::send_close_frame(close::status::value code,
-    const std::string &reason, bool ack, bool terminal)
+    std::string const & reason, bool ack, bool terminal)
 {
     m_alog.write(log::alevel::devel,"send_close_frame");
 
