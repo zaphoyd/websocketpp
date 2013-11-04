@@ -1,4 +1,6 @@
 HEAD
+- Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
+  These may be used to replace manually managed `asio::io_service::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.
 - Feature: Allows changing the listen backlog queue length.
 - Feature: Split tcp init into pre and post init.

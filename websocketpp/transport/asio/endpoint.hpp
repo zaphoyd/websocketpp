@@ -84,6 +84,8 @@ public:
     typedef lib::shared_ptr<boost::asio::ip::tcp::resolver> resolver_ptr;
     /// Type of timer handle
     typedef lib::shared_ptr<boost::asio::deadline_timer> timer_ptr;
+    /// Type of a shared pointer to an io_service work object
+    typedef lib::shared_ptr<boost::asio::io_service::work> work_ptr;
 
     // generate and manage our own io_service
     explicit endpoint()
@@ -554,6 +556,34 @@ public:
         return m_io_service->stopped();
     }
 
+    /// Marks the endpoint as perpetual, stopping it from exiting when empty
+    /**
+     * Marks the endpoint as perpetual. Perpetual endpoints will not
+     * automatically exit when they run out of connections to process. To stop
+     * a perpetual endpoint call `end_perpetual`.
+     *
+     * An endpoint may be marked perpetual at any time by any thread. It must be
+     * called either before the endpoint has run out of work or before it was
+     * started
+     *
+     * @since 0.4.0-alpha1
+     */
+    void start_perpetual() {
+        m_work.reset(new boost::asio::io_service::work(*m_io_service));
+    }
+
+    /// Clears the endpoint's perpetual flag, allowing it to exit when empty
+    /**
+     * Clears the endpoint's perpetual flag. This will cause the endpoint's run
+     * method to exit normally when it runs out of connections. If there are
+     * currently active connections it will not end until they are complete.
+     *
+     * @since 0.4.0-alpha1
+     */
+    void stop_perpetual() {
+        m_work.reset();
+    }
+
     /// Call back a function after a period of time.
     /**
      * Sets a timer that calls back a function after the specified period of
@@ -988,6 +1018,7 @@ private:
     bool                m_external_io_service;
     acceptor_ptr        m_acceptor;
     resolver_ptr        m_resolver;
+    work_ptr            m_work;
 
     // Network constants
     int                 m_listen_backlog;

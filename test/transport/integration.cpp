@@ -117,14 +117,23 @@ void run_client(client & c, std::string uri, bool log = false) {
         c.clear_access_channels(websocketpp::log::alevel::all);
         c.clear_error_channels(websocketpp::log::elevel::all);
     }
-    c.init_asio();
-
     websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    BOOST_CHECK(!ec);
+
     client::connection_ptr con = c.get_connection(uri,ec);
     BOOST_CHECK( !ec );
     c.connect(con);
 
     c.run();
+}
+
+void run_client_and_mark(client * c, bool * flag, websocketpp::lib::mutex * mutex) {
+    c->run();
+    BOOST_CHECK( true );
+    websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(*mutex);
+    *flag = true;
+    BOOST_CHECK( true );
 }
 
 void run_time_limited_client(client & c, std::string uri, long timeout,
@@ -429,4 +438,57 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     run_client(c, "http://localhost:9005",false);
 
     sthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( client_runs_out_of_work ) {
+    client c;
+
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,3));
+    tthread.detach();
+
+    websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    BOOST_CHECK(!ec);
+
+    c.run();
+
+    // This test checks that an io_service with no work ends immediately.
+    BOOST_CHECK(true);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE( client_is_perpetual ) {
+    client c;
+    bool flag = false;
+    websocketpp::lib::mutex mutex;
+
+    websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    BOOST_CHECK(!ec);
+
+    c.start_perpetual();
+
+    websocketpp::lib::thread cthread(websocketpp::lib::bind(&run_client_and_mark,&c,&flag,&mutex));
+
+    sleep(1);
+
+    {
+        // Checks that the thread hasn't exited yet
+        websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(mutex);
+        BOOST_CHECK( !flag );
+    }
+
+    c.stop_perpetual();
+
+    sleep(1);
+
+    {
+        // Checks that the thread has exited
+        websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(mutex);
+        BOOST_CHECK( flag );
+    }
+
+    cthread.join();
 }
