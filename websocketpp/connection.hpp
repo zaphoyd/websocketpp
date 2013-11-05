@@ -477,7 +477,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the open handshake timeout in ms 
+     * @param dur The length of the open handshake timeout in ms
      */
     void set_open_handshake_timeout(long dur) {
         m_open_handshake_timeout_dur = dur;
@@ -501,7 +501,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the close handshake timeout in ms 
+     * @param dur The length of the close handshake timeout in ms
      */
     void set_close_handshake_timeout(long dur) {
         m_close_handshake_timeout_dur = dur;
@@ -522,7 +522,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the pong timeout in ms 
+     * @param dur The length of the pong timeout in ms
      */
     void set_pong_timeout(long dur) {
         m_pong_timeout_dur = dur;
@@ -1286,7 +1286,7 @@ private:
     write_frame_handler     m_write_frame_handler;
 
     // static settings
-    const std::string       m_user_agent;
+    std::string const       m_user_agent;
 
     /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;

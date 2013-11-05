@@ -294,7 +294,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the open handshake timeout in ms 
+     * @param dur The length of the open handshake timeout in ms
      */
     void set_open_handshake_timeout(long dur) {
         scoped_lock_type guard(m_mutex);
@@ -319,7 +319,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the close handshake timeout in ms 
+     * @param dur The length of the close handshake timeout in ms
      */
     void set_close_handshake_timeout(long dur) {
         scoped_lock_type guard(m_mutex);
@@ -341,7 +341,7 @@ public:
      * the documentation for your transport policy for details about its
      * timer support.
      *
-     * @param dur The length of the pong timeout in ms 
+     * @param dur The length of the pong timeout in ms
      */
     void set_pong_timeout(long dur) {
         scoped_lock_type guard(m_mutex);
