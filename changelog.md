@@ -12,6 +12,8 @@ HEAD
   buffer sizes based on profiling, caching of handler binding for async
   reads/writes, non-malloc allocators for read/write handlers, disabling of a
   number of questionably useful range sanity checks in tight inner loops.
+- Bug: Fix issue with const endpoint accessors (such as `get_user_agent`) not
+  compiling due to non-const mutex use. #292 Thank you logofive for reporting.
 - Bug: Fix handler allocation crash with multithreaded io_service.
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting

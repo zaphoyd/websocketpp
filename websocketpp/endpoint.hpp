@@ -504,7 +504,7 @@ private:
     bool const                  m_is_server;
 
     // endpoint state
-    mutex_type                  m_mutex;
+    mutable mutex_type          m_mutex;
 };
 
 } // namespace websocketpp
