@@ -26,8 +26,8 @@ if os.environ.has_key('BOOSTROOT'):
     os.environ['BOOST_ROOT'] = os.environ['BOOSTROOT']
 
 if os.environ.has_key('BOOST_ROOT'):
-   env['BOOST_INCLUDES'] = os.environ['BOOST_ROOT']
-   env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib')
+   env['BOOST_INCLUDES'] = os.path.join(os.environ['BOOST_ROOT'], 'include')
+   env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'lib')
 elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
    env['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES']
    env['BOOST_LIBS'] = os.environ['BOOST_LIBS']
