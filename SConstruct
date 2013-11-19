@@ -1,5 +1,6 @@
 import os, sys, commands
 env = Environment(ENV = os.environ)
+env['PLATFORM'] = sys.platform
 
 # figure out a better way to configure this
 if os.environ.has_key('CXX'):
@@ -91,8 +92,9 @@ if env['PLATFORM'].startswith('win'):
    #env['LIBPATH'] = env['BOOST_LIBS']
    pass
 else:
-   env['LIBPATH'] = ['/usr/lib',
-                     '/usr/local/lib'] #, env['BOOST_LIBS']
+   env['LIBPATH'] = ['/usr/local/lib', # make sure this comes _before_ the sys path!
+                     '/usr/lib',
+                     ] #, env['BOOST_LIBS']
 
 # Compiler specific warning flags
 if env['CXX'].startswith('g++'):
@@ -111,8 +113,9 @@ platform_libs = []
 tls_libs = []
 
 tls_build = False
+fbsd = False
 
-if env['PLATFORM'] == 'posix':
+if env['PLATFORM'] == 'posix' or env['PLATFORM'].startswith('freebsd'):
    platform_libs = ['pthread', 'rt']
    tls_libs = ['ssl', 'crypto']
    tls_build = True
@@ -122,6 +125,10 @@ elif env['PLATFORM'] == 'darwin':
 elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass
+
+if sys.platform.startswith('freebsd'):
+   fbsd = True
+   env.Append(CPPPATH = ['/usr/local/include'])
 
 ## Append WebSocket++ path
 env.Append(CPPPATH = ['#'])
@@ -211,7 +218,8 @@ if tls_build:
     echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
 
 # broadcast_server
-broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
+if not fbsd: # issue #306
+   broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
 
 # testee_server
 testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = builddir + 'testee_server',duplicate = 0)
@@ -220,7 +228,8 @@ testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = b
 testee_client = SConscript('#/examples/testee_client/SConscript',variant_dir = builddir + 'testee_client',duplicate = 0)
 
 # utility_client
-utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir = builddir + 'utility_client',duplicate = 0)
+if not fbsd: # issue #308
+   utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir = builddir + 'utility_client',duplicate = 0)
 
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
