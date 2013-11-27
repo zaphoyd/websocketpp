@@ -12,6 +12,8 @@ HEAD
   buffer sizes based on profiling, caching of handler binding for async
   reads/writes, non-malloc allocators for read/write handlers, disabling of a
   number of questionably useful range sanity checks in tight inner loops.
+- Bug: Fix memory leak of connection objects due to cached handlers holding on to
+  reference counted pointers. #310 Thank you otaras for reporting.
 - Bug: Fix issue with const endpoint accessors (such as `get_user_agent`) not
   compiling due to non-const mutex use. #292 Thank you logofive for reporting.
 - Bug: Fix handler allocation crash with multithreaded io_service.

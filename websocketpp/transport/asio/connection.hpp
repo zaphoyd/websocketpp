@@ -909,6 +909,13 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
 
+		// Reset cached handlers now that we won't be reading or writing anymore
+		// These cached handlers store shared pointers to this connection and will leak
+		// the connection if not destroyed.
+		m_async_read_handler = 0;
+		m_async_write_handler = 0;
+		m_init_handler = 0;
+
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
             config::timeout_socket_shutdown,
