@@ -169,7 +169,10 @@ enum value {
     tls_short_read,
 
     /// Timer expired
-    timeout
+    timeout,
+    
+    /// read or write after shutdown
+    action_after_shutdown
 };
 
 class category : public lib::error_category {
@@ -198,6 +201,8 @@ class category : public lib::error_category {
                 return "TLS Short Read";
             case timeout:
                 return "Timer Expired";
+            case action_after_shutdown:
+                return "A transport action was requested after shutdown";
             default:
                 return "Unknown";
         }

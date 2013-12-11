@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();
 
-    run_client(c, "http://localhost:9005",false);
+    run_client(c, "http://localhost:9005", false);
 
     sthread.join();
 }
@@ -491,4 +491,10 @@ BOOST_AUTO_TEST_CASE( client_is_perpetual ) {
     }
 
     cthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( client_failed_connection ) {
+	client c;
+
+	run_time_limited_client(c,"http://localhost:9005", 5, true);
 }

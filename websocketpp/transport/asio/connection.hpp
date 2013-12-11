@@ -621,7 +621,8 @@ protected:
         boost::system::error_code const & ec)
     {
         if (m_alog.static_test(log::alevel::devel)) {
-            m_alog.write(log::alevel::devel,"asio connection handle_proxy_write");
+            m_alog.write(log::alevel::devel,
+                "asio connection handle_proxy_write");
         }
 
         m_bufs.clear();
@@ -688,7 +689,8 @@ protected:
         boost::system::error_code const & ec, size_t bytes_transferred)
     {
         if (m_alog.static_test(log::alevel::devel)) {
-            m_alog.write(log::alevel::devel,"asio connection handle_proxy_read");
+            m_alog.write(log::alevel::devel,
+                "asio connection handle_proxy_read");
         }
 
         // Timer expired or the operation was aborted for some reason.
@@ -774,6 +776,13 @@ protected:
             m_alog.write(log::alevel::devel,s.str());
         }
 
+        if (!m_async_read_handler) {
+            m_alog.write(log::alevel::devel,
+                "async_read_at_least called after async_shutdown");
+            handler(make_error_code(transport::error::action_after_shutdown), 0);
+            return;
+        }
+
         // TODO: safety vs speed ?
         // maybe move into an if devel block
         /*if (num_bytes > len) {
@@ -820,7 +829,14 @@ protected:
     }
 
     void async_write(const char* buf, size_t len, write_handler handler) {
-        m_bufs.push_back(boost::asio::buffer(buf,len));
+        if (!m_async_write_handler) {
+            m_alog.write(log::alevel::devel,
+                "async_write (single) called after async_shutdown");
+            handler(make_error_code(transport::error::action_after_shutdown));
+            return;
+        }
+
+		m_bufs.push_back(boost::asio::buffer(buf,len));
 
         m_write_handler = handler;
 
@@ -835,6 +851,12 @@ protected:
     }
 
     void async_write(const std::vector<buffer>& bufs, write_handler handler) {
+        if (!m_async_write_handler) {
+            m_alog.write(log::alevel::devel,
+                "async_write (vector) called after async_shutdown");
+            handler(make_error_code(transport::error::action_after_shutdown));
+            return;
+        }
         std::vector<buffer>::const_iterator it;
 
         for (it = bufs.begin(); it != bufs.end(); ++it) {
