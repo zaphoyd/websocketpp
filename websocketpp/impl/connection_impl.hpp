@@ -1256,7 +1256,7 @@ void connection<config>::send_http_request() {
             "Raw Handshake request:\n"+m_handshake_buffer);
     }
 
-    if (m_open_handshake_timeout_dur > 0 {
+    if (m_open_handshake_timeout_dur > 0) {
         m_handshake_timer = transport_con_type::set_timer(
             m_open_handshake_timeout_dur,
             lib::bind(
