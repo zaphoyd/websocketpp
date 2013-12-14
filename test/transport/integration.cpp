@@ -496,5 +496,5 @@ BOOST_AUTO_TEST_CASE( client_is_perpetual ) {
 BOOST_AUTO_TEST_CASE( client_failed_connection ) {
 	client c;
 
-	run_time_limited_client(c,"http://localhost:9005", 5, true);
+	run_time_limited_client(c,"http://localhost:9005", 5, false);
 }
