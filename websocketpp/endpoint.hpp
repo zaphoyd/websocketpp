@@ -288,7 +288,7 @@ public:
      *
      * The default value is specified via the compile time config value
      * 'timeout_open_handshake'. The default value in the core config
-     * is 5000ms.
+     * is 5000ms. A value of 0 will disable the timer entirely.
      *
      * To be effective, the transport you are using must support timers. See
      * the documentation for your transport policy for details about its
@@ -313,7 +313,7 @@ public:
      *
      * The default value is specified via the compile time config value
      * 'timeout_close_handshake'. The default value in the core config
-     * is 5000ms.
+     * is 5000ms. A value of 0 will disable the timer entirely.
      *
      * To be effective, the transport you are using must support timers. See
      * the documentation for your transport policy for details about its
@@ -335,7 +335,7 @@ public:
      *
      * The default value is specified via the compile time config value
      * 'timeout_pong'. The default value in the core config
-     * is 5000ms.
+     * is 5000ms. A value of 0 will disable the timer entirely.
      *
      * To be effective, the transport you are using must support timers. See
      * the documentation for your transport policy for details about its

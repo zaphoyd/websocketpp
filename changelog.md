@@ -8,6 +8,8 @@ HEAD
   for code. #298
 - Feature: Adds a compile time switch to asio transport config to disable
   certain multithreading features (some locks, asio strands)
+- Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
+  duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
   buffer sizes based on profiling, caching of handler binding for async
   reads/writes, non-malloc allocators for read/write handlers, disabling of a

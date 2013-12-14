@@ -163,15 +163,17 @@ void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
             m_ping_timer->cancel();
         }
 
-        m_ping_timer = transport_con_type::set_timer(
-            m_pong_timeout_dur,
-            lib::bind(
-                &type::handle_pong_timeout,
-                type::get_shared(),
-                payload,
-                lib::placeholders::_1
-            )
-        );
+        if (m_pong_timeout_dur > 0) {
+            m_ping_timer = transport_con_type::set_timer(
+                m_pong_timeout_dur,
+                lib::bind(
+                    &type::handle_pong_timeout,
+                    type::get_shared(),
+                    payload,
+                    lib::placeholders::_1
+                )
+            );
+        }
 
         if (!m_ping_timer) {
             // Our transport doesn't support timers
@@ -1254,14 +1256,16 @@ void connection<config>::send_http_request() {
             "Raw Handshake request:\n"+m_handshake_buffer);
     }
 
-    m_handshake_timer = transport_con_type::set_timer(
-        m_open_handshake_timeout_dur,
-        lib::bind(
-            &type::handle_open_handshake_timeout,
-            type::get_shared(),
-            lib::placeholders::_1
-        )
-    );
+    if (m_open_handshake_timeout_dur > 0 {
+        m_handshake_timer = transport_con_type::set_timer(
+            m_open_handshake_timeout_dur,
+            lib::bind(
+                &type::handle_open_handshake_timeout,
+                type::get_shared(),
+                lib::placeholders::_1
+            )
+        );
+    }
 
     transport_con_type::async_write(
         m_handshake_buffer.data(),
@@ -1870,14 +1874,16 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
 
     // Start a timer so we don't wait forever for the acknowledgement close
     // frame
-    m_handshake_timer = transport_con_type::set_timer(
-        m_close_handshake_timeout_dur,
-        lib::bind(
-            &type::handle_close_handshake_timeout,
-            type::get_shared(),
-            lib::placeholders::_1
-        )
-    );
+    if (m_close_handshake_timeout_dur > 0) {
+        m_handshake_timer = transport_con_type::set_timer(
+            m_close_handshake_timeout_dur,
+            lib::bind(
+                &type::handle_close_handshake_timeout,
+                type::get_shared(),
+                lib::placeholders::_1
+            )
+        );
+    }
 
     bool needs_writing = false;
     {
