@@ -462,6 +462,12 @@ connection<config>::get_request_header(const std::string &key) {
 
 template <typename config>
 const std::string &
+connection<config>::get_request_body() const {
+    return m_request.get_body();
+}
+
+template <typename config>
+const std::string &
 connection<config>::get_response_header(const std::string &key) {
     return m_response.get_header(key);
 }

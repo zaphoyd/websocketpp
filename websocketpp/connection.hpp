@@ -829,6 +829,14 @@ public:
      */
     std::string const & get_request_header(std::string const & key);
 
+    /// Retrieve body of a request
+    /**
+     * Retrieve the body of the handshake HTTP request.
+     *
+     * @return The body of the request
+     */
+    std::string const & get_request_body() const;
+
     /// Retrieve a response header
     /**
      * Retrieve the value of a header from the handshake HTTP request.

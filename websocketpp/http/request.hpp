@@ -52,7 +52,7 @@ public:
 
     request()
       : m_buf(new std::string())
-      , m_ready(false) {}
+      , m_ready(false), m_content_length(0) {}
 
     /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
     bool parse_complete(std::istream& s);
@@ -111,6 +111,7 @@ private:
     std::string                     m_method;
     std::string                     m_uri;
     bool                            m_ready;
+    int                             m_content_length;
 };
 
 } // namespace parser
