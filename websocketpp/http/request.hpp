@@ -84,6 +84,10 @@ public:
         return m_ready;
     }
 
+    int content_length() const {
+        return m_content_length;
+    }
+
     /// Returns the full raw request
     std::string raw();
 
