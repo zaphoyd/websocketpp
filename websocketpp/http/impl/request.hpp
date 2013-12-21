@@ -73,7 +73,7 @@ inline size_t request::consume(const char *buf, size_t len) {
         return len;
     }
 
-    if (m_content_length != 0 && m_buf->size() + len > max_header_size) {
+    if (m_content_length == 0 && m_buf->size() + len > max_header_size) {
         // exceeded max header size
         throw exception("Maximum header size exceeded.",
                         status_code::request_header_fields_too_large);
