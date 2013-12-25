@@ -152,7 +152,7 @@ inline size_t request::consume(const char *buf, size_t len) {
     }
 }
 
-inline std::string request::raw() {
+inline std::string request::raw() const {
     // TODO: validation. Make sure all required fields have been set?
     std::stringstream raw;
 
