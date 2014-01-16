@@ -500,11 +500,20 @@ public:
             
             mask_index += 2;
         } else if (s == BASIC_PAYLOAD_64BIT_CODE) {
+            
+            
+#if defined(__arm__)
+            //ARM requires 8-byte alignment for 64-bit variables
+            memcpy(&payload_size, &m_header[BASIC_HEADER_LENGTH], sizeof(uint64_t));
+            payload_size = zsutil::ntohll(payload_size);
+#else
+            
             // reinterpret the second eight bytes as a 64 bit integer in 
             // network byte order. Convert to host byte order and store.
             payload_size = zsutil::ntohll(*(
                 reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
             ));
+#endif
             
             if (payload_size <= limits::PAYLOAD_SIZE_EXTENDED) {
                 m_bytes_needed = payload_size;
