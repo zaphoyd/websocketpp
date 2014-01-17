@@ -396,7 +396,8 @@ public:
             // this reinterprets the second pair of bytes in m_header as a
             // 16 bit int and writes the payload size there as an integer
             // in network byte order
-            *reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH]) = htons(s);
+            uint16_t value = htons(s);
+            memcpy(&m_header[BASIC_HEADER_LENGTH], &value, sizeof(uint16_t));
         } else if (s <= limits::PAYLOAD_SIZE_JUMBO) {
             m_header[1] = BASIC_PAYLOAD_64BIT_CODE;
             uint64_converter temp64;
@@ -487,9 +488,9 @@ public:
         } else if (s == BASIC_PAYLOAD_16BIT_CODE) {         
             // reinterpret the second two bytes as a 16 bit integer in network
             // byte order. Convert to host byte order and store locally.
-            payload_size = ntohs(*(
-                reinterpret_cast<uint16_t*>(&m_header[BASIC_HEADER_LENGTH])
-            ));
+            uint16_t value;
+            memcpy(&value, &m_header[BASIC_HEADER_LENGTH], sizeof(uint16_t));
+            payload_size = ntohs(value);
             
             if (payload_size < s) {
                 std::stringstream err;
@@ -500,20 +501,10 @@ public:
             
             mask_index += 2;
         } else if (s == BASIC_PAYLOAD_64BIT_CODE) {
-            
-            
-#if defined(__arm__)
-            //ARM requires 8-byte alignment for 64-bit variables
+            // reinterpret the second eight bytes as a 64 bit integer in
+            // network byte order. Convert to host byte order and store.
             memcpy(&payload_size, &m_header[BASIC_HEADER_LENGTH], sizeof(uint64_t));
             payload_size = zsutil::ntohll(payload_size);
-#else
-            
-            // reinterpret the second eight bytes as a 64 bit integer in 
-            // network byte order. Convert to host byte order and store.
-            payload_size = zsutil::ntohll(*(
-                reinterpret_cast<uint64_t*>(&m_header[BASIC_HEADER_LENGTH])
-            ));
-#endif
             
             if (payload_size <= limits::PAYLOAD_SIZE_EXTENDED) {
                 m_bytes_needed = payload_size;
@@ -620,7 +611,8 @@ public:
     }
     
     void generate_masking_key() {
-        *(reinterpret_cast<int32_t *>(&m_header[get_header_len()-4])) = m_rng.rand();
+        int32_t value = m_rng.rand();
+        memcpy(&m_header[get_header_len()-4], &value, sizeof(int32_t));
     }
     void clear_masking_key() {
         // this is a no-op as clearing the mask bit also changes the get_header_len
