@@ -1339,6 +1339,13 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
     );
 
     if (ec) {
+        if (ec == websocketpp::transport::error::eof) {
+          m_response.consume(m_buf,0);
+          if (m_message_handler) {
+            m_message_handler(m_connection_hdl, nullptr);
+          }
+        }
+
         m_elog.write(log::elevel::rerror,
             "error in handle_read_http_response: "+ec.message());
         this->terminate(ec);
@@ -1400,7 +1407,6 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
         this->handle_read_frame(lib::error_code(), m_buf_cursor);
     } else {
         if (m_response.ready()) {
-//          this->handle_read_frame(lib::error_code(), m_buf_cursor);
           if (m_message_handler) {
             m_message_handler(m_connection_hdl, nullptr);
           }

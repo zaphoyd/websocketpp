@@ -137,6 +137,12 @@ public:
     const std::string& get_status_msg() const {
         return m_status_msg;
     }
+
+    ///
+    bool needs_complete_body() const {
+      return m_state == BODY && m_read == 0;
+    }
+
 private:
     /// Helper function for consume. Process response line
     void process(std::string::iterator begin, std::string::iterator end);
