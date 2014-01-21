@@ -280,7 +280,7 @@ private:
 public:
 
     explicit connection(bool is_server, std::string const & ua, alog_type& alog,
-        elog_type& elog, rng_type & rng)
+        elog_type& elog, rng_type & rng, int version)
       : transport_con_type(is_server,alog,elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
@@ -309,6 +309,7 @@ public:
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
       , m_was_clean(false)
+      , m_version(version)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -845,6 +846,14 @@ public:
      * @return The value of the header
      */
     std::string const & get_response_header(std::string const & key);
+
+    /// Retrieve body of a response
+    /**
+     * Retrieve the body of the handshake HTTP response.
+     *
+     * @return The body of the response
+     */
+     std::string const & get_response_body() const;
 
     /// Set response status code and message
     /**
@@ -1430,6 +1439,9 @@ private:
 
     /// Whether or not this endpoint initiated the drop of the TCP connection
     bool                    m_dropped_by_me;
+
+    /// version
+    int                     m_version;
 };
 
 } // namespace websocketpp

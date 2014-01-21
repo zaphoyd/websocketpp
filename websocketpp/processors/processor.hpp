@@ -168,6 +168,8 @@ public:
     /// Get the protocol version of this processor
     virtual int get_version() const = 0;
 
+    virtual bool is_websocket() const { return true; }
+
     /// Returns whether or not the permessage_compress extension is implemented
     /**
      * Compile time flag that indicates whether this processor has implemented

@@ -32,6 +32,7 @@
 
 #include <websocketpp/processors/processor.hpp>
 
+#include <websocketpp/processors/http11.hpp>
 #include <websocketpp/processors/hybi00.hpp>
 #include <websocketpp/processors/hybi07.hpp>
 #include <websocketpp/processors/hybi08.hpp>
@@ -473,6 +474,12 @@ connection<config>::get_response_header(const std::string &key) {
 }
 
 template <typename config>
+const std::string &
+connection<config>::get_response_body() const {
+    return m_response.get_body();
+}
+
+template <typename config>
 void connection<config>::set_status(http::status_code::value code)
 {
     //scoped_lock_type lock(m_connection_state_lock);
@@ -645,7 +652,8 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
     } else {
         // We are a client. Set the processor to the version specified in the
         // config file and send a handshake request.
-        m_processor = get_processor(config::client_version);
+//        m_processor = get_processor(config::client_version);
+        m_processor = get_processor(m_version);
         this->send_http_request();
     }
 }
@@ -1349,7 +1357,7 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
 
     m_alog.write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
-    if (m_response.headers_ready()) {
+    if (m_response.headers_ready() && m_processor->is_websocket()) {
         if (m_handshake_timer) {
             m_handshake_timer->cancel();
             m_handshake_timer.reset();
@@ -1391,7 +1399,14 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
 
         this->handle_read_frame(lib::error_code(), m_buf_cursor);
     } else {
-        transport_con_type::async_read_at_least(
+        if (m_response.ready()) {
+//          this->handle_read_frame(lib::error_code(), m_buf_cursor);
+          if (m_message_handler) {
+            m_message_handler(m_connection_hdl, nullptr);
+          }
+        }
+        else { 
+          transport_con_type::async_read_at_least(
             1,
             m_buf,
             config::connection_read_buffer_size,
@@ -1401,7 +1416,8 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
-        );
+          );
+        }
     }
 }
 
@@ -1913,6 +1929,16 @@ typename connection<config>::processor_ptr
 connection<config>::get_processor(int version) const {
     // TODO: allow disabling certain versions
     switch (version) {
+        case -1:
+            return processor_ptr(
+                new processor::http11<config>(
+                    transport_con_type::is_secure(),
+                    m_is_server,
+                    m_msg_manager
+                )
+            );
+            break;
+ 
         case 0:
             return processor_ptr(
                 new processor::hybi00<config>(
