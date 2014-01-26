@@ -30,6 +30,8 @@
 
 #include <websocketpp/common/thread.hpp>
 
+#include <websocketpp/config/core.hpp>
+#include <websocketpp/config/core_client.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/server.hpp>
@@ -79,6 +81,9 @@ struct config : public websocketpp::config::asio_client {
 
 typedef websocketpp::server<config> server;
 typedef websocketpp::client<config> client;
+
+typedef websocketpp::server<websocketpp::config::core> iostream_server;
+typedef websocketpp::client<websocketpp::config::core_client> iostream_client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
