@@ -302,6 +302,7 @@ public:
       , m_msg_manager(new con_msg_manager_type())
       , m_send_buffer_size(0)
       , m_write_flag(false)
+      , m_read_flag(true)
       , m_is_server(is_server)
       , m_alog(alog)
       , m_elog(elog)
@@ -615,9 +616,46 @@ public:
      * @return An error code
      */
     lib::error_code interrupt();
-
+    
     /// Transport inturrupt callback
     void handle_interrupt();
+    
+    /// Pause reading of new data
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    lib::error_code pause_reading();
+
+    /// Pause reading callback
+    void handle_pause_reading();
+
+    /// Resume reading of new data
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    lib::error_code resume_reading();
+
+    /// Resume reading callback
+    void handle_resume_reading();
 
     /// Send a ping
     /**
@@ -1092,8 +1130,8 @@ public:
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
 
-    void handle_read_frame(lib::error_code const & ec,
-        size_t bytes_transferred);
+    void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
+    void read_frame();
 
     /// Get array of WebSocket protocol versions that this connection supports.
     const std::vector<int>& get_supported_versions() const;
@@ -1379,6 +1417,9 @@ private:
      * Lock m_write_lock
      */
     bool m_write_flag;
+
+    /// True if this connection is presently reading new data
+    bool m_read_flag;
 
     // connection data
     request_type            m_request;

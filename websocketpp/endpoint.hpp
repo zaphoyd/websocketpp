@@ -363,6 +363,43 @@ public:
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
+    /// Pause reading of new data (exception free)
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    void pause_reading(connection_hdl hdl, lib::error_code & ec);
+    
+    /// Pause reading of new data
+    void pause_reading(connection_hdl hdl);
+
+    /// Resume reading of new data (exception free)
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    void resume_reading(connection_hdl hdl, lib::error_code & ec);
+
+    /// Resume reading of new data
+    void resume_reading(connection_hdl hdl);
+
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
      * Convenience method to send a message given a payload string and an opcode

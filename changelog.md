@@ -8,6 +8,9 @@ HEAD
   for code. #298
 - Feature: Adds a compile time switch to asio transport config to disable
   certain multithreading features (some locks, asio strands)
+- Feature: Adds the ability to pause reading on a connection. Paused connections will not
+  read more data from their socket, allowing TCP flow control to work without blocking
+  the main thread.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
   duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default

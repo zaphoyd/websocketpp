@@ -323,6 +323,41 @@ void connection<config>::handle_interrupt() {
     }
 }
 
+template <typename config>
+lib::error_code connection<config>::pause_reading() {
+    m_alog.write(log::alevel::devel,"connection connection::pause_reading");
+    return transport_con_type::dispatch(
+        lib::bind(
+            &type::handle_pause_reading,
+            type::get_shared()
+        )
+    );
+}
+
+/// Pause reading handler. Not safe to call directly
+template <typename config>
+void connection<config>::handle_pause_reading() {
+    m_alog.write(log::alevel::devel,"connection connection::handle_pause_reading");
+    m_read_flag = false;
+}
+
+template <typename config>
+lib::error_code connection<config>::resume_reading() {
+    m_alog.write(log::alevel::devel,"connection connection::resume_reading");
+    return transport_con_type::dispatch(
+        lib::bind(
+            &type::handle_resume_reading,
+            type::get_shared()
+        )
+    );
+}
+
+/// Resume reading helper method. Not safe to call directly
+template <typename config>
+void connection<config>::handle_resume_reading() {
+   m_read_flag = true;
+   read_frame();
+}
 
 
 
@@ -839,9 +874,9 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             }
         }
         if (ec == transport::error::tls_short_read) {
-			m_elog.write(log::elevel::rerror,"got TLS short read, killing connection for now");
-			this->terminate(ec);
-			return;
+            m_elog.write(log::elevel::rerror,"got TLS short read, killing connection for now");
+            this->terminate(ec);
+            return;
         }
 
         std::stringstream s;
@@ -933,6 +968,16 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         }
     }
 
+    read_frame();
+}
+
+/// Issue a new transport read unless reading is paused.
+template <typename config>
+void connection<config>::read_frame() {
+    if (!m_read_flag) {
+        return;
+    }
+    
     transport_con_type::async_read_at_least(
         // std::min wont work with undefined static const values.
         // TODO: is there a more elegant way to do this?
@@ -944,12 +989,6 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
         1,
         m_buf,
         config::connection_read_buffer_size,
-        /*lib::bind(
-            &type::handle_read_frame,
-            type::get_shared(),
-            lib::placeholders::_1,
-            lib::placeholders::_2
-        )*/
         m_handle_read_frame
     );
 }
