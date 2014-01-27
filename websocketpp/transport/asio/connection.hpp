@@ -998,7 +998,7 @@ protected:
         shutdown_timer->cancel();
 
         if (ec) {
-            log_err(log::elevel::info,"asio async_shutdown",ec);
+            log_err(log::elevel::devel,"asio async_shutdown",ec);
             if (ec == boost::asio::error::not_connected) {
                 // The socket was already closed when we tried to close it. This
                 // happens periodically (usually if a read or write fails

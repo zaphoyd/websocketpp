@@ -1525,7 +1525,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
     if (ec) {
         // there was an error actually shutting down the connection
-        m_elog.write(log::elevel::rerror,ec.message());
+        m_elog.write(log::elevel::devel,"handle_terminate error: "+ec.message());
     }
 
     // clean shutdown

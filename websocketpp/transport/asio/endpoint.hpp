@@ -653,10 +653,8 @@ public:
         lib::error_code & ec)
     {
         if (m_state != LISTENING) {
-            m_elog->write(log::elevel::library,
-                "asio::async_accept called from the wrong state");
             using websocketpp::error::make_error_code;
-            ec = make_error_code(websocketpp::error::invalid_state);
+            ec = make_error_code(websocketpp::error::async_accept_not_listening);
             return;
         }
 
@@ -721,8 +719,12 @@ protected:
         m_alog->write(log::alevel::devel, "asio::handle_accept");
 
         if (boost_ec) {
-            log_err(log::elevel::devel,"asio handle_accept",boost_ec);
-            ret_ec = make_error_code(error::pass_through);
+            if (boost_ec == boost::system::errc::operation_canceled) {
+                ret_ec = make_error_code(websocketpp::error::operation_canceled);
+            } else {
+                log_err(log::elevel::info,"asio handle_accept",boost_ec);
+                ret_ec = make_error_code(error::pass_through);
+            }
         }
 
         callback(ret_ec);
