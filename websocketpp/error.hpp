@@ -114,7 +114,14 @@ enum value {
     close_handshake_timeout,
 
     /// Invalid port in URI
-    invalid_port
+    invalid_port,
+    
+    /// An async accept operation failed because the underlying transport has been
+    /// requested to not listen for new connections anymore.
+    async_accept_not_listening,
+    
+    /// The requested operation was canceled
+    operation_canceled
 }; // enum value
 
 
@@ -176,6 +183,10 @@ public:
                 return "The closing handshake timed out";
             case error::invalid_port:
                 return "Invalid URI port";
+            case error::async_accept_not_listening:
+                return "Async Accept not listening";
+            case error::operation_canceled:
+                return "Operation canceled";
             default:
                 return "Unknown";
         }
