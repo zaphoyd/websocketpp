@@ -22,10 +22,12 @@ HEAD
   reference counted pointers. #310 Thank you otaras for reporting.
 - Bug: Fix issue with const endpoint accessors (such as `get_user_agent`) not
   compiling due to non-const mutex use. #292 Thank you logofive for reporting.
-- Bug: Fix handler allocation crash with multithreaded io_service.
+- Bug: Fix handler allocation crash with multithreaded `io_service`.
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting
 - Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
+- Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for 
+  reporting.
 
 0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan

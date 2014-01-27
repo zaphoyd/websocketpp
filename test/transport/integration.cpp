@@ -504,6 +504,24 @@ BOOST_AUTO_TEST_CASE( client_failed_connection ) {
     run_time_limited_client(c,"http://localhost:9005", 5, false);
 }
 
+BOOST_AUTO_TEST_CASE( stop_listening ) {
+    server s;
+    client c;
+
+    // the first connection stops the server from listening
+    s.set_open_handler(bind(&cancel_on_open,&s,::_1));
+
+    // client immediately closes after opening a connection
+    c.set_open_handler(bind(&close<client>,&c,::_1));
+
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,true));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    tthread.detach();
+
+    run_client(c, "http://localhost:9005",false);
+
+    sthread.join();
+}
 
 BOOST_AUTO_TEST_CASE( pause_reading ) {
     iostream_server s;
