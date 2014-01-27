@@ -363,6 +363,7 @@ BOOST_AUTO_TEST_CASE( strip_lws ) {
     std::string test5 = "    foo     ";
     std::string test6 = "  \r\n  foo     ";
     std::string test7 = "  \t  foo     ";
+    std::string test8 = "  \t       ";
 
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test1), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test2), "foo" );
@@ -371,6 +372,7 @@ BOOST_AUTO_TEST_CASE( strip_lws ) {
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test5), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test6), "foo" );
     BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test7), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test8), "" );
 }
 
 BOOST_AUTO_TEST_CASE( case_insensitive_headers ) {
