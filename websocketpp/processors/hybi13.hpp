@@ -33,6 +33,7 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/common/network.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/http/constants.hpp>
 
 #include <websocketpp/processors/processor.hpp>

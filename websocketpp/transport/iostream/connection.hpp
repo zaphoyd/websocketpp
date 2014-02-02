@@ -28,8 +28,9 @@
 #ifndef WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 
-#include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>

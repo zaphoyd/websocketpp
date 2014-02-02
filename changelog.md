@@ -28,6 +28,8 @@ HEAD
 - Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
 - Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for 
   reporting.
+- Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
+  Robin Rowe for reporting.
 
 0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan

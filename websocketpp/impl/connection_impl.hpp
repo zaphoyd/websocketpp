@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_CONNECTION_IMPL_HPP
 #define WEBSOCKETPP_CONNECTION_IMPL_HPP
 
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 #include <websocketpp/processors/processor.hpp>
