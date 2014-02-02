@@ -28,6 +28,8 @@ HEAD
 - Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
 - Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for 
   reporting.
+- Bug: Fix use of variable names that shadow function parameters. The library should
+  compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
   Robin Rowe for reporting.
 

@@ -849,7 +849,7 @@ void connection<config>::send_http_response_error() {
 // All exit paths for this function need to call send_http_response() or submit
 // a new read request with this function as the handler.
 template <typename config>
-void connection<config>::handle_read_frame(const lib::error_code& ec,
+void connection<config>::handle_read_frame(lib::error_code const & ec,
     size_t bytes_transferred)
 {
     //m_alog.write(log::alevel::devel,"connection handle_read_frame");
@@ -909,12 +909,12 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             m_alog.write(log::alevel::devel,s.str());
         }
 
-        lib::error_code ec;
+        lib::error_code consume_ec;
 
         p += m_processor->consume(
             reinterpret_cast<uint8_t*>(m_buf)+p,
             bytes_transferred-p,
-            ec
+            consume_ec
         );
 
         if (m_alog.static_test(log::alevel::devel)) {
@@ -922,11 +922,11 @@ void connection<config>::handle_read_frame(const lib::error_code& ec,
             s << "bytes left after consume: " << bytes_transferred-p;
             m_alog.write(log::alevel::devel,s.str());
         }
-        if (ec) {
-            m_elog.write(log::elevel::rerror,"consume error: "+ec.message());
+        if (consume_ec) {
+            m_elog.write(log::elevel::rerror,"consume error: "+consume_ec.message());
 
             if (config::drop_on_protocol_error) {
-                this->terminate(ec);
+                this->terminate(consume_ec);
                 return;
             } else {
                 lib::error_code close_ec;
@@ -1354,7 +1354,7 @@ void connection<config>::handle_send_http_request(const lib::error_code& ec) {
 }
 
 template <typename config>
-void connection<config>::handle_read_http_response(const lib::error_code& ec,
+void connection<config>::handle_read_http_response(lib::error_code const & ec,
     size_t bytes_transferred)
 {
     m_alog.write(log::alevel::devel,"handle_read_http_response");
@@ -1389,16 +1389,16 @@ void connection<config>::handle_read_http_response(const lib::error_code& ec,
             m_handshake_timer.reset();
         }
 
-        lib::error_code ec = m_processor->validate_server_handshake_response(
+        lib::error_code validate_ec = m_processor->validate_server_handshake_response(
             m_request,
             m_response
         );
-        if (ec) {
+        if (validate_ec) {
             m_elog.write(log::elevel::rerror,
                 std::string("Server handshake response was invalid: ")+
-                ec.message()
+                validate_ec.message()
             );
-            this->terminate(ec);
+            this->terminate(validate_ec);
             return;
         }
 
@@ -1714,8 +1714,7 @@ const std::vector<int>& connection<config>::get_supported_versions() const
 }
 
 template <typename config>
-void connection<config>::process_control_frame(typename
-    config::message_type::ptr msg)
+void connection<config>::process_control_frame(typename config::message_type::ptr msg)
 {
     m_alog.write(log::alevel::devel,"process_control_frame");
 
@@ -1762,7 +1761,7 @@ void connection<config>::process_control_frame(typename
 
         m_remote_close_code = close::extract_code(msg->get_payload(),ec);
         if (ec) {
-            std::stringstream s;
+            s.str("");
             if (config::drop_on_protocol_error) {
                 s << "Received invalid close code " << m_remote_close_code
                   << " dropping connection per config.";
@@ -1802,7 +1801,7 @@ void connection<config>::process_control_frame(typename
         }
 
         if (m_state == session::state::open) {
-            std::stringstream s;
+            s.str("");
             s << "Received close frame with code " << m_remote_close_code
               << " and reason " << m_remote_close_reason;
             m_alog.write(log::alevel::devel,s.str());

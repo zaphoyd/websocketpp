@@ -111,13 +111,13 @@ public:
             lock.unlock();
 
             if (a.type == SUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.insert(a.hdl);
             } else if (a.type == UNSUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.erase(a.hdl);
             } else if (a.type == MESSAGE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
 
                 con_list::iterator it;
                 for (it = m_connections.begin(); it != m_connections.end(); ++it) {
