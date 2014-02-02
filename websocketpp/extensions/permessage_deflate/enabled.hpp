@@ -435,7 +435,7 @@ public:
      * @return Validation error or 0 on success
      */
     lib::error_code validate_offer(http::attribute_list const & response) {
-
+        return make_error_code(error::general);
     }
 
     /// Negotiate extension
@@ -489,12 +489,13 @@ public:
         }
 
         size_t output;
-        int ret;
 
         m_dstate.avail_out = m_compress_buffer_size;
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
 
         do {
+            int ret;
+            
             // Output to local buffer
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();

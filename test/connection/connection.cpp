@@ -80,8 +80,7 @@ struct stub_config : public websocketpp::config::core {
 };
 
 struct connection_setup {
-    connection_setup(bool server)
-      : c(server,"",alog,elog,rng) {}
+    connection_setup(bool p_is_server) : c(p_is_server, "", alog, elog, rng) {}
 
     websocketpp::lib::error_code ec;
 	stub_config::alog_type alog;
