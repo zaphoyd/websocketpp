@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     // client immediately closes after opening a connection
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
-    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,true));
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
     tthread.detach();
 
