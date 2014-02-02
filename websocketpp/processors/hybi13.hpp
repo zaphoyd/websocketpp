@@ -68,9 +68,8 @@ public:
 
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit hybi13(bool secure, bool server, msg_manager_ptr manager,
-        rng_type& rng)
-      : processor<config>(secure,server)
+    explicit hybi13(bool secure, bool p_is_server, msg_manager_ptr manager, rng_type& rng)
+      : processor<config>(secure, p_is_server)
       , m_msg_manager(manager)
       , m_rng(rng)
     {

@@ -159,9 +159,9 @@ public:
     typedef typename config::message_type::ptr message_ptr;
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit processor(bool secure, bool server)
+    explicit processor(bool secure, bool p_is_server)
       : m_secure(secure)
-      , m_server(server) {}
+      , m_server(p_is_server) {}
 
     virtual ~processor() {}
 

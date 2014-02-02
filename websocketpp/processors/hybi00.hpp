@@ -58,8 +58,8 @@ public:
 
     typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
 
-    explicit hybi00(bool secure, bool server, msg_manager_ptr manager)
-      : processor<config>(secure, server)
+    explicit hybi00(bool secure, bool p_is_server, msg_manager_ptr manager)
+      : processor<config>(secure, p_is_server)
       , msg_hdr(0x00)
       , msg_ftr(0xff)
       , m_state(HEADER)

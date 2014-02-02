@@ -303,7 +303,7 @@ public:
       , m_send_buffer_size(0)
       , m_write_flag(false)
       , m_read_flag(true)
-      , m_is_server(is_server)
+      , m_is_server(p_is_server)
       , m_alog(alog)
       , m_elog(elog)
       , m_rng(rng)
