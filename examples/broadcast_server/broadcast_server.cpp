@@ -142,13 +142,13 @@ private:
 
 int main() {
 	try {
-	broadcast_server server;
+	broadcast_server server_instance;
 
 	// Start a thread to run the processing loop
-	thread t(bind(&broadcast_server::process_messages,&server));
+	thread t(bind(&broadcast_server::process_messages,&server_instance));
 
 	// Run the asio loop with the main thread
-	server.run(9002);
+	server_instance.run(9002);
 
 	t.join();
 

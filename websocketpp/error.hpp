@@ -216,9 +216,9 @@ namespace websocketpp {
 
 class exception : public std::exception {
 public:
-    exception(std::string const & msg,
-              error::value code = error::general)
-    : m_msg(msg),m_code(code) {}
+    exception(std::string const & msg, error::value p_code = error::general)
+      : m_msg(msg), m_code(p_code) {}
+
     ~exception() throw() {}
 
     virtual char const * what() const throw() {

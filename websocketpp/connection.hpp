@@ -279,9 +279,9 @@ private:
     };
 public:
 
-    explicit connection(bool is_server, std::string const & ua, alog_type& alog,
+    explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
         elog_type& elog, rng_type & rng)
-      : transport_con_type(is_server,alog,elog)
+      : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
             this,

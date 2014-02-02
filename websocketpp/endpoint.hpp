@@ -87,21 +87,21 @@ public:
 
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-    explicit endpoint(bool is_server)
+    explicit endpoint(bool p_is_server)
       : m_alog(config::alog_level, &std::cout)
       , m_elog(config::elog_level, &std::cerr)
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
-      , m_is_server(is_server)
+      , m_is_server(p_is_server)
     {
         m_alog.set_channels(config::alog_level);
         m_elog.set_channels(config::elog_level);
 
-        m_alog.write(log::alevel::devel,"endpoint constructor");
+        m_alog.write(log::alevel::devel, "endpoint constructor");
 
-        transport_type::init_logging(&m_alog,&m_elog);
+        transport_type::init_logging(&m_alog, &m_elog);
     }
 
     /// Returns the user agent string that this endpoint will use

@@ -69,8 +69,7 @@ public:
 
     explicit server() : endpoint_type(true)
     {
-        endpoint_type::m_alog.write(log::alevel::devel,
-            "server constructor");
+        endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
     }
 
     // return an initialized connection_ptr. Call start() on this object to

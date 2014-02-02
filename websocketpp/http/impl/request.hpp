@@ -38,15 +38,15 @@ namespace http {
 namespace parser {
 
 inline bool request::parse_complete(std::istream& s) {
-    std::string request;
+    std::string req;
 
     // get status line
-    std::getline(s, request);
+    std::getline(s, req);
 
-    if (request[request.size()-1] == '\r') {
-        request.erase(request.end()-1);
+    if (req[req.size()-1] == '\r') {
+        req.erase(req.end()-1);
 
-        std::stringstream ss(request);
+        std::stringstream ss(req);
         std::string val;
 
         ss >> val;
@@ -133,12 +133,12 @@ inline size_t request::consume(const char *buf, size_t len) {
 
 inline std::string request::raw() {
     // TODO: validation. Make sure all required fields have been set?
-    std::stringstream raw;
+    std::stringstream ret;
 
-    raw << m_method << " " << m_uri << " " << get_version() << "\r\n";
-    raw << raw_headers() << "\r\n" << m_body;
+    ret << m_method << " " << m_uri << " " << get_version() << "\r\n";
+    ret << raw_headers() << "\r\n" << m_body;
 
-    return raw.str();
+    return ret.str();
 }
 
 inline void request::set_method(const std::string& method) {

@@ -1630,7 +1630,7 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
         m_alog.write(log::alevel::devel,"connection handle_write_frame");
     }
 
-    bool terminate = m_current_msg->get_terminal();
+    bool terminal = m_current_msg->get_terminal();
 
     m_send_buffer.clear();
     m_current_msg.reset();
@@ -1641,7 +1641,7 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
         return;
     }
 
-    if (terminate) {
+    if (terminal) {
         this->terminate(lib::error_code());
         return;
     }
@@ -1735,13 +1735,13 @@ void connection<config>::process_control_frame(typename config::message_type::pt
     }
 
     if (op == frame::opcode::PING) {
-        bool pong = true;
+        bool should_reply = true;
 
         if (m_ping_handler) {
-            pong = m_ping_handler(m_connection_hdl, msg->get_payload());
+            should_reply = m_ping_handler(m_connection_hdl, msg->get_payload());
         }
 
-        if (pong) {
+        if (should_reply) {
             this->pong(msg->get_payload(),ec);
             if (ec) {
                 m_elog.write(log::elevel::devel,
@@ -1813,7 +1813,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             }
         } else if (m_state == session::state::closing && !m_was_clean) {
             // ack of our close
-            m_alog.write(log::alevel::devel,"Got acknowledgement of close");
+            m_alog.write(log::alevel::devel, "Got acknowledgement of close");
 
             m_was_clean = true;
 
@@ -1829,11 +1829,11 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             }
         } else {
             // spurious, ignore
-            m_elog.write(log::elevel::devel,"Got close frame in wrong state");
+            m_elog.write(log::elevel::devel, "Got close frame in wrong state");
         }
     } else {
         // got an invalid control opcode
-        m_elog.write(log::elevel::devel,"Got control frame with invalid opcode");
+        m_elog.write(log::elevel::devel, "Got control frame with invalid opcode");
         // initiate protocol error shutdown
     }
 }
