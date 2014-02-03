@@ -11,6 +11,8 @@ HEAD
 - Feature: Adds the ability to pause reading on a connection. Paused connections will not
   read more data from their socket, allowing TCP flow control to work without blocking
   the main thread.
+- Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR` TCP socket
+  option. The default for this value has been changed from `true` to `false`.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
   duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default

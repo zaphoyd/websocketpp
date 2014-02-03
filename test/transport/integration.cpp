@@ -108,6 +108,7 @@ void run_server(server * s, int port, bool log = false) {
     }
 
     s->init_asio();
+    s->set_reuse_addr(true);
 
     s->listen(port);
     s->start_accept();
@@ -124,6 +125,7 @@ void run_client(client & c, std::string uri, bool log = false) {
     }
     websocketpp::lib::error_code ec;
     c.init_asio(ec);
+    c.set_reuse_addr(true);
     BOOST_CHECK(!ec);
 
     client::connection_ptr con = c.get_connection(uri,ec);
