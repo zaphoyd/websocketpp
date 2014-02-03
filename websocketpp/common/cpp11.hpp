@@ -97,17 +97,17 @@
     // Test for nullptr
     #ifndef _WEBSOCKETPP_NULLPTR_TOKEN_
         #ifdef _WEBSOCKETPP_NULLPTR_
-            // build system says we have constexpr
+            // build system says we have nullptr
             #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
         #else
             #if __has_feature(cxx_nullptr)
-                // clang feature detect says we have constexpr
+                // clang feature detect says we have nullptr
                 #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
             #elif _MSC_VER >= 1600
                 // Visual Studio version that has nullptr
                 #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
             #else
-                // assume we don't have constexpr
+                // assume we don't have nullptr
                 #define _WEBSOCKETPP_NULLPTR_TOKEN_ 0
             #endif
         #endif
