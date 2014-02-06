@@ -32,6 +32,8 @@ HEAD
   reporting.
 - Bug: Fix use of variable names that shadow function parameters. The library should
   compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
+- Bug: Fix an issue where `set_open_handshake_timeout` was ignored by server code. Thank
+  you Robin Rowe for reporting.
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
   Robin Rowe for reporting.
 

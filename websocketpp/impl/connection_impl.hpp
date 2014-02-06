@@ -684,14 +684,16 @@ template <typename config>
 void connection<config>::read_handshake(size_t num_bytes) {
     m_alog.write(log::alevel::devel,"connection read");
 
-    m_handshake_timer = transport_con_type::set_timer(
-        config::timeout_open_handshake,
-        lib::bind(
-            &type::handle_open_handshake_timeout,
-            type::get_shared(),
-            lib::placeholders::_1
-        )
-    );
+    if (m_open_handshake_timeout_dur > 0) {
+        m_handshake_timer = transport_con_type::set_timer(
+            m_open_handshake_timeout_dur,
+            lib::bind(
+                &type::handle_open_handshake_timeout,
+                type::get_shared(),
+                lib::placeholders::_1
+            )
+        );
+    }
 
     transport_con_type::async_read_at_least(
         num_bytes,
