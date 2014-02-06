@@ -709,7 +709,7 @@ void connection<config>::read_handshake(size_t num_bytes) {
 // All exit paths for this function need to call send_http_response() or submit
 // a new read request with this function as the handler.
 template <typename config>
-void connection<config>::handle_read_handshake(const lib::error_code& ec,
+void connection<config>::handle_read_handshake(lib::error_code const & ec,
     size_t bytes_transferred)
 {
     m_alog.write(log::alevel::devel,"connection handle_read_handshake");
@@ -1665,8 +1665,8 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
 }
 
 template <typename config>
-void connection<config>::atomic_state_change(istate_type req,
-    istate_type dest, std::string msg)
+void connection<config>::atomic_state_change(istate_type req, istate_type dest,
+    std::string msg)
 {
     scoped_lock_type lock(m_connection_state_lock);
 
@@ -1679,10 +1679,9 @@ void connection<config>::atomic_state_change(istate_type req,
 }
 
 template <typename config>
-void connection<config>::atomic_state_change(
-    istate_type internal_req, istate_type internal_dest,
-    session::state::value external_req, session::state::value external_dest,
-    std::string msg)
+void connection<config>::atomic_state_change(istate_type internal_req, 
+    istate_type internal_dest, session::state::value external_req, 
+    session::state::value external_dest, std::string msg)
 {
     scoped_lock_type lock(m_connection_state_lock);
 
@@ -1696,8 +1695,7 @@ void connection<config>::atomic_state_change(
 }
 
 template <typename config>
-void connection<config>::atomic_state_check(istate_type req,
-    std::string msg)
+void connection<config>::atomic_state_check(istate_type req, std::string msg)
 {
     scoped_lock_type lock(m_connection_state_lock);
 
