@@ -51,11 +51,11 @@ those connections. Endpoints also manage any shared network resources.
 
 The connection stores information specific to each WebSocket session. 
 
-Aside:
-> Once a connection is launched, there is no link between the endpoint and the connection. All default settings are copied into the new connection by the endpoint. Changing default settings on an endpoint will only affect future connections.
+> **Note:** Once a connection is launched, there is no link between the endpoint and the connection. All default settings are copied into the new connection by the endpoint. Changing default settings on an endpoint will only affect future connections.
 Connections do not maintain a link back to their associated endpoint. Endpoints do not maintain a list of outstanding connections. If your application needs to iterate over all connections it will need to maintain a list of them itself.
 
-Terminology:
+
+> **Terminology: Endpoint Config**
 > WebSocket++ endpoints have a group of settings that may be configured at compile time via the `config` template arguement. A config is a struct that contains types and static constants that is used to produce an endpoint with specific properties. Depending on which config is being used the endpoint will have different methods available and may have additional third party dependencies. 
 Configs will be discussed later in more detail, for now we are going to use one of the default configs, `asio_client`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application.
 
