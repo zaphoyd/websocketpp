@@ -8,7 +8,7 @@ Initial Setup
 
 A basic program loop that prompts the user for a command and then processes it. In this tutorial we will modify this program to perform tasks and retrieve data from a remote server over a WebSocket connection.
 
-#### Build:
+#### Build
 `clang++ step1.cpp`
 
 #### Code so far
@@ -43,7 +43,7 @@ int main() {
 
 ### Step 2
 
-_Add WebSocket++ includes and set up endpoint type._
+_Add WebSocket++ includes and set up an endpoint type._
 
 WebSocket++ includes two major object types. The endpoint and the connection. The
 endpoint creates and launches new connections and maintains default settings for
@@ -54,18 +54,15 @@ The connection stores information specific to each WebSocket session.
 > **Note:** Once a connection is launched, there is no link between the endpoint and the connection. All default settings are copied into the new connection by the endpoint. Changing default settings on an endpoint will only affect future connections.
 Connections do not maintain a link back to their associated endpoint. Endpoints do not maintain a list of outstanding connections. If your application needs to iterate over all connections it will need to maintain a list of them itself.
 
+WebSocket++ endpoints are built by combining an endpoint role with an endpoint config. There are two different types of endpoint roles, one each for the client and server roles in a WebSocket session. This is a client tutorial so we will use the client role `websocketpp::client` which is provided by the `<websocketpp/client.hpp>` header.
 
-> **Terminology: Endpoint Config**
+> #### Terminology: Endpoint Config
 > WebSocket++ endpoints have a group of settings that may be configured at compile time via the `config` template arguement. A config is a struct that contains types and static constants that is used to produce an endpoint with specific properties. Depending on which config is being used the endpoint will have different methods available and may have additional third party dependencies. 
-Configs will be discussed later in more detail, for now we are going to use one of the default configs, `asio_client`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application.
 
-The following header includes the `asio_client` config. All of the default library configs are located in `websocketpp/config/*`
-`#include <websocketpp/config/asio_no_tls_client.hpp>`
+The endpoint role takes a template parameter called `config` that is used to configure the behavior of endpoint at compile time. For this example we are going to use a default config provided by the library called `asio_client`, provided by `<websocketpp/config/asio_no_tls_client.hpp>`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application, more about the other stock configs, and how to build your own custom configs.
 
-The following header includes the WebSocket++ client endpoint itself:
-`#include <websocketpp/client.hpp>`
+Combine a config with an endpoint role to produce a fully configured endpoint. This type will be used frequently so I would recommend a typedef here.
 
-The following line configures the client template with the config type to define the type of the endpoint that will be used in our program.
 `typedef websocketpp::client<websocketpp::config::asio_client> client`
 
 #### Build
@@ -88,7 +85,6 @@ typedef websocketpp::client<websocketpp::config::asio_client> client;
 int main() {
     bool done = false;
     std::string input;
-    websocket_endpoint endpoint;
 
     while (!done) {
         std::cout << "Enter Command: ";
