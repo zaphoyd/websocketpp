@@ -6,10 +6,10 @@ Initial Setup
 
 ### Step 1
 
-A basic program loop that prompts the user for a command and then processes it.
+A basic program loop that prompts the user for a command and then processes it. In this tutorial we will modify this program to perform tasks and retrieve data from a remote server over a WebSocket connection.
 
 Build:
-clang++ chapter1.cpp
+clang++ step1.cpp
 
 ### Step 2
 
@@ -19,7 +19,7 @@ WebSocket++ includes two major object types. The endpoint and the connection. Th
 endpoint creates and launches new connections and maintains default settings for
 those connections. Endpoints also manage any shared network resources.
 
-The connection stores information specific to each connection. 
+The connection stores information specific to each WebSocket session. 
 
 Aside:
 Once a connection is launched, there is no link between the endpoint and the connection. All default settings are copied into the new connection by the endpoint. Changing default settings on an endpoint will only affect future connections.
@@ -27,12 +27,12 @@ Connections do not maintain a link back to their associated endpoint. Endpoints 
 
 Terminology:
 WebSocket++ endpoints have a group of settings that may be configured at compile time via the `config` template arguement. A config is a struct that contains types and static constants that is used to produce an endpoint with specific properties. Depending on which config is being used the endpoint will have different methods available and may have additional third party dependencies. 
-Configs will be discussed later in more detail, for now we are going to use one of the default configs, `asio_no_tls_client`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application.
+Configs will be discussed later in more detail, for now we are going to use one of the default configs, `asio_client`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application.
 
-The following line includes the asio_no_tls_client config. All of the default library configs are located in `websocketpp/config/*`
+The following header includes the `asio_client` config. All of the default library configs are located in `websocketpp/config/*`
 `#include <websocketpp/config/asio_no_tls_client.hpp>`
 
-The following line includes the WebSocket++ client endpoint itself:
+The following header includes the WebSocket++ client endpoint itself:
 `#include <websocketpp/client.hpp>`
 
 The following line configures the client template with the config type to define the type of the endpoint that will be used in our program.
@@ -45,6 +45,35 @@ In addition to the new headers, boost::asio depends on the boost_system shared l
 
 clang++ step2.cpp -lboost_system
 
+```cpp
+#include <iostream>
+#include <string>
+
+int main() {
+    bool done = false;
+    std::string input;
+
+    while (!done) {
+        std::cout << "Enter Command: ";
+        std::getline(std::cin, input);
+
+        if (input == "quit") {
+            done = true;
+        } else if (input == "help") {
+            std::cout 
+                << "\nCommand List:\n"
+                << "help: Display this help text\n"
+                << "quit: Exit the program\n"
+                << std::endl;
+        } else {
+            std::cout << "Unrecognized Command" << std::endl;
+        }
+    }
+
+    return 0;
+}
+```
+
 ### Step 3
 
 Create endpoint wrapper object that handles initialization and setting up the background thread.
@@ -52,25 +81,25 @@ Create endpoint wrapper object that handles initialization and setting up the ba
 The websocket_endpoint class includes as members a client of the type we defined earlier and a thread that will be used to run network operations.
 
 Aside:
-Note the use of types in the websocketpp::lib namespace. Specifically websocketpp::lib::shared_ptr and websocketpp::lib::thread. In addition, note the inclusion of two additional headers from the <websocketpp/common/*> directory. These types are wrappers used here to allow the example to be built either against the boost libraries or the C++11 standard library.
-For best results, in your application you should replace websocketpp::lib::* types with the types appropriate to your environment. For example, if you plan to use the boost versions of these types you would include: boost/shared_ptr.hpp and boost/thread.hpp and use boost::shared_ptr and boost::thread respectively. If you plan to use your environments C++11 standard library you would include <memory> and <thread> and use std::shared_ptr and std::thread. [TODO: link to more information about websocketpp::lib namespace]
+Note the use of types in the `websocketpp::lib` namespace. Specifically `websocketpp::lib::shared_ptr` and `websocketpp::lib::thread`. In addition, note the inclusion of two additional headers from the <websocketpp/common/*> directory. These types are wrappers used here to allow the example to be built either against the boost libraries or the C++11 standard library.
+For best results, in your application you should replace `websocketpp::lib::*` types with the types appropriate to your environment. For example, if you plan to use the boost versions of these types you would include: `boost/shared_ptr.hpp` and `boost/thread.hpp` and use `boost::shared_ptr` and `boost::thread` respectively. If you plan to use your environments C++11 standard library you would include <memory> and <thread> and use `std::shared_ptr` and `std::thread`. [TODO: link to more information about websocketpp::lib namespace]
 
 Within the `websocket_endpoint` constructor several things happen:
 
 The following sets the endpoint logging behavior to silent by clearing all of the access and error logging channels. [TODO: link to more information about logging]
-```c++
+```cpp
 m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
 m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
 ```
 
 The following lines perform an initialization of the transport system underlying the endpoint and sets it to perpetual mode. In perpetual mode the endpoint will not exit when it runs out of work. This is important because we want this endpoint to remain active while our application is running and process requests for new WebSocket connections on demand as we need them.
-```c++
+```cpp
 m_endpoint.init_asio();
 m_endpoint.start_perpetual();
 ```
 
 Finally, this line launches a thread to run the `run` method of our client endpoint.
-```c++
+```cpp
 m_thread.reset(new websocketpp::lib::thread(&client::run, &m_endpoint));
 ```
 
