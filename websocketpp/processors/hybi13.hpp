@@ -396,7 +396,8 @@ public:
                                 m_extended_header
                             )
                         );
-                        // TODO: reserve space in the existing message for the new bytes
+                        
+                        out.reserve(out.size() + m_bytes_needed);
                     }
                     m_current_msg = &m_data_msg;
                 }
