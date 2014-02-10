@@ -196,8 +196,7 @@ public:
      * @return A status code, 0 on success, non-zero for specific sorts of
      * failure
      */
-    virtual lib::error_code validate_handshake(request_type const & request)
-        const = 0;
+    virtual lib::error_code validate_handshake(request_type const & request) const = 0;
 
     /// Calculate the appropriate response for this websocket request
     /**
@@ -236,8 +235,7 @@ public:
     virtual std::string get_raw(response_type const & request) const = 0;
 
     /// Return the value of the header containing the CORS origin.
-    virtual std::string const & get_origin(request_type const & request)
-        const = 0;
+    virtual std::string const & get_origin(request_type const & request) const = 0;
 
     /// Extracts requested subprotocols from a handshake request
     /**
@@ -310,8 +308,7 @@ public:
      * Performs validation, masking, compression, etc. will return an error if
      * there was an error, otherwise msg will be ready to be written
      */
-    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
-        = 0;
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) = 0;
 
     /// Prepare a ping frame
     /**
@@ -324,8 +321,8 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_ping(std::string const & in,
-        message_ptr out) const = 0;
+    virtual lib::error_code prepare_ping(std::string const & in, message_ptr out) const 
+        = 0;
 
     /// Prepare a pong frame
     /**
@@ -338,8 +335,8 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_pong(std::string const & in,
-        message_ptr out) const = 0;
+    virtual lib::error_code prepare_pong(std::string const & in, message_ptr out) const 
+        = 0;
 
     /// Prepare a close frame
     /**
