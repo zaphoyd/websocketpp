@@ -1945,49 +1945,49 @@ template <typename config>
 typename connection<config>::processor_ptr
 connection<config>::get_processor(int version) const {
     // TODO: allow disabling certain versions
+    
+    processor_ptr p;
+    
     switch (version) {
         case 0:
-            return processor_ptr(
-                new processor::hybi00<config>(
-                    transport_con_type::is_secure(),
-                    m_is_server,
-                    m_msg_manager
-                )
-            );
+            p.reset(new processor::hybi00<config>(
+                transport_con_type::is_secure(),
+                m_is_server,
+                m_msg_manager
+            ));
             break;
         case 7:
-            return processor_ptr(
-                new processor::hybi07<config>(
-                    transport_con_type::is_secure(),
-                    m_is_server,
-                    m_msg_manager,
-                    m_rng
-                )
-            );
+            p.reset(new processor::hybi07<config>(
+                transport_con_type::is_secure(),
+                m_is_server,
+                m_msg_manager,
+                m_rng
+            ));
             break;
         case 8:
-            return processor_ptr(
-                new processor::hybi08<config>(
-                    transport_con_type::is_secure(),
-                    m_is_server,
-                    m_msg_manager,
-                    m_rng
-                )
-            );
+            p.reset(new processor::hybi08<config>(
+                transport_con_type::is_secure(),
+                m_is_server,
+                m_msg_manager,
+                m_rng
+            ));
             break;
         case 13:
-            return processor_ptr(
-                new processor::hybi13<config>(
-                    transport_con_type::is_secure(),
-                    m_is_server,
-                    m_msg_manager,
-                    m_rng
-                )
-            );
+            p.reset(new processor::hybi13<config>(
+                transport_con_type::is_secure(),
+                m_is_server,
+                m_msg_manager,
+                m_rng
+            ));
             break;
         default:
-            return processor_ptr();
+            return p;
     }
+    
+    // Settings not configured by the constructor
+    p->set_max_message_size(m_max_message_size);
+    
+    return p;
 }
 
 template <typename config>

@@ -297,6 +297,7 @@ public:
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
+      , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
@@ -456,9 +457,9 @@ public:
         m_message_handler = h;
     }
 
-    /////////////////////////
-    // Connection timeouts //
-    /////////////////////////
+    //////////////////////////////////////////
+    // Connection timeouts and other limits //
+    //////////////////////////////////////////
 
     /// Set open handshake timeout
     /**
@@ -527,6 +528,38 @@ public:
      */
     void set_pong_timeout(long dur) {
         m_pong_timeout_dur = dur;
+    }
+
+    /// Get maximum message size
+    /**
+     * Get maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set maximum message size
+    /**
+     * Set maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error. This
+     * value may be changed during the connection.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+        if (m_processor) {
+            m_processor->set_max_message_size(new_value);
+        }
     }
 
     //////////////////////////////////
@@ -1345,6 +1378,7 @@ private:
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
     long                    m_pong_timeout_dur;
+    size_t                  m_max_message_size;
 
     /// External connection state
     /**
