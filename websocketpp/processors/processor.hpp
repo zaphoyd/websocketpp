@@ -161,12 +161,42 @@ public:
 
     explicit processor(bool secure, bool p_is_server)
       : m_secure(secure)
-      , m_server(p_is_server) {}
+      , m_server(p_is_server)
+      , m_max_message_size(config::max_message_size)
+    {}
 
     virtual ~processor() {}
 
     /// Get the protocol version of this processor
     virtual int get_version() const = 0;
+
+    /// Get maximum message size
+    /**
+     * Get maximum message size. Maximum message size determines the point at which the
+     * processor will fail a connection with the message_too_big protocol error.
+     *
+     * The default is retrieved from the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set maximum message size
+    /**
+     * Set maximum message size. Maximum message size determines the point at which the
+     * processor will fail a connection with the message_too_big protocol error.
+     *
+     * The default is retrieved from the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+    }
 
     /// Returns whether or not the permessage_compress extension is implemented
     /**
@@ -358,6 +388,7 @@ public:
 protected:
     bool const m_secure;
     bool const m_server;
+    size_t m_max_message_size;
 };
 
 } // namespace processor
