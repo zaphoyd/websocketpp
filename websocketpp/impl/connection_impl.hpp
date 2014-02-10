@@ -932,7 +932,7 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
                 return;
             } else {
                 lib::error_code close_ec;
-                this->close(processor::error::to_ws(ec),ec.message(),close_ec);
+                this->close(processor::error::to_ws(consume_ec),consume_ec.message(),close_ec);
 
                 if (close_ec) {
                     m_elog.write(log::elevel::fatal,
