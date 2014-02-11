@@ -13,7 +13,7 @@ HEAD
   the main thread.
 - Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR` TCP socket
   option. The default for this value has been changed from `true` to `false`.
-- Feature: Adds the ability to specify a maximum message size.
+- Feature: Adds the ability to specify a maximum message size. 
 - Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
   duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
