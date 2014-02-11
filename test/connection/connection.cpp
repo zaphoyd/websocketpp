@@ -192,6 +192,33 @@ BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
     BOOST_CHECK_EQUAL(ref, output.str());
 }
 
+BOOST_AUTO_TEST_CASE( set_max_message_size ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    
+    // After the handshake, add a single frame with a message that is too long.
+    char frame0[10] = {char(0x82), char(0x83), 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01};
+    input.append(frame0, 10);
+    
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
+
+    // After the handshake, add a single frame with a close message with message too big
+    // error code.
+    char frame1[4] = {char(0x88), 0x19, 0x03, char(0xf1)};
+    output.append(frame1, 4);
+    output.append("A message was too large");
+
+	server s;
+	s.set_user_agent("");
+	s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
+    s.set_max_message_size(2);
+
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+}
+
+// TODO: set max message size in client endpoint test case
+// TODO: set max message size mid connection test case
+// TODO: [maybe] set max message size in open handler
+
 /*
 
 BOOST_AUTO_TEST_CASE( user_reject_origin ) {

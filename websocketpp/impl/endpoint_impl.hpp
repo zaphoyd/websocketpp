@@ -74,6 +74,9 @@ endpoint<connection,config>::create_connection() {
     if (m_pong_timeout_dur == config::timeout_pong) {
         con->set_pong_timeout(m_pong_timeout_dur);
     }
+    if (m_max_message_size != config::max_message_size) {
+        con->set_max_message_size(m_max_message_size);
+    }
 
     lib::error_code ec;
 
