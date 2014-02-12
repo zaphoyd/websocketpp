@@ -64,14 +64,14 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
-    
-    if (m_open_handshake_timeout_dur == config::timeout_open_handshake) {
+
+    if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);
     }
-    if (m_close_handshake_timeout_dur == config::timeout_close_handshake) {
+    if (m_close_handshake_timeout_dur != config::timeout_close_handshake) {
         con->set_close_handshake_timeout(m_close_handshake_timeout_dur);
     }
-    if (m_pong_timeout_dur == config::timeout_pong) {
+    if (m_pong_timeout_dur != config::timeout_pong) {
         con->set_pong_timeout(m_pong_timeout_dur);
     }
     if (m_max_message_size != config::max_message_size) {
@@ -142,7 +142,7 @@ void endpoint<connection,config>::resume_reading(connection_hdl hdl) {
 
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload, 
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload,
     frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -152,7 +152,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, std::string const & p
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload, 
+void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload,
     frame::opcode::value op)
 {
     lib::error_code ec;
@@ -231,7 +231,7 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & p
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & payload, 
+void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & payload,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);

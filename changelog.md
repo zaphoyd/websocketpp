@@ -13,7 +13,7 @@ HEAD
   the main thread.
 - Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR` TCP socket
   option. The default for this value has been changed from `true` to `false`.
-- Feature: Adds the ability to specify a maximum message size. 
+- Feature: Adds the ability to specify a maximum message size.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
   duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
@@ -29,12 +29,14 @@ HEAD
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting
 - Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
-- Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for 
+- Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for
   reporting.
 - Bug: Fix use of variable names that shadow function parameters. The library should
   compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
 - Bug: Fix an issue where `set_open_handshake_timeout` was ignored by server code. Thank
   you Robin Rowe for reporting.
+- Bug: Fix an issue where custom timeout values weren't being propagated from
+  endpoints to new connections.
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
   Robin Rowe for reporting.
 
