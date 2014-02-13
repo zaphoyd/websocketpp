@@ -34,7 +34,7 @@ namespace websocketpp {
 
 /// A handle to uniquely identify a connection.
 /**
- * This type uniquely identifies a connection. It is implimented as a weak
+ * This type uniquely identifies a connection. It is implemented as a weak
  * pointer to the connection in question. This provides uniqueness across
  * multiple endpoints and ensures that IDs never conflict or run out.
  *

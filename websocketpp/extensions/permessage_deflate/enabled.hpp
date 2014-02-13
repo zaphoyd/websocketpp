@@ -50,8 +50,8 @@ namespace extensions {
 /**
  * ### permessage-deflate interface
  *
- * **is_implimented**\n
- * `bool is_implimented()`\n
+ * **is_implemented**\n
+ * `bool is_implemented()`\n
  * Returns whether or not the object impliments the extension or not
  *
  * **is_enabled**\n
