@@ -862,6 +862,8 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
     );
 
     if (ec) {
+        log::level echannel = log::elevel::fatal;
+        
         if (ec == transport::error::eof) {
             if (m_state == session::state::closed) {
                 // we expect to get eof if the connection is closed already
@@ -877,14 +879,12 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             }
         }
         if (ec == transport::error::tls_short_read) {
-            m_elog.write(log::elevel::rerror,"got TLS short read, killing connection for now");
-            this->terminate(ec);
-            return;
+            echannel = log::elevel::rerror;
+        } else if (ec == transport::error::action_after_shutdown) {
+            echannel = log::elevel::info;
         }
-
-        std::stringstream s;
-        s << "error in handle_read_frame: " << ec.message() << " (" << ec << ")";
-        m_elog.write(log::elevel::fatal,s.str());
+        
+        log_err(echannel, "handle_read_frame", ec);
         this->terminate(ec);
         return;
     }
