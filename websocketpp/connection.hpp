@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <iostream>
 #include <queue>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -1351,6 +1352,14 @@ private:
      * Includes: error code and message for why it was failed
      */
     void log_fail_result();
+
+    /// Prints information about an arbitrary error code on the specified channel
+    template <typename error_type>
+    void log_err(log::level l, char const * msg, error_type const & ec) {
+        std::stringstream s;
+        s << msg << " error: " << ec << " (" << ec.message() << ")";
+        m_elog.write(l, s.str());
+    }
 
     // internal handler functions
     read_handler            m_handle_read_frame;

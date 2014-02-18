@@ -925,19 +925,21 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             m_alog.write(log::alevel::devel,s.str());
         }
         if (consume_ec) {
-            m_elog.write(log::elevel::rerror,"consume error: "+consume_ec.message());
+            log_err(log::elevel::rerror, "consume", consume_ec);
 
             if (config::drop_on_protocol_error) {
                 this->terminate(consume_ec);
                 return;
             } else {
                 lib::error_code close_ec;
-                this->close(processor::error::to_ws(consume_ec),consume_ec.message(),close_ec);
+                this->close(
+                    processor::error::to_ws(consume_ec),
+                    consume_ec.message(),
+                    close_ec
+                );
 
                 if (close_ec) {
-                    m_elog.write(log::elevel::fatal,
-                        "Failed to send a close frame after protocol error: "
-                        +close_ec.message());
+                    log_err(log::elevel::fatal, "Protocol error close frame ", close_ec);
                     this->terminate(close_ec);
                     return;
                 }
@@ -955,13 +957,11 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             message_ptr msg = m_processor->get_message();
 
             if (!msg) {
-                m_alog.write(log::alevel::devel,
-                    "null message from m_processor");
+                m_alog.write(log::alevel::devel, "null message from m_processor");
             } else if (!is_control(msg->get_opcode())) {
                 // data message, dispatch to user
                 if (m_state != session::state::open) {
-                    m_elog.write(log::elevel::warn,
-                        "got non-close data frame in state closing");
+                    m_elog.write(log::elevel::warn, "got non-close frame while closing");
                 } else if (m_message_handler) {
                     m_message_handler(m_connection_hdl, msg);
                 }
@@ -1008,8 +1008,7 @@ bool connection<config>::initialize_processor() {
     int version = processor::get_websocket_version(m_request);
 
     if (version < 0) {
-        m_alog.write(log::alevel::devel,
-            "BAD REQUEST: can't determine version");
+        m_alog.write(log::alevel::devel, "BAD REQUEST: can't determine version");
         m_response.set_status(http::status_code::bad_request);
         return false;
     }
@@ -1023,8 +1022,7 @@ bool connection<config>::initialize_processor() {
 
     // We don't have a processor for this version. Return bad request
     // with Sec-WebSocket-Version header filled with values we do accept
-    m_alog.write(log::alevel::devel,
-        "BAD REQUEST: no processor for version");
+    m_alog.write(log::alevel::devel, "BAD REQUEST: no processor for version");
     m_response.set_status(http::status_code::bad_request);
 
     std::stringstream ss;
@@ -1055,8 +1053,7 @@ bool connection<config>::process_handshake_request() {
         );
 
         if (!m_uri->get_valid()) {
-            m_alog.write(log::alevel::devel,
-                std::string("Bad request: failed to parse uri"));
+            m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
             m_response.set_status(http::status_code::bad_request);
             return false;
         }
@@ -1075,8 +1072,7 @@ bool connection<config>::process_handshake_request() {
     // Validate: make sure all required elements are present.
     if (ec){
         // Not a valid handshake request
-        m_alog.write(log::alevel::devel,
-            "BAD REQUEST (724) "+ec.message());
+        m_alog.write(log::alevel::devel, "Bad request " + ec.message());
         m_response.set_status(http::status_code::bad_request);
         return false;
     }
@@ -1089,8 +1085,7 @@ bool connection<config>::process_handshake_request() {
     if (neg_results.first) {
         // There was a fatal error in extension parsing that should result in
         // a failed connection attempt.
-        m_alog.write(log::alevel::devel,
-            "BAD REQUEST: (737) " + neg_results.first.message());
+        m_alog.write(log::alevel::devel, "Bad request: " + neg_results.first.message());
         m_response.set_status(http::status_code::bad_request);
         return false;
     } else {
@@ -1108,8 +1103,7 @@ bool connection<config>::process_handshake_request() {
 
 
     if (!m_uri->get_valid()) {
-        m_alog.write(log::alevel::devel,
-            std::string("Bad request: failed to parse uri"));
+        m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
         m_response.set_status(http::status_code::bad_request);
         return false;
     }
@@ -1133,14 +1127,14 @@ bool connection<config>::process_handshake_request() {
         if (ec) {
             std::stringstream s;
             s << "Processing error: " << ec << "(" << ec.message() << ")";
-            m_alog.write(log::alevel::devel,s.str());
+            m_alog.write(log::alevel::devel, s.str());
 
             m_response.set_status(http::status_code::internal_server_error);
             return false;
         }
     } else {
         // User application has rejected the handshake
-        m_alog.write(log::alevel::devel,"USER REJECT");
+        m_alog.write(log::alevel::devel, "USER REJECT");
 
         // Use Bad Request if the user handler did not provide a more
         // specific http response error code.
@@ -1214,8 +1208,7 @@ void connection<config>::handle_send_http_response(
     );
 
     if (ec) {
-        m_elog.write(log::elevel::rerror,
-            "error in handle_send_http_response: "+ec.message());
+        log_err(log::elevel::rerror,"handle_send_http_response",ec);
         this->terminate(ec);
         return;
     }
@@ -1272,13 +1265,11 @@ void connection<config>::send_http_request() {
             m_requested_subprotocols);
 
         if (ec) {
-            m_elog.write(log::elevel::fatal,
-                "Internal library error: processor error: "+ec.message());
+            log_err(log::elevel::fatal,"Internal library error: Processor",ec);
             return;
         }
     } else {
-        m_elog.write(log::elevel::fatal,
-            "Internal library error: missing processor");
+        m_elog.write(log::elevel::fatal,"Internal library error: missing processor");
         return;
     }
 
@@ -1294,8 +1285,7 @@ void connection<config>::send_http_request() {
     m_handshake_buffer = m_request.raw();
 
     if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,
-            "Raw Handshake request:\n"+m_handshake_buffer);
+        m_alog.write(log::alevel::devel,"Raw Handshake request:\n"+m_handshake_buffer);
     }
 
     if (m_open_handshake_timeout_dur > 0) {
@@ -1330,8 +1320,7 @@ void connection<config>::handle_send_http_request(const lib::error_code& ec) {
     );
 
     if (ec) {
-        m_elog.write(log::elevel::rerror,
-            "error in handle_send_http_request: "+ec.message());
+        log_err(log::elevel::rerror,"handle_send_http_request",ec);
         this->terminate(ec);
         return;
     }
@@ -1367,8 +1356,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     );
 
     if (ec) {
-        m_elog.write(log::elevel::rerror,
-            "error in handle_read_http_response: "+ec.message());
+        log_err(log::elevel::rerror,"handle_send_http_response",ec);
         this->terminate(ec);
         return;
     }
@@ -1396,10 +1384,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             m_response
         );
         if (validate_ec) {
-            m_elog.write(log::elevel::rerror,
-                std::string("Server handshake response was invalid: ")+
-                validate_ec.message()
-            );
+            log_err(log::elevel::rerror,"Server handshake response",validate_ec);
             this->terminate(validate_ec);
             return;
         }
@@ -1446,14 +1431,13 @@ void connection<config>::handle_open_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,
-            "asio open handshake timer cancelled");
+        m_alog.write(log::alevel::devel,"asio open handshake timer cancelled");
     } else if (ec) {
         m_alog.write(log::alevel::devel,
             "asio open handle_open_handshake_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog.write(log::alevel::devel, "asio open handshake timer expired");
+        m_alog.write(log::alevel::devel,"asio open handshake timer expired");
         terminate(make_error_code(error::open_handshake_timeout));
     }
 }
@@ -1463,8 +1447,7 @@ void connection<config>::handle_close_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,
-            "asio close handshake timer cancelled");
+        m_alog.write(log::alevel::devel,"asio close handshake timer cancelled");
     } else if (ec) {
         m_alog.write(log::alevel::devel,
             "asio open handle_close_handshake_timeout error: "+ec.message());
@@ -1528,7 +1511,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
     if (ec) {
         // there was an error actually shutting down the connection
-        m_elog.write(log::elevel::devel,"handle_terminate error: "+ec.message());
+        log_err(log::elevel::devel,"handle_terminate",ec);
     }
 
     // clean shutdown
@@ -1554,8 +1537,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
             m_termination_handler(type::get_shared());
         } catch (const std::exception& e) {
             m_elog.write(log::elevel::warn,
-                std::string("termination_handler call failed. Reason was: ")
-                +e.what());
+                std::string("termination_handler call failed. Reason was: ")+e.what());
         }
     }
 }
@@ -1615,12 +1597,6 @@ void connection<config>::write_frame() {
 
     transport_con_type::async_write(
         m_send_buffer,
-        /*lib::bind(
-            &type::handle_write_frame,
-            type::get_shared(),
-            m_current_msg->get_terminal(),
-            lib::placeholders::_1
-        )*/
         m_write_frame_handler
     );
 }
@@ -1638,7 +1614,7 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
     m_current_msg.reset();
 
     if (ec) {
-        m_elog.write(log::elevel::fatal,"error in handle_write_frame: "+ec.message());
+        log_err(log::elevel::fatal,"handle_write_frame",ec);
         this->terminate(ec);
         return;
     }
@@ -1744,8 +1720,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
         if (should_reply) {
             this->pong(msg->get_payload(),ec);
             if (ec) {
-                m_elog.write(log::elevel::devel,
-                    "Failed to send response pong: "+ec.message());
+                log_err(log::elevel::devel,"Failed to send response pong",ec);
             }
         }
     } else if (op == frame::opcode::PONG) {
@@ -1774,8 +1749,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
                 ec = send_close_ack(close::status::protocol_error,
                     "Invalid close code");
                 if (ec) {
-                    m_elog.write(log::elevel::devel,
-                        "send_close_ack error: "+ec.message());
+                    log_err(log::elevel::devel,"send_close_ack",ec);
                 }
             }
             return;
@@ -1793,8 +1767,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
                 ec = send_close_ack(close::status::protocol_error,
                     "Invalid close reason");
                 if (ec) {
-                    m_elog.write(log::elevel::devel,
-                        "send_close_ack error: "+ec.message());
+                    log_err(log::elevel::devel,"send_close_ack",ec);
                 }
             }
             return;
@@ -1808,8 +1781,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
 
             ec = send_close_ack();
             if (ec) {
-                m_elog.write(log::elevel::devel,
-                    "send_close_ack error: "+ec.message());
+                log_err(log::elevel::devel,"send_close_ack",ec);
             }
         } else if (m_state == session::state::closing && !m_was_clean) {
             // ack of our close
