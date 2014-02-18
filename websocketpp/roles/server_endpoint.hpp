@@ -102,7 +102,7 @@ public:
                 "Stopping acceptance of new connections because the underlying transport is no longer listening.");
         } else if (ec) {
             endpoint_type::m_elog.write(log::elevel::rerror,
-                "handle_accept error: "+ec.message());
+                "start_accept error: "+ec.message());
         }
     }
 
