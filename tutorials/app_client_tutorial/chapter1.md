@@ -226,9 +226,10 @@ In order to track information about each connection a `connection_metadata` obje
 
 #### Update `websocket_endpoint`
 
-The `websocket_endpoint` object now tracks a mapping between connection IDs and their associated metadata. A `get_metadata` helper method has been added to allow retrieval of metadata given an ID. A 'show' command has been added to accept an integer argument, look up its metadata, and print it.
+The `websocket_endpoint` object has gained some new data members and methods. It now tracks a mapping between connection IDs and their associated metadata as well as the next sequential ID number to hand out. The `connect()` method initiates a new connection. The `get_metadata` method retrieves metadata given an ID.
 
-Lastly, the meat of the changes, the new `connect` method of `websocket_endpoint`. A new WebSocket connection is initiated via a three step process. First, a connection request is created by `endpoint::get_connection(uri)`. Next, the connection request is configured. Lastly, the connection request is submitted back to the endpoint via `endpoint::connect()` which adds it to the queue of new connections to make.
+#### The connect method
+A new WebSocket connection is initiated via a three step process. First, a connection request is created by `endpoint::get_connection(uri)`. Next, the connection request is configured. Lastly, the connection request is submitted back to the endpoint via `endpoint::connect()` which adds it to the queue of new connections to make.
 
 > ###### Terminology `connection_ptr`
 > WebSocket++ keeps track of connection related resources using a reference counted shared pointer. The type of this pointer is `endpoint::connection_ptr`. A `connection_ptr` allows direct access to information about the connection and allows changing connection settings. Because of this direct access and their internal resource management role within the library it is not safe to for end applications to use `connection_ptr` except in the specific circumstances detailed below.
@@ -306,6 +307,28 @@ Finally, we call `endpoint::connect()` on our configured connection request and 
 The open handler we registered, `connection_metadata::on_open`, sets the status metadata field to "Open" and retrieves the value of the "Server" header from the remote endpoint's HTTP response and stores it in the metadata object. Servers often set an identifying string in this header.
 
 The fail handler we registered, `connection_metadata::on_fail`, sets the status metadata field to "Failed", the server field similarly to `on_open`, and retrieves the error code describing why the connection failed. The human readable message associated with that error code is saved to the metadata object.
+
+#### New Commands
+
+Two new commands have been set up. "connect [uri]" will pass the URI to the `websocket_endpoint` connect method and report an error or the connection ID of the new connection. "show [connection id]" will retrieve and print out the metadata associated with that connection. The help text has been updated accordingly.
+
+```cpp
+} else if (input.substr(0,7) == "connect") {
+    int id = endpoint.connect(input.substr(8));
+    if (id != -1) {
+        std::cout << "> Created connection with id " << id << std::endl;
+    }
+} else if (input.substr(0,4) == "show") {
+    int id = atoi(input.substr(5).c_str());
+
+    connection_metadata::ptr metadata = endpoint.get_metadata(id);
+    if (metadata) {
+        std::cout << *metadata << std::endl;
+    } else {
+        std::cout << "> Unknown connection id " << id << std::endl;
+    }
+}
+```
 
 #### Build
 
