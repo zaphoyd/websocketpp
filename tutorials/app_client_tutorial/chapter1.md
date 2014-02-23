@@ -29,7 +29,7 @@ int main() {
         if (input == "quit") {
             done = true;
         } else if (input == "help") {
-            std::cout 
+            std::cout
                 << "\nCommand List:\n"
                 << "help: Display this help text\n"
                 << "quit: Exit the program\n"
@@ -51,7 +51,7 @@ WebSocket++ includes two major object types. The endpoint and the connection. Th
 endpoint creates and launches new connections and maintains default settings for
 those connections. Endpoints also manage any shared network resources.
 
-The connection stores information specific to each WebSocket session. 
+The connection stores information specific to each WebSocket session.
 
 > **Note:** Once a connection is launched, there is no link between the endpoint and the connection. All default settings are copied into the new connection by the endpoint. Changing default settings on an endpoint will only affect future connections.
 Connections do not maintain a link back to their associated endpoint. Endpoints do not maintain a list of outstanding connections. If your application needs to iterate over all connections it will need to maintain a list of them itself.
@@ -59,7 +59,7 @@ Connections do not maintain a link back to their associated endpoint. Endpoints 
 WebSocket++ endpoints are built by combining an endpoint role with an endpoint config. There are two different types of endpoint roles, one each for the client and server roles in a WebSocket session. This is a client tutorial so we will use the client role `websocketpp::client` which is provided by the `<websocketpp/client.hpp>` header.
 
 > ###### Terminology: Endpoint Config
-> WebSocket++ endpoints have a group of settings that may be configured at compile time via the `config` template parameter. A config is a struct that contains types and static constants that are used to produce an endpoint with specific properties. Depending on which config is being used the endpoint will have different methods available and may have additional third party dependencies. 
+> WebSocket++ endpoints have a group of settings that may be configured at compile time via the `config` template parameter. A config is a struct that contains types and static constants that are used to produce an endpoint with specific properties. Depending on which config is being used the endpoint will have different methods available and may have additional third party dependencies.
 
 The endpoint role takes a template parameter called `config` that is used to configure the behavior of endpoint at compile time. For this example we are going to use a default config provided by the library called `asio_client`, provided by `<websocketpp/config/asio_no_tls_client.hpp>`. This is a client config that uses boost::asio to provide network transport and does not support TLS based security. Later on we will discuss how to introduce TLS based security into a WebSocket++ application, more about the other stock configs, and how to build your own custom configs.
 
@@ -200,7 +200,7 @@ int main() {
         if (input == "quit") {
             done = true;
         } else if (input == "help") {
-            std::cout 
+            std::cout
                 << "\nCommand List:\n"
                 << "help: Display this help text\n"
                 << "quit: Exit the program\n"
@@ -216,56 +216,296 @@ int main() {
 
 ### Step 4
 
-_Opening and closing WebSocket connections_
+_Opening WebSocket connections_
 
-- Creating a connection
-- terminology: `connection_ptr` and `connection_hdl`
-- terminology: `error handling: exception vs ec`
-- endpoint::connect
-- endpoint::close
-- terminology: WebSocket close codes
-- terminology: registering handlers
-- Setting an open, fail, and close handler
+This step adds two new commands to app_client. The ability to open a new connection and the ability to view information about a previously opened connection. Every connection that gets opened will be assigned an integer connection id that the user of the program can use to interact with that connection.
 
+#### New Connection Metadata Object
 
-core websocket++ control flow.
-A handshake, followed by a split into 2 independent control strands
-- Handshake
--- use information specified before the call to endpoint::connect to construct a WebSocket
-   handshake request.
--- Pass the WebSocket handshake request to the transport policy. The transport policy
-   determines how to get these bytes to the endpoint playing the server role. Depending on
-   which transport policy your endpoint uses this method will be different.
--- Receive a handshake response from the underlying transport. This is parsed and checked
-   for conformance to RFC6455. If the validation fails, the fail handler is called. 
-   Otherwise the open handler is called.
-- At this point control splits into two separate strands. One that reads new bytes from
-  the transport policy on the incoming channle, the other that accepts new messages from
-  the local application for framing and writing to the outgoing transport channel.
-- Read strand
--- Read and process new bytes from transport
--- If the bytes contain at least one complete message dispatch each message by calling the
-   appropriate handler. This is either the message handler for data messages, or 
-   ping/pong/close handlers for each respective control message. If no handler is 
-   registered for a particular message it is ignored.
--- Ask the transport layer for more bytes
-- Write strand
--- Wait for messages from the application
--- Perform error checking on message input,
--- Frame message per RFC6455
--- Queue message for sending
--- Pass all outstanding messages to the transport policy for output
--- When there are no messages left to send, return to waiting
+In order to track information about each connection a `connection_metadata` object is defined. This object stores the numeric connection id and a number of fields that will be filled in as the connection is processed. Initially this includes the state of the connection (opening, open, failed, closed, etc), the original URI connected to, an identifying value from the server, and a description of the reason for connection failure/closure. Future steps will add more information to this metadata object.
 
-Important observations
-Handlers run in line with library processing which has several implications applications should be aware of:
-- 
+#### Update `websocket_endpoint`
+
+The `websocket_endpoint` object now tracks a mapping between connection IDs and their associated metadata. A `get_metadata` helper method has been added to allow retrieval of metadata given an ID. A 'show' command has been added to accept an integer argument, look up its metadata, and print it.
+
+Lastly, the meat of the changes, the new `connect` method of `websocket_endpoint`. A new WebSocket connection is initiated via a three step process. First, a connection request is created by `endpoint::get_connection(uri)`. Next, the connection request is configured. Lastly, the connection request is submitted back to the endpoint via `endpoint::connect()` which adds it to the queue of new connections to make.
+
+> ###### Terminology `connection_ptr`
+> WebSocket++ keeps track of connection related resources using a reference counted shared pointer. The type of this pointer is `endpoint::connection_ptr`. A `connection_ptr` allows direct access to information about the connection and allows changing connection settings. Because of this direct access and their internal resource management role within the library it is not safe to for end applications to use `connection_ptr` except in the specific circumstances detailed below.
+>
+> **When is it safe to use `connection_ptr`?**
+> - After `endpoint::get_connection(...)` and before `endpoint::connect()`: `get_connection` returns a `connection_ptr`. It is safe to use this pointer to configure your new connection. Once you submit the connection to `connect` you may no longer use the `connection_ptr` and should discard it immediately for optimal memory management.
+> - During a handler: WebSocket++ allows you to register hooks / callbacks / event handlers for specific events that happen during a connection's lifetime. During the invocation of one of these handlers the library guarantees that it is safe to use a `connection_ptr` for the connection associated with the currently running handler.
+
+> ###### Terminology `connection_hdl`
+> Because of the limited thread safety of the `connection_ptr` the library also provides a more flexible connection identifier, the `connection_hdl`. The `connection_hdl` has type `websocketpp::connection_hdl` and it is defined in `<websocketpp/common/connection_hdl.hpp>`. Note that unlike `connection_ptr` this is not dependent on the type or config of the endpoint. Code that simply stores or transmits `connection_hdl` but does not use them can include only the header above and can treat its hdls like values.
+>
+> Connection handles are not used directly. They are used by endpoint methods to identify the target of the desired action. For example, the endpoint method that sends a new message will take as a parameter the hdl of the connection to send the message to.
+>
+> **When is it safe to use `connection_hdl`?**
+> `connection_hdl`s may be used at any time from any thread. They may be copied and stored in containers. Deleting a hdl will not affect the connection in any way. Handles may be upgraded to a `connection_ptr` during a handler call by using `endpoint::get_con_from_hdl()`. The resulting `connection_ptr` is safe to use for the duration of that handler invocation.
+>
+> **`connection_hdl` FAQs**
+> - `connection_hdl`s are guaranteed to be unique within a program. Multiple endpoints in a single program will always create connections with unique handles.
+> - Using a `connection_hdl` with a different endpoint than the one that created its associated connection will result in undefined behavior.
+> - Using a `connection_hdl` whose associated connection has been closed or deleted is safe. The endpoint will return a specific error saying the operation couldn't be completed because the associated connection doesn't exist.
+> [TODO: more here? link to a connection_hdl FAQ elsewhere?]
+
+`websocket_endpoint::connect()` begins by calling `endpoint::get_connection()` using a uri passed as a parameter. Additionally, an error output value is passed to capture any errors that might occur during. If an error does occur an error notice is printed along with a descriptive message and the -1 / 'invalid' value is returned as the new ID.
+
+> ###### Terminology: `error handling: exceptions vs error_code`
+> WebSocket++ uses the error code system defined by the C++11 `<system_error>` library. It can optionally fall back to a similar system provided by the Boost libraries. All user facing endpoint methods that can fail take an `error_code` in an output parameter and store the error that occured there before returning. An empty/default constructed value is returned in the case of success.
+>
+> **Exception throwing varients**
+> All user facing endpoint methods that take and use an `error_code` parameter have a version that throws an exception instead. These methods are identical in function and signature except for the lack of the final ec parameter. The type of the exception thrown is `websocketpp::exception`. This type derives from `std::exception` so it can be caught by catch blocks grabbing generic `std::exception`s. The `websocketpp::exception::code()` method may be used to extract the machine readable `error_code` value from an exception.
+>
+> For clarity about error handling the app_client example uses exclusively the exception free varients of these methods. Your application may choose to use either.
+
+If connection creation succeeds, the next sequential connection ID is generated and a `connection_metadata` object is inserted into the connection list under that ID. Initially the metadata object stores the connection ID, the `connection_hdl`, and the URI the connection was opened to.
+
+```cpp
+int new_id = m_next_id++;
+metadata_ptr metadata(new connection_metadata(new_id, con->get_handle(), uri));
+m_connection_list[new_id] = metadata;
+```
+
+Next, the connection request is configured. For this step the only configuration we will do is setting up a few default handlers. Later on we will return and demonstrate some more detailed configuration that can happen here (setting user agents, origin, proxies, custom headers, subprotocols, etc).
+
+> ###### Terminology: Registering handlers
+> WebSocket++ provides a number of execution points where you can register to have a handler run. Which of these points are available to your endpoint will depend on its config. TLS handlers will not exist on non-TLS endpoints for example. A complete list of handlers can be found at  http://www.zaphoyd.com/websocketpp/manual/reference/handler-list.
+>
+> Handlers can be registered at the endpoint level and at the connection level. Endpoint handlers are copied into new connections as they are created. Changing an endpoint handler will affect only future connections. Handlers registered at the connection level will be bound to that specific connection only.
+>
+> The signature of handler binding methods is the same for endpoints and connections. The format is: `set_*_handler(...)`. Where * is the name of the handler. For example, `set_open_handler(...)` will set the handler to be called when a new connection is open. `set_fail_handler(...)` will set the handler to be called when a connection fails to connect.
+>
+> All handlers take one argument, a callable type that can be converted to a `std::function` with the correct count and type of arguments. You can pass free functions, functors, and Lambdas with matching argument lists as handlers. In addition, you can use `std::bind` (or `boost::bind`) to register functions with non-matching argument lists. This is useful for passing additional parameters not present in the handler signature or member functions that need to carry a 'this' pointer.
+>
+> The function signature of each handler can be looked up in the list above in the manual. In general, all handlers include the `connection_hdl` identifying which connection this even is associated with as the first parameter. Some handlers (such as the message handler) include additional parameters. Most handlers have a void return value but some (`validate`, `ping`, `tls_init`) do not. The specific meanings of the return values are documented in the handler list linked above.
+
+`app_client` registers an open and a fail handler. We will use these to track whether each connection was successfully opened or failed. If it successfully opens, we will gather some information from the opening handshake and store it with our connection metadata.
+
+In this example we are going to set connection specific handlers that are bound directly to the metadata object associated with our connection. This allows us to avoid performing a lookup in each handler to find the metadata object we plan to update which is a bit more efficient.
+
+Lets look at the parameters being sent to bind in detail:
+
+```cpp
+con->set_open_handler(websocketpp::lib::bind(
+    &connection_metadata::on_open,
+    metadata,
+    &m_endpoint,
+    websocketpp::lib::placeholders::_1
+));
+```
+
+`&connection_metadata::on_open` is the address of the `on_open` member function of the `connection_metadata` class. `metadata_ptr` is a pointer to the `connection_metadata` object associated with this class. It will be used as the object on which the `on_open` member function will be called. `&m_endpoint` is the address of the endpoint in use. This parameter will be passed as-is to the `on_open` method. Lastly, `websocketpp::lib::placeholders::_1` is a placeholder indicating that the bound function should take one additional argument to be filled in at a later time. WebSocket++ will fill in this placeholder with the `connection_hdl` when it invokes the handler.
+
+Finally, we call `endpoint::connect()` on our configured connection request and return the new connection ID.
+
+#### Handler Member Functions
+
+The open handler we registered, `connection_metadata::on_open`, sets the status metadata field to "Open" and retrieves the value of the "Server" header from the remote endpoint's HTTP response and stores it in the metadata object. Servers often set an identifying string in this header.
+
+The fail handler we registered, `connection_metadata::on_fail`, sets the status metadata field to "Failed", the server field similarly to `on_open`, and retrieves the error code describing why the connection failed. The human readable message associated with that error code is saved to the metadata object.
 
 #### Build
 
 There are no changes to the build instructions from step 3
 
+#### Run
+
+Enter Command: connect not a websocket uri
+> Connect initialization error: invalid uri
+Enter Command: show 0
+> Unknown connection id 0
+Enter Command: connect ws://echo.websocket.org
+> Created connection with id 0
+Enter Command: show 0
+> URI: ws://echo.websocket.org
+> Status: Open
+> Remote Server: Kaazing Gateway
+> Error/close reason: N/A
+Enter Command: connect ws://wikipedia.org
+> Created connection with id 1
+Enter Command: show 1
+> URI: ws://wikipedia.org
+> Status: Failed
+> Remote Server: Apache
+> Error/close reason: Invalid HTTP status.
+
 #### Code so far
+
+```cpp
+#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/client.hpp>
+
+#include <websocketpp/common/thread.hpp>
+#include <websocketpp/common/memory.hpp>
+
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
+
+typedef websocketpp::client<websocketpp::config::asio_client> client;
+
+class connection_metadata {
+public:
+    typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
+
+    connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
+      : m_id(id)
+      , m_hdl(hdl)
+      , m_status("Connecting")
+      , m_uri(uri)
+      , m_server("N/A")
+    {}
+
+    void on_open(client * c, websocketpp::connection_hdl hdl) {
+        m_status = "Open";
+
+        client::connection_ptr con = c->get_con_from_hdl(hdl);
+        m_server = con->get_response_header("Server");
+    }
+
+    void on_fail(client * c, websocketpp::connection_hdl hdl) {
+        m_status = "Failed";
+
+        client::connection_ptr con = c->get_con_from_hdl(hdl);
+        m_server = con->get_response_header("Server");
+        m_error_reason = con->get_ec().message();
+    }
+
+    friend std::ostream & operator<< (std::ostream & out, connection_metadata const & data);
+private:
+    int m_id;
+    websocketpp::connection_hdl m_hdl;
+    std::string m_status;
+    std::string m_uri;
+    std::string m_server;
+    std::string m_error_reason;
+};
+
+std::ostream & operator<< (std::ostream & out, connection_metadata const & data) {
+    out << "> URI: " << data.m_uri << "\n"
+        << "> Status: " << data.m_status << "\n"
+        << "> Remote Server: " << (data.m_server.empty() ? "None Specified" : data.m_server) << "\n"
+        << "> Error/close reason: " << (data.m_error_reason.empty() ? "N/A" : data.m_error_reason);
+
+    return out;
+}
+
+class websocket_endpoint {
+public:
+    websocket_endpoint () : m_next_id(0) {
+        m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
+        m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
+
+        m_endpoint.init_asio();
+        m_endpoint.start_perpetual();
+
+        m_thread.reset(new websocketpp::lib::thread(&client::run, &m_endpoint));
+    }
+
+    int connect(std::string const & uri) {
+        websocketpp::lib::error_code ec;
+
+        client::connection_ptr con = m_endpoint.get_connection(uri, ec);
+
+        if (ec) {
+            std::cout << "> Connect initialization error: " << ec.message() << std::endl;
+            return -1;
+        }
+
+        int new_id = m_next_id++;
+        connection_metadata::ptr metadata_ptr(new connection_metadata(new_id, con->get_handle(), uri));
+        m_connection_list[new_id] = metadata_ptr;
+
+        con->set_open_handler(websocketpp::lib::bind(
+            &connection_metadata::on_open,
+            metadata_ptr,
+            &m_endpoint,
+            websocketpp::lib::placeholders::_1
+        ));
+        con->set_fail_handler(websocketpp::lib::bind(
+            &connection_metadata::on_fail,
+            metadata_ptr,
+            &m_endpoint,
+            websocketpp::lib::placeholders::_1
+        ));
+
+        m_endpoint.connect(con);
+
+        return new_id;
+    }
+
+    connection_metadata::ptr get_metadata(int id) const {
+        con_list::const_iterator metadata_it = m_connection_list.find(id);
+        if (metadata_it == m_connection_list.end()) {
+            return connection_metadata::ptr();
+        } else {
+            return metadata_it->second;
+        }
+    }
+private:
+    typedef std::map<int,connection_metadata::ptr> con_list;
+
+    client m_endpoint;
+    websocketpp::lib::shared_ptr<websocketpp::lib::thread> m_thread;
+
+    con_list m_connection_list;
+    int m_next_id;
+};
+
+int main() {
+    bool done = false;
+    std::string input;
+    websocket_endpoint endpoint;
+
+    while (!done) {
+        std::cout << "Enter Command: ";
+        std::getline(std::cin, input);
+
+        if (input == "quit") {
+            done = true;
+        } else if (input == "help") {
+            std::cout
+                << "\nCommand List:\n"
+                << "connect <ws uri>\n"
+                << "show <connection id>\n"
+                << "help: Display this help text\n"
+                << "quit: Exit the program\n"
+                << std::endl;
+        } else if (input.substr(0,7) == "connect") {
+            int id = endpoint.connect(input.substr(8));
+            if (id != -1) {
+                std::cout << "> Created connection with id " << id << std::endl;
+            }
+        } else if (input.substr(0,4) == "show") {
+            int id = atoi(input.substr(5).c_str());
+
+            connection_metadata::ptr metadata = endpoint.get_metadata(id);
+            if (metadata) {
+                std::cout << *metadata << std::endl;
+            } else {
+                std::cout << "> Unknown connection id " << id << std::endl;
+            }
+        } else {
+            std::cout << "> Unrecognized Command" << std::endl;
+        }
+    }
+
+    return 0;
+}
+```
+
+### Step 5
+
+_Closing connections_
+
+- endpoint::close
+- terminology: WebSocket close codes
+- Setting a close handler
 
 ### Step 5
 
@@ -290,3 +530,30 @@ _Intermediate level features_
 
 _Using TLS / Secure WebSockets_
 
+
+
+
+### Misc stuff not sure if it should be included here or elsewhere?
+
+core websocket++ control flow.
+A handshake, followed by a split into 2 independent control strands
+- Handshake
+-- use information specified before the call to endpoint::connect to construct a WebSocket handshake request.
+-- Pass the WebSocket handshake request to the transport policy. The transport policy determines how to get these bytes to the endpoint playing the server role. Depending on which transport policy your endpoint uses this method will be different.
+-- Receive a handshake response from the underlying transport. This is parsed and checked for conformance to RFC6455. If the validation fails, the fail handler is called. Otherwise the open handler is called.
+- At this point control splits into two separate strands. One that reads new bytes from the transport policy on the incoming channle, the other that accepts new messages from the local application for framing and writing to the outgoing transport channel.
+- Read strand
+-- Read and process new bytes from transport
+-- If the bytes contain at least one complete message dispatch each message by calling the appropriate handler. This is either the message handler for data messages, or ping/pong/close handlers for each respective control message. If no handler is registered for a particular message it is ignored.
+-- Ask the transport layer for more bytes
+- Write strand
+-- Wait for messages from the application
+-- Perform error checking on message input,
+-- Frame message per RFC6455
+-- Queue message for sending
+-- Pass all outstanding messages to the transport policy for output
+-- When there are no messages left to send, return to waiting
+
+Important observations
+Handlers run in line with library processing which has several implications applications should be aware of:
+-

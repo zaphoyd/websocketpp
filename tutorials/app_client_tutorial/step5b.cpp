@@ -6,15 +6,15 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <string>
 #include <sstream>
+#include <vector>
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 class connection_metadata {
 public:
-    connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
+    connection_metadata(int id, websocketpp::connection_hdl hdl,std::string uri)
       : m_id(id)
       , m_hdl(hdl)
       , m_status("Connecting")
@@ -87,6 +87,8 @@ public:
         m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
         m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
         
+        m_endpoint.set_access_channels(websocketpp::log::alevel::app);
+
         m_endpoint.init_asio();
         m_endpoint.start_perpetual();
 
@@ -108,7 +110,6 @@ public:
     }
     
     // copy constructors
-    // assignment operator
     
     int connect(std::string const & uri) {
         websocketpp::lib::error_code ec;
@@ -117,25 +118,21 @@ public:
         client::connection_ptr con = m_endpoint.get_connection(uri, ec);
         
         if (ec) {
+            m_connection_list[new_id] = connection_metadata(new_id, websocketpp::connection_hdl(), uri);
+            m_connection_list[new_id].set_error("Connect initialization error: "+ec.message());
             std::cout << "> Connect initialization error: " << ec.message() << std::endl;
-            return -1;
-        }
+        } else {
+            m_connection_list[new_id] = connection_metadata(new_id, con->get_handle(), uri);
+            
+            using websocketpp::lib::placeholders::_1;
+            using websocketpp::lib::bind;
+            con->set_open_handler(bind(&connection_metadata::on_open,&m_connection_list[new_id],&m_endpoint,::_1));
+            con->set_fail_handler(bind(&connection_metadata::on_fail,&m_connection_list[new_id],&m_endpoint,::_1));
+            con->set_close_handler(bind(&connection_metadata::on_close,&m_connection_list[new_id],&m_endpoint,::_1));
+            
+            m_endpoint.connect(con);
+        }   
         
-        m_connection_list[new_id] = connection_metadata(new_id, con->get_handle(), uri);
-        
-        using websocketpp::lib::placeholders::_1;
-        using websocketpp::lib::bind;
-        con->set_open_handler(bind(
-            &connection_metadata::on_open,
-            &m_connection_list[new_id],
-            &m_endpoint,
-            ::_1
-        ));
-        con->set_fail_handler(bind(&connection_metadata::on_fail,&m_connection_list[new_id],&m_endpoint,::_1));
-        con->set_close_handler(bind(&connection_metadata::on_close,&m_connection_list[new_id],&m_endpoint,::_1));
-        
-        m_endpoint.connect(con);
-
         return new_id;
     }
     
