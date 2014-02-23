@@ -1,8 +1,10 @@
 Utility Client Example Application
 ==================================
 
-Initial Setup
--------------
+Chapter 1: Initial Setup & Basics
+---------------------------------
+
+Setting up the basic types, opening and closing connections, sending and receiving messages.
 
 ### Step 1
 
@@ -129,7 +131,7 @@ m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
 m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
 ```
 
-Next, we initialize the transport system underlying the endpoint and sets it to perpetual mode. In perpetual mode the endpoint's processing loop will not exit automatically when it has no connections. This is important because we want this endpoint to remain active while our application is running and process requests for new WebSocket connections on demand as we need them. Both of these methods are specific to the asio transport. They will not be  necessary or present in endpoints that use a non-asio config.
+Next, we initialize the transport system underlying the endpoint and set it to perpetual mode. In perpetual mode the endpoint's processing loop will not exit automatically when it has no connections. This is important because we want this endpoint to remain active while our application is running and process requests for new WebSocket connections on demand as we need them. Both of these methods are specific to the asio transport. They will not be  necessary or present in endpoints that use a non-asio config.
 ```cpp
 m_endpoint.init_asio();
 m_endpoint.start_perpetual();
@@ -142,16 +144,16 @@ m_thread.reset(new websocketpp::lib::thread(&client::run, &m_endpoint));
 
 #### Build
 
-Now that our client endpoint template is actually instantiated a few more linker dependencies will show up. In particular, WebSocket clients require a cryptographically secure random number generator. WebSocket++ is able to use either boost_random or the C++11 standard library <random> for this purpose.
+Now that our client endpoint template is actually instantiated a few more linker dependencies will show up. In particular, WebSocket clients require a cryptographically secure random number generator. WebSocket++ is able to use either `boost_random` or the C++11 standard library <random> for this purpose. Because this example also uses threads, if we do not have C++11 std::thread available we will need to include `boost_thread`.
 
 ##### Clang (C++98 & boost)
-`clang++ step3.cpp -lboost_system -lboost_random`
+`clang++ step3.cpp -lboost_system -lboost_random -lboost_thread`
 
 ##### Clang (C++11)
 `clang++ -std=c++0x -stdlib=libc++ step3.cpp -lboost_system -D_WEBSOCKETPP_CPP11_STL_`
 
 ##### G++ (C++98 & Boost)
-`g++ step3.cpp -lboost_system -lboost_random`
+`g++ step3.cpp -lboost_system -lboost_random -lboost_thread`
 
 ##### G++ v4.6+ (C++11)
 `g++ -std=c++0x step3.cpp -lboost_system -D_WEBSOCKETPP_CPP11_STL_`
@@ -211,3 +213,80 @@ int main() {
     return 0;
 }
 ```
+
+### Step 4
+
+_Opening and closing WebSocket connections_
+
+- Creating a connection
+- terminology: `connection_ptr` and `connection_hdl`
+- terminology: `error handling: exception vs ec`
+- endpoint::connect
+- endpoint::close
+- terminology: WebSocket close codes
+- terminology: registering handlers
+- Setting an open, fail, and close handler
+
+
+core websocket++ control flow.
+A handshake, followed by a split into 2 independent control strands
+- Handshake
+-- use information specified before the call to endpoint::connect to construct a WebSocket
+   handshake request.
+-- Pass the WebSocket handshake request to the transport policy. The transport policy
+   determines how to get these bytes to the endpoint playing the server role. Depending on
+   which transport policy your endpoint uses this method will be different.
+-- Receive a handshake response from the underlying transport. This is parsed and checked
+   for conformance to RFC6455. If the validation fails, the fail handler is called. 
+   Otherwise the open handler is called.
+- At this point control splits into two separate strands. One that reads new bytes from
+  the transport policy on the incoming channle, the other that accepts new messages from
+  the local application for framing and writing to the outgoing transport channel.
+- Read strand
+-- Read and process new bytes from transport
+-- If the bytes contain at least one complete message dispatch each message by calling the
+   appropriate handler. This is either the message handler for data messages, or 
+   ping/pong/close handlers for each respective control message. If no handler is 
+   registered for a particular message it is ignored.
+-- Ask the transport layer for more bytes
+- Write strand
+-- Wait for messages from the application
+-- Perform error checking on message input,
+-- Frame message per RFC6455
+-- Queue message for sending
+-- Pass all outstanding messages to the transport policy for output
+-- When there are no messages left to send, return to waiting
+
+Important observations
+Handlers run in line with library processing which has several implications applications should be aware of:
+- 
+
+#### Build
+
+There are no changes to the build instructions from step 3
+
+#### Code so far
+
+### Step 5
+
+_Sending and receiving messages_
+
+- Sending a messages
+- terminology: WebSocket opcodes, text vs binary messages
+- Receiving a message
+
+### Step 6
+
+_Intermediate level features_
+
+- Subprotocol negotiation
+- Setting and reading custom headers
+- Ping and Pong
+- Proxies?
+- Setting user agent
+- Setting Origin
+
+### Step 7
+
+_Using TLS / Secure WebSockets_
+
