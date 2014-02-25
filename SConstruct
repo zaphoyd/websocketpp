@@ -98,11 +98,13 @@ else:
 if env['CXX'].startswith('g++'):
    #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wcast-align'])
+   env.Append(CCFLAGS = ['-Wshadow'])
 elif env['CXX'].startswith('clang++'):
    #env.Append(CCFLAGS = ['-Wcast-align'])
    #env.Append(CCFLAGS = ['-Wglobal-constructors'])
    #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wno-padded'])
+   env.Append(CCFLAGS = ['-Wshadow'])
 
    # Wpadded
    # Wsign-conversion

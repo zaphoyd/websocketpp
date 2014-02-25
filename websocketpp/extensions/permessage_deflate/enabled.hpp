@@ -28,8 +28,10 @@
 #ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 #define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 
+
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/error.hpp>
 
@@ -48,8 +50,8 @@ namespace extensions {
 /**
  * ### permessage-deflate interface
  *
- * **is_implimented**\n
- * `bool is_implimented()`\n
+ * **is_implemented**\n
+ * `bool is_implemented()`\n
  * Returns whether or not the object impliments the extension or not
  *
  * **is_enabled**\n
@@ -433,7 +435,7 @@ public:
      * @return Validation error or 0 on success
      */
     lib::error_code validate_offer(http::attribute_list const & response) {
-
+        return make_error_code(error::general);
     }
 
     /// Negotiate extension
@@ -487,7 +489,6 @@ public:
         }
 
         size_t output;
-        int ret;
 
         m_dstate.avail_out = m_compress_buffer_size;
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
@@ -497,7 +498,7 @@ public:
             m_dstate.avail_out = m_compress_buffer_size;
             m_dstate.next_out = m_compress_buffer.get();
 
-            ret = deflate(&m_dstate, Z_SYNC_FLUSH);
+            deflate(&m_dstate, Z_SYNC_FLUSH);
 
             output = m_compress_buffer_size - m_dstate.avail_out;
 

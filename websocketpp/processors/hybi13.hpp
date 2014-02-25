@@ -33,6 +33,7 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/common/network.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/http/constants.hpp>
 
 #include <websocketpp/processors/processor.hpp>
@@ -67,9 +68,8 @@ public:
 
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit hybi13(bool secure, bool server, msg_manager_ptr manager,
-        rng_type& rng)
-      : processor<config>(secure,server)
+    explicit hybi13(bool secure, bool p_is_server, msg_manager_ptr manager, rng_type& rng)
+      : processor<config>(secure, p_is_server)
       , m_msg_manager(manager)
       , m_rng(rng)
     {
@@ -369,11 +369,25 @@ public:
                     m_current_msg = &m_control_msg;
                 } else {
                     if (!m_data_msg.msg_ptr) {
+                        if (m_bytes_needed > base::m_max_message_size) {
+                            ec = make_error_code(error::message_too_big);
+                            break;
+                        }
+                        
                         m_data_msg = msg_metadata(
                             m_msg_manager->get_message(op,m_bytes_needed),
                             frame::get_masking_key(m_basic_header,m_extended_header)
                         );
                     } else {
+                        // Fetch the underlying payload buffer from the data message we
+                        // are writing into.
+                        std::string & out = m_data_msg.msg_ptr->get_raw_payload();
+                        
+                        if (out.size() + m_bytes_needed > base::m_max_message_size) {
+                            ec = make_error_code(error::message_too_big);
+                            break;
+                        }
+                        
                         // Each frame starts a new masking key. All other state
                         // remains between frames.
                         m_data_msg.prepared_key = prepare_masking_key(
@@ -382,7 +396,8 @@ public:
                                 m_extended_header
                             )
                         );
-                        // TODO: reserve space in the existing message for the new bytes
+                        
+                        out.reserve(out.size() + m_bytes_needed);
                     }
                     m_current_msg = &m_data_msg;
                 }

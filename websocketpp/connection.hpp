@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <iostream>
 #include <queue>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -279,9 +280,9 @@ private:
     };
 public:
 
-    explicit connection(bool is_server, std::string const & ua, alog_type& alog,
+    explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
         elog_type& elog, rng_type & rng, int version)
-      : transport_con_type(is_server,alog,elog)
+      : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
             this,
@@ -297,12 +298,14 @@ public:
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
+      , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
       , m_send_buffer_size(0)
       , m_write_flag(false)
-      , m_is_server(is_server)
+      , m_read_flag(true)
+      , m_is_server(p_is_server)
       , m_alog(alog)
       , m_elog(elog)
       , m_rng(rng)
@@ -456,9 +459,9 @@ public:
         m_message_handler = h;
     }
 
-    /////////////////////////
-    // Connection timeouts //
-    /////////////////////////
+    //////////////////////////////////////////
+    // Connection timeouts and other limits //
+    //////////////////////////////////////////
 
     /// Set open handshake timeout
     /**
@@ -527,6 +530,38 @@ public:
      */
     void set_pong_timeout(long dur) {
         m_pong_timeout_dur = dur;
+    }
+
+    /// Get maximum message size
+    /**
+     * Get maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set maximum message size
+    /**
+     * Set maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error. This
+     * value may be changed during the connection.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+        if (m_processor) {
+            m_processor->set_max_message_size(new_value);
+        }
     }
 
     //////////////////////////////////
@@ -616,9 +651,46 @@ public:
      * @return An error code
      */
     lib::error_code interrupt();
-
+    
     /// Transport inturrupt callback
     void handle_interrupt();
+    
+    /// Pause reading of new data
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    lib::error_code pause_reading();
+
+    /// Pause reading callback
+    void handle_pause_reading();
+
+    /// Resume reading of new data
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    lib::error_code resume_reading();
+
+    /// Resume reading callback
+    void handle_resume_reading();
 
     /// Send a ping
     /**
@@ -1109,8 +1181,8 @@ public:
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
 
-    void handle_read_frame(lib::error_code const & ec,
-        size_t bytes_transferred);
+    void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
+    void read_frame();
 
     /// Get array of WebSocket protocol versions that this connection supports.
     const std::vector<int>& get_supported_versions() const;
@@ -1298,6 +1370,14 @@ private:
      */
     void log_fail_result();
 
+    /// Prints information about an arbitrary error code on the specified channel
+    template <typename error_type>
+    void log_err(log::level l, char const * msg, error_type const & ec) {
+        std::stringstream s;
+        s << msg << " error: " << ec << " (" << ec.message() << ")";
+        m_elog.write(l, s.str());
+    }
+
     // internal handler functions
     read_handler            m_handle_read_frame;
     write_frame_handler     m_write_frame_handler;
@@ -1324,6 +1404,7 @@ private:
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
     long                    m_pong_timeout_dur;
+    size_t                  m_max_message_size;
 
     /// External connection state
     /**
@@ -1396,6 +1477,9 @@ private:
      * Lock m_write_lock
      */
     bool m_write_flag;
+
+    /// True if this connection is presently reading new data
+    bool m_read_flag;
 
     // connection data
     request_type            m_request;

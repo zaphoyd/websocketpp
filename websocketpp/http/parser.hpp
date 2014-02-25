@@ -369,6 +369,9 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
 
 inline std::string strip_lws(std::string const & input) {
     std::string::const_iterator begin = extract_all_lws(input.begin(),input.end());
+    if (begin == input.end()) {
+        return std::string();
+    }
     std::string::const_reverse_iterator end = extract_all_lws(input.rbegin(),input.rend());
 
     return std::string(begin,end.base());

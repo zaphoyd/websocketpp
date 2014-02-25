@@ -216,6 +216,18 @@ struct debug_core {
      */
     static const bool silent_close = false;
 
+    /// Default maximum message size
+    /**
+     * Default value for the processor's maximum message size. Maximum message size
+     * determines the point at which the library will fail a connection with the 
+     * message_too_big protocol error.
+     *
+     * The default is 32MB
+     *
+     * @since 0.4.0-alpha1
+     */
+    static const size_t max_message_size = 32000000;
+
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;
 

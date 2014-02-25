@@ -47,13 +47,13 @@ static uint16_t const uri_default_secure_port = 443;
 
 class uri {
 public:
-    explicit uri(std::string const & uri) : m_valid(false) {
+    explicit uri(std::string const & uri_string) : m_valid(false) {
         std::string::const_iterator it;
         std::string::const_iterator temp;
 
         int state = 0;
 
-        it = uri.begin();
+        it = uri_string.begin();
 
         if (std::equal(it,it+6,"wss://")) {
             m_secure = true;
@@ -88,14 +88,14 @@ public:
             //temp = std::find(it,it2,']');
 
             temp = it;
-            while (temp != uri.end()) {
+            while (temp != uri_string.end()) {
                 if (*temp == ']') {
                     break;
                 }
                 ++temp;
             }
 
-            if (temp == uri.end()) {
+            if (temp == uri_string.end()) {
                 return;
             } else {
                 // validate IPv6 literal parts
@@ -103,7 +103,7 @@ public:
                 m_host.append(it,temp);
             }
             it = temp+1;
-            if (it == uri.end()) {
+            if (it == uri_string.end()) {
                 state = 2;
             } else if (*it == '/') {
                 state = 2;
@@ -119,7 +119,7 @@ public:
             // IPv4 or hostname
             // extract until : or /
             while (state == 0) {
-                if (it == uri.end()) {
+                if (it == uri_string.end()) {
                     state = 2;
                     break;
                 } else if (*it == '/') {
@@ -137,7 +137,7 @@ public:
         // parse port
         std::string port = "";
         while (state == 1) {
-            if (it == uri.end()) {
+            if (it == uri_string.end()) {
                 // state is not used after this point presently.
                 // this should be re-enabled if it ever is needed in a future
                 // refactoring
@@ -159,7 +159,7 @@ public:
         }
 
         m_resource = "/";
-        m_resource.append(it,uri.end());
+        m_resource.append(it,uri_string.end());
 
 
         m_valid = true;

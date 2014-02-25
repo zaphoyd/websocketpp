@@ -87,22 +87,23 @@ public:
 
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-    explicit endpoint(bool is_server, int version = config::client_version)
+    explicit endpoint(bool p_is_server, int version = config::client_version)
       : m_alog(config::alog_level, &std::cout)
       , m_elog(config::elog_level, &std::cerr)
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
-      , m_is_server(is_server)
+      , m_max_message_size(config::max_message_size)
+      , m_is_server(p_is_server)
       , m_version(version)
     {
         m_alog.set_channels(config::alog_level);
         m_elog.set_channels(config::elog_level);
 
-        m_alog.write(log::alevel::devel,"endpoint constructor");
+        m_alog.write(log::alevel::devel, "endpoint constructor");
 
-        transport_type::init_logging(&m_alog,&m_elog);
+        transport_type::init_logging(&m_alog, &m_elog);
     }
 
     /// Returns the user agent string that this endpoint will use
@@ -273,9 +274,9 @@ public:
         m_message_handler = h;
     }
 
-    /////////////////////////
-    // Connection timeouts //
-    /////////////////////////
+    //////////////////////////////////////////
+    // Connection timeouts and other limits //
+    //////////////////////////////////////////
 
     /// Set open handshake timeout
     /**
@@ -349,6 +350,36 @@ public:
         m_pong_timeout_dur = dur;
     }
 
+    /// Get default maximum message size
+    /**
+     * Get the default maximum message size that will be used for new connections created
+     * by this endpoint. The maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set default maximum message size
+    /**
+     * Set the default maximum message size that will be used for new connections created
+     * by this endpoint. Maximum message size determines the point at which the connection
+     * will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+    }
+
     /*************************************/
     /* Connection pass through functions */
     /*************************************/
@@ -363,6 +394,43 @@ public:
 
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
+
+    /// Pause reading of new data (exception free)
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    void pause_reading(connection_hdl hdl, lib::error_code & ec);
+    
+    /// Pause reading of new data
+    void pause_reading(connection_hdl hdl);
+
+    /// Resume reading of new data (exception free)
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    void resume_reading(connection_hdl hdl, lib::error_code & ec);
+
+    /// Resume reading of new data
+    void resume_reading(connection_hdl hdl);
 
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
@@ -498,6 +566,7 @@ private:
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
     long                        m_pong_timeout_dur;
+    size_t                      m_max_message_size;
 
     rng_type m_rng;
 

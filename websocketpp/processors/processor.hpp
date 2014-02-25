@@ -159,9 +159,11 @@ public:
     typedef typename config::message_type::ptr message_ptr;
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit processor(bool secure, bool server)
+    explicit processor(bool secure, bool p_is_server)
       : m_secure(secure)
-      , m_server(server) {}
+      , m_server(p_is_server)
+      , m_max_message_size(config::max_message_size)
+    {}
 
     virtual ~processor() {}
 
@@ -169,6 +171,34 @@ public:
     virtual int get_version() const = 0;
 
     virtual bool is_websocket() const { return true; }
+
+    /// Get maximum message size
+    /**
+     * Get maximum message size. Maximum message size determines the point at which the
+     * processor will fail a connection with the message_too_big protocol error.
+     *
+     * The default is retrieved from the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set maximum message size
+    /**
+     * Set maximum message size. Maximum message size determines the point at which the
+     * processor will fail a connection with the message_too_big protocol error.
+     *
+     * The default is retrieved from the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+    }
 
     /// Returns whether or not the permessage_compress extension is implemented
     /**
@@ -198,8 +228,7 @@ public:
      * @return A status code, 0 on success, non-zero for specific sorts of
      * failure
      */
-    virtual lib::error_code validate_handshake(request_type const & request)
-        const = 0;
+    virtual lib::error_code validate_handshake(request_type const & request) const = 0;
 
     /// Calculate the appropriate response for this websocket request
     /**
@@ -238,8 +267,7 @@ public:
     virtual std::string get_raw(response_type const & request) const = 0;
 
     /// Return the value of the header containing the CORS origin.
-    virtual std::string const & get_origin(request_type const & request)
-        const = 0;
+    virtual std::string const & get_origin(request_type const & request) const = 0;
 
     /// Extracts requested subprotocols from a handshake request
     /**
@@ -312,8 +340,7 @@ public:
      * Performs validation, masking, compression, etc. will return an error if
      * there was an error, otherwise msg will be ready to be written
      */
-    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
-        = 0;
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) = 0;
 
     /// Prepare a ping frame
     /**
@@ -326,8 +353,8 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_ping(std::string const & in,
-        message_ptr out) const = 0;
+    virtual lib::error_code prepare_ping(std::string const & in, message_ptr out) const 
+        = 0;
 
     /// Prepare a pong frame
     /**
@@ -340,8 +367,8 @@ public:
      *
      * @return Status code, zero on success, non-zero on failure
      */
-    virtual lib::error_code prepare_pong(std::string const & in,
-        message_ptr out) const = 0;
+    virtual lib::error_code prepare_pong(std::string const & in, message_ptr out) const 
+        = 0;
 
     /// Prepare a close frame
     /**
@@ -363,6 +390,7 @@ public:
 protected:
     bool const m_secure;
     bool const m_server;
+    size_t m_max_message_size;
 };
 
 } // namespace processor

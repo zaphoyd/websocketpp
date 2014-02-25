@@ -172,15 +172,15 @@ inline size_t response::consume(std::istream & s) {
 
 inline bool response::parse_complete(std::istream& s) {
     // parse a complete header (ie \r\n\r\n MUST be in the input stream)
-    std::string response;
+    std::string line;
 
     // get status line
-    std::getline(s, response);
+    std::getline(s, line);
 
-    if (response[response.size()-1] == '\r') {
-        response.erase(response.end()-1);
+    if (line[line.size()-1] == '\r') {
+        line.erase(line.end()-1);
 
-        std::stringstream   ss(response);
+        std::stringstream   ss(line);
         std::string         str_val;
         int                 int_val;
         char                char_val[256];
@@ -201,14 +201,14 @@ inline bool response::parse_complete(std::istream& s) {
 inline std::string response::raw() const {
     // TODO: validation. Make sure all required fields have been set?
 
-    std::stringstream raw;
+    std::stringstream ret;
 
-    raw << get_version() << " " << m_status_code << " " << m_status_msg;
-    raw << "\r\n" << raw_headers() << "\r\n";
+    ret << get_version() << " " << m_status_code << " " << m_status_msg;
+    ret << "\r\n" << raw_headers() << "\r\n";
 
-    raw << m_body;
+    ret << m_body;
 
-    return raw.str();
+    return ret.str();
 }
 
 inline void response::set_status(status_code::value code) {

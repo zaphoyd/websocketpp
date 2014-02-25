@@ -255,7 +255,7 @@ namespace http {
                 case internal_server_error:
                     return "Internal Server Error";
                 case not_implemented:
-                    return "Not Implimented";
+                    return "Not Implemented";
                 case bad_gateway:
                     return "Bad Gateway";
                 case service_unavailable:

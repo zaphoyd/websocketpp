@@ -9,7 +9,6 @@ typedef websocketpp::client<websocketpp::config::asio_client> client;
 int main() {
     bool done = false;
     std::string input;
-    websocket_endpoint endpoint;
 
     while (!done) {
         std::cout << "Enter Command: ";

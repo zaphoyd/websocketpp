@@ -17,7 +17,7 @@ Complete & Tested:
 - close_handler
 - echo_server & echo_server_tls
 
-Implimented, needs more testing
+Implemented, needs more testing
 - TLS support
 - External io_service support
 - socket_init_handler

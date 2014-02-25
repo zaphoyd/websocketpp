@@ -8,6 +8,12 @@ HEAD
   for code. #298
 - Feature: Adds a compile time switch to asio transport config to disable
   certain multithreading features (some locks, asio strands)
+- Feature: Adds the ability to pause reading on a connection. Paused connections will not
+  read more data from their socket, allowing TCP flow control to work without blocking
+  the main thread.
+- Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR` TCP socket
+  option. The default for this value has been changed from `true` to `false`.
+- Feature: Adds the ability to specify a maximum message size.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
   duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
@@ -19,9 +25,20 @@ HEAD
   reference counted pointers. #310 Thank you otaras for reporting.
 - Bug: Fix issue with const endpoint accessors (such as `get_user_agent`) not
   compiling due to non-const mutex use. #292 Thank you logofive for reporting.
-- Bug: Fix handler allocation crash with multithreaded io_service.
+- Bug: Fix handler allocation crash with multithreaded `io_service`.
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting
+- Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
+- Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for
+  reporting.
+- Bug: Fix use of variable names that shadow function parameters. The library should
+  compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
+- Bug: Fix an issue where `set_open_handshake_timeout` was ignored by server code. Thank
+  you Robin Rowe for reporting.
+- Bug: Fix an issue where custom timeout values weren't being propagated from
+  endpoints to new connections.
+- Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
+  Robin Rowe for reporting.
 
 0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan

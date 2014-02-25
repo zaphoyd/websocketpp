@@ -69,8 +69,7 @@ public:
 
     explicit server() : endpoint_type(true)
     {
-        endpoint_type::m_alog.write(log::alevel::devel,
-            "server constructor");
+        endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
     }
 
     // return an initialized connection_ptr. Call start() on this object to
@@ -84,7 +83,9 @@ public:
     // Starts the server's async connection acceptance loop.
     void start_accept() {
         connection_ptr con = get_connection();
-
+        
+        lib::error_code ec;
+        
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(
@@ -92,16 +93,30 @@ public:
                 this,
                 con,
                 lib::placeholders::_1
-            )
+            ),
+            ec
         );
+        
+        if (ec == error::async_accept_not_listening) {
+            endpoint_type::m_elog.write(log::elevel::info,
+                "Stopping acceptance of new connections because the underlying transport is no longer listening.");
+        } else if (ec) {
+            endpoint_type::m_elog.write(log::elevel::rerror,
+                "start_accept error: "+ec.message());
+        }
     }
 
-    void handle_accept(connection_ptr con, const lib::error_code& ec) {
+    void handle_accept(connection_ptr con, lib::error_code const & ec) {
         if (ec) {
             con->terminate(ec);
 
-            endpoint_type::m_elog.write(log::elevel::rerror,
-                "handle_accept error: "+ec.message());
+            if (ec == error::operation_canceled) {
+                endpoint_type::m_elog.write(log::elevel::info,
+                    "handle_accept error: "+ec.message());
+            } else {
+                endpoint_type::m_elog.write(log::elevel::rerror,
+                    "handle_accept error: "+ec.message());
+            }
         } else {
             con->start();
         }

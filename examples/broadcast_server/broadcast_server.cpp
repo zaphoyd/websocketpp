@@ -111,13 +111,13 @@ public:
             lock.unlock();
 
             if (a.type == SUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.insert(a.hdl);
             } else if (a.type == UNSUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.erase(a.hdl);
             } else if (a.type == MESSAGE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
 
                 con_list::iterator it;
                 for (it = m_connections.begin(); it != m_connections.end(); ++it) {
@@ -142,13 +142,13 @@ private:
 
 int main() {
 	try {
-	broadcast_server server;
+	broadcast_server server_instance;
 
 	// Start a thread to run the processing loop
-	thread t(bind(&broadcast_server::process_messages,&server));
+	thread t(bind(&broadcast_server::process_messages,&server_instance));
 
 	// Run the asio loop with the main thread
-	server.run(9002);
+	server_instance.run(9002);
 
 	t.join();
 

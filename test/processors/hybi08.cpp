@@ -50,6 +50,8 @@ struct stub_config {
 
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 
+    static const size_t max_message_size = 16000000;
+
     /// Extension related config
     static const bool enable_extensions = false;
 

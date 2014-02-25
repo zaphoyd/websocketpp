@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_TRANSPORT_ASIO_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_ASIO_CON_HPP
 
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
@@ -934,9 +935,9 @@ protected:
 		// Reset cached handlers now that we won't be reading or writing anymore
 		// These cached handlers store shared pointers to this connection and will leak
 		// the connection if not destroyed.
-		m_async_read_handler = 0;
-		m_async_write_handler = 0;
-		m_init_handler = 0;
+		m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+		m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+		m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
@@ -998,7 +999,7 @@ protected:
         shutdown_timer->cancel();
 
         if (ec) {
-            log_err(log::elevel::info,"asio async_shutdown",ec);
+            log_err(log::elevel::devel,"asio async_shutdown",ec);
             if (ec == boost::asio::error::not_connected) {
                 // The socket was already closed when we tried to close it. This
                 // happens periodically (usually if a read or write fails

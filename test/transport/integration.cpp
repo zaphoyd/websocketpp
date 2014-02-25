@@ -30,6 +30,8 @@
 
 #include <websocketpp/common/thread.hpp>
 
+#include <websocketpp/config/core.hpp>
+#include <websocketpp/config/core_client.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/server.hpp>
@@ -80,6 +82,9 @@ struct config : public websocketpp::config::asio_client {
 typedef websocketpp::server<config> server;
 typedef websocketpp::client<config> client;
 
+typedef websocketpp::server<websocketpp::config::core> iostream_server;
+typedef websocketpp::client<websocketpp::config::core_client> iostream_client;
+
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
@@ -103,6 +108,7 @@ void run_server(server * s, int port, bool log = false) {
     }
 
     s->init_asio();
+    s->set_reuse_addr(true);
 
     s->listen(port);
     s->start_accept();
@@ -119,6 +125,7 @@ void run_client(client & c, std::string uri, bool log = false) {
     }
     websocketpp::lib::error_code ec;
     c.init_asio(ec);
+    c.set_reuse_addr(true);
     BOOST_CHECK(!ec);
 
     client::connection_ptr con = c.get_connection(uri,ec);
@@ -494,7 +501,56 @@ BOOST_AUTO_TEST_CASE( client_is_perpetual ) {
 }
 
 BOOST_AUTO_TEST_CASE( client_failed_connection ) {
-	client c;
+    client c;
 
-	run_time_limited_client(c,"http://localhost:9005", 5, false);
+    run_time_limited_client(c,"http://localhost:9005", 5, false);
 }
+
+BOOST_AUTO_TEST_CASE( stop_listening ) {
+    server s;
+    client c;
+
+    // the first connection stops the server from listening
+    s.set_open_handler(bind(&cancel_on_open,&s,::_1));
+
+    // client immediately closes after opening a connection
+    c.set_open_handler(bind(&close<client>,&c,::_1));
+
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    tthread.detach();
+
+    run_client(c, "http://localhost:9005",false);
+
+    sthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( pause_reading ) {
+    iostream_server s;
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    char buffer[2] = { char(0x81), char(0x80) };
+    
+    // suppress output (it needs a place to go to avoid error but we don't care what it is)
+    std::stringstream null_output;
+    s.register_ostream(&null_output);
+    
+    iostream_server::connection_ptr con = s.get_connection();
+    con->start();
+
+    // read handshake, should work
+    BOOST_CHECK_EQUAL( con->read_some(handshake.data(), handshake.length()), handshake.length());
+    
+    // pause reading and try again. The first read should work, the second should return 0
+    // the first read was queued already after the handshake so it will go through because
+    // reading wasn't paused when it was queued. The byte it reads wont be enough to
+    // complete the frame so another read will be requested. This one wont actually happen
+    // because the connection is paused now.
+    con->pause_reading();
+    BOOST_CHECK_EQUAL( con->read_some(buffer, 1), 1);
+    BOOST_CHECK_EQUAL( con->read_some(buffer+1, 1), 0);
+    // resume reading and try again. Should work this time because the resume should have
+    // re-queued a read.
+    con->resume_reading();
+    BOOST_CHECK_EQUAL( con->read_some(buffer+1, 1), 1);
+}
+
