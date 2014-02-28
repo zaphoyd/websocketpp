@@ -780,7 +780,7 @@ protected:
         if (!m_async_read_handler) {
             m_alog.write(log::alevel::devel,
                 "async_read_at_least called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown), 0);
+            handler(make_error_code(transport::error::action_after_shutdown),0);
             return;
         }
 
@@ -933,8 +933,8 @@ protected:
         }
 
 		// Reset cached handlers now that we won't be reading or writing anymore
-		// These cached handlers store shared pointers to this connection and will leak
-		// the connection if not destroyed.
+		// These cached handlers store shared pointers to this connection and
+		// will leak the connection if not destroyed.
 		m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 		m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 		m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
