@@ -807,26 +807,28 @@ protected:
         );
     }
 
-    void handle_async_read(const boost::system::error_code& ec,
+    void handle_async_read(boost::system::error_code const & ec,
         size_t bytes_transferred)
     {
-        if (!ec) {
-            m_read_handler(lib::error_code(), bytes_transferred);
-            return;
-        }
-
         // translate boost error codes into more lib::error_codes
+        lib::error_code tec;
         if (ec == boost::asio::error::eof) {
-            m_read_handler(make_error_code(transport::error::eof),
-            bytes_transferred);
-        } else if (ec.value() == 335544539) {
-            m_read_handler(make_error_code(transport::error::tls_short_read),
-            bytes_transferred);
-        } else {
-            log_err(log::elevel::info,"asio async_read_at_least",ec);
-            m_read_handler(make_error_code(transport::error::pass_through),
-                bytes_transferred);
+            tec = make_error_code(transport::error::eof);
+        } else if (ec) {
+            // We don't know much more about the error at this point. As our
+            // socket/security policy if it knows more:
+            tec = socket_con_type::translate_ec(ec);
+            
+            if (tec == transport::error::tls_error || 
+                tec == transport::error::pass_through)
+            {
+                // These are aggregate/catch all errors. Log some human readable
+                // information to the info channel to give library users some
+                // more details about why the upstream method may have failed.
+                log_err(log::elevel::info,"asio async_read_at_least",ec);
+            }
         }
+        m_read_handler(tec,bytes_transferred);
     }
 
     void async_write(const char* buf, size_t len, write_handler handler) {
@@ -998,25 +1000,37 @@ protected:
 
         shutdown_timer->cancel();
 
+        lib::error_code tec;
         if (ec) {
-            log_err(log::elevel::devel,"asio async_shutdown",ec);
             if (ec == boost::asio::error::not_connected) {
                 // The socket was already closed when we tried to close it. This
                 // happens periodically (usually if a read or write fails
                 // earlier and if it is a real error will be caught at another
                 // level of the stack.
-                callback(lib::error_code());
             } else {
-                callback(make_error_code(transport::error::pass_through));
+                // We don't know anything more about this error, give our
+                // socket/security policy a crack at it.
+                tec = socket_con_type::translate_ec(ec);
+                
+                if (tec == transport::error::tls_short_read) {
+                    // TLS short read at this point is somewhat expected if both
+                    // sides try and end the connection at the same time or if 
+                    // SSLv2 is being used. In general there is nothing that can
+                    // be done here other than a low level development log.
+                } else {
+                    // all other errors are effectively pass through errors of
+                    // some sort so print some detail on the info channel for
+                    // library users to look up if needed.
+                    log_err(log::elevel::info,"asio async_shutdown",ec);
+                }
             }
         } else {
             if (m_alog.static_test(log::alevel::devel)) {
                 m_alog.write(log::alevel::devel,
                     "asio con handle_async_shutdown");
             }
-
-            callback(lib::error_code());
         }
+        callback(tec);
     }
 private:
     /// Convenience method for logging the code and message for an error_code
