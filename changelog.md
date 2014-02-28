@@ -20,6 +20,13 @@ HEAD
   buffer sizes based on profiling, caching of handler binding for async
   reads/writes, non-malloc allocators for read/write handlers, disabling of a
   number of questionably useful range sanity checks in tight inner loops.
+- Improvement: Cleaned up the handling of TLS related errors. TLS errors will
+  now be reported with more detail on the info channel rather than all being
+  `tls_short_read` or `pass_through`. In addition, many cases where a TLS short
+  read was in fact expected are no longer classified as errors. Expected TLS
+  short reads and quasi-expected socket shutdown related errors will no longer
+  be reported as unclean WebSocket shutdowns to the application. Information
+  about them will remain in the info error channel for debugging purposes.
 - Bug: Fix some cases of calls to empty lib::function objects.
 - Bug: Fix memory leak of connection objects due to cached handlers holding on to
   reference counted pointers. #310 Thank you otaras for reporting.
