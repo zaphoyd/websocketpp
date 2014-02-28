@@ -229,6 +229,23 @@ protected:
     lib::error_code get_ec() const {
         return lib::error_code();
     }
+    
+    /// Translate any security policy specific information about an error code
+    /**
+     * Translate_ec takes a boost error code and attempts to convert its value
+     * to an appropriate websocketpp error code. The plain socket policy does
+     * not presently provide any additional information so all errors will be
+     * reported as the generic transport pass_through error.
+     *
+     * @since 0.4.0-beta1
+     *
+     * @param ec The error code to translate_ec
+     * @return The translated error code
+     */
+    lib::error_code translate_ec(boost::system::error_code ec) {
+        // We don't know any more information about this error so pass through
+        return make_error_code(transport::error::pass_through);
+    }
 private:
     enum state {
         UNINITIALIZED = 0,
