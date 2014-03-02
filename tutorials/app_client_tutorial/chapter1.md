@@ -336,6 +336,7 @@ There are no changes to the build instructions from step 3
 
 #### Run
 
+```
 Enter Command: connect not a websocket uri
 > Connect initialization error: invalid uri
 Enter Command: show 0
@@ -354,6 +355,7 @@ Enter Command: show 1
 > Status: Failed
 > Remote Server: Apache
 > Error/close reason: Invalid HTTP status.
+```
 
 #### Code so far
 
