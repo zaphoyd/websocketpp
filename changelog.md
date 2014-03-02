@@ -46,6 +46,8 @@ HEAD
   endpoints to new connections.
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
   Robin Rowe for reporting.
+- Documentation: Examples and test suite build system now defaults to clang on
+  OS X
 
 0.3.0-alpha4 - 2013-10-11
 - HTTP requests ending normally are no longer logged as errors. Thank you Banaan
