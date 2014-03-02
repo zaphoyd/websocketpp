@@ -528,11 +528,26 @@ int main() {
 
 _Closing connections_
 
+This step adds a command that allows you to close a WebSocket connection and adjusts the quit command so that it cleanly closes all outstanding connections before quitting.
+
+#### WebSocket++ tools for connection closing
+
+> ###### Terminology: WebSocket close codes & reasons
+> The WebSocket close handshake involves an exchange of optional machine readable close codes and human readable reason strings. Each endpoint sends independent close details. The codes are short integers. The reasons are UTF8 text strings of at most 125 characters. More details about valid close code ranges and the meaning of each code can be found at https://tools.ietf.org/html/rfc6455#section-7.4
+
+WebSocket++ offers 
+
+The `websocketpp::close::status` namespace contains named constants for all of the IANA defined close codes. It also contains some special values.
+
+#### Add close handler
+
+The `connection_metadata::on_close` method is added. This method retrieves the close code and reason from the closing handshake and stores it in the local error reason field.
+
 - endpoint::close
 - terminology: WebSocket close codes
 - Setting a close handler
 
-### Step 5
+### Step 6
 
 _Sending and receiving messages_
 
@@ -540,7 +555,11 @@ _Sending and receiving messages_
 - terminology: WebSocket opcodes, text vs binary messages
 - Receiving a message
 
-### Step 6
+### Step 7
+
+_Using TLS / Secure WebSockets_
+
+### Step 8
 
 _Intermediate level features_
 
@@ -550,11 +569,8 @@ _Intermediate level features_
 - Proxies?
 - Setting user agent
 - Setting Origin
-
-### Step 7
-
-_Using TLS / Secure WebSockets_
-
+- Timers and security
+- Close behavior
 
 
 
