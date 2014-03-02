@@ -879,6 +879,13 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             }
         }
         if (ec == transport::error::tls_short_read) {
+            if (m_state == session::state::closed) {
+                // We expect to get a TLS short read if we try to read after the
+                // connection is closed. If this happens ignore and exit the
+                // read frame path.
+                terminate(lib::error_code());
+                return;
+            }
             echannel = log::elevel::rerror;
         } else if (ec == transport::error::action_after_shutdown) {
             echannel = log::elevel::info;

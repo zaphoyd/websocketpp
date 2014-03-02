@@ -172,7 +172,10 @@ enum value {
     timeout,
     
     /// read or write after shutdown
-    action_after_shutdown
+    action_after_shutdown,
+    
+    /// Other TLS error
+    tls_error,
 };
 
 class category : public lib::error_category {
@@ -203,6 +206,8 @@ class category : public lib::error_category {
                 return "Timer Expired";
             case action_after_shutdown:
                 return "A transport action was requested after shutdown";
+            case tls_error:
+                return "Generic TLS related error";
             default:
                 return "Unknown";
         }

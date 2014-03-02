@@ -79,6 +79,8 @@ elif env['PLATFORM'] == 'posix':
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
+   if not os.environ.has_key('CXX'):
+      env['CXX'] = "clang++"
    if env.has_key('DEBUG'):
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
