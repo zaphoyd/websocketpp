@@ -8,16 +8,17 @@ HEAD
   for code. #298
 - Feature: Adds a compile time switch to asio transport config to disable
   certain multithreading features (some locks, asio strands)
-- Feature: Adds the ability to pause reading on a connection. Paused connections will not
-  read more data from their socket, allowing TCP flow control to work without blocking
-  the main thread.
-- Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR` TCP socket
-  option. The default for this value has been changed from `true` to `false`.
+- Feature: Adds the ability to pause reading on a connection. Paused connections
+  will not read more data from their socket, allowing TCP flow control to work
+  without blocking the main thread.
+- Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR`
+  TCP socket option. The default for this value has been changed from `true` to 
+  `false`.
 - Feature: Adds the ability to specify a maximum message size.
 - Feature: Adds `close::status::get_string(...)` method to look up a human
   readable string given a close code value.
-- Improvement: Open, close, and pong timeouts can be disabled entirely by setting their
-  duration to 0.
+- Improvement: Open, close, and pong timeouts can be disabled entirely by
+  setting their duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
   buffer sizes based on profiling, caching of handler binding for async
   reads/writes, non-malloc allocators for read/write handlers, disabling of a
@@ -37,17 +38,18 @@ HEAD
 - Bug: Fix handler allocation crash with multithreaded `io_service`.
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting
-- Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for reporting.
-- Bug: Fix a crash following use of the `stop_listening` function. Thank you Thingol for
+- Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for
   reporting.
-- Bug: Fix use of variable names that shadow function parameters. The library should
-  compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
-- Bug: Fix an issue where `set_open_handshake_timeout` was ignored by server code. Thank
-  you Robin Rowe for reporting.
+- Bug: Fix a crash following use of the `stop_listening` function. Thank you
+  Thingol for reporting.
+- Bug: Fix use of variable names that shadow function parameters. The library
+  should compile cleanly with -Wshadow now. Thank you giszo for reporting. #318
+- Bug: Fix an issue where `set_open_handshake_timeout` was ignored by server
+  code. Thank you Robin Rowe for reporting.
 - Bug: Fix an issue where custom timeout values weren't being propagated from
   endpoints to new connections.
-- Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros. Thank you
-  Robin Rowe for reporting.
+- Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros.
+  Thank you Robin Rowe for reporting.
 - Documentation: Examples and test suite build system now defaults to clang on
   OS X
 
