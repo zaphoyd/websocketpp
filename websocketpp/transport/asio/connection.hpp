@@ -408,7 +408,7 @@ protected:
     /// Finish constructing the transport
     /**
      * init_asio is called once immediately after construction to initialize
-     * boost::asio components to the io_service
+     * boost::asio components to the io_service.
      *
      * @param io_service A pointer to the io_service to register with this
      * connection
@@ -416,42 +416,37 @@ protected:
      * @return Status code for the success or failure of the initialization
      */
     lib::error_code init_asio (io_service_ptr io_service) {
-        // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
         if (config::enable_multithreading) {
             m_strand.reset(new boost::asio::strand(*io_service));
 
             m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            ));
+                &type::handle_async_read, get_shared(),lib::placeholders::_1,
+                lib::placeholders::_2));
 
             m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            ));
+                &type::handle_async_write, get_shared(),lib::placeholders::_1,
+                lib::placeholders::_2));
         } else {
-            // TODO: goal: not have this line here
-            //m_strand.reset(new boost::asio::strand(*io_service));
-
-            m_async_read_handler = lib::bind(
-                &type::handle_async_read, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            );
+            m_async_read_handler = lib::bind(&type::handle_async_read,
+                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
 
             m_async_write_handler = lib::bind(&type::handle_async_write,
                 get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
-		
-		lib::error_code ec = socket_con_type::init_asio(io_service, m_strand, m_is_server);
-		if (ec) {
-			// reset the handlers to break the circular reference: this->handler->this
-			m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-			m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-		}
-		
-		return ec;
+
+        lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
+            m_is_server);
+
+        if (ec) {
+            // reset the handlers to break the circular reference:
+            // this->handler->this
+            m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+            m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        }
+
+        return ec;
     }
 
     void handle_pre_init(lib::error_code const & ec) {
@@ -823,7 +818,7 @@ protected:
         size_t bytes_transferred)
     {
         m_alog.write(log::alevel::devel, "asio con handle_async_read");
-        
+
         // translate boost error codes into more lib::error_codes
         lib::error_code tec;
         if (ec == boost::asio::error::eof) {
@@ -832,8 +827,8 @@ protected:
             // We don't know much more about the error at this point. As our
             // socket/security policy if it knows more:
             tec = socket_con_type::translate_ec(ec);
-            
-            if (tec == transport::error::tls_error || 
+
+            if (tec == transport::error::tls_error ||
                 tec == transport::error::pass_through)
             {
                 // These are aggregate/catch all errors. Log some human readable
@@ -1046,10 +1041,10 @@ protected:
                 // We don't know anything more about this error, give our
                 // socket/security policy a crack at it.
                 tec = socket_con_type::translate_ec(ec);
-                
+
                 if (tec == transport::error::tls_short_read) {
                     // TLS short read at this point is somewhat expected if both
-                    // sides try and end the connection at the same time or if 
+                    // sides try and end the connection at the same time or if
                     // SSLv2 is being used. In general there is nothing that can
                     // be done here other than a low level development log.
                 } else {
