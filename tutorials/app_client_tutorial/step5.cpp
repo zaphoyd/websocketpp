@@ -106,7 +106,8 @@ public:
             websocketpp::lib::error_code ec;
             m_endpoint.close(it->second->get_hdl(), websocketpp::close::status::going_away, "", ec);
             if (ec) {
-                std::cout << "> Error closing connection " << it->second->get_id() << ": "  << ec.message() << std::endl;
+                std::cout << "> Error closing connection " << it->second->get_id() << ": "  
+                          << ec.message() << std::endl;
             }
         }
         

@@ -530,7 +530,7 @@ _Closing connections_
 
 This step adds a command that allows you to close a WebSocket connection and adjusts the quit command so that it cleanly closes all outstanding connections before quitting.
 
-#### WebSocket++ tools for connection closing
+#### Getting connection close information out of WebSocket++
 
 > ###### Terminology: WebSocket close codes & reasons
 > The WebSocket close handshake involves an exchange of optional machine readable close codes and human readable reason strings. Each endpoint sends independent close details. The codes are short integers. The reasons are UTF8 text strings of at most 125 characters. More details about valid close code ranges and the meaning of each code can be found at https://tools.ietf.org/html/rfc6455#section-7.4
@@ -563,11 +563,11 @@ void on_close(client * c, websocketpp::connection_hdl hdl) {
 }
 ```
 
-Similarly to `on_open` and `on_fail`, websocket_endpoint::connect registers this close handler when a new connection is made.
+Similarly to `on_open` and `on_fail`, `websocket_endpoint::connect` registers this close handler when a new connection is made.
 
 #### Add close method to `websocket_endpoint`
 
-This method starts by looking up the given connection ID in the connection list. If it isn't found an error is printed. Next a close request is sent to the connection's handle with the specified WebSocket close code. This is done by calling `endpoint::close`. This is a thread safe method that is used to asynchronously dispatch a close signal to the connection with the given handle. When the operation is complete the connection's close handler will be triggered.
+This method starts by looking up the given connection ID in the connection list.  Next a close request is sent to the connection's handle with the specified WebSocket close code. This is done by calling `endpoint::close`. This is a thread safe method that is used to asynchronously dispatch a close signal to the connection with the given handle. When the operation is complete the connection's close handler will be triggered.
 
 ```cpp
 void close(int id, websocketpp::close::status::value code) {
@@ -588,9 +588,25 @@ void close(int id, websocketpp::close::status::value code) {
 
 #### Add close option to the command loop and help message
 
-A close option is added to the command loop. It takes a connection ID and optionally a close code and a close reason. If no code is specified the default of 1000/Normal is used. If no reason is specified, none is sent. The endpoint::send method will do some error checking and abort the close request if you try and send an invalid code or a reason with invalid UTF8 formatting. Reason strings longer than 125 characters will be truncated.
+A close option is added to the command loop. It takes a connection ID and optionally a close code and a close reason. If no code is specified the default of 1000/Normal is used. If no reason is specified, none is sent. The `endpoint::send` method will do some error checking and abort the close request if you try and send an invalid code or a reason with invalid UTF8 formatting. Reason strings longer than 125 characters will be truncated.
 
 An entry is also added to the help system to describe how the new command may be used.
+
+```cpp
+else if (input.substr(0,5) == "close") {
+    std::stringstream ss(input);
+    
+    std::string cmd;
+    int id;
+    int close_code = websocketpp::close::status::normal;
+    std::string reason = "";
+    
+    ss >> cmd >> id >> close_code;
+    std::getline(ss,reason);
+    
+    endpoint.close(id, close_code, reason);
+}
+```
 
 #### Close all outstanding connections in `websocket_endpoint` destructor
 
@@ -613,7 +629,8 @@ The destructor for `websocket_endpoint` now stops perpetual mode (so the run thr
         websocketpp::lib::error_code ec;
         m_endpoint.close(it->second->get_hdl(), websocketpp::close::status::going_away, "", ec);
         if (ec) {
-            std::cout << "> Error closing connection " << it->second->get_id() << ": "  << ec.message() << std::endl;
+            std::cout << "> Error closing connection " << it->second->get_id() << ": "  
+                      << ec.message() << std::endl;
         }
     }
     
