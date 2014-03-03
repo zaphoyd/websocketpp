@@ -796,6 +796,11 @@ protected:
 
         m_read_handler = handler;
 
+        if (!m_read_handler) {
+            m_alog.write(log::alevel::devel,
+                "asio con async_read_at_least called with bad handler");
+        }
+
         boost::asio::async_read(
             socket_con_type::get_socket(),
             boost::asio::buffer(buf,len),
@@ -810,6 +815,8 @@ protected:
     void handle_async_read(boost::system::error_code const & ec,
         size_t bytes_transferred)
     {
+        m_alog.write(log::alevel::devel, "asio con handle_async_read");
+        
         // translate boost error codes into more lib::error_codes
         lib::error_code tec;
         if (ec == boost::asio::error::eof) {
@@ -828,7 +835,16 @@ protected:
                 log_err(log::elevel::info,"asio async_read_at_least",ec);
             }
         }
-        m_read_handler(tec,bytes_transferred);
+        if (m_read_handler) {
+            m_read_handler(tec,bytes_transferred);
+            // TODO: why does this line break things?
+            //m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        } else {
+            // This can happen in cases where the connection is terminated while
+            // the transport is waiting on a read.
+            m_alog.write(log::alevel::devel,
+                "handle_async_read called with null read handler");
+        }
     }
 
     void async_write(const char* buf, size_t len, write_handler handler) {
@@ -882,11 +898,20 @@ protected:
         size_t bytes_transferred)
     {
         m_bufs.clear();
+        lib::error_code tec;
         if (ec) {
             log_err(log::elevel::info,"asio async_write",ec);
-            m_write_handler(make_error_code(transport::error::pass_through));
+            tec = make_error_code(transport::error::pass_through);
+        }
+        if (m_write_handler) {
+            m_write_handler(tec);
+            // TODO: why does this line break things?
+            //m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
         } else {
-            m_write_handler(lib::error_code());
+            // This can happen in cases where the connection is terminated while
+            // the transport is waiting on a read.
+            m_alog.write(log::alevel::devel,
+                "handle_async_write called with null write handler");
         }
     }
 
@@ -940,6 +965,9 @@ protected:
 		m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 		m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 		m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+
+        m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(

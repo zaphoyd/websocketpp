@@ -48,6 +48,8 @@ HEAD
   code. Thank you Robin Rowe for reporting.
 - Bug: Fix an issue where custom timeout values weren't being propagated from
   endpoints to new connections.
+- Bug: Fix a memory leak when a connection fails. #323 Thank you droppy for 
+  reporting.
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros.
   Thank you Robin Rowe for reporting.
 - Documentation: Examples and test suite build system now defaults to clang on
