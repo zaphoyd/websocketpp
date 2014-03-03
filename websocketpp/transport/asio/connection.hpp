@@ -443,8 +443,15 @@ protected:
             m_async_write_handler = lib::bind(&type::handle_async_write,
                 get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
-
-        return socket_con_type::init_asio(io_service, m_strand, m_is_server);
+		
+		lib::error_code ec = socket_con_type::init_asio(io_service, m_strand, m_is_server);
+		if (ec) {
+			// reset the handlers to break the circular reference: this->handler->this
+			m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+			m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+		}
+		
+		return ec;
     }
 
     void handle_pre_init(lib::error_code const & ec) {
