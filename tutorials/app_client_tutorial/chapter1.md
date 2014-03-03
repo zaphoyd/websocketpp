@@ -711,4 +711,3 @@ A handshake, followed by a split into 2 independent control strands
 
 Important observations
 Handlers run in line with library processing which has several implications applications should be aware of:
--
