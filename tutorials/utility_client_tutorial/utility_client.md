@@ -14,6 +14,9 @@ A basic program loop that prompts the user for a command and then processes it. 
 `clang++ step1.cpp`
 
 #### Code so far
+
+*note* A code snapshot for each step is present next to this tutorial file in the git repository.
+
 ```cpp
 #include <iostream>
 #include <string>
@@ -673,6 +676,9 @@ _Sending and receiving messages_
 
 _Using TLS / Secure WebSockets_
 
+Chapter 2: Intermediate Features
+--------------------------------
+
 ### Step 8
 
 _Intermediate level features_
@@ -685,7 +691,7 @@ _Intermediate level features_
 - Setting Origin
 - Timers and security
 - Close behavior
-
+- Send one message to all connections
 
 
 ### Misc stuff not sure if it should be included here or elsewhere?
