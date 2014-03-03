@@ -619,7 +619,7 @@ The destructor for `websocket_endpoint` now stops perpetual mode (so the run thr
     m_endpoint.stop_perpetual();
     
     for (con_list::const_iterator it = m_connection_list.begin(); it != m_connection_list.end(); ++it) {
-        if (it->second->get_status() != "open") {
+        if (it->second->get_status() != "Open") {
             // Only close open connections
             continue;
         }
