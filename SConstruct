@@ -229,6 +229,9 @@ utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir =
 # debug_client
 debug_client = SConscript('#/examples/debug_client/SConscript',variant_dir = builddir + 'debug_client',duplicate = 0)
 
+# debug_server
+debug_server = SConscript('#/examples/debug_server/SConscript',variant_dir = builddir + 'debug_server',duplicate = 0)
+
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
 
