@@ -1204,9 +1204,7 @@ void connection<config>::send_http_response() {
 }
 
 template <typename config>
-void connection<config>::handle_send_http_response(
-    const lib::error_code& ec)
-{
+void connection<config>::handle_send_http_response(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"handle_send_http_response");
 
     this->atomic_state_check(
@@ -1318,7 +1316,7 @@ void connection<config>::send_http_request() {
 }
 
 template <typename config>
-void connection<config>::handle_send_http_request(const lib::error_code& ec) {
+void connection<config>::handle_send_http_request(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"handle_send_http_request");
 
     this->atomic_state_check(
@@ -1438,13 +1436,13 @@ void connection<config>::handle_open_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,"asio open handshake timer cancelled");
+        m_alog.write(log::alevel::devel,"open handshake timer cancelled");
     } else if (ec) {
         m_alog.write(log::alevel::devel,
-            "asio open handle_open_handshake_timeout error: "+ec.message());
+            "open handle_open_handshake_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog.write(log::alevel::devel,"asio open handshake timer expired");
+        m_alog.write(log::alevel::devel,"open handshake timer expired");
         terminate(make_error_code(error::open_handshake_timeout));
     }
 }
@@ -1542,7 +1540,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
     if (m_termination_handler) {
         try {
             m_termination_handler(type::get_shared());
-        } catch (const std::exception& e) {
+        } catch (std::exception const & e) {
             m_elog.write(log::elevel::warn,
                 std::string("termination_handler call failed. Reason was: ")+e.what());
         }

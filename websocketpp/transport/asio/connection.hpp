@@ -498,7 +498,7 @@ protected:
     }
 
     void handle_post_init_timeout(timer_ptr post_timer, init_handler callback,
-        const lib::error_code& ec)
+        lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 
@@ -524,8 +524,8 @@ protected:
         callback(ret_ec);
     }
 
-    void handle_post_init(timer_ptr post_timer, init_handler callback, const
-        lib::error_code& ec)
+    void handle_post_init(timer_ptr post_timer, init_handler callback,
+        lib::error_code const & ec)
     {
         if (ec == transport::error::operation_aborted ||
             post_timer->expires_from_now().is_negative())
@@ -965,7 +965,7 @@ protected:
     }
 
     void handle_async_shutdown_timeout(timer_ptr shutdown_timer, init_handler
-        callback, const lib::error_code& ec)
+        callback, lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 
@@ -976,7 +976,7 @@ protected:
                 return;
             }
 
-            log_err(log::elevel::devel,"asio handle_async_socket_shutdown",ec);
+            log_err(log::elevel::devel,"asio handle_async_shutdown_timeout",ec);
             ret_ec = ec;
         } else {
             ret_ec = make_error_code(transport::error::timeout);
@@ -989,7 +989,7 @@ protected:
     }
 
     void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler
-        callback, const boost::system::error_code & ec)
+        callback, boost::system::error_code const & ec)
     {
         if (ec == boost::asio::error::operation_aborted ||
             shutdown_timer->expires_from_now().is_negative())
