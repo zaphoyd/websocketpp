@@ -535,17 +535,114 @@ This step adds a command that allows you to close a WebSocket connection and adj
 > ###### Terminology: WebSocket close codes & reasons
 > The WebSocket close handshake involves an exchange of optional machine readable close codes and human readable reason strings. Each endpoint sends independent close details. The codes are short integers. The reasons are UTF8 text strings of at most 125 characters. More details about valid close code ranges and the meaning of each code can be found at https://tools.ietf.org/html/rfc6455#section-7.4
 
-WebSocket++ offers 
+The `websocketpp::close::status` namespace contains named constants for all of the IANA defined close codes. It also includes free functions to determine whether a value is reserved or invalid and to convert a code to a human readable text representation.
 
-The `websocketpp::close::status` namespace contains named constants for all of the IANA defined close codes. It also contains some special values.
+During the close handler call WebSocket++ connections offer the following methods for accessing close handshake information:
+
+- `connection::get_remote_close_code()`: Get the close code as reported by the remote endpoint
+- `connection::get_remote_close_reason()`: Get the close reason as reported by the remote endpoint
+- `connection::get_local_close_code()`: Get the close code that this endpoint sent.
+- `connection::get_local_close_reason()`: Get the close reason that this endpoint sent.
+- `connection::get_ec()`: Get a more detailed/specific WebSocket++ `error_code` indicating what library error (if any) ultimately resulted in the connection closure.
+
+*Note:* there are some special close codes that will report a code that was not actually sent on the wire. For example 1005/"no close code" indicates that the endpoint omitted a close code entirely and 1006/"abnormal close" indicates that there was a problem that resulted in the connection closing without having performed a close handshake.
 
 #### Add close handler
 
 The `connection_metadata::on_close` method is added. This method retrieves the close code and reason from the closing handshake and stores it in the local error reason field.
 
-- endpoint::close
-- terminology: WebSocket close codes
-- Setting a close handler
+```cpp
+void on_close(client * c, websocketpp::connection_hdl hdl) {
+    m_status = "Closed";
+    client::connection_ptr con = c->get_con_from_hdl(hdl);
+    std::stringstream s;
+    s << "close code: " << con->get_remote_close_code() << " (" 
+      << websocketpp::close::status::get_string(con->get_remote_close_code()) 
+      << "), close reason: " << con->get_remote_close_reason();
+    m_error_reason = s.str();
+}
+```
+
+Similarly to `on_open` and `on_fail`, websocket_endpoint::connect registers this close handler when a new connection is made.
+
+#### Add close method to `websocket_endpoint`
+
+This method starts by looking up the given connection ID in the connection list. If it isn't found an error is printed. Next a close request is sent to the connection's handle with the specified WebSocket close code. This is done by calling `endpoint::close`. This is a thread safe method that is used to asynchronously dispatch a close signal to the connection with the given handle. When the operation is complete the connection's close handler will be triggered.
+
+```cpp
+void close(int id, websocketpp::close::status::value code) {
+    websocketpp::lib::error_code ec;
+    
+    con_list::iterator metadata_it = m_connection_list.find(id);
+    if (metadata_it == m_connection_list.end()) {
+        std::cout << "> No connection found with id " << id << std::endl;
+        return;
+    }
+    
+    m_endpoint.close(metadata_it->second->get_hdl(), code, "", ec);
+    if (ec) {
+        std::cout << "> Error initiating close: " << ec.message() << std::endl;
+    }
+}
+```
+
+#### Add close option to the command loop and help message
+
+A close option is added to the command loop. It takes a connection ID and optionally a close code and a close reason. If no code is specified the default of 1000/Normal is used. If no reason is specified, none is sent. The endpoint::send method will do some error checking and abort the close request if you try and send an invalid code or a reason with invalid UTF8 formatting. Reason strings longer than 125 characters will be truncated.
+
+An entry is also added to the help system to describe how the new command may be used.
+
+#### Close all outstanding connections in `websocket_endpoint` destructor
+
+Until now quitting the program left outstanding connections and the WebSocket++ network thread in a lurch. Now that we have a method of closing connections we can clean this up properly.
+
+The destructor for `websocket_endpoint` now stops perpetual mode (so the run thread exits after the last connection is closed) and iterates through the list of open connections and requests a clean close for each. Finally, the run thread is joined which causes the program to wait until those connection closes complete.
+
+```cpp
+~websocket_endpoint() {
+    m_endpoint.stop_perpetual();
+    
+    for (con_list::const_iterator it = m_connection_list.begin(); it != m_connection_list.end(); ++it) {
+        if (it->second->get_status() != "open") {
+            // Only close open connections
+            continue;
+        }
+        
+        std::cout << "> Closing connection " << it->second->get_id() << std::endl;
+        
+        websocketpp::lib::error_code ec;
+        m_endpoint.close(it->second->get_hdl(), websocketpp::close::status::going_away, "", ec);
+        if (ec) {
+            std::cout << "> Error closing connection " << it->second->get_id() << ": "  << ec.message() << std::endl;
+        }
+    }
+    
+    m_thread->join();
+}
+```
+
+#### Build
+
+There are no changes to the build instructions from step 4
+
+#### Run
+
+```
+Enter Command: connect ws://localhost:9002
+> Created connection with id 0
+Enter Command: close 0 1001 example message
+Enter Command: show 0
+> URI: ws://localhost:9002
+> Status: Closed
+> Remote Server: WebSocket++/0.3.0-alpha4
+> Error/close reason: close code: 1001 (Going away), close reason:  example message
+Enter Command: connect ws://localhost:9002
+> Created connection with id 1
+Enter Command: close 1 1006
+> Error initiating close: Invalid close code used
+Enter Command: quit
+> Closing connection 1
+```
 
 ### Step 6
 
