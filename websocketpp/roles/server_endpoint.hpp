@@ -82,6 +82,12 @@ public:
 
     // Starts the server's async connection acceptance loop.
     void start_accept() {
+        if (!transport_type::is_listening()) {
+            endpoint_type::m_elog.write(log::elevel::info,
+                "Stopping acceptance of new connections because the underlying transport is no longer listening.");
+            return;
+        }
+        
         connection_ptr con = get_connection();
         
         lib::error_code ec;
@@ -104,13 +110,12 @@ public:
             endpoint_type::m_elog.write(log::elevel::rerror,
                 "start_accept error: "+ec.message());
         }
-		
-		if (ec) {
-			// Terminate the connection to prevent memory leaks.
-			lib::error_code con_ec;
-			con->terminate(con_ec);
-		}
-	}
+        
+        if (ec) {
+            // Terminate the connection to prevent memory leaks.
+            con->terminate(lib::error_code());
+        }
+    }
 
     void handle_accept(connection_ptr con, lib::error_code const & ec) {
         if (ec) {
@@ -127,7 +132,7 @@ public:
             con->start();
         }
 
-        // TODO: are there cases where we should terminate this loop?
+        
         start_accept();
     }
 private:

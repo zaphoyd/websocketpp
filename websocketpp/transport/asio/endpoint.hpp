@@ -539,6 +539,14 @@ public:
         }
     }
 
+    /// Check if the endpoint is listening
+    /**
+     * @return Whether or not the endpoint is listening.
+     */
+    bool is_listening() const {
+        return (m_state == LISTENING);
+    }
+
     /// wraps the run method of the internal io_service object
     std::size_t run() {
         return m_io_service->run();
@@ -983,10 +991,6 @@ protected:
         }
 
         callback(lib::error_code());
-    }
-
-    bool is_listening() const {
-        return (m_state == LISTENING);
     }
 
     /// Initialize a connection
