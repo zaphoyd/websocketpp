@@ -110,12 +110,13 @@ public:
             endpoint_type::m_elog.write(log::elevel::rerror,
                 "start_accept error: "+ec.message());
         }
-        
-        if (ec) {
-            // Terminate the connection to prevent memory leaks.
-            con->terminate(lib::error_code());
-        }
-    }
+		
+		if (ec && con) {
+			// Terminate the connection to prevent memory leaks.
+			lib::error_code con_ec;
+			con->terminate(con_ec);
+		}
+	}
 
     void handle_accept(connection_ptr con, lib::error_code const & ec) {
         if (ec) {
