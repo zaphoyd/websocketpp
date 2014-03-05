@@ -105,7 +105,7 @@ public:
                 "start_accept error: "+ec.message());
         }
 		
-		if (ec) {
+		if (ec && con) {
 			// Terminate the connection to prevent memory leaks.
 			lib::error_code con_ec;
 			con->terminate(con_ec);
