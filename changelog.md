@@ -30,6 +30,8 @@ HEAD
   short reads and quasi-expected socket shutdown related errors will no longer
   be reported as unclean WebSocket shutdowns to the application. Information
   about them will remain in the info error channel for debugging purposes.
+- Improvement: `start_accept` errors are now reported to the caller either via
+  an exception or an ec parameter.
 - Bug: Fix some cases of calls to empty lib::function objects.
 - Bug: Fix memory leak of connection objects due to cached handlers holding on to
   reference counted pointers. #310 Thank you otaras for reporting.
@@ -48,7 +50,8 @@ HEAD
   code. Thank you Robin Rowe for reporting.
 - Bug: Fix an issue where custom timeout values weren't being propagated from
   endpoints to new connections.
-- Bug: Fix a memory leak when a connection fails. #323 Thank you droppy for 
+- Bug: Fix a number of memory leaks related to server connection failures. #323
+  #333 #334 #335 Thank you droppy and aydany for reporting and patches.
   reporting.
 - Compatibility: Fix compile time conflict with Visual Studio's MIN/MAX macros.
   Thank you Robin Rowe for reporting.
