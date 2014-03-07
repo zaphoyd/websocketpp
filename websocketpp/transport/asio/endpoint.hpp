@@ -194,9 +194,7 @@ public:
     void init_asio(io_service_ptr ptr) {
         lib::error_code ec;
         init_asio(ptr,ec);
-        if (ec) {
-            throw ec;
-        }
+        if (ec) { throw exception(ec); }
     }
 
     /// Initialize asio transport with internal io_service (exception free)
@@ -365,9 +363,7 @@ public:
     void listen(boost::asio::ip::tcp::endpoint const & ep) {
         lib::error_code ec;
         listen(ep,ec);
-        if (ec) {
-            throw ec;
-        }
+        if (ec) { throw exception(ec); }
     }
 
     /// Set up endpoint for listening with protocol and port (exception free)
@@ -497,9 +493,7 @@ public:
     {
         lib::error_code ec;
         listen(host,service,ec);
-        if (ec) {
-            throw ec;
-        }
+        if (ec) { throw exception(ec); }
     }
 
     /// Stop listening (exception free)
@@ -534,9 +528,7 @@ public:
     void stop_listening() {
         lib::error_code ec;
         stop_listening(ec);
-        if (ec) {
-            throw ec;
-        }
+        if (ec) { throw exception(ec); }
     }
 
     /// Check if the endpoint is listening
@@ -720,9 +712,7 @@ public:
     void async_accept(transport_con_ptr tcon, accept_handler callback) {
         lib::error_code ec;
         async_accept(tcon,callback,ec);
-        if (ec) {
-            throw ec;
-        }
+        if (ec) { throw exception(ec); }
     }
 protected:
     /// Initialize logging

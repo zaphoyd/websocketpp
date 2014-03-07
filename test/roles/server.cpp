@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_invalid ) {
 
 	std::string o;
 
-	BOOST_CHECK_THROW(o = run_server_test(s,input), websocketpp::lib::error_code);
+	BOOST_CHECK_THROW(o = run_server_test(s,input), websocketpp::exception);
 }
 
 BOOST_AUTO_TEST_CASE( accept_subprotocol_two ) {
