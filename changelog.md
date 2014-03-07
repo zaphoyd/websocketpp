@@ -12,7 +12,7 @@ HEAD
   will not read more data from their socket, allowing TCP flow control to work
   without blocking the main thread.
 - Feature: Adds the ability to specify whether or not to use the `SO_REUSEADDR`
-  TCP socket option. The default for this value has been changed from `true` to 
+  TCP socket option. The default for this value has been changed from `true` to
   `false`.
 - Feature: Adds the ability to specify a maximum message size.
 - Feature: Adds `close::status::get_string(...)` method to look up a human
@@ -30,8 +30,8 @@ HEAD
   short reads and quasi-expected socket shutdown related errors will no longer
   be reported as unclean WebSocket shutdowns to the application. Information
   about them will remain in the info error channel for debugging purposes.
-- Improvement: `start_accept` errors are now reported to the caller either via
-  an exception or an ec parameter.
+- Improvement: `start_accept` and `listen` errors are now reported to the caller
+  either via an exception or an ec parameter.
 - Bug: Fix some cases of calls to empty lib::function objects.
 - Bug: Fix memory leak of connection objects due to cached handlers holding on to
   reference counted pointers. #310 Thank you otaras for reporting.
