@@ -41,9 +41,11 @@
 #endif
 
 
-#ifdef _WEBSOCKETPP_CPP11_STL_
-    // This flag indicates that all of the C++11 language features are available
-    // to us.
+#if defined(_WEBSOCKETPP_CPP11_STL_) || __cplusplus >= 201103L
+    // _WEBSOCKETPP_CPP11_STL_ is a flag from the build system that forces
+    // WebSocket++ into C++11 mode. __cplusplus is a define set by the compiler
+    // if it has full support for C++11 language features. If either are set use
+    // C++11 language features
     #ifndef _WEBSOCKETPP_NOEXCEPT_TOKEN_
         #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
     #endif
