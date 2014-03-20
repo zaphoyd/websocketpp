@@ -1,4 +1,9 @@
 HEAD
+- API BREAKING CHANGE: Custom logging policies have some new required
+  constructors that take generic config settings rather than pointers to 
+  std::ostreams. This allows writing logging policies that do not involve the 
+  use of std::ostream. This does not affect anyone using the built in logging 
+  policies.
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
   These may be used to replace manually managed `asio::io_service::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.
