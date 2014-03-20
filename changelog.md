@@ -32,6 +32,9 @@ HEAD
   about them will remain in the info error channel for debugging purposes.
 - Improvement: `start_accept` and `listen` errors are now reported to the caller
   either via an exception or an ec parameter.
+- Improvement: Core library no longer has std::iostream as a dependency. 
+  std::iostream is still required for the optional iostream logging policy and
+  iostream transport.
 - Bug: Fix some cases of calls to empty lib::function objects.
 - Bug: Fix memory leak of connection objects due to cached handlers holding on to
   reference counted pointers. #310 Thank you otaras for reporting.
