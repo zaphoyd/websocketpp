@@ -17,6 +17,10 @@ HEAD
 - Feature: Adds the ability to specify a maximum message size.
 - Feature: Adds `close::status::get_string(...)` method to look up a human
   readable string given a close code value.
+- Feature: Adds incomplete `minimal_server` and `minimal_client` configs that 
+  can be used to build custom configs without pulling in the dependencies of 
+  `core` or `core_client`. These configs will offer a stable base config to 
+  future-proof custom configs.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by
   setting their duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default
