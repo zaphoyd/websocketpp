@@ -146,6 +146,7 @@ if env_cpp11['CXX'].startswith('g++'):
       print "C++11 build environment is not supported on this version of G++"
 elif env_cpp11['CXX'].startswith('clang++'):
    print "C++11 build environment enabled"
+   env.Append(CXXFLANGS = ['-stdlib=libc++'],LINKFLAGS=['-stdlib=libc++'])
    env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
 
    # look for optional second boostroot compiled with clang's libc++ STL library
