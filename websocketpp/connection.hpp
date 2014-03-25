@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -1451,9 +1451,9 @@ private:
      */
     std::vector<transport::buffer> m_send_buffer;
 
-    /// a pointer to hold on to the current message being written to keep it
+    /// a list of pointers to hold on to the messages being written to keep them
     /// from going out of scope before the write is complete.
-    message_ptr m_current_msg;
+    std::vector<message_ptr> m_current_msgs;
 
     /// True if there is currently an outstanding transport write
     /**

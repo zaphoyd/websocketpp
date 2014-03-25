@@ -123,7 +123,7 @@ public:
       : m_io_service(src.m_io_service)
       , m_external_io_service(src.m_external_io_service)
       , m_acceptor(src.m_acceptor)
-      , m_listen_backlog(0)
+      , m_listen_backlog(boost::asio::socket_base::max_connections)
       , m_reuse_addr(src.m_reuse_addr)
       , m_state(src.m_state)
     {
@@ -145,7 +145,7 @@ public:
             rhs.m_io_service = NULL;
             rhs.m_external_io_service = false;
             rhs.m_acceptor = NULL;
-            rhs.m_listen_backlog = 0;
+            rhs.m_listen_backlog = boost::asio::socket_base::max_connections;
             rhs.m_state = UNINITIALIZED;
         }
         return *this;
@@ -342,16 +342,25 @@ public:
 
         m_alog->write(log::alevel::devel,"asio::listen");
 
-        m_acceptor->open(ep.protocol());
-        m_acceptor->set_option(boost::asio::socket_base::reuse_address(m_reuse_addr));
-        m_acceptor->bind(ep);
-        if (m_listen_backlog == 0) {
-            m_acceptor->listen();
-        } else {
-            m_acceptor->listen(m_listen_backlog);
+        boost::system::error_code bec;
+
+        m_acceptor->open(ep.protocol(),bec);
+        if (!bec) {
+            m_acceptor->set_option(boost::asio::socket_base::reuse_address(m_reuse_addr),bec);
         }
-        m_state = LISTENING;
-        ec = lib::error_code();
+        if (!bec) {
+            m_acceptor->bind(ep,bec);
+        }
+        if (!bec) {
+            m_acceptor->listen(m_listen_backlog,bec);
+        }
+        if (bec) {
+            log_err(log::elevel::info,"asio listen",bec);
+            ec = make_error_code(error::pass_through);
+        } else {
+            m_state = LISTENING;
+            ec = lib::error_code();
+        }
     }
 
     /// Set up endpoint for listening manually

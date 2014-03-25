@@ -34,7 +34,11 @@
 #include <websocketpp/common/stdint.hpp>
 
 // Concurrency
+#ifndef _WEBSOCKETPP_NO_THREADING_
 #include <websocketpp/concurrency/basic.hpp>
+#else
+#include <websocketpp/concurrency/none.hpp>
+#endif
 
 // Transport
 #include <websocketpp/transport/iostream/endpoint.hpp>
@@ -68,7 +72,11 @@ struct core_client {
     typedef core_client type;
 
     // Concurrency policy
+#ifndef _WEBSOCKETPP_NO_THREADING_
     typedef websocketpp::concurrency::basic concurrency_type;
+#else
+    typedef websocketpp::concurrency::none concurrency_type;
+#endif
 
     // HTTP Parser Policies
     typedef http::parser::request request_type;
