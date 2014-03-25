@@ -44,6 +44,8 @@ HEAD
 - Improvement: Core library no longer has std::iostream as a dependency. 
   std::iostream is still required for the optional iostream logging policy and
   iostream transport.
+- Improvement: Outgoing writes are now batched for improved message throughput
+  and reduced system call and TCP frame overhead.
 - Bug: Fix some cases of calls to empty lib::function objects.
 - Bug: Fix memory leak of connection objects due to cached handlers holding on to
   reference counted pointers. #310 Thank you otaras for reporting.
