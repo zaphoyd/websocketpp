@@ -34,7 +34,8 @@ enum action_type {
 
 struct action {
     action(action_type t, connection_hdl h) : type(t), hdl(h) {}
-    action(action_type t, server::message_ptr m) : type(t), msg(m) {}
+    action(action_type t, connection_hdl h, server::message_ptr m)
+      : type(t), hdl(h), msg(m) {}
 
     action_type type;
     websocketpp::connection_hdl hdl;
@@ -92,7 +93,7 @@ public:
         // queue message up for sending by processing thread
         unique_lock<mutex> lock(m_action_lock);
         //std::cout << "on_message" << std::endl;
-        m_actions.push(action(MESSAGE,msg));
+        m_actions.push(action(MESSAGE,hdl,msg));
         lock.unlock();
         m_action_cond.notify_one();
     }

@@ -408,7 +408,7 @@ protected:
     /// Finish constructing the transport
     /**
      * init_asio is called once immediately after construction to initialize
-     * boost::asio components to the io_service
+     * boost::asio components to the io_service.
      *
      * @param io_service A pointer to the io_service to register with this
      * connection
@@ -416,35 +416,37 @@ protected:
      * @return Status code for the success or failure of the initialization
      */
     lib::error_code init_asio (io_service_ptr io_service) {
-        // do we need to store or use the io_service at this level?
         m_io_service = io_service;
 
         if (config::enable_multithreading) {
             m_strand.reset(new boost::asio::strand(*io_service));
 
             m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            ));
+                &type::handle_async_read, get_shared(),lib::placeholders::_1,
+                lib::placeholders::_2));
 
             m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            ));
+                &type::handle_async_write, get_shared(),lib::placeholders::_1,
+                lib::placeholders::_2));
         } else {
-            // TODO: goal: not have this line here
-            //m_strand.reset(new boost::asio::strand(*io_service));
-
-            m_async_read_handler = lib::bind(
-                &type::handle_async_read, get_shared(),
-                lib::placeholders::_1, lib::placeholders::_2
-            );
+            m_async_read_handler = lib::bind(&type::handle_async_read,
+                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
 
             m_async_write_handler = lib::bind(&type::handle_async_write,
                 get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
 
-        return socket_con_type::init_asio(io_service, m_strand, m_is_server);
+        lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
+            m_is_server);
+
+        if (ec) {
+            // reset the handlers to break the circular reference:
+            // this->handler->this
+            m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+            m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        }
+
+        return ec;
     }
 
     void handle_pre_init(lib::error_code const & ec) {
@@ -498,7 +500,7 @@ protected:
     }
 
     void handle_post_init_timeout(timer_ptr post_timer, init_handler callback,
-        const lib::error_code& ec)
+        lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 
@@ -524,8 +526,8 @@ protected:
         callback(ret_ec);
     }
 
-    void handle_post_init(timer_ptr post_timer, init_handler callback, const
-        lib::error_code& ec)
+    void handle_post_init(timer_ptr post_timer, init_handler callback,
+        lib::error_code const & ec)
     {
         if (ec == transport::error::operation_aborted ||
             post_timer->expires_from_now().is_negative())
@@ -796,6 +798,11 @@ protected:
 
         m_read_handler = handler;
 
+        if (!m_read_handler) {
+            m_alog.write(log::alevel::devel,
+                "asio con async_read_at_least called with bad handler");
+        }
+
         boost::asio::async_read(
             socket_con_type::get_socket(),
             boost::asio::buffer(buf,len),
@@ -810,6 +817,8 @@ protected:
     void handle_async_read(boost::system::error_code const & ec,
         size_t bytes_transferred)
     {
+        m_alog.write(log::alevel::devel, "asio con handle_async_read");
+
         // translate boost error codes into more lib::error_codes
         lib::error_code tec;
         if (ec == boost::asio::error::eof) {
@@ -818,8 +827,8 @@ protected:
             // We don't know much more about the error at this point. As our
             // socket/security policy if it knows more:
             tec = socket_con_type::translate_ec(ec);
-            
-            if (tec == transport::error::tls_error || 
+
+            if (tec == transport::error::tls_error ||
                 tec == transport::error::pass_through)
             {
                 // These are aggregate/catch all errors. Log some human readable
@@ -828,7 +837,16 @@ protected:
                 log_err(log::elevel::info,"asio async_read_at_least",ec);
             }
         }
-        m_read_handler(tec,bytes_transferred);
+        if (m_read_handler) {
+            m_read_handler(tec,bytes_transferred);
+            // TODO: why does this line break things?
+            //m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        } else {
+            // This can happen in cases where the connection is terminated while
+            // the transport is waiting on a read.
+            m_alog.write(log::alevel::devel,
+                "handle_async_read called with null read handler");
+        }
     }
 
     void async_write(const char* buf, size_t len, write_handler handler) {
@@ -882,11 +900,20 @@ protected:
         size_t bytes_transferred)
     {
         m_bufs.clear();
+        lib::error_code tec;
         if (ec) {
             log_err(log::elevel::info,"asio async_write",ec);
-            m_write_handler(make_error_code(transport::error::pass_through));
+            tec = make_error_code(transport::error::pass_through);
+        }
+        if (m_write_handler) {
+            m_write_handler(tec);
+            // TODO: why does this line break things?
+            //m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
         } else {
-            m_write_handler(lib::error_code());
+            // This can happen in cases where the connection is terminated while
+            // the transport is waiting on a read.
+            m_alog.write(log::alevel::devel,
+                "handle_async_write called with null write handler");
         }
     }
 
@@ -941,6 +968,9 @@ protected:
 		m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 		m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 
+        m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
             config::timeout_socket_shutdown,
@@ -965,7 +995,7 @@ protected:
     }
 
     void handle_async_shutdown_timeout(timer_ptr shutdown_timer, init_handler
-        callback, const lib::error_code& ec)
+        callback, lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 
@@ -976,7 +1006,7 @@ protected:
                 return;
             }
 
-            log_err(log::elevel::devel,"asio handle_async_socket_shutdown",ec);
+            log_err(log::elevel::devel,"asio handle_async_shutdown_timeout",ec);
             ret_ec = ec;
         } else {
             ret_ec = make_error_code(transport::error::timeout);
@@ -989,7 +1019,7 @@ protected:
     }
 
     void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler
-        callback, const boost::system::error_code & ec)
+        callback, boost::system::error_code const & ec)
     {
         if (ec == boost::asio::error::operation_aborted ||
             shutdown_timer->expires_from_now().is_negative())
@@ -1011,10 +1041,10 @@ protected:
                 // We don't know anything more about this error, give our
                 // socket/security policy a crack at it.
                 tec = socket_con_type::translate_ec(ec);
-                
+
                 if (tec == transport::error::tls_short_read) {
                     // TLS short read at this point is somewhat expected if both
-                    // sides try and end the connection at the same time or if 
+                    // sides try and end the connection at the same time or if
                     // SSLv2 is being used. In general there is nothing that can
                     // be done here other than a low level development log.
                 } else {

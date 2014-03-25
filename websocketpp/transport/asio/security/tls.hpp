@@ -260,11 +260,10 @@ protected:
         m_hdl = hdl;
     }
 
-    void handle_init(init_handler callback, const
-        boost::system::error_code& ec)
+    void handle_init(init_handler callback,boost::system::error_code const & ec)
     {
         if (ec) {
-            m_ec = socket::make_error_code(socket::error::pass_through);
+            m_ec = socket::make_error_code(socket::error::tls_handshake_failed);
         } else {
             m_ec = lib::error_code();
         }
@@ -284,7 +283,7 @@ protected:
     void async_shutdown(socket_shutdown_handler callback) {
         m_socket->async_shutdown(callback);
     }
-    
+
     /// Translate any security policy specific information about an error code
     /**
      * Translate_ec takes a boost error code and attempts to convert its value

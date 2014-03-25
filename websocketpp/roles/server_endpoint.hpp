@@ -64,48 +64,76 @@ public:
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
 
-
-    // TODO: clean up these types
-
     explicit server() : endpoint_type(true)
     {
         endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
     }
 
-    // return an initialized connection_ptr. Call start() on this object to
-    // begin the processing loop.
+    /// Create and initialize a new connection
+    /**
+     * The connection will be initialized and ready to begin. Call its start()
+     * method to begin the processing loop.
+     *
+     * Note: The connection must either be started or terminated using
+     * connection::terminate in order to avoid memory leaks.
+     *
+     * @return A pointer to the new connection.
+     */
     connection_ptr get_connection() {
-        connection_ptr con = endpoint_type::create_connection();
-
-        return con;
+        return endpoint_type::create_connection();
     }
 
-    // Starts the server's async connection acceptance loop.
-    void start_accept() {
-        connection_ptr con = get_connection();
+    /// Starts the server's async connection acceptance loop (exception free)
+    /**
+     * Initiates the server connection acceptance loop. Must be called after
+     * listen. This method will have no effect until the underlying io_service
+     * starts running. It may be called after the io_service is already running.
+     *
+     * Refer to documentation for the transport policy you are using for
+     * instructions on how to stop this acceptance loop.
+     * 
+     * @param [out] ec A status code indicating an error, if any.
+     */
+    void start_accept(lib::error_code & ec) {
+        if (!transport_type::is_listening()) {
+            ec = error::make_error_code(error::async_accept_not_listening);
+            return;
+        }
         
-        lib::error_code ec;
+        ec = lib::error_code();
+        connection_ptr con = get_connection();
         
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
-            lib::bind(
-                &type::handle_accept,
-                this,
-                con,
-                lib::placeholders::_1
-            ),
+            lib::bind(&type::handle_accept,this,con,lib::placeholders::_1),
             ec
         );
         
-        if (ec == error::async_accept_not_listening) {
-            endpoint_type::m_elog.write(log::elevel::info,
-                "Stopping acceptance of new connections because the underlying transport is no longer listening.");
-        } else if (ec) {
-            endpoint_type::m_elog.write(log::elevel::rerror,
-                "start_accept error: "+ec.message());
+        if (ec && con) {
+            // If the connection was constructed but the accept failed,
+            // terminate the connection to prevent memory leaks
+            con->terminate(lib::error_code());
         }
     }
 
+    /// Starts the server's async connection acceptance loop
+    /**
+     * Initiates the server connection acceptance loop. Must be called after
+     * listen. This method will have no effect until the underlying io_service
+     * starts running. It may be called after the io_service is already running.
+     *
+     * Refer to documentation for the transport policy you are using for
+     * instructions on how to stop this acceptance loop.
+     */
+    void start_accept() {
+        lib::error_code ec;
+        start_accept(ec);
+        if (ec) {
+            throw ec;
+        }
+    }
+
+    /// Handler callback for start_accept
     void handle_accept(connection_ptr con, lib::error_code const & ec) {
         if (ec) {
             con->terminate(ec);
@@ -121,10 +149,16 @@ public:
             con->start();
         }
 
-        // TODO: are there cases where we should terminate this loop?
-        start_accept();
+        lib::error_code start_ec;
+        start_accept(start_ec);
+        if (start_ec == error::async_accept_not_listening) {
+            endpoint_type::m_elog.write(log::elevel::info,
+                "Stopping acceptance of new connections because the underlying transport is no longer listening.");
+        } else if (start_ec) {
+            endpoint_type::m_elog.write(log::elevel::rerror,
+                "Restarting async_accept loop failed: "+ec.message());
+        }
     }
-private:
 };
 
 } // namespace websocketpp
