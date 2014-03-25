@@ -127,7 +127,8 @@ inline size_t request::consume(const char *buf, size_t len) {
             }
         }
 
-        begin = end+sizeof(header_delimiter)-1;
+        const auto validCheckedIteratorsOffset = sizeof(header_delimiter)-1;
+        begin = end+validCheckedIteratorsOffset;
     }
 }
 
