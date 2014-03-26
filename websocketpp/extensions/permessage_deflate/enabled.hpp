@@ -468,13 +468,13 @@ public:
 
         http::attribute_list::const_iterator it;
         for (it = offer.begin(); it != offer.end(); ++it) {
-            if (it->first == "s2c_no_context_takeover") {
+            if (it->first == "server_no_context_takeover") {
                 negotiate_s2c_no_context_takeover(it->second,ret.first);
-            } else if (it->first == "c2s_no_context_takeover") {
+            } else if (it->first == "client_no_context_takeover") {
                 negotiate_c2s_no_context_takeover(it->second,ret.first);
-            } else if (it->first == "s2c_max_window_bits") {
+            } else if (it->first == "server_max_window_bits") {
                 negotiate_s2c_max_window_bits(it->second,ret.first);
-            } else if (it->first == "c2s_max_window_bits") {
+            } else if (it->first == "client_max_window_bits") {
                 negotiate_c2s_max_window_bits(it->second,ret.first);
             } else {
                 ret.first = make_error_code(error::invalid_attributes);
@@ -579,23 +579,23 @@ private:
         std::string ret = "permessage-deflate";
 
         if (m_s2c_no_context_takeover) {
-            ret += "; s2c_no_context_takeover";
+            ret += "; server_no_context_takeover";
         }
 
         if (m_c2s_no_context_takeover) {
-            ret += "; c2s_no_context_takeover";
+            ret += "; client_no_context_takeover";
         }
 
         if (m_s2c_max_window_bits < default_s2c_max_window_bits) {
             std::stringstream s;
             s << int(m_s2c_max_window_bits);
-            ret += "; s2c_max_window_bits="+s.str();
+            ret += "; server_max_window_bits="+s.str();
         }
 
         if (m_c2s_max_window_bits < default_c2s_max_window_bits) {
             std::stringstream s;
             s << int(m_c2s_max_window_bits);
-            ret += "; c2s_max_window_bits="+s.str();
+            ret += "; client_max_window_bits="+s.str();
         }
 
         return ret;
