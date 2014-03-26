@@ -174,19 +174,19 @@ namespace websocketpp {
 namespace extensions {
 namespace permessage_deflate {
 
-/// Default value for s2c_max_window_bits as defined by RFC6455
-static uint8_t const default_s2c_max_window_bits = 15;
-/// Minimum value for s2c_max_window_bits as defined by RFC6455
-static uint8_t const min_s2c_max_window_bits = 8;
-/// Maximum value for s2c_max_window_bits as defined by RFC6455
-static uint8_t const max_s2c_max_window_bits = 15;
+/// Default value for server_max_window_bits as defined by RFC6455
+static uint8_t const default_server_max_window_bits = 15;
+/// Minimum value for server_max_window_bits as defined by RFC6455
+static uint8_t const min_server_max_window_bits = 8;
+/// Maximum value for server_max_window_bits as defined by RFC6455
+static uint8_t const max_server_max_window_bits = 15;
 
-/// Default value for c2s_max_window_bits as defined by RFC6455
-static uint8_t const default_c2s_max_window_bits = 15;
-/// Minimum value for c2s_max_window_bits as defined by RFC6455
-static uint8_t const min_c2s_max_window_bits = 8;
-/// Maximum value for c2s_max_window_bits as defined by RFC6455
-static uint8_t const max_c2s_max_window_bits = 15;
+/// Default value for client_max_window_bits as defined by RFC6455
+static uint8_t const default_client_max_window_bits = 15;
+/// Minimum value for client_max_window_bits as defined by RFC6455
+static uint8_t const min_client_max_window_bits = 8;
+/// Maximum value for client_max_window_bits as defined by RFC6455
+static uint8_t const max_client_max_window_bits = 15;
 
 namespace mode {
 enum value {
@@ -206,12 +206,12 @@ class enabled {
 public:
     enabled()
       : m_enabled(false)
-      , m_s2c_no_context_takeover(false)
-      , m_c2s_no_context_takeover(false)
-      , m_s2c_max_window_bits(15)
-      , m_c2s_max_window_bits(15)
-      , m_s2c_max_window_bits_mode(mode::accept)
-      , m_c2s_max_window_bits_mode(mode::accept)
+      , m_server_no_context_takeover(false)
+      , m_client_no_context_takeover(false)
+      , m_server_max_window_bits(15)
+      , m_client_max_window_bits(15)
+      , m_server_max_window_bits_mode(mode::accept)
+      , m_client_max_window_bits_mode(mode::accept)
       , m_initialized(false)
       , m_compress_buffer_size(16384)
     {
@@ -262,11 +262,11 @@ public:
         uint8_t inflate_bits;
 
         if (is_server) {
-            deflate_bits = m_s2c_max_window_bits;
-            inflate_bits = m_c2s_max_window_bits;
+            deflate_bits = m_server_max_window_bits;
+            inflate_bits = m_client_max_window_bits;
         } else {
-            deflate_bits = m_c2s_max_window_bits;
-            inflate_bits = m_s2c_max_window_bits;
+            deflate_bits = m_client_max_window_bits;
+            inflate_bits = m_server_max_window_bits;
         }
 
         int ret = deflateInit2(
@@ -292,8 +292,8 @@ public:
         }
 
         m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
-        if ((m_s2c_no_context_takeover && is_server) ||
-            (m_c2s_no_context_takeover && !is_server))
+        if ((m_server_no_context_takeover && is_server) ||
+            (m_client_no_context_takeover && !is_server))
         {
             m_flush = Z_FULL_FLUSH;
         } else {
@@ -345,8 +345,8 @@ public:
      * the option will be in use so they can optimize resource usage if they
      * are able.
      */
-    void enable_s2c_no_context_takeover() {
-        m_s2c_no_context_takeover = true;
+    void enable_server_no_context_takeover() {
+        m_server_no_context_takeover = true;
     }
 
     /// Reset client's outgoing LZ77 sliding window for each new message
@@ -364,8 +364,8 @@ public:
      * This option is supported by all compliant clients and servers. Enabling
      * it via either endpoint should be sufficient to ensure it is used.
      */
-    void enable_c2s_no_context_takeover() {
-        m_c2s_no_context_takeover = true;
+    void enable_client_no_context_takeover() {
+        m_client_no_context_takeover = true;
     }
 
     /// Limit server LZ77 sliding window size
@@ -390,12 +390,12 @@ public:
      * @param mode The mode to use for negotiating this parameter
      * @return A status code
      */
-    lib::error_code set_s2c_max_window_bits(uint8_t bits, mode::value mode) {
-        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+    lib::error_code set_server_max_window_bits(uint8_t bits, mode::value mode) {
+        if (bits < min_server_max_window_bits || bits > max_server_max_window_bits) {
             return error::make_error_code(error::invalid_max_window_bits);
         }
-        m_s2c_max_window_bits = bits;
-        m_s2c_max_window_bits_mode = mode;
+        m_server_max_window_bits = bits;
+        m_server_max_window_bits_mode = mode;
 
         return lib::error_code();
     }
@@ -421,12 +421,12 @@ public:
      * @param mode The mode to use for negotiating this parameter
      * @return A status code
      */
-    lib::error_code set_c2s_max_window_bits(uint8_t bits, mode::value mode) {
-        if (bits < min_c2s_max_window_bits || bits > max_c2s_max_window_bits) {
+    lib::error_code set_client_max_window_bits(uint8_t bits, mode::value mode) {
+        if (bits < min_client_max_window_bits || bits > max_client_max_window_bits) {
             return error::make_error_code(error::invalid_max_window_bits);
         }
-        m_c2s_max_window_bits = bits;
-        m_c2s_max_window_bits_mode = mode;
+        m_client_max_window_bits = bits;
+        m_client_max_window_bits_mode = mode;
 
         return lib::error_code();
     }
@@ -469,13 +469,13 @@ public:
         http::attribute_list::const_iterator it;
         for (it = offer.begin(); it != offer.end(); ++it) {
             if (it->first == "server_no_context_takeover") {
-                negotiate_s2c_no_context_takeover(it->second,ret.first);
+                negotiate_server_no_context_takeover(it->second,ret.first);
             } else if (it->first == "client_no_context_takeover") {
-                negotiate_c2s_no_context_takeover(it->second,ret.first);
+                negotiate_client_no_context_takeover(it->second,ret.first);
             } else if (it->first == "server_max_window_bits") {
-                negotiate_s2c_max_window_bits(it->second,ret.first);
+                negotiate_server_max_window_bits(it->second,ret.first);
             } else if (it->first == "client_max_window_bits") {
-                negotiate_c2s_max_window_bits(it->second,ret.first);
+                negotiate_client_max_window_bits(it->second,ret.first);
             } else {
                 ret.first = make_error_code(error::invalid_attributes);
             }
@@ -578,35 +578,35 @@ private:
     std::string generate_response() {
         std::string ret = "permessage-deflate";
 
-        if (m_s2c_no_context_takeover) {
+        if (m_server_no_context_takeover) {
             ret += "; server_no_context_takeover";
         }
 
-        if (m_c2s_no_context_takeover) {
+        if (m_client_no_context_takeover) {
             ret += "; client_no_context_takeover";
         }
 
-        if (m_s2c_max_window_bits < default_s2c_max_window_bits) {
+        if (m_server_max_window_bits < default_server_max_window_bits) {
             std::stringstream s;
-            s << int(m_s2c_max_window_bits);
+            s << int(m_server_max_window_bits);
             ret += "; server_max_window_bits="+s.str();
         }
 
-        if (m_c2s_max_window_bits < default_c2s_max_window_bits) {
+        if (m_client_max_window_bits < default_client_max_window_bits) {
             std::stringstream s;
-            s << int(m_c2s_max_window_bits);
+            s << int(m_client_max_window_bits);
             ret += "; client_max_window_bits="+s.str();
         }
 
         return ret;
     }
 
-    /// Negotiate s2c_no_context_takeover attribute
+    /// Negotiate server_no_context_takeover attribute
     /**
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_s2c_no_context_takeover(std::string const & value,
+    void negotiate_server_no_context_takeover(std::string const & value,
         lib::error_code & ec)
     {
         if (!value.empty()) {
@@ -614,15 +614,15 @@ private:
             return;
         }
 
-        m_s2c_no_context_takeover = true;
+        m_server_no_context_takeover = true;
     }
 
-    /// Negotiate c2s_no_context_takeover attribute
+    /// Negotiate client_no_context_takeover attribute
     /**
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_c2s_no_context_takeover(std::string const & value,
+    void negotiate_client_no_context_takeover(std::string const & value,
         lib::error_code & ec)
     {
         if (!value.empty()) {
@@ -630,13 +630,13 @@ private:
             return;
         }
 
-        m_c2s_no_context_takeover = true;
+        m_client_no_context_takeover = true;
     }
 
-    /// Negotiate s2c_max_window_bits attribute
+    /// Negotiate server_max_window_bits attribute
     /**
-     * When this method starts, m_s2c_max_window_bits will contain the server's
-     * preferred value and m_s2c_max_window_bits_mode will contain the mode the
+     * When this method starts, m_server_max_window_bits will contain the server's
+     * preferred value and m_server_max_window_bits_mode will contain the mode the
      * server wants to use to for negotiation. `value` contains the value the
      * client requested that we use.
      *
@@ -649,39 +649,39 @@ private:
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_s2c_max_window_bits(std::string const & value,
+    void negotiate_server_max_window_bits(std::string const & value,
         lib::error_code & ec)
     {
         uint8_t bits = uint8_t(atoi(value.c_str()));
 
-        if (bits < min_s2c_max_window_bits || bits > max_s2c_max_window_bits) {
+        if (bits < min_server_max_window_bits || bits > max_server_max_window_bits) {
             ec = make_error_code(error::invalid_attribute_value);
-            m_s2c_max_window_bits = default_s2c_max_window_bits;
+            m_server_max_window_bits = default_server_max_window_bits;
             return;
         }
 
-        switch (m_s2c_max_window_bits_mode) {
+        switch (m_server_max_window_bits_mode) {
             case mode::decline:
-                m_s2c_max_window_bits = default_s2c_max_window_bits;
+                m_server_max_window_bits = default_server_max_window_bits;
                 break;
             case mode::accept:
-                m_s2c_max_window_bits = bits;
+                m_server_max_window_bits = bits;
                 break;
             case mode::largest:
-                m_s2c_max_window_bits = std::min(bits,m_s2c_max_window_bits);
+                m_server_max_window_bits = std::min(bits,m_server_max_window_bits);
                 break;
             case mode::smallest:
-                m_s2c_max_window_bits = min_s2c_max_window_bits;
+                m_server_max_window_bits = min_server_max_window_bits;
                 break;
             default:
                 ec = make_error_code(error::invalid_mode);
-                m_s2c_max_window_bits = default_s2c_max_window_bits;
+                m_server_max_window_bits = default_server_max_window_bits;
         }
     }
 
-    /// Negotiate c2s_max_window_bits attribute
+    /// Negotiate client_max_window_bits attribute
     /**
-     * When this method starts, m_c2s_max_window_bits and m_c2s_max_window_mode
+     * When this method starts, m_client_max_window_bits and m_c2s_max_window_mode
      * will contain the server's preferred values for window size and
      * negotiation mode.
      *
@@ -694,47 +694,47 @@ private:
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
      */
-    void negotiate_c2s_max_window_bits(std::string const & value,
+    void negotiate_client_max_window_bits(std::string const & value,
             lib::error_code & ec)
     {
         uint8_t bits = uint8_t(atoi(value.c_str()));
 
         if (value.empty()) {
-            bits = default_c2s_max_window_bits;
-        } else if (bits < min_c2s_max_window_bits ||
-                   bits > max_c2s_max_window_bits)
+            bits = default_client_max_window_bits;
+        } else if (bits < min_client_max_window_bits ||
+                   bits > max_client_max_window_bits)
         {
             ec = make_error_code(error::invalid_attribute_value);
-            m_c2s_max_window_bits = default_c2s_max_window_bits;
+            m_client_max_window_bits = default_client_max_window_bits;
             return;
         }
 
-        switch (m_c2s_max_window_bits_mode) {
+        switch (m_client_max_window_bits_mode) {
             case mode::decline:
-                m_c2s_max_window_bits = default_c2s_max_window_bits;
+                m_client_max_window_bits = default_client_max_window_bits;
                 break;
             case mode::accept:
-                m_c2s_max_window_bits = bits;
+                m_client_max_window_bits = bits;
                 break;
             case mode::largest:
-                m_c2s_max_window_bits = std::min(bits,m_c2s_max_window_bits);
+                m_client_max_window_bits = std::min(bits,m_client_max_window_bits);
                 break;
             case mode::smallest:
-                m_c2s_max_window_bits = min_c2s_max_window_bits;
+                m_client_max_window_bits = min_client_max_window_bits;
                 break;
             default:
                 ec = make_error_code(error::invalid_mode);
-                m_c2s_max_window_bits = default_c2s_max_window_bits;
+                m_client_max_window_bits = default_client_max_window_bits;
         }
     }
 
     bool m_enabled;
-    bool m_s2c_no_context_takeover;
-    bool m_c2s_no_context_takeover;
-    uint8_t m_s2c_max_window_bits;
-    uint8_t m_c2s_max_window_bits;
-    mode::value m_s2c_max_window_bits_mode;
-    mode::value m_c2s_max_window_bits_mode;
+    bool m_server_no_context_takeover;
+    bool m_client_no_context_takeover;
+    uint8_t m_server_max_window_bits;
+    uint8_t m_client_max_window_bits;
+    mode::value m_server_max_window_bits_mode;
+    mode::value m_client_max_window_bits_mode;
 
     bool m_initialized;
     int m_flush;
