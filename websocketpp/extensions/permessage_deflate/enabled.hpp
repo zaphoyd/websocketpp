@@ -174,18 +174,18 @@ namespace websocketpp {
 namespace extensions {
 namespace permessage_deflate {
 
-/// Default value for server_max_window_bits as defined by RFC6455
+/// Default value for server_max_window_bits as defined by draft 17
 static uint8_t const default_server_max_window_bits = 15;
-/// Minimum value for server_max_window_bits as defined by RFC6455
+/// Minimum value for server_max_window_bits as defined by draft 17
 static uint8_t const min_server_max_window_bits = 8;
-/// Maximum value for server_max_window_bits as defined by RFC6455
+/// Maximum value for server_max_window_bits as defined by draft 17
 static uint8_t const max_server_max_window_bits = 15;
 
-/// Default value for client_max_window_bits as defined by RFC6455
+/// Default value for client_max_window_bits as defined by draft 17
 static uint8_t const default_client_max_window_bits = 15;
-/// Minimum value for client_max_window_bits as defined by RFC6455
+/// Minimum value for client_max_window_bits as defined by draft 17
 static uint8_t const min_client_max_window_bits = 8;
-/// Maximum value for client_max_window_bits as defined by RFC6455
+/// Maximum value for client_max_window_bits as defined by draft 17
 static uint8_t const max_client_max_window_bits = 15;
 
 namespace mode {
