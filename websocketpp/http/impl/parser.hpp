@@ -147,8 +147,8 @@ inline void parser::process_header(std::string::iterator begin,
         throw exception("Invalid header line",status_code::bad_request);
     }
 
-    append_header(std::string(begin,cursor),
-                  std::string(cursor+sizeof(header_separator)-1,end));
+    append_header(strip_lws(std::string(begin,cursor)),
+                  strip_lws(std::string(cursor+sizeof(header_separator)-1,end)));
 }
 
 inline std::string parser::raw_headers() const {

@@ -1,126 +1,270 @@
-/**
- * This example is presently used as a scratch space. It may or may not be broken
- * at any given time.
+/*
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the WebSocket++ Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <websocketpp/config/asio_client.hpp>
+// **NOTE:** This file is a snapshot of the WebSocket++ utility client tutorial.
+// Additional related material can be found in the tutorials/utility_client
+// directory of the WebSocket++ repository.
 
+#include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
+#include <websocketpp/common/thread.hpp>
+#include <websocketpp/common/memory.hpp>
+
+#include <cstdlib>
 #include <iostream>
-#include <chrono>
+#include <map>
+#include <string>
+#include <sstream>
 
-typedef websocketpp::client<websocketpp::config::asio_tls_client> client;
+typedef websocketpp::client<websocketpp::config::asio_client> client;
 
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-using websocketpp::lib::bind;
-
-// pull out the type of messages sent by our config
-typedef websocketpp::config::asio_tls_client::message_type::ptr message_ptr;
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
-typedef client::connection_ptr connection_ptr;
-
-
-
-class perftest {
+class connection_metadata {
 public:
-    typedef perftest type;
-    typedef std::chrono::duration<int,std::micro> dur_type;
+    typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
 
-    perftest () {
-        m_endpoint.set_access_channels(websocketpp::log::alevel::all);
-        m_endpoint.set_error_channels(websocketpp::log::elevel::all);
+    connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
+      : m_id(id)
+      , m_hdl(hdl)
+      , m_status("Connecting")
+      , m_uri(uri)
+      , m_server("N/A")
+    {}
 
-        // Initialize ASIO
-        m_endpoint.init_asio();
+    void on_open(client * c, websocketpp::connection_hdl hdl) {
+        m_status = "Open";
 
-        // Register our handlers
-        m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
-        m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
-        m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
-        m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
-        m_endpoint.set_close_handler(bind(&type::on_close,this,::_1));
+        client::connection_ptr con = c->get_con_from_hdl(hdl);
+        m_server = con->get_response_header("Server");
     }
 
-    void start(std::string uri) {
+    void on_fail(client * c, websocketpp::connection_hdl hdl) {
+        m_status = "Failed";
+
+        client::connection_ptr con = c->get_con_from_hdl(hdl);
+        m_server = con->get_response_header("Server");
+        m_error_reason = con->get_ec().message();
+    }
+    
+    void on_close(client * c, websocketpp::connection_hdl hdl) {
+        m_status = "Closed";
+        client::connection_ptr con = c->get_con_from_hdl(hdl);
+        std::stringstream s;
+        s << "close code: " << con->get_remote_close_code() << " (" 
+          << websocketpp::close::status::get_string(con->get_remote_close_code()) 
+          << "), close reason: " << con->get_remote_close_reason();
+        m_error_reason = s.str();
+    }
+
+    websocketpp::connection_hdl get_hdl() const {
+        return m_hdl;
+    }
+    
+    int get_id() const {
+        return m_id;
+    }
+    
+    std::string get_status() const {
+        return m_status;
+    }
+
+    friend std::ostream & operator<< (std::ostream & out, connection_metadata const & data);
+private:
+    int m_id;
+    websocketpp::connection_hdl m_hdl;
+    std::string m_status;
+    std::string m_uri;
+    std::string m_server;
+    std::string m_error_reason;
+};
+
+std::ostream & operator<< (std::ostream & out, connection_metadata const & data) {
+    out << "> URI: " << data.m_uri << "\n"
+        << "> Status: " << data.m_status << "\n"
+        << "> Remote Server: " << (data.m_server.empty() ? "None Specified" : data.m_server) << "\n"
+        << "> Error/close reason: " << (data.m_error_reason.empty() ? "N/A" : data.m_error_reason);
+
+    return out;
+}
+
+class websocket_endpoint {
+public:
+    websocket_endpoint () : m_next_id(0) {
+        m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
+        m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
+
+        m_endpoint.init_asio();
+        m_endpoint.start_perpetual();
+
+        m_thread.reset(new websocketpp::lib::thread(&client::run, &m_endpoint));
+    }
+
+    ~websocket_endpoint() {
+        m_endpoint.stop_perpetual();
+        
+        for (con_list::const_iterator it = m_connection_list.begin(); it != m_connection_list.end(); ++it) {
+            if (it->second->get_status() != "Open") {
+                // Only close open connections
+                continue;
+            }
+            
+            std::cout << "> Closing connection " << it->second->get_id() << std::endl;
+            
+            websocketpp::lib::error_code ec;
+            m_endpoint.close(it->second->get_hdl(), websocketpp::close::status::going_away, "", ec);
+            if (ec) {
+                std::cout << "> Error closing connection " << it->second->get_id() << ": "  
+                          << ec.message() << std::endl;
+            }
+        }
+        
+        m_thread->join();
+    }
+
+    int connect(std::string const & uri) {
         websocketpp::lib::error_code ec;
+
         client::connection_ptr con = m_endpoint.get_connection(uri, ec);
 
         if (ec) {
-        	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
+            std::cout << "> Connect initialization error: " << ec.message() << std::endl;
+            return -1;
         }
 
-        //con->set_proxy("http://humupdates.uchicago.edu:8443");
+        int new_id = m_next_id++;
+        connection_metadata::ptr metadata_ptr(new connection_metadata(new_id, con->get_handle(), uri));
+        m_connection_list[new_id] = metadata_ptr;
+
+        con->set_open_handler(websocketpp::lib::bind(
+            &connection_metadata::on_open,
+            metadata_ptr,
+            &m_endpoint,
+            websocketpp::lib::placeholders::_1
+        ));
+        con->set_fail_handler(websocketpp::lib::bind(
+            &connection_metadata::on_fail,
+            metadata_ptr,
+            &m_endpoint,
+            websocketpp::lib::placeholders::_1
+        ));
+        con->set_close_handler(websocketpp::lib::bind(
+            &connection_metadata::on_close,
+            metadata_ptr,
+            &m_endpoint,
+            websocketpp::lib::placeholders::_1
+        ));
 
         m_endpoint.connect(con);
 
-	    // Start the ASIO io_service run loop
-	    m_start = std::chrono::high_resolution_clock::now();
-        m_endpoint.run();
+        return new_id;
     }
 
-    void on_socket_init(websocketpp::connection_hdl hdl) {
-        m_socket_init = std::chrono::high_resolution_clock::now();
-    }
-
-    context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
-        m_tls_init = std::chrono::high_resolution_clock::now();
-        context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
-
-        try {
-            ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                             boost::asio::ssl::context::no_sslv2 |
-                             boost::asio::ssl::context::single_dh_use);
-        } catch (std::exception& e) {
-            std::cout << e.what() << std::endl;
+    void close(int id, websocketpp::close::status::value code, std::string reason) {
+        websocketpp::lib::error_code ec;
+        
+        con_list::iterator metadata_it = m_connection_list.find(id);
+        if (metadata_it == m_connection_list.end()) {
+            std::cout << "> No connection found with id " << id << std::endl;
+            return;
         }
-        return ctx;
+        
+        m_endpoint.close(metadata_it->second->get_hdl(), code, reason, ec);
+        if (ec) {
+            std::cout << "> Error initiating close: " << ec.message() << std::endl;
+        }
     }
 
-    void on_open(websocketpp::connection_hdl hdl) {
-        m_open = std::chrono::high_resolution_clock::now();
-        m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
-    }
-    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
-        m_message = std::chrono::high_resolution_clock::now();
-        m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
-    }
-    void on_close(websocketpp::connection_hdl hdl) {
-        m_close = std::chrono::high_resolution_clock::now();
-
-        std::cout << "Socket Init: " << std::chrono::duration_cast<dur_type>(m_socket_init-m_start).count() << std::endl;
-        std::cout << "TLS Init: " << std::chrono::duration_cast<dur_type>(m_tls_init-m_start).count() << std::endl;
-        std::cout << "Open: " << std::chrono::duration_cast<dur_type>(m_open-m_start).count() << std::endl;
-        std::cout << "Message: " << std::chrono::duration_cast<dur_type>(m_message-m_start).count() << std::endl;
-        std::cout << "Close: " << std::chrono::duration_cast<dur_type>(m_close-m_start).count() << std::endl;
+    connection_metadata::ptr get_metadata(int id) const {
+        con_list::const_iterator metadata_it = m_connection_list.find(id);
+        if (metadata_it == m_connection_list.end()) {
+            return connection_metadata::ptr();
+        } else {
+            return metadata_it->second;
+        }
     }
 private:
-    client m_endpoint;
+    typedef std::map<int,connection_metadata::ptr> con_list;
 
-    std::chrono::high_resolution_clock::time_point m_start;
-    std::chrono::high_resolution_clock::time_point m_socket_init;
-    std::chrono::high_resolution_clock::time_point m_tls_init;
-    std::chrono::high_resolution_clock::time_point m_open;
-    std::chrono::high_resolution_clock::time_point m_message;
-    std::chrono::high_resolution_clock::time_point m_close;
+    client m_endpoint;
+    websocketpp::lib::shared_ptr<websocketpp::lib::thread> m_thread;
+
+    con_list m_connection_list;
+    int m_next_id;
 };
 
-int main(int argc, char* argv[]) {
-	std::string uri = "wss://echo.websocket.org";
+int main() {
+    bool done = false;
+    std::string input;
+    websocket_endpoint endpoint;
 
-	if (argc == 2) {
-	    uri = argv[1];
-	}
+    while (!done) {
+        std::cout << "Enter Command: ";
+        std::getline(std::cin, input);
 
-	try {
-        perftest endpoint;
-        endpoint.start(uri);
-    } catch (const std::exception & e) {
-        std::cout << e.what() << std::endl;
-    } catch (websocketpp::lib::error_code e) {
-        std::cout << e.message() << std::endl;
-    } catch (...) {
-        std::cout << "other exception" << std::endl;
+        if (input == "quit") {
+            done = true;
+        } else if (input == "help") {
+            std::cout
+                << "\nCommand List:\n"
+                << "connect <ws uri>\n"
+                << "close <connection id> [<close code:default=1000>] [<close reason>]\n"
+                << "show <connection id>\n"
+                << "help: Display this help text\n"
+                << "quit: Exit the program\n"
+                << std::endl;
+        } else if (input.substr(0,7) == "connect") {
+            int id = endpoint.connect(input.substr(8));
+            if (id != -1) {
+                std::cout << "> Created connection with id " << id << std::endl;
+            }
+        } else if (input.substr(0,5) == "close") {
+            std::stringstream ss(input);
+            
+            std::string cmd;
+            int id;
+            int close_code = websocketpp::close::status::normal;
+            std::string reason = "";
+            
+            ss >> cmd >> id >> close_code;
+            std::getline(ss,reason);
+            
+            endpoint.close(id, close_code, reason);
+        }  else if (input.substr(0,4) == "show") {
+            int id = atoi(input.substr(5).c_str());
+
+            connection_metadata::ptr metadata = endpoint.get_metadata(id);
+            if (metadata) {
+                std::cout << *metadata << std::endl;
+            } else {
+                std::cout << "> Unknown connection id " << id << std::endl;
+            }
+        } else {
+            std::cout << "> Unrecognized Command" << std::endl;
+        }
     }
+
+    return 0;
 }

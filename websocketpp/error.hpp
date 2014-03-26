@@ -114,7 +114,14 @@ enum value {
     close_handshake_timeout,
 
     /// Invalid port in URI
-    invalid_port
+    invalid_port,
+    
+    /// An async accept operation failed because the underlying transport has been
+    /// requested to not listen for new connections anymore.
+    async_accept_not_listening,
+    
+    /// The requested operation was canceled
+    operation_canceled
 }; // enum value
 
 
@@ -176,6 +183,10 @@ public:
                 return "The closing handshake timed out";
             case error::invalid_port:
                 return "Invalid URI port";
+            case error::async_accept_not_listening:
+                return "Async Accept not listening";
+            case error::operation_canceled:
+                return "Operation canceled";
             default:
                 return "Unknown";
         }
@@ -205,9 +216,9 @@ namespace websocketpp {
 
 class exception : public std::exception {
 public:
-    exception(std::string const & msg,
-              error::value code = error::general)
-    : m_msg(msg),m_code(code) {}
+    exception(std::string const & msg, error::value p_code = error::general)
+      : m_msg(msg), m_code(p_code) {}
+
     ~exception() throw() {}
 
     virtual char const * what() const throw() {

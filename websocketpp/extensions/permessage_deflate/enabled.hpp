@@ -28,8 +28,10 @@
 #ifndef WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 #define WEBSOCKETPP_PROCESSOR_EXTENSION_PERMESSAGEDEFLATE_HPP
 
+
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/error.hpp>
 
@@ -522,6 +524,7 @@ public:
             m_dstate.next_out = m_compress_buffer.get();
 
             deflate(&m_dstate, m_flush);
+            
             output = m_compress_buffer_size - m_dstate.avail_out;
 
             out.append((char *)(m_compress_buffer.get()),output);

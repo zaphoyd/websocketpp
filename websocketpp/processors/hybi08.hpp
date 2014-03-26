@@ -46,9 +46,8 @@ public:
     typedef typename config::con_msg_manager_type::ptr msg_manager_ptr;
     typedef typename config::rng_type rng_type;
 
-    explicit hybi08(bool secure, bool server, msg_manager_ptr manager,
-        rng_type& rng)
-      : hybi13<config>(secure, server, manager, rng) {}
+    explicit hybi08(bool secure, bool p_is_server, msg_manager_ptr manager, rng_type& rng)
+      : hybi13<config>(secure, p_is_server, manager, rng) {}
 
     // outgoing client connection processing is not supported for this version
     lib::error_code client_handshake_request(request_type& req, uri_ptr uri,

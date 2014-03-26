@@ -51,6 +51,26 @@ namespace status {
     /// A blank value for internal use.
     static value const blank = 0;
 
+    /// Close the connection without a WebSocket close handshake.
+    /**
+     * This special value requests that the WebSocket connection be closed
+     * without performing the WebSocket closing handshake. This does not comply
+     * with RFC6455, but should be safe to do if necessary. This could be useful
+     * for clients that need to disconnect quickly and cannot afford the
+     * complete handshake.
+     */
+    static value const omit_handshake = 1;
+
+    /// Close the connection with a forced TCP drop.
+    /**
+     * This special value requests that the WebSocket connection be closed by
+     * forcibly dropping the TCP connection. This will leave the other side of
+     * the connection with a broken connection and some expensive timeouts. this
+     * should not be done except in extreme cases or in cases of malicious
+     * remote endpoints.
+     */
+    static value const force_tcp_drop = 2;
+
     /// Normal closure, meaning that the purpose for which the connection was
     /// established has been fulfilled.
     static value const normal = 1000;
@@ -179,6 +199,46 @@ namespace status {
                 code == policy_violation || code == message_too_big ||
                  code == internal_endpoint_error);
     }
+    
+    /// Return a human readable interpretation of a WebSocket close code
+    /**
+     * See https://tools.ietf.org/html/rfc6455#section-7.4 for more details.
+     *
+     * @since 0.4.0-beta1
+     *
+     * @param [in] code The code to look up.
+     * @return A human readable interpretation of the code.
+     */
+    inline std::string get_string(value code) {
+        switch (code) {
+            case normal:
+                return "Normal close";
+            case going_away:
+                return "Going away";
+            case protocol_error:
+                return "Protocol error";
+            case unsupported_data:
+                return "Unsupported data";
+            case no_status:
+                return "No status set";
+            case abnormal_close:
+                return "Abnormal close";
+            case invalid_payload:
+                return "Invalid payload";
+            case policy_violation:
+                return "Policy violoation";
+            case message_too_big:
+                return "Message too big";
+            case extension_required:
+                return "Extension required";
+            case internal_endpoint_error:
+                return "Internal endpoint error";
+            case tls_handshake:
+                return "TLS handshake failure";
+            default:
+                return "Unknown";
+        }
+    }
 } // namespace status
 
 /// Type used to convert close statuses between integer and wire representations
@@ -197,7 +257,7 @@ union code_converter {
  *
  * If the value is in an invalid or reserved range ec is set accordingly.
  *
- * @param [in] payload Close frame payload value recieved over the wire.
+ * @param [in] payload Close frame payload value received over the wire.
  * @param [out] ec Set to indicate what error occurred, if any.
  * @return The extracted value
  */

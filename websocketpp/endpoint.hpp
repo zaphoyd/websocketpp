@@ -87,18 +87,22 @@ public:
 
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-    explicit endpoint(bool is_server)
+    explicit endpoint(bool p_is_server)
       : m_alog(config::alog_level, &std::cout)
       , m_elog(config::elog_level, &std::cerr)
       , m_user_agent(::websocketpp::user_agent)
-      , m_is_server(is_server)
+      , m_open_handshake_timeout_dur(config::timeout_open_handshake)
+      , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+      , m_pong_timeout_dur(config::timeout_pong)
+      , m_max_message_size(config::max_message_size)
+      , m_is_server(p_is_server)
     {
         m_alog.set_channels(config::alog_level);
         m_elog.set_channels(config::elog_level);
 
-        m_alog.write(log::alevel::devel,"endpoint constructor");
+        m_alog.write(log::alevel::devel, "endpoint constructor");
 
-        transport_type::init_logging(&m_alog,&m_elog);
+        transport_type::init_logging(&m_alog, &m_elog);
     }
 
     /// Returns the user agent string that this endpoint will use
@@ -229,30 +233,37 @@ public:
         m_close_handler = h;
     }
     void set_fail_handler(fail_handler h) {
+        m_alog.write(log::alevel::devel,"set_fail_handler");
         scoped_lock_type guard(m_mutex);
         m_fail_handler = h;
     }
     void set_ping_handler(ping_handler h) {
+        m_alog.write(log::alevel::devel,"set_ping_handler");
         scoped_lock_type guard(m_mutex);
         m_ping_handler = h;
     }
     void set_pong_handler(pong_handler h) {
+        m_alog.write(log::alevel::devel,"set_pong_handler");
         scoped_lock_type guard(m_mutex);
         m_pong_handler = h;
     }
     void set_pong_timeout_handler(pong_timeout_handler h) {
+        m_alog.write(log::alevel::devel,"set_pong_timeout_handler");
         scoped_lock_type guard(m_mutex);
         m_pong_timeout_handler = h;
     }
     void set_interrupt_handler(interrupt_handler h) {
+        m_alog.write(log::alevel::devel,"set_interrupt_handler");
         scoped_lock_type guard(m_mutex);
         m_interrupt_handler = h;
     }
     void set_http_handler(http_handler h) {
+        m_alog.write(log::alevel::devel,"set_http_handler");
         scoped_lock_type guard(m_mutex);
         m_http_handler = h;
     }
     void set_validate_handler(validate_handler h) {
+        m_alog.write(log::alevel::devel,"set_validate_handler");
         scoped_lock_type guard(m_mutex);
         m_validate_handler = h;
     }
@@ -260,6 +271,112 @@ public:
         m_alog.write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
+    }
+
+    //////////////////////////////////////////
+    // Connection timeouts and other limits //
+    //////////////////////////////////////////
+
+    /// Set open handshake timeout
+    /**
+     * Sets the length of time the library will wait after an opening handshake
+     * has been initiated before cancelling it. This can be used to prevent
+     * excessive wait times for outgoing clients or excessive resource usage
+     * from broken clients or DoS attacks on servers.
+     *
+     * Connections that time out will have their fail handlers called with the
+     * open_handshake_timeout error code.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_open_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the open handshake timeout in ms
+     */
+    void set_open_handshake_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
+        m_open_handshake_timeout_dur = dur;
+    }
+
+    /// Set close handshake timeout
+    /**
+     * Sets the length of time the library will wait after a closing handshake
+     * has been initiated before cancelling it. This can be used to prevent
+     * excessive wait times for outgoing clients or excessive resource usage
+     * from broken clients or DoS attacks on servers.
+     *
+     * Connections that time out will have their close handlers called with the
+     * close_handshake_timeout error code.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_close_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the close handshake timeout in ms
+     */
+    void set_close_handshake_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
+        m_close_handshake_timeout_dur = dur;
+    }
+
+    /// Set pong timeout
+    /**
+     * Sets the length of time the library will wait for a pong response to a
+     * ping. This can be used as a keepalive or to detect broken  connections.
+     *
+     * Pong responses that time out will have the pong timeout handler called.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_pong'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the pong timeout in ms
+     */
+    void set_pong_timeout(long dur) {
+        scoped_lock_type guard(m_mutex);
+        m_pong_timeout_dur = dur;
+    }
+
+    /// Get default maximum message size
+    /**
+     * Get the default maximum message size that will be used for new connections created
+     * by this endpoint. The maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set default maximum message size
+    /**
+     * Set the default maximum message size that will be used for new connections created
+     * by this endpoint. Maximum message size determines the point at which the connection
+     * will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the max_message_size value from the template config
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
     }
 
     /*************************************/
@@ -277,8 +394,63 @@ public:
     void interrupt(connection_hdl hdl, lib::error_code & ec);
     void interrupt(connection_hdl hdl);
 
+    /// Pause reading of new data (exception free)
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    void pause_reading(connection_hdl hdl, lib::error_code & ec);
+    
+    /// Pause reading of new data
+    void pause_reading(connection_hdl hdl);
+
+    /// Resume reading of new data (exception free)
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    void resume_reading(connection_hdl hdl, lib::error_code & ec);
+
+    /// Resume reading of new data
+    void resume_reading(connection_hdl hdl);
+
+    /// Create a message and add it to the outgoing send queue (exception free)
+    /**
+     * Convenience method to send a message given a payload string and an opcode
+     *
+     * @param [in] hdl The handle identifying the connection to send via.
+     * @param [in] payload The payload string to generated the message with
+     * @param [in] op The opcode to generated the message with.
+     * @param [out] ec A code to fill in for errors
+     */
     void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op, lib::error_code & ec);
+    /// Create a message and add it to the outgoing send queue
+    /**
+     * Convenience method to send a message given a payload string and an opcode
+     *
+     * @param [in] hdl The handle identifying the connection to send via.
+     * @param [in] payload The payload string to generated the message with
+     * @param [in] op The opcode to generated the message with.
+     * @param [out] ec A code to fill in for errors
+     */
     void send(connection_hdl hdl, std::string const & payload,
         frame::opcode::value op);
 
@@ -372,7 +544,6 @@ public:
     }
 protected:
     connection_ptr create_connection();
-    void remove_connection(connection_ptr con);
 
     alog_type m_alog;
     elog_type m_elog;
@@ -391,16 +562,18 @@ private:
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
 
-    rng_type m_rng;
+    long                        m_open_handshake_timeout_dur;
+    long                        m_close_handshake_timeout_dur;
+    long                        m_pong_timeout_dur;
+    size_t                      m_max_message_size;
 
-    // endpoint resources
-    std::set<connection_ptr>    m_connections;
+    rng_type m_rng;
 
     // static settings
     bool const                  m_is_server;
 
     // endpoint state
-    mutex_type                  m_mutex;
+    mutable mutex_type          m_mutex;
 };
 
 } // namespace websocketpp

@@ -33,6 +33,7 @@
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/common/network.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/http/constants.hpp>
 
 #include <websocketpp/processors/processor.hpp>
@@ -67,9 +68,8 @@ public:
 
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit hybi13(bool secure, bool server, msg_manager_ptr manager,
-        rng_type& rng)
-      : processor<config>(secure,server)
+    explicit hybi13(bool secure, bool p_is_server, msg_manager_ptr manager, rng_type& rng)
+      : processor<config>(secure, p_is_server)
       , m_msg_manager(manager)
       , m_rng(rng)
     {
@@ -370,11 +370,25 @@ public:
                     m_current_msg = &m_control_msg;
                 } else {
                     if (!m_data_msg.msg_ptr) {
+                        if (m_bytes_needed > base::m_max_message_size) {
+                            ec = make_error_code(error::message_too_big);
+                            break;
+                        }
+                        
                         m_data_msg = msg_metadata(
                             m_msg_manager->get_message(op,m_bytes_needed),
                             frame::get_masking_key(m_basic_header,m_extended_header)
                         );
                     } else {
+                        // Fetch the underlying payload buffer from the data message we
+                        // are writing into.
+                        std::string & out = m_data_msg.msg_ptr->get_raw_payload();
+                        
+                        if (out.size() + m_bytes_needed > base::m_max_message_size) {
+                            ec = make_error_code(error::message_too_big);
+                            break;
+                        }
+                        
                         // Each frame starts a new masking key. All other state
                         // remains between frames.
                         m_data_msg.prepared_key = prepare_masking_key(
@@ -383,7 +397,8 @@ public:
                                 m_extended_header
                             )
                         );
-                        // TODO: reserve space in the existing message for the new bytes
+                        
+                        out.reserve(out.size() + m_bytes_needed);
                     }
                     m_current_msg = &m_data_msg;
                 }
@@ -660,27 +675,11 @@ protected:
     lib::error_code process_handshake_key(std::string & key) const {
         key.append(constants::handshake_guid);
 
-        sha1 sha;
-        uint32_t message_digest[5];
+        unsigned char message_digest[20];
+        sha1::calc(key.c_str(),key.length(),message_digest);
+        key = base64_encode(message_digest,20);
 
-        sha << key.c_str();
-
-        if (sha.get_raw_digest(message_digest)){
-            // convert sha1 hash bytes to network byte order because this sha1
-            //  library works on ints rather than bytes
-            for (int i = 0; i < 5; i++) {
-                message_digest[i] = htonl(message_digest[i]);
-            }
-
-            key = base64_encode(
-                reinterpret_cast<unsigned char const *>(message_digest),
-                20
-            );
-
-            return lib::error_code();
-        } else {
-            return error::make_error_code(error::sha1_library);
-        }
+        return lib::error_code();
     }
 
     /// Reads bytes from buf into m_basic_header

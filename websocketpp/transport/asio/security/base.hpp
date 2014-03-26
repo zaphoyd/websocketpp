@@ -95,7 +95,10 @@ namespace error {
         pass_through,
 
         /// Required tls_init handler not present
-        missing_tls_init_handler
+        missing_tls_init_handler,
+
+        /// TLS Handshake Failed
+        tls_handshake_failed,
     };
 } // namespace error
 
@@ -119,9 +122,11 @@ public:
             case error::tls_handshake_timeout:
                 return "TLS handshake timed out";
             case error::pass_through:
-                return "Pass through from underlying library";
+                return "Pass through from socket policy";
             case error::missing_tls_init_handler:
                 return "Required tls_init handler not present.";
+            case error::tls_handshake_failed:
+                return "TLS handshake failed";
             default:
                 return "Unknown";
         }

@@ -33,7 +33,7 @@
  * don't fit somewhere else better.
  */
 
-#if defined(WIN32) && !defined(NOMINMAX)
+#if defined(_WIN32) && !defined(NOMINMAX)
     // don't define min and max macros that conflict with std::min and std::max
     #define NOMINMAX
 #endif

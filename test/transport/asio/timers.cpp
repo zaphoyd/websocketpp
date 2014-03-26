@@ -95,6 +95,8 @@ struct config {
     typedef websocketpp::http::parser::response response_type;
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
 
+    static const bool enable_multithreading = true;
+
     static const long timeout_socket_pre_init = 1000;
     static const long timeout_proxy = 1000;
     static const long timeout_socket_post_init = 1000;
@@ -156,14 +158,12 @@ struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
                 &mock_endpoint::handle_connect,
                 this,
                 m_con,
-                websocketpp::lib::placeholders::_1,
-                websocketpp::lib::placeholders::_2
+                websocketpp::lib::placeholders::_1
             )
         );
     }
 
-    void handle_connect(connection_ptr con, websocketpp::connection_hdl,
-        const websocketpp::lib::error_code & ec)
+    void handle_connect(connection_ptr con, websocketpp::lib::error_code const & ec)
     {
         BOOST_CHECK( !ec );
         con->start();

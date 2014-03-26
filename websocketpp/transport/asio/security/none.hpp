@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 #define WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 
+#include <websocketpp/common/memory.hpp>
 #include <websocketpp/transport/asio/security/base.hpp>
 
 #include <boost/asio.hpp>
@@ -48,7 +49,7 @@ typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
  * transport::asio::basic_socket::connection implements a connection socket
  * component using Boost ASIO ip::tcp::socket.
  */
-class connection {
+class connection : public lib::enable_shared_from_this<connection> {
 public:
     /// Type of this connection socket component
     typedef connection type;
@@ -57,12 +58,19 @@ public:
 
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a pointer to the ASIO io_service strand being used
+    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
 
     explicit connection() : m_state(UNINITIALIZED) {
         //std::cout << "transport::asio::basic_socket::connection constructor"
         //          << std::endl;
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return shared_from_this();
     }
 
     /// Check whether or not this connection is secure
@@ -146,7 +154,9 @@ protected:
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, bool is_server) {
+    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+        bool is_server)
+    {
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
         }
@@ -218,6 +228,23 @@ protected:
 
     lib::error_code get_ec() const {
         return lib::error_code();
+    }
+    
+    /// Translate any security policy specific information about an error code
+    /**
+     * Translate_ec takes a boost error code and attempts to convert its value
+     * to an appropriate websocketpp error code. The plain socket policy does
+     * not presently provide any additional information so all errors will be
+     * reported as the generic transport pass_through error.
+     *
+     * @since 0.4.0-beta1
+     *
+     * @param ec The error code to translate_ec
+     * @return The translated error code
+     */
+    lib::error_code translate_ec(boost::system::error_code ec) {
+        // We don't know any more information about this error so pass through
+        return make_error_code(transport::error::pass_through);
     }
 private:
     enum state {

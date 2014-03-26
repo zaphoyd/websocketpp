@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <iostream>
 #include <queue>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -149,6 +150,10 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
+//
+typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
+typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
+
 // constants related to the default WebSocket protocol versions available
 #ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
     /// Container that stores the list of protocol versions supported
@@ -216,7 +221,6 @@ template <typename config>
 class connection
  : public config::transport_type::transport_con_type
  , public config::connection_base
- , public lib::enable_shared_from_this< connection<config> >
 {
 public:
     /// Type of this connection
@@ -276,16 +280,32 @@ private:
     };
 public:
 
-    explicit connection(bool is_server, std::string const & ua, alog_type& alog,
+    explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
         elog_type& elog, rng_type & rng)
-      : transport_con_type(is_server,alog,elog)
+      : transport_con_type(p_is_server, alog, elog)
+      , m_handle_read_frame(lib::bind(
+            &type::handle_read_frame,
+            this,
+            lib::placeholders::_1,
+            lib::placeholders::_2
+        ))
+      , m_write_frame_handler(lib::bind(
+            &type::handle_write_frame,
+            this,
+            lib::placeholders::_1
+        ))
       , m_user_agent(ua)
+      , m_open_handshake_timeout_dur(config::timeout_open_handshake)
+      , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+      , m_pong_timeout_dur(config::timeout_pong)
+      , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
       , m_msg_manager(new con_msg_manager_type())
       , m_send_buffer_size(0)
       , m_write_flag(false)
-      , m_is_server(is_server)
+      , m_read_flag(true)
+      , m_is_server(p_is_server)
       , m_alog(alog)
       , m_elog(elog)
       , m_rng(rng)
@@ -294,6 +314,11 @@ public:
       , m_was_clean(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return lib::static_pointer_cast<type>(transport_con_type::get_shared());
     }
 
     ///////////////////////////
@@ -433,6 +458,111 @@ public:
         m_message_handler = h;
     }
 
+    //////////////////////////////////////////
+    // Connection timeouts and other limits //
+    //////////////////////////////////////////
+
+    /// Set open handshake timeout
+    /**
+     * Sets the length of time the library will wait after an opening handshake
+     * has been initiated before cancelling it. This can be used to prevent
+     * excessive wait times for outgoing clients or excessive resource usage
+     * from broken clients or DoS attacks on servers.
+     *
+     * Connections that time out will have their fail handlers called with the
+     * open_handshake_timeout error code.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_open_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the open handshake timeout in ms
+     */
+    void set_open_handshake_timeout(long dur) {
+        m_open_handshake_timeout_dur = dur;
+    }
+
+    /// Set close handshake timeout
+    /**
+     * Sets the length of time the library will wait after a closing handshake
+     * has been initiated before cancelling it. This can be used to prevent
+     * excessive wait times for outgoing clients or excessive resource usage
+     * from broken clients or DoS attacks on servers.
+     *
+     * Connections that time out will have their close handlers called with the
+     * close_handshake_timeout error code.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_close_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the close handshake timeout in ms
+     */
+    void set_close_handshake_timeout(long dur) {
+        m_close_handshake_timeout_dur = dur;
+    }
+
+    /// Set pong timeout
+    /**
+     * Sets the length of time the library will wait for a pong response to a
+     * ping. This can be used as a keepalive or to detect broken  connections.
+     *
+     * Pong responses that time out will have the pong timeout handler called.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_pong'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the pong timeout in ms
+     */
+    void set_pong_timeout(long dur) {
+        m_pong_timeout_dur = dur;
+    }
+
+    /// Get maximum message size
+    /**
+     * Get maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     */
+    size_t get_max_message_size() const {
+        return m_max_message_size;
+    }
+    
+    /// Set maximum message size
+    /**
+     * Set maximum message size. Maximum message size determines the point at which the
+     * connection will fail a connection with the message_too_big protocol error. This
+     * value may be changed during the connection.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.4.0-alpha1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_message_size(size_t new_value) {
+        m_max_message_size = new_value;
+        if (m_processor) {
+            m_processor->set_max_message_size(new_value);
+        }
+    }
+
     //////////////////////////////////
     // Uncategorized public methods //
     //////////////////////////////////
@@ -472,7 +602,7 @@ public:
      * frame::opcode::text
      */
     lib::error_code send(std::string const & payload, frame::opcode::value op =
-        frame::opcode::TEXT);
+        frame::opcode::text);
 
     /// Send a message (raw array overload)
     /**
@@ -489,7 +619,7 @@ public:
      * frame::opcode::binary
      */
     lib::error_code send(void const * payload, size_t len, frame::opcode::value
-        op = frame::opcode::BINARY);
+        op = frame::opcode::binary);
 
     /// Add a message to the outgoing send queue
     /**
@@ -520,9 +650,46 @@ public:
      * @return An error code
      */
     lib::error_code interrupt();
-
+    
     /// Transport inturrupt callback
     void handle_interrupt();
+    
+    /// Pause reading of new data
+    /**
+     * Signals to the connection to halt reading of new data. While reading is paused, 
+     * the connection will stop reading from its associated socket. In turn this will 
+     * result in TCP based flow control kicking in and slowing data flow from the remote
+     * endpoint.
+     *
+     * This is useful for applications that push new requests to a queue to be processed
+     * by another thread and need a way to signal when their request queue is full without
+     * blocking the network processing thread.
+     *
+     * Use `resume_reading()` to resume.
+     *
+     * If supported by the transport this is done asynchronously. As such reading may not
+     * stop until the current read operation completes. Typically you can expect to
+     * receive no more bytes after initiating a read pause than the size of the read 
+     * buffer.
+     *
+     * If reading is paused for this connection already nothing is changed.
+     */
+    lib::error_code pause_reading();
+
+    /// Pause reading callback
+    void handle_pause_reading();
+
+    /// Resume reading of new data
+    /**
+     * Signals to the connection to resume reading of new data after it was paused by
+     * `pause_reading()`.
+     *
+     * If reading is not paused for this connection already nothing is changed.
+     */
+    lib::error_code resume_reading();
+
+    /// Resume reading callback
+    void handle_resume_reading();
 
     /// Send a ping
     /**
@@ -803,7 +970,7 @@ public:
      * @see replace_header
      * @see websocketpp::http::parser::append_header
      */
-    void append_header(std::string const  &key, std::string const & val);
+    void append_header(std::string const & key, std::string const & val);
 
     /// Replace a header
     /**
@@ -997,8 +1164,8 @@ public:
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
 
-    void handle_read_frame(lib::error_code const & ec,
-        size_t bytes_transferred);
+    void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
+    void read_frame();
 
     /// Get array of WebSocket protocol versions that this connection supports.
     const std::vector<int>& get_supported_versions() const;
@@ -1030,7 +1197,7 @@ public:
      * @param ec A status code from the transport layer, zero on success,
      * non-zero otherwise.
      */
-    void handle_write_frame(bool terminate, lib::error_code const & ec);
+    void handle_write_frame(lib::error_code const & ec);
 protected:
     void handle_transport_init(lib::error_code const & ec);
 
@@ -1186,8 +1353,20 @@ private:
      */
     void log_fail_result();
 
+    /// Prints information about an arbitrary error code on the specified channel
+    template <typename error_type>
+    void log_err(log::level l, char const * msg, error_type const & ec) {
+        std::stringstream s;
+        s << msg << " error: " << ec << " (" << ec.message() << ")";
+        m_elog.write(l, s.str());
+    }
+
+    // internal handler functions
+    read_handler            m_handle_read_frame;
+    write_frame_handler     m_write_frame_handler;
+
     // static settings
-    const std::string       m_user_agent;
+    std::string const       m_user_agent;
 
     /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;
@@ -1203,6 +1382,12 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+
+    /// constant values
+    long                    m_open_handshake_timeout_dur;
+    long                    m_close_handshake_timeout_dur;
+    long                    m_pong_timeout_dur;
+    size_t                  m_max_message_size;
 
     /// External connection state
     /**
@@ -1266,15 +1451,18 @@ private:
      */
     std::vector<transport::buffer> m_send_buffer;
 
-    /// a pointer to hold on to the current message being written to keep it
+    /// a list of pointers to hold on to the messages being written to keep them
     /// from going out of scope before the write is complete.
-    message_ptr m_current_msg;
+    std::vector<message_ptr> m_current_msgs;
 
     /// True if there is currently an outstanding transport write
     /**
      * Lock m_write_lock
      */
     bool m_write_flag;
+
+    /// True if this connection is presently reading new data
+    bool m_read_flag;
 
     // connection data
     request_type            m_request;

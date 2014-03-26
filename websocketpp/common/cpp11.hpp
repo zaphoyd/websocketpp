@@ -41,9 +41,11 @@
 #endif
 
 
-#ifdef _WEBSOCKETPP_CPP11_STL_
-    // This flag indicates that all of the C++11 language features are available
-    // to us.
+#if defined(_WEBSOCKETPP_CPP11_STL_) || __cplusplus >= 201103L
+    // _WEBSOCKETPP_CPP11_STL_ is a flag from the build system that forces
+    // WebSocket++ into C++11 mode. __cplusplus is a define set by the compiler
+    // if it has full support for C++11 language features. If either are set use
+    // C++11 language features
     #ifndef _WEBSOCKETPP_NOEXCEPT_TOKEN_
         #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
     #endif
@@ -52,6 +54,9 @@
     #endif
     #ifndef _WEBSOCKETPP_INITIALIZER_LISTS_
         #define _WEBSOCKETPP_INITIALIZER_LISTS_
+    #endif
+    #ifndef _WEBSOCKETPP_NULLPTR_TOKEN_
+        #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
     #endif
 #else
     // Test for noexcept
@@ -89,6 +94,25 @@
     // Enable initializer lists on clang when available.
     #if __has_feature(cxx_generalized_initializers) && !defined(_WEBSOCKETPP_INITIALIZER_LISTS_)
         #define _WEBSOCKETPP_INITIALIZER_LISTS_
+    #endif
+    
+    // Test for nullptr
+    #ifndef _WEBSOCKETPP_NULLPTR_TOKEN_
+        #ifdef _WEBSOCKETPP_NULLPTR_
+            // build system says we have nullptr
+            #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
+        #else
+            #if __has_feature(cxx_nullptr)
+                // clang feature detect says we have nullptr
+                #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
+            #elif _MSC_VER >= 1600
+                // Visual Studio version that has nullptr
+                #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
+            #else
+                // assume we don't have nullptr
+                #define _WEBSOCKETPP_NULLPTR_TOKEN_ 0
+            #endif
+        #endif
     #endif
 #endif
 

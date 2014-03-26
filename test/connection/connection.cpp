@@ -80,8 +80,7 @@ struct stub_config : public websocketpp::config::core {
 };
 
 struct connection_setup {
-    connection_setup(bool server)
-      : c(server,"",alog,elog,rng) {}
+    connection_setup(bool p_is_server) : c(p_is_server, "", alog, elog, rng) {}
 
     websocketpp::lib::error_code ec;
 	stub_config::alog_type alog;
@@ -174,7 +173,7 @@ BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
 
     //std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
 
-	std::string ref = "GET / HTTP/1.1\r\nConnection: Upgrade\r\nHost: localhost\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\nSec-WebSocket-Version: 13\r\nUpgrade: websocket\r\nUser-Agent: foo\r\n\r\n";
+	std::string ref = "GET / HTTP/1.1\r\nConnection: Upgrade\r\nFoo: Bar\r\nHost: localhost\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\nSec-WebSocket-Version: 13\r\nUpgrade: websocket\r\nUser-Agent: foo\r\n\r\n";
 
 	std::stringstream output;
 
@@ -187,10 +186,38 @@ BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
 	client::connection_ptr con;
 	websocketpp::lib::error_code ec;
 	con = e.get_connection(uri, ec);
+	con->append_header("Foo","Bar");
 	e.connect(con);
 
     BOOST_CHECK_EQUAL(ref, output.str());
 }
+
+BOOST_AUTO_TEST_CASE( set_max_message_size ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    
+    // After the handshake, add a single frame with a message that is too long.
+    char frame0[10] = {char(0x82), char(0x83), 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01};
+    input.append(frame0, 10);
+    
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
+
+    // After the handshake, add a single frame with a close message with message too big
+    // error code.
+    char frame1[4] = {char(0x88), 0x19, 0x03, char(0xf1)};
+    output.append(frame1, 4);
+    output.append("A message was too large");
+
+	server s;
+	s.set_user_agent("");
+	s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
+    s.set_max_message_size(2);
+
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+}
+
+// TODO: set max message size in client endpoint test case
+// TODO: set max message size mid connection test case
+// TODO: [maybe] set max message size in open handler
 
 /*
 

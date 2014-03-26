@@ -355,6 +355,26 @@ BOOST_AUTO_TEST_CASE( extract_parameters ) {
     BOOST_CHECK_EQUAL( a.find("bar")->second, "a \"b\" c" );
 }
 
+BOOST_AUTO_TEST_CASE( strip_lws ) {
+    std::string test1 = "foo";
+    std::string test2 = " foo ";
+    std::string test3 = "foo ";
+    std::string test4 = " foo";
+    std::string test5 = "    foo     ";
+    std::string test6 = "  \r\n  foo     ";
+    std::string test7 = "  \t  foo     ";
+    std::string test8 = "  \t       ";
+
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test1), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test2), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test3), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test4), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test5), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test6), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test7), "foo" );
+    BOOST_CHECK_EQUAL( websocketpp::http::parser::strip_lws(test8), "" );
+}
+
 BOOST_AUTO_TEST_CASE( case_insensitive_headers ) {
     websocketpp::http::parser::parser r;
 
@@ -655,12 +675,12 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 41 );
+    BOOST_CHECK_EQUAL( pos, 41 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.0" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.0" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
 }
 
 BOOST_AUTO_TEST_CASE( new_http_version1 ) {
@@ -678,12 +698,12 @@ BOOST_AUTO_TEST_CASE( new_http_version1 ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 42 );
+    BOOST_CHECK_EQUAL( pos, 42 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.12" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.12" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
 }
 
 BOOST_AUTO_TEST_CASE( new_http_version2 ) {
@@ -701,12 +721,12 @@ BOOST_AUTO_TEST_CASE( new_http_version2 ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 43 );
+    BOOST_CHECK_EQUAL( pos, 43 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/12.12" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/12.12" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
 }
 
 /* commented out due to not being implemented yet
@@ -726,7 +746,7 @@ BOOST_AUTO_TEST_CASE( new_http_version3 ) {
     }
 
     BOOST_CHECK( exception == true );
-}
+}*/
 
 BOOST_AUTO_TEST_CASE( header_whitespace1 ) {
     websocketpp::http::parser::request r;
@@ -743,12 +763,12 @@ BOOST_AUTO_TEST_CASE( header_whitespace1 ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 43 );
+    BOOST_CHECK_EQUAL( pos, 43 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
 }
 
 BOOST_AUTO_TEST_CASE( header_whitespace2 ) {
@@ -766,13 +786,13 @@ BOOST_AUTO_TEST_CASE( header_whitespace2 ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 40 );
+    BOOST_CHECK_EQUAL( pos, 40 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
-}*/
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
+}
 
 BOOST_AUTO_TEST_CASE( header_aggregation ) {
     websocketpp::http::parser::request r;
@@ -789,12 +809,12 @@ BOOST_AUTO_TEST_CASE( header_aggregation ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 61 );
+    BOOST_CHECK_EQUAL( pos, 61 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Foo") == "bar, bat" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Foo"), "bar, bat" );
 }
 
 BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
@@ -813,15 +833,42 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 159 );
+    BOOST_CHECK_EQUAL( pos, 159 );
     BOOST_CHECK( r.headers_ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::switching_protocols );
-    BOOST_CHECK( r.get_status_msg() == "Switching Protocols" );
-    BOOST_CHECK( r.get_header("Upgrade") == "websocket" );
-    BOOST_CHECK( r.get_header("Connection") == "Upgrade" );
-    BOOST_CHECK( r.get_header("Sec-WebSocket-Accept") == "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
-    BOOST_CHECK( r.get_header("Sec-WebSocket-Protocol") == "chat" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
+}
+
+BOOST_AUTO_TEST_CASE( response_with_non_standard_lws ) {
+    websocketpp::http::parser::response r;
+
+    std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept:HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+    	pos += r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+    	exception = true;
+    	std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 158 );
+    BOOST_CHECK( r.headers_ready() );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
 }
 
 BOOST_AUTO_TEST_CASE( plain_http_response ) {
@@ -840,21 +887,21 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     }
 
     BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 405 );
+    BOOST_CHECK_EQUAL( pos, 405 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_status_code() == websocketpp::http::status_code::ok );
-    BOOST_CHECK( r.get_status_msg() == "OK" );
-    BOOST_CHECK( r.get_header("Date") == "Thu, 10 May 2012 11:59:25 GMT" );
-    BOOST_CHECK( r.get_header("Server") == "Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch" );
-    BOOST_CHECK( r.get_header("Last-Modified") == "Tue, 30 Mar 2010 17:41:28 GMT" );
-    BOOST_CHECK( r.get_header("ETag") == "\"16799d-55-4830823a78200\"" );
-    BOOST_CHECK( r.get_header("Accept-Ranges") == "bytes" );
-    BOOST_CHECK( r.get_header("Content-Length") == "85" );
-    BOOST_CHECK( r.get_header("Vary") == "Accept-Encoding" );
-    BOOST_CHECK( r.get_header("Content-Type") == "text/html" );
-    BOOST_CHECK( r.get_body() == "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::ok );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "OK" );
+    BOOST_CHECK_EQUAL( r.get_header("Date"), "Thu, 10 May 2012 11:59:25 GMT" );
+    BOOST_CHECK_EQUAL( r.get_header("Server"), "Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch" );
+    BOOST_CHECK_EQUAL( r.get_header("Last-Modified"), "Tue, 30 Mar 2010 17:41:28 GMT" );
+    BOOST_CHECK_EQUAL( r.get_header("ETag"), "\"16799d-55-4830823a78200\"" );
+    BOOST_CHECK_EQUAL( r.get_header("Accept-Ranges"), "bytes" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "85" );
+    BOOST_CHECK_EQUAL( r.get_header("Vary"), "Accept-Encoding" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Type"), "text/html" );
+    BOOST_CHECK_EQUAL( r.get_body(), "<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>" );
 }
 
 BOOST_AUTO_TEST_CASE( parse_istream ) {
@@ -889,7 +936,7 @@ BOOST_AUTO_TEST_CASE( write_request_basic ) {
     r.set_method("GET");
     r.set_uri("/");
 
-    BOOST_CHECK( r.raw() == raw );
+    BOOST_CHECK_EQUAL( r.raw(), raw );
 }
 
 BOOST_AUTO_TEST_CASE( write_request_with_header ) {
@@ -902,7 +949,7 @@ BOOST_AUTO_TEST_CASE( write_request_with_header ) {
     r.set_uri("/");
     r.replace_header("Host","http://example.com");
 
-    BOOST_CHECK( r.raw() == raw );
+    BOOST_CHECK_EQUAL( r.raw(), raw );
 }
 
 BOOST_AUTO_TEST_CASE( write_request_with_body ) {
@@ -917,5 +964,5 @@ BOOST_AUTO_TEST_CASE( write_request_with_body ) {
     r.replace_header("Content-Type","application/x-www-form-urlencoded");
     r.set_body("licenseID=string&content=string&paramsXML=string");
 
-    BOOST_CHECK( r.raw() == raw );
+    BOOST_CHECK_EQUAL( r.raw(), raw );
 }

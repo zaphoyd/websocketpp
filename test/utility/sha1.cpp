@@ -37,48 +37,45 @@
 BOOST_AUTO_TEST_SUITE ( sha1 )
 
 BOOST_AUTO_TEST_CASE( sha1_test_a ) {
-    websocketpp::sha1 sha;
-    uint32_t digest[5];
+    unsigned char hash[20];
+    unsigned char reference[20] = {0xa9, 0x99, 0x3e, 0x36, 0x47,
+                                   0x06, 0x81, 0x6a, 0xba, 0x3e,
+                                   0x25, 0x71, 0x78, 0x50, 0xc2,
+                                   0x6c, 0x9c, 0xd0, 0xd8, 0x9d};
 
-    sha << "abc";
-    BOOST_CHECK(sha.get_raw_digest(digest));
+    websocketpp::sha1::calc("abc",3,hash);
 
-    BOOST_CHECK_EQUAL( digest[0], 0xa9993e36 );
-    BOOST_CHECK_EQUAL( digest[1], 0x4706816a );
-    BOOST_CHECK_EQUAL( digest[2], 0xba3e2571 );
-    BOOST_CHECK_EQUAL( digest[3], 0x7850c26c );
-    BOOST_CHECK_EQUAL( digest[4], 0x9cd0d89d );
+    BOOST_CHECK_EQUAL_COLLECTIONS(hash, hash+20, reference, reference+20);
 }
 
 BOOST_AUTO_TEST_CASE( sha1_test_b ) {
-    websocketpp::sha1 sha;
-    uint32_t digest[5];
+    unsigned char hash[20];
+    unsigned char reference[20] = {0x84, 0x98, 0x3e, 0x44, 0x1c,
+                                   0x3b, 0xd2, 0x6e, 0xba, 0xae,
+                                   0x4a, 0xa1, 0xf9, 0x51, 0x29,
+                                   0xe5, 0xe5, 0x46, 0x70, 0xf1};
 
-    sha << "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-    BOOST_CHECK(sha.get_raw_digest(digest));
+    websocketpp::sha1::calc(
+        "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",56,hash);
 
-    BOOST_CHECK_EQUAL( digest[0], 0x84983e44 );
-    BOOST_CHECK_EQUAL( digest[1], 0x1c3bd26e );
-    BOOST_CHECK_EQUAL( digest[2], 0xbaae4aa1 );
-    BOOST_CHECK_EQUAL( digest[3], 0xf95129e5 );
-    BOOST_CHECK_EQUAL( digest[4], 0xe54670f1 );
+    BOOST_CHECK_EQUAL_COLLECTIONS(hash, hash+20, reference, reference+20);
 }
 
 BOOST_AUTO_TEST_CASE( sha1_test_c ) {
-    websocketpp::sha1 sha;
-    uint32_t digest[5];
+    std::string input;
+    unsigned char hash[20];
+    unsigned char reference[20] = {0x34, 0xaa, 0x97, 0x3c, 0xd4,
+                                   0xc4, 0xda, 0xa4, 0xf6, 0x1e,
+                                   0xeb, 0x2b, 0xdb, 0xad, 0x27,
+                                   0x31, 0x65, 0x34, 0x01, 0x6f};
 
-    for (int i = 1; i <= 1000000; i++) {
-        sha.input('a');
+    for (int i = 0; i < 1000000; i++) {
+        input += 'a';
     }
 
-    BOOST_CHECK(sha.get_raw_digest(digest));
+    websocketpp::sha1::calc(input.c_str(),input.size(),hash);
 
-    BOOST_CHECK_EQUAL( digest[0], 0x34aa973c );
-    BOOST_CHECK_EQUAL( digest[1], 0xd4c4daa4 );
-    BOOST_CHECK_EQUAL( digest[2], 0xf61eeb2b );
-    BOOST_CHECK_EQUAL( digest[3], 0xdbad2731 );
-    BOOST_CHECK_EQUAL( digest[4], 0x6534016f );
+    BOOST_CHECK_EQUAL_COLLECTIONS(hash, hash+20, reference, reference+20);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -45,6 +45,8 @@ struct stub_config {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type>
 		con_msg_manager_type;
+		
+	static const size_t max_message_size = 16000000;
 };
 
 struct processor_setup {

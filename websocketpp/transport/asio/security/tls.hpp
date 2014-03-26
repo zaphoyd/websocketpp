@@ -55,7 +55,7 @@ typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)
  * transport::asio::tls_socket::connection implements a secure connection socket
  * component that uses Boost ASIO's ssl::stream to wrap an ip::tcp::socket.
  */
-class connection {
+class connection : public lib::enable_shared_from_this<connection> {
 public:
     /// Type of this connection socket component
     typedef connection type;
@@ -68,6 +68,8 @@ public:
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_service being used
     typedef boost::asio::io_service* io_service_ptr;
+    /// Type of a pointer to the ASIO io_service strand being used
+    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 
@@ -76,6 +78,11 @@ public:
     explicit connection() {
         //std::cout << "transport::asio::tls_socket::connection constructor"
         //          << std::endl;
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return shared_from_this();
     }
 
     /// Check whether or not this connection is secure
@@ -169,9 +176,12 @@ protected:
      * boost::asio components to the io_service
      *
      * @param service A pointer to the endpoint's io_service
+     * @param strand A pointer to the connection's strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, bool is_server) {
+    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+        bool is_server)
+    {
         if (!m_tls_init_handler) {
             return socket::make_error_code(socket::error::missing_tls_init_handler);
         }
@@ -183,6 +193,7 @@ protected:
         m_socket.reset(new socket_type(*service,*m_context));
 
         m_io_service = service;
+        m_strand = strand;
         m_is_server = is_server;
 
         return lib::error_code();
@@ -217,15 +228,25 @@ protected:
         m_ec = socket::make_error_code(socket::error::tls_handshake_timeout);
 
         // TLS handshake
-        m_socket->async_handshake(
-            get_handshake_type(),
-            lib::bind(
-                &type::handle_init,
-                this,
-                callback,
-                lib::placeholders::_1
-            )
-        );
+        if (m_strand) {
+            m_socket->async_handshake(
+                get_handshake_type(),
+                m_strand->wrap(lib::bind(
+                    &type::handle_init, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            m_socket->async_handshake(
+                get_handshake_type(),
+                lib::bind(
+                    &type::handle_init, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                )
+            );
+        }
     }
 
     /// Sets the connection handle
@@ -239,11 +260,10 @@ protected:
         m_hdl = hdl;
     }
 
-    void handle_init(init_handler callback, const
-        boost::system::error_code& ec)
+    void handle_init(init_handler callback,boost::system::error_code const & ec)
     {
         if (ec) {
-            m_ec = socket::make_error_code(socket::error::pass_through);
+            m_ec = socket::make_error_code(socket::error::tls_handshake_failed);
         } else {
             m_ec = lib::error_code();
         }
@@ -263,6 +283,37 @@ protected:
     void async_shutdown(socket_shutdown_handler callback) {
         m_socket->async_shutdown(callback);
     }
+
+    /// Translate any security policy specific information about an error code
+    /**
+     * Translate_ec takes a boost error code and attempts to convert its value
+     * to an appropriate websocketpp error code. Any error that is determined to
+     * be related to TLS but does not have a more specific websocketpp error
+     * code is returned under the catch all error "tls_error".
+     *
+     * Non-TLS related errors are returned as the transport generic pass_through
+     * error.
+     *
+     * @since 0.4.0-beta1
+     *
+     * @param ec The error code to translate_ec
+     * @return The translated error code
+     */
+    lib::error_code translate_ec(boost::system::error_code ec) {
+        if (ec.category() == boost::asio::error::get_ssl_category()) {
+            if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
+                return make_error_code(transport::error::tls_short_read);
+            } else {
+                // We know it is a TLS related error, but otherwise don't know
+                // more. Pass through as TLS generic.
+                return make_error_code(transport::error::tls_error);
+            }
+        } else {
+            // We don't know any more information about this error so pass
+            // through
+            return make_error_code(transport::error::pass_through);
+        }
+    }
 private:
     socket_type::handshake_type get_handshake_type() {
         if (m_is_server) {
@@ -273,6 +324,7 @@ private:
     }
 
     io_service_ptr      m_io_service;
+    strand_ptr          m_strand;
     context_ptr         m_context;
     socket_ptr          m_socket;
     bool                m_is_server;

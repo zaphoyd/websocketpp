@@ -53,7 +53,7 @@ namespace http {
     static char const header_delimiter[] = "\r\n";
 
     /// Literal value of the HTTP header separator
-    static char const header_separator[] = ": ";
+    static char const header_separator[] = ":";
 
     /// Literal value of an empty header
     static std::string const empty_header = "";
@@ -255,7 +255,7 @@ namespace http {
                 case internal_server_error:
                     return "Internal Server Error";
                 case not_implemented:
-                    return "Not Implimented";
+                    return "Not Implemented";
                 case bad_gateway:
                     return "Bad Gateway";
                 case service_unavailable:

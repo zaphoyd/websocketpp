@@ -30,8 +30,11 @@
 
 #include <websocketpp/common/thread.hpp>
 
-#include <websocketpp/config/asio_no_tls.hpp>
-#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/config/core.hpp>
+#include <websocketpp/config/core_client.hpp>
+#include <websocketpp/config/asio.hpp>
+#include <websocketpp/config/asio_client.hpp>
+#include <websocketpp/config/debug_asio.hpp>
 #include <websocketpp/server.hpp>
 #include <websocketpp/client.hpp>
 
@@ -77,8 +80,56 @@ struct config : public websocketpp::config::asio_client {
     static const long timeout_pong = 500;
 };
 
+struct config_tls : public websocketpp::config::asio_tls_client {
+    typedef config type;
+    typedef websocketpp::config::asio base;
+
+    typedef base::concurrency_type concurrency_type;
+
+    typedef base::request_type request_type;
+    typedef base::response_type response_type;
+
+    typedef base::message_type message_type;
+    typedef base::con_msg_manager_type con_msg_manager_type;
+    typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
+
+    typedef base::alog_type alog_type;
+    typedef base::elog_type elog_type;
+
+    typedef base::rng_type rng_type;
+
+    struct transport_config : public base::transport_config {
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
+        typedef websocketpp::transport::asio::basic_socket::endpoint
+            socket_type;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config>
+        transport_type;
+
+    //static const websocketpp::log::level elog_level = websocketpp::log::elevel::all;
+    //static const websocketpp::log::level alog_level = websocketpp::log::alevel::all;
+
+    /// Length of time before an opening handshake is aborted
+    static const long timeout_open_handshake = 500;
+    /// Length of time before a closing handshake is aborted
+    static const long timeout_close_handshake = 500;
+    /// Length of time to wait for a pong after a ping
+    static const long timeout_pong = 500;
+};
+
 typedef websocketpp::server<config> server;
 typedef websocketpp::client<config> client;
+
+typedef websocketpp::server<config_tls> server_tls;
+typedef websocketpp::client<config_tls> client_tls;
+
+typedef websocketpp::server<websocketpp::config::core> iostream_server;
+typedef websocketpp::client<websocketpp::config::core_client> iostream_client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -87,7 +138,10 @@ using websocketpp::lib::bind;
 template <typename T>
 void close_after_timeout(T & e, websocketpp::connection_hdl hdl, long timeout) {
     sleep(timeout);
-    e.close(hdl,websocketpp::close::status::normal,"");
+
+    websocketpp::lib::error_code ec;
+    e.close(hdl,websocketpp::close::status::normal,"",ec);
+    BOOST_CHECK(!ec);
 }
 
 void run_server(server * s, int port, bool log = false) {
@@ -100,6 +154,7 @@ void run_server(server * s, int port, bool log = false) {
     }
 
     s->init_asio();
+    s->set_reuse_addr(true);
 
     s->listen(port);
     s->start_accept();
@@ -114,14 +169,24 @@ void run_client(client & c, std::string uri, bool log = false) {
         c.clear_access_channels(websocketpp::log::alevel::all);
         c.clear_error_channels(websocketpp::log::elevel::all);
     }
-    c.init_asio();
-
     websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    c.set_reuse_addr(true);
+    BOOST_CHECK(!ec);
+
     client::connection_ptr con = c.get_connection(uri,ec);
     BOOST_CHECK( !ec );
     c.connect(con);
 
     c.run();
+}
+
+void run_client_and_mark(client * c, bool * flag, websocketpp::lib::mutex * mutex) {
+    c->run();
+    BOOST_CHECK( true );
+    websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(*mutex);
+    *flag = true;
+    BOOST_CHECK( true );
 }
 
 void run_time_limited_client(client & c, std::string uri, long timeout,
@@ -391,7 +456,7 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
     websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,6));
     tthread.detach();
 
-    run_client(c, "http://localhost:9005",false);
+    run_client(c, "http://localhost:9005", false);
 
     sthread.join();
 }
@@ -426,4 +491,116 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     run_client(c, "http://localhost:9005",false);
 
     sthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( client_runs_out_of_work ) {
+    client c;
+
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,3));
+    tthread.detach();
+
+    websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    BOOST_CHECK(!ec);
+
+    c.run();
+
+    // This test checks that an io_service with no work ends immediately.
+    BOOST_CHECK(true);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE( client_is_perpetual ) {
+    client c;
+    bool flag = false;
+    websocketpp::lib::mutex mutex;
+
+    websocketpp::lib::error_code ec;
+    c.init_asio(ec);
+    BOOST_CHECK(!ec);
+
+    c.start_perpetual();
+
+    websocketpp::lib::thread cthread(websocketpp::lib::bind(&run_client_and_mark,&c,&flag,&mutex));
+
+    sleep(1);
+
+    {
+        // Checks that the thread hasn't exited yet
+        websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(mutex);
+        BOOST_CHECK( !flag );
+    }
+
+    c.stop_perpetual();
+
+    sleep(1);
+
+    {
+        // Checks that the thread has exited
+        websocketpp::lib::lock_guard<websocketpp::lib::mutex> lock(mutex);
+        BOOST_CHECK( flag );
+    }
+
+    cthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( client_failed_connection ) {
+    client c;
+
+    run_time_limited_client(c,"http://localhost:9005", 5, false);
+}
+
+BOOST_AUTO_TEST_CASE( stop_listening ) {
+    server s;
+    client c;
+
+    // the first connection stops the server from listening
+    s.set_open_handler(bind(&cancel_on_open,&s,::_1));
+
+    // client immediately closes after opening a connection
+    c.set_open_handler(bind(&close<client>,&c,::_1));
+
+    websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    tthread.detach();
+
+    run_client(c, "http://localhost:9005",false);
+
+    sthread.join();
+}
+
+BOOST_AUTO_TEST_CASE( pause_reading ) {
+    iostream_server s;
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    char buffer[2] = { char(0x81), char(0x80) };
+    
+    // suppress output (it needs a place to go to avoid error but we don't care what it is)
+    std::stringstream null_output;
+    s.register_ostream(&null_output);
+    
+    iostream_server::connection_ptr con = s.get_connection();
+    con->start();
+
+    // read handshake, should work
+    BOOST_CHECK_EQUAL( con->read_some(handshake.data(), handshake.length()), handshake.length());
+    
+    // pause reading and try again. The first read should work, the second should return 0
+    // the first read was queued already after the handshake so it will go through because
+    // reading wasn't paused when it was queued. The byte it reads wont be enough to
+    // complete the frame so another read will be requested. This one wont actually happen
+    // because the connection is paused now.
+    con->pause_reading();
+    BOOST_CHECK_EQUAL( con->read_some(buffer, 1), 1);
+    BOOST_CHECK_EQUAL( con->read_some(buffer+1, 1), 0);
+    // resume reading and try again. Should work this time because the resume should have
+    // re-queued a read.
+    con->resume_reading();
+    BOOST_CHECK_EQUAL( con->read_some(buffer+1, 1), 1);
+}
+
+
+BOOST_AUTO_TEST_CASE( server_connection_cleanup ) {
+    server_tls s;
 }

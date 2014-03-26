@@ -78,7 +78,7 @@ struct ci_less : std::binary_function<std::string, std::string, bool> {
       : public std::binary_function<unsigned char,unsigned char,bool>
     {
         bool operator() (unsigned char const & c1, unsigned char const & c2) const {
-            return std::tolower (c1) < std::tolower (c2);
+            return tolower (c1) < tolower (c2);
         }
     };
     bool operator() (std::string const & s1, std::string const & s2) const {

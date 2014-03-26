@@ -34,7 +34,11 @@
 #include <websocketpp/common/stdint.hpp>
 
 // Concurrency
+#ifndef _WEBSOCKETPP_NO_THREADING_
 #include <websocketpp/concurrency/basic.hpp>
+#else
+#include <websocketpp/concurrency/none.hpp>
+#endif
 
 // Transport
 #include <websocketpp/transport/iostream/endpoint.hpp>
@@ -68,7 +72,11 @@ struct core_client {
     typedef core_client type;
 
     // Concurrency policy
+#ifndef _WEBSOCKETPP_NO_THREADING_
     typedef websocketpp::concurrency::basic concurrency_type;
+#else
+    typedef websocketpp::concurrency::none concurrency_type;
+#endif
 
     // HTTP Parser Policies
     typedef http::parser::request request_type;
@@ -92,12 +100,22 @@ struct core_client {
     typedef websocketpp::random::random_device::int_generator<uint32_t,
         concurrency_type> rng_type;
 
+    /// Controls compile time enabling/disabling of thread syncronization code
+    /// Disabling can provide a minor performance improvement to single threaded
+    /// applications
+    static bool const enable_multithreading = true;
+
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
+
+        /// Controls compile time enabling/disabling of thread syncronization
+        /// code Disabling can provide a minor performance improvement to single
+        /// threaded applications
+        static bool const enable_multithreading = true;
 
         /// Default timer values (in ms)
 
@@ -180,7 +198,7 @@ struct core_client {
         websocketpp::log::alevel::all ^ websocketpp::log::alevel::devel;
 
     ///
-    static const size_t connection_read_buffer_size = 512;
+    static const size_t connection_read_buffer_size = 16384;
 
     /// Drop connections immediately on protocol error.
     /**
@@ -205,6 +223,18 @@ struct core_client {
      * sent by local applications.
      */
     static const bool silent_close = false;
+
+    /// Default maximum message size
+    /**
+     * Default value for the processor's maximum message size. Maximum message size
+     * determines the point at which the library will fail a connection with the 
+     * message_too_big protocol error.
+     *
+     * The default is 32MB
+     *
+     * @since 0.4.0-alpha1
+     */
+    static const size_t max_message_size = 32000000;
 
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;

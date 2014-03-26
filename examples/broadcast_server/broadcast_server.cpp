@@ -34,7 +34,8 @@ enum action_type {
 
 struct action {
     action(action_type t, connection_hdl h) : type(t), hdl(h) {}
-    action(action_type t, server::message_ptr m) : type(t), msg(m) {}
+    action(action_type t, connection_hdl h, server::message_ptr m)
+      : type(t), hdl(h), msg(m) {}
 
     action_type type;
     websocketpp::connection_hdl hdl;
@@ -92,7 +93,7 @@ public:
         // queue message up for sending by processing thread
         unique_lock<mutex> lock(m_action_lock);
         //std::cout << "on_message" << std::endl;
-        m_actions.push(action(MESSAGE,msg));
+        m_actions.push(action(MESSAGE,hdl,msg));
         lock.unlock();
         m_action_cond.notify_one();
     }
@@ -111,13 +112,13 @@ public:
             lock.unlock();
 
             if (a.type == SUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.insert(a.hdl);
             } else if (a.type == UNSUBSCRIBE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
                 m_connections.erase(a.hdl);
             } else if (a.type == MESSAGE) {
-                unique_lock<mutex> lock(m_connection_lock);
+                unique_lock<mutex> con_lock(m_connection_lock);
 
                 con_list::iterator it;
                 for (it = m_connections.begin(); it != m_connections.end(); ++it) {
@@ -142,13 +143,13 @@ private:
 
 int main() {
 	try {
-	broadcast_server server;
+	broadcast_server server_instance;
 
 	// Start a thread to run the processing loop
-	thread t(bind(&broadcast_server::process_messages,&server));
+	thread t(bind(&broadcast_server::process_messages,&server_instance));
 
 	// Run the asio loop with the main thread
-	server.run(9002);
+	server_instance.run(9002);
 
 	t.join();
 

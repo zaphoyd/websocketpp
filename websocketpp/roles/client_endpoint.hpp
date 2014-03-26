@@ -66,8 +66,7 @@ public:
 
     explicit client() : endpoint_type(false)
     {
-        endpoint_type::m_alog.write(log::alevel::devel,
-            "client constructor");
+        endpoint_type::m_alog.write(log::alevel::devel, "client constructor");
     }
 
     /// Get a new connection
@@ -77,15 +76,17 @@ public:
      * applying connection specific settings before performing the opening
      * handshake.
      *
+     * @param [in] location URI to open the connection to as a uri_ptr
+     * @param [out] ec An status code indicating failure reasons, if any
+     *
      * @return A connection_ptr to the new connection
      */
-    connection_ptr get_connection(uri_ptr location, lib::error_code &ec) {
+    connection_ptr get_connection(uri_ptr location, lib::error_code & ec) {
         if (location->get_secure() && !transport_type::is_secure()) {
             ec = error::make_error_code(error::endpoint_not_secure);
             return connection_ptr();
         }
 
-        // create connection
         connection_ptr con = endpoint_type::create_connection();
 
         if (!con) {
@@ -95,7 +96,6 @@ public:
 
         con->set_uri(location);
 
-        // Success
         ec = lib::error_code();
         return con;
     }
@@ -106,10 +106,12 @@ public:
      * suitable for passing to connect(connection_ptr). This overload allows
      * default construction of the uri_ptr from a standard string.
      *
+     * @param [in] u URI to open the connection to as a string
+     * @param [out] ec An status code indicating failure reasons, if any
+     *
      * @return A connection_ptr to the new connection
      */
-    connection_ptr get_connection(const std::string& u, lib::error_code &ec) {
-        // parse uri
+    connection_ptr get_connection(std::string const & u, lib::error_code & ec) {
         uri_ptr location(new uri(u));
 
         if (!location->get_valid()) {
@@ -137,35 +139,17 @@ public:
             lib::bind(
                 &type::handle_connect,
                 this,
-                lib::placeholders::_1,
-                lib::placeholders::_2
+                con,
+                lib::placeholders::_1
             )
         );
 
         return con;
     }
-
-
-
-    // connect(...)
 private:
     // handle_connect
-    void handle_connect(connection_hdl hdl, const lib::error_code & ec) {
-        lib::error_code hdl_ec;
-        connection_ptr con = endpoint_type::get_con_from_hdl(hdl,hdl_ec);
-
-        if (hdl_ec == error::bad_connection) {
-            endpoint_type::m_elog.write(log::elevel::fatal,
-                "handle_connect got an invalid handle back");
-        } else if (hdl_ec) {
-            // There was some other unknown error attempting to convert the hdl
-            // to a connection.
-            endpoint_type::m_elog.write(log::elevel::fatal,
-                "handle_connect error in get_con_from_hdl: "+hdl_ec.message());
-            //con->terminate();
-        } else if (ec) {
-            // TODO
-            // Set connection's failure reasons
+    void handle_connect(connection_ptr con, lib::error_code const & ec) {
+        if (ec) {
             con->terminate(ec);
 
             endpoint_type::m_elog.write(log::elevel::rerror,

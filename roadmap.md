@@ -10,16 +10,18 @@ Complete & Tested:
 - 32 bit support
 - Logging
 - Client role
-
-Implimented, needs more testing
-- TLS support
-- echo_server & echo_server_tls
-- External io_service support
-- socket_init_handler
-- tls_init_handler
 - message_handler
 - ping_handler
 - pong_handler
+- open_handler
+- close_handler
+- echo_server & echo_server_tls
+
+Implemented, needs more testing
+- TLS support
+- External io_service support
+- socket_init_handler
+- tls_init_handler
 - tcp_init_handler
 - exception/error handling
 - Subprotocol negotiation
@@ -30,8 +32,7 @@ Implimented, needs more testing
 - Visual Studio / Windows support
 - Timeouts
 - CMake build/install support
-- open_handler
-- close_handler
+
 - validate_handler
 - http_handler
 
@@ -39,3 +40,5 @@ Future feature roadmap
 - Extension support
 - permessage_compress extension
 - Message buffer pool
+- flow control
+- tutorials & documentation

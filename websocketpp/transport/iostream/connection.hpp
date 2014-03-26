@@ -28,8 +28,9 @@
 #ifndef WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_CON_HPP
 
-#include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>
@@ -49,7 +50,7 @@ struct timer {
 };
 
 template <typename config>
-class connection {
+class connection : public lib::enable_shared_from_this< connection<config> > {
 public:
     /// Type of this connection transport component
     typedef connection<config> type;
@@ -79,6 +80,11 @@ public:
       , m_remote_endpoint("iostream transport")
     {
         m_alog.write(log::alevel::devel,"iostream con transport constructor");
+    }
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return type::shared_from_this();
     }
 
     /// Register a std::ostream with the transport for writing output
@@ -127,14 +133,62 @@ public:
      * Copies bytes from buf into WebSocket++'s input buffers. Bytes will be
      * copied from the supplied buffer to fulfill any pending library reads. It
      * will return the number of bytes successfully processed. If there are no
-     * pending reads readsome will return immediately. Not all of the bytes may
+     * pending reads read_some will return immediately. Not all of the bytes may
      * be able to be read in one call
+     *
+     *
+     * @since 0.3.0-alpha4
+     *
+     * @param buf Char buffer to read into the websocket
+     * @param len Length of buf
+     * @return The number of characters from buf actually read.
      */
-    size_t readsome(char const * buf, size_t len) {
+    size_t read_some(char const * buf, size_t len) {
         // this serializes calls to external read.
         scoped_lock_type lock(m_read_mutex);
 
-        return this->readsome_impl(buf,len);
+        return this->read_some_impl(buf,len);
+    }
+
+    /// Manual input supply (DEPRECATED)
+    /**
+     * @deprecated DEPRECATED in favor of read_some()
+     * @see read_some()
+     */
+    size_t readsome(char const * buf, size_t len) {
+        return this->read_some(buf,len);
+    }
+
+    /// Signal EOF
+    /**
+     * Signals to the transport that data stream being read has reached EOF and
+     * that no more bytes may be read or written to/from the transport.
+     *
+     * @since 0.3.0-alpha4
+     */
+    void eof() {
+        // this serializes calls to external read.
+        scoped_lock_type lock(m_read_mutex);
+
+        if (m_reading) {
+            complete_read(make_error_code(transport::error::eof));
+        }
+    }
+
+    /// Signal transport error
+    /**
+     * Signals to the transport that a fatal data stream error has occurred and
+     * that no more bytes may be read or written to/from the transport.
+     *
+     * @since 0.3.0-alpha4
+     */
+    void fatal_error() {
+        // this serializes calls to external read.
+        scoped_lock_type lock(m_read_mutex);
+
+        if (m_reading) {
+            complete_read(make_error_code(transport::error::pass_through));
+        }
     }
 
     /// Set whether or not this connection is secure
@@ -408,18 +462,18 @@ private:
             // TODO: error handling
             if (in.bad()) {
                 m_reading = false;
-                m_read_handler(make_error_code(error::bad_stream), m_cursor);
+                complete_read(make_error_code(error::bad_stream));
             }
 
             if (m_cursor >= m_bytes_needed) {
                 m_reading = false;
-                m_read_handler(lib::error_code(), m_cursor);
+                complete_read(lib::error_code());
             }
         }
     }
 
-    size_t readsome_impl(char const * buf, size_t len) {
-        m_alog.write(log::alevel::devel,"iostream_con readsome");
+    size_t read_some_impl(char const * buf, size_t len) {
+        m_alog.write(log::alevel::devel,"iostream_con read_some");
 
         if (!m_reading) {
             m_elog.write(log::elevel::devel,"write while not reading");
@@ -428,16 +482,40 @@ private:
 
         size_t bytes_to_copy = std::min(len,m_len-m_cursor);
 
-        std::copy(buf,buf+bytes_to_copy,m_buf);
+        std::copy(buf,buf+bytes_to_copy,m_buf+m_cursor);
 
         m_cursor += bytes_to_copy;
 
         if (m_cursor >= m_bytes_needed) {
-            m_reading = false;
-            m_read_handler(lib::error_code(), m_cursor);
+            complete_read(lib::error_code());
         }
 
         return bytes_to_copy;
+    }
+
+    /// Signal that a requested read is complete
+    /**
+     * Sets the reading flag to false and returns the handler that should be
+     * called back with the result of the read. The cursor position that is sent
+     * is whatever the value of m_cursor is.
+     *
+     * It MUST NOT be called when m_reading is false.
+     * it MUST be called while holding the read lock
+     *
+     * It is important to use this method rather than directly setting/calling
+     * m_read_handler back because this function makes sure to delete the
+     * locally stored handler which contains shared pointers that will otherwise
+     * cause circular reference based memory leaks.
+     *
+     * @param ec The error code to forward to the read handler
+     */
+    void complete_read(lib::error_code const & ec) {
+        m_reading = false;
+
+        read_handler handler = m_read_handler;
+        m_read_handler = read_handler();
+
+        handler(ec,m_cursor);
     }
 
     // Read space (Protected by m_read_mutex)
