@@ -387,6 +387,10 @@ public:
                             m_msg_manager->get_message(op,m_bytes_needed),
                             frame::get_masking_key(m_basic_header,m_extended_header)
                         );
+                        
+                        if (m_permessage_deflate.is_enabled()) {
+                            m_data_msg.msg_ptr->set_compressed(frame::get_rsv1(m_basic_header));
+                        }
                     } else {
                         // Fetch the underlying payload buffer from the data message we
                         // are writing into.
@@ -459,7 +463,7 @@ public:
         // if the frame is compressed, append the compression
         // trailer and flush the compression buffer.
         if (m_permessage_deflate.is_enabled()
-            && frame::get_rsv1(m_basic_header))
+            && m_current_msg->msg_ptr->get_compressed())
         {
             uint8_t trailer[4] = {0x00, 0x00, 0xff, 0xff};
 
@@ -770,7 +774,7 @@ protected:
 
         // decompress message if needed.
         if (m_permessage_deflate.is_enabled()
-            && frame::get_rsv1(m_basic_header))
+            && m_current_msg->msg_ptr->get_compressed())
         {
             // Decompress current buffer into the message buffer
             ec = m_permessage_deflate.decompress(buf,len,out);
