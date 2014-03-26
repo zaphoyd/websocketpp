@@ -777,9 +777,6 @@ protected:
             if (ec) {
                 return 0;
             }
-
-            // get the length of the newly uncompressed output
-            offset = out.size() - offset;
         } else {
             // No compression, straight copy
             out.append(reinterpret_cast<char *>(buf),len);
