@@ -129,8 +129,8 @@ public:
                         // Figure out if this is an error that should halt all
                         // extension negotiations or simply cause negotiation of
                         // this specific extension to fail.
-                        std::cout << "permessage-compress negotiation failed: "
-                                  << neg_ret.first.message() << std::endl;
+                        //std::cout << "permessage-compress negotiation failed: "
+                        //          << neg_ret.first.message() << std::endl;
                     } else {
                         // Note: this list will need commas if WebSocket++ ever
                         // supports more than one extension
