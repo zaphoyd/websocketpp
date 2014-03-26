@@ -115,6 +115,14 @@ public:
             for (it = p.begin(); it != p.end(); ++it) {
                 // look through each extension, if the key is permessage-deflate
                 if (it->first == "permessage-deflate") {
+                    // if we have already successfully negotiated this extension
+                    // then skip any other requests to negotiate the same one
+                    // with different parameters 
+                    if (m_permessage_deflate.is_enabled()) {
+                        continue;
+                    }
+                    
+                    
                     neg_ret = m_permessage_deflate.negotiate(it->second);
 
                     if (neg_ret.first) {
