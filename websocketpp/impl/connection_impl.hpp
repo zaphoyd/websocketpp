@@ -95,7 +95,9 @@ lib::error_code connection<config>::send(const void* payload, size_t len,
 template <typename config>
 lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 {
-    m_alog.write(log::alevel::devel,"connection send");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection send");
+    }
     // TODO:
 
     if (m_state != session::state::open) {
@@ -141,7 +143,9 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
 template <typename config>
 void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
-    m_alog.write(log::alevel::devel,"connection ping");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection ping");
+    }
 
     if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
@@ -230,7 +234,9 @@ void connection<config>::handle_pong_timeout(std::string payload, const lib::err
 
 template <typename config>
 void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
-    m_alog.write(log::alevel::devel,"connection pong");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection pong");
+    }
 
     if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
@@ -276,7 +282,9 @@ template <typename config>
 void connection<config>::close(close::status::value const code,
     std::string const & reason, lib::error_code & ec)
 {
-    m_alog.write(log::alevel::devel,"connection close");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection close");
+    }
 
     if (m_state != session::state::open) {
        ec = error::make_error_code(error::invalid_state);
@@ -2012,10 +2020,12 @@ void connection<config>::write_push(typename config::message_type::ptr msg)
     m_send_buffer_size += msg->get_payload().size();
     m_send_queue.push(msg);
 
-    std::stringstream s;
-    s << "write_push: message count: " << m_send_queue.size()
-      << " buffer size: " << m_send_buffer_size;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+        std::stringstream s;
+        s << "write_push: message count: " << m_send_queue.size()
+          << " buffer size: " << m_send_buffer_size;
+        m_alog.write(log::alevel::devel,s.str());
+    }
 }
 
 template <typename config>
@@ -2032,10 +2042,12 @@ typename config::message_type::ptr connection<config>::write_pop()
     m_send_buffer_size -= msg->get_payload().size();
     m_send_queue.pop();
 
-    std::stringstream s;
-    s << "write_pop: message count: " << m_send_queue.size()
-      << " buffer size: " << m_send_buffer_size;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+        std::stringstream s;
+        s << "write_pop: message count: " << m_send_queue.size()
+          << " buffer size: " << m_send_buffer_size;
+        m_alog.write(log::alevel::devel,s.str());
+    }
     return msg;
 }
 
