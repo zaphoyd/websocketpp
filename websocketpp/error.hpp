@@ -38,7 +38,7 @@ namespace websocketpp {
 /// Combination error code / string type for returning two values
 typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-// setup for errors that should be propogated back to the user.
+/// Library level error codes
 namespace error {
 enum value {
     /// Catch-all library error
@@ -115,11 +115,11 @@ enum value {
 
     /// Invalid port in URI
     invalid_port,
-    
+
     /// An async accept operation failed because the underlying transport has been
     /// requested to not listen for new connections anymore.
     async_accept_not_listening,
-    
+
     /// The requested operation was canceled
     operation_canceled
 }; // enum value

@@ -141,6 +141,7 @@ struct buffer {
     size_t len;
 };
 
+/// Generic transport related errors
 namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
@@ -170,10 +171,10 @@ enum value {
 
     /// Timer expired
     timeout,
-    
+
     /// read or write after shutdown
     action_after_shutdown,
-    
+
     /// Other TLS error
     tls_error,
 };
