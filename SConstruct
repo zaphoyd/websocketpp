@@ -214,6 +214,7 @@ echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = build
 # echo_server_tls
 if tls_build:
     echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
+    echo_server_both = SConscript('#/examples/echo_server_both/SConscript',variant_dir = builddir + 'echo_server_both',duplicate = 0)
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
