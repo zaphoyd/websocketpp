@@ -183,10 +183,14 @@ bool hybi_header::get_masked() const {
     return ((m_header[1] & BPB1_MASK) == BPB1_MASK);
 }
 int32_t hybi_header::get_masking_key() const {
+    int32_t key;
+    memcpy(&key, &m_header[get_header_len()-4], sizeof(key));
+
     if (!get_masked()) {
         return 0;
     }
-    return *reinterpret_cast<const int32_t*>(&m_header[get_header_len()-4]);
+
+    return key;
 }
 uint64_t hybi_header::get_payload_size() const {
     return m_payload_size;
