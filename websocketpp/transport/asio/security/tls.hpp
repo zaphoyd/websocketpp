@@ -43,10 +43,14 @@
 namespace websocketpp {
 namespace transport {
 namespace asio {
+/// A socket policy for the asio transport that implements a TLS encrypted
+/// socket by wrapping with an asio::ssl::stream
 namespace tls_socket {
 
+/// The signature of the socket_init_handler for this socket policy
 typedef lib::function<void(connection_hdl,boost::asio::ssl::stream<
     boost::asio::ip::tcp::socket>&)> socket_init_handler;
+/// The signature of the tls_init_handler for this socket policy
 typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)>
     tls_init_handler;
 
