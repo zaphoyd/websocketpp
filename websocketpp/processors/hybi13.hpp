@@ -331,6 +331,14 @@ public:
                     continue;
                 }
 
+                if (base::m_alog->static_test(log::alevel::devel)) {
+                    std::stringstream s;
+                    s << "Received frame basic header: "
+                      << utility::to_hex(&m_basic_header.b0,1)
+                      << utility::to_hex(&m_basic_header.b1,1);
+                    base::m_alog->write(log::alevel::devel,s.str());
+                }
+
                 ec = this->validate_incoming_basic_header(
                     m_basic_header, base::m_server, !m_data_msg.msg_ptr
                 );
@@ -350,7 +358,7 @@ public:
 
                 if (base::m_alog->static_test(log::alevel::devel)) {
                     std::stringstream s;
-                    s << "Received frame header: "
+                    s << "Received frame full header: "
                       << utility::to_hex(&m_basic_header.b0,1)
                       << utility::to_hex(&m_basic_header.b1,1)
                       << utility::to_hex(m_extended_header.bytes,
