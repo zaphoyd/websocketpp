@@ -2005,6 +2005,7 @@ connection<config>::get_processor(int version) const {
     }
     
     // Settings not configured by the constructor
+    p->init_logging(&m_alog,&m_elog);
     p->set_max_message_size(m_max_message_size);
     
     return p;
