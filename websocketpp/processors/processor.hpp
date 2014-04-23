@@ -31,9 +31,12 @@
 #include <websocketpp/processors/base.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+
 #include <websocketpp/close.hpp>
+#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/utilities.hpp>
 #include <websocketpp/uri.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 #include <map>
 #include <string>
@@ -159,16 +162,42 @@ public:
     typedef typename config::message_type::ptr message_ptr;
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
+    /// Type of this processor's error logging policy
+    typedef typename config::elog_type elog_type;
+    /// Type of this processor's access logging policy
+    typedef typename config::alog_type alog_type;
+
     explicit processor(bool secure, bool p_is_server)
       : m_secure(secure)
       , m_server(p_is_server)
       , m_max_message_size(config::max_message_size)
+      , m_elog(_WEBSOCKETPP_NULLPTR_TOKEN_)
+      , m_alog(_WEBSOCKETPP_NULLPTR_TOKEN_)
     {}
 
     virtual ~processor() {}
 
     /// Get the protocol version of this processor
     virtual int get_version() const = 0;
+
+    /// Initialize logging
+    /**
+     * The loggers are managed by the owner of the processor. As such, the
+     * processor doesn't have direct access to them. This method is called by
+     * the owner to allow shared logging from the processor component. These are
+     * raw pointers to the logging types specified in the config. It is the
+     * responsibility of the owning object to ensure that they remain in scope
+     * until the processor goes out of scope.
+     *
+     * TODO: better way of handling non-initialized logging?
+     *
+     * @param a A pointer to the access logger to use.
+     * @param e A pointer to the error logger to use.
+     */
+    void init_logging(alog_type * a, elog_type * e) {
+        m_elog = e;
+        m_alog = a;
+    }
 
     /// Get maximum message size
     /**
@@ -389,6 +418,8 @@ protected:
     bool const m_secure;
     bool const m_server;
     size_t m_max_message_size;
+    elog_type* m_elog;
+    alog_type* m_alog;
 };
 
 } // namespace processor
