@@ -36,6 +36,7 @@
 #include <websocketpp/http/response.hpp>
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
+#include <websocketpp/logger/stub.hpp>
 
 struct stub_config {
 	typedef websocketpp::http::parser::request request_type;
@@ -45,8 +46,13 @@ struct stub_config {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type>
 		con_msg_manager_type;
-		
+	
+	typedef websocketpp::log::stub alog_type;
+	typedef websocketpp::log::stub elog_type;
+	
 	static const size_t max_message_size = 16000000;
+	
+	
 };
 
 struct processor_setup {

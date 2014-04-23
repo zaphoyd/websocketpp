@@ -38,6 +38,7 @@
 #include <websocketpp/message_buffer/message.hpp>
 #include <websocketpp/message_buffer/alloc.hpp>
 #include <websocketpp/random/none.hpp>
+#include <websocketpp/logger/stub.hpp>
 
 #include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 #include <websocketpp/extensions/permessage_deflate/enabled.hpp>
@@ -50,6 +51,9 @@ struct stub_config {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type>
 		con_msg_manager_type;
+
+    typedef websocketpp::log::stub alog_type;
+	typedef websocketpp::log::stub elog_type;
 
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 
@@ -72,6 +76,9 @@ struct stub_config_ext {
 		<websocketpp::message_buffer::alloc::con_msg_manager> message_type;
 	typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type>
 		con_msg_manager_type;
+
+    typedef websocketpp::log::stub alog_type;
+	typedef websocketpp::log::stub elog_type;
 
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
 
