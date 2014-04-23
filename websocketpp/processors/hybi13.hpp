@@ -348,6 +348,17 @@ public:
                     continue;
                 }
 
+                if (base::m_alog->static_test(log::alevel::devel)) {
+                    std::stringstream s;
+                    s << "Received frame header: "
+                      << utility::to_hex(&m_basic_header.b0,1)
+                      << utility::to_hex(&m_basic_header.b1,1)
+                      << utility::to_hex(m_extended_header.bytes,
+                            frame::get_header_len(m_basic_header) -
+                            frame::BASIC_HEADER_LENGTH);
+                    base::m_alog->write(log::alevel::devel,s.str());
+                }
+
                 ec = validate_incoming_extended_header(m_basic_header,m_extended_header);
                 if (ec){break;}
 
