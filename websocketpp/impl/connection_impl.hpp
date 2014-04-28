@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -96,7 +96,9 @@ lib::error_code connection<config>::send(const void* payload, size_t len,
 template <typename config>
 lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 {
-    m_alog.write(log::alevel::devel,"connection send");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection send");
+    }
     // TODO:
 
     if (m_state != session::state::open) {
@@ -142,7 +144,9 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
 template <typename config>
 void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
-    m_alog.write(log::alevel::devel,"connection ping");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection ping");
+    }
 
     if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
@@ -231,7 +235,9 @@ void connection<config>::handle_pong_timeout(std::string payload, const lib::err
 
 template <typename config>
 void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
-    m_alog.write(log::alevel::devel,"connection pong");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection pong");
+    }
 
     if (m_state != session::state::open) {
         ec = error::make_error_code(error::invalid_state);
@@ -277,7 +283,9 @@ template <typename config>
 void connection<config>::close(close::status::value const code,
     std::string const & reason, lib::error_code & ec)
 {
-    m_alog.write(log::alevel::devel,"connection close");
+    if (m_alog.static_test(log::alevel::devel)) {
+        m_alog.write(log::alevel::devel,"connection close");
+    }
 
     if (m_state != session::state::open) {
        ec = error::make_error_code(error::invalid_state);
@@ -893,6 +901,13 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             }
         }
         if (ec == transport::error::tls_short_read) {
+            if (m_state == session::state::closed) {
+                // We expect to get a TLS short read if we try to read after the
+                // connection is closed. If this happens ignore and exit the
+                // read frame path.
+                terminate(lib::error_code());
+                return;
+            }
             echannel = log::elevel::rerror;
         } else if (ec == transport::error::action_after_shutdown) {
             echannel = log::elevel::info;
@@ -1211,9 +1226,7 @@ void connection<config>::send_http_response() {
 }
 
 template <typename config>
-void connection<config>::handle_send_http_response(
-    const lib::error_code& ec)
-{
+void connection<config>::handle_send_http_response(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"handle_send_http_response");
 
     this->atomic_state_check(
@@ -1325,7 +1338,7 @@ void connection<config>::send_http_request() {
 }
 
 template <typename config>
-void connection<config>::handle_send_http_request(const lib::error_code& ec) {
+void connection<config>::handle_send_http_request(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"handle_send_http_request");
 
     this->atomic_state_check(
@@ -1459,13 +1472,13 @@ void connection<config>::handle_open_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,"asio open handshake timer cancelled");
+        m_alog.write(log::alevel::devel,"open handshake timer cancelled");
     } else if (ec) {
         m_alog.write(log::alevel::devel,
-            "asio open handle_open_handshake_timeout error: "+ec.message());
+            "open handle_open_handshake_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog.write(log::alevel::devel,"asio open handshake timer expired");
+        m_alog.write(log::alevel::devel,"open handshake timer expired");
         terminate(make_error_code(error::open_handshake_timeout));
     }
 }
@@ -1563,7 +1576,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
     if (m_termination_handler) {
         try {
             m_termination_handler(type::get_shared());
-        } catch (const std::exception& e) {
+        } catch (std::exception const & e) {
             m_elog.write(log::elevel::warn,
                 std::string("termination_handler call failed. Reason was: ")+e.what());
         }
@@ -1585,43 +1598,77 @@ void connection<config>::write_frame() {
             return;
         }
 
-        // Get the next message in the queue. This will return an empty
-        // message if the queue was empty.
-        m_current_msg = write_pop();
-
-        if (!m_current_msg) {
-            return;
+        // pull off all the messages that are ready to write.
+        // stop if we get a message marked terminal
+        message_ptr next_message = write_pop();
+        while (next_message) {
+            m_current_msgs.push_back(next_message);
+            if (!next_message->get_terminal()) {
+                next_message = write_pop();
+            } else {
+                next_message = message_ptr();
+            }
         }
-
-        // At this point we own the next message to be sent and are
-        // responsible for holding the write flag until it is successfully
-        // sent or there is some error
-        m_write_flag = true;
+        
+        if (m_current_msgs.empty()) {
+            // there was nothing to send
+            return;
+        } else {
+            // At this point we own the next messages to be sent and are
+            // responsible for holding the write flag until they are 
+            // successfully sent or there is some error
+            m_write_flag = true;
+        }
     }
 
-    std::string const & header = m_current_msg->get_header();
-    std::string const & payload = m_current_msg->get_payload();
+    typename std::vector<message_ptr>::iterator it;
+    for (it = m_current_msgs.begin(); it != m_current_msgs.end(); ++it) {
+        std::string const & header = (*it)->get_header();
+        std::string const & payload = (*it)->get_payload();
 
-    m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
-    m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
+        m_send_buffer.push_back(transport::buffer(header.c_str(),header.size()));
+        m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));   
+    }
 
-
+    // Print detailed send stats if those log levels are enabled
     if (m_alog.static_test(log::alevel::frame_header)) {
     if (m_alog.dynamic_test(log::alevel::frame_header)) {
-        std::stringstream s;
-        s << "Dispatching write with " << header.size()
-          << " header bytes and " << payload.size()
-          << " payload bytes" << std::endl;
-        m_alog.write(log::alevel::frame_header,s.str());
-        m_alog.write(log::alevel::frame_header,"Header: "+utility::to_hex(header));
-    }
-    }
-    if (m_alog.static_test(log::alevel::frame_payload)) {
-    if (m_alog.dynamic_test(log::alevel::frame_payload)) {
-        m_alog.write(log::alevel::frame_payload,"Payload: "+utility::to_hex(payload));
-    }
-    }
+        std::stringstream general,header,payload;
+        
+        general << "Dispatching write containing " << m_current_msgs.size()
+                <<" message(s) containing ";
+        header << "Header Bytes: \n";
+        payload << "Payload Bytes: \n";
+        
+        size_t hbytes = 0;
+        size_t pbytes = 0;
+        
+        for (size_t i = 0; i < m_current_msgs.size(); i++) {
+            hbytes += m_current_msgs[i]->get_header().size();
+            pbytes += m_current_msgs[i]->get_payload().size();
 
+            
+            header << "[" << i << "] (" 
+                   << m_current_msgs[i]->get_header().size() << ") " 
+                   << utility::to_hex(m_current_msgs[i]->get_header()) << "\n";
+
+            if (m_alog.static_test(log::alevel::frame_payload)) {
+            if (m_alog.dynamic_test(log::alevel::frame_payload)) {
+                payload << "[" << i << "] (" 
+                        << m_current_msgs[i]->get_payload().size() << ") " 
+                        << utility::to_hex(m_current_msgs[i]->get_payload()) 
+                        << "\n";
+            }
+            }  
+        }
+        
+        general << hbytes << " header bytes and " << pbytes << " payload bytes";
+        
+        m_alog.write(log::alevel::frame_header,general.str());
+        m_alog.write(log::alevel::frame_header,header.str());
+        m_alog.write(log::alevel::frame_payload,payload.str());
+    }
+    }
 
     transport_con_type::async_write(
         m_send_buffer,
@@ -1636,10 +1683,11 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
         m_alog.write(log::alevel::devel,"connection handle_write_frame");
     }
 
-    bool terminal = m_current_msg->get_terminal();
+    bool terminal = m_current_msgs.back()->get_terminal();
 
     m_send_buffer.clear();
-    m_current_msg.reset();
+    m_current_msgs.clear();
+    // TODO: recycle instead of deleting
 
     if (ec) {
         log_err(log::elevel::fatal,"handle_write_frame",ec);
@@ -2010,10 +2058,12 @@ void connection<config>::write_push(typename config::message_type::ptr msg)
     m_send_buffer_size += msg->get_payload().size();
     m_send_queue.push(msg);
 
-    std::stringstream s;
-    s << "write_push: message count: " << m_send_queue.size()
-      << " buffer size: " << m_send_buffer_size;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+        std::stringstream s;
+        s << "write_push: message count: " << m_send_queue.size()
+          << " buffer size: " << m_send_buffer_size;
+        m_alog.write(log::alevel::devel,s.str());
+    }
 }
 
 template <typename config>
@@ -2030,10 +2080,12 @@ typename config::message_type::ptr connection<config>::write_pop()
     m_send_buffer_size -= msg->get_payload().size();
     m_send_queue.pop();
 
-    std::stringstream s;
-    s << "write_pop: message count: " << m_send_queue.size()
-      << " buffer size: " << m_send_buffer_size;
-    m_alog.write(log::alevel::devel,s.str());
+    if (m_alog.static_test(log::alevel::devel)) {
+        std::stringstream s;
+        s << "write_pop: message count: " << m_send_queue.size()
+          << " buffer size: " << m_send_buffer_size;
+        m_alog.write(log::alevel::devel,s.str());
+    }
     return msg;
 }
 

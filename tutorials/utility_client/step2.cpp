@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -22,20 +22,40 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#ifndef WEBSOCKETPP_COMMON_PLATFORMS_HPP
-#define WEBSOCKETPP_COMMON_PLATFORMS_HPP
+// **NOTE:** This file is a snapshot of the WebSocket++ utility client tutorial.
+// Additional related material can be found in the tutorials/utility_client
+// directory of the WebSocket++ repository.
 
-/**
- * This header contains any platform specific preprocessor adjustments that
- * don't fit somewhere else better.
- */
+#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/client.hpp>
 
-#if defined(_WIN32) && !defined(NOMINMAX)
-    // don't define min and max macros that conflict with std::min and std::max
-    #define NOMINMAX
-#endif
+#include <iostream>
+#include <string>
 
-#endif // WEBSOCKETPP_COMMON_PLATFORMS_HPP
+typedef websocketpp::client<websocketpp::config::asio_client> client;
+
+int main() {
+    bool done = false;
+    std::string input;
+
+    while (!done) {
+        std::cout << "Enter Command: ";
+        std::getline(std::cin, input);
+
+        if (input == "quit") {
+            done = true;
+        } else if (input == "help") {
+            std::cout
+                << "\nCommand List:\n"
+                << "help: Display this help text\n"
+                << "quit: Exit the program\n"
+                << std::endl;
+        } else {
+            std::cout << "Unrecognized Command" << std::endl;
+        }
+    }
+
+    return 0;
+}

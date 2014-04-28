@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -22,16 +22,35 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
-#ifndef WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
-#define WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
+// **NOTE:** This file is a snapshot of the WebSocket++ utility client tutorial.
+// Additional related material can be found in the tutorials/utility_client
+// directory of the WebSocket++ repository.
 
-class echo_handler : public server::handler {
-	void on_message(connection_ptr con, std::string msg) {
-		con->write(msg);
-	}
-};
+#include <iostream>
+#include <string>
 
-#endif // WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
+int main() {
+    bool done = false;
+    std::string input;
+
+    while (!done) {
+        std::cout << "Enter Command: ";
+        std::getline(std::cin, input);
+
+        if (input == "quit") {
+            done = true;
+        } else if (input == "help") {
+            std::cout 
+                << "\nCommand List:\n"
+                << "help: Display this help text\n"
+                << "quit: Exit the program\n"
+                << std::endl;
+        } else {
+            std::cout << "Unrecognized Command" << std::endl;
+        }
+    }
+
+    return 0;
+}

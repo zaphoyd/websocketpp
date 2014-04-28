@@ -45,7 +45,7 @@ struct testee_config : public websocketpp::config::asio {
     typedef core::rng_type rng_type;
     typedef core::endpoint_base endpoint_base;
 
-    static bool const enable_multithreading = false;
+    static bool const enable_multithreading = true;
 
     struct transport_config : public core::transport_config {
         typedef core::concurrency_type concurrency_type;
@@ -54,7 +54,7 @@ struct testee_config : public websocketpp::config::asio {
         typedef core::request_type request_type;
         typedef core::response_type response_type;
 
-        static bool const enable_multithreading = false;
+        static bool const enable_multithreading = true;
     };
 
     typedef websocketpp::transport::asio::endpoint<transport_config>
@@ -104,6 +104,7 @@ int main(int argc, char * argv[]) {
 
         // Initialize ASIO
         testee_server.init_asio();
+        testee_server.set_reuse_addr(true);
 
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));

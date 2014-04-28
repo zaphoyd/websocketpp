@@ -79,6 +79,8 @@ elif env['PLATFORM'] == 'posix':
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
+   if not os.environ.has_key('CXX'):
+      env['CXX'] = "clang++"
    if env.has_key('DEBUG'):
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
@@ -144,6 +146,7 @@ if env_cpp11['CXX'].startswith('g++'):
       print "C++11 build environment is not supported on this version of G++"
 elif env_cpp11['CXX'].startswith('clang++'):
    print "C++11 build environment enabled"
+   env.Append(CXXFLANGS = ['-stdlib=libc++'],LINKFLAGS=['-stdlib=libc++'])
    env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
 
    # look for optional second boostroot compiled with clang's libc++ STL library
@@ -211,6 +214,7 @@ echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = build
 # echo_server_tls
 if tls_build:
     echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
+    echo_server_both = SConscript('#/examples/echo_server_both/SConscript',variant_dir = builddir + 'echo_server_both',duplicate = 0)
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
@@ -223,6 +227,12 @@ testee_client = SConscript('#/examples/testee_client/SConscript',variant_dir = b
 
 # utility_client
 utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir = builddir + 'utility_client',duplicate = 0)
+
+# debug_client
+debug_client = SConscript('#/examples/debug_client/SConscript',variant_dir = builddir + 'debug_client',duplicate = 0)
+
+# debug_server
+debug_server = SConscript('#/examples/debug_server/SConscript',variant_dir = builddir + 'debug_server',duplicate = 0)
 
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)

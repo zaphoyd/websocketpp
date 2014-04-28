@@ -290,10 +290,10 @@ public:
      * @return query portion of the URI.
      */
     std::string get_query() const {
-    	std::size_t found = m_resource.find('?');
-    	if (found != std::string::npos) {
-    		return m_resource.substr(found + 1);
-    	} else {
+        std::size_t found = m_resource.find('?');
+        if (found != std::string::npos) {
+            return m_resource.substr(found + 1);
+        } else {
             return "";
         }
     }
