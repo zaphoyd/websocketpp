@@ -103,7 +103,7 @@ inline std::string base64_encode(unsigned char const * bytes_to_encode, unsigned
 }
 
 inline std::string base64_encode(std::string const & data) {
-    return base64_encode(reinterpret_cast<const unsigned char *>(data.data()),data.size());
+    return base64_encode(reinterpret_cast<const unsigned char *>(data.data()),(uint)data.size());
 }
 
 inline std::string base64_decode(std::string const & encoded_string) {
