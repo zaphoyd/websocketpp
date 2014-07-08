@@ -138,7 +138,7 @@ public:
             m_io_service = rhs.m_io_service;
             m_external_io_service = rhs.m_external_io_service;
             m_acceptor = rhs.m_acceptor;
-            m_listen_backlog = rhs.m_listen_backlog
+            m_listen_backlog = rhs.m_listen_backlog;
             m_reuse_addr = rhs.m_reuse_addr;
             m_state = rhs.m_state;
 
