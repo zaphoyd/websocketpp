@@ -78,3 +78,9 @@ examples/wsperf/wsperf_client
 *.out
 
 *.log
+*.opensdf
+*.sdf
+*.vcxproj
+*.vcxproj.filters
+*.user
+install
