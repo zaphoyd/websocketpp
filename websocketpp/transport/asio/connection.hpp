@@ -477,16 +477,19 @@ protected:
         }
 
         timer_ptr post_timer;
-        post_timer = set_timer(
-            config::timeout_socket_post_init,
-            lib::bind(
-                &type::handle_post_init_timeout,
-                get_shared(),
-                post_timer,
-                m_init_handler,
-                lib::placeholders::_1
-            )
-        );
+        
+        if (config::timeout_socket_post_init > 0) {
+            post_timer = set_timer(
+                config::timeout_socket_post_init,
+                lib::bind(
+                    &type::handle_post_init_timeout,
+                    get_shared(),
+                    post_timer,
+                    m_init_handler,
+                    lib::placeholders::_1
+                )
+            );
+        }
 
         socket_con_type::post_init(
             lib::bind(
@@ -530,13 +533,15 @@ protected:
         lib::error_code const & ec)
     {
         if (ec == transport::error::operation_aborted ||
-            post_timer->expires_from_now().is_negative())
+            (post_timer && post_timer->expires_from_now().is_negative()))
         {
             m_alog.write(log::alevel::devel,"post_init cancelled");
             return;
         }
 
-        post_timer->cancel();
+        if (post_timer) {
+            post_timer->cancel();
+        }
 
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle_post_init");
