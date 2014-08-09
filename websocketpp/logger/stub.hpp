@@ -28,7 +28,7 @@
 #ifndef WEBSOCKETPP_LOGGER_STUB_HPP
 #define WEBSOCKETPP_LOGGER_STUB_HPP
 
-#include <iostream>
+#include <string>
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/logger/levels.hpp>
@@ -39,8 +39,8 @@ namespace log {
 /// Stub logger that ignores all input
 class stub {
 public:
-    explicit stub(std::ostream * out) {}
-    stub(level c, std::ostream * out) {}
+    explicit stub(channel_type_hint::value h) {}
+    stub(level c, channel_type_hint::value h) {}
     _WEBSOCKETPP_CONSTEXPR_TOKEN_ stub() {}
 
     void set_channels(level channels) {}

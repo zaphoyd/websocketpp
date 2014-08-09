@@ -55,12 +55,24 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(std::ostream * out = &std::cout)
+    basic<concurrency,names>(channel_type_hint::value h = 
+        channel_type_hint::access)
+      : m_static_channels(0xffffffff)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+      
+    basic<concurrency,names>(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, std::ostream * out = &std::cout)
+    basic<concurrency,names>(level c, channel_type_hint::value h = 
+        channel_type_hint::access)
+      : m_static_channels(c)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+    
+    basic<concurrency,names>(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}

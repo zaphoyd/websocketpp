@@ -5,6 +5,18 @@ HEAD
   WebSocket++ exceptions to be caught in the same statement as others. The error
   code that was previously thrown is wrapped in the exception object and can be
   accessed via the `websocketpp::exception::code()` method.
+- API BREAKING CHANGE: Custom logging policies have some new required
+  constructors that take generic config settings rather than pointers to 
+  std::ostreams. This allows writing logging policies that do not involve the 
+  use of std::ostream. This does not affect anyone using the built in logging 
+  policies.
+- Feature: Adds incomplete `minimal_server` and `minimal_client` configs that 
+  can be used to build custom configs without pulling in the dependencies of 
+  `core` or `core_client`. These configs will offer a stable base config to 
+  future-proof custom configs.
+- Improvement: Core library no longer has std::iostream as a dependency. 
+  std::iostream is still required for the optional iostream logging policy and
+  iostream transport.
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
 
