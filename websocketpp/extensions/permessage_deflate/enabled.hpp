@@ -643,7 +643,7 @@ private:
                 m_s2c_max_window_bits = bits;
                 break;
             case mode::largest:
-                m_s2c_max_window_bits = std::min(bits,m_s2c_max_window_bits);
+                m_s2c_max_window_bits = (std::min)(bits,m_s2c_max_window_bits);
                 break;
             case mode::smallest:
                 m_s2c_max_window_bits = min_s2c_max_window_bits;

@@ -510,7 +510,7 @@ private:
             return 0;
         }
 
-        size_t bytes_to_copy = std::min(len,m_len-m_cursor);
+        size_t bytes_to_copy = (std::min)(len,m_len-m_cursor);
 
         std::copy(buf,buf+bytes_to_copy,m_buf+m_cursor);
 

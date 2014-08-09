@@ -110,7 +110,7 @@ public:
         //       of warning or exception.
         const std::string& key3 = req.get_header("Sec-WebSocket-Key3");
         std::copy(key3.c_str(),
-                  key3.c_str()+std::min(static_cast<size_t>(8), key3.size()),
+                  key3.c_str()+(std::min)(static_cast<size_t>(8), key3.size()),
                   &key_final[8]);
 
         res.append_header(

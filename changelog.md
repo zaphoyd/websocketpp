@@ -1,4 +1,6 @@
 HEAD
+- Compatibility: Adjust usage of std::min to be more compatible with systems
+  that define a min(...) macro.
 
 0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
