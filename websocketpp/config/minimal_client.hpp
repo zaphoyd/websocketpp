@@ -62,7 +62,7 @@ namespace config {
  * <stdint.h> or <boost/cstdint.hpp>
  * <netinet/in.h> or <winsock2.h> (for ntohl.. could potentially bundle this)
  *
- * @since 0.4.0-alpha1
+ * @since 0.4.0-dev
  */
 typedef minimal_server minimal_client;
 
