@@ -129,7 +129,7 @@ public:
         lib::error_code ec;
         start_accept(ec);
         if (ec) {
-            throw ec;
+            throw exception(ec);
         }
     }
 

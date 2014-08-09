@@ -205,17 +205,17 @@ void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
 }
 
 template<typename config>
-void connection<config>::ping(const std::string& payload) {
+void connection<config>::ping(std::string const & payload) {
     lib::error_code ec;
     ping(payload,ec);
     if (ec) {
-        throw ec;
+        throw exception(ec);
     }
 }
 
 template<typename config>
-void connection<config>::handle_pong_timeout(std::string payload, const lib::error_code &
-    ec)
+void connection<config>::handle_pong_timeout(std::string payload,
+    lib::error_code const & ec)
 {
     if (ec) {
         if (ec == transport::error::operation_aborted) {
@@ -270,11 +270,11 @@ void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
 }
 
 template<typename config>
-void connection<config>::pong(const std::string& payload) {
+void connection<config>::pong(std::string const & payload) {
     lib::error_code ec;
     pong(payload,ec);
     if (ec) {
-        throw ec;
+        throw exception(ec);
     }
 }
 
@@ -305,7 +305,7 @@ void connection<config>::close(close::status::value const code,
     lib::error_code ec;
     close(code,reason,ec);
     if (ec) {
-        throw ec;
+        throw exception(ec);
     }
 }
 
@@ -431,7 +431,7 @@ connection<config>::get_requested_subprotocols() const {
 }
 
 template <typename config>
-void connection<config>::add_subprotocol(const std::string & value,
+void connection<config>::add_subprotocol(std::string const & value,
     lib::error_code & ec)
 {
     if (m_is_server) {
@@ -451,17 +451,17 @@ void connection<config>::add_subprotocol(const std::string & value,
 }
 
 template <typename config>
-void connection<config>::add_subprotocol(const std::string & value) {
+void connection<config>::add_subprotocol(std::string const & value) {
     lib::error_code ec;
     this->add_subprotocol(value,ec);
     if (ec) {
-        throw ec;
+        throw exception(ec);
     }
 }
 
 
 template <typename config>
-void connection<config>::select_subprotocol(const std::string & value,
+void connection<config>::select_subprotocol(std::string const & value,
     lib::error_code & ec)
 {
     if (!m_is_server) {
@@ -489,24 +489,24 @@ void connection<config>::select_subprotocol(const std::string & value,
 }
 
 template <typename config>
-void connection<config>::select_subprotocol(const std::string & value) {
+void connection<config>::select_subprotocol(std::string const & value) {
     lib::error_code ec;
     this->select_subprotocol(value,ec);
     if (ec) {
-        throw ec;
+        throw exception(ec);
     }
 }
 
 
 template <typename config>
 const std::string &
-connection<config>::get_request_header(const std::string &key) {
+connection<config>::get_request_header(std::string const & key) {
     return m_request.get_header(key);
 }
 
 template <typename config>
 const std::string &
-connection<config>::get_response_header(const std::string &key) {
+connection<config>::get_response_header(std::string const & key) {
     return m_response.get_header(key);
 }
 
@@ -516,9 +516,8 @@ void connection<config>::set_status(http::status_code::value code)
     //scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //              error::INVALID_STATE);
+        throw exception("Call to set_status from invalid state",
+                      error::make_error_code(error::invalid_state));
     }
 
     m_response.set_status(code);
@@ -530,9 +529,8 @@ void connection<config>::set_status(http::status_code::value code,
     //scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //              error::INVALID_STATE);
+        throw exception("Call to set_status from invalid state",
+                      error::make_error_code(error::invalid_state));
     }
 
     m_response.set_status(code,msg);
@@ -542,9 +540,8 @@ void connection<config>::set_body(std::string const & value) {
     //scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception("Call to set_status from invalid state",
-        //                error::INVALID_STATE);
+        throw exception("Call to set_status from invalid state",
+                      error::make_error_code(error::invalid_state));
     }
 
     m_response.set_body(value);
@@ -561,14 +558,16 @@ void connection<config>::append_header(std::string const & key,
             // we are setting response headers for an incoming server connection
             m_response.append_header(key,val);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to append_header from invalid state",
+                      error::make_error_code(error::invalid_state));
         }
     } else {
         if (m_internal_state == istate::USER_INIT) {
             // we are setting initial headers for an outgoing client connection
             m_request.append_header(key,val);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to append_header from invalid state",
+                      error::make_error_code(error::invalid_state));
         }
     }
 }
@@ -583,14 +582,16 @@ void connection<config>::replace_header(std::string const & key,
             // we are setting response headers for an incoming server connection
             m_response.replace_header(key,val);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to replace_header from invalid state",
+                        error::make_error_code(error::invalid_state));
         }
     } else {
         if (m_internal_state == istate::USER_INIT) {
             // we are setting initial headers for an outgoing client connection
             m_request.replace_header(key,val);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to replace_header from invalid state",
+                        error::make_error_code(error::invalid_state));
         }
     }
 }
@@ -604,14 +605,16 @@ void connection<config>::remove_header(std::string const & key)
             // we are setting response headers for an incoming server connection
             m_response.remove_header(key);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to remove_header from invalid state",
+                        error::make_error_code(error::invalid_state));
         }
     } else {
         if (m_internal_state == istate::USER_INIT) {
             // we are setting initial headers for an outgoing client connection
             m_request.remove_header(key);
         } else {
-            throw error::make_error_code(error::invalid_state);
+            throw exception("Call to remove_header from invalid state",
+                        error::make_error_code(error::invalid_state));
         }
     }
 }
@@ -653,9 +656,8 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
         scoped_lock_type lock(m_connection_state_lock);
 
         if (m_internal_state != istate::TRANSPORT_INIT) {
-            throw error::make_error_code(error::invalid_state);
-            //throw exception("handle_transport_init must be called from transport init state",
-            //                error::INVALID_STATE);
+            throw exception("handle_transport_init must be called from transport init state",
+                            error::make_error_code(error::invalid_state));
         }
 
         if (!ec) {
@@ -1697,8 +1699,7 @@ void connection<config>::atomic_state_change(istate_type req, istate_type dest,
     scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != req) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception(msg,error::INVALID_STATE);
+        throw exception(msg,error::make_error_code(error::invalid_state));
     }
 
     m_internal_state = dest;
@@ -1712,8 +1713,7 @@ void connection<config>::atomic_state_change(istate_type internal_req,
     scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != internal_req || m_state != external_req) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception(msg,error::INVALID_STATE);
+        throw exception(msg,error::make_error_code(error::invalid_state));
     }
 
     m_internal_state = internal_dest;
@@ -1726,8 +1726,7 @@ void connection<config>::atomic_state_check(istate_type req, std::string msg)
     scoped_lock_type lock(m_connection_state_lock);
 
     if (m_internal_state != req) {
-        throw error::make_error_code(error::invalid_state);
-        //throw exception(msg,error::INVALID_STATE);
+        throw exception(msg,error::make_error_code(error::invalid_state));
     }
 }
 

@@ -165,7 +165,7 @@ public:
      *
      * @param ec A status value
      */
-    void set_proxy(const std::string & uri, lib::error_code & ec) {
+    void set_proxy(std::string const & uri, lib::error_code & ec) {
         // TODO: return errors for illegal URIs here?
         // TODO: should https urls be illegal for the moment?
         m_proxy = uri;
@@ -174,10 +174,10 @@ public:
     }
 
     /// Set the proxy to connect through (exception)
-    void set_proxy(const std::string & uri) {
+    void set_proxy(std::string const & uri) {
         lib::error_code ec;
         set_proxy(uri,ec);
-        if (ec) { throw ec; }
+        if (ec) { throw exception(ec); }
     }
 
     /// Set the basic auth credentials to use (exception free)
@@ -193,8 +193,8 @@ public:
      *
      * @param ec A status value
      */
-    void set_proxy_basic_auth(const std::string & username, const
-        std::string & password, lib::error_code & ec)
+    void set_proxy_basic_auth(std::string const & username, std::string const &
+        password, lib::error_code & ec)
     {
         if (!m_proxy_data) {
             ec = make_error_code(websocketpp::error::invalid_state);
@@ -208,12 +208,12 @@ public:
     }
 
     /// Set the basic auth credentials to use (exception)
-    void set_proxy_basic_auth(const std::string & username, const
-        std::string & password)
+    void set_proxy_basic_auth(std::string const & username, std::string const &
+        password)
     {
         lib::error_code ec;
         set_proxy_basic_auth(username,password,ec);
-        if (ec) { throw ec; }
+        if (ec) { throw exception(ec); }
     }
 
     /// Set the proxy timeout duration (exception free)
@@ -240,7 +240,7 @@ public:
     void set_proxy_timeout(long duration) {
         lib::error_code ec;
         set_proxy_timeout(duration,ec);
-        if (ec) { throw ec; }
+        if (ec) { throw exception(ec); }
     }
 
     const std::string & get_proxy() const {

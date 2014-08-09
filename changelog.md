@@ -1,4 +1,10 @@
 HEAD
+- BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type 
+  `websocketpp::exception` which derives from `std::exception`. This normalizes
+  all exception types under the standard exception hierarchy and allows
+  WebSocket++ exceptions to be caught in the same statement as others. The error
+  code that was previously thrown is wrapped in the exception object and can be
+  accessed via the `websocketpp::exception::code()` method.
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
 
