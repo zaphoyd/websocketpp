@@ -298,7 +298,7 @@ protected:
      * Non-TLS related errors are returned as the transport generic pass_through
      * error.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param ec The error code to translate_ec
      * @return The translated error code
