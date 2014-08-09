@@ -35,7 +35,6 @@
 #include <websocketpp/transport/asio/security/none.hpp>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <iostream>
@@ -290,7 +289,7 @@ public:
     void set_listen_backlog(int backlog) {
         m_listen_backlog = backlog;
     }
-    
+
     /// Sets whether or not to use the SO_REUSEADDR flag when opening a listening socket
     /**
      * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What this flag
