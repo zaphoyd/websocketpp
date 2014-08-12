@@ -50,7 +50,7 @@ inline bool is_little_endian() {
 #define TYP_SMLE 1
 #define TYP_BIGE 2
 
-inline uint64_t htonll(uint64_t src) {
+inline uint64_t websocketpp_htonll(uint64_t src) {
     static int typ = TYP_INIT;
     unsigned char c;
     union {
@@ -71,8 +71,8 @@ inline uint64_t htonll(uint64_t src) {
     return x.ull;
 }
 
-inline uint64_t ntohll(uint64_t src) {
-    return htonll(src);
+inline uint64_t websocketpp_ntohll(uint64_t src) {
+    return websocketpp_htonll(src);
 }
 
 } // net
