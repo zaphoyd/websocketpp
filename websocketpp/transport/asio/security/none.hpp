@@ -242,7 +242,7 @@ protected:
      * not presently provide any additional information so all errors will be
      * reported as the generic transport pass_through error.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param ec The error code to translate_ec
      * @return The translated error code

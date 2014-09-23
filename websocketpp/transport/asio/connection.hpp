@@ -116,7 +116,7 @@ public:
      * established but before any additional wrappers (proxy connects, TLS
      * handshakes, etc) have been performed.
      *
-     * @since 0.4.0-alpha1
+     * @since 0.3.0
      *
      * @param h The handler to call on tcp pre init.
      */
@@ -145,7 +145,7 @@ public:
      * etc have been performed. This is fired before any bytes are read or any
      * WebSocket specific handshake logic has been performed.
      *
-     * @since 0.4.0-alpha1
+     * @since 0.3.0
      *
      * @param h The handler to call on tcp post init.
      */

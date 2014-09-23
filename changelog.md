@@ -1,4 +1,6 @@
 HEAD
+
+0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
   These may be used to replace manually managed `asio::io_service::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.

@@ -159,7 +159,7 @@ public:
      * it doesn't it indicates that the connection was most likely closed or
      * is in an error state where it is no longer accepting new input.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param buf Char buffer to read into the websocket
      * @param len Length of buf
