@@ -323,11 +323,11 @@ public:
      *
      * TODO: candidate for protected status
      *
-     * @param t Pointer to the timer in question
+     * @param post_timer Pointer to the timer in question
      * @param callback The function to call back
      * @param ec The status code
      */
-    void handle_timer(timer_ptr t, timer_handler callback,
+    void handle_timer(timer_ptr, timer_handler callback,
         boost::system::error_code const & ec)
     {
         if (ec) {
@@ -502,7 +502,16 @@ protected:
         );
     }
 
-    void handle_post_init_timeout(timer_ptr post_timer, init_handler callback,
+    /// Post init timeout callback
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     *
+     * @param post_timer Pointer to the timer in question
+     * @param callback The function to call back
+     * @param ec The status code
+     */
+    void handle_post_init_timeout(timer_ptr, init_handler callback,
         lib::error_code const & ec)
     {
         lib::error_code ret_ec;
@@ -529,6 +538,15 @@ protected:
         callback(ret_ec);
     }
 
+    /// Post init timeout callback
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     *
+     * @param post_timer Pointer to the timer in question
+     * @param callback The function to call back
+     * @param ec The status code
+     */
     void handle_post_init(timer_ptr post_timer, init_handler callback,
         lib::error_code const & ec)
     {
@@ -693,8 +711,14 @@ protected:
         }
     }
 
+    /// Proxy read callback
+    /**
+     * @param init_handler The function to call back
+     * @param ec The status code
+     * @param bytes_transferred The number of bytes read
+     */
     void handle_proxy_read(init_handler callback,
-        boost::system::error_code const & ec, size_t bytes_transferred)
+        boost::system::error_code const & ec, size_t)
     {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,
@@ -901,9 +925,12 @@ protected:
         );
     }
 
-    void handle_async_write(boost::system::error_code const & ec,
-        size_t bytes_transferred)
-    {
+    /// Async write callback
+    /**
+     * @param ec The status code
+     * @param bytes_transferred The number of bytes read
+     */
+    void handle_async_write(boost::system::error_code const & ec, size_t) {
         m_bufs.clear();
         lib::error_code tec;
         if (ec) {
@@ -999,8 +1026,14 @@ protected:
         );
     }
 
-    void handle_async_shutdown_timeout(timer_ptr shutdown_timer, init_handler
-        callback, lib::error_code const & ec)
+    /// Async shutdown timeout handler
+    /**
+     * @param shutdown_timer A pointer to the timer to keep it in scope
+     * @param callback The function to call back
+     * @param ec The status code
+     */
+    void handle_async_shutdown_timeout(timer_ptr, init_handler callback, 
+        lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 

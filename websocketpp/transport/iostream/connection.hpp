@@ -304,7 +304,7 @@ public:
      * @return A handle that can be used to cancel the timer if it is no longer
      * needed.
      */
-    timer_ptr set_timer(long duration, timer_handler handler) {
+    timer_ptr set_timer(long, timer_handler) {
         return timer_ptr();
     }
 protected:

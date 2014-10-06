@@ -77,7 +77,7 @@ public:
      *
      * @return true if the message was successfully recycled, false otherwse.
      */
-    bool recycle(message * msg) {
+    bool recycle(message *) {
         return false;
     }
 };
