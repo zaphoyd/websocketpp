@@ -37,13 +37,13 @@ public:
 
     // This method will block until the connection is complete
     void run(const std::string & uri) {
-    	// Create a new connection to the given URI
+        // Create a new connection to the given URI
         websocketpp::lib::error_code ec;
         client::connection_ptr con = m_client.get_connection(uri, ec);
         if (ec) {
-        	m_client.get_alog().write(websocketpp::log::alevel::app,
-                	"Get Connection Error: "+ec.message());
-        	return;
+            m_client.get_alog().write(websocketpp::log::alevel::app,
+                    "Get Connection Error: "+ec.message());
+            return;
         }
 
         // Grab a handle for this connection so we can talk to it in a thread
@@ -128,7 +128,7 @@ public:
             // in this simple example, we'll stop the telemetry loop.
             if (ec) {
                 m_client.get_alog().write(websocketpp::log::alevel::app,
-                	"Send Error: "+ec.message());
+                    "Send Error: "+ec.message());
                 break;
             }
 

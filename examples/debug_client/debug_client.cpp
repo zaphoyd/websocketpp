@@ -74,15 +74,15 @@ public:
         client::connection_ptr con = m_endpoint.get_connection(uri, ec);
 
         if (ec) {
-        	m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
+            m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
         }
 
         //con->set_proxy("http://humupdates.uchicago.edu:8443");
 
         m_endpoint.connect(con);
 
-	    // Start the ASIO io_service run loop
-	    m_start = std::chrono::high_resolution_clock::now();
+        // Start the ASIO io_service run loop
+        m_start = std::chrono::high_resolution_clock::now();
         m_endpoint.run();
     }
 
@@ -133,13 +133,13 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-	std::string uri = "wss://echo.websocket.org";
+    std::string uri = "wss://echo.websocket.org";
 
-	if (argc == 2) {
-	    uri = argv[1];
-	}
+    if (argc == 2) {
+        uri = argv[1];
+    }
 
-	try {
+    try {
         perftest endpoint;
         endpoint.start(uri);
     } catch (const std::exception & e) {

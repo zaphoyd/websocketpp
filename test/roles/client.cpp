@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
 
     // TODO: more tests related to reading the HTTP response
     std::stringstream channel2;
-	channel2 << "e\r\n\r\n";
-	channel2 >> *con;
+    channel2 << "e\r\n\r\n";
+    channel2 >> *con;
 }
 
 BOOST_AUTO_TEST_CASE( select_subprotocol ) {

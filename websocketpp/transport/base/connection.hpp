@@ -201,7 +201,7 @@ class category : public lib::error_category {
                 return "The operation is not supported by this transport";
             case eof:
                 return "End of File";
-        	case tls_short_read:
+            case tls_short_read:
                 return "TLS Short Read";
             case timeout:
                 return "Timer Expired";

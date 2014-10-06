@@ -95,7 +95,7 @@ struct stub_con : public iostream_con {
     }
 
     void async_read_at_least(size_t num_bytes, char *buf, size_t len)
-	{
+    {
         iostream_con::async_read_at_least(
             num_bytes,
             buf,
@@ -113,7 +113,7 @@ struct stub_con : public iostream_con {
     }
 
     void async_read_indef(size_t num_bytes, char *buf, size_t len)
-	{
+    {
         indef_read_size = num_bytes;
         indef_read_buf = buf;
         indef_read_len = len;
@@ -266,22 +266,22 @@ BOOST_AUTO_TEST_CASE( async_read_at_least ) {
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel;
-	channel << "abcd";
-	channel >> *con;
-	BOOST_CHECK( channel.tellg() == -1 );
+    channel << "abcd";
+    channel >> *con;
+    BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel2;
-	channel2 << "e";
-	channel2 >> *con;
-	BOOST_CHECK( channel2.tellg() == -1 );
+    channel2 << "e";
+    channel2 >> *con;
+    BOOST_CHECK( channel2.tellg() == -1 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
 
     std::stringstream channel3;
-	channel3 << "f";
-	channel3 >> *con;
-	BOOST_CHECK( channel3.tellg() == 0 );
+    channel3 << "f";
+    channel3 >> *con;
+    BOOST_CHECK( channel3.tellg() == 0 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
     con->async_read_at_least(1,buf+5,5);
@@ -302,15 +302,15 @@ BOOST_AUTO_TEST_CASE( async_read_at_least2 ) {
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel;
-	channel << "abcdefg";
-	channel >> *con;
+    channel << "abcdefg";
+    channel >> *con;
     BOOST_CHECK( channel.tellg() == 5 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
 
     con->async_read_at_least(1,buf+5,5);
-	channel >> *con;
-	BOOST_CHECK( channel.tellg() == -1 );
+    channel >> *con;
+    BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdefgxxx" );
 }

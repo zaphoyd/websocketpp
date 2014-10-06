@@ -547,7 +547,7 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection handle_post_init");
         }
 
-		if (m_tcp_post_init_handler) {
+        if (m_tcp_post_init_handler) {
             m_tcp_post_init_handler(m_connection_hdl);
         }
 
@@ -813,8 +813,8 @@ protected:
             boost::asio::buffer(buf,len),
             boost::asio::transfer_at_least(num_bytes),
             make_custom_alloc_handler(
-            	m_read_handler_allocator,
-            	m_async_read_handler
+                m_read_handler_allocator,
+                m_async_read_handler
             )
         );
     }
@@ -862,7 +862,7 @@ protected:
             return;
         }
 
-		m_bufs.push_back(boost::asio::buffer(buf,len));
+        m_bufs.push_back(boost::asio::buffer(buf,len));
 
         m_write_handler = handler;
 
@@ -870,8 +870,8 @@ protected:
             socket_con_type::get_socket(),
             m_bufs,
             make_custom_alloc_handler(
-            	m_write_handler_allocator,
-            	m_async_write_handler
+                m_write_handler_allocator,
+                m_async_write_handler
             )
         );
     }
@@ -895,8 +895,8 @@ protected:
             socket_con_type::get_socket(),
             m_bufs,
             make_custom_alloc_handler(
-            	m_write_handler_allocator,
-            	m_async_write_handler
+                m_write_handler_allocator,
+                m_async_write_handler
             )
         );
     }
@@ -966,12 +966,12 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
 
-		// Reset cached handlers now that we won't be reading or writing anymore
-		// These cached handlers store shared pointers to this connection and
-		// will leak the connection if not destroyed.
-		m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-		m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-		m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        // Reset cached handlers now that we won't be reading or writing anymore
+        // These cached handlers store shared pointers to this connection and
+        // will leak the connection if not destroyed.
+        m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
 
         m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
         m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;

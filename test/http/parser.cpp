@@ -54,24 +54,24 @@ BOOST_AUTO_TEST_CASE( is_token_char ) {
 
     // numbers
     for (int i = 0x30; i < 0x3a; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // upper
     for (int i = 0x41; i < 0x5b; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // lower
     for (int i = 0x61; i < 0x7b; i++) {
-    	BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // invalid characters
 
     // lower unprintable
     for (int i = 0; i < 33; i++) {
-    	BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // misc
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( is_token_char ) {
 
     // upper unprintable and out of ascii range
     for (int i = 127; i < 256; i++) {
-    	BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
+        BOOST_CHECK( !websocketpp::http::is_token_char((unsigned char)(i)) );
     }
 
     // is not
@@ -412,9 +412,9 @@ BOOST_AUTO_TEST_CASE( blank_consume ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -429,9 +429,9 @@ BOOST_AUTO_TEST_CASE( blank_request ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -446,9 +446,9 @@ BOOST_AUTO_TEST_CASE( bad_request_no_host ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -464,10 +464,10 @@ BOOST_AUTO_TEST_CASE( basic_request ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -488,9 +488,9 @@ BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -512,11 +512,11 @@ BOOST_AUTO_TEST_CASE( basic_split1 ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -538,11 +538,11 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -563,11 +563,11 @@ BOOST_AUTO_TEST_CASE( max_header_len ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-    		exception = true;
-    	}
+        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
+            exception = true;
+        }
     }
 
     BOOST_CHECK( exception == true );
@@ -583,12 +583,12 @@ BOOST_AUTO_TEST_CASE( max_header_len_split ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
-    	pos += r.consume(raw2.c_str(),raw2.size());
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
     } catch (const websocketpp::http::exception& e) {
-    	if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-    		exception = true;
-    	}
+        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
+            exception = true;
+        }
     }
 
     BOOST_CHECK( exception == true );
@@ -603,9 +603,9 @@ BOOST_AUTO_TEST_CASE( firefox_full_request ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -636,9 +636,9 @@ BOOST_AUTO_TEST_CASE( bad_method ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -652,9 +652,9 @@ BOOST_AUTO_TEST_CASE( bad_header_name ) {
     bool exception = false;
 
     try {
-    	r.consume(raw.c_str(),raw.size());
+        r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -669,9 +669,9 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -692,9 +692,9 @@ BOOST_AUTO_TEST_CASE( new_http_version1 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -715,9 +715,9 @@ BOOST_AUTO_TEST_CASE( new_http_version2 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -740,9 +740,9 @@ BOOST_AUTO_TEST_CASE( new_http_version3 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == true );
@@ -757,9 +757,9 @@ BOOST_AUTO_TEST_CASE( header_whitespace1 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -780,9 +780,9 @@ BOOST_AUTO_TEST_CASE( header_whitespace2 ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -803,9 +803,9 @@ BOOST_AUTO_TEST_CASE( header_aggregation ) {
     size_t pos = 0;
 
     try {
-    	pos = r.consume(raw.c_str(),raw.size());
+        pos = r.consume(raw.c_str(),raw.size());
     } catch (...) {
-    	exception = true;
+        exception = true;
     }
 
     BOOST_CHECK( exception == false );
@@ -826,10 +826,10 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -853,10 +853,10 @@ BOOST_AUTO_TEST_CASE( response_with_non_standard_lws ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -880,10 +880,10 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw.c_str(),raw.size());
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK( exception == false );
@@ -915,10 +915,10 @@ BOOST_AUTO_TEST_CASE( parse_istream ) {
     size_t pos = 0;
 
     try {
-    	pos += r.consume(s);
+        pos += r.consume(s);
     } catch (std::exception &e) {
-    	exception = true;
-    	std::cout << e.what() << std::endl;
+        exception = true;
+        std::cout << e.what() << std::endl;
     }
 
     BOOST_CHECK_EQUAL( exception, false );

@@ -35,7 +35,7 @@
 BOOST_AUTO_TEST_CASE( placeholder ) {}
 
 /*BOOST_AUTO_TEST_CASE( blank_error ) {
-	websocketpp::lib::error_code ec;
+    websocketpp::lib::error_code ec;
 
     BOOST_CHECK( !ec );
 }*/
