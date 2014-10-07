@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE( async_read_at_least2 ) {
     BOOST_CHECK( std::string(buf,10) == "abcdefgxxx" );
 }
 
-void timer_callback_stub(const websocketpp::lib::error_code & ec) {}
+void timer_callback_stub(websocketpp::lib::error_code const &) {}
 
 BOOST_AUTO_TEST_CASE( set_timer ) {
    stub_con::ptr con(new stub_con(true,alogger,elogger));

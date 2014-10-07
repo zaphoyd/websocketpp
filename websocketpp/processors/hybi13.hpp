@@ -182,7 +182,13 @@ public:
         return lib::error_code();
     }
 
-    lib::error_code client_handshake_request(request_type& req, uri_ptr
+    /// Fill in a set of request headers for a client connection request
+    /**
+     * @param [out] req  Set of headers to fill in
+     * @param [in] uri The uri being connected to
+     * @param [in] subprotocols The list of subprotocols to request
+     */
+    lib::error_code client_handshake_request(request_type & req, uri_ptr
         uri, std::vector<std::string> const & subprotocols) const
     {
         req.set_method("GET");
@@ -219,6 +225,12 @@ public:
         return lib::error_code();
     }
 
+    /// Validate the server's response to an outgoing handshake request
+    /**
+     * @param req The original request sent
+     * @param res The reponse to generate
+     * @return An error code, 0 on success, non-zero for other errors
+     */
     lib::error_code validate_server_handshake_response(request_type const & req,
         response_type& res) const
     {

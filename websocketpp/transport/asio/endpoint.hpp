@@ -645,7 +645,7 @@ public:
         return new_timer;
     }
 
-    /// Timer callback
+    /// Timer handler
     /**
      * The timer pointer is included to ensure the timer isn't destroyed until
      * after it has expired.
@@ -654,7 +654,7 @@ public:
      * @param callback The function to call back
      * @param ec A status code indicating an error, if any.
      */
-    void handle_timer(timer_ptr t, timer_handler callback,
+    void handle_timer(timer_ptr, timer_handler callback,
         boost::system::error_code const & ec)
     {
         if (ec) {
@@ -842,7 +842,16 @@ protected:
         }
     }
 
-    void handle_resolve_timeout(timer_ptr dns_timer, connect_handler callback,
+    /// DNS resolution timeout handler
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     *
+     * @param dns_timer Pointer to the timer in question
+     * @param callback The function to call back
+     * @param ec A status code indicating an error, if any.
+     */
+    void handle_resolve_timeout(timer_ptr, connect_handler callback,
         lib::error_code const & ec)
     {
         lib::error_code ret_ec;
@@ -941,7 +950,17 @@ protected:
         }
     }
 
-    void handle_connect_timeout(transport_con_ptr tcon, timer_ptr con_timer,
+    /// Asio connect timeout handler
+    /**
+     * The timer pointer is included to ensure the timer isn't destroyed until
+     * after it has expired.
+     *
+     * @param tcon Pointer to the transport connection that is being connected
+     * @param con_timer Pointer to the timer in question
+     * @param callback The function to call back
+     * @param ec A status code indicating an error, if any.
+     */
+    void handle_connect_timeout(transport_con_ptr tcon, timer_ptr,
         connect_handler callback, lib::error_code const & ec)
     {
         lib::error_code ret_ec;

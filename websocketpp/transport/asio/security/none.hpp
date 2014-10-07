@@ -158,8 +158,7 @@ protected:
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
-        bool is_server)
+    lib::error_code init_asio (io_service_ptr service, strand_ptr, bool)
     {
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
@@ -246,7 +245,7 @@ protected:
      * @param ec The error code to translate_ec
      * @return The translated error code
      */
-    lib::error_code translate_ec(boost::system::error_code ec) {
+    lib::error_code translate_ec(boost::system::error_code) {
         // We don't know any more information about this error so pass through
         return make_error_code(transport::error::pass_through);
     }

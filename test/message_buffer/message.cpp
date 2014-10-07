@@ -40,7 +40,7 @@ struct stub {
 
     stub() : recycled(false) {}
 
-    bool recycle(message * msg) {
+    bool recycle(message *) {
         this->recycled = true;
         return false;
     }

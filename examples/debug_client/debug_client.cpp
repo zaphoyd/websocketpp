@@ -86,11 +86,11 @@ public:
         m_endpoint.run();
     }
 
-    void on_socket_init(websocketpp::connection_hdl hdl) {
+    void on_socket_init(websocketpp::connection_hdl) {
         m_socket_init = std::chrono::high_resolution_clock::now();
     }
 
-    context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+    context_ptr on_tls_init(websocketpp::connection_hdl) {
         m_tls_init = std::chrono::high_resolution_clock::now();
         context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 
@@ -108,11 +108,11 @@ public:
         m_open = std::chrono::high_resolution_clock::now();
         m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
     }
-    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+    void on_message(websocketpp::connection_hdl hdl, message_ptr) {
         m_message = std::chrono::high_resolution_clock::now();
         m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
     }
-    void on_close(websocketpp::connection_hdl hdl) {
+    void on_close(websocketpp::connection_hdl) {
         m_close = std::chrono::high_resolution_clock::now();
 
         std::cout << "Socket Init: " << std::chrono::duration_cast<dur_type>(m_socket_init-m_start).count() << std::endl;

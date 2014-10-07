@@ -434,7 +434,7 @@ public:
      * @param response The server response attribute list to validate
      * @return Validation error or 0 on success
      */
-    lib::error_code validate_offer(http::attribute_list const & response) {
+    lib::error_code validate_offer(http::attribute_list const &) {
         return make_error_code(error::general);
     }
 
