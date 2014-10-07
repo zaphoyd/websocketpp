@@ -170,12 +170,12 @@ public:
         scoped_lock_type lock(m_read_mutex);
         
         size_t total_read = 0;
-        size_t read = 0;
+        size_t temp_read = 0;
 
         do {
-            read = this->read_some_impl(buf+total_read,len-total_read);
-            total_read += read;
-        } while (read != 0 && total_read < len);
+            temp_read = this->read_some_impl(buf+total_read,len-total_read);
+            total_read += temp_read;
+        } while (temp_read != 0 && total_read < len);
 
         return total_read;
     }
