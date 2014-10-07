@@ -135,9 +135,9 @@ struct stub_con : public iostream_con {
         );
     }
 
-    void handle_indef(websocketpp::lib::error_code const & e, size_t read) {
+    void handle_indef(websocketpp::lib::error_code const & e, size_t amt_read) {
         ec = e;
-        indef_read_total += read;
+        indef_read_total += amt_read;
         
         indef_read();
     }
