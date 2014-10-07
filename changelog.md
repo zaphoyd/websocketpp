@@ -19,6 +19,11 @@ HEAD
   iostream transport.
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
+- Compatibility: Removes unused parameters from all library, test, and example
+  code. This assists with those developing with -Werror and -Wunused-parameter
+  #376
+- Cleanup: Removes unused functions, fixes variable shadow warnings, normalizes
+  all whitespace in library, examples, and tests to 4 spaces. #376
 
 0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
