@@ -42,15 +42,13 @@ namespace sha1 {
     namespace // local
     {
         // Rotate an integer value to left.
-        inline const unsigned int rol(const unsigned int value,
-                const unsigned int steps)
-        {
+        inline unsigned int rol(unsigned int value, unsigned int steps) {
             return ((value << steps) | (value >> (32 - steps)));
         }
 
         // Sets the first 16 integers in the buffert to zero.
         // Used for clearing the W buffert.
-        inline void clearWBuffert(unsigned int* buffert)
+        inline void clearWBuffert(unsigned int * buffert)
         {
             for (int pos = 16; --pos >= 0;)
             {
@@ -58,7 +56,7 @@ namespace sha1 {
             }
         }
 
-        inline void innerHash(unsigned int* result, unsigned int* w)
+        inline void innerHash(unsigned int * result, unsigned int * w)
         {
             unsigned int a = result[0];
             unsigned int b = result[1];
