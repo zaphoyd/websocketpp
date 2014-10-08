@@ -106,7 +106,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
         set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
         set (WEBSOCKETPP_BOOST_LIBS system thread)
-        set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
         if (NOT APPLE)
             add_definitions (-DNDEBUG -Wall -Wcast-align) # todo: should we use CMAKE_C_FLAGS for these?
         endif ()
