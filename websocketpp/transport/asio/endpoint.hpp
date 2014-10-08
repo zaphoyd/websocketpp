@@ -176,7 +176,7 @@ public:
 
         m_io_service = ptr;
         m_external_io_service = true;
-        m_acceptor.reset(new boost::asio::ip::tcp::acceptor(*m_io_service));
+        m_acceptor = lib::make_shared<boost::asio::ip::tcp::acceptor>(*m_io_service);
         m_state = READY;
         ec = lib::error_code();
     }
@@ -205,7 +205,7 @@ public:
      * @param ec Set to indicate what error occurred, if any.
      */
     void init_asio(lib::error_code & ec) {
-        init_asio(new boost::asio::io_service(),ec);
+        init_asio(new boost::asio::io_service(), ec);
         m_external_io_service = false;
     }
 
@@ -597,7 +597,7 @@ public:
      * @since 0.3.0
      */
     void start_perpetual() {
-        m_work.reset(new boost::asio::io_service::work(*m_io_service));
+        m_work = lib::make_shared<boost::asio::io_service::work>(*m_io_service);
     }
 
     /// Clears the endpoint's perpetual flag, allowing it to exit when empty
@@ -625,11 +625,9 @@ public:
      * needed.
      */
     timer_ptr set_timer(long duration, timer_handler callback) {
-        timer_ptr new_timer(
-            new boost::asio::deadline_timer(
-                *m_io_service,
-                boost::posix_time::milliseconds(duration)
-            )
+        timer_ptr new_timer = lib::make_shared<boost::asio::deadline_timer>(
+            *m_io_service,
+            boost::posix_time::milliseconds(duration)
         );
 
         new_timer->async_wait(
@@ -763,7 +761,7 @@ protected:
 
         // Create a resolver
         if (!m_resolver) {
-            m_resolver.reset(new boost::asio::ip::tcp::resolver(*m_io_service));
+            m_resolver = lib::make_shared<boost::asio::ip::tcp::resolver>(*m_io_service);
         }
 
         std::string proxy = tcon->get_proxy();
@@ -776,7 +774,7 @@ protected:
         } else {
             lib::error_code ec;
 
-            uri_ptr pu(new uri(proxy));
+            uri_ptr pu = lib::make_shared<uri>(proxy);
 
             if (!pu->get_valid()) {
                 cb(make_error_code(error::proxy_invalid));

@@ -92,7 +92,7 @@ public:
 
     context_ptr on_tls_init(websocketpp::connection_hdl) {
         m_tls_init = std::chrono::high_resolution_clock::now();
-        context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+        context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
 
         try {
             ctx->set_options(boost::asio::ssl::context::default_workarounds |

@@ -164,7 +164,7 @@ protected:
             return socket::make_error_code(socket::error::invalid_state);
         }
 
-        m_socket.reset(new boost::asio::ip::tcp::socket(*service));
+        m_socket = lib::make_shared<boost::asio::ip::tcp::socket>(*service);
 
         m_state = READY;
 

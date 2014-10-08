@@ -169,7 +169,7 @@ public:
         // TODO: return errors for illegal URIs here?
         // TODO: should https urls be illegal for the moment?
         m_proxy = uri;
-        m_proxy_data.reset(new proxy_data());
+        m_proxy_data = lib::make_shared<proxy_data>();
         ec = lib::error_code();
     }
 
@@ -290,11 +290,9 @@ public:
      * needed.
      */
     timer_ptr set_timer(long duration, timer_handler callback) {
-        timer_ptr new_timer(
-            new boost::asio::deadline_timer(
-                *m_io_service,
-                boost::posix_time::milliseconds(duration)
-            )
+        timer_ptr new_timer = lib::make_shared<boost::asio::deadline_timer>(
+            *m_io_service,
+            boost::posix_time::milliseconds(duration)
         );
 
         if (config::enable_multithreading) {
@@ -419,7 +417,7 @@ protected:
         m_io_service = io_service;
 
         if (config::enable_multithreading) {
-            m_strand.reset(new boost::asio::strand(*io_service));
+            m_strand = lib::make_shared<boost::asio::strand>(*io_service);
 
             m_async_read_handler = m_strand->wrap(lib::bind(
                 &type::handle_async_read, get_shared(),lib::placeholders::_1,
@@ -442,8 +440,8 @@ protected:
         if (ec) {
             // reset the handlers to break the circular reference:
             // this->handler->this
-            m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-            m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+            m_async_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+            m_async_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
         }
 
         return ec;
@@ -869,7 +867,7 @@ protected:
         if (m_read_handler) {
             m_read_handler(tec,bytes_transferred);
             // TODO: why does this line break things?
-            //m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+            //m_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
         } else {
             // This can happen in cases where the connection is terminated while
             // the transport is waiting on a read.
@@ -940,7 +938,7 @@ protected:
         if (m_write_handler) {
             m_write_handler(tec);
             // TODO: why does this line break things?
-            //m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+            //m_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
         } else {
             // This can happen in cases where the connection is terminated while
             // the transport is waiting on a read.
@@ -996,12 +994,12 @@ protected:
         // Reset cached handlers now that we won't be reading or writing anymore
         // These cached handlers store shared pointers to this connection and
         // will leak the connection if not destroyed.
-        m_async_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-        m_async_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-        m_init_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_async_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        m_async_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        m_init_handler = _WEBSOCKETPP_NULL_FUNCTION_;
 
-        m_read_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
-        m_write_handler = _WEBSOCKETPP_NULLPTR_TOKEN_;
+        m_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        m_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(

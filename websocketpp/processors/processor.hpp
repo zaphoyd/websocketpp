@@ -140,12 +140,12 @@ uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
     if (last_colon == std::string::npos ||
         (last_sbrace != std::string::npos && last_sbrace > last_colon))
     {
-        return uri_ptr(new uri(scheme, h, request.get_uri()));
+        return lib::make_shared<uri>(scheme, h, request.get_uri());
     } else {
-        return uri_ptr(new uri(scheme,
+        return lib::make_shared<uri>(scheme,
                                h.substr(0,last_colon),
                                h.substr(last_colon+1),
-                               request.get_uri()));
+                               request.get_uri());
     }
 }
 

@@ -33,7 +33,7 @@ std::string get_password() {
 
 context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
-    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
+    context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
 
     try {
         ctx->set_options(boost::asio::ssl::context::default_workarounds |

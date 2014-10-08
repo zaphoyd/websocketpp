@@ -112,7 +112,7 @@ public:
      * @return A connection_ptr to the new connection
      */
     connection_ptr get_connection(std::string const & u, lib::error_code & ec) {
-        uri_ptr location(new uri(u));
+        uri_ptr location = lib::make_shared<uri>(u);
 
         if (!location->get_valid()) {
             ec = error::make_error_code(error::invalid_uri);
