@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE( prepare_masking_key ) {
 
     if (sizeof(size_t) == 8) {
         BOOST_CHECK(
-            frame::prepare_masking_key(key) == lib::net::htonll(0x1234567812345678LL)
+            frame::prepare_masking_key(key) == lib::net::_htonll(0x1234567812345678LL)
         );
     } else {
         BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0x12345678) );
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE( prepare_masking_key2 ) {
     // One call
     if (sizeof(size_t) == 8) {
         BOOST_CHECK(
-            frame::prepare_masking_key(key) == lib::net::htonll(0xD5FB70EED5FB70EELL)
+            frame::prepare_masking_key(key) == lib::net::_htonll(0xD5FB70EED5FB70EELL)
         );
     } else {
         BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0xD5FB70EE) );
