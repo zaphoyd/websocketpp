@@ -10,11 +10,14 @@ HEAD
   std::ostreams. This allows writing logging policies that do not involve the
   use of std::ostream. This does not affect anyone using the built in logging
   policies.
-- BREAKING UTILITY CHANGE: websocketpp::lib::net::htonll and
-  websocketpp::lib::net::ntohll have been prefixed with an underscore to avoid
+- BREAKING UTILITY CHANGE: `websocketpp::lib::net::htonll` and
+  `websocketpp::lib::net::ntohll` have been prefixed with an underscore to avoid
   conflicts with similarly named macros in some operating systems. If you are
   using the WebSocket++ provided 64 bit host/network byte order functions you
   will need to switch to the prefixed versions.
+- BREAKING UTILITY CHANGE: The signature of the `base64_encode` has changed from
+  `websocketpp::base64_encode(unsigned char const *, unsigned int)` to
+  `websocketpp::base64_encode(unsigned char const *, size_t)`.
 - Feature: Adds incomplete `minimal_server` and `minimal_client` configs that
   can be used to build custom configs without pulling in the dependencies of
   `core` or `core_client`. These configs will offer a stable base config to
