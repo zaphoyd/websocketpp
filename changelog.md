@@ -1,4 +1,39 @@
 HEAD
+- BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
+  `websocketpp::exception` which derives from `std::exception`. This normalizes
+  all exception types under the standard exception hierarchy and allows
+  WebSocket++ exceptions to be caught in the same statement as others. The error
+  code that was previously thrown is wrapped in the exception object and can be
+  accessed via the `websocketpp::exception::code()` method.
+- BREAKING API CHANGE: Custom logging policies have some new required
+  constructors that take generic config settings rather than pointers to
+  std::ostreams. This allows writing logging policies that do not involve the
+  use of std::ostream. This does not affect anyone using the built in logging
+  policies.
+- BREAKING UTILITY CHANGE: websocketpp::lib::net::htonll and
+  websocketpp::lib::net::ntohll have been prefixed with an underscore to avoid
+  conflicts with similarly named macros in some operating systems. If you are
+  using the WebSocket++ provided 64 bit host/network byte order functions you
+  will need to switch to the prefixed versions.
+- Feature: Adds incomplete `minimal_server` and `minimal_client` configs that
+  can be used to build custom configs without pulling in the dependencies of
+  `core` or `core_client`. These configs will offer a stable base config to
+  future-proof custom configs.
+- Improvement: Core library no longer has std::iostream as a dependency.
+  std::iostream is still required for the optional iostream logging policy and
+  iostream transport.
+- Compatibility: Adjust usage of std::min to be more compatible with systems
+  that define a min(...) macro.
+- Compatibility: Removes unused parameters from all library, test, and example
+  code. This assists with those developing with -Werror and -Wunused-parameter
+  #376
+- Compatibility: Renames ntohll and htonll methods to avoid conflicts with
+  platform specific macros. #358 #381, #382 Thank you logotype, unphased,
+  svendjo
+- Cleanup: Removes unused functions, fixes variable shadow warnings, normalizes
+  all whitespace in library, examples, and tests to 4 spaces. #376
+
+0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
   These may be used to replace manually managed `asio::io_service::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.

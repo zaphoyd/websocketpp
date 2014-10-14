@@ -238,13 +238,13 @@ BOOST_AUTO_TEST_CASE( prepare_masking_key ) {
 
 	key.i = htonl(0x12345678);
 
-	if (sizeof(size_t) == 8) {
-		BOOST_CHECK(
-			frame::prepare_masking_key(key) == lib::net::htonll(0x1234567812345678LL)
-		);
-	} else {
-		BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0x12345678) );
-	}
+    if (sizeof(size_t) == 8) {
+        BOOST_CHECK(
+            frame::prepare_masking_key(key) == lib::net::_htonll(0x1234567812345678LL)
+        );
+    } else {
+        BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0x12345678) );
+    }
 }
 
 BOOST_AUTO_TEST_CASE( prepare_masking_key2 ) {
@@ -252,14 +252,14 @@ BOOST_AUTO_TEST_CASE( prepare_masking_key2 ) {
 
 	key.i = htonl(0xD5FB70EE);
 
-	// One call
-	if (sizeof(size_t) == 8) {
-		BOOST_CHECK(
-			frame::prepare_masking_key(key) == lib::net::htonll(0xD5FB70EED5FB70EELL)
-		);
-	} else {
-		BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0xD5FB70EE) );
-	}
+    // One call
+    if (sizeof(size_t) == 8) {
+        BOOST_CHECK(
+            frame::prepare_masking_key(key) == lib::net::_htonll(0xD5FB70EED5FB70EELL)
+        );
+    } else {
+        BOOST_CHECK( frame::prepare_masking_key(key) == htonl(0xD5FB70EE) );
+    }
 }
 
 // TODO: figure out a way to run/test both 4 and 8 byte versions.
