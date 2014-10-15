@@ -15,9 +15,12 @@ HEAD
   conflicts with similarly named macros in some operating systems. If you are
   using the WebSocket++ provided 64 bit host/network byte order functions you
   will need to switch to the prefixed versions.
-- BREAKING UTILITY CHANGE: The signature of the `base64_encode` has changed from
+- BREAKING UTILITY CHANGE: The signature of `base64_encode` has changed from
   `websocketpp::base64_encode(unsigned char const *, unsigned int)` to
   `websocketpp::base64_encode(unsigned char const *, size_t)`.
+- BREAKING UTILITY CHANGE: The signature of `sha1::calc` has changed from
+  `websocketpp::sha1::calc(void const *, int, unsigned char *)` to
+  `websocketpp::sha1::calc(void const *, size_t, unsigned char *)`
 - Feature: Adds incomplete `minimal_server` and `minimal_client` configs that
   can be used to build custom configs without pulling in the dependencies of
   `core` or `core_client`. These configs will offer a stable base config to
