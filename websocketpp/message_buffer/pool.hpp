@@ -171,7 +171,7 @@ public:
      * @return A shared pointer to a new message with specified size.
      */
     message_ptr get_message(size_t size) const {
-        return message_ptr(new message(size));
+        return lib::make_shared<message>(size);
     }
 
     /// Recycle a message
@@ -201,7 +201,7 @@ public:
      * @return A pointer to the requested connection message manager.
      */
     con_msg_man_ptr get_manager() const {
-        return con_msg_man_ptr(new con_msg_manager());
+        return lib::make_shared<con_msg_manager>();
     }
 };
 

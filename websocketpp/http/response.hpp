@@ -58,7 +58,7 @@ public:
 
     response()
       : m_read(0)
-      , m_buf(new std::string())
+      , m_buf(lib::make_shared<std::string>())
       , m_status_code(status_code::uninitialized)
       , m_state(RESPONSE_LINE) {}
 

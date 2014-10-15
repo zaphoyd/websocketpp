@@ -209,12 +209,12 @@ public:
         if (last_colon == std::string::npos ||
             (last_sbrace != std::string::npos && last_sbrace > last_colon))
         {
-            return uri_ptr(new uri(base::m_secure, h, request.get_uri()));
+            return lib::make_shared<uri>(base::m_secure, h, request.get_uri());
         } else {
-            return uri_ptr(new uri(base::m_secure,
+            return lib::make_shared<uri>(base::m_secure,
                                    h.substr(0,last_colon),
                                    h.substr(last_colon+1),
-                                   request.get_uri()));
+                                   request.get_uri());
         }
 
         // TODO: check if get_uri is a full uri

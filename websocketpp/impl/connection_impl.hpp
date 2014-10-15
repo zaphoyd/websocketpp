@@ -1969,35 +1969,35 @@ connection<config>::get_processor(int version) const {
     
     switch (version) {
         case 0:
-            p.reset(new processor::hybi00<config>(
+            p = lib::make_shared<processor::hybi00<config> >(
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager
-            ));
+            );
             break;
         case 7:
-            p.reset(new processor::hybi07<config>(
+            p = lib::make_shared<processor::hybi07<config> >(
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
                 m_rng
-            ));
+            );
             break;
         case 8:
-            p.reset(new processor::hybi08<config>(
+            p = lib::make_shared<processor::hybi08<config> >(
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
                 m_rng
-            ));
+            );
             break;
         case 13:
-            p.reset(new processor::hybi13<config>(
+            p = lib::make_shared<processor::hybi13<config> >(
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
                 m_rng
-            ));
+            );
             break;
         default:
             return p;

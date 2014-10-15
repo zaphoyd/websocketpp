@@ -68,7 +68,7 @@ int main() {
     typedef websocketpp::message_buffer::alloc::con_msg_manager<message_type>
         con_msg_man_type;
 
-    con_msg_man_type::ptr manager(new con_msg_man_type());
+    con_msg_man_type::ptr manager = websocketpp::lib::make_shared<con_msg_man_type>();
 
     size_t foo = 1024;
 

@@ -51,7 +51,7 @@ public:
     typedef lib::shared_ptr<type> ptr;
 
     request()
-      : m_buf(new std::string())
+      : m_buf(lib::make_shared<std::string>())
       , m_ready(false) {}
 
     /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
