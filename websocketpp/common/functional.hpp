@@ -49,7 +49,11 @@ namespace lib {
     using std::bind;
     using std::ref;
     namespace placeholders = std::placeholders;
-    #define _WEBSOCKETPP_NULL_FUNCTION_ nullptr
+    
+    template <typename T>
+    void clear_function(T & x) {
+        x = nullptr;
+    }
 #else
     using boost::function;
     using boost::bind;
@@ -59,7 +63,11 @@ namespace lib {
         using ::_1;
         using ::_2;
     }
-    #define _WEBSOCKETPP_NULL_FUNCTION_ 0
+    
+    template <typename T>
+    void clear_function(T & x) {
+        x.clear();
+    }
 #endif
 
 } // namespace lib

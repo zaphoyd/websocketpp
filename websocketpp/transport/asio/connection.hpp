@@ -440,8 +440,8 @@ protected:
         if (ec) {
             // reset the handlers to break the circular reference:
             // this->handler->this
-            m_async_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
-            m_async_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+            lib::clear_function(m_async_read_handler);
+            lib::clear_function(m_async_write_handler);
         }
 
         return ec;
@@ -994,12 +994,12 @@ protected:
         // Reset cached handlers now that we won't be reading or writing anymore
         // These cached handlers store shared pointers to this connection and
         // will leak the connection if not destroyed.
-        m_async_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
-        m_async_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
-        m_init_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        lib::clear_function(m_async_read_handler);
+        lib::clear_function(m_async_write_handler);
+        lib::clear_function(m_init_handler);
 
-        m_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
-        m_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        lib::clear_function(m_read_handler);
+        lib::clear_function(m_write_handler);
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
