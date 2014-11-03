@@ -39,7 +39,10 @@
 #else
     #include <boost/bind.hpp>
     #include <boost/function.hpp>
+    #include <boost/ref.hpp>
 #endif
+
+
 
 namespace websocketpp {
 namespace lib {
@@ -49,6 +52,13 @@ namespace lib {
     using std::bind;
     using std::ref;
     namespace placeholders = std::placeholders;
+    
+    // There are some cases where a C++11 compiler balks at using std::ref
+    // but a C++03 compiler using boost function requires boost::ref. As such
+    // lib::ref is not useful in these cases. Instead this macro allows the use
+    // of boost::ref in the case of a boost compile or no reference wrapper at
+    // all in the case of a C++11 compile
+    #define _WEBSOCKETPP_REF(x) x
     
     template <typename T>
     void clear_function(T & x) {
@@ -63,6 +73,9 @@ namespace lib {
         using ::_1;
         using ::_2;
     }
+    
+    // See above definition for more details on what this is and why it exists
+    #define _WEBSOCKETPP_REF(x) boost::ref(x)
     
     template <typename T>
     void clear_function(T & x) {

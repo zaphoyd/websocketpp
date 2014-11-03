@@ -291,7 +291,7 @@ public:
      */
     timer_ptr set_timer(long duration, timer_handler callback) {
         timer_ptr new_timer = lib::make_shared<boost::asio::deadline_timer>(
-            *m_io_service,
+            lib::ref(*m_io_service),
             boost::posix_time::milliseconds(duration)
         );
 
@@ -417,7 +417,8 @@ protected:
         m_io_service = io_service;
 
         if (config::enable_multithreading) {
-            m_strand = lib::make_shared<boost::asio::strand>(*io_service);
+            m_strand = lib::make_shared<boost::asio::strand>(
+                lib::ref(*io_service));
 
             m_async_read_handler = m_strand->wrap(lib::bind(
                 &type::handle_async_read, get_shared(),lib::placeholders::_1,
