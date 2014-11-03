@@ -76,10 +76,9 @@
         #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
     #endif
     
-    #ifndef _WEBSOCKETPP_CPP11_STL_
-        // a few extra things that real/full C++11 compilers have but the 
-        // *almost* c++11 compilers like GCC 4.7/4.8 that otherwise work with
-        // _WEBSOCKETPP_CPP11_STL_ lack.
+    #ifndef __GNUC__
+        // GCC as of version 4.9 (latest) does not support std::put_time yet.
+        // so ignore it
         #define _WEBSOCKETPP_PUTTIME_
     #endif
 #else
