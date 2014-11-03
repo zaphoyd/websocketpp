@@ -32,6 +32,7 @@ HEAD
   header. Thank you Max Dmitrichenko for reporting and a patch.
 - Bug: use of `std::put_time` is now guarded by a general 11 flag rather than
   a chrono flag. Thank you Max Dmitrichenko for reporting.
+- Bug: Fixes non-thread safe use of std::localtime. #347 #383
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
 - Compatibility: Removes unused parameters from all library, test, and example

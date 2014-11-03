@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,6 +46,7 @@
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
+#include <websocketpp/common/time.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 namespace websocketpp {
@@ -132,13 +133,13 @@ private:
     // TODO: find a workaround for this or make this format user settable
     static std::ostream & timestamp(std::ostream & os) {
         std::time_t t = std::time(NULL);
-        std::tm* lt = std::localtime(&t);
-            return os << std::put_time(lt,"%Y-%m-%d %H:%M:%S");
+        std::tm lt = lib::localtime(t);
         #ifdef _WEBSOCKETPP_PUTTIME_
+            return os << std::put_time(&lt,"%Y-%m-%d %H:%M:%S");
         #else // Falls back to strftime, which requires a temporary copy of the string.
             char buffer[20];
-            std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",lt);
-            return os << buffer;
+            size_t result = std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",&lt);
+            return os << (result == 0 ? "Unknown" : buffer);
         #endif
     }
 
