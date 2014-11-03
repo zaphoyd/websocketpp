@@ -28,6 +28,10 @@ HEAD
 - Improvement: Core library no longer has std::iostream as a dependency.
   std::iostream is still required for the optional iostream logging policy and
   iostream transport.
+- Bug: C++11 Chrono support was being incorrectly detected by the `boost_config`
+  header. Thank you Max Dmitrichenko for reporting and a patch.
+- Bug: use of `std::put_time` is now guarded by a general 11 flag rather than
+  a chrono flag. Thank you Max Dmitrichenko for reporting.
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
 - Compatibility: Removes unused parameters from all library, test, and example
