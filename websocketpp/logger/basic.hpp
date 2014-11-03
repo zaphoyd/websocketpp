@@ -133,8 +133,8 @@ private:
     static std::ostream & timestamp(std::ostream & os) {
         std::time_t t = std::time(NULL);
         std::tm* lt = std::localtime(&t);
-        #ifdef _WEBSOCKETPP_CPP11_STL_
             return os << std::put_time(lt,"%Y-%m-%d %H:%M:%S");
+        #ifdef _WEBSOCKETPP_PUTTIME_
         #else // Falls back to strftime, which requires a temporary copy of the string.
             char buffer[20];
             std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",lt);
