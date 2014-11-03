@@ -163,7 +163,7 @@ inline void calc(void const * src, size_t bytelength, unsigned char * hash) {
     // Handle the last and not full 64 byte block if existing.
     endCurrentBlock = bytelength - currentBlock;
     clearWBuffert(w);
-    int lastBlockBytes = 0;
+    size_t lastBlockBytes = 0;
     for (;lastBlockBytes < endCurrentBlock; ++lastBlockBytes) {
         w[lastBlockBytes >> 2] |= (unsigned int) sarray[lastBlockBytes + currentBlock] << ((3 - (lastBlockBytes & 3)) << 3);
     }
