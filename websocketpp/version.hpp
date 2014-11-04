@@ -50,10 +50,10 @@ static int const patch_version = 0;
  * This is a textual flag indicating the type and number for pre-release
  * versions (dev, alpha, beta, rc). This will be blank for release versions.
  */
-static char const prerelease_flag[] = "";
+static char const prerelease_flag[] = "dev";
 
 /// Default user agent string
-static char const user_agent[] = "WebSocket++/0.4.0";
+static char const user_agent[] = "WebSocket++/0.4.x-dev";
 
 } // namespace websocketpp
 
