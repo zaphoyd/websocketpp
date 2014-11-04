@@ -87,7 +87,14 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 
     # C++11 defines
     if (ENABLE_CPP11)
-        add_definitions (-D_WEBSOCKETPP_CPP11_STL_)
+        if (MSVC)
+            add_definitions (-D_WEBSOCKETPP_CPP11_FUNCTIONAL_)
+            add_definitions (-D_WEBSOCKETPP_CPP11_SYSTEM_ERROR_)
+            add_definitions (-D_WEBSOCKETPP_CPP11_RANDOM_DEVICE_)
+            add_definitions (-D_WEBSOCKETPP_CPP11_MEMORY_)
+        else()
+            add_definitions (-D_WEBSOCKETPP_CPP11_STL_)
+        endif()
     endif ()
 
     # Visual studio
