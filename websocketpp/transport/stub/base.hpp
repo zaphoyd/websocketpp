@@ -25,78 +25,71 @@
  *
  */
 
-#ifndef WEBSOCKETPP_EXTENSION_HPP
-#define WEBSOCKETPP_EXTENSION_HPP
+#ifndef WEBSOCKETPP_TRANSPORT_STUB_BASE_HPP
+#define WEBSOCKETPP_TRANSPORT_STUB_BASE_HPP
 
-#include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
+#include <websocketpp/common/cpp11.hpp>
 
 #include <string>
-#include <vector>
 
 namespace websocketpp {
+namespace transport {
+/// Stub transport policy that has no input or output.
+namespace stub {
 
-/**
- * Some generic information about extensions
- *
- * Each extension object has an implemented flag. It can be retrieved by calling
- * is_implemented(). This compile time flag indicates whether or not the object
- * in question actually implements the extension or if it is a placeholder stub
- *
- * Each extension object also has an enabled flag. It can be retrieved by
- * calling is_enabled(). This runtime flag indicates whether or not the
- * extension has been negotiated for this connection.
- */
-namespace extensions {
-
+/// stub transport errors
 namespace error {
 enum value {
-    /// Catch all
+    /// Catch-all error for transport policy errors that don't fit in other
+    /// categories
     general = 1,
 
-    /// Extension disabled
-    disabled
+    /// not implimented
+    not_implimented
 };
 
+/// iostream transport error category
 class category : public lib::error_category {
-public:
+    public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
-        return "websocketpp.extension";
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+        return "websocketpp.transport.stub";
     }
 
     std::string message(int value) const {
         switch(value) {
             case general:
-                return "Generic extension error";
-            case disabled:
-                return "Use of methods from disabled extension";
+                return "Generic stub transport policy error";
+            case not_implimented:
+                return "feature not implimented";
             default:
-                return "Unknown permessage-compress error";
+                return "Unknown";
         }
     }
 };
 
-inline const lib::error_category& get_category() {
+/// Get a reference to a static copy of the stub transport error category
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
 
+/// Get an error code with the given value and the stub transport category
 inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_category());
 }
 
 } // namespace error
-} // namespace extensions
+} // namespace stub
+} // namespace transport
 } // namespace websocketpp
-
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_
-template<> struct is_error_code_enum
-    <websocketpp::extensions::error::value>
+template<> struct is_error_code_enum<websocketpp::transport::stub::error::value>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 
-#endif // WEBSOCKETPP_EXTENSION_HPP
+#endif // WEBSOCKETPP_TRANSPORT_STUB_BASE_HPP

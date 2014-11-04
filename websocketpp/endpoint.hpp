@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,6 @@
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/version.hpp>
 
-#include <iostream>
 #include <set>
 
 namespace websocketpp {
@@ -88,8 +87,8 @@ public:
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
     explicit endpoint(bool p_is_server)
-      : m_alog(config::alog_level, &std::cout)
-      , m_elog(config::elog_level, &std::cerr)
+      : m_alog(config::alog_level, log::channel_type_hint::access)
+      , m_elog(config::elog_level, log::channel_type_hint::error)
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
@@ -538,7 +537,7 @@ public:
         lib::error_code ec;
         connection_ptr con = this->get_con_from_hdl(hdl,ec);
         if (ec) {
-            throw ec;
+            throw exception(ec);
         }
         return con;
     }

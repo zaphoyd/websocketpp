@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -171,7 +171,7 @@ public:
      * @return A shared pointer to a new message with specified size.
      */
     message_ptr get_message(size_t size) const {
-        return message_ptr(new message(size));
+        return lib::make_shared<message>(size);
     }
 
     /// Recycle a message
@@ -201,7 +201,7 @@ public:
      * @return A pointer to the requested connection message manager.
      */
     con_msg_man_ptr get_manager() const {
-        return con_msg_man_ptr(new con_msg_manager());
+        return lib::make_shared<con_msg_manager>();
     }
 };
 

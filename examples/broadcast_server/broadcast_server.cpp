@@ -59,9 +59,9 @@ public:
         m_server.listen(port);
 
         // Start the server accept loop
-	    m_server.start_accept();
+        m_server.start_accept();
 
-	    // Start the ASIO io_service run loop
+        // Start the ASIO io_service run loop
         try {
             m_server.run();
         } catch (const std::exception & e) {
@@ -142,18 +142,18 @@ private:
 };
 
 int main() {
-	try {
-	broadcast_server server_instance;
+    try {
+    broadcast_server server_instance;
 
-	// Start a thread to run the processing loop
-	thread t(bind(&broadcast_server::process_messages,&server_instance));
+    // Start a thread to run the processing loop
+    thread t(bind(&broadcast_server::process_messages,&server_instance));
 
-	// Run the asio loop with the main thread
-	server_instance.run(9002);
+    // Run the asio loop with the main thread
+    server_instance.run(9002);
 
-	t.join();
+    t.join();
 
-	} catch (std::exception & e) {
-	    std::cout << e.what() << std::endl;
-	}
+    } catch (std::exception & e) {
+        std::cout << e.what() << std::endl;
+    }
 }

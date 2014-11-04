@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,34 +36,34 @@ namespace websocketpp {
  */
 class error_msg {
 public:
-	const std::string& get_msg() const {
-		return m_error_msg;
-	}
+    const std::string& get_msg() const {
+        return m_error_msg;
+    }
 
-	void set_msg(const std::string& msg) {
-		m_error_msg = msg;
-	}
+    void set_msg(const std::string& msg) {
+        m_error_msg = msg;
+    }
 
-	void append_msg(const std::string& msg) {
-		m_error_msg.append(msg);
-	}
+    void append_msg(const std::string& msg) {
+        m_error_msg.append(msg);
+    }
 
-	template <typename T>
-	void set_msg(const T& thing) {
-		std::stringsteam val;
-		val << thing;
-		this->set_msg(val.str());
-	}
+    template <typename T>
+    void set_msg(const T& thing) {
+        std::stringsteam val;
+        val << thing;
+        this->set_msg(val.str());
+    }
 
-	template <typename T>
-	void append_msg(const T& thing) {
-		std::stringsteam val;
-		val << thing;
-		this->append_msg(val.str());
-	}
+    template <typename T>
+    void append_msg(const T& thing) {
+        std::stringsteam val;
+        val << thing;
+        this->append_msg(val.str());
+    }
 private:
-	// error resources
-	std::string		m_error_msg;
+    // error resources
+    std::string     m_error_msg;
 };
 
 } // namespace websocketpp
