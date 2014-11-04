@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,10 +50,10 @@ static int const patch_version = 0;
  * This is a textual flag indicating the type and number for pre-release
  * versions (dev, alpha, beta, rc). This will be blank for release versions.
  */
-static char const prerelease_flag[] = "dev";
+static char const prerelease_flag[] = "";
 
 /// Default user agent string
-static char const user_agent[] = "WebSocket++/0.4.0-dev";
+static char const user_agent[] = "WebSocket++/0.4.0";
 
 } // namespace websocketpp
 

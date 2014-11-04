@@ -1,4 +1,4 @@
-HEAD
+0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
   `websocketpp::exception` which derives from `std::exception`. This normalizes
   all exception types under the standard exception hierarchy and allows
@@ -30,8 +30,8 @@ HEAD
   iostream transport.
 - Bug: C++11 Chrono support was being incorrectly detected by the `boost_config`
   header. Thank you Max Dmitrichenko for reporting and a patch.
-- Bug: use of `std::put_time` is now guarded by a general 11 flag rather than
-  a chrono flag. Thank you Max Dmitrichenko for reporting.
+- Bug: use of `std::put_time` is now guarded by a unique flag rather than a
+  chrono library flag. Thank you Max Dmitrichenko for reporting.
 - Bug: Fixes non-thread safe use of std::localtime. #347 #383
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
