@@ -97,6 +97,7 @@ public:
         try {
             ctx->set_options(boost::asio::ssl::context::default_workarounds |
                              boost::asio::ssl::context::no_sslv2 |
+                             boost::asio::ssl::context::no_sslv3 |
                              boost::asio::ssl::context::single_dh_use);
         } catch (std::exception& e) {
             std::cout << e.what() << std::endl;

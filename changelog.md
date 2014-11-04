@@ -1,3 +1,6 @@
+HEAD
+- Security: Disabled SSLv3 in example servers.
+
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
   `websocketpp::exception` which derives from `std::exception`. This normalizes
