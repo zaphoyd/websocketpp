@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -159,7 +159,7 @@ public:
      * it doesn't it indicates that the connection was most likely closed or
      * is in an error state where it is no longer accepting new input.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param buf Char buffer to read into the websocket
      * @param len Length of buf
@@ -170,12 +170,12 @@ public:
         scoped_lock_type lock(m_read_mutex);
         
         size_t total_read = 0;
-        size_t read = 0;
+        size_t temp_read = 0;
 
         do {
-            read = this->read_some_impl(buf+total_read,len-total_read);
-            total_read += read;
-        } while (read != 0 && total_read < len);
+            temp_read = this->read_some_impl(buf+total_read,len-total_read);
+            total_read += temp_read;
+        } while (temp_read != 0 && total_read < len);
 
         return total_read;
     }
@@ -304,7 +304,7 @@ public:
      * @return A handle that can be used to cancel the timer if it is no longer
      * needed.
      */
-    timer_ptr set_timer(long duration, timer_handler handler) {
+    timer_ptr set_timer(long, timer_handler) {
         return timer_ptr();
     }
 protected:
@@ -510,7 +510,7 @@ private:
             return 0;
         }
 
-        size_t bytes_to_copy = std::min(len,m_len-m_cursor);
+        size_t bytes_to_copy = (std::min)(len,m_len-m_cursor);
 
         std::copy(buf,buf+bytes_to_copy,m_buf+m_cursor);
 

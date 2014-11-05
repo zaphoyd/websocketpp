@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -434,7 +434,7 @@ public:
      * @param response The server response attribute list to validate
      * @return Validation error or 0 on success
      */
-    lib::error_code validate_offer(http::attribute_list const & response) {
+    lib::error_code validate_offer(http::attribute_list const &) {
         return make_error_code(error::general);
     }
 
@@ -643,7 +643,7 @@ private:
                 m_s2c_max_window_bits = bits;
                 break;
             case mode::largest:
-                m_s2c_max_window_bits = std::min(bits,m_s2c_max_window_bits);
+                m_s2c_max_window_bits = (std::min)(bits,m_s2c_max_window_bits);
                 break;
             case mode::smallest:
                 m_s2c_max_window_bits = min_s2c_max_window_bits;

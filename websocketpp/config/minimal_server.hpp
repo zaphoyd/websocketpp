@@ -25,20 +25,19 @@
  *
  */
 
-#ifndef WEBSOCKETPP_CONFIG_DEBUG_HPP
-#define WEBSOCKETPP_CONFIG_DEBUG_HPP
-
-
+#ifndef WEBSOCKETPP_CONFIG_MINIMAL_HPP
+#define WEBSOCKETPP_CONFIG_MINIMAL_HPP
 
 // Non-Policy common stuff
+#include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 
 // Concurrency
-#include <websocketpp/concurrency/basic.hpp>
+#include <websocketpp/concurrency/none.hpp>
 
 // Transport
-#include <websocketpp/transport/iostream/endpoint.hpp>
+#include <websocketpp/transport/stub/endpoint.hpp>
 
 // HTTP
 #include <websocketpp/http/request.hpp>
@@ -49,7 +48,7 @@
 #include <websocketpp/message_buffer/alloc.hpp>
 
 // Loggers
-#include <websocketpp/logger/basic.hpp>
+#include <websocketpp/logger/stub.hpp>
 
 // RNG
 #include <websocketpp/random/none.hpp>
@@ -64,12 +63,41 @@
 namespace websocketpp {
 namespace config {
 
-/// Client/Server debug config with iostream transport
-struct debug_core {
-    typedef debug_core type;
+/// Server config with minimal dependencies
+/**
+ * This config strips out as many dependencies as possible. It is suitable for
+ * use as a base class for custom configs that want to implement or choose their
+ * own policies for components that even the core config includes.
+ *
+ * NOTE: this config stubs out enough that it cannot be used directly. You must
+ * supply at least a transport policy for a config based on `minimal_server` to
+ * do anything useful.
+ *
+ * Present dependency list for minimal_server config:
+ *
+ * C++98 STL:
+ * <algorithm>
+ * <map>
+ * <sstream>
+ * <string>
+ * <vector>
+ *
+ * C++11 STL or Boost
+ * <memory>
+ * <functional>
+ * <system_error>
+ *
+ * Operating System:
+ * <stdint.h> or <boost/cstdint.hpp>
+ * <netinet/in.h> or <winsock2.h> (for ntohl.. could potentially bundle this)
+ *
+ * @since 0.4.0-dev
+ */
+struct minimal_server {
+    typedef minimal_server type;
 
     // Concurrency policy
-    typedef websocketpp::concurrency::basic concurrency_type;
+    typedef websocketpp::concurrency::none concurrency_type;
 
     // HTTP Parser Policies
     typedef http::parser::request request_type;
@@ -84,9 +112,9 @@ struct debug_core {
         endpoint_msg_manager_type;
 
     /// Logging policies
-    typedef websocketpp::log::basic<concurrency_type,
+    typedef websocketpp::log::stub<concurrency_type,
         websocketpp::log::elevel> elog_type;
-    typedef websocketpp::log::basic<concurrency_type,
+    typedef websocketpp::log::stub<concurrency_type,
         websocketpp::log::alevel> alog_type;
 
     /// RNG policies
@@ -138,7 +166,7 @@ struct debug_core {
     };
 
     /// Transport Endpoint Component
-    typedef websocketpp::transport::iostream::endpoint<transport_config>
+    typedef websocketpp::transport::stub::endpoint<transport_config>
         transport_type;
 
     /// User overridable Endpoint base class
@@ -174,7 +202,7 @@ struct debug_core {
      * Default is all except for development/debug level errors
      */
     static const websocketpp::log::level elog_level =
-        websocketpp::log::elevel::all;
+        websocketpp::log::elevel::none;
 
     /// Default static access logging channels
     /**
@@ -187,7 +215,7 @@ struct debug_core {
      * Default is all except for development/debug level access messages
      */
     static const websocketpp::log::level alog_level =
-        websocketpp::log::alevel::all;
+        websocketpp::log::alevel::none;
 
     ///
     static const size_t connection_read_buffer_size = 16384;
@@ -224,7 +252,7 @@ struct debug_core {
      *
      * The default is 32MB
      *
-     * @since 0.3.0
+     * @since 0.4.0-alpha1
      */
     static const size_t max_message_size = 32000000;
 
@@ -235,7 +263,7 @@ struct debug_core {
 
     /// permessage_compress extension
     struct permessage_deflate_config {
-        typedef type::request_type request_type;
+        typedef core::request_type request_type;
 
         /// If the remote endpoint requests that we reset the compression
         /// context after each message should we honor the request?
@@ -271,4 +299,4 @@ struct debug_core {
 } // namespace config
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_CONFIG_CORE_HPP
+#endif // WEBSOCKETPP_CONFIG_MINIMAL_HPP

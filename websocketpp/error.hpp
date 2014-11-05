@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -217,21 +217,30 @@ namespace websocketpp {
 
 class exception : public std::exception {
 public:
-    exception(std::string const & msg, error::value p_code = error::general)
-      : m_msg(msg), m_code(p_code) {}
+    exception(std::string const & msg, lib::error_code ec = make_error_code(error::general))
+      : m_msg(msg), m_code(ec)
+    {}
+
+    explicit exception(lib::error_code ec)
+      : m_code(ec)
+    {}
 
     ~exception() throw() {}
 
     virtual char const * what() const throw() {
-        return m_msg.c_str();
+        if (m_msg.empty()) {
+            return m_code.message().c_str();
+        } else {
+            return m_msg.c_str();
+        }
     }
 
-    error::value code() const throw() {
+    lib::error_code code() const throw() {
         return m_code;
     }
 
     std::string m_msg;
-    error::value m_code;
+    lib::error_code m_code;
 };
 
 } // namespace websocketpp

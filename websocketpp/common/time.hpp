@@ -25,28 +25,30 @@
  *
  */
 
-#ifndef WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
-#define WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
+#ifndef WEBSOCKETPP_COMMON_TIME_HPP
+#define WEBSOCKETPP_COMMON_TIME_HPP
 
-#include <websocketpp/common/memory.hpp>
+#include <time.h>
 
 namespace websocketpp {
+namespace lib {
 
-/// A handle to uniquely identify a connection.
-/**
- * This type uniquely identifies a connection. It is implemented as a weak
- * pointer to the connection in question. This provides uniqueness across
- * multiple endpoints and ensures that IDs never conflict or run out.
- *
- * It is safe to make copies of this handle, store those copies in containers,
- * and use them from other threads.
- *
- * This handle can be upgraded to a full shared_ptr using
- * `endpoint::get_con_from_hdl()` from within a handler fired by the connection
- * that owns the handler.
- */
-typedef lib::weak_ptr<void> connection_hdl;
+// Code in this header was inspired by the following article and includes some
+// code from the related project g2log. The g2log code is public domain licensed
+// http://kjellkod.wordpress.com/2013/01/22/exploring-c11-part-2-localtime-and-time-again/
 
-} // namespace websocketpp
+/// Thread safe cross platform localtime
+inline std::tm localtime(std::time_t const & time) {
+    std::tm tm_snapshot;
+#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+    localtime_s(&tm_snapshot, &time); 
+#else
+    localtime_r(&time, &tm_snapshot); // POSIX  
+#endif
+    return tm_snapshot;
+}
 
-#endif // WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
+} // lib
+} // websocketpp
+
+#endif // WEBSOCKETPP_COMMON_TIME_HPP

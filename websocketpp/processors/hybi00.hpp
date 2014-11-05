@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -110,7 +110,7 @@ public:
         //       of warning or exception.
         const std::string& key3 = req.get_header("Sec-WebSocket-Key3");
         std::copy(key3.c_str(),
-                  key3.c_str()+std::min(static_cast<size_t>(8), key3.size()),
+                  key3.c_str()+(std::min)(static_cast<size_t>(8), key3.size()),
                   &key_final[8]);
 
         res.append_header(
@@ -141,15 +141,32 @@ public:
         return lib::error_code();
     }
 
-    // outgoing client connection processing is not supported for this version
-    lib::error_code client_handshake_request(request_type& req, uri_ptr uri,
-        std::vector<std::string> const & subprotocols) const
+    /// Fill in a set of request headers for a client connection request
+    /**
+     * The Hybi 00 processor only implements incoming connections so this will
+     * always return an error.
+     *
+     * @param [out] req  Set of headers to fill in
+     * @param [in] uri The uri being connected to
+     * @param [in] subprotocols The list of subprotocols to request
+     */
+    lib::error_code client_handshake_request(request_type &, uri_ptr,
+        std::vector<std::string> const &) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
 
-    lib::error_code validate_server_handshake_response(request_type const & req,
-        response_type & res) const
+    /// Validate the server's response to an outgoing handshake request
+    /**
+     * The Hybi 00 processor only implements incoming connections so this will
+     * always return an error.
+     *
+     * @param req The original request sent
+     * @param res The reponse to generate
+     * @return An error code, 0 on success, non-zero for other errors
+     */
+    lib::error_code validate_server_handshake_response(request_type const &,
+        response_type &) const
     {
         return error::make_error_code(error::no_protocol_support);
     }
@@ -164,9 +181,16 @@ public:
         return r.get_header("Origin");
     }
 
-    // hybi00 doesn't support subprotocols so there never will be any requested
-    lib::error_code extract_subprotocols(request_type const & req,
-        std::vector<std::string> & subprotocol_list)
+    /// Extracts requested subprotocols from a handshake request
+    /**
+     * hybi00 doesn't support subprotocols so there never will be any requested
+     *
+     * @param [in] req The request to extract from
+     * @param [out] subprotocol_list A reference to a vector of strings to store
+     * the results in.
+     */
+    lib::error_code extract_subprotocols(request_type const &, 
+        std::vector<std::string> &)
     {
         return lib::error_code();
     }
@@ -185,12 +209,12 @@ public:
         if (last_colon == std::string::npos ||
             (last_sbrace != std::string::npos && last_sbrace > last_colon))
         {
-            return uri_ptr(new uri(base::m_secure, h, request.get_uri()));
+            return lib::make_shared<uri>(base::m_secure, h, request.get_uri());
         } else {
-            return uri_ptr(new uri(base::m_secure,
+            return lib::make_shared<uri>(base::m_secure,
                                    h.substr(0,last_colon),
                                    h.substr(last_colon+1),
-                                   request.get_uri()));
+                                   request.get_uri());
         }
 
         // TODO: check if get_uri is a full uri
@@ -319,18 +343,44 @@ public:
         return lib::error_code();
     }
 
-    lib::error_code prepare_ping(std::string const & in, message_ptr out) const
+    /// Prepare a ping frame
+    /**
+     * Hybi 00 doesn't support pings so this will always return an error
+     *
+     * @param in The string to use for the ping payload
+     * @param out The message buffer to prepare the ping in.
+     * @return Status code, zero on success, non-zero on failure
+     */
+    lib::error_code prepare_ping(std::string const &, message_ptr) const
     {
         return lib::error_code(error::no_protocol_support);
     }
 
-    lib::error_code prepare_pong(const std::string & in, message_ptr out) const
+    /// Prepare a pong frame
+    /**
+     * Hybi 00 doesn't support pongs so this will always return an error
+     *
+     * @param in The string to use for the pong payload
+     * @param out The message buffer to prepare the pong in.
+     * @return Status code, zero on success, non-zero on failure
+     */
+    lib::error_code prepare_pong(const std::string &, message_ptr) const
     {
         return lib::error_code(error::no_protocol_support);
     }
 
-    lib::error_code prepare_close(close::status::value code,
-        std::string const & reason, message_ptr out) const
+    /// Prepare a close frame
+    /**
+     * Hybi 00 doesn't support the close code or reason so these parameters are
+     * ignored.
+     *
+     * @param code The close code to send
+     * @param reason The reason string to send
+     * @param out The message buffer to prepare the fame in
+     * @return Status code, zero on success, non-zero on failure
+     */
+    lib::error_code prepare_close(close::status::value, std::string const &, 
+        message_ptr out) const
     {
         if (!out) {
             return lib::error_code(error::invalid_arguments);

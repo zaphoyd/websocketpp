@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -204,7 +204,7 @@ namespace status {
     /**
      * See https://tools.ietf.org/html/rfc6455#section-7.4 for more details.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param [in] code The code to look up.
      * @return A human readable interpretation of the code.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -112,7 +112,7 @@ public:
      * @return A connection_ptr to the new connection
      */
     connection_ptr get_connection(std::string const & u, lib::error_code & ec) {
-        uri_ptr location(new uri(u));
+        uri_ptr location = lib::make_shared<uri>(u);
 
         if (!location->get_valid()) {
             ec = error::make_error_code(error::invalid_uri);

@@ -273,11 +273,11 @@ void run_dummy_client(std::string port) {
     }
 }
 
-bool on_ping(websocketpp::connection_hdl, std::string payload) {
+bool on_ping(websocketpp::connection_hdl, std::string) {
     return false;
 }
 
-void cancel_on_open(server * s, websocketpp::connection_hdl hdl) {
+void cancel_on_open(server * s, websocketpp::connection_hdl) {
     s->stop_listening();
 }
 
@@ -294,25 +294,25 @@ void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl hdl) {
     con->ping(payload);
 }
 
-void fail_on_pong(websocketpp::connection_hdl hdl, std::string payload) {
+void fail_on_pong(websocketpp::connection_hdl, std::string) {
     BOOST_FAIL( "expected no pong handler" );
 }
 
-void fail_on_pong_timeout(websocketpp::connection_hdl hdl, std::string payload) {
+void fail_on_pong_timeout(websocketpp::connection_hdl, std::string) {
     BOOST_FAIL( "expected no pong timeout" );
 }
 
-void req_pong(std::string expected_payload, websocketpp::connection_hdl hdl,
+void req_pong(std::string expected_payload, websocketpp::connection_hdl,
     std::string payload)
 {
     BOOST_CHECK_EQUAL( expected_payload, payload );
 }
 
-void fail_on_open(websocketpp::connection_hdl hdl) {
+void fail_on_open(websocketpp::connection_hdl) {
     BOOST_FAIL( "expected no open handler" );
 }
 
-void delay(websocketpp::connection_hdl hdl, long duration) {
+void delay(websocketpp::connection_hdl, long duration) {
     sleep(duration);
 }
 
