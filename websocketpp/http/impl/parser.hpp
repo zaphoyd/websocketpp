@@ -68,18 +68,23 @@ inline void parser::append_header(std::string const & key, std::string const &
     if (std::find_if(key.begin(),key.end(),is_not_token_char) != key.end()) {
         throw exception("Invalid header name",status_code::bad_request);
     }
-
+/*
     if (this->get_header(key) == "") {
         m_headers[key] = val;
     } else {
         m_headers[key] += ", " + val;
     }
+*/
+    m_headers.insert(std::make_pair(key, val));
 }
 
 inline void parser::replace_header(std::string const & key, std::string const &
     val)
 {
-    m_headers[key] = val;
+//    m_headers[key] = val;
+    header_list::iterator it = m_headers.find(key);
+    if (it != m_headers.end()) it->second = val;
+    else m_headers.insert(std::make_pair(key, val));
 }
 
 inline void parser::remove_header(std::string const & key) {

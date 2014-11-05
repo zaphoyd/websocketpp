@@ -313,6 +313,7 @@ public:
       , m_remote_close_code(close::status::abnormal_close)
       , m_was_clean(false)
       , m_version(version)
+      , m_http_response_paused(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -691,6 +692,21 @@ public:
 
     /// Resume reading callback
     void handle_resume_reading();
+
+    /// Resume http_response of new data
+    /**
+     * Signals to the connection to resume http_response of new data after it was paused by
+     * `pause_http_response()`.
+     *
+     * If http_response is not paused for this connection already nothing is changed.
+     */
+    lib::error_code resume_http_response();
+
+    /// Resume http_response callback
+    void handle_resume_http_response();
+
+    void pause_http_response();
+    bool is_http_response_paused() const { return m_http_response_paused; }
 
     /// Send a ping
     /**
@@ -1526,6 +1542,8 @@ private:
 
     /// version
     int                     m_version;
+
+    bool                    m_http_response_paused;
 };
 
 } // namespace websocketpp

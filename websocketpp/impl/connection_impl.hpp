@@ -369,15 +369,29 @@ void connection<config>::handle_resume_reading() {
    read_frame();
 }
 
+template <typename config>
+void connection<config>::pause_http_response() {
+    m_alog.write(log::alevel::devel,"connection connection::pause_http_response");
+    m_http_response_paused = true;
+}
 
+template <typename config>
+lib::error_code connection<config>::resume_http_response() {
+    m_alog.write(log::alevel::devel,"connection connection::resume_http_response");
+    return transport_con_type::dispatch(
+        lib::bind(
+            &type::handle_resume_http_response,
+            type::get_shared()
+        )
+    );
+}
 
-
-
-
-
-
-
-
+/// Resume http_response helper method. Not safe to call directly
+template <typename config>
+void connection<config>::handle_resume_http_response() {
+    m_http_response_paused = false;
+    send_http_response();
+}
 
 template <typename config>
 bool connection<config>::get_secure() const {
@@ -838,6 +852,13 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 
         // We have the complete request. Process it.
         this->process_handshake_request();
+        if (this->m_http_response_paused) {
+            if (m_handshake_timer) {
+                m_handshake_timer->cancel();
+                m_handshake_timer.reset();
+            }
+            return;
+        } 
         this->send_http_response();
     } else {
         // read at least 1 more byte
