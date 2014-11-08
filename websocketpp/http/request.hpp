@@ -85,7 +85,7 @@ public:
     }
 
     /// Returns the full raw request
-    std::string raw();
+    std::string raw() const;
 
     /// Set the HTTP method. Must be a valid HTTP token
     void set_method(const std::string& method);
