@@ -588,6 +588,7 @@ public:
         }
 
         out->set_prepared(true);
+        out->set_opcode(op);
 
         return lib::error_code();
     }
