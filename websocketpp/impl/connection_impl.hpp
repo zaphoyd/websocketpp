@@ -73,7 +73,7 @@ session::state::value connection<config>::get_state() const {
 }
 
 template <typename config>
-lib::error_code connection<config>::send(const std::string& payload,
+lib::error_code connection<config>::send(std::string const & payload,
     frame::opcode::value op)
 {
     message_ptr msg = m_msg_manager->get_message(op,payload.size());
@@ -83,7 +83,7 @@ lib::error_code connection<config>::send(const std::string& payload,
 }
 
 template <typename config>
-lib::error_code connection<config>::send(const void* payload, size_t len,
+lib::error_code connection<config>::send(void const * payload, size_t len,
     frame::opcode::value op)
 {
     message_ptr msg = m_msg_manager->get_message(op,len);
@@ -1629,8 +1629,11 @@ void connection<config>::write_frame() {
             if (m_alog.static_test(log::alevel::frame_payload)) {
             if (m_alog.dynamic_test(log::alevel::frame_payload)) {
                 payload << "[" << i << "] (" 
-                        << m_current_msgs[i]->get_payload().size() << ") " 
-                        << utility::to_hex(m_current_msgs[i]->get_payload()) 
+                        << m_current_msgs[i]->get_payload().size() << ") ["<<m_current_msgs[i]->get_opcode()<<"] "
+                        << (m_current_msgs[i]->get_opcode() == frame::opcode::text ? 
+                                m_current_msgs[i]->get_payload() : 
+                                utility::to_hex(m_current_msgs[i]->get_payload())
+                           ) 
                         << "\n";
             }
             }  

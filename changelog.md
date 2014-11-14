@@ -1,4 +1,6 @@
 HEAD
+- Improvement: Message payload logging now prints text for text messages rather
+  than binary.
 - Security: Disabled SSLv3 in example servers.
 
 0.4.0 - 2014-11-04
