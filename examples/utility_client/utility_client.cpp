@@ -79,7 +79,7 @@ public:
         m_error_reason = s.str();
     }
 
-    void on_message(client * c, websocketpp::connection_hdl hdl, client::message_ptr msg) {
+    void on_message(websocketpp::connection_hdl, client::message_ptr msg) {
         if (msg->get_opcode() == websocketpp::frame::opcode::text) {
             m_messages.push_back("<< " + msg->get_payload());
         } else {
@@ -198,7 +198,6 @@ public:
         con->set_message_handler(websocketpp::lib::bind(
             &connection_metadata::on_message,
             metadata_ptr,
-            &m_endpoint,
             websocketpp::lib::placeholders::_1,
             websocketpp::lib::placeholders::_2
         ));

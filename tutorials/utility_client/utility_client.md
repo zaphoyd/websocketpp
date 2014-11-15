@@ -760,14 +760,14 @@ for (it = data.m_messages.begin(); it != data.m_messages.end(); ++it) {
 
 #### Receiving Messages
 
-Messages are received by registering a message handler. The message will be called once per message received and its signature is `void on_message(websocketpp::connection_hdl hdl, endpoint::message_ptr msg)`. The `connection_hdl`, like the similar parameter from the other handlers is a handle for the connection that the message was received on. The `message_ptr` is a pointer to an object that can be queried for the message payload, opcode, and other metadata. Note that the message_ptr type, as well as its underlying message type, is dependent on how your endpoint is configured and may be different for different configs.
+Messages are received by registering a message handler. This handler will be called once per message received and its signature is `void on_message(websocketpp::connection_hdl hdl, endpoint::message_ptr msg)`. The `connection_hdl`, like the similar parameter from the other handlers is a handle for the connection that the message was received on. The `message_ptr` is a pointer to an object that can be queried for the message payload, opcode, and other metadata. Note that the message_ptr type, as well as its underlying message type, is dependent on how your endpoint is configured and may be different for different configs.
 
 #### Add a message handler to method to `connection_metadata`
 
 The message receiving behave that we are implementing will be to collect all messages sent and received and to print them in order when the show connection command is run. The sent messages are already being added to that list. Now we add a message handler that pushes received messages to the list as well. Text messages are pushed as-is. Binary messages are first converted to printable hexadecimal format.
 
 ```cpp
-void on_message(client * c, websocketpp::connection_hdl hdl, client::message_ptr msg) {
+void on_message(websocketpp::connection_hdl hdl, client::message_ptr msg) {
     if (msg->get_opcode() == websocketpp::frame::opcode::text) {
         m_messages.push_back(msg->get_payload());
     } else {
@@ -782,7 +782,6 @@ In order to have this handler called when new messages are received we also regi
 con->set_message_handler(websocketpp::lib::bind(
     &connection_metadata::on_message,
     metadata_ptr,
-    &m_endpoint,
     websocketpp::lib::placeholders::_1,
     websocketpp::lib::placeholders::_2
 ));
