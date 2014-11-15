@@ -1,7 +1,9 @@
 HEAD
+- Security: Disabled SSLv3 in example servers.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
-- Security: Disabled SSLv3 in example servers.
+- Documentation: Add chapter 6 (Sending & Receiving Messages) to the
+  `utility_client` tutorial. Update `utility_client` example to match.
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
