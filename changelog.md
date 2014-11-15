@@ -2,7 +2,7 @@ HEAD
 - Security: Disabled SSLv3 in example servers.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
-- Documentation: Add chapter 6 (Sending & Receiving Messages) to the
+- Documentation: Add Sending & Receiving Messages step to chapter one of the
   `utility_client` tutorial. Update `utility_client` example to match.
 
 0.4.0 - 2014-11-04
