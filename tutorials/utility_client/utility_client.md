@@ -221,7 +221,7 @@ int main() {
 
 _Opening WebSocket connections_
 
-This step adds two new commands to app_client. The ability to open a new connection and the ability to view information about a previously opened connection. Every connection that gets opened will be assigned an integer connection id that the user of the program can use to interact with that connection.
+This step adds two new commands to utility_client. The ability to open a new connection and the ability to view information about a previously opened connection. Every connection that gets opened will be assigned an integer connection id that the user of the program can use to interact with that connection.
 
 #### New Connection Metadata Object
 
@@ -263,7 +263,7 @@ A new WebSocket connection is initiated via a three step process. First, a conne
 > **Exception throwing varients**
 > All user facing endpoint methods that take and use an `error_code` parameter have a version that throws an exception instead. These methods are identical in function and signature except for the lack of the final ec parameter. The type of the exception thrown is `websocketpp::exception`. This type derives from `std::exception` so it can be caught by catch blocks grabbing generic `std::exception`s. The `websocketpp::exception::code()` method may be used to extract the machine readable `error_code` value from an exception.
 >
-> For clarity about error handling the app_client example uses exclusively the exception free varients of these methods. Your application may choose to use either.
+> For clarity about error handling the utility_client example uses exclusively the exception free varients of these methods. Your application may choose to use either.
 
 If connection creation succeeds, the next sequential connection ID is generated and a `connection_metadata` object is inserted into the connection list under that ID. Initially the metadata object stores the connection ID, the `connection_hdl`, and the URI the connection was opened to.
 
@@ -286,7 +286,7 @@ Next, the connection request is configured. For this step the only configuration
 >
 > The function signature of each handler can be looked up in the list above in the manual. In general, all handlers include the `connection_hdl` identifying which connection this even is associated with as the first parameter. Some handlers (such as the message handler) include additional parameters. Most handlers have a void return value but some (`validate`, `ping`, `tls_init`) do not. The specific meanings of the return values are documented in the handler list linked above.
 
-`app_client` registers an open and a fail handler. We will use these to track whether each connection was successfully opened or failed. If it successfully opens, we will gather some information from the opening handshake and store it with our connection metadata.
+`utility_client` registers an open and a fail handler. We will use these to track whether each connection was successfully opened or failed. If it successfully opens, we will gather some information from the opening handshake and store it with our connection metadata.
 
 In this example we are going to set connection specific handlers that are bound directly to the metadata object associated with our connection. This allows us to avoid performing a lookup in each handler to find the metadata object we plan to update which is a bit more efficient.
 
@@ -668,6 +668,8 @@ Enter Command: quit
 
 _Sending and receiving messages_
 
+This step adds a command to send a message on a given connection and updates the show command to print a transcript of all sent and received messages for that connection.
+
 > ###### Terminology: WebSocket message types (opcodes)
 > WebSocket messages have types indicated by their opcode. The protocol currently specifies two different opcodes for data messages, text and binary. Text messages represent UTF8 text and will be validated as such. Binary messages represent raw binary bytes and are passed through directly with no validation. 
 >
@@ -684,6 +686,13 @@ The first overload, `connection_hdl hdl, std::string const & payload, frame::opc
 The second overload, `connection_hdl hdl, void const * payload, size_t len, frame::opcode::value op`, takes a void * buffer and length. The buffer contents are copied and can be safely modified after calling send.
 
 The third overload, `connection_hdl hdl, message_ptr msg`, takes a WebSocket++ `message_ptr`. This overload allows a message to be constructed in place before the call to send. It also may allow a single message buffer to be sent multiple times, including to multiple connections, without copying. Whether or not this actually happens depends on other factors such as whether compression is enabled. The contents of the message buffer may not be safely modified after being sent.
+
+> ###### Terminology: Outgoing WebSocket message queueing & flow control
+> In many configurations, such as when the Asio based transport is in use, WebSocket++ is an asynchronous system. As such the `endpoint::send` method may return before any bytes are actually written to the outgoing socket. In cases where send is called multiple times in quick succession messages may be coalesced and sent in the same operation or even the same TCP packet. When this happens the message boundaries are preserved (each call to send will produce a separate message).
+>
+> In the case of applications that call send from inside a handler this means that no messages will be written to the socket until that handler returns. If you are planning to send many messages in this manor or need a message to be written on the wire before continuing you should look into using multiple threads or the built in timer/interrupt handler functionality.
+>
+> If the outgoing socket link is slow messages may build up in this queue. You can use `connection::get_buffered_amount` to query the current size of the written message queue to decide if you want to change your sending behavior.
 
 #### Add send method to `websocket_endpoint`
 
