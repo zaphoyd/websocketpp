@@ -3,6 +3,7 @@
 #include <websocketpp/server.hpp>
 
 #include <iostream>
+#include <set>
 
 /*#include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>

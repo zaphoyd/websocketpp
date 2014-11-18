@@ -28,8 +28,6 @@
 #ifndef WEBSOCKETPP_PROCESSOR_HYBI00_HPP
 #define WEBSOCKETPP_PROCESSOR_HYBI00_HPP
 
-#include <cstdlib>
-
 #include <websocketpp/frame.hpp>
 #include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/common/network.hpp>
@@ -37,6 +35,11 @@
 #include <websocketpp/common/platforms.hpp>
 
 #include <websocketpp/processors/processor.hpp>
+
+#include <algorithm>
+#include <cstdlib>
+#include <string>
+#include <vector>
 
 namespace websocketpp {
 namespace processor {
@@ -108,7 +111,7 @@ public:
         // if it is less the final key will almost certainly be wrong.
         // TODO: decide if it is best to silently fail here or produce some sort
         //       of warning or exception.
-        const std::string& key3 = req.get_header("Sec-WebSocket-Key3");
+        std::string const & key3 = req.get_header("Sec-WebSocket-Key3");
         std::copy(key3.c_str(),
                   key3.c_str()+(std::min)(static_cast<size_t>(8), key3.size()),
                   &key_final[8]);
@@ -364,7 +367,7 @@ public:
      * @param out The message buffer to prepare the pong in.
      * @return Status code, zero on success, non-zero on failure
      */
-    lib::error_code prepare_pong(const std::string &, message_ptr) const
+    lib::error_code prepare_pong(std::string const &, message_ptr) const
     {
         return lib::error_code(error::no_protocol_support);
     }

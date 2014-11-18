@@ -30,6 +30,9 @@
 
 #include <websocketpp/processors/hybi08.hpp>
 
+#include <string>
+#include <vector>
+
 namespace websocketpp {
 namespace processor {
 

@@ -30,6 +30,9 @@
 
 #include <websocketpp/processors/hybi13.hpp>
 
+#include <string>
+#include <vector>
+
 namespace websocketpp {
 namespace processor {
 
@@ -68,7 +71,7 @@ public:
         return 8;
     }
 
-    const std::string& get_origin(request_type const & r) const {
+    std::string const & get_origin(request_type const & r) const {
         return r.get_header("Sec-WebSocket-Origin");
     }
 private:

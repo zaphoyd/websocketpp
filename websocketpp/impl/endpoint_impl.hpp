@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ENDPOINT_IMPL_HPP
 #define WEBSOCKETPP_ENDPOINT_IMPL_HPP
 
+#include <string>
+
 namespace websocketpp {
 
 template <typename connection, typename config>

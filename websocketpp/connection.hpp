@@ -29,17 +29,18 @@
 #define WEBSOCKETPP_CONNECTION_HPP
 
 #include <websocketpp/close.hpp>
-#include <websocketpp/common/connection_hdl.hpp>
-#include <websocketpp/common/cpp11.hpp>
-#include <websocketpp/common/functional.hpp>
 #include <websocketpp/error.hpp>
 #include <websocketpp/frame.hpp>
-#include <websocketpp/http/constants.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/processors/processor.hpp>
 #include <websocketpp/transport/base/connection.hpp>
+#include <websocketpp/http/constants.hpp>
 
-#include <algorithm>
+#include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/functional.hpp>
+
 #include <queue>
 #include <sstream>
 #include <string>
@@ -1167,7 +1168,7 @@ public:
     void read_frame();
 
     /// Get array of WebSocket protocol versions that this connection supports.
-    const std::vector<int>& get_supported_versions() const;
+    std::vector<int> const & get_supported_versions() const;
 
     /// Sets the handler for a terminating connection. Should only be used
     /// internally by the endpoint class.

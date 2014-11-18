@@ -29,10 +29,11 @@
 #define WEBSOCKETPP_ENDPOINT_HPP
 
 #include <websocketpp/connection.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/version.hpp>
 
-#include <set>
+#include <string>
 
 namespace websocketpp {
 

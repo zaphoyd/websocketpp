@@ -35,8 +35,10 @@
 #include <websocketpp/utilities.hpp>
 #include <websocketpp/uri.hpp>
 
-#include <map>
+#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace websocketpp {
 /// Processors encapsulate the protocol rules specific to each WebSocket version

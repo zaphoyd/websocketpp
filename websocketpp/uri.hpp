@@ -28,11 +28,11 @@
 #ifndef WEBSOCKETPP_URI_HPP
 #define WEBSOCKETPP_URI_HPP
 
-#include <websocketpp/common/memory.hpp>
 #include <websocketpp/error.hpp>
 
+#include <websocketpp/common/memory.hpp>
+
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 #include <string>
 

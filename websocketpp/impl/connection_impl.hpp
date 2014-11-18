@@ -28,15 +28,22 @@
 #ifndef WEBSOCKETPP_CONNECTION_IMPL_HPP
 #define WEBSOCKETPP_CONNECTION_IMPL_HPP
 
-#include <websocketpp/common/platforms.hpp>
-#include <websocketpp/common/system_error.hpp>
-
-#include <websocketpp/processors/processor.hpp>
-
 #include <websocketpp/processors/hybi00.hpp>
 #include <websocketpp/processors/hybi07.hpp>
 #include <websocketpp/processors/hybi08.hpp>
 #include <websocketpp/processors/hybi13.hpp>
+
+#include <websocketpp/processors/processor.hpp>
+
+#include <websocketpp/common/platforms.hpp>
+#include <websocketpp/common/system_error.hpp>
+
+#include <algorithm>
+#include <exception>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace websocketpp {
 
@@ -55,7 +62,7 @@ void connection<config>::set_termination_handler(
 }
 
 template <typename config>
-const std::string& connection<config>::get_origin() const {
+std::string const & connection<config>::get_origin() const {
     //scoped_lock_type lock(m_connection_state_lock);
     return m_processor->get_origin(m_request);
 }
@@ -142,7 +149,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 }
 
 template <typename config>
-void connection<config>::ping(const std::string& payload, lib::error_code& ec) {
+void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection ping");
     }
@@ -233,7 +240,7 @@ void connection<config>::handle_pong_timeout(std::string payload,
 }
 
 template <typename config>
-void connection<config>::pong(const std::string& payload, lib::error_code& ec) {
+void connection<config>::pong(std::string const& payload, lib::error_code& ec) {
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"connection pong");
     }
@@ -385,13 +392,13 @@ bool connection<config>::get_secure() const {
 }
 
 template <typename config>
-const std::string& connection<config>::get_host() const {
+std::string const & connection<config>::get_host() const {
     //scoped_lock_type lock(m_connection_state_lock);
     return m_uri->get_host();
 }
 
 template <typename config>
-const std::string& connection<config>::get_resource() const {
+std::string const & connection<config>::get_resource() const {
     //scoped_lock_type lock(m_connection_state_lock);
     return m_uri->get_resource();
 }
@@ -420,12 +427,12 @@ void connection<config>::set_uri(uri_ptr uri) {
 
 
 template <typename config>
-const std::string & connection<config>::get_subprotocol() const {
+std::string const & connection<config>::get_subprotocol() const {
     return m_subprotocol;
 }
 
 template <typename config>
-const std::vector<std::string> &
+std::vector<std::string> const &
 connection<config>::get_requested_subprotocols() const {
     return m_requested_subprotocols;
 }
@@ -499,13 +506,13 @@ void connection<config>::select_subprotocol(std::string const & value) {
 
 
 template <typename config>
-const std::string &
+std::string const &
 connection<config>::get_request_header(std::string const & key) {
     return m_request.get_header(key);
 }
 
 template <typename config>
-const std::string &
+std::string const &
 connection<config>::get_response_header(std::string const & key) {
     return m_response.get_header(key);
 }
@@ -1734,7 +1741,7 @@ void connection<config>::atomic_state_check(istate_type req, std::string msg)
 }
 
 template <typename config>
-const std::vector<int>& connection<config>::get_supported_versions() const
+std::vector<int> const & connection<config>::get_supported_versions() const
 {
     return versions_supported;
 }
