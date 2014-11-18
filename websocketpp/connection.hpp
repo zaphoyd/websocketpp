@@ -40,7 +40,6 @@
 #include <websocketpp/transport/base/connection.hpp>
 
 #include <algorithm>
-#include <iostream>
 #include <queue>
 #include <sstream>
 #include <string>
