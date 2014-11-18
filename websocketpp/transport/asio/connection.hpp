@@ -28,22 +28,27 @@
 #ifndef WEBSOCKETPP_TRANSPORT_ASIO_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_ASIO_CON_HPP
 
-#include <websocketpp/common/cpp11.hpp>
-#include <websocketpp/common/memory.hpp>
-#include <websocketpp/common/functional.hpp>
-#include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/transport/asio/base.hpp>
+
+#include <websocketpp/transport/base/connection.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/http/constants.hpp>
-#include <websocketpp/transport/asio/base.hpp>
-#include <websocketpp/transport/base/connection.hpp>
 
 #include <websocketpp/base64/base64.hpp>
 #include <websocketpp/error.hpp>
 
+#include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 
+#include <istream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace websocketpp {
@@ -243,7 +248,7 @@ public:
         if (ec) { throw exception(ec); }
     }
 
-    const std::string & get_proxy() const {
+    std::string const & get_proxy() const {
         return m_proxy;
     }
 
@@ -899,7 +904,7 @@ protected:
         );
     }
 
-    void async_write(const std::vector<buffer>& bufs, write_handler handler) {
+    void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         if (!m_async_write_handler) {
             m_alog.write(log::alevel::devel,
                 "async_write (vector) called after async_shutdown");

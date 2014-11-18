@@ -28,13 +28,18 @@
 #ifndef WEBSOCKETPP_TRANSPORT_STUB_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_STUB_CON_HPP
 
+#include <websocketpp/transport/stub/base.hpp>
+
+#include <websocketpp/transport/base/connection.hpp>
+
+#include <websocketpp/logger/levels.hpp>
+
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/platforms.hpp>
-#include <websocketpp/logger/levels.hpp>
 
-#include <websocketpp/transport/base/connection.hpp>
-#include <websocketpp/transport/stub/base.hpp>
+#include <string>
+#include <vector>
 
 namespace websocketpp {
 namespace transport {
@@ -183,7 +188,7 @@ protected:
      * @param handler The callback to invoke when the operation is complete or
      * ends in an error
      */
-    void async_read_at_least(size_t num_bytes, char *buf, size_t len,
+    void async_read_at_least(size_t num_bytes, char * buf, size_t len,
         read_handler handler)
     {
         m_alog.write(log::alevel::devel, "stub_con async_read_at_least");

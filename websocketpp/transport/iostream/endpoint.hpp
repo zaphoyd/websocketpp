@@ -28,13 +28,15 @@
 #ifndef WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 #define WEBSOCKETPP_TRANSPORT_IOSTREAM_HPP
 
-#include <websocketpp/common/memory.hpp>
-#include <websocketpp/logger/levels.hpp>
-
 #include <websocketpp/transport/base/endpoint.hpp>
 #include <websocketpp/transport/iostream/connection.hpp>
 
-#include <iostream>
+#include <websocketpp/uri.hpp>
+#include <websocketpp/logger/levels.hpp>
+
+#include <websocketpp/common/memory.hpp>
+
+#include <ostream>
 
 namespace websocketpp {
 namespace transport {
