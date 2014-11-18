@@ -28,7 +28,7 @@
 #ifndef WEBSOCKETPP_COMMON_TIME_HPP
 #define WEBSOCKETPP_COMMON_TIME_HPP
 
-#include <time.h>
+#include <ctime>
 
 namespace websocketpp {
 namespace lib {
