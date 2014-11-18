@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_FRAME_HPP
 
 #include <algorithm>
+#include <string>
 
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/network.hpp>

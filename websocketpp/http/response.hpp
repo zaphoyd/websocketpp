@@ -82,7 +82,7 @@ public:
      * @param len Size of byte buffer
      * @return Number of bytes processed.
      */
-    size_t consume(const char *buf, size_t len);
+    size_t consume(char const * buf, size_t len);
 
     size_t consume(std::istream & s);
 
@@ -126,7 +126,7 @@ public:
      * @param code Code to set
      * @param msg Message to set
      */
-    void set_status(status_code::value code, const std::string& msg);
+    void set_status(status_code::value code, std::string const & msg);
 
     /// Return the response status code
     status_code::value get_status_code() const {
@@ -142,7 +142,7 @@ private:
     void process(std::string::iterator begin, std::string::iterator end);
 
     /// Helper function for processing body bytes
-    size_t process_body(const char *buf, size_t len);
+    size_t process_body(char const * buf, size_t len);
 
     enum state {
         RESPONSE_LINE = 0,

@@ -28,6 +28,9 @@
 #ifndef HTTP_PARSER_REQUEST_HPP
 #define HTTP_PARSER_REQUEST_HPP
 
+#include <istream>
+#include <string>
+
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/http/parser.hpp>
 
@@ -55,7 +58,7 @@ public:
       , m_ready(false) {}
 
     /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
-    bool parse_complete(std::istream& s);
+    bool parse_complete(std::istream & s);
 
     /// Process bytes in the input buffer
     /**
@@ -77,7 +80,7 @@ public:
      * @param len Size of byte buffer
      * @return Number of bytes processed.
      */
-    size_t consume(const char *buf, size_t len);
+    size_t consume(char const * buf, size_t len);
 
     /// Returns whether or not the request is ready for reading.
     bool ready() const {
@@ -88,18 +91,18 @@ public:
     std::string raw() const;
 
     /// Set the HTTP method. Must be a valid HTTP token
-    void set_method(const std::string& method);
+    void set_method(std::string const & method);
 
     /// Return the request method
-    const std::string& get_method() const {
+    std::string const & get_method() const {
         return m_method;
     }
 
     /// Set the HTTP uri. Must be a valid HTTP uri
-    void set_uri(const std::string& uri);
+    void set_uri(std::string const & uri);
 
     /// Return the requested URI
-    const std::string& get_uri() const {
+    std::string const & get_uri() const {
         return m_uri;
     }
 

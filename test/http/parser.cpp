@@ -28,6 +28,7 @@
 #define BOOST_TEST_MODULE http_parser
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <string>
 
 #include <websocketpp/http/request.hpp>

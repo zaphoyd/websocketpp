@@ -29,7 +29,9 @@
 #define HTTP_PARSER_REQUEST_IMPL_HPP
 
 #include <algorithm>
+#include <istream>
 #include <sstream>
+#include <string>
 
 #include <websocketpp/http/parser.hpp>
 
@@ -37,7 +39,7 @@ namespace websocketpp {
 namespace http {
 namespace parser {
 
-inline bool request::parse_complete(std::istream& s) {
+inline bool request::parse_complete(std::istream & s) {
     std::string req;
 
     // get status line
@@ -64,7 +66,7 @@ inline bool request::parse_complete(std::istream& s) {
     return parse_headers(s);
 }
 
-inline size_t request::consume(const char *buf, size_t len) {
+inline size_t request::consume(char const * buf, size_t len) {
     if (m_ready) {return 0;}
 
     if (m_buf->size() + len > max_header_size) {
@@ -141,7 +143,7 @@ inline std::string request::raw() const {
     return ret.str();
 }
 
-inline void request::set_method(const std::string& method) {
+inline void request::set_method(std::string const & method) {
     if (std::find_if(method.begin(),method.end(),is_not_token_char) != method.end()) {
         throw exception("Invalid method token.",status_code::bad_request);
     }
@@ -156,7 +158,7 @@ inline void request::set_method(const std::string& method) {
  *
  * @param value The value to set the body to.
  */
-inline void request::set_uri(const std::string& uri) {
+inline void request::set_uri(std::string const & uri) {
     // TODO: validation?
     m_uri = uri;
 }

@@ -29,8 +29,10 @@
 #define HTTP_PARSER_HPP
 
 #include <algorithm>
-#include <iostream>
+#include <istream>
 #include <map>
+#include <string>
+#include <utility>
 
 #include <websocketpp/utilities.hpp>
 #include <websocketpp/http/constants.hpp>

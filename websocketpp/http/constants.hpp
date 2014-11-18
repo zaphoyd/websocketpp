@@ -28,9 +28,11 @@
 #ifndef HTTP_CONSTANTS_HPP
 #define HTTP_CONSTANTS_HPP
 
+#include <exception>
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace websocketpp {
 /// HTTP handling support

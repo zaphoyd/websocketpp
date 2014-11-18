@@ -29,6 +29,7 @@
 #define HTTP_PARSER_IMPL_HPP
 
 #include <algorithm>
+#include <istream>
 #include <sstream>
 #include <string>
 
