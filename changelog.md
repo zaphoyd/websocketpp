@@ -7,6 +7,8 @@ HEAD
   than binary.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the
   `utility_client` tutorial. Update `utility_client` example to match.
+- Cleanup: Removes unused files & STL includes. Adds required STL includes.
+  Normalizes include order.
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
