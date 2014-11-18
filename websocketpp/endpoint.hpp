@@ -84,8 +84,6 @@ public:
     // TODO: organize these
     typedef typename connection_type::termination_handler termination_handler;
 
-    typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
-
     explicit endpoint(bool p_is_server)
       : m_alog(config::alog_level, log::channel_type_hint::access)
       , m_elog(config::elog_level, log::channel_type_hint::error)
