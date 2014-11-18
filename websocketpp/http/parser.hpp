@@ -29,7 +29,6 @@
 #define HTTP_PARSER_HPP
 
 #include <algorithm>
-#include <istream>
 #include <map>
 #include <string>
 #include <utility>
@@ -500,14 +499,6 @@ public:
     bool parse_parameter_list(std::string const & in, parameter_list & out)
         const;
 protected:
-    /// Parse headers from an istream
-    /**
-     * @deprecated Use process_header instead.
-     *
-     * @param [in] s The istream to extract headers from.
-     */
-    bool parse_headers(std::istream & s);
-
     /// Process a header line
     /**
      * @todo Update this method to be exception free.

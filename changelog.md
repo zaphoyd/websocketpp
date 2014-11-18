@@ -1,4 +1,7 @@
 HEAD
+- BREAKING UTILITY CHANGE: Deprecated methods `http::parser::parse_headers`,
+  `http::response::parse_complete`, and `http::request::parse_complete` have
+  been removed.
 - Security: Disabled SSLv3 in example servers.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.

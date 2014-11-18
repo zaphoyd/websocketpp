@@ -172,34 +172,6 @@ inline size_t response::consume(std::istream & s) {
     return total;
 }
 
-inline bool response::parse_complete(std::istream & s) {
-    // parse a complete header (ie \r\n\r\n MUST be in the input stream)
-    std::string line;
-
-    // get status line
-    std::getline(s, line);
-
-    if (line[line.size()-1] == '\r') {
-        line.erase(line.end()-1);
-
-        std::stringstream   ss(line);
-        std::string         str_val;
-        int                 int_val;
-        char                char_val[256];
-
-        ss >> str_val;
-        set_version(str_val);
-
-        ss >> int_val;
-        ss.getline(char_val,256);
-        set_status(status_code::value(int_val),std::string(char_val));
-    } else {
-        return false;
-    }
-
-    return parse_headers(s);
-}
-
 inline std::string response::raw() const {
     // TODO: validation. Make sure all required fields have been set?
 

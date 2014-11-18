@@ -29,7 +29,6 @@
 #define HTTP_PARSER_REQUEST_IMPL_HPP
 
 #include <algorithm>
-#include <istream>
 #include <sstream>
 #include <string>
 
@@ -38,33 +37,6 @@
 namespace websocketpp {
 namespace http {
 namespace parser {
-
-inline bool request::parse_complete(std::istream & s) {
-    std::string req;
-
-    // get status line
-    std::getline(s, req);
-
-    if (req[req.size()-1] == '\r') {
-        req.erase(req.end()-1);
-
-        std::stringstream ss(req);
-        std::string val;
-
-        ss >> val;
-        set_method(val);
-
-        ss >> val;
-        set_uri(val);
-
-        ss >> val;
-        set_version(val);
-    } else {
-        return false;
-    }
-
-    return parse_headers(s);
-}
 
 inline size_t request::consume(char const * buf, size_t len) {
     if (m_ready) {return 0;}

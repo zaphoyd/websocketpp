@@ -112,28 +112,6 @@ inline bool parser::parse_parameter_list(std::string const & in,
     return (it == in.begin());
 }
 
-inline bool parser::parse_headers(std::istream & s) {
-    std::string header;
-    std::string::size_type end;
-
-    // get headers
-    while (std::getline(s, header) && header != "\r") {
-        if (header[header.size()-1] != '\r') {
-            continue; // ignore malformed header lines?
-        } else {
-            header.erase(header.end()-1);
-        }
-
-        end = header.find(header_separator,0);
-
-        if (end != std::string::npos) {
-            append_header(header.substr(0,end),header.substr(end+2));
-        }
-    }
-
-    return true;
-}
-
 inline void parser::process_header(std::string::iterator begin,
     std::string::iterator end)
 {

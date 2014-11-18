@@ -28,6 +28,9 @@
 #ifndef HTTP_PARSER_RESPONSE_HPP
 #define HTTP_PARSER_RESPONSE_HPP
 
+#include <iostream>
+#include <string>
+
 #include <websocketpp/http/parser.hpp>
 
 namespace websocketpp {
@@ -84,6 +87,26 @@ public:
      */
     size_t consume(char const * buf, size_t len);
 
+    /// Process bytes in the input buffer (istream version)
+    /**
+     * Process bytes from istream s. Returns the number of bytes processed. 
+     * Bytes left unprocessed means bytes left over after the final header
+     * delimiters.
+     *
+     * Consume is a streaming processor. It may be called multiple times on one
+     * response and the full headers need not be available before processing can
+     * begin. If the end of the response was reached during this call to consume
+     * the ready flag will be set. Further calls to consume once ready will be
+     * ignored.
+     *
+     * Consume will throw an http::exception in the case of an error. Typical
+     * error reasons include malformed responses, incomplete responses, and max
+     * header size being reached.
+     *
+     * @param buf Pointer to byte buffer
+     * @param len Size of byte buffer
+     * @return Number of bytes processed.
+     */
     size_t consume(std::istream & s);
 
     /// Returns true if the response is ready.
@@ -98,9 +121,6 @@ public:
     bool headers_ready() const {
         return (m_state == BODY || m_state == DONE);
     }
-
-    /// DEPRECATED parse a complete response from a pre-delimited istream
-    bool parse_complete(std::istream& s);
 
     /// Returns the full raw response
     std::string raw() const;

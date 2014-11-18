@@ -28,7 +28,6 @@
 #ifndef HTTP_PARSER_REQUEST_HPP
 #define HTTP_PARSER_REQUEST_HPP
 
-#include <istream>
 #include <string>
 
 #include <websocketpp/common/memory.hpp>
@@ -56,9 +55,6 @@ public:
     request()
       : m_buf(lib::make_shared<std::string>())
       , m_ready(false) {}
-
-    /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
-    bool parse_complete(std::istream & s);
 
     /// Process bytes in the input buffer
     /**
