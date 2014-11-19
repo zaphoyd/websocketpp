@@ -899,7 +899,7 @@ public:
      * @param key Name of the header to get
      * @return The value of the header
      */
-    std::string const & get_request_header(std::string const & key);
+    std::string const & get_request_header(std::string const & key) const;
 
     /// Retrieve a response header
     /**
@@ -908,7 +908,7 @@ public:
      * @param key Name of the header to get
      * @return The value of the header
      */
-    std::string const & get_response_header(std::string const & key);
+    std::string const & get_response_header(std::string const & key) const;
 
     /// Set response status code and message
     /**

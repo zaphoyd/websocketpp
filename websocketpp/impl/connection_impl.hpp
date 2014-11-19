@@ -507,13 +507,13 @@ void connection<config>::select_subprotocol(std::string const & value) {
 
 template <typename config>
 std::string const &
-connection<config>::get_request_header(std::string const & key) {
+connection<config>::get_request_header(std::string const & key) const {
     return m_request.get_header(key);
 }
 
 template <typename config>
 std::string const &
-connection<config>::get_response_header(std::string const & key) {
+connection<config>::get_response_header(std::string const & key) const {
     return m_response.get_header(key);
 }
 
