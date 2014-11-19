@@ -39,7 +39,17 @@ namespace http {
 namespace parser {
 
 inline size_t request::consume(char const * buf, size_t len) {
+    size_t bytes_processed;
+    
     if (m_ready) {return 0;}
+    
+    if (m_body_bytes_needed > 0) {
+        bytes_processed = process_body(buf,len);
+        if (body_ready()) {
+            m_ready = true;
+        }
+        return bytes_processed;
+    }
 
     if (m_buf->size() + len > max_header_size) {
         // exceeded max header size
@@ -81,9 +91,8 @@ inline size_t request::consume(char const * buf, size_t len) {
             if (m_method.empty() || get_header("Host") == "") {
                 throw exception("Incomplete Request",status_code::bad_request);
             }
-            m_ready = true;
 
-            size_t bytes_processed = (
+            bytes_processed = (
                 len - static_cast<std::string::size_type>(m_buf->end()-end)
                     + sizeof(header_delimiter) - 1
             );
@@ -91,8 +100,22 @@ inline size_t request::consume(char const * buf, size_t len) {
             // frees memory used temporarily during request parsing
             m_buf.reset();
 
-            // return number of bytes processed (starting bytes - bytes left)
-            return bytes_processed;
+            // if this was not an upgrade request and has a content length
+            // continue capturing content-length bytes and expose them as a 
+            // request body.
+            
+            if (prepare_body()) {
+                bytes_processed += process_body(buf+bytes_processed,len-bytes_processed);
+                if (body_ready()) {
+                    m_ready = true;
+                }
+                return bytes_processed;
+            } else {
+                m_ready = true;
+
+                // return number of bytes processed (starting bytes - bytes left)
+                return bytes_processed;
+            }
         } else {
             if (m_method.empty()) {
                 this->process(begin,end);

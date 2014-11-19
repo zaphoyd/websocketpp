@@ -63,6 +63,9 @@ namespace http {
 
     /// Maximum size in bytes before rejecting an HTTP header as too big.
     size_t const max_header_size = 16000;
+    
+    /// Default Maximum size in bytes for HTTP message bodies.
+    size_t const max_body_size = 32000000;
 
     /// Number of bytes to use for temporary istream read buffers
     size_t const istream_buffer = 512;
