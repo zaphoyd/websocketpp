@@ -44,6 +44,17 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
 
+void on_http(server* s, websocketpp::connection_hdl hdl) {
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    std::string res = con->get_request_body();
+
+    std::cout << "got HTTP request with " << res.size() << " bytes of body data." << std::endl;
+
+    con->set_body(res);
+    con->set_status(websocketpp::http::status_code::ok);
+}
+
 // Define a callback to handle incoming messages
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
@@ -73,6 +84,8 @@ int main() {
 
         // Register our message handler
         echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+        
+        echo_server.set_http_handler(bind(&on_http,&echo_server,::_1));
 
         // Listen on port 9012
         echo_server.listen(9012);

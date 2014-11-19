@@ -533,8 +533,8 @@ public:
 
     /// Get maximum message size
     /**
-     * Get maximum message size. Maximum message size determines the point at which the
-     * connection will fail a connection with the message_too_big protocol error.
+     * Get maximum message size. Maximum message size determines the point at 
+     * which the connection will fail with the message_too_big protocol error.
      *
      * The default is set by the endpoint that creates the connection.
      *
@@ -546,9 +546,9 @@ public:
     
     /// Set maximum message size
     /**
-     * Set maximum message size. Maximum message size determines the point at which the
-     * connection will fail a connection with the message_too_big protocol error. This
-     * value may be changed during the connection.
+     * Set maximum message size. Maximum message size determines the point at 
+     * which the connection will fail with the message_too_big protocol error. 
+     * This value may be changed during the connection.
      *
      * The default is set by the endpoint that creates the connection.
      *
@@ -561,6 +561,38 @@ public:
         if (m_processor) {
             m_processor->set_max_message_size(new_value);
         }
+    }
+    
+    /// Get maximum HTTP message body size
+    /**
+     * Get maximum HTTP message body size. Maximum message body size determines
+     * the point at which the connection will stop reading an HTTP request whose
+     * body is too large.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.5.0
+     *
+     * @return The maximum HTTP message body size
+     */
+    size_t get_max_http_body_size() const {
+        return m_request.get_max_body_size();
+    }
+    
+    /// Set maximum HTTP message body size
+    /**
+     * Set maximum HTTP message body size. Maximum message body size determines
+     * the point at which the connection will stop reading an HTTP request whose
+     * body is too large.
+     *
+     * The default is set by the endpoint that creates the connection.
+     *
+     * @since 0.5.0
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_http_body_size(size_t new_value) {
+        m_request.set_max_body_size(new_value);
     }
 
     //////////////////////////////////
@@ -900,6 +932,17 @@ public:
      * @return The value of the header
      */
     std::string const & get_request_header(std::string const & key) const;
+
+    /// Retrieve a request body
+    /**
+     * Retrieve the value of the request body. This value is typically used with
+     * PUT and POST requests to upload files or other data. Only HTTP
+     * connections will ever have bodies. WebSocket connection's will always
+     * have blank bodies.
+     *
+     * @return The value of the request body.
+     */
+    std::string const & get_request_body() const;
 
     /// Retrieve a response header
     /**

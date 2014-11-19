@@ -3,6 +3,8 @@ HEAD
   `http::response::parse_complete`, and `http::request::parse_complete` have
   been removed.
 - Security: Disabled SSLv3 in example servers.
+- Feature: Adds basic support for accessing HTTP request bodies in the http
+  handler. #181
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the

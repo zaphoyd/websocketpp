@@ -513,6 +513,12 @@ connection<config>::get_request_header(std::string const & key) const {
 
 template <typename config>
 std::string const &
+connection<config>::get_request_body() const {
+    return m_request.get_body();
+}
+
+template <typename config>
+std::string const &
 connection<config>::get_response_header(std::string const & key) const {
     return m_response.get_header(key);
 }
