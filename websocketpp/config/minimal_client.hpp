@@ -25,28 +25,48 @@
  *
  */
 
-#ifndef WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
-#define WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
+#ifndef WEBSOCKETPP_CONFIG_MINIMAL_CLIENT_HPP
+#define WEBSOCKETPP_CONFIG_MINIMAL_CLIENT_HPP
 
-#include <websocketpp/common/memory.hpp>
+#include <websocketpp/config/minimal_server.hpp>
 
 namespace websocketpp {
+namespace config {
 
-/// A handle to uniquely identify a connection.
+/// Client config with minimal dependencies
 /**
- * This type uniquely identifies a connection. It is implemented as a weak
- * pointer to the connection in question. This provides uniqueness across
- * multiple endpoints and ensures that IDs never conflict or run out.
+ * This config strips out as many dependencies as possible. It is suitable for
+ * use as a base class for custom configs that want to implement or choose their
+ * own policies for components that even the core config includes.
  *
- * It is safe to make copies of this handle, store those copies in containers,
- * and use them from other threads.
+ * NOTE: this config stubs out enough that it cannot be used directly. You must
+ * supply at least a transport policy and a cryptographically secure random 
+ * number generation policy for a config based on `minimal_client` to do 
+ * anything useful.
  *
- * This handle can be upgraded to a full shared_ptr using
- * `endpoint::get_con_from_hdl()` from within a handler fired by the connection
- * that owns the handler.
+ * Present dependency list for minimal_server config:
+ *
+ * C++98 STL:
+ * <algorithm>
+ * <map>
+ * <sstream>
+ * <string>
+ * <vector>
+ *
+ * C++11 STL or Boost
+ * <memory>
+ * <functional>
+ * <system_error>
+ *
+ * Operating System:
+ * <stdint.h> or <boost/cstdint.hpp>
+ * <netinet/in.h> or <winsock2.h> (for ntohl.. could potentially bundle this)
+ *
+ * @since 0.4.0-dev
  */
-typedef lib::weak_ptr<void> connection_hdl;
+typedef minimal_server minimal_client;
 
+} // namespace config
 } // namespace websocketpp
 
-#endif // WEBSOCKETPP_COMMON_CONNECTION_HDL_HPP
+#endif // WEBSOCKETPP_CONFIG_MINIMAL_CLIENT_HPP

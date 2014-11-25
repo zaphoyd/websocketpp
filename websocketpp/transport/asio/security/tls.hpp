@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,6 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/system/error_code.hpp>
 
-#include <iostream>
 #include <string>
 
 namespace websocketpp {
@@ -194,7 +193,8 @@ protected:
         if (!m_context) {
             return socket::make_error_code(socket::error::invalid_tls_context);
         }
-        m_socket.reset(new socket_type(*service,*m_context));
+        m_socket = lib::make_shared<socket_type>(
+            _WEBSOCKETPP_REF(*service),lib::ref(*m_context));
 
         m_io_service = service;
         m_strand = strand;
@@ -298,7 +298,7 @@ protected:
      * Non-TLS related errors are returned as the transport generic pass_through
      * error.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param ec The error code to translate_ec
      * @return The translated error code

@@ -1,4 +1,4 @@
-HEAD
+0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
   `websocketpp::exception` which derives from `std::exception`. This normalizes
   all exception types under the standard exception hierarchy and allows
@@ -10,11 +10,17 @@ HEAD
   std::ostreams. This allows writing logging policies that do not involve the
   use of std::ostream. This does not affect anyone using the built in logging
   policies.
-- BREAKING UTILITY CHANGE: websocketpp::lib::net::htonll and
-  websocketpp::lib::net::ntohll have been prefixed with an underscore to avoid
+- BREAKING UTILITY CHANGE: `websocketpp::lib::net::htonll` and
+  `websocketpp::lib::net::ntohll` have been prefixed with an underscore to avoid
   conflicts with similarly named macros in some operating systems. If you are
   using the WebSocket++ provided 64 bit host/network byte order functions you
   will need to switch to the prefixed versions.
+- BREAKING UTILITY CHANGE: The signature of `base64_encode` has changed from
+  `websocketpp::base64_encode(unsigned char const *, unsigned int)` to
+  `websocketpp::base64_encode(unsigned char const *, size_t)`.
+- BREAKING UTILITY CHANGE: The signature of `sha1::calc` has changed from
+  `websocketpp::sha1::calc(void const *, int, unsigned char *)` to
+  `websocketpp::sha1::calc(void const *, size_t, unsigned char *)`
 - Feature: Adds incomplete `minimal_server` and `minimal_client` configs that
   can be used to build custom configs without pulling in the dependencies of
   `core` or `core_client`. These configs will offer a stable base config to
@@ -22,6 +28,11 @@ HEAD
 - Improvement: Core library no longer has std::iostream as a dependency.
   std::iostream is still required for the optional iostream logging policy and
   iostream transport.
+- Bug: C++11 Chrono support was being incorrectly detected by the `boost_config`
+  header. Thank you Max Dmitrichenko for reporting and a patch.
+- Bug: use of `std::put_time` is now guarded by a unique flag rather than a
+  chrono library flag. Thank you Max Dmitrichenko for reporting.
+- Bug: Fixes non-thread safe use of std::localtime. #347 #383
 - Compatibility: Adjust usage of std::min to be more compatible with systems
   that define a min(...) macro.
 - Compatibility: Removes unused parameters from all library, test, and example

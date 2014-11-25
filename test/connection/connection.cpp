@@ -37,9 +37,9 @@
 BOOST_AUTO_TEST_CASE( basic_http_request ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
     std::string output = "HTTP/1.1 426 Upgrade Required\r\nServer: " +
-		                 std::string(websocketpp::user_agent)+"\r\n\r\n";
+                         std::string(websocketpp::user_agent)+"\r\n\r\n";
 
-	std::string o2 = run_server_test(input);
+    std::string o2 = run_server_test(input);
 
     BOOST_CHECK(o2 == output);
 }
@@ -83,10 +83,10 @@ struct connection_setup {
     connection_setup(bool p_is_server) : c(p_is_server, "", alog, elog, rng) {}
 
     websocketpp::lib::error_code ec;
-	stub_config::alog_type alog;
+    stub_config::alog_type alog;
     stub_config::elog_type elog;
-	stub_config::rng_type rng;
-	websocketpp::connection<stub_config> c;
+    stub_config::rng_type rng;
+    websocketpp::connection<stub_config> c;
 };
 
 /*void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE( basic_websocket_request ) {
     output+=websocketpp::user_agent;
     output+="\r\nUpgrade: websocket\r\n\r\n";
 
-	server s;
-	s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
+    server s;
+    s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
 
     BOOST_CHECK(run_server_test(s,input) == output);
 }
@@ -139,8 +139,8 @@ BOOST_AUTO_TEST_CASE( http_request ) {
     output+=websocketpp::user_agent;
     output+="\r\n\r\n/foo/bar";
 
-	server s;
-	s.set_http_handler(bind(&http_func,&s,::_1));
+    server s;
+    s.set_http_handler(bind(&http_func,&s,::_1));
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
@@ -149,9 +149,9 @@ BOOST_AUTO_TEST_CASE( request_no_server_header ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nUpgrade: websocket\r\n\r\n";
 
-	server s;
-	s.set_user_agent("");
-	s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
+    server s;
+    s.set_user_agent("");
+    s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
@@ -160,10 +160,10 @@ BOOST_AUTO_TEST_CASE( request_no_server_header_override ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
 
-	server s;
-	s.set_user_agent("");
-	s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
-	s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
+    server s;
+    s.set_user_agent("");
+    s.set_message_handler(bind(&echo_func,&s,::_1,::_2));
+    s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
@@ -173,21 +173,21 @@ BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
 
     //std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
 
-	std::string ref = "GET / HTTP/1.1\r\nConnection: Upgrade\r\nFoo: Bar\r\nHost: localhost\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\nSec-WebSocket-Version: 13\r\nUpgrade: websocket\r\nUser-Agent: foo\r\n\r\n";
+    std::string ref = "GET / HTTP/1.1\r\nConnection: Upgrade\r\nFoo: Bar\r\nHost: localhost\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\nSec-WebSocket-Version: 13\r\nUpgrade: websocket\r\nUser-Agent: foo\r\n\r\n";
 
-	std::stringstream output;
+    std::stringstream output;
 
-	client e;
-	e.set_access_channels(websocketpp::log::alevel::none);
+    client e;
+    e.set_access_channels(websocketpp::log::alevel::none);
     e.set_error_channels(websocketpp::log::elevel::none);
-	e.set_user_agent("foo");
-	e.register_ostream(&output);
+    e.set_user_agent("foo");
+    e.register_ostream(&output);
 
-	client::connection_ptr con;
-	websocketpp::lib::error_code ec;
-	con = e.get_connection(uri, ec);
-	con->append_header("Foo","Bar");
-	e.connect(con);
+    client::connection_ptr con;
+    websocketpp::lib::error_code ec;
+    con = e.get_connection(uri, ec);
+    con->append_header("Foo","Bar");
+    e.connect(con);
 
     BOOST_CHECK_EQUAL(ref, output.str());
 }
@@ -207,9 +207,9 @@ BOOST_AUTO_TEST_CASE( set_max_message_size ) {
     output.append(frame1, 4);
     output.append("A message was too large");
 
-	server s;
-	s.set_user_agent("");
-	s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
+    server s;
+    s.set_user_agent("");
+    s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
     s.set_max_message_size(2);
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
@@ -231,10 +231,10 @@ BOOST_AUTO_TEST_CASE( user_reject_origin ) {
 BOOST_AUTO_TEST_CASE( basic_text_message ) {
     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
 
-	unsigned char frames[8] = {0x82,0x82,0xFF,0xFF,0xFF,0xFF,0xD5,0xD5};
-	input.append(reinterpret_cast<char*>(frames),8);
+    unsigned char frames[8] = {0x82,0x82,0xFF,0xFF,0xFF,0xFF,0xD5,0xD5};
+    input.append(reinterpret_cast<char*>(frames),8);
 
-	std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: "+websocketpp::USER_AGENT+"\r\nUpgrade: websocket\r\n\r\n**";
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: "+websocketpp::USER_AGENT+"\r\nUpgrade: websocket\r\n\r\n**";
 
     BOOST_CHECK( run_server_test(input) == output);
 }
