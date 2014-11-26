@@ -73,7 +73,7 @@
         #define _WEBSOCKETPP_INITIALIZER_LISTS_
     #endif
     #ifndef _WEBSOCKETPP_NULLPTR_TOKEN_
-        #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
+        #define _WEBSOCKETPP_NULLPTR_TOKEN_ 0
     #endif
     
     #ifndef __GNUC__

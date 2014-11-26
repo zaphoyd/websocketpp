@@ -97,7 +97,7 @@ public:
         m_dynamic_channels &= ~channels;
     }
 
-    void write(level channel, std::string const & msg) {
+    virtual void write(level channel, std::string const & msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -106,7 +106,7 @@ public:
         m_out->flush();
     }
 
-    void write(level channel, char const * msg) {
+    virtual void write(level channel, char const * msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -122,10 +122,13 @@ public:
     bool dynamic_test(level channel) {
         return ((channel & m_dynamic_channels) != 0);
     }
-private:
+
+protected:
     typedef typename concurrency::scoped_lock_type scoped_lock_type;
     typedef typename concurrency::mutex_type mutex_type;
+    mutex_type m_lock;
 
+private:
     // The timestamp does not include the time zone, because on Windows with the
     // default registry settings, the time zone would be written out in full,
     // which would be obnoxiously verbose.
@@ -142,8 +145,6 @@ private:
             return os << (result == 0 ? "Unknown" : buffer);
         #endif
     }
-
-    mutex_type m_lock;
 
     level const m_static_channels;
     level m_dynamic_channels;
