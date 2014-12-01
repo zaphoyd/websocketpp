@@ -23,11 +23,11 @@ public:
         channel_type_hint::access)
       : basic<concurrency,names>(c, h), channel_type_hint_(h) {}
 
-    void write(level channel, std::string const & msg) override {
+    void write(level channel, std::string const & msg) {
         write(channel, msg.c_str());
     }
 
-    void write(level channel, char const * msg) override {
+    void write(level channel, char const * msg) {
         scoped_lock_type lock(basic<concurrency,names>::m_lock);
         if (!this->dynamic_test(channel)) { return; }
         ::syslog(syslog_priority(channel), "[%s] %s", names::channel_name(channel), msg);

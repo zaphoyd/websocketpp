@@ -99,7 +99,7 @@ public:
         m_dynamic_channels &= ~channels;
     }
 
-    virtual void write(level channel, std::string const & msg) {
+    void write(level channel, std::string const & msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -108,7 +108,7 @@ public:
         m_out->flush();
     }
 
-    virtual void write(level channel, char const * msg) {
+    void write(level channel, char const * msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
