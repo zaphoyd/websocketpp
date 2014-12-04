@@ -72,6 +72,7 @@ namespace lib {
         /// \todo this feels hacky, is there a better way?
         using ::_1;
         using ::_2;
+        using ::_3;
     }
     
     // See above definition for more details on what this is and why it exists

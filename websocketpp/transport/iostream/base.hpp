@@ -40,10 +40,12 @@ namespace transport {
 /// Transport policy that uses STL iostream for I/O and does not support timers
 namespace iostream {
 
-/// The type and signature of the callback passed to the accept method
-typedef lib::function<void(connection_hdl, char const *, size_t)> write_handler;
+/// The type and signature of the callback used by iostream transport to write
+typedef lib::function<lib::error_code(connection_hdl, char const *, size_t)> 
+    write_handler;
 
-/// The type and signature of the callback passed to the accept method
+/// The type and signature of the callback used by iostream transport to signal 
+/// a transport shutdown.
 typedef lib::function<lib::error_code(connection_hdl)> shutdown_handler;
 
 /// iostream transport errors

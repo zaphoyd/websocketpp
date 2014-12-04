@@ -313,6 +313,24 @@ public:
         return timer_ptr();
     }
     
+    /// Sets the write handler
+    /**
+     * The write handler is called when the iostream transport receives data
+     * that needs to be written to the appropriate output location. This handler
+     * can be used in place of registering an ostream for output.
+     *
+     * The signature of the handler is 
+     * `lib::error_code (connection_hdl, char const *, size_t)` The
+     * code returned will be reported and logged by the core library.
+     *
+     * @since 0.5.0
+     *
+     * @param h The handler to call on connection shutdown.
+     */
+    void set_write_handler(write_handler h) {
+        m_write_handler = h;
+    }
+    
     /// Sets the shutdown handler
     /**
      * The shutdown handler is called when the iostream transport receives a
@@ -322,7 +340,7 @@ public:
      * If you are using iostream transport with another socket library, this is
      * a good time to close/shutdown the socket for this connection.
      *
-     * The signature of the handler is lib::error_code (connection_hdl). The
+     * The signature of the handler is `lib::error_code (connection_hdl)`. The
      * code returned will be reported and logged by the core library.
      *
      * @since 0.5.0
@@ -400,13 +418,17 @@ protected:
 
     /// Asyncronous Transport Write
     /**
-     * Write len bytes in buf to the output stream. Call handler to report
+     * Write len bytes in buf to the output method. Call handler to report
      * success or failure. handler may or may not be called during async_write,
      * but it must be safe for this to happen.
      *
      * Will return 0 on success. Other possible errors (not exhaustive)
      * output_stream_required: No output stream was registered to write to
      * bad_stream: a ostream pass through error
+     *
+     * This method will attempt to write to the registered ostream first. If an
+     * ostream is not registered it will use the write handler. If neither are
+     * registered then an error is passed up to the connection.
      *
      * @param buf buffer to read bytes from
      * @param len number of bytes to write
@@ -418,29 +440,36 @@ protected:
         m_alog.write(log::alevel::devel,"iostream_con async_write");
         // TODO: lock transport state?
 
-        if (!m_output_stream) {
-            handler(make_error_code(error::output_stream_required));
-            return;
-        }
+        lib::error_code ec;
 
-        m_output_stream->write(buf,len);
-
-        if (m_output_stream->bad()) {
-            handler(make_error_code(error::bad_stream));
+        if (m_output_stream) {
+            m_output_stream->write(buf,len);
+            
+            if (m_output_stream->bad()) {
+                ec = make_error_code(error::bad_stream);
+            }
+        } else if (m_write_handler) {
+            ec = m_write_handler(m_connection_hdl, buf, len);
         } else {
-            handler(lib::error_code());
+            ec = make_error_code(error::output_stream_required);
         }
+
+        handler(ec);
     }
 
     /// Asyncronous Transport Write (scatter-gather)
     /**
-     * Write a sequence of buffers to the output stream. Call handler to report
+     * Write a sequence of buffers to the output method. Call handler to report
      * success or failure. handler may or may not be called during async_write,
      * but it must be safe for this to happen.
      *
      * Will return 0 on success. Other possible errors (not exhaustive)
      * output_stream_required: No output stream was registered to write to
      * bad_stream: a ostream pass through error
+     *
+     * This method will attempt to write to the registered ostream first. If an
+     * ostream is not registered it will use the write handler. If neither are
+     * registered then an error is passed up to the connection.
      *
      * @param bufs vector of buffers to write
      * @param handler Callback to invoke with operation status.
@@ -451,21 +480,30 @@ protected:
         m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
         // TODO: lock transport state?
 
-        if (!m_output_stream) {
-            handler(make_error_code(error::output_stream_required));
-            return;
-        }
+        lib::error_code ec;
 
-        std::vector<buffer>::const_iterator it;
-        for (it = bufs.begin(); it != bufs.end(); it++) {
-            m_output_stream->write((*it).buf,(*it).len);
+        if (m_output_stream) {
+            std::vector<buffer>::const_iterator it;
+            for (it = bufs.begin(); it != bufs.end(); it++) {
+                m_output_stream->write((*it).buf,(*it).len);
 
-            if (m_output_stream->bad()) {
-                handler(make_error_code(error::bad_stream));
+                if (m_output_stream->bad()) {
+                    ec = make_error_code(error::bad_stream);
+                    break;
+                }
             }
+        } else if (m_write_handler) {
+            std::vector<buffer>::const_iterator it;
+            for (it = bufs.begin(); it != bufs.end(); it++) {
+                ec = m_write_handler(m_connection_hdl, (*it).buf, (*it).len);
+                if (ec) {break;}
+            }
+            
+        } else {
+            ec = make_error_code(error::output_stream_required);
         }
-
-        handler(lib::error_code());
+        
+        handler(ec);
     }
 
     /// Set Connection Handle
