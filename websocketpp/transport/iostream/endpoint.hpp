@@ -116,6 +116,26 @@ public:
     bool is_secure() const {
         return m_is_secure;
     }
+    
+    /// Sets the shutdown handler
+    /**
+     * The shutdown handler is called when the iostream transport receives a
+     * notification from the core library that it is finished with all read and
+     * write operations and that the underlying transport can be cleaned up.
+     *
+     * If you are using iostream transport with another socket library, this is
+     * a good time to close/shutdown the socket for this connection.
+     *
+     * The signature of the handler is lib::error_code (connection_hdl). The
+     * code returned will be reported and logged by the core library.
+     *
+     * @since 0.5.0
+     *
+     * @param h The handler to call on connection shutdown.
+     */
+    void set_shutdown_handler(shutdown_handler h) {
+        m_shutdown_handler = h;
+    }
 protected:
     /// Initialize logging
     /**
@@ -158,10 +178,15 @@ protected:
      */
     lib::error_code init(transport_con_ptr tcon) {
         tcon->register_ostream(m_output_stream);
+        if (m_shutdown_handler) {
+            tcon->set_shutdown_handler(m_shutdown_handler);
+        }
         return lib::error_code();
     }
 private:
     std::ostream *  m_output_stream;
+    shutdown_handler m_shutdown_handler;
+    
     elog_type *     m_elog;
     alog_type *     m_alog;
     bool            m_is_secure;

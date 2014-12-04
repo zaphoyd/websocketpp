@@ -30,6 +30,8 @@
 
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/connection_hdl.hpp>
 
 #include <string>
 
@@ -37,6 +39,12 @@ namespace websocketpp {
 namespace transport {
 /// Transport policy that uses STL iostream for I/O and does not support timers
 namespace iostream {
+
+/// The type and signature of the callback passed to the accept method
+typedef lib::function<void(connection_hdl, char const *, size_t)> write_handler;
+
+/// The type and signature of the callback passed to the accept method
+typedef lib::function<lib::error_code(connection_hdl)> shutdown_handler;
 
 /// iostream transport errors
 namespace error {

@@ -142,6 +142,20 @@ struct stub_con : public iostream_con {
         indef_read();
     }
 
+    void shutdown() {
+        iostream_con::async_shutdown(
+            websocketpp::lib::bind(
+                &stub_con::handle_async_shutdown,
+                type::get_shared(),
+                websocketpp::lib::placeholders::_1
+            )
+        );
+    }
+
+    void handle_async_shutdown(websocketpp::lib::error_code const & e) {
+        ec = e;
+    }
+
     websocketpp::lib::error_code ec;
     size_t indef_read_size;
     char * indef_read_buf;
@@ -406,6 +420,26 @@ BOOST_AUTO_TEST_CASE( fatal_error_flag ) {
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
     con->fatal_error();
     BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::transport::error::pass_through) );
+}
+
+BOOST_AUTO_TEST_CASE( shutdown ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+    BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
+    con->shutdown();
+    BOOST_CHECK_EQUAL( con->ec, websocketpp::lib::error_code() );
+}
+
+websocketpp::lib::error_code sd_handler(websocketpp::connection_hdl) {
+    return make_error_code(websocketpp::transport::error::general);
+}
+
+BOOST_AUTO_TEST_CASE( shutdown_handler ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+    
+    con->set_shutdown_handler(&sd_handler);
+    BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
+    con->shutdown();
+    BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::transport::error::general) );
 }
 
 BOOST_AUTO_TEST_CASE( shared_pointer_memory_cleanup ) {

@@ -312,6 +312,26 @@ public:
     timer_ptr set_timer(long, timer_handler) {
         return timer_ptr();
     }
+    
+    /// Sets the shutdown handler
+    /**
+     * The shutdown handler is called when the iostream transport receives a
+     * notification from the core library that it is finished with all read and
+     * write operations and that the underlying transport can be cleaned up.
+     *
+     * If you are using iostream transport with another socket library, this is
+     * a good time to close/shutdown the socket for this connection.
+     *
+     * The signature of the handler is lib::error_code (connection_hdl). The
+     * code returned will be reported and logged by the core library.
+     *
+     * @since 0.5.0
+     *
+     * @param h The handler to call on connection shutdown.
+     */
+    void set_shutdown_handler(shutdown_handler h) {
+        m_shutdown_handler = h;
+    }
 protected:
     /// Initialize the connection transport
     /**
@@ -392,7 +412,9 @@ protected:
      * @param len number of bytes to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(char const * buf, size_t len, write_handler handler) {
+    void async_write(char const * buf, size_t len, transport::write_handler 
+        handler)
+    {
         m_alog.write(log::alevel::devel,"iostream_con async_write");
         // TODO: lock transport state?
 
@@ -423,7 +445,9 @@ protected:
      * @param bufs vector of buffers to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(std::vector<buffer> const & bufs, write_handler handler) {
+    void async_write(std::vector<buffer> const & bufs, transport::write_handler
+        handler)
+    {
         m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
         // TODO: lock transport state?
 
@@ -470,10 +494,20 @@ protected:
 
     /// Perform cleanup on socket shutdown_handler
     /**
-     * @param h The `shutdown_handler` to call back when complete
+     * If a shutdown handler is set, call it and pass through its return error
+     * code. Otherwise assume there is nothing to do and pass through a success
+     * code.
+     *
+     * @param handler The `shutdown_handler` to call back when complete
      */
-    void async_shutdown(shutdown_handler handler) {
-        handler(lib::error_code());
+    void async_shutdown(transport::shutdown_handler handler) {
+        lib::error_code ec;
+        
+        if (m_shutdown_handler) {
+            ec = m_shutdown_handler(m_connection_hdl);
+        }
+        
+        handler(ec);
     }
 private:
     void read(std::istream &in) {
@@ -563,6 +597,8 @@ private:
     // transport resources
     std::ostream *  m_output_stream;
     connection_hdl  m_connection_hdl;
+    write_handler   m_write_handler;
+    shutdown_handler    m_shutdown_handler;
 
     bool            m_reading;
     bool const      m_is_server;
