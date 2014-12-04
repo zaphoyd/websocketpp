@@ -49,10 +49,19 @@ void on_http(server* s, websocketpp::connection_hdl hdl) {
 
     std::string res = con->get_request_body();
 
-    std::cout << "got HTTP request with " << res.size() << " bytes of body data." << std::endl;
+    std::stringstream ss;
+    ss << "got HTTP request with " << res.size() << " bytes of body data.";
 
-    con->set_body(res);
+    con->set_body(ss.str());
     con->set_status(websocketpp::http::status_code::ok);
+}
+
+void on_fail(websocketpp::connection_hdl) {
+    std::cout << "Fail handler" << std::endl;
+}
+
+void on_close(websocketpp::connection_hdl) {
+    std::cout << "Close handler" << std::endl;
 }
 
 // Define a callback to handle incoming messages
@@ -86,6 +95,8 @@ int main() {
         echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
         
         echo_server.set_http_handler(bind(&on_http,&echo_server,::_1));
+        echo_server.set_fail_handler(&on_fail);
+        echo_server.set_close_handler(&on_close);
 
         // Listen on port 9012
         echo_server.listen(9012);
