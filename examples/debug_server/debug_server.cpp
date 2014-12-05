@@ -31,11 +31,55 @@
 
 #include <websocketpp/config/debug_asio_no_tls.hpp>
 
+// Custom logger
+#include <websocketpp/logger/syslog.hpp>
+
 #include <websocketpp/server.hpp>
 
 #include <iostream>
 
-typedef websocketpp::server<websocketpp::config::debug_asio> server;
+////////////////////////////////////////////////////////////////////////////////
+///////////////// Custom Config for debugging custom policies //////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+struct debug_custom : public websocketpp::config::debug_asio {
+    typedef debug_custom type;
+    typedef debug_asio base;
+
+    typedef base::concurrency_type concurrency_type;
+
+    typedef base::request_type request_type;
+    typedef base::response_type response_type;
+
+    typedef base::message_type message_type;
+    typedef base::con_msg_manager_type con_msg_manager_type;
+    typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
+
+    /// Custom Logging policies
+    typedef websocketpp::log::syslog<concurrency_type,
+        websocketpp::log::elevel> elog_type;
+    typedef websocketpp::log::syslog<concurrency_type,
+        websocketpp::log::alevel> alog_type;
+
+    typedef base::rng_type rng_type;
+
+    struct transport_config : public base::transport_config {
+        typedef type::concurrency_type concurrency_type;
+        typedef type::alog_type alog_type;
+        typedef type::elog_type elog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
+        typedef websocketpp::transport::asio::basic_socket::endpoint
+            socket_type;
+    };
+
+    typedef websocketpp::transport::asio::endpoint<transport_config>
+        transport_type;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef websocketpp::server<debug_custom> server;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -93,7 +137,7 @@ int main() {
 
         // Register our message handler
         echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
-        
+
         echo_server.set_http_handler(bind(&on_http,&echo_server,::_1));
         echo_server.set_fail_handler(&on_fail);
         echo_server.set_close_handler(&on_close);

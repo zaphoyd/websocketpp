@@ -5,13 +5,15 @@ HEAD
 - Security: Disabled SSLv3 in example servers.
 - Feature: Adds basic support for accessing HTTP request bodies in the http
   handler. #181
-- Feature: Adds the ability to register a shutdown handler when using the 
-  iostream transport. This provides a clean interface for triggering the shut 
+- Feature: Adds the ability to register a shutdown handler when using the
+  iostream transport. This provides a clean interface for triggering the shut
   down of external sockets and other cleanup without hooking in to higher level
   WebSocket handlers.
 - Feature: Adds the ability to register a write handler when using the iostream
   transport. This handler can be used to handle transport output in place of
   registering an ostream to write to.
+- Feature: Adds a new logging policy that outputs to syslog. #386 Thank you Tom
+  Hughes for submitting the initial version of this policy.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the
