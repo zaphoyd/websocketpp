@@ -58,23 +58,23 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(channel_type_hint::value h = 
+    basic<concurrency,names>(channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
-      
+
     basic<concurrency,names>(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, channel_type_hint::value h = 
+    basic<concurrency,names>(level c, channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
-    
+
     basic<concurrency,names>(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
@@ -99,6 +99,11 @@ public:
         m_dynamic_channels &= ~channels;
     }
 
+    /// Write a string message to the given channel
+    /**
+     * @param channel The channel to write to
+     * @param msg The message to write
+     */
     void write(level channel, std::string const & msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
@@ -108,6 +113,11 @@ public:
         m_out->flush();
     }
 
+    /// Write a cstring message to the given channel
+    /**
+     * @param channel The channel to write to
+     * @param msg The message to write
+     */
     void write(level channel, char const * msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
