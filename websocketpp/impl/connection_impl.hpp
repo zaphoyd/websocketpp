@@ -780,7 +780,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 
     // More paranoid boundaries checking.
     // TODO: Is this overkill?
-    if (bytes_processed > config::connection_read_buffer_size) {
+    if (bytes_processed > bytes_transferred) {
         m_elog.write(log::elevel::fatal,"Fatal boundaries checking error.");
         this->terminate(make_error_code(error::general));
         return;
