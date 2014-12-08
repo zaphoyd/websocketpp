@@ -132,11 +132,7 @@ int main(int argc, char * argv[]) {
             }
         }
 
-    } catch (const std::exception & e) {
+    } catch (websocketpp::exception const & e) {
         std::cout << "exception: " << e.what() << std::endl;
-    } catch (websocketpp::lib::error_code e) {
-        std::cout << "error code: " << e.message() << std::endl;
-    } catch (...) {
-        std::cout << "other exception" << std::endl;
     }
 }
