@@ -239,6 +239,9 @@ debug_server = SConscript('#/examples/debug_server/SConscript',variant_dir = bui
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
 
+# telemetry_server
+telemetry_server = SConscript('#/examples/telemetry_server/SConscript',variant_dir = builddir + 'telemetry_server',duplicate = 0)
+
 if not env['PLATFORM'].startswith('win'):
     # iostream_server
     iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)
