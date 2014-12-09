@@ -156,18 +156,12 @@ public:
         con->set_status(websocketpp::http::status_code::ok);
     }
 
-    // The open handler will signal that we are ready to start sending telemetry
     void on_open(connection_hdl hdl) {
         m_connections.insert(hdl);
     }
 
-    // The close handler will signal that we should stop sending telemetry
     void on_close(connection_hdl hdl) {
         m_connections.erase(hdl);
-    }
-
-    // The fail handler will signal that we should stop sending telemetry
-    void on_fail(connection_hdl) {
     }
 private:
     typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
