@@ -49,7 +49,6 @@ public:
         using websocketpp::lib::bind;
         m_endpoint.set_open_handler(bind(&telemetry_server::on_open,this,::_1));
         m_endpoint.set_close_handler(bind(&telemetry_server::on_close,this,::_1));
-        m_endpoint.set_fail_handler(bind(&telemetry_server::on_fail,this,::_1));
         m_endpoint.set_http_handler(bind(&telemetry_server::on_http,this,::_1));
     }
 
