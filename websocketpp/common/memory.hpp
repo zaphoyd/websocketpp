@@ -28,7 +28,9 @@
 #ifndef WEBSOCKETPP_COMMON_MEMORY_HPP
 #define WEBSOCKETPP_COMMON_MEMORY_HPP
 
-#if defined _WEBSOCKETPP_CPP11_STL_ && !defined _WEBSOCKETPP_NO_CPP11_MEMORY_
+#include <websocketpp/common/cpp11.hpp>
+
+#if defined _WEBSOCKETPP_CPP11_INTERNAL_ && !defined _WEBSOCKETPP_NO_CPP11_MEMORY_
     #ifndef _WEBSOCKETPP_CPP11_MEMORY_
         #define _WEBSOCKETPP_CPP11_MEMORY_
     #endif
