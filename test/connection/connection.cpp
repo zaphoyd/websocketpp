@@ -127,8 +127,8 @@ struct debug_config_client : public websocketpp::config::core {
     typedef core::endpoint_base endpoint_base;
     typedef connection_extension connection_base;
     
-    static const websocketpp::log::level elog_level = websocketpp::log::elevel::all;
-    static const websocketpp::log::level alog_level = websocketpp::log::alevel::all;
+    static const websocketpp::log::level elog_level = websocketpp::log::elevel::none;
+    static const websocketpp::log::level alog_level = websocketpp::log::alevel::none;
 };
 
 struct connection_setup {

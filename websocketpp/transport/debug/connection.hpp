@@ -272,8 +272,6 @@ protected:
      */
     void async_write(char const * buf, size_t len, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write");
-        //handler(lib::error_code());
-        std::cout << std::string(buf,len) << std::endl;
         m_write_handler = handler;
     }
 
@@ -290,7 +288,6 @@ protected:
      */
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write buffer list");
-        //handler(lib::error_code());
         m_write_handler = handler;
     }
 
