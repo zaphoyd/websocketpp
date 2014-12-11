@@ -1251,45 +1251,6 @@ protected:
     /// Perform WebSocket handshake validation of m_request using m_processor.
     /// set m_response and return false on error.
     bool process_handshake_request();
-
-    /// Atomically change the internal connection state.
-    /**
-     * @param req The required starting state. If the internal state does not
-     * match req an exception is thrown.
-     *
-     * @param dest The state to change to.
-     *
-     * @param msg The message to include in the exception thrown
-     */
-    void atomic_state_change(istate_type req, istate_type dest,
-        std::string msg);
-
-    /// Atomically change the internal and external connection state.
-    /**
-     * @param ireq The required starting internal state. If the internal state
-     * does not match ireq an exception is thrown.
-     *
-     * @param idest The internal state to change to.
-     *
-     * @param ereq The required starting external state. If the external state
-     * does not match ereq an exception is thrown.
-     *
-     * @param edest The external state to change to.
-     *
-     * @param msg The message to include in the exception thrown
-     */
-    void atomic_state_change(istate_type ireq, istate_type idest,
-        session::state::value ereq, session::state::value edest,
-        std::string msg);
-
-    /// Atomically read and compared the internal state.
-    /**
-     * @param req The state to test against. If the internal state does not
-     * match req an exception is thrown.
-     *
-     * @param msg The message to include in the exception thrown
-     */
-    void atomic_state_check(istate_type req, std::string msg);
 private:
     /// Completes m_response, serializes it, and sends it out on the wire.
     void send_http_response();
