@@ -73,6 +73,7 @@ public:
     typedef lib::shared_ptr<timer> timer_ptr;
 
     explicit connection(bool is_server, alog_type & alog, elog_type & elog)
+      : m_alog(alog), m_elog(elog)
     {
         m_alog.write(log::alevel::devel,"stub con transport constructor");
     }
@@ -161,7 +162,7 @@ protected:
      */
     void init(init_handler handler) {
         m_alog.write(log::alevel::devel,"stub connection init");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Initiate an async_read for at least num_bytes bytes into buf
@@ -192,7 +193,7 @@ protected:
         read_handler handler)
     {
         m_alog.write(log::alevel::devel, "stub_con async_read_at_least");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented), 0);
     }
 
     /// Asyncronous Transport Write
@@ -209,7 +210,7 @@ protected:
      */
     void async_write(char const * buf, size_t len, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Asyncronous Transport Write (scatter-gather)
@@ -225,7 +226,7 @@ protected:
      */
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write buffer list");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Set Connection Handle
@@ -259,6 +260,8 @@ protected:
     }
 private:
     // member variables!
+    alog_type & m_alog;
+    elog_type & m_elog;
 };
 
 

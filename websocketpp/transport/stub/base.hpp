@@ -45,11 +45,11 @@ enum value {
     /// categories
     general = 1,
 
-    /// not implimented
-    not_implimented
+    /// not implemented
+    not_implemented
 };
 
-/// iostream transport error category
+/// stub transport error category
 class category : public lib::error_category {
     public:
     category() {}
@@ -62,8 +62,8 @@ class category : public lib::error_category {
         switch(value) {
             case general:
                 return "Generic stub transport policy error";
-            case not_implimented:
-                return "feature not implimented";
+            case not_implemented:
+                return "feature not implemented";
             default:
                 return "Unknown";
         }

@@ -119,7 +119,7 @@ typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
 /**
  * The validate handler is called after a WebSocket handshake has been received
  * and processed but before it has been accepted. This gives the application a
- * chance to impliment connection details specific policies for accepting
+ * chance to implement connection details specific policies for accepting
  * connections and the ability to negotiate extensions and subprotocols.
  *
  * The validate handler return value indicates whether or not the connection

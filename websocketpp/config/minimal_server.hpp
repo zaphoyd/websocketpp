@@ -112,10 +112,8 @@ struct minimal_server {
         endpoint_msg_manager_type;
 
     /// Logging policies
-    typedef websocketpp::log::stub<concurrency_type,
-        websocketpp::log::elevel> elog_type;
-    typedef websocketpp::log::stub<concurrency_type,
-        websocketpp::log::alevel> alog_type;
+    typedef websocketpp::log::stub elog_type;
+    typedef websocketpp::log::stub alog_type;
 
     /// RNG policies
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;

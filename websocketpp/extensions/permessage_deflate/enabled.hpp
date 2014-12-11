@@ -46,7 +46,7 @@
 namespace websocketpp {
 namespace extensions {
 
-/// Implimentation of the draft permessage-deflate WebSocket extension
+/// Implementation of the draft permessage-deflate WebSocket extension
 /**
  * ### permessage-deflate interface
  *
@@ -289,7 +289,7 @@ public:
 
     /// Test if this object implements the permessage-deflate specification
     /**
-     * Because this object does impliment it, it will always return true.
+     * Because this object does implieent it, it will always return true.
      *
      * @return Whether or not this object implements permessage-deflate
      */

@@ -197,7 +197,7 @@ HEAD
 - Change default HTTP response error code when no http_handler is defined from
   500/Internal Server Error to 426/Upgrade Required
 - Remove timezone from logger timestamp to work around issues with the Windows
-  implimentation of strftime. Thank you breyed for testing and code. #257
+  implementation of strftime. Thank you breyed for testing and code. #257
 - Switch integer literals to char literals to improve VCPP compatibility.
   Thank you breyed for testing and code. #257
 - Add MSVCPP warning suppression for the bundled SHA1 library. Thank you breyed
