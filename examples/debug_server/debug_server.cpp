@@ -88,6 +88,11 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
 
+bool validate(server *, websocketpp::connection_hdl) {
+    //sleep(6);
+    return false;
+}
+
 void on_http(server* s, websocketpp::connection_hdl hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
@@ -141,6 +146,8 @@ int main() {
         echo_server.set_http_handler(bind(&on_http,&echo_server,::_1));
         echo_server.set_fail_handler(&on_fail);
         echo_server.set_close_handler(&on_close);
+
+        echo_server.set_validate_handler(bind(&validate,&echo_server,::_1));
 
         // Listen on port 9012
         echo_server.listen(9012);
