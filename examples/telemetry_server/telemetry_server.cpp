@@ -37,8 +37,7 @@ public:
     telemetry_server() : m_count(0) {
         // set up access channels to only log interesting things
         m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
-        m_endpoint.set_access_channels(websocketpp::log::alevel::connect);
-        m_endpoint.set_access_channels(websocketpp::log::alevel::disconnect);
+        m_endpoint.set_access_channels(websocketpp::log::alevel::access_core);
         m_endpoint.set_access_channels(websocketpp::log::alevel::app);
 
         // Initialize the Asio transport policy
@@ -183,6 +182,7 @@ int main(int argc, char* argv[]) {
 
     if (argc == 1) {
         std::cout << "Usage: telemetry_server [documentroot] [port]" << std::endl;
+        return 1;
     }
     
     if (argc >= 2) {

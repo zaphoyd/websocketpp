@@ -18,6 +18,12 @@ HEAD
   than binary.
 - Improvement: Overhaul of handshake state machine. Should make it impossible
   for exceptions to bubble out of transport methods like `io_service::run`.
+- Improvement: Overhaul of handshake error reporting. Fail handler error codes
+  will be more detailed and precise. Adds new [fail] and [http] logging channels
+  that log failed websocket connections and successful HTTP connections
+  respectively. A new aggregate channel package, `alevel::access_core`, allows
+  enabling connect, disconnect, fail, and http together. Successful HTTP
+  connections will no longer trigger a fail handler.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the
   `utility_client` tutorial. Update `utility_client` example to match.
 - Cleanup: Removes unused files & STL includes. Adds required STL includes.

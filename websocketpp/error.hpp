@@ -124,7 +124,23 @@ enum value {
     async_accept_not_listening,
 
     /// The requested operation was canceled
-    operation_canceled
+    operation_canceled,
+    
+    /// Connection rejected
+    rejected,
+    
+    /// Upgrade Required. This happens if an HTTP request is made to a
+    /// WebSocket++ server that doesn't implement an http handler
+    upgrade_required,
+    
+    /// Invalid WebSocket protocol version
+    invalid_version,
+    
+    /// Unsupported WebSocket protocol version
+    unsupported_version,
+    
+    /// HTTP parse error
+    http_parse_error
 }; // enum value
 
 
@@ -190,6 +206,16 @@ public:
                 return "Async Accept not listening";
             case error::operation_canceled:
                 return "Operation canceled";
+            case error::rejected:
+                return "Connection rejected";
+            case error::upgrade_required:
+                return "Upgrade required";
+            case error::invalid_version:
+                return "Invalid version";
+            case error::unsupported_version:
+                return "Unsupported version";
+            case error::http_parse_error:
+                return "HTTP parse error";
             default:
                 return "Unknown";
         }

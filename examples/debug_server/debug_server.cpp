@@ -56,10 +56,13 @@ struct debug_custom : public websocketpp::config::debug_asio {
     typedef base::endpoint_msg_manager_type endpoint_msg_manager_type;
 
     /// Custom Logging policies
-    typedef websocketpp::log::syslog<concurrency_type,
+    /*typedef websocketpp::log::syslog<concurrency_type,
         websocketpp::log::elevel> elog_type;
     typedef websocketpp::log::syslog<concurrency_type,
         websocketpp::log::alevel> alog_type;
+    */
+    typedef base::alog_type alog_type;
+    typedef base::elog_type elog_type;
 
     typedef base::rng_type rng_type;
 
@@ -75,6 +78,8 @@ struct debug_custom : public websocketpp::config::debug_asio {
 
     typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
+    
+    static const long timeout_open_handshake = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +95,7 @@ typedef server::message_ptr message_ptr;
 
 bool validate(server *, websocketpp::connection_hdl) {
     //sleep(6);
-    return false;
+    return true;
 }
 
 void on_http(server* s, websocketpp::connection_hdl hdl) {
@@ -105,8 +110,10 @@ void on_http(server* s, websocketpp::connection_hdl hdl) {
     con->set_status(websocketpp::http::status_code::ok);
 }
 
-void on_fail(websocketpp::connection_hdl) {
-    std::cout << "Fail handler" << std::endl;
+void on_fail(server* s, websocketpp::connection_hdl hdl) {
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+    
+    std::cout << "Fail handler: " << con->get_ec() << " " << con->get_ec().message()  << std::endl;
 }
 
 void on_close(websocketpp::connection_hdl) {
@@ -144,7 +151,7 @@ int main() {
         echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
 
         echo_server.set_http_handler(bind(&on_http,&echo_server,::_1));
-        echo_server.set_fail_handler(&on_fail);
+        echo_server.set_fail_handler(bind(&on_fail,&echo_server,::_1));
         echo_server.set_close_handler(&on_close);
 
         echo_server.set_validate_handler(bind(&validate,&echo_server,::_1));

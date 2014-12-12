@@ -311,6 +311,7 @@ public:
       , m_rng(rng)
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
+      , m_is_http(false)
       , m_was_clean(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
@@ -1245,21 +1246,21 @@ protected:
     void handle_transport_init(lib::error_code const & ec);
 
     /// Set m_processor based on information in m_request. Set m_response
-    /// status and return false on error.
-    bool initialize_processor();
+    /// status and return an error code indicating status.
+    lib::error_code initialize_processor();
 
     /// Perform WebSocket handshake validation of m_request using m_processor.
-    /// set m_response and return false on error.
-    bool process_handshake_request();
+    /// set m_response and return an error code indicating status.
+    lib::error_code process_handshake_request();
 private:
     /// Completes m_response, serializes it, and sends it out on the wire.
-    void send_http_response();
+    void send_http_response(lib::error_code const & ec);
 
     /// Sends an opening WebSocket connect request
     void send_http_request();
 
     /// Alternate path for send_http_response in error conditions
-    void send_http_response_error();
+    void send_http_response_error(lib::error_code const & ec);
 
     /// Process control message
     /**
@@ -1356,6 +1357,12 @@ private:
      * Includes: error code and message for why it was failed
      */
     void log_fail_result();
+    
+    /// Prints information about HTTP connections
+    /**
+     * Includes: TODO
+     */
+    void log_http_result();
 
     /// Prints information about an arbitrary error code on the specified channel
     template <typename error_type>
@@ -1499,6 +1506,10 @@ private:
 
     /// Detailed internal error code
     lib::error_code m_ec;
+    
+    /// A flag that gets set once it is determined that the connection is an
+    /// HTTP connection and not a WebSocket one.
+    bool m_is_http;
 
     bool m_was_clean;
 

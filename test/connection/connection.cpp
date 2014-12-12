@@ -167,6 +167,29 @@ void http_func(server* s, websocketpp::connection_hdl hdl) {
     con->set_status(websocketpp::http::status_code::ok);
 }
 
+void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called, 
+    websocketpp::connection_hdl hdl)
+{
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    BOOST_CHECK_EQUAL(ec, con->get_ec());
+    called = true;
+}
+
+void on_open_print(server* s, websocketpp::connection_hdl hdl)
+{
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    std::cout << con->get_uri() << std::endl;
+}
+
+void fail_on_open(websocketpp::connection_hdl hdl) {
+    BOOST_CHECK(false);
+}
+void fail_on_http(websocketpp::connection_hdl hdl) {
+    BOOST_CHECK(false);
+}
+
 BOOST_AUTO_TEST_CASE( connection_extensions ) {
     connection_setup env(true);
 
@@ -268,6 +291,80 @@ BOOST_AUTO_TEST_CASE( set_max_message_size ) {
     s.set_max_message_size(2);
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_parse_error ) {
+    std::string input = "asdf\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::http_parse_error);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_invalid_version ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: foo\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::invalid_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_unsupported_version ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 12\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+/*BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri ) {
+    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+    s.set_open_handler(bind(&on_open_print,&s,::_1));
+
+    std::cout << run_server_test(s,input,true) << std::endl;
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri_http ) {
+    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+    s.set_open_handler(bind(&on_open_print,&s,::_1));
+
+    std::cout << run_server_test(s,input,true) << std::endl;
+    BOOST_CHECK(called);
+}*/
+
+BOOST_AUTO_TEST_CASE( websocket_fail_upgrade_required ) {
+    std::string input = "GET /foo/bar HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::upgrade_required);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
 }
 
 // TODO: set max message size in client endpoint test case

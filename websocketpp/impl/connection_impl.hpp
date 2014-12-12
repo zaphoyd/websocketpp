@@ -784,7 +784,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
         // All HTTP exceptions will result in this request failing and an error
         // response being returned. No more bytes will be read in this con.
         m_response.set_status(e.m_error_code,e.m_error_msg);
-        this->send_http_response_error();
+        this->send_http_response_error(error::make_error_code(error::http_parse_error));
         return;
     }
 
@@ -804,8 +804,9 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
     }
 
     if (m_request.ready()) {
-        if (!this->initialize_processor()) {
-            this->send_http_response_error();
+        lib::error_code processor_ec = this->initialize_processor();
+        if (processor_ec) {
+            this->send_http_response_error(processor_ec);
             return;
         }
 
@@ -822,7 +823,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
                 // TODO: need more bytes
                 m_alog.write(log::alevel::devel,"short key3 read");
                 m_response.set_status(http::status_code::internal_server_error);
-                this->send_http_response_error();
+                this->send_http_response_error(processor::error::make_error_code(processor::error::short_key3));
                 return;
             }
         }
@@ -845,8 +846,8 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
         m_internal_state = istate::PROCESS_HTTP_REQUEST;
         
         // We have the complete request. Process it.
-        this->process_handshake_request();
-        this->send_http_response();
+        lib::error_code handshake_ec = this->process_handshake_request();
+        this->send_http_response(handshake_ec);
     } else {
         // read at least 1 more byte
         transport_con_type::async_read_at_least(
@@ -869,7 +870,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 // sure if the hybi00 key3 bytes need to be read). This method sets the correct
 // state and calls send_http_response
 template <typename config>
-void connection<config>::send_http_response_error() {
+void connection<config>::send_http_response_error(lib::error_code const & ec) {
     if (m_internal_state != istate::READ_HTTP_REQUEST) {
         m_alog.write(log::alevel::devel,
             "send_http_response_error called in invalid state");
@@ -879,7 +880,7 @@ void connection<config>::send_http_response_error() {
     
     m_internal_state = istate::PROCESS_HTTP_REQUEST;
     
-    this->send_http_response();
+    this->send_http_response(ec);
 }
 
 // All exit paths for this function need to call send_http_response() or submit
@@ -1048,12 +1049,12 @@ void connection<config>::read_frame() {
 }
 
 template <typename config>
-bool connection<config>::initialize_processor() {
+lib::error_code connection<config>::initialize_processor() {
     m_alog.write(log::alevel::devel,"initialize_processor");
 
     // if it isn't a websocket handshake nothing to do.
     if (!processor::is_websocket_handshake(m_request)) {
-        return true;
+        return lib::error_code();
     }
 
     int version = processor::get_websocket_version(m_request);
@@ -1061,14 +1062,14 @@ bool connection<config>::initialize_processor() {
     if (version < 0) {
         m_alog.write(log::alevel::devel, "BAD REQUEST: can't determine version");
         m_response.set_status(http::status_code::bad_request);
-        return false;
+        return error::make_error_code(error::invalid_version);
     }
 
     m_processor = get_processor(version);
 
     // if the processor is not null we are done
     if (m_processor) {
-        return true;
+        return lib::error_code();
     }
 
     // We don't have a processor for this version. Return bad request
@@ -1086,11 +1087,11 @@ bool connection<config>::initialize_processor() {
     }
 
     m_response.replace_header("Sec-WebSocket-Version",ss.str());
-    return false;
+    return error::make_error_code(error::unsupported_version);
 }
 
 template <typename config>
-bool connection<config>::process_handshake_request() {
+lib::error_code connection<config>::process_handshake_request() {
     m_alog.write(log::alevel::devel,"process handshake request");
 
     if (!processor::is_websocket_handshake(m_request)) {
@@ -1106,16 +1107,18 @@ bool connection<config>::process_handshake_request() {
         if (!m_uri->get_valid()) {
             m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
             m_response.set_status(http::status_code::bad_request);
-            return false;
+            return error::make_error_code(error::invalid_uri);
         }
 
         if (m_http_handler) {
+            m_is_http = true;
             m_http_handler(m_connection_hdl);
         } else {
             set_status(http::status_code::upgrade_required);
+            return error::make_error_code(error::upgrade_required);
         }
 
-        return true;
+        return lib::error_code();
     }
 
     lib::error_code ec = m_processor->validate_handshake(m_request);
@@ -1125,7 +1128,7 @@ bool connection<config>::process_handshake_request() {
         // Not a valid handshake request
         m_alog.write(log::alevel::devel, "Bad request " + ec.message());
         m_response.set_status(http::status_code::bad_request);
-        return false;
+        return ec;
     }
 
     // Read extension parameters and set up values necessary for the end user
@@ -1138,7 +1141,7 @@ bool connection<config>::process_handshake_request() {
         // a failed connection attempt.
         m_alog.write(log::alevel::devel, "Bad request: " + neg_results.first.message());
         m_response.set_status(http::status_code::bad_request);
-        return false;
+        return neg_results.first;
     } else {
         // extension negotiation succeeded, set response header accordingly
         // we don't send an empty extensions header because it breaks many
@@ -1156,7 +1159,7 @@ bool connection<config>::process_handshake_request() {
     if (!m_uri->get_valid()) {
         m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
         m_response.set_status(http::status_code::bad_request);
-        return false;
+        return error::make_error_code(error::invalid_uri);
     }
 
     // extract subprotocols
@@ -1181,7 +1184,7 @@ bool connection<config>::process_handshake_request() {
             m_alog.write(log::alevel::devel, s.str());
 
             m_response.set_status(http::status_code::internal_server_error);
-            return false;
+            return ec;
         }
     } else {
         // User application has rejected the handshake
@@ -1193,19 +1196,22 @@ bool connection<config>::process_handshake_request() {
         if (m_response.get_status_code() == http::status_code::uninitialized) {
             m_response.set_status(http::status_code::bad_request);
         }
-
-        return false;
+        
+        return error::make_error_code(error::rejected);
     }
 
-    return true;
+    return lib::error_code();
 }
 
 template <typename config>
-void connection<config>::send_http_response() {
+void connection<config>::send_http_response(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"connection send_http_response");
 
     if (m_response.get_status_code() == http::status_code::uninitialized) {
         m_response.set_status(http::status_code::internal_server_error);
+        m_ec = error::make_error_code(error::general);
+    } else {
+        m_ec = ec;
     }
 
     m_response.set_version("HTTP/1.1");
@@ -1290,12 +1296,13 @@ void connection<config>::handle_send_http_response(lib::error_code const & ec) {
         m_handshake_timer.reset();
     }
 
-    this->log_open_result();
-
     if (m_response.get_status_code() != http::status_code::switching_protocols)
     {
-        if (m_processor) {
-            // this was a websocket connection that ended in an error
+        /*if (m_processor || m_ec == error::http_parse_error || 
+            m_ec == error::invalid_version || m_ec == error::unsupported_version
+            || m_ec == error::upgrade_required)
+        {*/
+        if (!m_is_http) {
             std::stringstream s;
             s << "Handshake ended with HTTP error: "
               << m_response.get_status_code();
@@ -1303,10 +1310,21 @@ void connection<config>::handle_send_http_response(lib::error_code const & ec) {
         } else {
             // if this was not a websocket connection, we have written
             // the expected response and the connection can be closed.
-        }
-        this->terminate(make_error_code(error::http_connection_ended));
+            
+            this->log_http_result();
+            
+            if (m_ec) {
+                m_alog.write(log::alevel::devel,
+                    "got to writing HTTP results with m_ec set: "+m_ec.message());
+            }
+            m_ec = make_error_code(error::http_connection_ended);
+        }        
+        
+        this->terminate(m_ec);
         return;
     }
+
+    this->log_open_result();
 
     m_internal_state = istate::PROCESS_CONNECTION;
     m_state = session::state::open;
@@ -1586,6 +1604,12 @@ void connection<config>::terminate(lib::error_code const & ec) {
     if (m_state == session::state::connecting) {
         m_state = session::state::closed;
         tstat = failed;
+        
+        // Log fail result here before socket is shut down and we can't get
+        // the remote address, etc anymore
+        if (m_ec != error::http_connection_ended) {
+            log_fail_result();
+        }
     } else if (m_state != session::state::closed) {
         m_state = session::state::closed;
         tstat = closed;
@@ -1622,10 +1646,11 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
     // clean shutdown
     if (tstat == failed) {
-        if (m_fail_handler) {
-            m_fail_handler(m_connection_hdl);
+        if (m_ec != error::http_connection_ended) {
+            if (m_fail_handler) {
+                m_fail_handler(m_connection_hdl);
+            }
         }
-        log_fail_result();
     } else if (tstat == closed) {
         if (m_close_handler) {
             m_close_handler(m_connection_hdl);
@@ -2164,9 +2189,69 @@ void connection<config>::log_close_result()
 template <typename config>
 void connection<config>::log_fail_result()
 {
-    // TODO: include more information about the connection?
-    // should this be filed under connect rather than disconnect?
-    m_alog.write(log::alevel::disconnect,"Failed: "+m_ec.message());
+    std::stringstream s;
+    
+    int version = processor::get_websocket_version(m_request);
+
+    // Connection Type
+    s << "WebSocket Connection ";
+
+    // Remote endpoint address & WebSocket version
+    s << transport_con_type::get_remote_endpoint();
+    if (version < 0) {
+        s << " -";
+    } else {
+        s << " v" << version;
+    }
+
+    // User Agent
+    std::string ua = m_request.get_header("User-Agent");
+    if (ua == "") {
+        s << " \"\" ";
+    } else {
+        // check if there are any quotes in the user agent
+        s << " \"" << utility::string_replace_all(ua,"\"","\\\"") << "\" ";
+    }
+
+    // URI
+    s << (m_uri ? m_uri->get_resource() : "-");
+
+    // HTTP Status code
+    s  << " " << m_response.get_status_code();
+    
+    // WebSocket++ error code & reason
+    s << " " << m_ec << " " << m_ec.message();
+
+    m_alog.write(log::alevel::fail,s.str());
+}
+
+template <typename config>
+void connection<config>::log_http_result() {
+    std::stringstream s;
+
+    if (processor::is_websocket_handshake(m_request)) {
+        m_alog.write(log::alevel::devel,"Call to log_http_result for WebSocket");
+        return;
+    }  
+
+    // Connection Type
+    s << (m_request.get_header("host") == "" ? "-" : m_request.get_header("host"))
+      << " " << transport_con_type::get_remote_endpoint()
+      << " \"" << m_request.get_method() 
+      << " " << (m_uri ? m_uri->get_resource() : "-") 
+      << " " << m_request.get_version() << "\" " << m_response.get_status_code()
+      << " " << m_response.get_body().size();
+    
+    // User Agent
+    std::string ua = m_request.get_header("User-Agent");
+    if (ua == "") {
+        s << " \"\" ";
+    } else {
+        // check if there are any quotes in the user agent
+        s << " \"" << utility::string_replace_all(ua,"\"","\\\"") << "\" ";
+    }
+
+    m_alog.write(log::alevel::http,s.str());
 }
 
 } // namespace websocketpp
