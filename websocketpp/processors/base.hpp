@@ -150,7 +150,11 @@ enum processor_errors {
     extension_parse_error,
 
     /// Extension related operation was ignored because extensions are disabled
-    extensions_disabled
+    extensions_disabled,
+    
+    /// Short Ke3 read. Hybi00 requires a third key to be read from the 8 bytes
+    /// after the handshake. Less than 8 bytes were read.
+    short_key3
 };
 
 /// Category for processor errors
@@ -222,6 +226,8 @@ public:
                 return "Error parsing extension header";
             case error::extensions_disabled:
                 return "Extensions are disabled";
+            case error::short_key3:
+                return "Short Hybi00 Key 3 read";
             default:
                 return "Unknown";
         }
