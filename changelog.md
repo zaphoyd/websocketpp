@@ -16,10 +16,14 @@ HEAD
   Hughes for submitting the initial version of this policy.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
+- Improvement: Overhaul of handshake state machine. Should make it impossible
+  for exceptions to bubble out of transport methods like `io_service::run`.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the
   `utility_client` tutorial. Update `utility_client` example to match.
 - Cleanup: Removes unused files & STL includes. Adds required STL includes.
   Normalizes include order.
+- Bug: Fixes a fatal state error when a handshake response is completed
+  immediately after that handshake times out. #389
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
