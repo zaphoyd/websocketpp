@@ -105,6 +105,10 @@ bool is_websocket_handshake(request_type& r) {
  */
 template <typename request_type>
 int get_websocket_version(request_type& r) {
+    if (!r.ready()) {
+        return -2;
+    }
+    
     if (r.get_header("Sec-WebSocket-Version") == "") {
         return 0;
     }
