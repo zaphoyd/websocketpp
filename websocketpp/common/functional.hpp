@@ -30,11 +30,24 @@
 
 #include <websocketpp/common/cpp11.hpp>
 
+// If we've determined that we're in full C++11 mode and the user hasn't
+// explicitly disabled the use of C++11 functional header, then prefer it to 
+// boost.
 #if defined _WEBSOCKETPP_CPP11_INTERNAL_ && !defined _WEBSOCKETPP_NO_CPP11_FUNCTIONAL_
     #ifndef _WEBSOCKETPP_CPP11_FUNCTIONAL_
         #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
     #endif
 #endif
+
+// If we're on Visual Studio 2010 or higher and haven't explicitly disabled
+// the use of C++11 functional header then prefer it to boost.
+#if _MSC_VER >= 1600 && !defined _WEBSOCKETPP_NO_CPP11_FUNCTIONAL_
+    #ifndef _WEBSOCKETPP_CPP11_FUNCTIONAL_
+        #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
+    #endif
+#endif
+
+
 
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
     #include <functional>
