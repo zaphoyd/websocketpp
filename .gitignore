@@ -38,6 +38,9 @@ bin/Debug
 */RelWithDebInfo/*
 */*/RelWithDebInfo/*
 
+# explicitly allow this path with /debug/ in it
+!websocketpp/transport/debug/*
+
 objs_shared/
 objs_static/
 
