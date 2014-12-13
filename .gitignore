@@ -30,8 +30,9 @@ install_manifest.txt
 *.sln
 *.suo
 *.ncb
-#*/Debug/*
-#*/*/Debug/*
+*/Debug/*
+*/*/Debug/*
+bin/Debug
 */Release/*
 */*/Release/*
 */RelWithDebInfo/*
