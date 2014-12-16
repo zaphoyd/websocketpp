@@ -1210,7 +1210,7 @@ template <typename config>
 void connection<config>::send_http_response(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"connection send_http_response");
 
-    if (m_ec == error::make_error_code(error::http_connection_ended) {
+    if (ec == error::make_error_code(error::http_connection_ended)) {
         m_alog.write(log::alevel::http,"An HTTP handler took over the connection.");
         return;
     }
