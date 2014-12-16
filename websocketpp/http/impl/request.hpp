@@ -138,6 +138,16 @@ inline std::string request::raw() const {
     return ret.str();
 }
 
+inline std::string request::raw_head() const {
+    // TODO: validation. Make sure all required fields have been set?
+    std::stringstream ret;
+
+    ret << m_method << " " << m_uri << " " << get_version() << "\r\n";
+    ret << raw_headers() << "\r\n";
+
+    return ret.str();
+}
+
 inline void request::set_method(std::string const & method) {
     if (std::find_if(method.begin(),method.end(),is_not_token_char) != method.end()) {
         throw exception("Invalid method token.",status_code::bad_request);
@@ -146,13 +156,6 @@ inline void request::set_method(std::string const & method) {
     m_method = method;
 }
 
-/// Set HTTP body
-/**
- * Sets the body of the HTTP object and fills in the appropriate content length
- * header
- *
- * @param value The value to set the body to.
- */
 inline void request::set_uri(std::string const & uri) {
     // TODO: validation?
     m_uri = uri;

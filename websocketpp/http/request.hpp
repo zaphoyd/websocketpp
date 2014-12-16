@@ -83,8 +83,11 @@ public:
         return m_ready;
     }
 
-    /// Returns the full raw request
+    /// Returns the full raw request (including the body)
     std::string raw() const;
+    
+    /// Returns the raw request headers only (similar to an HTTP HEAD request)
+    std::string raw_head() const;
 
     /// Set the HTTP method. Must be a valid HTTP token
     void set_method(std::string const & method);
