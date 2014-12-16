@@ -750,7 +750,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
             // usually by the handshake timer. This is basically expected
             // (though hopefully rare) and there is nothing we can do so ignore.
             m_alog.write(log::alevel::devel,
-                "handle_send_http_response invoked after connection was closed");
+                "handle_read_handshake invoked after connection was closed");
             return;
         } else {
             ecm = error::make_error_code(error::invalid_state);
@@ -1113,6 +1113,9 @@ lib::error_code connection<config>::process_handshake_request() {
         if (m_http_handler) {
             m_is_http = true;
             m_http_handler(m_connection_hdl);
+            if (m_state == session::state::closed) {
+                return error::make_error_code(error::http_connection_ended);
+            }
         } else {
             set_status(http::status_code::upgrade_required);
             return error::make_error_code(error::upgrade_required);
@@ -1212,6 +1215,11 @@ void connection<config>::send_http_response(lib::error_code const & ec) {
         m_ec = error::make_error_code(error::general);
     } else {
         m_ec = ec;
+    }
+
+    if (m_ec == error::make_error_code(error::http_connection_ended) {
+        m_alog.write(log::alevel::http,"An HTTP handler took over the connection.");
+        return;
     }
 
     m_response.set_version("HTTP/1.1");
