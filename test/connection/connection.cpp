@@ -31,7 +31,7 @@
 #include "connection_tu2.hpp"
 
 // Include special debugging transport
-#include <websocketpp/config/minimal_client.hpp>
+//#include <websocketpp/config/minimal_client.hpp>
 #include <websocketpp/transport/debug/endpoint.hpp>
 
 // NOTE: these tests currently test against hardcoded output values. I am not
@@ -183,10 +183,10 @@ void on_open_print(server* s, websocketpp::connection_hdl hdl)
     std::cout << con->get_uri() << std::endl;
 }
 
-void fail_on_open(websocketpp::connection_hdl hdl) {
+void fail_on_open(websocketpp::connection_hdl) {
     BOOST_CHECK(false);
 }
-void fail_on_http(websocketpp::connection_hdl hdl) {
+void fail_on_http(websocketpp::connection_hdl) {
     BOOST_CHECK(false);
 }
 

@@ -24,6 +24,8 @@ HEAD
   respectively. A new aggregate channel package, `alevel::access_core`, allows
   enabling connect, disconnect, fail, and http together. Successful HTTP
   connections will no longer trigger a fail handler.
+- Improvement: Ability to terminate connection during an http handler to cleanly
+  suppress the default outgoing HTTP response.
 - Documentation: Add Sending & Receiving Messages step to chapter one of the
   `utility_client` tutorial. Update `utility_client` example to match.
 - Cleanup: Removes unused files & STL includes. Adds required STL includes.

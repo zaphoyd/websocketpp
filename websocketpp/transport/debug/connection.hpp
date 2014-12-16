@@ -91,7 +91,7 @@ public:
      *
      * @param value Whether or not this connection is secure.
      */
-    void set_secure(bool value) {}
+    void set_secure(bool) {}
 
     /// Tests whether or not the underlying transport is secure
     /**
@@ -117,7 +117,7 @@ public:
      *
      * @param value The remote endpoint address to set.
      */
-    void set_remote_endpoint(std::string value) {}
+    void set_remote_endpoint(std::string) {}
 
     /// Get human readable remote endpoint address
     /**
@@ -150,7 +150,7 @@ public:
      * @return A handle that can be used to cancel the timer if it is no longer
      * needed.
      */
-    timer_ptr set_timer(long duration, timer_handler handler) {
+    timer_ptr set_timer(long, timer_handler handler) {
         m_alog.write(log::alevel::devel,"debug connection set timer");
         m_timer_handler = handler;
         return timer_ptr();
@@ -270,7 +270,7 @@ protected:
      * @param len number of bytes to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(char const * buf, size_t len, write_handler handler) {
+    void async_write(char const *, size_t, write_handler handler) {
         m_alog.write(log::alevel::devel,"debug_con async_write");
         m_write_handler = handler;
     }
@@ -286,7 +286,7 @@ protected:
      * @param bufs vector of buffers to write
      * @param handler Callback to invoke with operation status.
      */
-    void async_write(std::vector<buffer> const & bufs, write_handler handler) {
+    void async_write(std::vector<buffer> const &, write_handler handler) {
         m_alog.write(log::alevel::devel,"debug_con async_write buffer list");
         m_write_handler = handler;
     }
@@ -295,7 +295,7 @@ protected:
     /**
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {}
+    void set_handle(connection_hdl) {}
 
     /// Call given handler back within the transport's event system (if present)
     /**
