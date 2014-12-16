@@ -1210,16 +1210,16 @@ template <typename config>
 void connection<config>::send_http_response(lib::error_code const & ec) {
     m_alog.write(log::alevel::devel,"connection send_http_response");
 
+    if (m_ec == error::make_error_code(error::http_connection_ended) {
+        m_alog.write(log::alevel::http,"An HTTP handler took over the connection.");
+        return;
+    }
+
     if (m_response.get_status_code() == http::status_code::uninitialized) {
         m_response.set_status(http::status_code::internal_server_error);
         m_ec = error::make_error_code(error::general);
     } else {
         m_ec = ec;
-    }
-
-    if (m_ec == error::make_error_code(error::http_connection_ended) {
-        m_alog.write(log::alevel::http,"An HTTP handler took over the connection.");
-        return;
     }
 
     m_response.set_version("HTTP/1.1");
