@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,5));
     tthread.detach();
 
     run_client(c, "http://localhost:9005",false);
@@ -578,17 +578,17 @@ BOOST_AUTO_TEST_CASE( pause_reading ) {
     iostream_server s;
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
     char buffer[2] = { char(0x81), char(0x80) };
-    
+
     // suppress output (it needs a place to go to avoid error but we don't care what it is)
     std::stringstream null_output;
     s.register_ostream(&null_output);
-    
+
     iostream_server::connection_ptr con = s.get_connection();
     con->start();
 
     // read handshake, should work
     BOOST_CHECK_EQUAL( con->read_some(handshake.data(), handshake.length()), handshake.length());
-    
+
     // pause reading and try again. The first read should work, the second should return 0
     // the first read was queued already after the handshake so it will go through because
     // reading wasn't paused when it was queued. The byte it reads wont be enough to
