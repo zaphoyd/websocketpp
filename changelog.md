@@ -32,6 +32,8 @@ HEAD
   Normalizes include order.
 - Bug: Fixes a fatal state error when a handshake response is completed
   immediately after that handshake times out. #389
+- Bug: MinGW fixes; C++11 feature detection, localtime use. #393 Thank you
+  Schebb for reporting, code, and testing.
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
