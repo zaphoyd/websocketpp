@@ -87,7 +87,8 @@ public:
 
     // generate and manage our own io_service
     explicit endpoint()
-      : m_external_io_service(false)
+      : m_io_service(NULL)
+      , m_external_io_service(false)
       , m_listen_backlog(0)
       , m_reuse_addr(false)
       , m_state(UNINITIALIZED)
