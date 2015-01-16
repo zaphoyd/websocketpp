@@ -64,7 +64,7 @@ public:
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
 
-    explicit client() : endpoint_type(false)
+    explicit client(int version = config::client_version) : endpoint_type(false, version)
     {
         endpoint_type::m_alog.write(log::alevel::devel, "client constructor");
     }

@@ -170,6 +170,8 @@ public:
     /// Get the protocol version of this processor
     virtual int get_version() const = 0;
 
+    virtual bool is_websocket() const { return true; }
+
     /// Get maximum message size
     /**
      * Get maximum message size. Maximum message size determines the point at which the

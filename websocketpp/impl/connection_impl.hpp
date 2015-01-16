@@ -33,6 +33,7 @@
 
 #include <websocketpp/processors/processor.hpp>
 
+#include <websocketpp/processors/http11.hpp>
 #include <websocketpp/processors/hybi00.hpp>
 #include <websocketpp/processors/hybi07.hpp>
 #include <websocketpp/processors/hybi08.hpp>
@@ -368,15 +369,29 @@ void connection<config>::handle_resume_reading() {
    read_frame();
 }
 
+template <typename config>
+void connection<config>::pause_http_response() {
+    m_alog.write(log::alevel::devel,"connection connection::pause_http_response");
+    m_http_response_paused = true;
+}
 
+template <typename config>
+lib::error_code connection<config>::resume_http_response() {
+    m_alog.write(log::alevel::devel,"connection connection::resume_http_response");
+    return transport_con_type::dispatch(
+        lib::bind(
+            &type::handle_resume_http_response,
+            type::get_shared()
+        )
+    );
+}
 
-
-
-
-
-
-
-
+/// Resume http_response helper method. Not safe to call directly
+template <typename config>
+void connection<config>::handle_resume_http_response() {
+    m_http_response_paused = false;
+    send_http_response();
+}
 
 template <typename config>
 bool connection<config>::get_secure() const {
@@ -506,8 +521,20 @@ connection<config>::get_request_header(std::string const & key) {
 
 template <typename config>
 const std::string &
+connection<config>::get_request_body() const {
+    return m_request.get_body();
+}
+
+template <typename config>
+const std::string &
 connection<config>::get_response_header(std::string const & key) {
     return m_response.get_header(key);
+}
+
+template <typename config>
+const std::string &
+connection<config>::get_response_body() const {
+    return m_response.get_body();
 }
 
 template <typename config>
@@ -685,7 +712,8 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
     } else {
         // We are a client. Set the processor to the version specified in the
         // config file and send a handshake request.
-        m_processor = get_processor(config::client_version);
+//        m_processor = get_processor(config::client_version);
+        m_processor = get_processor(m_version);
         this->send_http_request();
     }
 }
@@ -826,6 +854,15 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 
         // We have the complete request. Process it.
         this->process_handshake_request();
+        if (m_handshake_timer) {
+            m_handshake_timer->cancel();
+            m_handshake_timer.reset();
+        }
+ 
+        if (this->m_http_response_paused) {
+           return;
+        } 
+
         this->send_http_response();
     } else {
         // read at least 1 more byte
@@ -1371,6 +1408,13 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     );
 
     if (ec) {
+        if (ec == websocketpp::transport::error::eof) {
+          m_response.consume(m_buf,0);
+          if (m_message_handler) {
+            m_message_handler(m_connection_hdl, nullptr);
+          }
+        }
+
         log_err(log::elevel::rerror,"handle_send_http_response",ec);
         this->terminate(ec);
         return;
@@ -1388,7 +1432,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 
     m_alog.write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
-    if (m_response.headers_ready()) {
+    if (m_response.headers_ready() && m_processor->is_websocket()) {
         if (m_handshake_timer) {
             m_handshake_timer->cancel();
             m_handshake_timer.reset();
@@ -1427,7 +1471,13 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 
         this->handle_read_frame(lib::error_code(), m_buf_cursor);
     } else {
-        transport_con_type::async_read_at_least(
+        if (m_response.ready()) {
+          if (m_message_handler) {
+            m_message_handler(m_connection_hdl, nullptr);
+          }
+        }
+        else { 
+          transport_con_type::async_read_at_least(
             1,
             m_buf,
             config::connection_read_buffer_size,
@@ -1437,7 +1487,8 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
-        );
+          );
+        }
     }
 }
 
@@ -1968,6 +2019,16 @@ connection<config>::get_processor(int version) const {
     processor_ptr p;
     
     switch (version) {
+        case -1:
+            p.reset(
+                new processor::http11<config>(
+                    transport_con_type::is_secure(),
+                    m_is_server,
+                    m_msg_manager
+                )
+            );
+            return p;
+ 
         case 0:
             p = lib::make_shared<processor::hybi00<config> >(
                 transport_con_type::is_secure(),

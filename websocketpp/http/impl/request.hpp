@@ -67,7 +67,13 @@ inline bool request::parse_complete(std::istream& s) {
 inline size_t request::consume(const char *buf, size_t len) {
     if (m_ready) {return 0;}
 
-    if (m_buf->size() + len > max_header_size) {
+    if (m_content_length > 0 && m_body.size() < m_content_length) {
+        m_body.append(buf, len);
+        if (m_body.size() >= m_content_length) m_ready = true;
+        return len;
+    }
+
+    if (m_content_length == 0 && m_buf->size() + len > max_header_size) {
         // exceeded max header size
         throw exception("Maximum header size exceeded.",
                         status_code::request_header_fields_too_large);
@@ -81,6 +87,7 @@ inline size_t request::consume(const char *buf, size_t len) {
     std::string::iterator end;
 
     for (;;) {
+
         // search for line delimiter
         end = std::search(
             begin,
@@ -107,6 +114,20 @@ inline size_t request::consume(const char *buf, size_t len) {
             if (m_method.empty() || get_header("Host") == "") {
                 throw exception("Incomplete Request",status_code::bad_request);
             }
+
+            if (m_method == "POST") {
+                const std::string& s = get_header("Content-Length");
+                if (! s.empty()) m_content_length = atoi(s.c_str()); 
+                if (m_content_length < 0) m_content_length = -1;
+                m_body.assign(end + sizeof(header_delimiter) - 1, m_buf->end());
+
+                if (m_body.size() >= m_content_length) m_ready = true;
+                return len;
+            }
+            else {
+                m_content_length = 0;
+            }
+
             m_ready = true;
 
             size_t bytes_processed = (
@@ -131,7 +152,7 @@ inline size_t request::consume(const char *buf, size_t len) {
     }
 }
 
-inline std::string request::raw() {
+inline std::string request::raw() const {
     // TODO: validation. Make sure all required fields have been set?
     std::stringstream ret;
 

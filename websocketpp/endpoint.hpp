@@ -86,7 +86,7 @@ public:
 
     typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
 
-    explicit endpoint(bool p_is_server)
+    explicit endpoint(bool p_is_server, int version = config::client_version)
       : m_alog(config::alog_level, log::channel_type_hint::access)
       , m_elog(config::elog_level, log::channel_type_hint::error)
       , m_user_agent(::websocketpp::user_agent)
@@ -95,6 +95,7 @@ public:
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_is_server(p_is_server)
+      , m_version(version)
     {
         m_alog.set_channels(config::alog_level);
         m_elog.set_channels(config::elog_level);
@@ -573,6 +574,8 @@ private:
 
     // endpoint state
     mutable mutex_type          m_mutex;
+
+    int                         m_version;
 };
 
 } // namespace websocketpp

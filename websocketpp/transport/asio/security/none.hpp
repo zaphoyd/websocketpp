@@ -227,6 +227,7 @@ protected:
     void async_shutdown(socket_shutdown_handler h) {
         boost::system::error_code ec;
         m_socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both,ec);
+        m_socket->close(ec);
         h(ec);
     }
 

@@ -258,10 +258,14 @@ inline void response::process(std::string::iterator begin,
 inline size_t response::process_body(const char *buf, size_t len) {
     // If no content length was set then we read forever and never set m_ready
     if (m_read == 0) {
-        //m_body.append(buf,len);
-        //return len;
-        m_state = DONE;
-        return 0;
+        if (len == 0) {
+            m_state = DONE;
+            return 0;
+        }
+        else {
+          m_body.append(buf,len);
+          return len;
+        }
     }
 
     // Otherwise m_read is the number of bytes left.

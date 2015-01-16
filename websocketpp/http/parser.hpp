@@ -48,7 +48,7 @@ namespace state {
     };
 }
 
-typedef std::map<std::string, std::string, utility::ci_less > header_list;
+typedef std::multimap<std::string, std::string, utility::ci_less > header_list;
 
 /// Read and return the next token in the stream
 /**
@@ -400,6 +400,10 @@ public:
      * @param [in] version The value to set the HTTP version to.
      */
     void set_version(std::string const & version);
+
+    header_list const& get_headers() const {
+      return m_headers;
+    }
 
     /// Get the value of an HTTP header
     /**

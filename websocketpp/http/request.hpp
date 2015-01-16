@@ -52,7 +52,7 @@ public:
 
     request()
       : m_buf(lib::make_shared<std::string>())
-      , m_ready(false) {}
+      , m_ready(false), m_content_length(-1) {}
 
     /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
     bool parse_complete(std::istream& s);
@@ -84,8 +84,12 @@ public:
         return m_ready;
     }
 
+    int content_length() const {
+        return m_content_length;
+    }
+
     /// Returns the full raw request
-    std::string raw();
+    std::string raw() const;
 
     /// Set the HTTP method. Must be a valid HTTP token
     void set_method(const std::string& method);
@@ -111,6 +115,7 @@ private:
     std::string                     m_method;
     std::string                     m_uri;
     bool                            m_ready;
+    int                             m_content_length;
 };
 
 } // namespace parser
