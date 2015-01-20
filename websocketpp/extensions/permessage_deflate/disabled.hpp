@@ -55,7 +55,7 @@ class disabled {
 public:
     /// Negotiate extension
     /**
-     * The disabled extension always fails the negotiation with a disabled 
+     * The disabled extension always fails the negotiation with a disabled
      * error.
      *
      * @param offer Attribute from client's offer
@@ -66,7 +66,13 @@ public:
     }
 
     /// Initialize state
-    lib::error_code init(bool is_server) {
+    /**
+     * For the disabled extension state initialization is a no-op.
+     *
+     * @param is_server True to initialize as a server, false for a client.
+     * @return A code representing the error that occurred, if any
+     */
+    lib::error_code init(bool) {
         return lib::error_code();
     }
 

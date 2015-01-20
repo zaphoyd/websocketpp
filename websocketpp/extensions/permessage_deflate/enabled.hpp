@@ -254,7 +254,7 @@ public:
      *
      * @todo memory level, strategy, etc are hardcoded
      *
-     * @param is_server Whether or not to initialize as a server or client.
+     * @param is_server True to initialize as a server, false for a client.
      * @return A code representing the error that occurred, if any
      */
     lib::error_code init(bool is_server) {
@@ -450,7 +450,7 @@ public:
      * @param response The server response attribute list to validate
      * @return Validation error or 0 on success
      */
-    lib::error_code validate_offer(http::attribute_list const & response) {
+    lib::error_code validate_offer(http::attribute_list const &) {
         return lib::error_code();
     }
 
