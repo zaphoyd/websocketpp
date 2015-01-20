@@ -93,7 +93,8 @@ public:
 
     // generate and manage our own io_service
     explicit endpoint()
-      : m_external_io_service(false)
+      : m_io_service(NULL)
+      , m_external_io_service(false)
       , m_listen_backlog(0)
       , m_reuse_addr(false)
       , m_state(UNINITIALIZED)
@@ -184,7 +185,7 @@ public:
         m_external_io_service = true;
         m_acceptor = lib::make_shared<boost::asio::ip::tcp::acceptor>(
             lib::ref(*m_io_service));
-            
+
         m_state = READY;
         ec = lib::error_code();
     }
@@ -294,10 +295,10 @@ public:
     void set_listen_backlog(int backlog) {
         m_listen_backlog = backlog;
     }
-    
+
     /// Sets whether to use the SO_REUSEADDR flag when opening listening sockets
     /**
-     * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What 
+     * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What
      * this flag does depends on your operating system. Please consult operating
      * system documentation for more details.
      *

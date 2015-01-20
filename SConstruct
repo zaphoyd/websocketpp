@@ -110,6 +110,19 @@ elif env['CXX'].startswith('clang++'):
    env.Append(CCFLAGS = ['-Wshadow'])
    env.Append(CCFLAGS = ['-Wunused-parameter'])
 
+   env.Append(CCFLAGS = ['-Wsometimes-uninitialized'])
+   env.Append(CCFLAGS = ['-Wuninitialized'])
+
+   #env.Append(CCFLAGS = ['-Weverything'])
+   #env.Append(CCFLAGS = ['-Wno-documentation'])
+   #env.Append(CCFLAGS = ['-Wno-weak-vtables'])
+   #env.Append(CCFLAGS = ['-Wno-global-constructors'])
+   #env.Append(CCFLAGS = ['-Wno-sign-conversion'])
+   #env.Append(CCFLAGS = ['-Wno-exit-time-destructors'])
+
+
+
+
    # Wpadded
    # Wsign-conversion
 

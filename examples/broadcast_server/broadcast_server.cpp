@@ -127,7 +127,7 @@ public:
         }
     }
 private:
-    typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
+    typedef std::set<connection_hdl,std::owner_less<connection_hdl> > con_list;
 
     server m_server;
     con_list m_connections;

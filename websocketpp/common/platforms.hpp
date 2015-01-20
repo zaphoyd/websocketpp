@@ -39,7 +39,7 @@
 #endif
 
 // Bump up the variadic parameter max for Visual Studio 2012
-#if _MSC_VER == 1700
+#if defined(_MSC_VER) && _MSC_VER == 1700
     #define _VARIADIC_MAX 8
 #endif
 

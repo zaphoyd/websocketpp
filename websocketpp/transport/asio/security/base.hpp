@@ -97,7 +97,7 @@ namespace error {
         missing_tls_init_handler,
 
         /// TLS Handshake Failed
-        tls_handshake_failed,
+        tls_handshake_failed
     };
 } // namespace error
 

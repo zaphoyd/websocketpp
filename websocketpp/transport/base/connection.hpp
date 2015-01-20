@@ -177,7 +177,7 @@ enum value {
     action_after_shutdown,
 
     /// Other TLS error
-    tls_error,
+    tls_error
 };
 
 class category : public lib::error_category {
