@@ -1,4 +1,50 @@
-HEAD
+0.4.0 - 2014-11-04
+- BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
+  `websocketpp::exception` which derives from `std::exception`. This normalizes
+  all exception types under the standard exception hierarchy and allows
+  WebSocket++ exceptions to be caught in the same statement as others. The error
+  code that was previously thrown is wrapped in the exception object and can be
+  accessed via the `websocketpp::exception::code()` method.
+- BREAKING API CHANGE: Custom logging policies have some new required
+  constructors that take generic config settings rather than pointers to
+  std::ostreams. This allows writing logging policies that do not involve the
+  use of std::ostream. This does not affect anyone using the built in logging
+  policies.
+- BREAKING UTILITY CHANGE: `websocketpp::lib::net::htonll` and
+  `websocketpp::lib::net::ntohll` have been prefixed with an underscore to avoid
+  conflicts with similarly named macros in some operating systems. If you are
+  using the WebSocket++ provided 64 bit host/network byte order functions you
+  will need to switch to the prefixed versions.
+- BREAKING UTILITY CHANGE: The signature of `base64_encode` has changed from
+  `websocketpp::base64_encode(unsigned char const *, unsigned int)` to
+  `websocketpp::base64_encode(unsigned char const *, size_t)`.
+- BREAKING UTILITY CHANGE: The signature of `sha1::calc` has changed from
+  `websocketpp::sha1::calc(void const *, int, unsigned char *)` to
+  `websocketpp::sha1::calc(void const *, size_t, unsigned char *)`
+- Feature: Adds incomplete `minimal_server` and `minimal_client` configs that
+  can be used to build custom configs without pulling in the dependencies of
+  `core` or `core_client`. These configs will offer a stable base config to
+  future-proof custom configs.
+- Improvement: Core library no longer has std::iostream as a dependency.
+  std::iostream is still required for the optional iostream logging policy and
+  iostream transport.
+- Bug: C++11 Chrono support was being incorrectly detected by the `boost_config`
+  header. Thank you Max Dmitrichenko for reporting and a patch.
+- Bug: use of `std::put_time` is now guarded by a unique flag rather than a
+  chrono library flag. Thank you Max Dmitrichenko for reporting.
+- Bug: Fixes non-thread safe use of std::localtime. #347 #383
+- Compatibility: Adjust usage of std::min to be more compatible with systems
+  that define a min(...) macro.
+- Compatibility: Removes unused parameters from all library, test, and example
+  code. This assists with those developing with -Werror and -Wunused-parameter
+  #376
+- Compatibility: Renames ntohll and htonll methods to avoid conflicts with
+  platform specific macros. #358 #381, #382 Thank you logotype, unphased,
+  svendjo
+- Cleanup: Removes unused functions, fixes variable shadow warnings, normalizes
+  all whitespace in library, examples, and tests to 4 spaces. #376
+
+0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
   These may be used to replace manually managed `asio::io_service::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.
@@ -17,6 +63,9 @@ HEAD
 - Feature: Adds the ability to specify a maximum message size.
 - Feature: Adds `close::status::get_string(...)` method to look up a human
   readable string given a close code value.
+- Feature: Adds `connection::read_all(...)` method to iostream transport as a
+  convenience method for reading all data into the connection buffer without the
+  end user needing to manually loop on `read_some`.
 - Improvement: Open, close, and pong timeouts can be disabled entirely by
   setting their duration to 0.
 - Improvement: Numerous performance improvements. Including: tuned default

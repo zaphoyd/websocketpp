@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,18 +40,18 @@ std::string run_server_test(server & s, std::string input) {
     server::connection_ptr con;
     std::stringstream output;
 
-	s.clear_access_channels(websocketpp::log::alevel::all);
+    s.clear_access_channels(websocketpp::log::alevel::all);
     s.clear_error_channels(websocketpp::log::elevel::all);
 
-	s.register_ostream(&output);
+    s.register_ostream(&output);
 
-	con = s.get_connection();
-	con->start();
+    con = s.get_connection();
+    con->start();
 
-	std::stringstream channel;
+    std::stringstream channel;
 
-	channel << input;
-	channel >> *con;
+    channel << input;
+    channel >> *con;
 
-	return output.str();
+    return output.str();
 }

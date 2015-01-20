@@ -101,12 +101,14 @@ if env['CXX'].startswith('g++'):
    #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wcast-align'])
    env.Append(CCFLAGS = ['-Wshadow'])
+   env.Append(CCFLAGS = ['-Wunused-parameter'])
 elif env['CXX'].startswith('clang++'):
    #env.Append(CCFLAGS = ['-Wcast-align'])
    #env.Append(CCFLAGS = ['-Wglobal-constructors'])
    #env.Append(CCFLAGS = ['-Wconversion'])
    env.Append(CCFLAGS = ['-Wno-padded'])
    env.Append(CCFLAGS = ['-Wshadow'])
+   env.Append(CCFLAGS = ['-Wunused-parameter'])
 
    # Wpadded
    # Wsign-conversion
@@ -132,7 +134,7 @@ env.Append(CPPPATH = ['#'])
 
 ##### Set up C++11 environment
 polyfill_libs = [] # boost libraries used as drop in replacements for incomplete
-				   # C++11 STL implementations
+                   # C++11 STL implementations
 env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
@@ -165,18 +167,18 @@ else:
 # values then use it for the boost libraries. Otherwise just add them to the
 # regular CPPPATH values.
 if env['CXX'].startswith('g++') or env['CXX'].startswith('clang'):
-	env.Append(CPPFLAGS = '-isystem ' + env['BOOST_INCLUDES'])
+    env.Append(CPPFLAGS = '-isystem ' + env['BOOST_INCLUDES'])
 else:
-	env.Append(CPPPATH = [env['BOOST_INCLUDES']])
+    env.Append(CPPPATH = [env['BOOST_INCLUDES']])
 env.Append(LIBPATH = [env['BOOST_LIBS']])
 
 # if the build system is known to allow the isystem modifier for library include
 # values then use it for the boost libraries. Otherwise just add them to the
 # regular CPPPATH values.
 if env_cpp11['CXX'].startswith('g++') or env_cpp11['CXX'].startswith('clang'):
-	env_cpp11.Append(CPPFLAGS = '-isystem ' + env_cpp11['BOOST_INCLUDES'])
+    env_cpp11.Append(CPPFLAGS = '-isystem ' + env_cpp11['BOOST_INCLUDES'])
 else:
-	env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
+    env_cpp11.Append(CPPPATH = [env_cpp11['BOOST_INCLUDES']])
 env_cpp11.Append(LIBPATH = [env_cpp11['BOOST_LIBS']])
 
 releasedir = 'build/release/'
@@ -214,6 +216,7 @@ echo_server = SConscript('#/examples/echo_server/SConscript',variant_dir = build
 # echo_server_tls
 if tls_build:
     echo_server_tls = SConscript('#/examples/echo_server_tls/SConscript',variant_dir = builddir + 'echo_server_tls',duplicate = 0)
+    echo_server_both = SConscript('#/examples/echo_server_both/SConscript',variant_dir = builddir + 'echo_server_both',duplicate = 0)
 
 # broadcast_server
 broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)

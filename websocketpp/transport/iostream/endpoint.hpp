@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -140,7 +140,7 @@ protected:
      * @param u A URI pointer to the URI to connect to.
      * @param cb The function to call back with the results when complete.
      */
-    void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
+    void async_connect(transport_con_ptr, uri_ptr, connect_handler cb) {
         cb(lib::error_code());
     }
 

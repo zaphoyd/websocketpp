@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -524,7 +524,7 @@ public:
             m_dstate.next_out = m_compress_buffer.get();
 
             deflate(&m_dstate, m_flush);
-            
+
             output = m_compress_buffer_size - m_dstate.avail_out;
 
             out.append((char *)(m_compress_buffer.get()),output);

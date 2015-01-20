@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -46,6 +46,7 @@
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
+#include <websocketpp/common/time.hpp>
 #include <websocketpp/logger/levels.hpp>
 
 namespace websocketpp {
@@ -55,12 +56,24 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(std::ostream * out = &std::cout)
+    basic<concurrency,names>(channel_type_hint::value h = 
+        channel_type_hint::access)
+      : m_static_channels(0xffffffff)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+      
+    basic<concurrency,names>(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, std::ostream * out = &std::cout)
+    basic<concurrency,names>(level c, channel_type_hint::value h = 
+        channel_type_hint::access)
+      : m_static_channels(c)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+    
+    basic<concurrency,names>(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}
@@ -120,13 +133,13 @@ private:
     // TODO: find a workaround for this or make this format user settable
     static std::ostream & timestamp(std::ostream & os) {
         std::time_t t = std::time(NULL);
-        std::tm* lt = std::localtime(&t);
-        #ifdef _WEBSOCKETPP_CPP11_CHRONO_
-            return os << std::put_time(lt,"%Y-%m-%d %H:%M:%S");
+        std::tm lt = lib::localtime(t);
+        #ifdef _WEBSOCKETPP_PUTTIME_
+            return os << std::put_time(&lt,"%Y-%m-%d %H:%M:%S");
         #else // Falls back to strftime, which requires a temporary copy of the string.
             char buffer[20];
-            std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",lt);
-            return os << buffer;
+            size_t result = std::strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",&lt);
+            return os << (result == 0 ? "Unknown" : buffer);
         #endif
     }
 

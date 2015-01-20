@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -191,7 +191,13 @@ public:
         return lib::error_code();
     }
 
-    lib::error_code client_handshake_request(request_type& req, uri_ptr
+    /// Fill in a set of request headers for a client connection request
+    /**
+     * @param [out] req  Set of headers to fill in
+     * @param [in] uri The uri being connected to
+     * @param [in] subprotocols The list of subprotocols to request
+     */
+    lib::error_code client_handshake_request(request_type & req, uri_ptr
         uri, std::vector<std::string> const & subprotocols) const
     {
         req.set_method("GET");
@@ -228,6 +234,12 @@ public:
         return lib::error_code();
     }
 
+    /// Validate the server's response to an outgoing handshake request
+    /**
+     * @param req The original request sent
+     * @param res The reponse to generate
+     * @return An error code, 0 on success, non-zero for other errors
+     */
     lib::error_code validate_server_handshake_response(request_type const & req,
         response_type& res) const
     {
@@ -417,7 +429,7 @@ public:
             } else if (m_state == EXTENSION) {
                 m_state = APPLICATION;
             } else if (m_state == APPLICATION) {
-                size_t bytes_to_process = std::min(m_bytes_needed,len-p);
+                size_t bytes_to_process = (std::min)(m_bytes_needed,len-p);
 
                 if (bytes_to_process > 0) {
                     p += this->process_payload_bytes(buf+p,bytes_to_process,ec);
@@ -728,7 +740,7 @@ protected:
 
     /// Reads bytes from buf into m_extended_header
     size_t copy_extended_header_bytes(uint8_t const * buf, size_t len) {
-        size_t bytes_to_read = std::min(m_bytes_needed,len);
+        size_t bytes_to_read = (std::min)(m_bytes_needed,len);
 
         std::copy(buf,buf+bytes_to_read,m_extended_header.bytes+m_cursor);
         m_cursor += bytes_to_read;

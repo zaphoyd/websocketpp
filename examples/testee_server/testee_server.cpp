@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -45,7 +45,7 @@ struct testee_config : public websocketpp::config::asio {
     typedef core::rng_type rng_type;
     typedef core::endpoint_base endpoint_base;
 
-    static bool const enable_multithreading = false;
+    static bool const enable_multithreading = true;
 
     struct transport_config : public core::transport_config {
         typedef core::concurrency_type concurrency_type;
@@ -54,7 +54,7 @@ struct testee_config : public websocketpp::config::asio {
         typedef core::request_type request_type;
         typedef core::response_type response_type;
 
-        static bool const enable_multithreading = false;
+        static bool const enable_multithreading = true;
     };
 
     typedef websocketpp::transport::asio::endpoint<transport_config>
@@ -80,7 +80,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-void on_socket_init(websocketpp::connection_hdl hdl, boost::asio::ip::tcp::socket & s) {
+void on_socket_init(websocketpp::connection_hdl, boost::asio::ip::tcp::socket & s) {
     boost::asio::ip::tcp::no_delay option(true);
     s.set_option(option);
 }
@@ -104,6 +104,7 @@ int main(int argc, char * argv[]) {
 
         // Initialize ASIO
         testee_server.init_asio();
+        testee_server.set_reuse_addr(true);
 
         // Register our message handler
         testee_server.set_message_handler(bind(&on_message,&testee_server,::_1,::_2));
@@ -123,7 +124,7 @@ int main(int argc, char * argv[]) {
             typedef websocketpp::lib::shared_ptr<websocketpp::lib::thread> thread_ptr;
             std::vector<thread_ptr> ts;
             for (size_t i = 0; i < num_threads; i++) {
-                ts.push_back(thread_ptr(new websocketpp::lib::thread(&server::run, &testee_server)));
+                ts.push_back(websocketpp::lib::make_shared<websocketpp::lib::thread>(&server::run, &testee_server));
             }
 
             for (size_t i = 0; i < num_threads; i++) {

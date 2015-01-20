@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -63,6 +63,7 @@ struct stub_con : public iostream_con {
         // Set the error to a known code that is unused by the library
         // This way we can easily confirm that the handler was run at all.
         , ec(websocketpp::error::make_error_code(websocketpp::error::test))
+        , indef_read_total(0)
     {}
 
     /// Get a shared pointer to this component
@@ -94,7 +95,7 @@ struct stub_con : public iostream_con {
     }
 
     void async_read_at_least(size_t num_bytes, char *buf, size_t len)
-	{
+    {
         iostream_con::async_read_at_least(
             num_bytes,
             buf,
@@ -111,7 +112,41 @@ struct stub_con : public iostream_con {
         ec = e;
     }
 
+    void async_read_indef(size_t num_bytes, char *buf, size_t len)
+    {
+        indef_read_size = num_bytes;
+        indef_read_buf = buf;
+        indef_read_len = len;
+        
+        indef_read();
+    }
+
+    void indef_read() {
+        iostream_con::async_read_at_least(
+            indef_read_size,
+            indef_read_buf,
+            indef_read_len,
+            websocketpp::lib::bind(
+                &stub_con::handle_indef,
+                type::get_shared(),
+                websocketpp::lib::placeholders::_1,
+                websocketpp::lib::placeholders::_2
+            )
+        );
+    }
+
+    void handle_indef(websocketpp::lib::error_code const & e, size_t amt_read) {
+        ec = e;
+        indef_read_total += amt_read;
+        
+        indef_read();
+    }
+
     websocketpp::lib::error_code ec;
+    size_t indef_read_size;
+    char * indef_read_buf;
+    size_t indef_read_len;
+    size_t indef_read_total;
 };
 
 // Stubs
@@ -231,22 +266,22 @@ BOOST_AUTO_TEST_CASE( async_read_at_least ) {
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel;
-	channel << "abcd";
-	channel >> *con;
-	BOOST_CHECK( channel.tellg() == -1 );
+    channel << "abcd";
+    channel >> *con;
+    BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel2;
-	channel2 << "e";
-	channel2 >> *con;
-	BOOST_CHECK( channel2.tellg() == -1 );
+    channel2 << "e";
+    channel2 >> *con;
+    BOOST_CHECK( channel2.tellg() == -1 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
 
     std::stringstream channel3;
-	channel3 << "f";
-	channel3 >> *con;
-	BOOST_CHECK( channel3.tellg() == 0 );
+    channel3 << "f";
+    channel3 >> *con;
+    BOOST_CHECK( channel3.tellg() == 0 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
     con->async_read_at_least(1,buf+5,5);
@@ -267,20 +302,20 @@ BOOST_AUTO_TEST_CASE( async_read_at_least2 ) {
     BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
 
     std::stringstream channel;
-	channel << "abcdefg";
-	channel >> *con;
+    channel << "abcdefg";
+    channel >> *con;
     BOOST_CHECK( channel.tellg() == 5 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdexxxxx" );
 
     con->async_read_at_least(1,buf+5,5);
-	channel >> *con;
-	BOOST_CHECK( channel.tellg() == -1 );
+    channel >> *con;
+    BOOST_CHECK( channel.tellg() == -1 );
     BOOST_CHECK( !con->ec );
     BOOST_CHECK( std::string(buf,10) == "abcdefgxxx" );
 }
 
-void timer_callback_stub(const websocketpp::lib::error_code & ec) {}
+void timer_callback_stub(websocketpp::lib::error_code const &) {}
 
 BOOST_AUTO_TEST_CASE( set_timer ) {
    stub_con::ptr con(new stub_con(true,alogger,elogger));
@@ -312,6 +347,47 @@ BOOST_AUTO_TEST_CASE( async_read_at_least_read_some ) {
     BOOST_CHECK_EQUAL(con->read_some(input+5,2), 2);
     BOOST_CHECK( !con->ec );
     BOOST_CHECK_EQUAL( std::string(buf,10), "abcdefgxxx" );
+}
+
+BOOST_AUTO_TEST_CASE( async_read_at_least_read_some_indef ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+
+    char buf[20];
+    memset(buf,'x',20);
+
+    con->async_read_indef(5,buf,5);
+    BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
+
+    // here we expect to return early from read some because the outstanding
+    // read was for 5 bytes and we were called with 10.
+    char input[11] = "aaaaabbbbb";
+    BOOST_CHECK_EQUAL(con->read_some(input,10), 5);
+    BOOST_CHECK( !con->ec );
+    BOOST_CHECK_EQUAL( std::string(buf,10), "aaaaaxxxxx" );
+    BOOST_CHECK_EQUAL( con->indef_read_total, 5 );
+    
+    // A subsequent read should read 5 more because the indef read refreshes
+    // itself. The new read will start again at the beginning of the buffer.
+    BOOST_CHECK_EQUAL(con->read_some(input+5,5), 5);
+    BOOST_CHECK( !con->ec );
+    BOOST_CHECK_EQUAL( std::string(buf,10), "bbbbbxxxxx" );
+    BOOST_CHECK_EQUAL( con->indef_read_total, 10 );
+}
+
+BOOST_AUTO_TEST_CASE( async_read_at_least_read_all ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+
+    char buf[20];
+    memset(buf,'x',20);
+
+    con->async_read_indef(5,buf,5);
+    BOOST_CHECK( con->ec == make_error_code(websocketpp::error::test) );
+
+    char input[11] = "aaaaabbbbb";
+    BOOST_CHECK_EQUAL(con->read_all(input,10), 10);
+    BOOST_CHECK( !con->ec );
+    BOOST_CHECK_EQUAL( std::string(buf,10), "bbbbbxxxxx" );
+    BOOST_CHECK_EQUAL( con->indef_read_total, 10 );
 }
 
 BOOST_AUTO_TEST_CASE( eof_flag ) {

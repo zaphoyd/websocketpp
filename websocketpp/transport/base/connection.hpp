@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -141,6 +141,7 @@ struct buffer {
     size_t len;
 };
 
+/// Generic transport related errors
 namespace error {
 enum value {
     /// Catch-all error for transport policy errors that don't fit in other
@@ -170,10 +171,10 @@ enum value {
 
     /// Timer expired
     timeout,
-    
+
     /// read or write after shutdown
     action_after_shutdown,
-    
+
     /// Other TLS error
     tls_error,
 };
@@ -200,7 +201,7 @@ class category : public lib::error_category {
                 return "The operation is not supported by this transport";
             case eof:
                 return "End of File";
-        	case tls_short_read:
+            case tls_short_read:
                 return "TLS Short Read";
             case timeout:
                 return "Timer Expired";

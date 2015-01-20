@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,14 +33,16 @@
 
 #include <boost/asio.hpp>
 
-#include <iostream>
 #include <string>
 
 namespace websocketpp {
 namespace transport {
 namespace asio {
+/// A socket policy for the asio transport that implements a plain, unencrypted
+/// socket
 namespace basic_socket {
 
+/// The signature of the socket init handler for this socket policy
 typedef lib::function<void(connection_hdl,boost::asio::ip::tcp::socket&)>
     socket_init_handler;
 
@@ -60,8 +62,10 @@ public:
     typedef boost::asio::io_service* io_service_ptr;
     /// Type of a pointer to the ASIO io_service strand being used
     typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
+    /// Type of the ASIO socket being used
+    typedef boost::asio::ip::tcp::socket socket_type;
     /// Type of a shared pointer to the socket being used.
-    typedef lib::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+    typedef lib::shared_ptr<socket_type> socket_ptr;
 
     explicit connection() : m_state(UNINITIALIZED) {
         //std::cout << "transport::asio::basic_socket::connection constructor"
@@ -154,14 +158,14 @@ protected:
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
-        bool is_server)
+    lib::error_code init_asio (io_service_ptr service, strand_ptr, bool)
     {
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
         }
 
-        m_socket.reset(new boost::asio::ip::tcp::socket(*service));
+        m_socket = lib::make_shared<boost::asio::ip::tcp::socket>(
+            lib::ref(*service));
 
         m_state = READY;
 
@@ -229,7 +233,7 @@ protected:
     lib::error_code get_ec() const {
         return lib::error_code();
     }
-    
+
     /// Translate any security policy specific information about an error code
     /**
      * Translate_ec takes a boost error code and attempts to convert its value
@@ -237,12 +241,12 @@ protected:
      * not presently provide any additional information so all errors will be
      * reported as the generic transport pass_through error.
      *
-     * @since 0.4.0-beta1
+     * @since 0.3.0
      *
      * @param ec The error code to translate_ec
      * @return The translated error code
      */
-    lib::error_code translate_ec(boost::system::error_code ec) {
+    lib::error_code translate_ec(boost::system::error_code) {
         // We don't know any more information about this error so pass through
         return make_error_code(transport::error::pass_through);
     }

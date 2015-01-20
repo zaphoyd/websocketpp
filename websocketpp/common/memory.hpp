@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,7 @@
     #include <memory>
 #else
     #include <boost/shared_ptr.hpp>
+	#include <boost/make_shared.hpp>
     #include <boost/scoped_array.hpp>
     #include <boost/enable_shared_from_this.hpp>
     #include <boost/pointer_cast.hpp>
@@ -51,6 +52,7 @@ namespace lib {
     using std::weak_ptr;
     using std::enable_shared_from_this;
     using std::static_pointer_cast;
+    using std::make_shared;
 
     typedef std::unique_ptr<unsigned char[]> unique_ptr_uchar_array;
 #else
@@ -58,6 +60,7 @@ namespace lib {
     using boost::weak_ptr;
     using boost::enable_shared_from_this;
     using boost::static_pointer_cast;
+    using boost::make_shared;
 
     typedef boost::scoped_array<unsigned char> unique_ptr_uchar_array;
 #endif

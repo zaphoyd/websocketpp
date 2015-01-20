@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,13 +25,30 @@
  *
  */
 
-#ifndef WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
-#define WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
+#ifndef WEBSOCKETPP_COMMON_TIME_HPP
+#define WEBSOCKETPP_COMMON_TIME_HPP
 
-class echo_handler : public server::handler {
-	void on_message(connection_ptr con, std::string msg) {
-		con->write(msg);
-	}
-};
+#include <time.h>
 
-#endif // WEBSOCKETPP_ECHO_SERVER_HANDLER_HPP
+namespace websocketpp {
+namespace lib {
+
+// Code in this header was inspired by the following article and includes some
+// code from the related project g2log. The g2log code is public domain licensed
+// http://kjellkod.wordpress.com/2013/01/22/exploring-c11-part-2-localtime-and-time-again/
+
+/// Thread safe cross platform localtime
+inline std::tm localtime(std::time_t const & time) {
+    std::tm tm_snapshot;
+#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+    localtime_s(&tm_snapshot, &time); 
+#else
+    localtime_r(&time, &tm_snapshot); // POSIX  
+#endif
+    return tm_snapshot;
+}
+
+} // lib
+} // websocketpp
+
+#endif // WEBSOCKETPP_COMMON_TIME_HPP

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ public:
     typedef lib::shared_ptr<type> ptr;
 
     request()
-      : m_buf(new std::string())
+      : m_buf(lib::make_shared<std::string>())
       , m_ready(false) {}
 
     /// DEPRECATED parse a complete header (\r\n\r\n MUST be in the istream)
