@@ -34,6 +34,8 @@ HEAD
   immediately after that handshake times out. #389
 - Bug: MinGW fixes; C++11 feature detection, localtime use. #393 Thank you
   Schebb for reporting, code, and testing.
+- Bug: Fixes an issue where `websocketpp::exception::what()` could return an out
+  of scope pointer. #397 Thank you fabioang for reporting.
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type

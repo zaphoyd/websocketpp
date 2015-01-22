@@ -125,20 +125,20 @@ enum value {
 
     /// The requested operation was canceled
     operation_canceled,
-    
+
     /// Connection rejected
     rejected,
-    
+
     /// Upgrade Required. This happens if an HTTP request is made to a
     /// WebSocket++ server that doesn't implement an http handler
     upgrade_required,
-    
+
     /// Invalid WebSocket protocol version
     invalid_version,
-    
+
     /// Unsupported WebSocket protocol version
     unsupported_version,
-    
+
     /// HTTP parse error
     http_parse_error
 }; // enum value
@@ -246,7 +246,7 @@ namespace websocketpp {
 class exception : public std::exception {
 public:
     exception(std::string const & msg, lib::error_code ec = make_error_code(error::general))
-      : m_msg(msg), m_code(ec)
+      : m_msg(msg.empty() ? ec.message() : msg), m_code(ec)
     {}
 
     explicit exception(lib::error_code ec)
@@ -256,11 +256,7 @@ public:
     ~exception() throw() {}
 
     virtual char const * what() const throw() {
-        if (m_msg.empty()) {
-            return m_code.message().c_str();
-        } else {
-            return m_msg.c_str();
-        }
+        return m_msg.c_str();
     }
 
     lib::error_code code() const throw() {
