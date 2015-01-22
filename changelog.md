@@ -1,4 +1,6 @@
 HEAD
+
+0.5.0 - 2015-01-22
 - BREAKING UTILITY CHANGE: Deprecated methods `http::parser::parse_headers`,
   `http::response::parse_complete`, and `http::request::parse_complete` have
   been removed.
