@@ -362,6 +362,9 @@ public:
             m_acceptor->listen(m_listen_backlog,bec);
         }
         if (bec) {
+            if (m_acceptor->is_open()) {
+                m_acceptor->close();
+            }
             log_err(log::elevel::info,"asio listen",bec);
             ec = make_error_code(error::pass_through);
         } else {

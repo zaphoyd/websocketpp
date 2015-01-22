@@ -36,6 +36,8 @@ HEAD
   Schebb for reporting, code, and testing.
 - Bug: Fixes an issue where `websocketpp::exception::what()` could return an out
   of scope pointer. #397 Thank you fabioang for reporting.
+- Bug: Fixes an issue where endpoints were not reset properly after a call to
+  `endpoint::listen` failed. #390 Thank you wyyqyl for reporting.
 
 0.4.0 - 2014-11-04
 - BREAKING API CHANGE: All WebSocket++ methods now throw an exception of type
