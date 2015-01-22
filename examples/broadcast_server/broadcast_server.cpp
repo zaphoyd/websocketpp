@@ -3,6 +3,7 @@
 #include <websocketpp/server.hpp>
 
 #include <iostream>
+#include <set>
 
 /*#include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -66,10 +67,6 @@ public:
             m_server.run();
         } catch (const std::exception & e) {
             std::cout << e.what() << std::endl;
-        } catch (websocketpp::lib::error_code e) {
-            std::cout << e.message() << std::endl;
-        } catch (...) {
-            std::cout << "other exception" << std::endl;
         }
     }
 
@@ -130,7 +127,7 @@ public:
         }
     }
 private:
-    typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;
+    typedef std::set<connection_hdl,std::owner_less<connection_hdl> > con_list;
 
     server m_server;
     con_list m_connections;
@@ -153,7 +150,7 @@ int main() {
 
     t.join();
 
-    } catch (std::exception & e) {
+    } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;
     }
 }

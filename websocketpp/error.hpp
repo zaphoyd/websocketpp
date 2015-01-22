@@ -28,7 +28,9 @@
 #ifndef WEBSOCKETPP_ERROR_HPP
 #define WEBSOCKETPP_ERROR_HPP
 
+#include <exception>
 #include <string>
+#include <utility>
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/system_error.hpp>
@@ -122,7 +124,23 @@ enum value {
     async_accept_not_listening,
 
     /// The requested operation was canceled
-    operation_canceled
+    operation_canceled,
+
+    /// Connection rejected
+    rejected,
+
+    /// Upgrade Required. This happens if an HTTP request is made to a
+    /// WebSocket++ server that doesn't implement an http handler
+    upgrade_required,
+
+    /// Invalid WebSocket protocol version
+    invalid_version,
+
+    /// Unsupported WebSocket protocol version
+    unsupported_version,
+
+    /// HTTP parse error
+    http_parse_error
 }; // enum value
 
 
@@ -188,6 +206,16 @@ public:
                 return "Async Accept not listening";
             case error::operation_canceled:
                 return "Operation canceled";
+            case error::rejected:
+                return "Connection rejected";
+            case error::upgrade_required:
+                return "Upgrade required";
+            case error::invalid_version:
+                return "Invalid version";
+            case error::unsupported_version:
+                return "Unsupported version";
+            case error::http_parse_error:
+                return "HTTP parse error";
             default:
                 return "Unknown";
         }
@@ -218,7 +246,7 @@ namespace websocketpp {
 class exception : public std::exception {
 public:
     exception(std::string const & msg, lib::error_code ec = make_error_code(error::general))
-      : m_msg(msg), m_code(ec)
+      : m_msg(msg.empty() ? ec.message() : msg), m_code(ec)
     {}
 
     explicit exception(lib::error_code ec)
@@ -228,11 +256,7 @@ public:
     ~exception() throw() {}
 
     virtual char const * what() const throw() {
-        if (m_msg.empty()) {
-            return m_code.message().c_str();
-        } else {
-            return m_msg.c_str();
-        }
+        return m_msg.c_str();
     }
 
     lib::error_code code() const throw() {

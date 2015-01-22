@@ -97,14 +97,14 @@ namespace error {
         missing_tls_init_handler,
 
         /// TLS Handshake Failed
-        tls_handshake_failed,
+        tls_handshake_failed
     };
 } // namespace error
 
 /// Error category related to asio transport socket policies
 class socket_category : public lib::error_category {
 public:
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
         return "websocketpp.transport.asio.socket";
     }
 
@@ -132,7 +132,7 @@ public:
     }
 };
 
-inline const lib::error_category& get_socket_category() {
+inline lib::error_category const & get_socket_category() {
     static socket_category instance;
     return instance;
 }

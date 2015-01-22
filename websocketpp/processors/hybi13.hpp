@@ -28,19 +28,20 @@
 #ifndef WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 #define WEBSOCKETPP_PROCESSOR_HYBI13_HPP
 
-#include <cassert>
-
-#include <websocketpp/frame.hpp>
-#include <websocketpp/utf8_validator.hpp>
-#include <websocketpp/common/network.hpp>
-#include <websocketpp/common/platforms.hpp>
-#include <websocketpp/http/constants.hpp>
-
 #include <websocketpp/processors/processor.hpp>
 
+#include <websocketpp/frame.hpp>
+#include <websocketpp/http/constants.hpp>
+
+#include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/sha1/sha1.hpp>
 #include <websocketpp/base64/base64.hpp>
 
+#include <websocketpp/common/network.hpp>
+#include <websocketpp/common/platforms.hpp>
+
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <vector>
 #include <utility>
@@ -160,8 +161,8 @@ public:
      * generic struct if other user input parameters to the processed handshake
      * are found.
      */
-    lib::error_code process_handshake(request_type const & request, const
-        std::string & subprotocol, response_type& response) const
+    lib::error_code process_handshake(request_type const & request, 
+        std::string const & subprotocol, response_type & response) const
     {
         std::string server_key = request.get_header("Sec-WebSocket-Key");
 
@@ -588,6 +589,7 @@ public:
         }
 
         out->set_prepared(true);
+        out->set_opcode(op);
 
         return lib::error_code();
     }

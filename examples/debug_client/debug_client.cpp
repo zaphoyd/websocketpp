@@ -36,7 +36,7 @@
 #include <iostream>
 #include <chrono>
 
-typedef websocketpp::client<websocketpp::config::asio_tls_client> client;
+typedef websocketpp::client<websocketpp::config::asio_client> client;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -63,10 +63,11 @@ public:
 
         // Register our handlers
         m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
-        m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
+        //m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
         m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
         m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
         m_endpoint.set_close_handler(bind(&type::on_close,this,::_1));
+        m_endpoint.set_fail_handler(bind(&type::on_fail,this,::_1));
     }
 
     void start(std::string uri) {
@@ -97,11 +98,24 @@ public:
         try {
             ctx->set_options(boost::asio::ssl::context::default_workarounds |
                              boost::asio::ssl::context::no_sslv2 |
+                             boost::asio::ssl::context::no_sslv3 |
                              boost::asio::ssl::context::single_dh_use);
         } catch (std::exception& e) {
             std::cout << e.what() << std::endl;
         }
         return ctx;
+    }
+
+    void on_fail(websocketpp::connection_hdl hdl) {
+        client::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
+        
+        std::cout << "Fail handler" << std::endl;
+        std::cout << con->get_state() << std::endl;
+        std::cout << con->get_local_close_code() << std::endl;
+        std::cout << con->get_local_close_reason() << std::endl;
+        std::cout << con->get_remote_close_code() << std::endl;
+        std::cout << con->get_remote_close_reason() << std::endl;
+        std::cout << con->get_ec() << " - " << con->get_ec().message() << std::endl;
     }
 
     void on_open(websocketpp::connection_hdl hdl) {

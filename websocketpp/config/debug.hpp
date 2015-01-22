@@ -228,6 +228,18 @@ struct debug_core {
      */
     static const size_t max_message_size = 32000000;
 
+    /// Default maximum http body size
+    /**
+     * Default value for the http parser's maximum body size. Maximum body size
+     * determines the point at which the library will abort reading an HTTP
+     * connection with the 413/request entity too large error.
+     *
+     * The default is 32MB
+     *
+     * @since 0.5.0
+     */
+    static const size_t max_http_body_size = 32000000;
+
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;
 

@@ -110,6 +110,19 @@ elif env['CXX'].startswith('clang++'):
    env.Append(CCFLAGS = ['-Wshadow'])
    env.Append(CCFLAGS = ['-Wunused-parameter'])
 
+   env.Append(CCFLAGS = ['-Wsometimes-uninitialized'])
+   env.Append(CCFLAGS = ['-Wuninitialized'])
+
+   #env.Append(CCFLAGS = ['-Weverything'])
+   #env.Append(CCFLAGS = ['-Wno-documentation'])
+   #env.Append(CCFLAGS = ['-Wno-weak-vtables'])
+   #env.Append(CCFLAGS = ['-Wno-global-constructors'])
+   #env.Append(CCFLAGS = ['-Wno-sign-conversion'])
+   #env.Append(CCFLAGS = ['-Wno-exit-time-destructors'])
+
+
+
+
    # Wpadded
    # Wsign-conversion
 
@@ -238,6 +251,9 @@ debug_server = SConscript('#/examples/debug_server/SConscript',variant_dir = bui
 
 # subprotocol_server
 subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',variant_dir = builddir + 'subprotocol_server',duplicate = 0)
+
+# telemetry_server
+telemetry_server = SConscript('#/examples/telemetry_server/SConscript',variant_dir = builddir + 'telemetry_server',duplicate = 0)
 
 if not env['PLATFORM'].startswith('win'):
     # iostream_server

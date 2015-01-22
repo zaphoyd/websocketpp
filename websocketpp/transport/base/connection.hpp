@@ -31,8 +31,9 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
-#include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/system_error.hpp>
+
+#include <string>
 
 namespace websocketpp {
 /// Transport policies provide network connectivity and timers
@@ -176,7 +177,7 @@ enum value {
     action_after_shutdown,
 
     /// Other TLS error
-    tls_error,
+    tls_error
 };
 
 class category : public lib::error_category {
