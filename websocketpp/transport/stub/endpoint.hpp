@@ -55,7 +55,7 @@ public:
 
     /// Type of this endpoint transport component's associated connection
     /// transport component.
-    typedef iostream::connection<config> transport_con_type;
+    typedef stub::connection<config> transport_con_type;
     /// Type of a shared pointer to this endpoint transport component's
     /// associated connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
@@ -113,7 +113,7 @@ protected:
      * @param cb The function to call back with the results when complete.
      */
     void async_connect(transport_con_ptr tcon, uri_ptr u, connect_handler cb) {
-        cb(make_error_code(error::not_implimented));
+        cb(make_error_code(error::not_implemented));
     }
 
     /// Initialize a connection
@@ -127,7 +127,7 @@ protected:
      * @return A status code indicating the success or failure of the operation
      */
     lib::error_code init(transport_con_ptr tcon) {
-        cb(make_error_code(error::not_implimented));
+        return make_error_code(error::not_implemented);
     }
 private:
 

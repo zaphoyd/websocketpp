@@ -30,6 +30,10 @@
 
 #include "connection_tu2.hpp"
 
+// Include special debugging transport
+//#include <websocketpp/config/minimal_client.hpp>
+#include <websocketpp/transport/debug/endpoint.hpp>
+
 // NOTE: these tests currently test against hardcoded output values. I am not
 // sure how problematic this will be. If issues arise like order of headers the
 // output should be parsed by http::response and have values checked directly
@@ -79,6 +83,54 @@ struct stub_config : public websocketpp::config::core {
     typedef connection_extension connection_base;
 };
 
+struct debug_config_client : public websocketpp::config::core {
+    typedef debug_config_client type;
+    
+    typedef core::concurrency_type concurrency_type;
+
+    typedef core::request_type request_type;
+    typedef core::response_type response_type;
+
+    typedef core::message_type message_type;
+    typedef core::con_msg_manager_type con_msg_manager_type;
+    typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
+
+    typedef core::alog_type alog_type;
+    typedef core::elog_type elog_type;
+
+    typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
+
+    struct transport_config {
+        typedef type::concurrency_type concurrency_type;
+        typedef type::elog_type elog_type;
+        typedef type::alog_type alog_type;
+        typedef type::request_type request_type;
+        typedef type::response_type response_type;
+
+        /// Controls compile time enabling/disabling of thread syncronization
+        /// code Disabling can provide a minor performance improvement to single
+        /// threaded applications
+        static bool const enable_multithreading = true;
+
+        /// Default timer values (in ms)
+        static const long timeout_socket_pre_init = 5000;
+        static const long timeout_proxy = 5000;
+        static const long timeout_socket_post_init = 5000;
+        static const long timeout_connect = 5000;
+        static const long timeout_socket_shutdown = 5000;
+    };
+
+    /// Transport Endpoint Component
+    typedef websocketpp::transport::debug::endpoint<transport_config>
+        transport_type;
+
+    typedef core::endpoint_base endpoint_base;
+    typedef connection_extension connection_base;
+    
+    static const websocketpp::log::level elog_level = websocketpp::log::elevel::none;
+    static const websocketpp::log::level alog_level = websocketpp::log::alevel::none;
+};
+
 struct connection_setup {
     connection_setup(bool p_is_server) : c(p_is_server, "", alog, elog, rng) {}
 
@@ -88,6 +140,9 @@ struct connection_setup {
     stub_config::rng_type rng;
     websocketpp::connection<stub_config> c;
 };
+
+typedef websocketpp::client<debug_config_client> debug_client;
+typedef websocketpp::server<debug_config_client> debug_server;
 
 /*void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
@@ -110,6 +165,29 @@ void http_func(server* s, websocketpp::connection_hdl hdl) {
 
     con->set_body(res);
     con->set_status(websocketpp::http::status_code::ok);
+}
+
+void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called, 
+    websocketpp::connection_hdl hdl)
+{
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    BOOST_CHECK_EQUAL(ec, con->get_ec());
+    called = true;
+}
+
+void on_open_print(server* s, websocketpp::connection_hdl hdl)
+{
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    std::cout << con->get_uri() << std::endl;
+}
+
+void fail_on_open(websocketpp::connection_hdl) {
+    BOOST_CHECK(false);
+}
+void fail_on_http(websocketpp::connection_hdl) {
+    BOOST_CHECK(false);
 }
 
 BOOST_AUTO_TEST_CASE( connection_extensions ) {
@@ -215,6 +293,80 @@ BOOST_AUTO_TEST_CASE( set_max_message_size ) {
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
 }
 
+BOOST_AUTO_TEST_CASE( websocket_fail_parse_error ) {
+    std::string input = "asdf\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::http_parse_error);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_invalid_version ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: foo\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::invalid_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_unsupported_version ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 12\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+/*BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri ) {
+    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+    s.set_open_handler(bind(&on_open_print,&s,::_1));
+
+    std::cout << run_server_test(s,input,true) << std::endl;
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri_http ) {
+    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+    s.set_open_handler(bind(&on_open_print,&s,::_1));
+
+    std::cout << run_server_test(s,input,true) << std::endl;
+    BOOST_CHECK(called);
+}*/
+
+BOOST_AUTO_TEST_CASE( websocket_fail_upgrade_required ) {
+    std::string input = "GET /foo/bar HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::upgrade_required);
+    bool called = false;
+    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
 // TODO: set max message size in client endpoint test case
 // TODO: set max message size mid connection test case
 // TODO: [maybe] set max message size in open handler
@@ -239,3 +391,88 @@ BOOST_AUTO_TEST_CASE( basic_text_message ) {
     BOOST_CHECK( run_server_test(input) == output);
 }
 */
+
+
+
+
+
+BOOST_AUTO_TEST_CASE( client_handshake_timeout_race1 ) {
+    debug_client c;
+
+    websocketpp::lib::error_code ec;
+    debug_client::connection_ptr con = c.get_connection("ws://localhost:9002", ec);
+
+    BOOST_CHECK(!ec);
+
+    // This test the case where a handshake times out immediately before the 
+    // handler that would have completed it gets invoked. This situation happens
+    // when clients are connecting to overloaded servers and on servers that are
+    // overloaded. 
+    c.connect(con);
+    
+    con->expire_timer(websocketpp::lib::error_code());
+    // Fullfil the write to simulate the write completing immediately after
+    // timer expires
+    con->fullfil_write();
+    
+    BOOST_CHECK_EQUAL(con->get_ec(), make_error_code(websocketpp::error::open_handshake_timeout));
+}
+
+BOOST_AUTO_TEST_CASE( client_handshake_timeout_race2 ) {
+    debug_client c;
+
+    websocketpp::lib::error_code ec;
+    debug_client::connection_ptr con = c.get_connection("ws://localhost:9002", ec);
+
+    BOOST_CHECK(!ec);
+
+    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: upgrade\r\nSec-WebSocket-Accept: ICX+Yqv66kxgM0FcWaLWlFLwTAI=\r\nServer: foo\r\nUpgrade: websocket\r\n\r\n";
+
+    // This test the case where a handshake times out immediately before the 
+    // handler that would have completed it gets invoked. This situation happens
+    // when clients are connecting to overloaded servers and on servers that are
+    // overloaded. 
+    c.connect(con);
+    con->fullfil_write();
+    
+    con->expire_timer(websocketpp::lib::error_code());
+    // Read valid handshake to simulate receiving the handshake response
+    // immediately after the timer expires
+    con->read_all(output.data(),output.size());
+    
+    BOOST_CHECK_EQUAL(con->get_ec(), make_error_code(websocketpp::error::open_handshake_timeout));
+}
+
+BOOST_AUTO_TEST_CASE( server_handshake_timeout_race1 ) {
+    debug_server s;
+
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\n\r\n";
+
+    debug_server::connection_ptr con = s.get_connection();
+    con->start();
+    
+    con->expire_timer(websocketpp::lib::error_code());
+    // Read handshake immediately after timer expire
+    con->read_all(input.data(), input.size());
+    
+    BOOST_CHECK_EQUAL(con->get_ec(), make_error_code(websocketpp::error::open_handshake_timeout));
+}
+
+BOOST_AUTO_TEST_CASE( server_handshake_timeout_race2 ) {
+    debug_server s;
+
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==\r\n\r\n";
+
+    debug_server::connection_ptr con = s.get_connection();
+    con->start();
+    
+    con->read_all(input.data(), input.size());
+    
+    con->expire_timer(websocketpp::lib::error_code());
+    // Complete write immediately after timer expire
+    con->fullfil_write();
+    
+    BOOST_CHECK_EQUAL(con->get_ec(), make_error_code(websocketpp::error::open_handshake_timeout));
+}
+
+

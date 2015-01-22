@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Peter Thorson. All rights reserved.
+ * Copyright (c) 2014, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -273,7 +273,8 @@ void run_dummy_client(std::string port) {
     }
 }
 
-bool on_ping(websocketpp::connection_hdl, std::string) {
+bool on_ping(server * s, websocketpp::connection_hdl, std::string) {
+    s->get_alog().write(websocketpp::log::alevel::app,"got ping");
     return false;
 }
 
@@ -291,7 +292,9 @@ void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
 template <typename T>
 void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl hdl) {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
-    con->ping(payload);
+    websocketpp::lib::error_code ec;
+    con->ping(payload,ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 }
 
 void fail_on_pong(websocketpp::connection_hdl, std::string) {
@@ -382,7 +385,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     server s;
     client c;
 
-    s.set_ping_handler(on_ping);
+    s.set_ping_handler(bind(&on_ping, &s,::_1,::_2));
     s.set_close_handler(bind(&stop_on_close,&s,::_1));
 
     c.set_fail_handler(bind(&check_ec<client>,&c,
@@ -563,7 +566,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,2));
+    websocketpp::lib::thread tthread(websocketpp::lib::bind(&run_test_timer,5));
     tthread.detach();
 
     run_client(c, "http://localhost:9005",false);

@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ENDPOINT_IMPL_HPP
 #define WEBSOCKETPP_ENDPOINT_IMPL_HPP
 
+#include <string>
+
 namespace websocketpp {
 
 template <typename connection, typename config>
@@ -77,6 +79,7 @@ endpoint<connection,config>::create_connection() {
     if (m_max_message_size != config::max_message_size) {
         con->set_max_message_size(m_max_message_size);
     }
+    con->set_max_http_body_size(m_max_http_body_size);
 
     lib::error_code ec;
 

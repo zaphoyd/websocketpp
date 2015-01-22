@@ -28,11 +28,13 @@
 #ifndef WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 #define WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 
-#include <websocketpp/common/memory.hpp>
 #include <websocketpp/transport/asio/security/base.hpp>
+
+#include <websocketpp/common/memory.hpp>
 
 #include <boost/asio.hpp>
 
+#include <sstream>
 #include <string>
 
 namespace websocketpp {

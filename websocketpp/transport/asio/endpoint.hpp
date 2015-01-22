@@ -28,15 +28,21 @@
 #ifndef WEBSOCKETPP_TRANSPORT_ASIO_HPP
 #define WEBSOCKETPP_TRANSPORT_ASIO_HPP
 
-#include <websocketpp/common/functional.hpp>
-#include <websocketpp/logger/levels.hpp>
 #include <websocketpp/transport/base/endpoint.hpp>
 #include <websocketpp/transport/asio/connection.hpp>
 #include <websocketpp/transport/asio/security/none.hpp>
 
+#include <websocketpp/uri.hpp>
+#include <websocketpp/logger/levels.hpp>
+
+#include <websocketpp/common/functional.hpp>
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/system/error_code.hpp>
+
+#include <sstream>
+#include <string>
 
 namespace websocketpp {
 namespace transport {
@@ -179,7 +185,7 @@ public:
         m_external_io_service = true;
         m_acceptor = lib::make_shared<boost::asio::ip::tcp::acceptor>(
             lib::ref(*m_io_service));
-            
+
         m_state = READY;
         ec = lib::error_code();
     }
@@ -289,10 +295,10 @@ public:
     void set_listen_backlog(int backlog) {
         m_listen_backlog = backlog;
     }
-    
+
     /// Sets whether to use the SO_REUSEADDR flag when opening listening sockets
     /**
-     * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What 
+     * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What
      * this flag does depends on your operating system. Please consult operating
      * system documentation for more details.
      *
@@ -356,6 +362,9 @@ public:
             m_acceptor->listen(m_listen_backlog,bec);
         }
         if (bec) {
+            if (m_acceptor->is_open()) {
+                m_acceptor->close();
+            }
             log_err(log::elevel::info,"asio listen",bec);
             ec = make_error_code(error::pass_through);
         } else {

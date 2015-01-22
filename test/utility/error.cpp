@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Peter Thorson. All rights reserved.
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,48 +24,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+//#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE error
+#include <boost/test/unit_test.hpp>
 
-#ifndef WEBSOCKETPP_ERROR_MESSAGE_HPP
-#define WEBSOCKETPP_ERROR_MESSAGE_HPP
+#include <websocketpp/error.hpp>
 
-namespace websocketpp {
+BOOST_AUTO_TEST_CASE( constructing_exceptions ) {
+    websocketpp::lib::error_code test_ec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code general_ec = websocketpp::error::make_error_code(websocketpp::error::general);
 
-/**
- * The transport::security::* classes are a set of security/socket related
- * policies and support code for the ASIO transport types.
- */
-class error_msg {
-public:
-    const std::string& get_msg() const {
-        return m_error_msg;
-    }
+    websocketpp::exception b("foo");
+    websocketpp::exception c("foo",test_ec);
+    websocketpp::exception d("");
+    websocketpp::exception e("",test_ec);
 
-    void set_msg(const std::string& msg) {
-        m_error_msg = msg;
-    }
+    BOOST_CHECK_EQUAL(b.what(),"foo");
+    BOOST_CHECK_EQUAL(b.code(),general_ec);
 
-    void append_msg(const std::string& msg) {
-        m_error_msg.append(msg);
-    }
+    BOOST_CHECK_EQUAL(c.what(),"foo");
+    BOOST_CHECK_EQUAL(c.code(),test_ec);
 
-    template <typename T>
-    void set_msg(const T& thing) {
-        std::stringsteam val;
-        val << thing;
-        this->set_msg(val.str());
-    }
+    BOOST_CHECK_EQUAL(d.what(),"Generic error");
+    BOOST_CHECK_EQUAL(d.code(),general_ec);
 
-    template <typename T>
-    void append_msg(const T& thing) {
-        std::stringsteam val;
-        val << thing;
-        this->append_msg(val.str());
-    }
-private:
-    // error resources
-    std::string     m_error_msg;
-};
+    BOOST_CHECK_EQUAL(e.what(),"Test Error");
+    BOOST_CHECK_EQUAL(e.code(),test_ec);
+}
 
-} // namespace websocketpp
-
-#endif // WEBSOCKETPP_ERROR_MESSAGE_HPP

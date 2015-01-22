@@ -42,7 +42,7 @@ namespace websocketpp {
 /// Library major version number
 static int const major_version = 0;
 /// Library minor version number
-static int const minor_version = 4;
+static int const minor_version = 5;
 /// Library patch version number
 static int const patch_version = 0;
 /// Library pre-release flag
@@ -53,7 +53,7 @@ static int const patch_version = 0;
 static char const prerelease_flag[] = "";
 
 /// Default user agent string
-static char const user_agent[] = "WebSocket++/0.4.0";
+static char const user_agent[] = "WebSocket++/0.5.0";
 
 } // namespace websocketpp
 

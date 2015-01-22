@@ -28,6 +28,7 @@
 #define BOOST_TEST_MODULE http_parser
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <string>
 
 #include <websocketpp/http/request.hpp>
@@ -479,6 +480,62 @@ BOOST_AUTO_TEST_CASE( basic_request ) {
     BOOST_CHECK( r.get_header("Host") == "www.example.com" );
 }
 
+BOOST_AUTO_TEST_CASE( basic_request_with_body ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 5\r\n\r\nabcdef";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos = r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 65 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "5" );
+    BOOST_CHECK_EQUAL( r.get_body(), "abcde" );
+}
+
+BOOST_AUTO_TEST_CASE( basic_request_with_body_split ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabc";
+    std::string raw2 = "def";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+        pos += r.consume(raw2.c_str(),raw2.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 66 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "6" );
+    BOOST_CHECK_EQUAL( r.get_body(), "abcdef" );
+}
+
+
+
 BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
     websocketpp::http::parser::request r;
 
@@ -591,6 +648,27 @@ BOOST_AUTO_TEST_CASE( max_header_len_split ) {
         }
     }
 
+    BOOST_CHECK( exception == true );
+}
+
+BOOST_AUTO_TEST_CASE( max_body_len ) {
+    websocketpp::http::parser::request r;
+    
+    r.set_max_body_size(5);
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabcdef";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (websocketpp::http::exception const & e) {
+        exception = true;
+        BOOST_CHECK_EQUAL(e.m_error_code,websocketpp::http::status_code::request_entity_too_large);
+    }
+
+    BOOST_CHECK_EQUAL(r.get_max_body_size(),5);
     BOOST_CHECK( exception == true );
 }
 

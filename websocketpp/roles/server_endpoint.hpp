@@ -29,12 +29,12 @@
 #define WEBSOCKETPP_SERVER_ENDPOINT_HPP
 
 #include <websocketpp/endpoint.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 
-#include <iostream>
+#include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
-
 
 /// Server endpoint role based on the given config
 /**
