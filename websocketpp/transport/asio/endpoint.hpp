@@ -639,10 +639,7 @@ public:
      * needed.
      */
     timer_ptr set_timer(long duration, timer_handler callback) {
-        timer_ptr new_timer = lib::make_shared<boost::asio::deadline_timer>(
-            *m_io_service,
-            boost::posix_time::milliseconds(duration)
-        );
+        timer_ptr new_timer(new boost::asio::deadline_timer(*m_io_service, boost::posix_time::milliseconds(duration)));
 
         new_timer->async_wait(
             lib::bind(
