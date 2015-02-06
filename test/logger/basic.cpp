@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE( copy_constructor ) {
     BOOST_CHECK( out.str().size() > 0 );
 }
 
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 BOOST_AUTO_TEST_CASE( move_constructor ) {
     std::stringstream out;
     
@@ -105,7 +106,6 @@ BOOST_AUTO_TEST_CASE( move_constructor ) {
     BOOST_CHECK( out.str().size() > 0 );
 }
 
-#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 BOOST_AUTO_TEST_CASE( emplace ) {
     std::stringstream out1;
     std::stringstream out2;
