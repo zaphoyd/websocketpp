@@ -113,23 +113,28 @@ public:
     /// transport::asio objects are moveable but not copyable or assignable.
     /// The following code sets this situation up based on whether or not we
     /// have C++11 support or not
-#ifdef _WEBSOCKETPP_DELETED_FUNCTIONS_
-    endpoint(const endpoint& src) = delete;
+#ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    endpoint(const endpoint & src) = delete;
     endpoint& operator= (const endpoint & rhs) = delete;
 #else
 private:
-    endpoint(const endpoint& src);
-    endpoint& operator= (const endpoint & rhs);
+    endpoint(const endpoint & src);
+    endpoint & operator= (const endpoint & rhs);
 public:
-#endif
+#endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
 
-#ifdef _WEBSOCKETPP_RVALUE_REFERENCES_
-    endpoint (endpoint&& src)
-      : m_io_service(src.m_io_service)
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+    endpoint (endpoint && src)
+      : config::socket_type(std::move(src))
+      , m_tcp_pre_init_handler(src.m_tcp_pre_init_handler)
+      , m_tcp_post_init_handler(src.m_tcp_post_init_handler)
+      , m_io_service(src.m_io_service)
       , m_external_io_service(src.m_external_io_service)
       , m_acceptor(src.m_acceptor)
       , m_listen_backlog(boost::asio::socket_base::max_connections)
       , m_reuse_addr(src.m_reuse_addr)
+      , m_elog(src.m_elog)
+      , m_alog(src.m_alog)
       , m_state(src.m_state)
     {
         src.m_io_service = NULL;
@@ -138,7 +143,7 @@ public:
         src.m_state = UNINITIALIZED;
     }
 
-    endpoint& operator= (const endpoint && rhs) {
+    /*endpoint & operator= (const endpoint && rhs) {
         if (this != &rhs) {
             m_io_service = rhs.m_io_service;
             m_external_io_service = rhs.m_external_io_service;
@@ -152,10 +157,13 @@ public:
             rhs.m_acceptor = NULL;
             rhs.m_listen_backlog = boost::asio::socket_base::max_connections;
             rhs.m_state = UNINITIALIZED;
+            
+            // TODO: this needs to be updated
         }
         return *this;
-    }
-#endif
+    }*/
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
+
     /// Return whether or not the endpoint produces secure connections.
     bool is_secure() const {
         return socket_type::is_secure();
