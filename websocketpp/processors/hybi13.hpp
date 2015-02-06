@@ -563,6 +563,7 @@ public:
         } else {
             frame::extended_header e(i.size());
             out->set_header(frame::prepare_header(h,e));
+            key.i = 0;
         }
 
         // prepare payload
