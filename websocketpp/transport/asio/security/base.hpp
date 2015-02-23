@@ -56,6 +56,7 @@
 
 // Connection
 // TODO
+// set_hostname(std::string hostname)
 // pre_init(init_handler);
 // post_init(init_handler);
 
@@ -97,7 +98,10 @@ namespace error {
         missing_tls_init_handler,
 
         /// TLS Handshake Failed
-        tls_handshake_failed
+        tls_handshake_failed,
+        
+        /// Failed to set TLS SNI hostname
+        tls_failed_sni_hostname
     };
 } // namespace error
 
@@ -126,6 +130,8 @@ public:
                 return "Required tls_init handler not present.";
             case error::tls_handshake_failed:
                 return "TLS handshake failed";
+            case error::tls_failed_sni_hostname:
+                return "Failed to set TLS SNI hostname";
             default:
                 return "Unknown";
         }

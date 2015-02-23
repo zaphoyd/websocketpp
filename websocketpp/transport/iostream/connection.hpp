@@ -32,6 +32,8 @@
 
 #include <websocketpp/transport/base/connection.hpp>
 
+#include <websocketpp/uri.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/common/connection_hdl.hpp>
@@ -104,6 +106,19 @@ public:
         scoped_lock_type lock(m_read_mutex);
         m_output_stream = o;
     }
+
+    /// Set uri hook
+    /**
+     * Called by the endpoint as a connection is being established to provide
+     * the uri being connected to to the transport layer.
+     *
+     * This transport policy doesn't use the uri so it is ignored.
+     *
+     * @since 0.6.0
+     *
+     * @param u The uri to set
+     */
+    void set_uri(uri_ptr) {}
 
     /// Overloaded stream input operator
     /**

@@ -30,6 +30,8 @@
 
 #include <websocketpp/transport/asio/security/base.hpp>
 
+#include <websocketpp/uri.hpp>
+
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/memory.hpp>
@@ -205,6 +207,22 @@ protected:
         return lib::error_code();
     }
 
+    /// Set hostname hook
+    /**
+     * Called by the transport as a connection is being established to provide
+     * the hostname being connected to to the security/socket layer.
+     *
+     * This socket policy uses the hostname to set the appropriate TLS SNI
+     * header.
+     *
+     * @since 0.6.0
+     *
+     * @param u The uri to set
+     */
+    void set_uri(uri_ptr u) {
+        m_uri = u;
+    }
+
     /// Pre-initialize security policy
     /**
      * Called by the transport after a new connection is created to initialize
@@ -215,6 +233,22 @@ protected:
      * @param callback Handler to call back with completion information
      */
     void pre_init(init_handler callback) {
+        // TODO: is this the best way to check whether this function is 
+        //       available in the version of OpenSSL being used?
+        // TODO: consider case where host is an IP address
+#if OPENSSL_VERSION_NUMBER >= 0x90812f
+        if (!m_is_server) {
+            // For clients on systems with a suitable OpenSSL version, set the
+            // TLS SNI hostname header so connecting to TLS servers using SNI
+            // will work.
+            long res = SSL_set_tlsext_host_name(
+                get_socket().native_handle(), m_uri->get_host().c_str());
+            if (!(1 == res)) {
+                callback(socket::make_error_code(socket::error::tls_failed_sni_hostname));
+            }
+        }
+#endif
+
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl,get_socket());
         }
@@ -333,6 +367,7 @@ private:
     strand_ptr          m_strand;
     context_ptr         m_context;
     socket_ptr          m_socket;
+    uri_ptr             m_uri;
     bool                m_is_server;
 
     lib::error_code     m_ec;

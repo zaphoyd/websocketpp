@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 #define WEBSOCKETPP_TRANSPORT_SECURITY_NONE_HPP
 
+#include <websocketpp/uri.hpp>
+
 #include <websocketpp/transport/asio/security/base.hpp>
 
 #include <websocketpp/common/memory.hpp>
@@ -173,6 +175,19 @@ protected:
 
         return lib::error_code();
     }
+
+    /// Set uri hook
+    /**
+     * Called by the transport as a connection is being established to provide
+     * the uri being connected to to the security/socket layer.
+     *
+     * This socket policy doesn't use the uri so it is ignored.
+     *
+     * @since 0.6.0
+     *
+     * @param u The uri to set
+     */
+    void set_uri(uri_ptr) {}
 
     /// Pre-initialize security policy
     /**

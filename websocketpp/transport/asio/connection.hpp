@@ -37,6 +37,7 @@
 
 #include <websocketpp/base64/base64.hpp>
 #include <websocketpp/error.hpp>
+#include <websocketpp/uri.hpp>
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/memory.hpp>
@@ -113,6 +114,22 @@ public:
 
     bool is_secure() const {
         return socket_con_type::is_secure();
+    }
+
+    /// Set uri hook
+    /**
+     * Called by the endpoint as a connection is being established to provide
+     * the uri being connected to to the transport layer.
+     *
+     * This transport policy doesn't use the uri except to forward it to the 
+     * socket layer.
+     *
+     * @since 0.6.0
+     *
+     * @param u The uri to set
+     */
+    void set_uri(uri_ptr u) {
+        socket_con_type::set_uri(u);
     }
 
     /// Sets the tcp pre init handler

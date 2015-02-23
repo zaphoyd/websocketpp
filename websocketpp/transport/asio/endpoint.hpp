@@ -787,6 +787,8 @@ protected:
                 lib::ref(*m_io_service));
         }
 
+        tcon->set_uri(u);
+
         std::string proxy = tcon->get_proxy();
         std::string host;
         std::string port;

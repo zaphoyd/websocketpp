@@ -1,4 +1,16 @@
 HEAD
+- BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be 
+  required to include a new method `void set_uri(uri_ptr u)`. An implementation
+  is not required. The stub transport policy includes an example stub method
+  that can be pasted into any existing custom transport policy to fulfill this
+  requirement. This does not affect anyone using the bundled transports or
+  configs.
+- BREAKING SOCKET POLICY CHANGE: Custom asio transport socket policies will now
+  be required to include a new method `void set_uri(uri_ptr u)`. Like with the
+  transport layer, an implementation is not required. This does not affect 
+  anyone using the bundled socket policies.
+- Improvement: Outgoing TLS connections to servers using the SNI extension to
+  choose a certificate will now work.
 
 0.5.0 - 2015-01-22
 - BREAKING UTILITY CHANGE: Deprecated methods `http::parser::parse_headers`,
