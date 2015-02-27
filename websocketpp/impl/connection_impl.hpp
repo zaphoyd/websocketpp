@@ -1532,6 +1532,25 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             return;
         }
 
+        // Read extension parameters and set up values necessary for the end
+        // user to complete extension negotiation.
+        std::pair<lib::error_code,std::string> neg_results;
+        neg_results = m_processor->negotiate_extensions(m_response);
+
+        if (neg_results.first) {
+            // There was a fatal error in extension negotiation. For the moment
+            // kill all connections that fail extension negotiation.
+            
+            // TODO: deal with cases where the response is well formed but 
+            // doesn't match the options requested by the client. Its possible
+            // that the best behavior in this cases is to log and continue with
+            // an unextended connection.
+            m_alog.write(log::alevel::devel, "Extension negotiation failed: " 
+                + neg_results.first.message());
+            this->terminate(make_error_code(error::extension_neg_failed));
+            // TODO: close connection with reason 1010 (and list extensions)
+        }
+
         // response is valid, connection can now be assumed to be open      
         m_internal_state = istate::PROCESS_CONNECTION;
         m_state = session::state::open;
