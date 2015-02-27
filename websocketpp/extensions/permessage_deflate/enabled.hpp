@@ -439,7 +439,8 @@ public:
      * @return A WebSocket extension offer string for this extension
      */
     std::string generate_offer() const {
-        return "";
+        // TODO: this should be dynamically generated based on user settings
+        return "permessage-deflate; client_no_context_takeover; client_max_window_bits";
     }
 
     /// Validate extension response

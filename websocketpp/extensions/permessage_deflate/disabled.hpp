@@ -88,6 +88,17 @@ public:
         return false;
     }
 
+    /// Generate extension offer
+    /**
+     * Creates an offer string to include in the Sec-WebSocket-Extensions
+     * header of outgoing client requests.
+     *
+     * @return A WebSocket extension offer string for this extension
+     */
+    std::string generate_offer() const {
+        return "";
+    }
+
     /// Compress bytes
     /**
      * @param [in] in String to compress
