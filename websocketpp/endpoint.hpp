@@ -406,11 +406,11 @@ public:
      * The default is set by the max_http_body_size value from the template
      * config
      *
-     * @since 0.5.0
+     * @since 0.5.1
      *
      * @param new_value The value to set as the maximum message size.
      */
-    void get_max_http_body_size(size_t new_value) {
+    void set_max_http_body_size(size_t new_value) {
         m_max_http_body_size = new_value;
     }
 
