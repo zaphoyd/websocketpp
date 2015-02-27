@@ -559,6 +559,30 @@ BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
     BOOST_CHECK( r.get_header("Host") == "www.example.com" );
 }
 
+BOOST_AUTO_TEST_CASE( trailing_body_characters_beyond_max_lenth ) {
+    websocketpp::http::parser::request r;
+
+    std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
+    raw.append(websocketpp::http::max_header_size,'*');
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos = r.consume(raw.c_str(),raw.size());
+    } catch (...) {
+        exception = true;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK( pos == 41 );
+    BOOST_CHECK( r.ready() == true );
+    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
+    BOOST_CHECK( r.get_method() == "GET" );
+    BOOST_CHECK( r.get_uri() == "/" );
+    BOOST_CHECK( r.get_header("Host") == "www.example.com" );
+}
+
 BOOST_AUTO_TEST_CASE( basic_split1 ) {
     websocketpp::http::parser::request r;
 
@@ -614,7 +638,8 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
 BOOST_AUTO_TEST_CASE( max_header_len ) {
     websocketpp::http::parser::request r;
 
-    std::string raw(websocketpp::http::max_header_size+1,'*');
+    std::string raw(websocketpp::http::max_header_size-1,'*');
+    raw += "\r\n";
 
     bool exception = false;
     size_t pos = 0;
@@ -899,6 +924,62 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     websocketpp::http::parser::response r;
 
     std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 159 );
+    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
+}
+
+BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing ) {
+    websocketpp::http::parser::response r;
+
+    std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+    raw += "a";
+
+    bool exception = false;
+    size_t pos = 0;
+
+    try {
+        pos += r.consume(raw.c_str(),raw.size());
+    } catch (std::exception &e) {
+        exception = true;
+        std::cout << e.what() << std::endl;
+    }
+
+    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL( pos, 159 );
+    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
+    BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"), "websocket" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Accept"), "HSmrc0sMlYUkAGmm5OPpG2HaGWk=" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "chat" );
+}
+
+BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing_large ) {
+    websocketpp::http::parser::response r;
+
+    std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
+    raw.append(websocketpp::http::max_header_size,'*');
 
     bool exception = false;
     size_t pos = 0;

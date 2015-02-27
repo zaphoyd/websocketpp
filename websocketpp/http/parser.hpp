@@ -394,7 +394,8 @@ inline std::string strip_lws(std::string const & input) {
 class parser {
 public:
     parser()
-      : m_body_bytes_needed(0)
+      : m_header_bytes(0)
+      , m_body_bytes_needed(0)
       , m_body_bytes_max(max_body_size)
       , m_body_encoding(body_encoding::unknown) {}
     
@@ -596,6 +597,8 @@ protected:
 
     std::string m_version;
     header_list m_headers;
+    
+    size_t                  m_header_bytes;
     
     std::string             m_body;
     size_t                  m_body_bytes_needed;
