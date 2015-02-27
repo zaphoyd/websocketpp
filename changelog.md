@@ -1,5 +1,12 @@
 HEAD
 
+0.5.1 - 2015-02-27
+- Bug: Fixes an issue where some frame data was counted against the max header
+  size limit, resulting in connections that included a lot of frame data
+  immediately after the opening handshake to fail.
+- Bug: Fix a typo in the name of the set method for `max_http_body_size`. #406
+  Thank you jplatte for reporting.
+
 0.5.0 - 2015-01-22
 - BREAKING UTILITY CHANGE: Deprecated methods `http::parser::parse_headers`,
   `http::response::parse_complete`, and `http::request::parse_complete` have
