@@ -4,7 +4,7 @@ HEAD
 - Bug: Fixes an issue where some frame data was counted against the max header
   size limit, resulting in connections that included a lot of frame data
   immediately after the opening handshake to fail.
-  Bug: Fix a type in the name of the set method for `max_http_body_size`. #406
+- Bug: Fix a type in the name of the set method for `max_http_body_size`. #406
   Thank you jplatte for reporting.
 
 0.5.0 - 2015-01-22
