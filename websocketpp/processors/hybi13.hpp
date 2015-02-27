@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Peter Thorson. All rights reserved.
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -85,7 +85,21 @@ public:
         return m_permessage_deflate.is_implemented();
     }
 
-    err_str_pair negotiate_extensions(request_type const & req) {
+    err_str_pair negotiate_extensions(request_type const & request) {
+        return negotiate_extensions_helper(request);
+    }
+    
+    err_str_pair negotiate_extensions(response_type const & response) {
+        return negotiate_extensions_helper(response);
+    }
+    
+    /// Extension negotiation helper function
+    /**
+     * This exists mostly because the code for requests and responses is
+     * identical and I can't have virtual template methods.
+     */
+    template <typename header_type>
+    err_str_pair negotiate_extensions_helper(header_type const & header) {
         err_str_pair ret;
 
         // Respect blanket disabling of all extensions and don't even parse
@@ -97,7 +111,7 @@ public:
 
         http::parameter_list p;
 
-        bool error = req.get_header_as_plist("Sec-WebSocket-Extensions",p);
+        bool error = header.get_header_as_plist("Sec-WebSocket-Extensions",p);
 
         if (error) {
             ret.first = make_error_code(error::extension_parse_error);
@@ -232,6 +246,13 @@ public:
 
         req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
 
+        if (m_permessage_deflate.is_implemented()) {
+            std::string offer = m_permessage_deflate.generate_offer();
+            if (!offer.empty()) {
+                req.replace_header("Sec-WebSocket-Extensions",offer);
+            }
+        }
+
         return lib::error_code();
     }
 
@@ -272,6 +293,8 @@ public:
         if (ec || key != res.get_header("Sec-WebSocket-Accept")) {
             return error::make_error_code(error::missing_required_header);
         }
+
+        // check extensions
 
         return lib::error_code();
     }
