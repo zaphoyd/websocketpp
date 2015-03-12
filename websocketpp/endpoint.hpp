@@ -38,7 +38,8 @@ namespace websocketpp {
 
 /// Creates and manages connections associated with a WebSocket endpoint
 template <typename connection, typename config>
-class endpoint : public config::transport_type, public config::endpoint_base {
+class endpoint : public config::transport_type, public config::endpoint_base,
+    public lib::enable_shared_from_this<endpoint<connection, config> > {
 public:
     // Import appropriate types from our helper class
     // See endpoint_types for more details.
@@ -543,6 +544,10 @@ public:
     }
 protected:
     connection_ptr create_connection();
+
+    lib::shared_ptr<endpoint> get_shared() {
+      return this->shared_from_this();
+    }
 
     alog_type m_alog;
     elog_type m_elog;

@@ -69,6 +69,10 @@ public:
         endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
     }
 
+    ~server() {
+        endpoint_type::cancel();
+    }
+
     /// Create and initialize a new connection
     /**
      * The connection will be initialized and ready to begin. Call its start()
@@ -102,7 +106,7 @@ public:
         
         ec = lib::error_code();
         connection_ptr con = get_connection();
-        
+
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(&type::handle_accept,this,con,lib::placeholders::_1),
@@ -113,6 +117,8 @@ public:
             // If the connection was constructed but the accept failed,
             // terminate the connection to prevent memory leaks
             con->terminate(lib::error_code());
+        } else {
+            m_pending_accept_con = con;
         }
     }
 
@@ -121,13 +127,28 @@ public:
      * Initiates the server connection acceptance loop. Must be called after
      * listen. This method will have no effect until the underlying io_service
      * starts running. It may be called after the io_service is already running.
-     *
-     * Refer to documentation for the transport policy you are using for
-     * instructions on how to stop this acceptance loop.
      */
     void start_accept() {
         lib::error_code ec;
         start_accept(ec);
+        if (ec) {
+            throw exception(ec);
+        }
+    }
+
+    /// Stops the server's async connection acceptance loop
+    void stop_accept(lib::error_code & ec) {
+        endpoint_type::stop_listening(ec);
+        if (m_pending_accept_con) {
+            m_pending_accept_con->terminate(lib::error_code());
+            m_pending_accept_con.reset();
+        }
+    }
+
+    /// Stops the server's async connection acceptance loop
+    void stop_accept() {
+        lib::error_code ec;
+        stop_accept(ec);
         if (ec) {
             throw exception(ec);
         }
@@ -158,7 +179,10 @@ public:
             endpoint_type::m_elog.write(log::elevel::rerror,
                 "Restarting async_accept loop failed: "+ec.message());
         }
+        m_pending_accept_con.reset();
     }
+private:
+    connection_ptr m_pending_accept_con;
 };
 
 } // namespace websocketpp

@@ -97,7 +97,7 @@ public:
 
     ~endpoint() {
         // clean up our io_service if we were initialized with an internal one.
-        m_acceptor.reset();
+        cancel();
         if (m_state != UNINITIALIZED && !m_external_io_service) {
             delete m_io_service;
         }
@@ -1039,6 +1039,16 @@ protected:
         tcon->set_tcp_post_init_handler(m_tcp_post_init_handler);
 
         return lib::error_code();
+    }
+
+    void cancel() {
+        lib::error_code ec;
+        if (m_acceptor) {
+            m_acceptor->cancel(ec);
+        }
+        if (m_resolver) {
+            m_resolver->cancel();
+        }
     }
 private:
     /// Convenience method for logging the code and message for an error_code
