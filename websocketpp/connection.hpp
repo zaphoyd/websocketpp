@@ -272,6 +272,8 @@ public:
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
+    typedef lib::shared_ptr<void> endpoint_hdl;
+
 private:
     enum terminate_status {
         failed = 1,
@@ -281,7 +283,7 @@ private:
 public:
 
     explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
-        elog_type& elog, rng_type & rng)
+        elog_type& elog, rng_type & rng, endpoint_hdl endpoint)
       : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
@@ -309,6 +311,7 @@ public:
       , m_alog(alog)
       , m_elog(elog)
       , m_rng(rng)
+      , m_endpoint_hdl(endpoint)
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
       , m_was_clean(false)
@@ -1479,6 +1482,8 @@ private:
     elog_type& m_elog;
 
     rng_type & m_rng;
+
+    endpoint_hdl m_endpoint_hdl;
 
     // Close state
     /// Close code that was sent on the wire by this endpoint
