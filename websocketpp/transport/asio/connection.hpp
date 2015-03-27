@@ -361,7 +361,7 @@ public:
             callback(lib::error_code());
         }
     }
-protected:
+
     /// Get a pointer to this connection's strand
     strand_ptr get_strand() {
         return m_strand;
@@ -384,6 +384,7 @@ protected:
      * read or write the WebSocket handshakes. At this point the original
      * callback function is called.
      */
+protected:
     void init(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection init");
