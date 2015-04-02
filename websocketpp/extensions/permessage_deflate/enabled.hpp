@@ -148,13 +148,13 @@ public:
 };
 
 /// Get a reference to a static copy of the permessage-deflate error category
-lib::error_category const & get_category() {
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
 
 /// Create an error code in the permessage-deflate category
-lib::error_code make_error_code(error::value e) {
+inline lib::error_code make_error_code(error::value e) {
     return lib::error_code(static_cast<int>(e), get_category());
 }
 

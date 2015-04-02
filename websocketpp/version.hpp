@@ -53,7 +53,7 @@ static int const patch_version = 1;
 static char const prerelease_flag[] = "permessagedeflate";
 
 /// Default user agent string
-static char const user_agent[] = "WebSocket++/0.5.0-permessagedeflate";
+static char const user_agent[] = "WebSocketpp/0.5.1-permessagedeflate";
 
 } // namespace websocketpp
 
