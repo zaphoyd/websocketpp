@@ -938,7 +938,8 @@ protected:
             out->set_header(frame::prepare_header(h,e));
             std::copy(payload.begin(),payload.end(),o.begin());
         }
-
+    
+        out->set_opcode(op);
         out->set_prepared(true);
 
         return lib::error_code();
