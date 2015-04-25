@@ -813,6 +813,13 @@ Enter Command: show 0
 
 _Using TLS / Secure WebSockets_
 
+- Change the includes
+- link to the new library dependencies
+- Switch the config
+- add the `tls_init_handler`
+- configure the SSL context for desired security level
+- mixing secure and non-secure connections in one application.
+
 Chapter 2: Intermediate Features
 --------------------------------
 
