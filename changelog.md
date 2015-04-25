@@ -1,14 +1,19 @@
 HEAD
-- BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
+- MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
   required to include a new method `void set_uri(uri_ptr u)`. An implementation
   is not required. The stub transport policy includes an example stub method
   that can be added to any existing custom transport policy to fulfill this
   requirement. This does not affect anyone using the bundled transports or
   configs.
-- BREAKING SOCKET POLICY CHANGE: Custom asio transport socket policies will now
-  be required to include a new method `void set_uri(uri_ptr u)`. Like with the
-  transport layer, an implementation is not required. This does not affect
-  anyone using the bundled socket policies.
+- MINOR BREAKING SOCKET POLICY CHANGE: Custom asio transport socket policies 
+  will now be required to include a new method `void set_uri(uri_ptr u)`. Like
+  with the transport layer, an implementation is not required. This does not 
+  affect anyone using the bundled socket policies.
+- MINOR BREAKING DEPENDENCY CHANGE: When using Boost versions greater than or 
+  equal to 1.49 in C++03 mode, `libboost-chrono` is needed now instead of 
+  `libboost-date_time`. Users with C++11 compilers or using Boost versions 1.48
+  and earlier are not affected. Note: This change affects the bundled unit test
+  suite.
 - Feature: WebSocket++ Asio transport policy can now be used with the standalone
   version of Asio (1.8.0+) when a C++11 compiler and standard library are 
   present. This means that it is possible now to use WebSocket++'s Asio
