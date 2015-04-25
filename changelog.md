@@ -17,7 +17,8 @@ HEAD
 - Feature: WebSocket++ Asio transport policy can now be used with the standalone
   version of Asio (1.8.0+) when a C++11 compiler and standard library are 
   present. This means that it is possible now to use WebSocket++'s Asio
-  transport entirely without Boost.
+  transport entirely without Boost. Thank you Robert Seiler for proof of concept
+  code that was used as a guide for this implementation. Fixes #324 
 - Feature: Adds a vectored/scatter-gather write handler to the iostream
   transport.
 - Improvement: `echo_server_tls` has been update to demonstrate how to configure
