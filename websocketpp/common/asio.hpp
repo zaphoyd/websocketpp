@@ -53,7 +53,7 @@
     #include <asio/steady_timer.hpp>
     #include <websocketpp/common/chrono.hpp> 
 #else
-    #include <boost/asio.hpp>
+    #include <boost/version.hpp>
     
     // See note above about boost <1.49 compatibility. If we are running on 
     // boost > 1.48 pull in the steady timer and chrono library
@@ -62,6 +62,7 @@
         #include <websocketpp/common/chrono.hpp>
     #endif
     
+    #include <boost/asio.hpp>
     #include <boost/system/error_code.hpp>
 #endif
 
