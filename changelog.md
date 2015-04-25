@@ -20,6 +20,8 @@ HEAD
   transport entirely without Boost.
 - Feature: Adds a vectored/scatter-gather write handler to the iostream
   transport.
+- Improvement: `echo_server_tls` has been update to demonstrate how to configure
+  it for Mozilla's recommended intermediate and modern TLS security profiles.
 - Improvement: `endpoint::set_timer` now uses a steady clock provided by 
   `boost::chrono` or `std::chrono` where available instead of the non-monotonic
   system clock. Thank you breyed for reporting. fixes #241
