@@ -2,17 +2,37 @@ HEAD
 - BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
   required to include a new method `void set_uri(uri_ptr u)`. An implementation
   is not required. The stub transport policy includes an example stub method
-  that can be pasted into any existing custom transport policy to fulfill this
+  that can be added to any existing custom transport policy to fulfill this
   requirement. This does not affect anyone using the bundled transports or
   configs.
 - BREAKING SOCKET POLICY CHANGE: Custom asio transport socket policies will now
   be required to include a new method `void set_uri(uri_ptr u)`. Like with the
   transport layer, an implementation is not required. This does not affect
   anyone using the bundled socket policies.
-- Improvement: Outgoing TLS connections to servers using the SNI extension to
-  choose a certificate will now work.
+- Feature: WebSocket++ Asio transport policy can now be used with the standalone
+  version of Asio (1.8.0+) when a C++11 compiler and standard library are 
+  present. This means that it is possible now to use WebSocket++'s Asio
+  transport entirely without Boost.
 - Feature: Adds a vectored/scatter-gather write handler to the iostream
   transport.
+- Improvement: `endpoint::set_timer` now uses a steady clock provided by 
+  `boost::chrono` or `std::chrono` where available instead of the non-monotonic
+  system clock. Thank you breyed for reporting. fixes #241
+- Improvement: Outgoing TLS connections to servers using the SNI extension to
+  choose a certificate will now work.
+- Cleanup: Asio transport policy has been refactored to remove many Boost
+  dependencies. On C++03 compilers the `boost::noncopyable` dependency has been
+  removed and the `boost::date_time` dependency has been replaced with the newer
+  `boost::chrono` when possible. On C++11 compilers the `boost::aligned_storage`
+  and `boost::date_time` dependencies are gone, replaced with equivalent C++11
+  standard library features.
+
+0.5.1 - 2015-02-27
+- Bug: Fixes an issue where some frame data was counted against the max header
+  size limit, resulting in connections that included a lot of frame data
+  immediately after the opening handshake to fail.
+- Bug: Fix a typo in the name of the set method for `max_http_body_size`. #406
+  Thank you jplatte for reporting.
 
 0.5.0 - 2015-01-22
 - BREAKING UTILITY CHANGE: Deprecated methods `http::parser::parse_headers`,

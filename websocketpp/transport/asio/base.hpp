@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Peter Thorson. All rights reserved.
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,25 +28,22 @@
 #ifndef WEBSOCKETPP_TRANSPORT_ASIO_BASE_HPP
 #define WEBSOCKETPP_TRANSPORT_ASIO_BASE_HPP
 
+#include <websocketpp/common/asio.hpp>
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/common/type_traits.hpp>
 
-#include <boost/system/error_code.hpp>
-
 #include <string>
 
 namespace websocketpp {
 namespace transport {
-/// Transport policy that uses boost::asio
+/// Transport policy that uses asio
 /**
- * This policy uses a single boost::asio io_service to provide transport
+ * This policy uses a single asio io_service to provide transport
  * services to a WebSocket++ endpoint.
  */
 namespace asio {
-
-//
 
 // Class to manage the memory to be used for handler-based custom allocation.
 // It contains a single block of memory which may be returned for allocation
@@ -145,13 +142,13 @@ inline custom_alloc_handler<Handler> make_custom_alloc_handler(
 template <typename config>
 class endpoint;
 
-typedef lib::function<void(boost::system::error_code const &)>
+typedef lib::function<void(lib::asio::error_code const &)>
     socket_shutdown_handler;
 
-typedef lib::function<void (boost::system::error_code const & ec,
+typedef lib::function<void (lib::asio::error_code const & ec,
     size_t bytes_transferred)> async_read_handler;
 
-typedef lib::function<void (boost::system::error_code const & ec,
+typedef lib::function<void (lib::asio::error_code const & ec,
     size_t bytes_transferred)> async_write_handler;
 
 typedef lib::function<void (lib::error_code const & ec)> pre_init_handler;

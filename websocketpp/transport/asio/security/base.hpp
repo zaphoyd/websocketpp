@@ -34,8 +34,6 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 
-#include <boost/asio.hpp>
-
 #include <string>
 
 // Interface that sockets/security policies must implement
