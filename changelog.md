@@ -21,6 +21,10 @@ HEAD
   code that was used as a guide for this implementation. Fixes #324 
 - Feature: Adds a vectored/scatter-gather write handler to the iostream
   transport.
+- Feature: Adds the ability to defer sending an HTTP response until sometime
+  after the `http_handler` is run. This allows processing of long running http
+  handlers to defer their response until it is ready without blocking the
+  network thread. references #425
 - Improvement: `echo_server_tls` has been update to demonstrate how to configure
   it for Mozilla's recommended intermediate and modern TLS security profiles.
 - Improvement: `endpoint::set_timer` now uses a steady clock provided by 
