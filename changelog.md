@@ -27,7 +27,8 @@ HEAD
   `boost::chrono` or `std::chrono` where available instead of the non-monotonic
   system clock. Thank you breyed for reporting. fixes #241
 - Improvement: Outgoing TLS connections to servers using the SNI extension to
-  choose a certificate will now work.
+  choose a certificate will now work. Thank you moozzyk for reporting. 
+  Fixes #400
 - Cleanup: Asio transport policy has been refactored to remove many Boost
   dependencies. On C++03 compilers the `boost::noncopyable` dependency has been
   removed and the `boost::date_time` dependency has been replaced with the newer
