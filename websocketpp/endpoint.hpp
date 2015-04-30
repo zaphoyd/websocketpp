@@ -516,6 +516,35 @@ public:
     /// Resume reading of new data
     void resume_reading(connection_hdl hdl);
 
+    /// Send deferred HTTP Response
+    /**
+     * Sends an http response to an HTTP connection that was deferred. This will
+     * send a complete response including all headers, status line, and body
+     * text. The connection will be closed afterwards.
+     *
+     * Exception free variant
+     *
+     * @since 0.6.0
+     *
+     * @param hdl The connection to send the response on
+     * @param ec A status code, zero on success, non-zero otherwise
+     */
+    void send_http_response(connection_hdl hdl, lib::error_code & ec);
+        
+    /// Send deferred HTTP Response (exception free)
+    /**
+     * Sends an http response to an HTTP connection that was deferred. This will
+     * send a complete response including all headers, status line, and body
+     * text. The connection will be closed afterwards.
+     *
+     * Exception variant
+     *
+     * @since 0.6.0
+     *
+     * @param hdl The connection to send the response on
+     */
+    void send_http_response(connection_hdl hdl);
+
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
      * Convenience method to send a message given a payload string and an opcode

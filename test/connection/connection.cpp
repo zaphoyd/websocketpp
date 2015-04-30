@@ -172,8 +172,8 @@ void defer_http_func(server* s, bool * deferred, websocketpp::connection_hdl hdl
     
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     
-    websocketpp::lib::error_code ec;
-    con->defer_http_response(ec);
+    websocketpp::lib::error_code ec = con->defer_http_response();
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 }
 
 void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called, 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE( deferred_http_request ) {
     con->set_status(websocketpp::http::status_code::ok);
     
     websocketpp::lib::error_code ec;
-    con->send_http_response(ec);
+    s.send_http_response(con->get_handle(),ec);
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK_EQUAL(ostream.str(), output);
     con->send_http_response(ec);

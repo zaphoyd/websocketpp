@@ -1076,7 +1076,7 @@ public:
         return m_request;
     }
     
-    /// Defer HTTP Response until later
+    /// Defer HTTP Response until later (Exception free)
     /**
      * Used in the http handler to defer the HTTP response for this connection
      * until later. Handshake timers will be canceled and the connection will be
@@ -1087,11 +1087,11 @@ public:
      *
      * @since 0.6.0
      *
-     * @param ec A status code, zero on success, non-zero otherwise
+     * @return A status code, zero on success, non-zero otherwise
      */
-    void defer_http_response(lib::error_code & ec);
+    lib::error_code defer_http_response();
     
-    /// Send deferred HTTP Response
+    /// Send deferred HTTP Response (exception free)
     /**
      * Sends an http response to an HTTP connection that was deferred. This will
      * send a complete response including all headers, status line, and body
@@ -1102,6 +1102,9 @@ public:
      * @param ec A status code, zero on success, non-zero otherwise
      */
     void send_http_response(lib::error_code & ec);
+    
+    /// Send deferred HTTP Response
+    void send_http_response();
     
     // TODO HTTPNBIO: write_headers
     // function that processes headers + status so far and writes it to the wire

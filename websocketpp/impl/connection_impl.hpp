@@ -644,10 +644,10 @@ void connection<config>::remove_header(std::string const & key)
  * Warning: deferred connections won't time out and as a result can tie up
  * resources.
  *
- * @param ec A status code, zero on success, non-zero otherwise
+ * @return A status code, zero on success, non-zero otherwise
  */
 template <typename config>
-void connection<config>::defer_http_response(lib::error_code & ec) {
+lib::error_code connection<config>::defer_http_response() {
     // Cancel handshake timer, otherwise the connection will time out and we'll
     // close the connection before the app has a chance to send a response.
     if (m_handshake_timer) {
@@ -658,10 +658,10 @@ void connection<config>::defer_http_response(lib::error_code & ec) {
     // Do something to signal deferral
     m_http_state = session::http_state::deferred;
     
-    ec = lib::error_code();
+    return lib::error_code();
 }
 
-/// Send deferred HTTP Response
+/// Send deferred HTTP Response (exception free)
 /**
  * Sends an http response to an HTTP connection that was deferred. This will
  * send a complete response including all headers, status line, and body
@@ -685,6 +685,15 @@ void connection<config>::send_http_response(lib::error_code & ec) {
     
     this->write_http_response(lib::error_code());
     ec = lib::error_code();
+}
+
+template <typename config>
+void connection<config>::send_http_response() {
+    lib::error_code ec;
+    this->send_http_response(ec);
+    if (ec) {
+        throw exception(ec);
+    }
 }
 
 
