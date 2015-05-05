@@ -638,7 +638,6 @@ public:
      * @return the connection_ptr. May be NULL if the handle was invalid.
      */
     connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
-        scoped_lock_type lock(m_mutex);
         connection_ptr con = lib::static_pointer_cast<connection_type>(
             hdl.lock());
         if (!con) {

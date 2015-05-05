@@ -33,6 +33,7 @@ HEAD
 - Improvement: Outgoing TLS connections to servers using the SNI extension to
   choose a certificate will now work. Thank you moozzyk for reporting. 
   Fixes #400
+- Improvement: Removes an unnecessary mutex lock in `get_con_from_hdl`.
 - Cleanup: Asio transport policy has been refactored to remove many Boost
   dependencies. On C++03 compilers the `boost::noncopyable` dependency has been
   removed and the `boost::date_time` dependency has been replaced with the newer
