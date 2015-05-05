@@ -70,7 +70,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     ############ Compiler specific setup
 
     set (WEBSOCKETPP_PLATFORM_LIBS "")
-    set (WEBSOCKETPP_PLATFORM_TSL_LIBS "")
+    set (WEBSOCKETPP_PLATFORM_TLS_LIBS "")
     set (WEBSOCKETPP_BOOST_LIBS "")
 
     # VC9 and C++11 reasoning
@@ -111,7 +111,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     # g++
     if (CMAKE_COMPILER_IS_GNUCXX)
         set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
-        set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
+        set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
         set (WEBSOCKETPP_BOOST_LIBS system thread)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
         if (NOT APPLE)
@@ -133,7 +133,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         else()
             set (WEBSOCKETPP_PLATFORM_LIBS pthread)
         endif()
-        set (WEBSOCKETPP_PLATFORM_TSL_LIBS ssl crypto)
+        set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
         set (WEBSOCKETPP_BOOST_LIBS system thread)
         set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
         if (NOT APPLE)
