@@ -33,6 +33,8 @@ http://www.zaphoyd.com/websocketpp/manual/
 **GitHub Repository**
 https://github.com/zaphoyd/websocketpp/
 
+GitHub pull requests should be submitted to the `develop` branch.
+
 **Announcements Mailing List**
 http://groups.google.com/group/websocketpp-announcements/
 
