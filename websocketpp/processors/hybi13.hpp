@@ -563,6 +563,7 @@ public:
         } else {
             frame::extended_header e(i.size());
             out->set_header(frame::prepare_header(h,e));
+            key.i = 0;
         }
 
         // prepare payload
@@ -937,7 +938,8 @@ protected:
             out->set_header(frame::prepare_header(h,e));
             std::copy(payload.begin(),payload.end(),o.begin());
         }
-
+    
+        out->set_opcode(op);
         out->set_prepared(true);
 
         return lib::error_code();
