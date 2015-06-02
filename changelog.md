@@ -1,4 +1,6 @@
 HEAD
+
+0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
   required to include a new method `void set_uri(uri_ptr u)`. An implementation
   is not required. The stub transport policy includes an example stub method
