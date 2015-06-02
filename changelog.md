@@ -40,6 +40,8 @@ HEAD
   `boost::chrono` when possible. On C++11 compilers the `boost::aligned_storage`
   and `boost::date_time` dependencies are gone, replaced with equivalent C++11
   standard library features.
+- Bug: Fixes a potential dangling pointer and inconsistent error message
+  handling in `websocketpp::exception`. #432 Thank you Tom Swirly for the fix.
 
 0.5.1 - 2015-02-27
 - Bug: Fixes an issue where some frame data was counted against the max header
