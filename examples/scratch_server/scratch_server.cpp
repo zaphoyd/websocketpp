@@ -84,7 +84,9 @@ int main(int argc, char * argv[]) {
         echo_server.init_asio();
         
         // Register our message handler
-        echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+        using websocketpp::lib::placeholders::_1;
+        using websocketpp::lib::placeholders::_2;
+        echo_server.set_message_handler(bind(&on_message,&echo_server,_1,_2));
         
         // Listen on port 9002
         echo_server.listen(9002);

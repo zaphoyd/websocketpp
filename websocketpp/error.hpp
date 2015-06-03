@@ -255,7 +255,7 @@ public:
     {}
 
     explicit exception(lib::error_code ec)
-      : m_code(ec)
+      : m_msg(ec.message()), m_code(ec)
     {}
 
     ~exception() throw() {}
@@ -268,7 +268,7 @@ public:
         return m_code;
     }
 
-    std::string m_msg;
+    const std::string m_msg;
     lib::error_code m_code;
 };
 
