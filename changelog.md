@@ -1,4 +1,5 @@
 HEAD
+- Improvement: Better automatic std::chrono feature detection for Visual Studio
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
