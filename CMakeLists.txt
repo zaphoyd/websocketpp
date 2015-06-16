@@ -224,11 +224,6 @@ if (BUILD_EXAMPLES)
     add_subdirectory (examples)
 endif ()
 
-# Add tests
-if (BUILD_TESTS)
-    add_subdirectory (test)
-endif ()
-
 print_used_build_config()
 
 export (PACKAGE websocketpp)
