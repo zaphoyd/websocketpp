@@ -5,3 +5,13 @@
 
 set(WEBSOCKETPP_FOUND TRUE)
 set(WEBSOCKETPP_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/@RELATIVE_INSTALL@")
+
+#This is a bit of a hack, but as a header only library it's simpler to do this than the
+#more correct method of setting up the import target and using it to install and export. It
+#also allows continued support of CMake 2.6
+if(COMMAND target_include_directories)
+  add_library(websocketpp::websocketpp INTERFACE IMPORTED)
+  #A concequence of declaring this manually instead of using the export command is that
+  #we cannot use target_include_directories directly
+  set_target_properties(websocketpp::websocketpp PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WEBSOCKETPP_INCLUDE_DIR}")
+endif()
