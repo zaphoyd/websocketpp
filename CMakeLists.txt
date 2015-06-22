@@ -233,6 +233,7 @@ print_used_build_config()
 
 export (PACKAGE websocketpp)
 
+file(RELATIVE_PATH RELATIVE_INSTALL "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
 configure_file (websocketpp-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake" @ONLY)
 configure_file (websocketpp-configVersion.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake" @ONLY)
 
