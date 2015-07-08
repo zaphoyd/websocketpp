@@ -29,7 +29,7 @@
 #define WEBSOCKETPP_COMMON_ASIO_SSL_HPP
 
 #ifdef ASIO_STANDALONE
-    #include <asio/asio/ssl.hpp>
+    #include <asio/ssl.hpp>
 #else
     #include <boost/asio/ssl.hpp>
 #endif
