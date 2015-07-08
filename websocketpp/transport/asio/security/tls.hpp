@@ -334,7 +334,12 @@ protected:
      * @param ec The error code to translate_ec
      * @return The translated error code
      */
-    lib::error_code translate_ec(boost::system::error_code ec) {
+#ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+    lib::error_code translate_ec(lib::error_code ec)
+#else
+    lib::error_code translate_ec(boost::system::error_code ec)
+#endif
+		{
         if (ec.category() == lib::asio::error::get_ssl_category()) {
             if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
                 return make_error_code(transport::error::tls_short_read);
@@ -349,6 +354,7 @@ protected:
             return make_error_code(transport::error::pass_through);
         }
     }
+
 private:
     socket_type::handshake_type get_handshake_type() {
         if (m_is_server) {
