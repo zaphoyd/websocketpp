@@ -150,6 +150,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         list (APPEND WEBSOCKETPP_BOOST_LIBS random)
     endif()
 
+    if (BUILD_TESTS)
+        list (APPEND WEBSOCKETPP_BOOST_LIBS unit_test_framework)
+    endif()
+
     ############ Dependencies
 
     # Set BOOST_ROOT env variable or pass with cmake -DBOOST_ROOT=path.
@@ -221,12 +225,12 @@ add_subdirectory (websocketpp)
 
 # Add examples
 if (BUILD_EXAMPLES)
-    add_subdirectory (examples)
+    include_subdirs ("examples")
 endif ()
 
 # Add tests
 if (BUILD_TESTS)
-    add_subdirectory (test)
+    include_subdirs ("test")
 endif ()
 
 print_used_build_config()
