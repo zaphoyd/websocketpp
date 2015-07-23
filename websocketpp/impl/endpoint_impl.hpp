@@ -66,6 +66,7 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
+    con->set_idle_handler(m_idle_handler);
 
     if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);

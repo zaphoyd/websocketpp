@@ -116,12 +116,19 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
     message_ptr outgoing_msg;
     bool needs_writing = false;
 
-    if (msg->get_prepared()) {
+    if (!msg) {
+        scoped_lock_type lock(m_write_lock);
+        m_trigger_idle = true;
+        needs_writing = true;
+    } else if (msg->get_prepared()) {
         outgoing_msg = msg;
 
         scoped_lock_type lock(m_write_lock);
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
+        if (needs_writing) {
+            m_trigger_idle = true;
+        }
     } else {
         outgoing_msg = m_msg_manager->get_message();
 
@@ -138,6 +145,9 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
+        if (needs_writing) {
+            m_trigger_idle = true;
+        }
     }
 
     if (needs_writing) {
@@ -1750,6 +1760,7 @@ template <typename config>
 void connection<config>::write_frame() {
     //m_alog.write(log::alevel::devel,"connection write_frame");
 
+    bool idle = false;
     {
         scoped_lock_type lock(m_write_lock);
 
@@ -1775,13 +1786,27 @@ void connection<config>::write_frame() {
         
         if (m_current_msgs.empty()) {
             // there was nothing to send
-            return;
+            //return;
+            if (m_trigger_idle) {
+                m_trigger_idle = false;
+                idle = true;
+            } else {
+                return;
+            }
         } else {
             // At this point we own the next messages to be sent and are
             // responsible for holding the write flag until they are 
             // successfully sent or there is some error
             m_write_flag = true;
         }
+    }
+
+    if (idle) {
+        if (m_idle_handler) {
+            m_idle_handler(m_connection_hdl);
+        }
+        // there was nothing to send
+        return;
     }
 
     typename std::vector<message_ptr>::iterator it;
@@ -1881,6 +1906,12 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
             &type::write_frame,
             type::get_shared()
         ));
+    } else if (m_idle_handler) {
+        //m_idle_handler(m_connection_hdl); // let write_frame trigger idle
+        transport_con_type::dispatch(lib::bind(
+            &type::write_frame,
+            type::get_shared()
+            ));
     }
 }
 

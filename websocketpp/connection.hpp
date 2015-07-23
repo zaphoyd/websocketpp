@@ -277,6 +277,9 @@ public:
     typedef processor::processor<config> processor_type;
     typedef lib::shared_ptr<processor_type> processor_ptr;
 
+    // wmj: idle handler
+    typedef lib::function<void(connection_hdl)> idle_handler;
+
     // Message handler (needs to know message type)
     typedef lib::function<void(connection_hdl,message_ptr)> message_handler;
 
@@ -328,6 +331,7 @@ public:
       , m_is_http(false)
       , m_http_state(session::http_state::init)
       , m_was_clean(false)
+      , m_trigger_idle(false)
     {
         m_alog.write(log::alevel::devel,"connection constructor");
     }
@@ -472,6 +476,16 @@ public:
      */
     void set_message_handler(message_handler h) {
         m_message_handler = h;
+    }
+
+    /// Set idle handler
+    /**
+     * The idle handler is called when the connection is idle for write.
+     *
+     * @param h The new message_handler
+     */
+    void set_idle_handler(idle_handler h) {
+        m_idle_handler = h;
     }
 
     //////////////////////////////////////////
@@ -1455,6 +1469,8 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+    idle_handler            m_idle_handler; //wmj
+    bool                    m_trigger_idle; //wmj
 
     /// constant values
     long                    m_open_handshake_timeout_dur;
