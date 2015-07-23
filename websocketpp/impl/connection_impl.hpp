@@ -540,6 +540,7 @@ connection<config>::get_response_header(std::string const & key) const {
     return m_response.get_header(key);
 }
 
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_status(http::status_code::value code)
 {
@@ -549,6 +550,8 @@ void connection<config>::set_status(http::status_code::value code)
     }
     m_response.set_status(code);
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_status(http::status_code::value code,
     std::string const & msg)
@@ -560,6 +563,8 @@ void connection<config>::set_status(http::status_code::value code,
 
     m_response.set_status(code,msg);
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_body(std::string const & value) {
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -570,6 +575,7 @@ void connection<config>::set_body(std::string const & value) {
     m_response.set_body(value);
 }
 
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::append_header(std::string const & key,
     std::string const & val)
@@ -592,6 +598,8 @@ void connection<config>::append_header(std::string const & key,
         }
     }
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::replace_header(std::string const & key,
     std::string const & val)
@@ -614,6 +622,8 @@ void connection<config>::replace_header(std::string const & key,
         }
     }
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::remove_header(std::string const & key)
 {
