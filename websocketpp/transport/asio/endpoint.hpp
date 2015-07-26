@@ -218,7 +218,10 @@ public:
      * @param ec Set to indicate what error occurred, if any.
      */
     void init_asio(lib::error_code & ec) {
-        init_asio(new lib::asio::io_service(), ec);
+        // Use a smart pointer until the call is successful and ownership has successfully been taken
+        lib::auto_ptr<lib::asio::io_service> pService(new lib::asio::io_service());
+        init_asio(pService.get(), ec);
+        if( !ec ) pService.release(); // Call was successful, transfer ownership
         m_external_io_service = false;
     }
 
@@ -230,7 +233,11 @@ public:
      * @see init_asio(io_service_ptr ptr)
      */
     void init_asio() {
-        init_asio(new lib::asio::io_service());
+        // Use a smart pointer until the call is successful and ownership transferred
+        lib::auto_ptr<lib::asio::io_service> pService(new lib::asio::io_service());
+        init_asio( pService.get() );
+        // If control got this far without an exception, then ownership has successfully been taken
+        pService.release();
         m_external_io_service = false;
     }
 
