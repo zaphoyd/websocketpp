@@ -1,12 +1,17 @@
+# Test alloc message buffer strategy
+file (GLOB SOURCE alloc.cpp)
 
-file (GLOB SOURCE_FILES *.cpp)
-file (GLOB HEADER_FILES *.hpp)
-
-init_target (test_message_buffer)
-
-build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
+init_target (test_message_alloc)
+build_executable (${TARGET_NAME} ${SOURCE})
 link_boost ()
 final_target ()
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
 
+# Test message buffers
+file (GLOB SOURCE message.cpp)
+
+init_target (test_message_buffer)
+build_executable (${TARGET_NAME} ${SOURCE})
+link_boost ()
+final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")

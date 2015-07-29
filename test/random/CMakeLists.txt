@@ -1,12 +1,17 @@
+# Test RNG policy none
+file (GLOB SOURCE none.cpp)
 
-file (GLOB SOURCE_FILES *.cpp)
-file (GLOB HEADER_FILES *.hpp)
-
-init_target (test_random)
-
-build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
-
+init_target (test_random_none)
+build_executable (${TARGET_NAME} ${SOURCE})
 link_boost ()
 final_target ()
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
 
+# Test RNG policy random_device
+file (GLOB SOURCE random_device.cpp)
+
+init_target (test_random_random_device)
+build_executable (${TARGET_NAME} ${SOURCE})
+link_boost ()
+final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")

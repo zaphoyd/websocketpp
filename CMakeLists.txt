@@ -186,6 +186,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         set (Boost_USE_STATIC_LIBS FALSE)
     endif ()
 
+	if (BOOST_STATIC)
+		set (Boost_USE_STATIC_LIBS TRUE)
+	endif ()
+
     set (Boost_FIND_REQUIRED TRUE)
     set (Boost_FIND_QUIETLY TRUE)
     set (Boost_DEBUG FALSE)
@@ -218,6 +222,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     endif ()
 
     find_package(OpenSSL)
+    find_package(ZLIB)
 endif()
 
 ############ Add projects

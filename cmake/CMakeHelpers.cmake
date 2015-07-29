@@ -13,7 +13,7 @@ macro (print_used_build_config)
     message ("")
     message (STATUS "WEBSOCKETPP_BOOST_LIBS        = ${WEBSOCKETPP_BOOST_LIBS}")
     message (STATUS "WEBSOCKETPP_PLATFORM_LIBS     = ${WEBSOCKETPP_PLATFORM_LIBS}")
-    message (STATUS "WEBSOCKETPP_PLATFORM_TSL_LIBS = ${WEBSOCKETPP_PLATFORM_TSL_LIBS}")
+    message (STATUS "WEBSOCKETPP_PLATFORM_TLS_LIBS = ${WEBSOCKETPP_PLATFORM_TLS_LIBS}")
     message ("") 
 endmacro ()
 
@@ -75,6 +75,10 @@ endmacro ()
 
 macro (link_openssl)
     target_link_libraries (${TARGET_NAME} ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+endmacro ()
+
+macro (link_zlib)
+	target_link_libraries (${TARGET_NAME} ${ZLIB_LIBRARIES})
 endmacro ()
 
 macro (include_subdirs PARENT)

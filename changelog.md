@@ -1,5 +1,8 @@
 HEAD
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
+- Improvement: Major refactoring to bundled CMake build system. CMake can now be used to
+  build all of the examples and the test suite. Thank you Thijs Wenker for a significant
+  portion of this code. #378, #435, #449
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

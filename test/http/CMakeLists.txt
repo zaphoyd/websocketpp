@@ -1,10 +1,9 @@
 
-file (GLOB SOURCE_FILES *.cpp)
-file (GLOB HEADER_FILES *.hpp)
+file (GLOB SOURCE_FILES parser.cpp)
 
 init_target (test_http)
 
-build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+build_executable (${TARGET_NAME} ${SOURCE_FILES})
 
 link_boost ()
 final_target ()
