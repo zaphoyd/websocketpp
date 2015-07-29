@@ -13,6 +13,8 @@ set (WEBSOCKETPP_MINOR_VERSION 7)
 set (WEBSOCKETPP_PATCH_VERSION 0)
 set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
 if (WIN32 AND NOT CYGWIN)
   set (DEF_INSTALL_CMAKE_DIR cmake)
@@ -150,6 +152,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         list (APPEND WEBSOCKETPP_BOOST_LIBS random)
     endif()
 
+    if (BUILD_TESTS)
+        list (APPEND WEBSOCKETPP_BOOST_LIBS unit_test_framework)
+    endif()
+
     ############ Dependencies
 
     # Set BOOST_ROOT env variable or pass with cmake -DBOOST_ROOT=path.
@@ -179,6 +185,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         set (Boost_USE_MULTITHREADED FALSE)
         set (Boost_USE_STATIC_LIBS FALSE)
     endif ()
+
+	if (BOOST_STATIC)
+		set (Boost_USE_STATIC_LIBS TRUE)
+	endif ()
 
     set (Boost_FIND_REQUIRED TRUE)
     set (Boost_FIND_QUIETLY TRUE)
@@ -212,6 +222,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     endif ()
 
     find_package(OpenSSL)
+    find_package(ZLIB)
 endif()
 
 ############ Add projects
@@ -221,12 +232,12 @@ add_subdirectory (websocketpp)
 
 # Add examples
 if (BUILD_EXAMPLES)
-    add_subdirectory (examples)
+    include_subdirs ("examples")
 endif ()
 
 # Add tests
 if (BUILD_TESTS)
-    add_subdirectory (test)
+    include_subdirs ("test")
 endif ()
 
 print_used_build_config()

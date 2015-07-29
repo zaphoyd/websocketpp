@@ -88,3 +88,5 @@ examples/wsperf/wsperf_client
 *.vcxproj.filters
 *.user
 install
+Makefile
+bin
