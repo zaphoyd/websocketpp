@@ -51,12 +51,6 @@ inline size_t request::consume(char const * buf, size_t len) {
         return bytes_processed;
     }
 
-    if (m_buf->size() + len > max_header_size) {
-        // exceeded max header size
-        throw exception("Maximum header size exceeded.",
-                        status_code::request_header_fields_too_large);
-    }
-
     // copy new header bytes into buffer
     m_buf->append(buf,len);
 
@@ -72,15 +66,21 @@ inline size_t request::consume(char const * buf, size_t len) {
             header_delimiter,
             header_delimiter+sizeof(header_delimiter)-1
         );
-
-        //std::cout << "mark5: " << end-begin << std::endl;
-        //std::cout << "mark6: " << sizeof(header_delimiter) << std::endl;
+        
+        m_header_bytes += (end-begin+sizeof(header_delimiter));
+        
+        if (m_header_bytes > max_header_size) {
+            // exceeded max header size
+            throw exception("Maximum header size exceeded.",
+                status_code::request_header_fields_too_large);
+        }
 
         if (end == m_buf->end()) {
             // we are out of bytes. Discard the processed bytes and copy the
             // remaining unprecessed bytes to the beginning of the buffer
             std::copy(begin,end,m_buf->begin());
             m_buf->resize(static_cast<std::string::size_type>(end-begin));
+            m_header_bytes -= m_buf->size();
 
             return len;
         }

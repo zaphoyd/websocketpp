@@ -85,6 +85,7 @@ lib::error_code connection<config>::send(std::string const & payload,
 {
     message_ptr msg = m_msg_manager->get_message(op,payload.size());
     msg->append_payload(payload);
+    msg->set_compressed(true);
 
     return send(msg);
 }
@@ -539,6 +540,7 @@ connection<config>::get_response_header(std::string const & key) const {
     return m_response.get_header(key);
 }
 
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_status(http::status_code::value code)
 {
@@ -548,6 +550,8 @@ void connection<config>::set_status(http::status_code::value code)
     }
     m_response.set_status(code);
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_status(http::status_code::value code,
     std::string const & msg)
@@ -559,6 +563,8 @@ void connection<config>::set_status(http::status_code::value code,
 
     m_response.set_status(code,msg);
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::set_body(std::string const & value) {
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -569,6 +575,7 @@ void connection<config>::set_body(std::string const & value) {
     m_response.set_body(value);
 }
 
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::append_header(std::string const & key,
     std::string const & val)
@@ -591,6 +598,8 @@ void connection<config>::append_header(std::string const & key,
         }
     }
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::replace_header(std::string const & key,
     std::string const & val)
@@ -613,6 +622,8 @@ void connection<config>::replace_header(std::string const & key,
         }
     }
 }
+
+// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::remove_header(std::string const & key)
 {
@@ -1025,6 +1036,12 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
         }
 
         lib::error_code consume_ec;
+
+        if (m_alog.static_test(log::alevel::devel)) {
+            std::stringstream s;
+            s << "Processing Bytes: " << utility::to_hex(reinterpret_cast<uint8_t*>(m_buf)+p,bytes_transferred-p);
+            m_alog.write(log::alevel::devel,s.str());
+        }
 
         p += m_processor->consume(
             reinterpret_cast<uint8_t*>(m_buf)+p,
@@ -1585,6 +1602,25 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             log_err(log::elevel::rerror,"Server handshake response",validate_ec);
             this->terminate(validate_ec);
             return;
+        }
+
+        // Read extension parameters and set up values necessary for the end
+        // user to complete extension negotiation.
+        std::pair<lib::error_code,std::string> neg_results;
+        neg_results = m_processor->negotiate_extensions(m_response);
+
+        if (neg_results.first) {
+            // There was a fatal error in extension negotiation. For the moment
+            // kill all connections that fail extension negotiation.
+            
+            // TODO: deal with cases where the response is well formed but 
+            // doesn't match the options requested by the client. Its possible
+            // that the best behavior in this cases is to log and continue with
+            // an unextended connection.
+            m_alog.write(log::alevel::devel, "Extension negotiation failed: " 
+                + neg_results.first.message());
+            this->terminate(make_error_code(error::extension_neg_failed));
+            // TODO: close connection with reason 1010 (and list extensions)
         }
 
         // response is valid, connection can now be assumed to be open      

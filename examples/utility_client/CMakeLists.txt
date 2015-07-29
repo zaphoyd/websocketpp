@@ -10,3 +10,4 @@ link_boost ()
 final_target ()
 
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "examples")
+

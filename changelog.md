@@ -1,4 +1,5 @@
 HEAD
+- Feature: Basic support for the permessage-deflate extension. #344
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be used to
   build all of the examples and the test suite. Thank you Thijs Wenker for a significant

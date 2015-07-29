@@ -78,7 +78,7 @@ public:
     }
 };
 
-inline const lib::error_category& get_category() {
+inline lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
