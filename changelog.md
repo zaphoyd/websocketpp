@@ -4,6 +4,8 @@ HEAD
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be used to
   build all of the examples and the test suite. Thank you Thijs Wenker for a significant
   portion of this code. #378, #435, #449
+- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark Grimes for
+  reporting and fixing.
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
