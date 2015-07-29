@@ -1,5 +1,7 @@
 HEAD
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
+- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark Grimes for
+  reporting and fixing. 
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

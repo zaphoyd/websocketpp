@@ -219,9 +219,9 @@ public:
      */
     void init_asio(lib::error_code & ec) {
         // Use a smart pointer until the call is successful and ownership has successfully been taken
-        lib::auto_ptr<lib::asio::io_service> pService(new lib::asio::io_service());
-        init_asio(pService.get(), ec);
-        if( !ec ) pService.release(); // Call was successful, transfer ownership
+        lib::auto_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+        init_asio(service.get(), ec);
+        if( !ec ) service.release(); // Call was successful, transfer ownership
         m_external_io_service = false;
     }
 
@@ -234,10 +234,10 @@ public:
      */
     void init_asio() {
         // Use a smart pointer until the call is successful and ownership transferred
-        lib::auto_ptr<lib::asio::io_service> pService(new lib::asio::io_service());
-        init_asio( pService.get() );
+        lib::auto_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+        init_asio( service.get() );
         // If control got this far without an exception, then ownership has successfully been taken
-        pService.release();
+        service.release();
         m_external_io_service = false;
     }
 
