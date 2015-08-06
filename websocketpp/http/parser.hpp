@@ -381,9 +381,13 @@ inline std::string strip_lws(std::string const & input) {
     if (begin == input.end()) {
         return std::string();
     }
-    std::string::const_reverse_iterator end = extract_all_lws(input.rbegin(),input.rend());
 
-    return std::string(begin,end.base());
+    std::string::const_reverse_iterator rbegin = extract_all_lws(input.rbegin(),input.rend());
+    if (rbegin == input.rend()) {
+        return std::string();
+    }
+
+    return std::string(begin,rbegin.base());
 }
 
 /// Base HTTP parser
