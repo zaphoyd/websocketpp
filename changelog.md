@@ -6,6 +6,8 @@ HEAD
   portion of this code. #378, #435, #449
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark Grimes for
   reporting and fixing.
+- Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli Fidler for
+  reporting, test cases, and a patch. #456
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
