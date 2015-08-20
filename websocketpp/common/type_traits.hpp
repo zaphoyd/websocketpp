@@ -53,8 +53,10 @@ namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_TYPE_TRAITS_
     using std::aligned_storage;
+    using std::is_same;
 #else
     using boost::aligned_storage;
+    using boost::is_same;
 #endif
 
 } // namespace lib

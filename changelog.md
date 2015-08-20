@@ -1,13 +1,22 @@
 HEAD
 - Feature: Basic support for the permessage-deflate extension. #344
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
-- Improvement: Major refactoring to bundled CMake build system. CMake can now be used to
-  build all of the examples and the test suite. Thank you Thijs Wenker for a significant
-  portion of this code. #378, #435, #449
-- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark Grimes for
-  reporting and fixing.
-- Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli Fidler for
-  reporting, test cases, and a patch. #456
+- Improvement: Major refactoring to bundled CMake build system. CMake can now be
+  used to build all of the examples and the test suite. Thank you Thijs Wenker
+  for a significant portion of this code. #378, #435, #449
+- Improvement: In build environments where `lib::error_code` and 
+  `lib::asio::error_code` match (such as using `boost::asio` with 
+  `boost::system_error` or standalone asio with `std::system_error`, transport
+  errors are passed through natively rather than being reported as a translated 
+  `pass_through` error type.
+- Improvement: Add a `get_transport_error` method to Asio transport connections
+  to allow retrieving a machine readable native transport error.
+- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
+  Grimes for reporting and fixing.
+- Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli 
+  Fidler for reporting, test cases, and a patch. #456
+- Bug: Fix an issue where standalone Asio builds that use TLS would not compile
+  due to lingering boost code. #448 Thank you mjsp for reporting
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

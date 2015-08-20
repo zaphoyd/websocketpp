@@ -366,6 +366,29 @@ public:
         return m_strand;
     }
 
+	/// Get the internal transport error code for a closed/failed connection
+    /**
+     * Retrieves a machine readable detailed error code indicating the reason
+     * that the connection was closed or failed. Valid only after the close or
+     * fail handler is called.
+     *
+     * Primarily used if you are using mismatched asio / system_error
+     * implementations such as `boost::asio` with `std::system_error`. In these
+     * cases the transport error type is different than the library error type
+     * and some WebSocket++ functions that return transport errors via the 
+     * library error code type will be coerced into a catch all `pass_through`
+     * or `tls_error` error. This method will return the original machine 
+     * readable transport error in the native type.
+     *
+     * @since 0.7.0
+     *
+     * @return Error code indicating the reason the connection was closed or 
+     * failed
+     */
+    lib::asio::error_code get_transport_ec() const {
+        return m_tec;
+    }
+
     /// Initialize transport for reading
     /**
      * init_asio is called once immediately after construction to initialize
@@ -877,6 +900,7 @@ protected:
             // We don't know much more about the error at this point. As our
             // socket/security policy if it knows more:
             tec = socket_con_type::translate_ec(ec);
+            m_tec = ec;
 
             if (tec == transport::error::tls_error ||
                 tec == transport::error::pass_through)
@@ -1100,6 +1124,7 @@ protected:
                 // We don't know anything more about this error, give our
                 // socket/security policy a crack at it.
                 tec = socket_con_type::translate_ec(ec);
+                m_tec = ec;
 
                 if (tec == transport::error::tls_short_read) {
                     // TLS short read at this point is somewhat expected if both
@@ -1155,6 +1180,9 @@ private:
     connection_hdl  m_connection_hdl;
 
     std::vector<lib::asio::const_buffer> m_bufs;
+
+	/// Detailed internal error code
+    lib::asio::error_code m_tec;
 
     // Handlers
     tcp_init_handler    m_tcp_pre_init_handler;

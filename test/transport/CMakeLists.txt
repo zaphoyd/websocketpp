@@ -20,6 +20,16 @@ link_openssl()
 final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
 
+# Test transport asio security
+file (GLOB SOURCE asio/security.cpp)
+
+init_target (test_transport_asio_security)
+build_executable (${TARGET_NAME} ${SOURCE})
+link_boost ()
+link_openssl()
+final_target ()
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
+
 endif()
 
 # Test transport iostream base
