@@ -320,7 +320,7 @@ protected:
      * @return The error that occurred, if any.
      */
     lib::asio::error_code cancel_socket() {
-    	lib::asio::error_code ec;
+        lib::asio::error_code ec;
         get_raw_socket().cancel(ec);
         return ec;
     }

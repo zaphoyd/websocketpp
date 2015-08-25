@@ -366,7 +366,7 @@ public:
         return m_strand;
     }
 
-	/// Get the internal transport error code for a closed/failed connection
+    /// Get the internal transport error code for a closed/failed connection
     /**
      * Retrieves a machine readable detailed error code indicating the reason
      * that the connection was closed or failed. Valid only after the close or
@@ -580,12 +580,12 @@ protected:
         m_alog.write(log::alevel::devel, "Asio transport post-init timed out");
         lib::asio::error_code cec = socket_con_type::cancel_socket();
         if (cec) {
-        	if (cec == lib::asio::error::operation_not_supported) {
-        		// cancel not supported on this OS, ignore and log at dev level
-        		m_alog.write(log::alevel::devel, "socket cancel not supported");
-        	} else {
-        		m_alog.write(log::elevel::warn, "socket cancel failed");
-        	}
+            if (cec == lib::asio::error::operation_not_supported) {
+                // cancel not supported on this OS, ignore and log at dev level
+                m_alog.write(log::alevel::devel, "socket cancel not supported");
+            } else {
+                m_alog.write(log::elevel::warn, "socket cancel failed");
+            }
         }
         callback(ret_ec);
     }
@@ -1189,7 +1189,7 @@ private:
 
     std::vector<lib::asio::const_buffer> m_bufs;
 
-	/// Detailed internal error code
+    /// Detailed internal error code
     lib::asio::error_code m_tec;
 
     // Handlers
