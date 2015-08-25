@@ -1,4 +1,8 @@
 HEAD
+- MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
+  `cancel_socket` will now return `lib::asio::error_code` instead of `void`.
+  Custom Asio transport socket policies will need to be updated accordingly.
+  This does not affect anyone using the bundled socket policies.
 - Feature: Basic support for the permessage-deflate extension. #344
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be
@@ -17,6 +21,9 @@ HEAD
   Fidler for reporting, test cases, and a patch. #456
 - Bug: Fix an issue where standalone Asio builds that use TLS would not compile
   due to lingering boost code. #448 Thank you mjsp for reporting
+- Bug: Fix an issue where canceling a socket could throw an exception on some
+  older Windows XP platforms. It now prints an appropriate set of log messages
+  instead. Thank you Thijs Wenker for reporting and researching solutions. #460
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

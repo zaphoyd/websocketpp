@@ -577,8 +577,16 @@ protected:
             }
         }
 
-        m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
-        socket_con_type::cancel_socket();
+        m_alog.write(log::alevel::devel, "Asio transport post-init timed out");
+        lib::asio::error_code cec = socket_con_type::cancel_socket();
+        if (cec) {
+        	if (cec == lib::asio::error::operation_not_supported) {
+        		// cancel not supported on this OS, ignore and log at dev level
+        		m_alog.write(log::alevel::devel, "socket cancel not supported");
+        	} else {
+        		m_alog.write(log::elevel::warn, "socket cancel failed");
+        	}
+        }
         callback(ret_ec);
     }
 

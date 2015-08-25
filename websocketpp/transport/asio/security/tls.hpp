@@ -311,8 +311,18 @@ protected:
     }
 
     /// Cancel all async operations on this socket
-    void cancel_socket() {
-        get_raw_socket().cancel();
+    /**
+     * Attempts to cancel all async operations on this socket and reports any
+     * failures.
+     *
+     * NOTE: Windows XP and earlier do not support socket cancellation.
+     *
+     * @return The error that occurred, if any.
+     */
+    lib::asio::error_code cancel_socket() {
+    	lib::asio::error_code ec;
+        get_raw_socket().cancel(ec);
+        return ec;
     }
 
     void async_shutdown(socket::shutdown_handler callback) {
