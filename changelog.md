@@ -24,6 +24,10 @@ HEAD
 - Bug: Fix an issue where canceling a socket could throw an exception on some
   older Windows XP platforms. It now prints an appropriate set of log messages
   instead. Thank you Thijs Wenker for reporting and researching solutions. #460
+- Bug: Fix an issue where deferred HTTP connections that start sending a very 
+  long response before their HTTP handler ends would result in a second set of
+  HTTP headers being injected into the output. Thank you Kevin Smith for
+  reporting and providing test case details. #443
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

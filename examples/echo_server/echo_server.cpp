@@ -43,7 +43,7 @@ int main() {
         echo_server.set_access_channels(websocketpp::log::alevel::all);
         echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
-        // Initialize ASIO
+        // Initialize Asio
         echo_server.init_asio();
 
         // Register our message handler
