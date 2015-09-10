@@ -150,6 +150,13 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
+/// The type and function signature of an send_empty handler
+/**
+ * The send_empty handler is called when the send queue becomes empty of
+ * messages.
+ */
+typedef lib::function<void(connection_hdl)> send_empty_handler;
+
 //
 typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
 typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
@@ -472,6 +479,16 @@ public:
      */
     void set_message_handler(message_handler h) {
         m_message_handler = h;
+    }
+
+    /// Set send empty handler
+    /**
+     * The send empty handler is called when the message queue is empty.
+     *
+     * @param h The new message_handler
+     */
+    void set_send_empty_handler(send_empty_handler h) {
+        m_send_empty_handler = h;
     }
 
     //////////////////////////////////////////
@@ -1455,7 +1472,8 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
-
+    send_empty_handler      m_send_empty_handler;
+ 
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
