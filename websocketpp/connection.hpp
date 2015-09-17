@@ -969,6 +969,18 @@ public:
      */
     std::string const & get_response_header(std::string const & key) const;
 
+    /// Get response status code and message
+    /**
+     * Gets the response status code 
+     *
+     * @since 0.7.0
+     *
+     * @return The response status code sent
+     */
+    http::status_code::value get_status() const {
+        return m_response->get_status();
+    }
+
     /// Set response status code and message
     /**
      * Sets the response status code to `code` and looks up the corresponding
@@ -1074,6 +1086,25 @@ public:
      */
     request_type const & get_request() const {
         return m_request;
+    }
+    
+    /// Get response object
+    /**
+     * Direct access to the HTTP response sent or received as a part of the
+     * opening handshake. This can be used to call methods of the response
+     * object that are not part of the standard request API that connection
+     * wraps.
+     *
+     * Note use of this method involves using behavior specific to the
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.7.0
+     *
+     * @return A const reference to the raw response object
+     */
+    response_type const & get_response() const {
+        return m_response;
     }
     
     /// Defer HTTP Response until later (Exception free)

@@ -15,6 +15,9 @@ HEAD
   `pass_through` error type.
 - Improvement: Add a `get_transport_error` method to Asio transport connections
   to allow retrieving a machine readable native transport error.
+- Improvement: Add `connection::get_status` and `connection::get_response`
+  methods to allow accessing additional information about the HTTP responses
+  that WebSocket++ sends. #465 Thank you Flow86 for reporting.
 - Documentation: Adds an example demonstrating the use of external `io_service`
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.
