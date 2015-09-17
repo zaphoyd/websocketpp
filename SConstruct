@@ -34,6 +34,11 @@ elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
 else:
    raise SCons.Errors.UserError, "Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!"
 
+## Custom OpenSSL
+if os.environ.has_key('OPENSSL_PATH'):
+   env.Append(CPPPATH = os.path.join(os.environ['OPENSSL_PATH'], 'include'))
+   env.Append(LIBPATH = os.environ['OPENSSL_PATH'])
+
 if os.environ.has_key('WSPP_ENABLE_CPP11'):
    env['WSPP_ENABLE_CPP11'] = True
 else:
@@ -93,8 +98,7 @@ if env['PLATFORM'].startswith('win'):
    #env['LIBPATH'] = env['BOOST_LIBS']
    pass
 else:
-   env['LIBPATH'] = ['/usr/lib',
-                     '/usr/local/lib'] #, env['BOOST_LIBS']
+   env.Append(LIBPATH = ['/usr/lib', '/usr/local/lib'])
 
 # Compiler specific warning flags
 if env['CXX'].startswith('g++'):
@@ -259,6 +263,9 @@ subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',varia
 
 # telemetry_server
 telemetry_server = SConscript('#/examples/telemetry_server/SConscript',variant_dir = builddir + 'telemetry_server',duplicate = 0)
+
+# external_io_service
+external_io_service = SConscript('#/examples/external_io_service/SConscript',variant_dir = builddir + 'external_io_service',duplicate = 0)
 
 if not env['PLATFORM'].startswith('win'):
     # iostream_server

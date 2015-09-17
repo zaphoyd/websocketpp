@@ -15,6 +15,7 @@ HEAD
   `pass_through` error type.
 - Improvement: Add a `get_transport_error` method to Asio transport connections
   to allow retrieving a machine readable native transport error.
+- Documentation: Adds an example demonstrating the use of external `io_service`
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.
 - Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli 
