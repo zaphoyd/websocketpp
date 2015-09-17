@@ -40,7 +40,6 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 namespace asio = websocketpp::lib::asio;
-using tcp = asio::ip::tcp;
 
 struct tcp_echo_session : websocketpp::lib::enable_shared_from_this<tcp_echo_session> {
     typedef websocketpp::lib::shared_ptr<tcp_echo_session> ptr;
@@ -68,14 +67,14 @@ struct tcp_echo_session : websocketpp::lib::enable_shared_from_this<tcp_echo_ses
         }
     }
 
-    tcp::socket m_socket;
+    asio::ip::tcp::socket m_socket;
     char m_buffer[1024];
 };
 
 struct tcp_echo_server {
     tcp_echo_server(asio::io_service & service, short port)
         : m_service(service)
-        , m_acceptor(service, tcp::endpoint(tcp::v6(), port))
+        , m_acceptor(service, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port))
     {
         this->start_accept();
     }
@@ -94,5 +93,5 @@ struct tcp_echo_server {
     }
 
     asio::io_service & m_service;
-    tcp::acceptor m_acceptor;
+    asio::ip::tcp::acceptor m_acceptor;
 };
