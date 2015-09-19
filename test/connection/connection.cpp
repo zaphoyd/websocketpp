@@ -159,12 +159,17 @@ bool validate_set_ua(server* s, websocketpp::connection_hdl hdl) {
 }
 
 void http_func(server* s, websocketpp::connection_hdl hdl) {
+    using namespace websocketpp::http;
+
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
     std::string res = con->get_resource();
 
     con->set_body(res);
-    con->set_status(websocketpp::http::status_code::ok);
+    con->set_status(status_code::ok);
+
+    BOOST_CHECK_EQUAL(con->get_response_code(), status_code::ok);
+    BOOST_CHECK_EQUAL(con->get_response_msg(), status_code::get_string(status_code::ok));
 }
 
 void defer_http_func(server* s, bool * deferred, websocketpp::connection_hdl hdl) {

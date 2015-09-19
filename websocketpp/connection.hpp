@@ -969,7 +969,7 @@ public:
      */
     std::string const & get_response_header(std::string const & key) const;
 
-    /// Get response status code and message
+    /// Get response HTTP status code
     /**
      * Gets the response status code 
      *
@@ -977,10 +977,22 @@ public:
      *
      * @return The response status code sent
      */
-    http::status_code::value get_status() const {
-        return m_response->get_status();
+    http::status_code::value get_response_code() const {
+        return m_response.get_status_code();
     }
 
+    /// Get response HTTP status message
+    /**
+     * Gets the response status message 
+     *
+     * @since 0.7.0
+     *
+     * @return The response status message sent
+     */
+    std::string const & get_response_msg() const {
+        return m_response.get_status_msg();
+    }
+    
     /// Set response status code and message
     /**
      * Sets the response status code to `code` and looks up the corresponding
