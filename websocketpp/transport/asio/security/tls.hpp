@@ -316,7 +316,10 @@ protected:
     }
 
     void async_shutdown(socket_shutdown_handler callback) {
-        m_socket->async_shutdown(callback);
+        if (m_strand)
+            m_socket->async_shutdown(m_strand->wrap(callback));
+        else
+            m_socket->async_shutdown(callback);
     }
 
     /// Translate any security policy specific information about an error code
