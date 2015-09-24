@@ -61,7 +61,9 @@ namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
+#if (_MSC_VER != 1600) // the following line gives an error in MSVC++2010, skipping this fixes it.
     using std::errc;
+#endif
     using std::error_code;
     using std::error_category;
     using std::error_condition;
