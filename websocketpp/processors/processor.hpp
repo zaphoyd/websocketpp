@@ -109,7 +109,7 @@ int get_websocket_version(request_type& r) {
         return -2;
     }
     
-    if (r.get_header("Sec-WebSocket-Version") == "") {
+    if (r.get_header("Sec-WebSocket-Version").empty()) {
         return 0;
     }
 

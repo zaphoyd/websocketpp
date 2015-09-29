@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE( extract_token ) {
     BOOST_CHECK( ret.second == d1.begin()+3 );
 
     ret = websocketpp::http::parser::extract_token(d2.begin(),d2.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d2.begin()+0 );
 
     ret = websocketpp::http::parser::extract_token(d2.begin()+1,d2.end());
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE( extract_quoted_string ) {
     std::string d1 = "\"foo\"";
     std::string d2 = "\"foo\\\"bar\\\"baz\"";
     std::string d3 = "\"foo\"     ";
-    std::string d4 = "";
+    std::string d4;
     std::string d5 = "foo";
 
     std::pair<std::string,std::string::const_iterator> ret;
@@ -147,11 +147,11 @@ BOOST_AUTO_TEST_CASE( extract_quoted_string ) {
     BOOST_CHECK( ret.second == d3.begin()+5 );
 
     ret = extract_quoted_string(d4.begin(),d4.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d4.begin() );
 
     ret = extract_quoted_string(d5.begin(),d5.end());
-    BOOST_CHECK( ret.first == "" );
+    BOOST_CHECK( ret.first.empty() );
     BOOST_CHECK( ret.second == d5.begin() );
 }
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( extract_all_lws ) {
 }
 
 BOOST_AUTO_TEST_CASE( extract_attributes_blank ) {
-    std::string s = "";
+    std::string s;
 
     websocketpp::http::attribute_list a;
     std::string::const_iterator it;
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE( extract_attributes_simple ) {
 }
 
 BOOST_AUTO_TEST_CASE( extract_parameters ) {
-    std::string s1 = "";
+    std::string s1;
     std::string s2 = "foo";
     std::string s3 = " foo \r\nAbc";
     std::string s4 = "  \r\n   foo  ";
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE( case_insensitive_headers_overwrite ) {
 BOOST_AUTO_TEST_CASE( blank_consume ) {
     websocketpp::http::parser::request r;
 
-    std::string raw = "";
+    std::string raw;
 
     bool exception = false;
 

@@ -71,7 +71,7 @@ inline void parser::append_header(std::string const & key, std::string const &
         throw exception("Invalid header name",status_code::bad_request);
     }
 
-    if (this->get_header(key) == "") {
+    if (this->get_header(key).empty()) {
         m_headers[key] = val;
     } else {
         m_headers[key] += ", " + val;
@@ -91,7 +91,7 @@ inline void parser::remove_header(std::string const & key) {
 inline void parser::set_body(std::string const & value) {
     if (value.size() == 0) {
         remove_header("Content-Length");
-        m_body = "";
+        m_body.clear();
         return;
     }
 
@@ -117,7 +117,7 @@ inline bool parser::parse_parameter_list(std::string const & in,
 }
 
 inline bool parser::prepare_body() {
-    if (get_header("Content-Length") != "") {
+    if (!get_header("Content-Length").empty()) {
         std::string const & cl_header = get_header("Content-Length");
         char * end;
         

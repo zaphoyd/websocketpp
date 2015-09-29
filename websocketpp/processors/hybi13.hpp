@@ -173,7 +173,7 @@ public:
         // Host is required by HTTP/1.1
         // Connection is required by is_websocket_handshake
         // Upgrade is required by is_websocket_handshake
-        if (r.get_header("Sec-WebSocket-Key") == "") {
+        if (r.get_header("Sec-WebSocket-Key").empty()) {
             return make_error_code(error::missing_required_header);
         }
 

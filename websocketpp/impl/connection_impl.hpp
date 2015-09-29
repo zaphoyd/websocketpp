@@ -900,7 +900,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,m_request.raw());
-            if (m_request.get_header("Sec-WebSocket-Key3") != "") {
+            if (!m_request.get_header("Sec-WebSocket-Key3").empty()) {
                 m_alog.write(log::alevel::devel,
                     utility::to_hex(m_request.get_header("Sec-WebSocket-Key3")));
             }
@@ -1160,7 +1160,7 @@ lib::error_code connection<config>::initialize_processor() {
     m_response.set_status(http::status_code::bad_request);
 
     std::stringstream ss;
-    std::string sep = "";
+    std::string sep;
     std::vector<int>::const_iterator it;
     for (it = versions_supported.begin(); it != versions_supported.end(); it++)
     {
@@ -1308,7 +1308,7 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
     m_response.set_version("HTTP/1.1");
 
     // Set server header based on the user agent settings
-    if (m_response.get_header("Server") == "") {
+    if (m_response.get_header("Server").empty()) {
         if (!m_user_agent.empty()) {
             m_response.replace_header("Server",m_user_agent);
         } else {
@@ -1326,7 +1326,7 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
 
     if (m_alog.static_test(log::alevel::devel)) {
         m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
-        if (m_response.get_header("Sec-WebSocket-Key3") != "") {
+        if (!m_response.get_header("Sec-WebSocket-Key3").empty()) {
             m_alog.write(log::alevel::devel,
                 utility::to_hex(m_response.get_header("Sec-WebSocket-Key3")));
         }
@@ -1450,7 +1450,7 @@ void connection<config>::send_http_request() {
     }
 
     // Unless the user has overridden the user agent, send generic WS++ UA.
-    if (m_request.get_header("User-Agent") == "") {
+    if (m_request.get_header("User-Agent").empty()) {
         if (!m_user_agent.empty()) {
             m_request.replace_header("User-Agent",m_user_agent);
         } else {
@@ -2075,7 +2075,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     if (config::silent_close) {
         m_alog.write(log::alevel::devel,"closing silently");
         m_local_close_code = close::status::no_status;
-        m_local_close_reason = "";
+        m_local_close_reason.clear();
     } else if (code != close::status::blank) {
         m_alog.write(log::alevel::devel,"closing with specified codes");
         m_local_close_code = code;
@@ -2083,12 +2083,12 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     } else if (!ack) {
         m_alog.write(log::alevel::devel,"closing with no status code");
         m_local_close_code = close::status::no_status;
-        m_local_close_reason = "";
+        m_local_close_reason.clear();
     } else if (m_remote_close_code == close::status::no_status) {
         m_alog.write(log::alevel::devel,
             "acknowledging a no-status close with normal code");
         m_local_close_code = close::status::normal;
-        m_local_close_reason = "";
+        m_local_close_reason.clear();
     } else {
         m_alog.write(log::alevel::devel,"acknowledging with remote codes");
         m_local_close_code = m_remote_close_code;
@@ -2269,7 +2269,7 @@ void connection<config>::log_open_result()
 
     // User Agent
     std::string ua = m_request.get_header("User-Agent");
-    if (ua == "") {
+    if (ua.empty()) {
         s << "\"\" ";
     } else {
         // check if there are any quotes in the user agent
@@ -2292,9 +2292,9 @@ void connection<config>::log_close_result()
 
     s << "Disconnect "
       << "close local:[" << m_local_close_code
-      << (m_local_close_reason == "" ? "" : ","+m_local_close_reason)
+      << (m_local_close_reason.empty() ? "" : ","+m_local_close_reason)
       << "] remote:[" << m_remote_close_code
-      << (m_remote_close_reason == "" ? "" : ","+m_remote_close_reason) << "]";
+      << (m_remote_close_reason.empty() ? "" : ","+m_remote_close_reason) << "]";
 
     m_alog.write(log::alevel::disconnect,s.str());
 }
@@ -2319,7 +2319,7 @@ void connection<config>::log_fail_result()
 
     // User Agent
     std::string ua = m_request.get_header("User-Agent");
-    if (ua == "") {
+    if (ua.empty()) {
         s << " \"\" ";
     } else {
         // check if there are any quotes in the user agent
@@ -2348,7 +2348,7 @@ void connection<config>::log_http_result() {
     }  
 
     // Connection Type
-    s << (m_request.get_header("host") == "" ? "-" : m_request.get_header("host"))
+    s << (m_request.get_header("host").empty() ? "-" : m_request.get_header("host"))
       << " " << transport_con_type::get_remote_endpoint()
       << " \"" << m_request.get_method() 
       << " " << (m_uri ? m_uri->get_resource() : "-") 
@@ -2357,7 +2357,7 @@ void connection<config>::log_http_result() {
     
     // User Agent
     std::string ua = m_request.get_header("User-Agent");
-    if (ua == "") {
+    if (ua.empty()) {
         s << " \"\" ";
     } else {
         // check if there are any quotes in the user agent
