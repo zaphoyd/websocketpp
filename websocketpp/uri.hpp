@@ -135,7 +135,7 @@ public:
         }
 
         // parse port
-        std::string port = "";
+        std::string port;
         while (state == 1) {
             if (it == uri_string.end()) {
                 // state is not used after this point presently.
@@ -169,7 +169,7 @@ public:
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_port(port)
       , m_secure(secure)
       , m_valid(true) {}
@@ -177,7 +177,7 @@ public:
     uri(bool secure, std::string const & host, std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_port(secure ? uri_default_secure_port : uri_default_port)
       , m_secure(secure)
       , m_valid(true) {}
@@ -186,7 +186,7 @@ public:
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_secure(secure)
     {
         lib::error_code ec;
@@ -198,7 +198,7 @@ public:
         std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_port(port)
       , m_secure(scheme == "wss" || scheme == "https")
       , m_valid(true) {}
@@ -206,7 +206,7 @@ public:
     uri(std::string scheme, std::string const & host, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
       , m_secure(scheme == "wss" || scheme == "https")
       , m_valid(true) {}
@@ -215,7 +215,7 @@ public:
         std::string const & port, std::string const & resource)
       : m_scheme(scheme)
       , m_host(host)
-      , m_resource(resource == "" ? "/" : resource)
+      , m_resource(resource.empty() ? "/" : resource)
       , m_secure(scheme == "wss" || scheme == "https")
     {
         lib::error_code ec;
@@ -321,7 +321,7 @@ private:
     {
         ec = lib::error_code();
 
-        if (port == "") {
+        if (port.empty()) {
             return (m_secure ? uri_default_secure_port : uri_default_port);
         }
 

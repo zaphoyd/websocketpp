@@ -602,7 +602,7 @@ else if (input.substr(0,5) == "close") {
     std::string cmd;
     int id;
     int close_code = websocketpp::close::status::normal;
-    std::string reason = "";
+    std::string reason;
     
     ss >> cmd >> id >> close_code;
     std::getline(ss,reason);

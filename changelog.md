@@ -19,6 +19,9 @@ HEAD
   and `connection::get_response_msg` methods to allow accessing additional
   information about the HTTP responses that WebSocket++ sends. #465 Thank you
   Flow86 for reporting.
+- Improvement: Removes use of empty strings ("") in favor of `string::clear()`
+  and `string::empty()`. This avoids generating unnecessary temporary objects.
+  #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
 - Documentation: Adds an example demonstrating the use of external `io_service`
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.

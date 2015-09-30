@@ -322,7 +322,7 @@ inline status::value extract_code(std::string const & payload, lib::error_code
 inline std::string extract_reason(std::string const & payload, lib::error_code
     & ec)
 {
-    std::string reason = "";
+    std::string reason;
     ec = lib::error_code();
 
     if (payload.size() > 2) {

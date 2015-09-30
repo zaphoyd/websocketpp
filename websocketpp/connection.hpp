@@ -1385,7 +1385,7 @@ private:
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_ack(close::status::value code =
-        close::status::blank, std::string const & reason = "");
+        close::status::blank, std::string const & reason = std::string());
 
     /// Send close frame
     /**
@@ -1403,7 +1403,7 @@ private:
      * @return A status code, zero on success, non-zero otherwise
      */
     lib::error_code send_close_frame(close::status::value code =
-        close::status::blank, std::string const & reason = "", bool ack = false,
+        close::status::blank, std::string const & reason = std::string(), bool ack = false,
         bool terminal = false);
 
     /// Get a pointer to a new WebSocket protocol processor for a given version
