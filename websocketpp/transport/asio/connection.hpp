@@ -847,19 +847,24 @@ protected:
 
         if (config::enable_multithreading) {
             lib::asio::async_read(
-        		    socket_con_type::get_socket(),
-        		    lib::asio::buffer(buf,len),
-        		    lib::asio::transfer_at_least(num_bytes),
-        		    m_strand->wrap(m_async_read_handler)
-        		);
+                    socket_con_type::get_socket(),
+                    lib::asio::buffer(buf,len),
+                    lib::asio::transfer_at_least(num_bytes),
+                    m_strand->wrap(
+                        make_custom_alloc_handler(
+                            m_read_handler_allocator,
+                            m_async_read_handler))
+                );
         }
         else {
             lib::asio::async_read(
-        		    socket_con_type::get_socket(),
-        		    lib::asio::buffer(buf,len),
-        		    lib::asio::transfer_at_least(num_bytes),
-        		    m_async_read_handler
-        		);
+                    socket_con_type::get_socket(),
+                    lib::asio::buffer(buf,len),
+                    lib::asio::transfer_at_least(num_bytes),
+                    make_custom_alloc_handler(
+                        m_read_handler_allocator,
+                        m_async_read_handler)
+                );
         }
     }
 
@@ -912,17 +917,22 @@ protected:
 
         if (config::enable_multithreading) {
             lib::asio::async_write(
-        		    socket_con_type::get_socket(),
-        		    m_bufs,
-        		    m_strand->wrap(m_async_write_handler)
-        		);
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    m_strand->wrap(
+                        make_custom_alloc_handler(
+                            m_write_handler_allocator,
+                            m_async_write_handler))
+                );
         }
         else {
             lib::asio::async_write(
-        		    socket_con_type::get_socket(),
-        		    m_bufs,
-        		    m_async_write_handler
-        		);
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler)
+                );
         }
     }
 
@@ -943,17 +953,22 @@ protected:
 
         if (config::enable_multithreading) {
             lib::asio::async_write(
-        		    socket_con_type::get_socket(),
-        		    m_bufs,
-        		    m_strand->wrap(m_async_write_handler)
-        		);
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    m_strand->wrap(
+                        make_custom_alloc_handler(
+                            m_write_handler_allocator,
+                            m_async_write_handler))
+                );
         }
         else {
             lib::asio::async_write(
-        		    socket_con_type::get_socket(),
-        		    m_bufs,
-        		    m_async_write_handler
-        		);
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler)
+                );
         }
     }
 
