@@ -333,6 +333,16 @@ public:
         return *m_io_service;
     }
 
+	/// Get the value of the endpoint
+    /**
+     * Tcp local endpoint is provided
+     *
+     * @param output : endpoint 
+     */
+	boost::asio::ip::tcp::endpoint getEndPoint() const
+	{
+       return m_endpoint;
+	}
     /// Set up endpoint for listening manually (exception free)
     /**
      * Bind the internal acceptor using the specified settings. The endpoint
