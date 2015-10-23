@@ -105,6 +105,17 @@ public:
         return endpoint_type::create_connection();
     }
 
+    /// Get the value of the endpoint
+    /**
+     * Tcp local endpoint is provided
+     *
+     * @param output : endpoint 
+     */
+    boost::asio::ip::tcp::endpoint getEndPoint() const
+    {
+       return transport_type::getEndPoint();
+    }
+
     /// Starts the server's async connection acceptance loop (exception free)
     /**
      * Initiates the server connection acceptance loop. Must be called after
