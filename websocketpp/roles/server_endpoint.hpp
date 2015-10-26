@@ -105,17 +105,6 @@ public:
         return endpoint_type::create_connection();
     }
 
-    /// Get the value of the endpoint
-    /**
-     * Tcp local endpoint is provided
-     *
-     * @param output : endpoint 
-     */
-    lib::asio::ip::tcp::endpoint getEndPoint() const
-    {
-       return transport_type::getEndPoint();
-    }
-
     /// Starts the server's async connection acceptance loop (exception free)
     /**
      * Initiates the server connection acceptance loop. Must be called after
@@ -148,6 +137,17 @@ public:
             con->terminate(lib::error_code());
         }
     }
+
+..../// Get the value of the endpoint
+    /**
+     * Tcp local endpoint is provided
+     *
+     * @param output : endpoint 
+     */
+....uint16_t get_local_port() const
+....{
+       return transport_type::get_local_port();
+....}
 
     /// Starts the server's async connection acceptance loop
     /**

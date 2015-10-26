@@ -339,10 +339,11 @@ public:
      *
      * @param output : endpoint 
      */
-	lib::asio::ip::tcp::endpoint getEndPoint() const
-	{
-       return m_endpoint;
-	}
+    uint16_t get_local_port() const
+    {
+       return m_endpoint.port();
+    }
+
     /// Set up endpoint for listening manually (exception free)
     /**
      * Bind the internal acceptor using the specified settings. The endpoint
@@ -382,6 +383,7 @@ public:
             log_err(log::elevel::info,"asio listen",bec);
             ec = make_error_code(error::pass_through);
         } else {
+            m_endpoint = m_acceptor->local_endpoint();
             m_state = LISTENING;
             ec = lib::error_code();
         }
@@ -1099,8 +1101,8 @@ private:
     elog_type* m_elog;
     alog_type* m_alog;
 
-	//TCP Endpoint
-	lib::asio::ip::tcp::endpoint  m_endpoint ;
+    //TCP Endpoint
+    lib::asio::ip::tcp::endpoint  m_endpoint ;
     // Transport state
     state               m_state;
 };
