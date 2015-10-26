@@ -1099,6 +1099,8 @@ private:
     elog_type* m_elog;
     alog_type* m_alog;
 
+	//TCP Endpoint
+	boost::asio::ip::tcp::endpoint m_endpoint
     // Transport state
     state               m_state;
 };
