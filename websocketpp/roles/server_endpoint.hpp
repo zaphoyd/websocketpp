@@ -111,7 +111,7 @@ public:
      *
      * @param output : endpoint 
      */
-    boost::asio::ip::tcp::endpoint getEndPoint() const
+    lib::asio::ip::tcp::endpoint getEndPoint() const
     {
        return transport_type::getEndPoint();
     }
