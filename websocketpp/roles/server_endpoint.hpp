@@ -138,16 +138,16 @@ public:
         }
     }
 
-..../// Get the value of the endpoint
+/// Get the value of the endpoint
     /**
      * Tcp local endpoint is provided
      *
      * @param output : endpoint 
      */
-....uint16_t get_local_port() const
-....{
+    uint16_t get_local_port() const
+    {
        return transport_type::get_local_port();
-....}
+    }
 
     /// Starts the server's async connection acceptance loop
     /**
