@@ -36,6 +36,8 @@ HEAD
   long response before their HTTP handler ends would result in a second set of
   HTTP headers being injected into the output. Thank you Kevin Smith for
   reporting and providing test case details. #443
+- Compatibility: Removes non-standards compliant masking behavior. Fixes #469,
+  Fixes #395
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

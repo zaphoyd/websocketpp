@@ -574,19 +574,6 @@ public:
      * Performs validation, masking, compression, etc. will return an error if
      * there was an error, otherwise msg will be ready to be written
      *
-     * By default WebSocket++ performs block masking/unmasking in a manner that
-     * makes assumptions about the nature of the machine and STL library used.
-     * In particular the assumption is either a 32 or 64 bit word size and an
-     * STL with std::string::data returning a contiguous char array.
-     *
-     * This method improves masking performance by 3-8x depending on the ratio
-     * of small to large messages and the availability of a 64 bit processor.
-     *
-     * To disable this optimization (for use with alternative STL
-     * implementations or processors) define WEBSOCKETPP_STRICT_MASKING when
-     * compiling the library. This will force the library to perform masking in
-     * single byte chunks.
-     *
      * TODO: tests
      *
      * @param in An unprepared message to prepare
@@ -791,19 +778,9 @@ protected:
     {
         // unmask if masked
         if (frame::get_masked(m_basic_header)) {
-            #ifdef WEBSOCKETPP_STRICT_MASKING
-                m_current_msg->prepared_key = frame::byte_mask_circ(
-                    buf,
-                    len,
-                    m_current_msg->prepared_key
-                );
-            #else
-                m_current_msg->prepared_key = frame::word_mask_circ(
-                    buf,
-                    len,
-                    m_current_msg->prepared_key
-                );
-            #endif
+            m_current_msg->prepared_key = frame::byte_mask_circ(
+                buf, len, m_current_msg->prepared_key);
+            // TODO: SIMD masking
         }
 
         std::string & out = m_current_msg->msg_ptr->get_raw_payload();
@@ -962,16 +939,8 @@ protected:
     void masked_copy (std::string const & i, std::string & o,
         frame::masking_key_type key) const
     {
-        #ifdef WEBSOCKETPP_STRICT_MASKING
-            frame::byte_mask(i.begin(),i.end(),o.begin(),key);
-        #else
-            websocketpp::frame::word_mask_exact(
-                reinterpret_cast<uint8_t *>(const_cast<char *>(i.data())),
-                reinterpret_cast<uint8_t *>(const_cast<char *>(o.data())),
-                i.size(),
-                key
-            );
-        #endif
+        frame::byte_mask(i.begin(),i.end(),o.begin(),key);
+        // TODO: SIMD masking
     }
 
     /// Generic prepare control frame with opcode and payload.
