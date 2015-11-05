@@ -1,5 +1,5 @@
-Utility Client Example Application
-==================================
+Utility Client Example Application Tutorial
+===========================================
 
 Chapter 1: Initial Setup & Basics
 ---------------------------------
@@ -17,7 +17,7 @@ A basic program loop that prompts the user for a command and then processes it. 
 
 *note* A code snapshot for each step is present next to this tutorial file in the git repository.
 
-```cpp
+~~~{.cpp}
 #include <iostream>
 #include <string>
 
@@ -44,7 +44,7 @@ int main() {
 
     return 0;
 }
-```
+~~~
 
 ### Step 2
 
