@@ -80,7 +80,7 @@ namespace _workaround_gcc_libstdcpp_issue_68307_missing_values {
   };
 
   template <typename T>
-  struct op_canceled_helper<T, enable_if<T::operation_canceled == T::operation_canceled, void>> {
+  struct op_canceled_helper<T, enable_if<T::operation_canceled == T::operation_canceled, void> > {
     template<typename U>
     static inline bool is_op_canceled(const U & u) { return u == T::operation_canceled; }
   };
