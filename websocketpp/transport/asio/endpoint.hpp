@@ -51,8 +51,11 @@ namespace asio {
  * as a stand-alone library, so because of the libstdc++ defect, code below referring
  * to lib::asio::errc::operation_canceled fails to compile on mingw.
  *
- * This workaround detects the defect using SFINAE and uses an acceptable substitute
- * if the needed value is missing. ( ECANCELED from <cerrno> )
+ * This workaround detects the defect using SFINAE and returns 'false' for the check
+ * if operation_canceled is not defined, instead of failing to compile.
+ *
+ * If upstream patches this later by defining those enum values, then the workaround
+ * will stop having any effect.
  *
  * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68307
  */
@@ -88,10 +91,20 @@ namespace _workaround_gcc_libstdcpp_issue_68307_missing_values {
    *
    * except that if lib::asio::errc::operation_canceled does not exist, it returns false,
    * instead of failing to compile.
+   *
+   * When using boost and not asio standalone, then lib::asio::errc is a namespace, not an enum class.
+   * So the template code will fail to compile and we need to block it from being instantiated, with this
+   * ifdef. When using boost the standard library symbol definitions aren't relevant afaik.
    */
+#ifdef ASIO_STANDALONE
   static inline bool is_op_canceled(const lib::asio::error_code & asio_ec) {
     return op_canceled_helper<lib::asio::errc, void>::is_op_canceled(asio_ec);
   }
+#else
+  static inline bool is_op_canceled(const lib::asio::error_code & asio_ec) {
+    return asio_ec == lib::asio::errc::operation_canceled;
+  }
+#endif
 } // namespace _workaround
 
 /// Asio based endpoint transport component
