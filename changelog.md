@@ -40,6 +40,8 @@ HEAD
   long response before their HTTP handler ends would result in a second set of
   HTTP headers being injected into the output. Thank you Kevin Smith for
   reporting and providing test case details. #443
+- Bug: Fix an issue where the wrong type of strand was being created. Thank you 
+  Bastien Brunnenstein for reporting and a patch. #462
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
 
 0.6.0
