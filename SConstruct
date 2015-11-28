@@ -1,5 +1,6 @@
 import os, sys, commands
 env = Environment(ENV = os.environ)
+env['PLATFORM'] = sys.platform
 
 # figure out a better way to configure this
 if os.environ.has_key('CXX'):
@@ -26,8 +27,8 @@ if os.environ.has_key('BOOSTROOT'):
     os.environ['BOOST_ROOT'] = os.environ['BOOSTROOT']
 
 if os.environ.has_key('BOOST_ROOT'):
-   env['BOOST_INCLUDES'] = os.environ['BOOST_ROOT']
-   env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib')
+   env['BOOST_INCLUDES'] = os.path.join(os.environ['BOOST_ROOT'], 'include')
+   env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'lib')
 elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
    env['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES']
    env['BOOST_LIBS'] = os.environ['BOOST_LIBS']
@@ -93,8 +94,9 @@ if env['PLATFORM'].startswith('win'):
    #env['LIBPATH'] = env['BOOST_LIBS']
    pass
 else:
-   env['LIBPATH'] = ['/usr/lib',
-                     '/usr/local/lib'] #, env['BOOST_LIBS']
+   env['LIBPATH'] = ['/usr/local/lib', # make sure this comes _before_ the sys path!
+                     '/usr/lib',
+                     ] #, env['BOOST_LIBS']
 
 # Compiler specific warning flags
 if env['CXX'].startswith('g++'):
@@ -130,8 +132,9 @@ platform_libs = []
 tls_libs = []
 
 tls_build = False
+fbsd = False
 
-if env['PLATFORM'] == 'posix':
+if env['PLATFORM'] == 'posix' or env['PLATFORM'].startswith('freebsd'):
    platform_libs = ['pthread', 'rt']
    tls_libs = ['ssl', 'crypto']
    tls_build = True
@@ -141,6 +144,10 @@ elif env['PLATFORM'] == 'darwin':
 elif env['PLATFORM'].startswith('win'):
    # Win/VC++ supports autolinking. nothing to do.
    pass
+
+if sys.platform.startswith('freebsd'):
+   fbsd = True
+   env.Append(CPPPATH = ['/usr/local/include'])
 
 ## Append WebSocket++ path
 env.Append(CPPPATH = ['#'])
@@ -232,7 +239,8 @@ if tls_build:
     echo_server_both = SConscript('#/examples/echo_server_both/SConscript',variant_dir = builddir + 'echo_server_both',duplicate = 0)
 
 # broadcast_server
-broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
+if not fbsd: # issue #306
+   broadcast_server = SConscript('#/examples/broadcast_server/SConscript',variant_dir = builddir + 'broadcast_server',duplicate = 0)
 
 # testee_server
 testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = builddir + 'testee_server',duplicate = 0)
@@ -241,7 +249,8 @@ testee_server = SConscript('#/examples/testee_server/SConscript',variant_dir = b
 testee_client = SConscript('#/examples/testee_client/SConscript',variant_dir = builddir + 'testee_client',duplicate = 0)
 
 # utility_client
-utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir = builddir + 'utility_client',duplicate = 0)
+if not fbsd: # issue #308
+   utility_client = SConscript('#/examples/utility_client/SConscript',variant_dir = builddir + 'utility_client',duplicate = 0)
 
 # debug_client
 debug_client = SConscript('#/examples/debug_client/SConscript',variant_dir = builddir + 'debug_client',duplicate = 0)
