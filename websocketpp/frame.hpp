@@ -828,7 +828,7 @@ inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key)
 {
     uint32_converter key;
-    key.i = prepared_key;
+    key.i = static_cast<uint32_t>(prepared_key);
 
     for (size_t i = 0; i < length; ++i) {
         output[i] = input[i] ^ key.c[i % 4];
