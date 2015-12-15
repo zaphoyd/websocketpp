@@ -584,7 +584,7 @@ protected:
                 // cancel not supported on this OS, ignore and log at dev level
                 m_alog.write(log::alevel::devel, "socket cancel not supported");
             } else {
-                m_alog.write(log::elevel::warn, "socket cancel failed");
+                m_elog.write(log::elevel::warn, "socket cancel failed");
             }
         }
         callback(ret_ec);
