@@ -578,15 +578,7 @@ protected:
         }
 
         m_alog.write(log::alevel::devel, "Asio transport post-init timed out");
-        lib::asio::error_code cec = socket_con_type::cancel_socket();
-        if (cec) {
-            if (cec == lib::asio::error::operation_not_supported) {
-                // cancel not supported on this OS, ignore and log at dev level
-                m_alog.write(log::alevel::devel, "socket cancel not supported");
-            } else {
-                log_err(log::elevel::warn, "socket cancel failed", cec);
-            }
-        }
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -690,7 +682,7 @@ protected:
         } else {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer expired");
-            socket_con_type::cancel_socket();
+            cancel_socket_checked();
             callback(make_error_code(transport::error::timeout));
         }
     }
@@ -1105,7 +1097,7 @@ protected:
 
         m_alog.write(log::alevel::devel,
             "Asio transport socket shutdown timed out");
-        socket_con_type::cancel_socket();
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -1154,6 +1146,20 @@ protected:
         }
         callback(tec);
     }
+
+    /// Cancel the underlying socket and log any errors
+    void cancel_socket_checked() {
+        lib::asio::error_code cec = socket_con_type::cancel_socket();
+        if (cec) {
+            if (cec == lib::asio::error::operation_not_supported) {
+                // cancel not supported on this OS, ignore and log at dev level
+                m_alog.write(log::alevel::devel, "socket cancel not supported");
+            } else {
+                log_err(log::elevel::warn, "socket cancel failed", cec);
+            }
+        }
+    }
+
 private:
     /// Convenience method for logging the code and message for an error_code
     template <typename error_type>

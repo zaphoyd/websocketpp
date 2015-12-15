@@ -1027,7 +1027,7 @@ protected:
         }
 
         m_alog->write(log::alevel::devel,"TCP connect timed out");
-        tcon->cancel_socket();
+        tcon->cancel_socket_checked();
         callback(ret_ec);
     }
 
