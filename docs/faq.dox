@@ -1,0 +1,22 @@
+/** \page faq FAQ
+
+## Dependency Management
+
+### Can WebSocket++ be used without Boost?
+Yes. WebSocket++ only uses Boost features as polyfills for C++11 language features and libraries. If you have a C++11 compiler and standard library you can use WebSocket++ without Boost. In most cases setting your build environment to use the C++11 (or later) language dialect is sufficient to enable this mode of use. 
+
+With less common compilers (and sometimes very recently release compilers) there may be specific issues with certain libraries that aren't automatically detected by the library. For these situations there are additional defines available to fine tune which C++11 libraries and features are used. TODO: more details about them.
+
+For the iostream/raw transport the C++11 standard library is sufficient. For the Asio based transports, there is no C++11 library that provides the networking capabilaties that Asio does. As such even with a C++11 build system, you will need a standalone copy of Asio to use if Boost Asio is not available.
+
+### Can WebSocket++ be used with standalone Asio
+Yes. The process is the same as used with standalone Asio itself. Define `ASIO_STANDALONE` before including Asio or WebSocket++ headers. You will need to download a copy of the Asio headers separately (http://www.think-async.com) and make sure they are in your build system's include path.
+
+### Can WebSocket++ be used without TLS or OpenSSL?
+Yes. When using the iostream/raw transport, there are no TLS features and OpenSSL is not required. When using the Asio transport TLS features are optional. You only need OpenSSL if you want to use TLS. You can only make or recieve encrypted connections (https/wss) if you have enabled TLS features.
+
+Whether an Asio endpoint uses TLS or not is determined by its config template parameter. The default bundled `websocketpp::config::asio` and `websocketpp::config::asio_client` configs do not support TLS, the `websocketpp::config::asio_tls` and `websocketpp::config::asio_tls_client` do.
+
+The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` headers will include both the TLS and non-TLS varients of their respective configs and require the presence of OpenSSL. The `<websocketpp/config/asio_no_tls.hpp>` and `<websocketpp/config/asio_no_tls_client.hpp>` headers will include only the non-TLS configs and do not require OpenSSL.
+
+*/
