@@ -87,4 +87,5 @@ examples/wsperf/wsperf_client
 *.vcxproj
 *.vcxproj.filters
 *.user
+*.VC.db
 install
