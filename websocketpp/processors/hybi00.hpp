@@ -85,9 +85,9 @@ public:
         // Host is required by HTTP/1.1
         // Connection is required by is_websocket_handshake
         // Upgrade is required by is_websocket_handshake
-        if (r.get_header("Sec-WebSocket-Key1") == "" ||
-            r.get_header("Sec-WebSocket-Key2") == "" ||
-            r.get_header("Sec-WebSocket-Key3") == "")
+        if (r.get_header("Sec-WebSocket-Key1").empty() ||
+            r.get_header("Sec-WebSocket-Key2").empty() ||
+            r.get_header("Sec-WebSocket-Key3").empty())
         {
             return make_error_code(error::missing_required_header);
         }
@@ -126,18 +126,18 @@ public:
 
         // Echo back client's origin unless our local application set a
         // more restrictive one.
-        if (res.get_header("Sec-WebSocket-Origin") == "") {
+        if (res.get_header("Sec-WebSocket-Origin").empty()) {
             res.append_header("Sec-WebSocket-Origin",req.get_header("Origin"));
         }
 
         // Echo back the client's request host unless our local application
         // set a different one.
-        if (res.get_header("Sec-WebSocket-Location") == "") {
+        if (res.get_header("Sec-WebSocket-Location").empty()) {
             uri_ptr uri = get_uri(req);
             res.append_header("Sec-WebSocket-Location",uri->str());
         }
 
-        if (subprotocol != "") {
+        if (!subprotocol.empty()) {
             res.replace_header("Sec-WebSocket-Protocol",subprotocol);
         }
 
@@ -400,7 +400,7 @@ public:
 private:
     void decode_client_key(std::string const & key, char * result) const {
         unsigned int spaces = 0;
-        std::string digits = "";
+        std::string digits;
         uint32_t num;
 
         // key2

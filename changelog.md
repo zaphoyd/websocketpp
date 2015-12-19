@@ -4,6 +4,10 @@ HEAD
   Custom Asio transport socket policies will need to be updated accordingly.
   This does not affect anyone using the bundled socket policies.
 - Feature: Basic support for the permessage-deflate extension. #344
+- Feature: Allow accessing the local endpoint when using the Asio transport.
+  This allows inspection of the address and port in cases where they are chosen
+  by the operating system rather than the user. Thank you Andreas Weis and 
+  Muzahid Hussain for reporting and related code. #458
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be
   used to build all of the examples and the test suite. Thank you Thijs Wenker
@@ -19,6 +23,9 @@ HEAD
   and `connection::get_response_msg` methods to allow accessing additional
   information about the HTTP responses that WebSocket++ sends. #465 Thank you
   Flow86 for reporting.
+- Improvement: Removes use of empty strings ("") in favor of `string::clear()`
+  and `string::empty()`. This avoids generating unnecessary temporary objects.
+  #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
 - Documentation: Adds an example demonstrating the use of external `io_service`
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.
@@ -33,6 +40,9 @@ HEAD
   long response before their HTTP handler ends would result in a second set of
   HTTP headers being injected into the output. Thank you Kevin Smith for
   reporting and providing test case details. #443
+- Bug: Fix an issue where the wrong type of strand was being created. Thank you 
+  Bastien Brunnenstein for reporting and a patch. #462
+- Compatibility: Removes non-standards compliant masking behavior. #395, #469
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

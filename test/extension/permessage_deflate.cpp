@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE( negotiate_server_no_context_takeover_invalid ) {
 
 BOOST_AUTO_TEST_CASE( negotiate_server_no_context_takeover ) {
     ext_vars v;
-    v.attr["server_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
 
     v.esp = v.exts.negotiate(v.attr);
     BOOST_CHECK( v.exts.is_enabled() );
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE( negotiate_client_no_context_takeover_invalid ) {
 
 BOOST_AUTO_TEST_CASE( negotiate_client_no_context_takeover ) {
     ext_vars v;
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["client_no_context_takeover"].clear();
 
     v.esp = v.exts.negotiate(v.attr);
     BOOST_CHECK( v.exts.is_enabled() );
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE( negotiate_client_max_window_bits_invalid ) {
 BOOST_AUTO_TEST_CASE( negotiate_client_max_window_bits_valid ) {
     ext_vars v;
 
-    v.attr["client_max_window_bits"] = "";
+    v.attr["client_max_window_bits"].clear();
     v.esp = v.exts.negotiate(v.attr);
     BOOST_CHECK( v.exts.is_enabled() );
     BOOST_CHECK_EQUAL( v.esp.first, websocketpp::lib::error_code() );
@@ -364,8 +364,8 @@ BOOST_AUTO_TEST_CASE( negotiate_client_max_window_bits_smallest ) {
 BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated1 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
+    v.attr["client_no_context_takeover"].clear();
 
     v.esp = v.exts.negotiate(v.attr);
     BOOST_CHECK( v.exts.is_enabled() );
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated1 ) {
 BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated2 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated2 ) {
 BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated3 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
     v.attr["client_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated3 ) {
 BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated4 ) {
     ext_vars v;
 
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["client_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated4 ) {
 BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated5 ) {
     ext_vars v;
 
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["client_no_context_takeover"].clear();
     v.attr["client_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE( negotiate_two_client_initiated6 ) {
 BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated1 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
+    v.attr["client_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -449,8 +449,8 @@ BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated1 ) {
 BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated2 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
+    v.attr["client_no_context_takeover"].clear();
     v.attr["client_max_window_bits"] = "10";
 
     v.esp = v.exts.negotiate(v.attr);
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated2 ) {
 BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated3 ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
     v.attr["client_max_window_bits"] = "10";
 
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated3 ) {
 BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated4 ) {
     ext_vars v;
 
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["client_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
     v.attr["client_max_window_bits"] = "10";
 
@@ -488,8 +488,8 @@ BOOST_AUTO_TEST_CASE( negotiate_three_client_initiated4 ) {
 BOOST_AUTO_TEST_CASE( negotiate_four_client_initiated ) {
     ext_vars v;
 
-    v.attr["server_no_context_takeover"] = "";
-    v.attr["client_no_context_takeover"] = "";
+    v.attr["server_no_context_takeover"].clear();
+    v.attr["client_no_context_takeover"].clear();
     v.attr["server_max_window_bits"] = "10";
     v.attr["client_max_window_bits"] = "10";
 
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
 
     websocketpp::http::attribute_list alist;
 
-    alist["server_no_context_takeover"] = "";
+    alist["server_no_context_takeover"].clear();
     v.exts.enable_server_no_context_takeover();
 
     v.exts.negotiate(alist);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( compress_in, decompress_out );
 
-    decompress_out = "";
+    decompress_out.clear();
 
     v.ec = v.exts.compress(compress_in,compress_out2);
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
 BOOST_AUTO_TEST_CASE( compress_empty ) {
     ext_vars v;
 
-    std::string compress_in = "";
+    std::string compress_in;
     std::string compress_out;
     std::string decompress_out;
 
@@ -616,8 +616,8 @@ BOOST_AUTO_TEST_CASE( compress_empty ) {
 
     v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
 
-    compress_out = "";
-    decompress_out = "";
+    compress_out.clear();
+    decompress_out.clear();
 
     v.ec = v.exts.compress(compress_in,compress_out);
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE( decompress_data ) {
     ext_vars v;
 
     uint8_t in[11] = {0xf2, 0x48, 0xcd, 0xc9, 0xc9, 0x07, 0x00, 0x00, 0x00, 0xff, 0xff};
-    std::string out = "";
+    std::string out;
     std::string reference = "Hello";
 
     v.exts.init(true);
