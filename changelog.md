@@ -42,6 +42,9 @@ HEAD
   reporting and providing test case details. #443
 - Bug: Fix an issue where the wrong type of strand was being created. Thank you 
   Bastien Brunnenstein for reporting and a patch. #462
+- Bug: Fix an issue where TLS includes were broken for Asio Standalone builds.
+  Thank you giachi and Bastien Brunnenstein for reporting. #491
+- Compatibility: Fixes a number of build & config issues on Visual Studio 2015
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
 
 0.6.0

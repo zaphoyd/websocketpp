@@ -1,3 +1,39 @@
+/*
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the WebSocket++ Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL PETER THORSON BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+ /**
+  * NOTES
+  *
+  * This example uses a number of standard classes through the websocketpp::lib
+  * namespace. This is to allow easy switching between Boost, the C++11 STL, and 
+  * the standalone Asio library. Your program need not use these namespaces if
+  * you do not need this sort of flexibility.
+  */
+
 #include <websocketpp/config/asio.hpp>
 
 #include <websocketpp/server.hpp>
@@ -12,7 +48,7 @@ using websocketpp::lib::bind;
 
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio::message_type::ptr message_ptr;
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
@@ -46,27 +82,30 @@ enum tls_mode {
 };
 
 context_ptr on_tls_init(tls_mode mode, websocketpp::connection_hdl hdl) {
+    namespace asio = websocketpp::lib::asio;
+
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
     std::cout << "using TLS mode: " << (mode == MOZILLA_MODERN ? "Mozilla Modern" : "Mozilla Intermediate") << std::endl;
-    context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::sslv23);
+
+    context_ptr ctx = websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::sslv23);
 
     try {
         if (mode == MOZILLA_MODERN) {
             // Modern disables TLSv1
-            ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                             boost::asio::ssl::context::no_sslv2 |
-                             boost::asio::ssl::context::no_sslv3 |
-                             boost::asio::ssl::context::no_tlsv1 |
-                             boost::asio::ssl::context::single_dh_use);
+            ctx->set_options(asio::ssl::context::default_workarounds |
+                             asio::ssl::context::no_sslv2 |
+                             asio::ssl::context::no_sslv3 |
+                             asio::ssl::context::no_tlsv1 |
+                             asio::ssl::context::single_dh_use);
         } else {
-            ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                             boost::asio::ssl::context::no_sslv2 |
-                             boost::asio::ssl::context::no_sslv3 |
-                             boost::asio::ssl::context::single_dh_use);
+            ctx->set_options(asio::ssl::context::default_workarounds |
+                             asio::ssl::context::no_sslv2 |
+                             asio::ssl::context::no_sslv3 |
+                             asio::ssl::context::single_dh_use);
         }
         ctx->set_password_callback(bind(&get_password));
         ctx->use_certificate_chain_file("server.pem");
-        ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
+        ctx->use_private_key_file("server.pem", asio::ssl::context::pem);
         
         // Example method of generating this file:
         // `openssl dhparam -out dh.pem 2048`
