@@ -69,6 +69,8 @@ option (BUILD_TESTS "Build websocketpp tests." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
 
+    enable_testing ()
+
     ############ Compiler specific setup
 
     set (WEBSOCKETPP_PLATFORM_LIBS "")

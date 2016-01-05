@@ -2,7 +2,7 @@
 file (GLOB SOURCE client.cpp)
 
 init_target (test_roles_client)
-build_executable (${TARGET_NAME} ${SOURCE})
+build_test (${TARGET_NAME} ${SOURCE})
 link_boost ()
 final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
@@ -11,7 +11,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
 file (GLOB SOURCE server.cpp)
 
 init_target (test_roles_server)
-build_executable (${TARGET_NAME} ${SOURCE})
+build_test (${TARGET_NAME} ${SOURCE})
 link_boost ()
 final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")

@@ -53,6 +53,17 @@ macro (build_executable TARGET_NAME)
     set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
 endmacro ()
 
+# Build executable and register as test
+macro (build_test TARGET_NAME)
+    build_executable (${TARGET_NAME} ${ARGN})
+
+    if (${CMAKE_VERSION} VERSION_LESS 3)
+        message(WARNING "CMake too old to register ${TARGET_NAME} as a test")
+    else ()
+        add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
+    endif ()
+endmacro ()
+
 # Finalize target for all types
 macro (final_target)
     if ("${TARGET_LIB_TYPE}" STREQUAL "EXECUTABLE")
