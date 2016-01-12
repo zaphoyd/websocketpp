@@ -192,6 +192,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 		set (Boost_USE_STATIC_LIBS TRUE)
 	endif ()
 
+    if (NOT Boost_USE_STATIC_LIBS)
+        add_definitions (/DBOOST_TEST_DYN_LINK)
+    endif ()
+
     set (Boost_FIND_REQUIRED TRUE)
     set (Boost_FIND_QUIETLY TRUE)
     set (Boost_DEBUG FALSE)

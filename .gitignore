@@ -90,3 +90,5 @@ examples/wsperf/wsperf_client
 install
 Makefile
 bin
+
+Testing/Temporary/CTestCostData.txt
