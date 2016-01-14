@@ -15,6 +15,11 @@ macro (print_used_build_config)
     message (STATUS "WEBSOCKETPP_PLATFORM_LIBS     = ${WEBSOCKETPP_PLATFORM_LIBS}")
     message (STATUS "WEBSOCKETPP_PLATFORM_TLS_LIBS = ${WEBSOCKETPP_PLATFORM_TLS_LIBS}")
     message ("") 
+    message (STATUS "OPENSSL_FOUND        = ${OPENSSL_FOUND}")
+    message (STATUS "OPENSSL_INCLUDE_DIR     = ${OPENSSL_INCLUDE_DIR}")
+    message (STATUS "OPENSSL_LIBRARIES = ${OPENSSL_LIBRARIES}")
+    message (STATUS "OPENSSL_VERSION = ${OPENSSL_VERSION}")
+    message ("") 
 endmacro ()
 
 # Adds the given folder_name into the source files of the current project. 
@@ -49,8 +54,21 @@ macro (build_executable TARGET_NAME)
 
     include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE})
 
+    target_link_libraries(${TARGET_NAME} ${WEBSOCKETPP_PLATFORM_LIBS})
+
     set_target_properties (${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${WEBSOCKETPP_BIN})
     set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
+endmacro ()
+
+# Build executable and register as test
+macro (build_test TARGET_NAME)
+    build_executable (${TARGET_NAME} ${ARGN})
+
+    if (${CMAKE_VERSION} VERSION_LESS 3)
+        message(WARNING "CMake too old to register ${TARGET_NAME} as a test")
+    else ()
+        add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
+    endif ()
 endmacro ()
 
 # Finalize target for all types

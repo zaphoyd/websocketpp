@@ -6,7 +6,7 @@ if (OPENSSL_FOUND)
 
 init_target (test_endpoint)
 
-build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+build_test (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 link_boost ()
 link_openssl ()

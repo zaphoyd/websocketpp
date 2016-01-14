@@ -69,6 +69,8 @@ option (BUILD_TESTS "Build websocketpp tests." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
 
+    enable_testing ()
+
     ############ Compiler specific setup
 
     set (WEBSOCKETPP_PLATFORM_LIBS "")
@@ -189,6 +191,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 	if (BOOST_STATIC)
 		set (Boost_USE_STATIC_LIBS TRUE)
 	endif ()
+
+    if (NOT Boost_USE_STATIC_LIBS)
+        add_definitions (/DBOOST_TEST_DYN_LINK)
+    endif ()
 
     set (Boost_FIND_REQUIRED TRUE)
     set (Boost_FIND_QUIETLY TRUE)

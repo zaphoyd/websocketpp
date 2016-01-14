@@ -13,7 +13,7 @@ if ( ZLIB_FOUND )
 file (GLOB SOURCE permessage_deflate.cpp)
 
 init_target (test_permessage_deflate)
-build_executable (${TARGET_NAME} ${SOURCE})
+build_test (${TARGET_NAME} ${SOURCE})
 link_boost ()
 link_zlib()
 final_target ()
