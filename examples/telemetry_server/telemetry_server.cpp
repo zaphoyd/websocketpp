@@ -111,7 +111,7 @@ public:
         server::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
     
         std::ifstream file;
-        std::string filename = con->get_uri()->get_resource();
+        std::string filename = con->get_resource();
         std::string response;
     
         m_endpoint.get_alog().write(websocketpp::log::alevel::app,
