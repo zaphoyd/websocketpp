@@ -32,7 +32,6 @@ class telemetry_server {
 public:
     typedef websocketpp::connection_hdl connection_hdl;
     typedef websocketpp::server<websocketpp::config::asio> server;
-    typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
 
     telemetry_server() : m_count(0) {
         // set up access channels to only log interesting things
@@ -112,7 +111,7 @@ public:
         server::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
     
         std::ifstream file;
-        std::string filename = con->get_uri()->get_resource();
+        std::string filename = con->get_resource();
         std::string response;
     
         m_endpoint.get_alog().write(websocketpp::log::alevel::app,
