@@ -32,7 +32,6 @@ class telemetry_server {
 public:
     typedef websocketpp::connection_hdl connection_hdl;
     typedef websocketpp::server<websocketpp::config::asio> server;
-    typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
 
     telemetry_server() : m_count(0) {
         // set up access channels to only log interesting things
