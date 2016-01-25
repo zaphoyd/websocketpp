@@ -102,7 +102,7 @@
             // build system says we have noexcept
             #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
         #else
-            #if __has_feature(cxx_noexcept)
+            #if __has_feature(cxx_noexcept) || _MSC_VER > 1800
                 // clang feature detect says we have noexcept
                 #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
             #else
