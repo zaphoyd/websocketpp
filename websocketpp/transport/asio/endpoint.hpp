@@ -240,8 +240,15 @@ public:
      * @see init_asio(io_service_ptr ptr)
      */
     void init_asio() {
-        // Use a smart pointer until the call is successful and ownership transferred
+        // Use a smart pointer until the call is successful and ownership has 
+        // successfully been taken. Use unique_ptr when available.
+        // TODO: remove the use of auto_ptr when C++98/03 support is no longer
+        //       necessary.
+#ifdef _WEBSOCKETPP_CPP11_MEMORY_
+        lib::unique_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#else
         lib::auto_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#endif
         init_asio( service.get() );
         // If control got this far without an exception, then ownership has successfully been taken
         service.release();
