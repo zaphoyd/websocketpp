@@ -46,6 +46,8 @@ HEAD
   Thank you giachi and Bastien Brunnenstein for reporting. #491
 - Compatibility: Fixes a number of build & config issues on Visual Studio 2015
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
+- Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr
+  is available.
 
 0.6.0
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
