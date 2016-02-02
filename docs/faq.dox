@@ -19,4 +19,17 @@ Whether an Asio endpoint uses TLS or not is determined by its config template pa
 
 The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` headers will include both the TLS and non-TLS varients of their respective configs and require the presence of OpenSSL. The `<websocketpp/config/asio_no_tls.hpp>` and `<websocketpp/config/asio_no_tls_client.hpp>` headers will include only the non-TLS configs and do not require OpenSSL.
 
+
+## Security
+
+### Is it possible to terminate a malicious connection quickly, without tying up resources performing clean close steps, 
+
+Yes. The library will automatically detect and terminate connections that violate the WebSocket protocol. In cases where the library believes the remote endpoint to be malicious or sufficiently broken to be unlikely to understand or process the closing handshake, it will be omited.
+
+If your application detects conditions above the protocol level that you believe to be malicious, for example, if you recognize an IP from a known denial of service attack, you can close the connection with two different levels of urgency. Use the standard `websocketpp::endpoint::close` or `websocketpp::connection::close` methods with one of the following special close codes:
+- `websocketpp::close::status::omit_handshake`: Omits the closing handshake, but cleanly closes the TCP connection.
+- `websocketpp::close::status::force_tcp_drop`: Forcibly drop the TCP connection.
+
+Please note that usage of these disconnect methods results in a violation of the WebSocket protocol and may have negative reprocusions for the remote endpoint with respect to network timeouts. Please use caution when using them.
+
 */

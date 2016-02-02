@@ -49,7 +49,7 @@ HEAD
 - Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr
   is available.
 
-0.6.0
+0.6.0 - 2015-06-02
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
   required to include a new method `void set_uri(uri_ptr u)`. An implementation
   is not required. The stub transport policy includes an example stub method
