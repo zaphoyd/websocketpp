@@ -464,21 +464,12 @@ protected:
         if (config::enable_multithreading) {
             m_strand = lib::make_shared<lib::asio::io_service::strand>(
                 lib::ref(*io_service));
-
-            m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-
-            m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-        } else {
-            m_async_read_handler = lib::bind(&type::handle_async_read,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
-
-            m_async_write_handler = lib::bind(&type::handle_async_write,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
+        m_async_read_handler = lib::bind(&type::handle_async_read,
+            get_shared(), lib::placeholders::_1, lib::placeholders::_2);
+
+        m_async_write_handler = lib::bind(&type::handle_async_write,
+            get_shared(), lib::placeholders::_1, lib::placeholders::_2);
 
         lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
             m_is_server);
@@ -876,15 +867,28 @@ protected:
                 "asio con async_read_at_least called with bad handler");
         }
 
-        lib::asio::async_read(
-            socket_con_type::get_socket(),
-            lib::asio::buffer(buf,len),
-            lib::asio::transfer_at_least(num_bytes),
-            make_custom_alloc_handler(
-                m_read_handler_allocator,
-                m_async_read_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_read_handler_allocator,
+                        m_async_read_handler))
+            );
+        } else {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                make_custom_alloc_handler(
+                    m_read_handler_allocator,
+                    m_async_read_handler
+                )
+            );    
+        }
+        
     }
 
     void handle_async_read(lib::asio::error_code const & ec,
@@ -935,14 +939,25 @@ protected:
 
         m_write_handler = handler;
 
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    m_async_write_handler
+                )
+            );
+        }
     }
 
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
@@ -960,14 +975,25 @@ protected:
 
         m_write_handler = handler;
 
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    m_async_write_handler
+                )
+            );
+        }
     }
 
     /// Async write callback
