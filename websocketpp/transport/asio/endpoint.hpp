@@ -103,8 +103,8 @@ public:
 
         // Explicitly destroy local objects
         m_acceptor.reset();
-        //m_resolver.reset();
-        //m_work.reset();
+        m_resolver.reset();
+        m_work.reset();
         if (m_state != UNINITIALIZED && !m_external_io_service) {
             delete m_io_service;
         }
