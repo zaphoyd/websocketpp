@@ -252,7 +252,7 @@ struct extended_header {
         // Copy Masking Key
         uint32_converter temp32;
         temp32.i = masking_key;
-        std::copy(temp32.c,temp32.c+4,bytes+offset);
+        std::memcpy(bytes + offset, temp32.c, 4);
     }
 
     uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
