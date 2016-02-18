@@ -30,7 +30,7 @@ public:
         connection_data data;
 
         data.sessionid = m_next_sessionid++;
-        data.name = "";
+        data.name.clear();
 
         m_connections[hdl] = data;
     }
@@ -47,7 +47,7 @@ public:
     void on_message(connection_hdl hdl, server::message_ptr msg) {
         connection_data& data = get_data_from_hdl(hdl);
 
-        if (data.name == "") {
+        if (data.name.empty()) {
             data.name = msg->get_payload();
             std::cout << "Setting name of connection with sessionid "
                       << data.sessionid << " to " << data.name << std::endl;

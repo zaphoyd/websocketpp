@@ -28,8 +28,10 @@
 #ifndef WEBSOCKETPP_COMMON_ASIO_SSL_HPP
 #define WEBSOCKETPP_COMMON_ASIO_SSL_HPP
 
+// NOTE: This file must be included before common/asio.hpp
+
 #ifdef ASIO_STANDALONE
-    #include <asio/asio/ssl.hpp>
+    #include <asio/ssl.hpp>
 #else
     #include <boost/asio/ssl.hpp>
 #endif

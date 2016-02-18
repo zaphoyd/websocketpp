@@ -366,6 +366,29 @@ public:
         return m_strand;
     }
 
+    /// Get the internal transport error code for a closed/failed connection
+    /**
+     * Retrieves a machine readable detailed error code indicating the reason
+     * that the connection was closed or failed. Valid only after the close or
+     * fail handler is called.
+     *
+     * Primarily used if you are using mismatched asio / system_error
+     * implementations such as `boost::asio` with `std::system_error`. In these
+     * cases the transport error type is different than the library error type
+     * and some WebSocket++ functions that return transport errors via the 
+     * library error code type will be coerced into a catch all `pass_through`
+     * or `tls_error` error. This method will return the original machine 
+     * readable transport error in the native type.
+     *
+     * @since 0.7.0
+     *
+     * @return Error code indicating the reason the connection was closed or 
+     * failed
+     */
+    lib::asio::error_code get_transport_ec() const {
+        return m_tec;
+    }
+
     /// Initialize transport for reading
     /**
      * init_asio is called once immediately after construction to initialize
@@ -441,21 +464,12 @@ protected:
         if (config::enable_multithreading) {
             m_strand = lib::make_shared<lib::asio::io_service::strand>(
                 lib::ref(*io_service));
-
-            m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-
-            m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-        } else {
-            m_async_read_handler = lib::bind(&type::handle_async_read,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
-
-            m_async_write_handler = lib::bind(&type::handle_async_write,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
+        m_async_read_handler = lib::bind(&type::handle_async_read,
+            get_shared(), lib::placeholders::_1, lib::placeholders::_2);
+
+        m_async_write_handler = lib::bind(&type::handle_async_write,
+            get_shared(), lib::placeholders::_1, lib::placeholders::_2);
 
         lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
             m_is_server);
@@ -554,8 +568,8 @@ protected:
             }
         }
 
-        m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
-        socket_con_type::cancel_socket();
+        m_alog.write(log::alevel::devel, "Asio transport post-init timed out");
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -659,7 +673,7 @@ protected:
         } else {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer expired");
-            socket_con_type::cancel_socket();
+            cancel_socket_checked();
             callback(make_error_code(transport::error::timeout));
         }
     }
@@ -853,15 +867,28 @@ protected:
                 "asio con async_read_at_least called with bad handler");
         }
 
-        lib::asio::async_read(
-            socket_con_type::get_socket(),
-            lib::asio::buffer(buf,len),
-            lib::asio::transfer_at_least(num_bytes),
-            make_custom_alloc_handler(
-                m_read_handler_allocator,
-                m_async_read_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_read_handler_allocator,
+                        m_async_read_handler))
+            );
+        } else {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                make_custom_alloc_handler(
+                    m_read_handler_allocator,
+                    m_async_read_handler
+                )
+            );    
+        }
+        
     }
 
     void handle_async_read(lib::asio::error_code const & ec,
@@ -877,6 +904,7 @@ protected:
             // We don't know much more about the error at this point. As our
             // socket/security policy if it knows more:
             tec = socket_con_type::translate_ec(ec);
+            m_tec = ec;
 
             if (tec == transport::error::tls_error ||
                 tec == transport::error::pass_through)
@@ -911,14 +939,25 @@ protected:
 
         m_write_handler = handler;
 
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    m_async_write_handler
+                )
+            );
+        }
     }
 
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
@@ -936,14 +975,25 @@ protected:
 
         m_write_handler = handler;
 
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(
+                    make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        m_async_write_handler))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    m_async_write_handler
+                )
+            );
+        }
     }
 
     /// Async write callback
@@ -1073,7 +1123,7 @@ protected:
 
         m_alog.write(log::alevel::devel,
             "Asio transport socket shutdown timed out");
-        socket_con_type::cancel_socket();
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -1100,6 +1150,7 @@ protected:
                 // We don't know anything more about this error, give our
                 // socket/security policy a crack at it.
                 tec = socket_con_type::translate_ec(ec);
+                m_tec = ec;
 
                 if (tec == transport::error::tls_short_read) {
                     // TLS short read at this point is somewhat expected if both
@@ -1121,6 +1172,20 @@ protected:
         }
         callback(tec);
     }
+
+    /// Cancel the underlying socket and log any errors
+    void cancel_socket_checked() {
+        lib::asio::error_code cec = socket_con_type::cancel_socket();
+        if (cec) {
+            if (cec == lib::asio::error::operation_not_supported) {
+                // cancel not supported on this OS, ignore and log at dev level
+                m_alog.write(log::alevel::devel, "socket cancel not supported");
+            } else {
+                log_err(log::elevel::warn, "socket cancel failed", cec);
+            }
+        }
+    }
+
 private:
     /// Convenience method for logging the code and message for an error_code
     template <typename error_type>
@@ -1155,6 +1220,9 @@ private:
     connection_hdl  m_connection_hdl;
 
     std::vector<lib::asio::const_buffer> m_bufs;
+
+    /// Detailed internal error code
+    lib::asio::error_code m_tec;
 
     // Handlers
     tcp_init_handler    m_tcp_pre_init_handler;

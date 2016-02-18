@@ -12,4 +12,7 @@ build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 link_boost ()
 link_openssl()
 final_target ()
+
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "examples")
+
 endif()

@@ -32,8 +32,8 @@
 
 #include <websocketpp/uri.hpp>
 
-#include <websocketpp/common/asio.hpp>
 #include <websocketpp/common/asio_ssl.hpp>
+#include <websocketpp/common/asio.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/memory.hpp>
@@ -55,7 +55,7 @@ typedef lib::function<void(connection_hdl,lib::asio::ssl::stream<
 typedef lib::function<lib::shared_ptr<lib::asio::ssl::context>(connection_hdl)>
     tls_init_handler;
 
-/// TLS enabled Boost ASIO connection socket component
+/// TLS enabled Asio connection socket component
 /**
  * transport::asio::tls_socket::connection implements a secure connection socket
  * component that uses Asio's ssl::stream to wrap an ip::tcp::socket.
@@ -311,30 +311,49 @@ protected:
     }
 
     /// Cancel all async operations on this socket
-    void cancel_socket() {
-        get_raw_socket().cancel();
+    /**
+     * Attempts to cancel all async operations on this socket and reports any
+     * failures.
+     *
+     * NOTE: Windows XP and earlier do not support socket cancellation.
+     *
+     * @return The error that occurred, if any.
+     */
+    lib::asio::error_code cancel_socket() {
+        lib::asio::error_code ec;
+        get_raw_socket().cancel(ec);
+        return ec;
     }
 
-    void async_shutdown(socket_shutdown_handler callback) {
-        m_socket->async_shutdown(callback);
+    void async_shutdown(socket::shutdown_handler callback) {
+        if (m_strand) {
+            m_socket->async_shutdown(m_strand->wrap(callback));
+        } else {
+            m_socket->async_shutdown(callback);
+        }
     }
 
     /// Translate any security policy specific information about an error code
     /**
-     * Translate_ec takes a boost error code and attempts to convert its value
-     * to an appropriate websocketpp error code. Any error that is determined to
-     * be related to TLS but does not have a more specific websocketpp error
-     * code is returned under the catch all error "tls_error".
+     * Translate_ec takes an Asio error code and attempts to convert its value
+     * to an appropriate websocketpp error code. In the case that the Asio and
+     * Websocketpp error types are the same (such as using boost::asio and
+     * boost::system_error or using standalone asio and std::system_error the
+     * code will be passed through natively.
      *
-     * Non-TLS related errors are returned as the transport generic pass_through
-     * error.
+     * In the case of a mismatch (boost::asio with std::system_error) a
+     * translated code will be returned. Any error that is determined to be
+     * related to TLS but does not have a more specific websocketpp error code
+     * is returned under the catch all error `tls_error`. Non-TLS related errors
+     * are returned as the transport generic error `pass_through`
      *
      * @since 0.3.0
      *
      * @param ec The error code to translate_ec
      * @return The translated error code
      */
-    lib::error_code translate_ec(boost::system::error_code ec) {
+    template <typename ErrorCodeType>
+    lib::error_code translate_ec(ErrorCodeType ec) {
         if (ec.category() == lib::asio::error::get_ssl_category()) {
             if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
                 return make_error_code(transport::error::tls_short_read);
@@ -348,6 +367,20 @@ protected:
             // through
             return make_error_code(transport::error::pass_through);
         }
+    }
+    
+    /// Overload of translate_ec to catch cases where lib::error_code is the
+    /// same type as lib::asio::error_code
+    lib::error_code translate_ec(lib::error_code ec) {
+        // Normalize the tls_short_read error as it is used by the library and 
+        // needs a consistent value. All other errors pass through natively.
+        // TODO: how to get the SSL category from std::error?
+        /*if (ec.category() == lib::asio::error::get_ssl_category()) {
+            if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
+                return make_error_code(transport::error::tls_short_read);
+            }
+        }*/
+        return ec;
     }
 private:
     socket_type::handshake_type get_handshake_type() {
