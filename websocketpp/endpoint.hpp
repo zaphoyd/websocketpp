@@ -85,6 +85,9 @@ public:
     // TODO: organize these
     typedef typename connection_type::termination_handler termination_handler;
 
+    // This would be ideal. Requires C++11 though
+    //friend connection;
+
     explicit endpoint(bool p_is_server)
       : m_alog(config::alog_level, log::channel_type_hint::access)
       , m_elog(config::elog_level, log::channel_type_hint::error)

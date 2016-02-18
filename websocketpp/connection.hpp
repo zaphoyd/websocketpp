@@ -628,7 +628,10 @@ public:
      */
     size_t get_buffered_amount() const;
 
-    /// DEPRECATED: use get_buffered_amount instead
+    /// Get the size of the outgoing write buffer (in payload bytes)
+    /**
+     * @deprecated use `get_buffered_amount` instead
+     */
     size_t buffered_amount() const {
         return get_buffered_amount();
     }
@@ -1252,26 +1255,6 @@ public:
         return m_ec;
     }
 
-    ////////////////////////////////////////////////////////////////////////
-    // The remaining public member functions are for internal/policy use  //
-    // only. Do not call from application code unless you understand what //
-    // you are doing.                                                     //
-    ////////////////////////////////////////////////////////////////////////
-
-    /// Set Connection Handle
-    /**
-     * The connection handle is a token that can be shared outside the
-     * WebSocket++ core for the purposes of identifying a connection and
-     * sending it messages.
-     *
-     * @param hdl A connection_hdl that the connection will use to refer
-     * to itself.
-     */
-    void set_handle(connection_hdl hdl) {
-        m_connection_hdl = hdl;
-        transport_con_type::set_handle(hdl);
-    }
-
     /// Get a message buffer
     /**
      * Warning: The API related to directly sending message buffers may change
@@ -1297,7 +1280,13 @@ public:
         return m_msg_manager->get_message(op, size);
     }
 
-    void start();
+    ////////////////////////////////////////////////////////////////////////
+    // The remaining public member functions are for internal/policy use  //
+    // only. Do not call from application code unless you understand what //
+    // you are doing.                                                     //
+    ////////////////////////////////////////////////////////////////////////
+
+    
 
     void read_handshake(size_t num_bytes);
 
@@ -1347,6 +1336,27 @@ public:
      * non-zero otherwise.
      */
     void handle_write_frame(lib::error_code const & ec);
+// protected:
+    // This set of methods would really like to be protected, but doing so 
+    // requires that the endpoint be able to friend the connection. This is 
+    // allowed with C++11, but not prior versions
+
+    /// Start the connection state machine
+    void start();
+
+    /// Set Connection Handle
+    /**
+     * The connection handle is a token that can be shared outside the
+     * WebSocket++ core for the purposes of identifying a connection and
+     * sending it messages.
+     *
+     * @param hdl A connection_hdl that the connection will use to refer
+     * to itself.
+     */
+    void set_handle(connection_hdl hdl) {
+        m_connection_hdl = hdl;
+        transport_con_type::set_handle(hdl);
+    }
 protected:
     void handle_transport_init(lib::error_code const & ec);
 
@@ -1358,6 +1368,8 @@ protected:
     /// set m_response and return an error code indicating status.
     lib::error_code process_handshake_request();
 private:
+    
+
     /// Completes m_response, serializes it, and sends it out on the wire.
     void write_http_response(lib::error_code const & ec);
 

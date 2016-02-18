@@ -67,6 +67,8 @@ public:
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
 
+    friend class connection<config>;
+
     explicit client() : endpoint_type(false)
     {
         endpoint_type::m_alog.write(log::alevel::devel, "client constructor");
