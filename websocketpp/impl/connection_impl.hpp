@@ -143,8 +143,9 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::write_frame,
-            type::get_shared()
+            type::get_handle()
         ));
     }
 
@@ -188,8 +189,9 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
             m_ping_timer = transport_con_type::set_timer(
                 m_pong_timeout_dur,
                 lib::bind(
+                    &type::safe_callback_wrapper<std::string, lib::error_code const &>,
                     &type::handle_pong_timeout,
-                    type::get_shared(),
+                    type::get_handle(),
                     payload,
                     lib::placeholders::_1
                 )
@@ -212,8 +214,9 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::write_frame,
-            type::get_shared()
+            type::get_handle()
         ));
     }
 
@@ -283,8 +286,9 @@ void connection<config>::pong(std::string const& payload, lib::error_code& ec) {
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::write_frame,
-            type::get_shared()
+            type::get_handle()
         ));
     }
 
@@ -342,8 +346,9 @@ lib::error_code connection<config>::interrupt() {
     m_alog.write(log::alevel::devel,"connection connection::interrupt");
     return transport_con_type::interrupt(
         lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::handle_interrupt,
-            type::get_shared()
+            type::get_handle()
         )
     );
 }
@@ -361,8 +366,9 @@ lib::error_code connection<config>::pause_reading() {
     m_alog.write(log::alevel::devel,"connection connection::pause_reading");
     return transport_con_type::dispatch(
         lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::handle_pause_reading,
-            type::get_shared()
+            type::get_handle()
         )
     );
 }
@@ -379,8 +385,9 @@ lib::error_code connection<config>::resume_reading() {
     m_alog.write(log::alevel::devel,"connection connection::resume_reading");
     return transport_con_type::dispatch(
         lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::handle_resume_reading,
-            type::get_shared()
+            type::get_handle()
         )
     );
 }
@@ -729,8 +736,9 @@ void connection<config>::start() {
     // handle_transport_init from this function.
     transport_con_type::init(
         lib::bind(
+            &type::safe_callback_wrapper<lib::error_code const &>,
             &type::handle_transport_init,
-            type::get_shared(),
+            type::get_handle(),
             lib::placeholders::_1
         )
     );
@@ -778,8 +786,9 @@ void connection<config>::read_handshake(size_t num_bytes) {
         m_handshake_timer = transport_con_type::set_timer(
             m_open_handshake_timeout_dur,
             lib::bind(
+                &type::safe_callback_wrapper<lib::error_code const &>,
                 &type::handle_open_handshake_timeout,
-                type::get_shared(),
+                type::get_handle(),
                 lib::placeholders::_1
             )
         );
@@ -790,8 +799,9 @@ void connection<config>::read_handshake(size_t num_bytes) {
         m_buf,
         config::connection_read_buffer_size,
         lib::bind(
+            &type::safe_callback_wrapper<lib::error_code const&, size_t>,
             &type::handle_read_handshake,
-            type::get_shared(),
+            type::get_handle(),
             lib::placeholders::_1,
             lib::placeholders::_2
         )
@@ -931,8 +941,9 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
             m_buf,
             config::connection_read_buffer_size,
             lib::bind(
+                &type::safe_callback_wrapper<lib::error_code const&, size_t>,
                 &type::handle_read_handshake,
-                type::get_shared(),
+                type::get_handle(),
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
@@ -1337,8 +1348,9 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
         m_handshake_buffer.data(),
         m_handshake_buffer.size(),
         lib::bind(
+            &type::safe_callback_wrapper<lib::error_code const&>,
             &type::handle_write_http_response,
-            type::get_shared(),
+            type::get_handle(),
             lib::placeholders::_1
         )
     );
@@ -1468,8 +1480,9 @@ void connection<config>::send_http_request() {
         m_handshake_timer = transport_con_type::set_timer(
             m_open_handshake_timeout_dur,
             lib::bind(
+                &type::safe_callback_wrapper<lib::error_code const&>,
                 &type::handle_open_handshake_timeout,
-                type::get_shared(),
+                type::get_handle(),
                 lib::placeholders::_1
             )
         );
@@ -1479,8 +1492,9 @@ void connection<config>::send_http_request() {
         m_handshake_buffer.data(),
         m_handshake_buffer.size(),
         lib::bind(
+            &type::safe_callback_wrapper<lib::error_code const&>,
             &type::handle_send_http_request,
-            type::get_shared(),
+            type::get_handle(),
             lib::placeholders::_1
         )
     );
@@ -1531,8 +1545,9 @@ void connection<config>::handle_send_http_request(lib::error_code const & ec) {
         m_buf,
         config::connection_read_buffer_size,
         lib::bind(
+            &type::safe_callback_wrapper<lib::error_code const&, size_t>,
             &type::handle_read_http_response,
-            type::get_shared(),
+            type::get_handle(),
             lib::placeholders::_1,
             lib::placeholders::_2
         )
@@ -1650,8 +1665,9 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             m_buf,
             config::connection_read_buffer_size,
             lib::bind(
+                &type::safe_callback_wrapper<lib::error_code const&, size_t>,
                 &type::handle_read_http_response,
-                type::get_shared(),
+                type::get_handle(),
                 lib::placeholders::_1,
                 lib::placeholders::_2
             )
@@ -1736,8 +1752,10 @@ void connection<config>::terminate(lib::error_code const & ec) {
 
     transport_con_type::async_shutdown(
         lib::bind(
+            &type::safe_callback_wrapper
+                <terminate_status, lib::error_code const&>,
             &type::handle_terminate,
-            type::get_shared(),
+            type::get_handle(),
             tstat,
             lib::placeholders::_1
         )
@@ -1918,8 +1936,9 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::write_frame,
-            type::get_shared()
+            type::get_handle()
         ));
     }
 }
@@ -2146,8 +2165,9 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
+            &type::safe_callback_wrapper<>,
             &type::write_frame,
-            type::get_shared()
+            type::get_handle()
         ));
     }
 
