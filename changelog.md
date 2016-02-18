@@ -27,6 +27,8 @@ HEAD
   and `string::empty()`. This avoids generating unnecessary temporary objects.
   #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
 - Documentation: Adds an example demonstrating the use of external `io_service`
+- Documentation: Adds a simple echo_client example.
+- Documentation: Begins migration of the web based user manual into Doxygen.
 - Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.
 - Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli 
