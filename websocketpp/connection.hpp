@@ -337,6 +337,19 @@ public:
         return lib::static_pointer_cast<type>(transport_con_type::get_shared());
     }
 
+    /// Callback wrapper that safely locks connection object to avoid memory
+    // leaks.
+    template <typename... Args>
+    static void safe_callback_wrapper(
+        lib::function<void(type*, Args...)> callback,
+        connection_hdl weak_this, Args... args) {
+      if (auto shared_this = weak_this.lock()) {
+        auto bound_callback = lib::bind(
+            callback, static_cast<type*>(shared_this.get()), args...);
+        bound_callback();
+      }
+    }
+
     ///////////////////////////
     // Set Handler Callbacks //
     ///////////////////////////
@@ -1263,7 +1276,6 @@ public:
     void handle_read_http_response(lib::error_code const & ec,
         size_t bytes_transferred);
 
-    
     void handle_write_http_response(lib::error_code const & ec);
     void handle_send_http_request(lib::error_code const & ec);
 

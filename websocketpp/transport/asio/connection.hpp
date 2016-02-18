@@ -296,6 +296,19 @@ public:
         return m_connection_hdl;
     }
 
+    /// Callback wrapper that safely locks connection object to avoid memory
+    // leaks.
+    template <typename... Args>
+    static void safe_callback_wrapper(
+        lib::function<void(type*, Args...)> callback,
+        connection_hdl weak_this, Args... args) {
+      if (auto shared_this = weak_this.lock()) {
+        auto bound_callback = lib::bind(
+            callback, static_cast<type*>(shared_this.get()), args...);
+        bound_callback();
+      }
+    }
+
     /// Call back a function after a period of time.
     /**
      * Sets a timer that calls back a function after the specified period of
@@ -318,14 +331,18 @@ public:
 
         if (config::enable_multithreading) {
             new_timer->async_wait(m_strand->wrap(lib::bind(
-                &type::handle_timer, get_shared(),
+                &type::safe_callback_wrapper<
+                    timer_ptr, timer_handler, lib::asio::error_code const&>,
+                &type::handle_timer, get_handle(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
             )));
         } else {
             new_timer->async_wait(lib::bind(
-                &type::handle_timer, get_shared(),
+                &type::safe_callback_wrapper<
+                    timer_ptr, timer_handler, lib::asio::error_code const&>,
+                &type::handle_timer, get_handle(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
@@ -396,8 +413,9 @@ protected:
 
         socket_con_type::pre_init(
             lib::bind(
+                &type::safe_callback_wrapper<lib::error_code const &>,
                 &type::handle_pre_init,
-                get_shared(),
+                get_handle(),
                 lib::placeholders::_1
             )
         );
@@ -439,22 +457,32 @@ protected:
         m_io_service = io_service;
 
         if (config::enable_multithreading) {
-            m_strand = lib::make_shared<lib::asio::io_service::strand>(
+            m_strand = lib::make_shared<lib::asio::strand>(
                 lib::ref(*io_service));
 
             m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),lib::placeholders::_1,
+                &type::safe_callback_wrapper<
+                    lib::asio::error_code const&, size_t>,
+                &type::handle_async_read, get_handle(), lib::placeholders::_1,
                 lib::placeholders::_2));
 
             m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),lib::placeholders::_1,
+                &type::safe_callback_wrapper<
+                    lib::asio::error_code const&, size_t>,
+                &type::handle_async_write, get_handle(), lib::placeholders::_1,
                 lib::placeholders::_2));
         } else {
-            m_async_read_handler = lib::bind(&type::handle_async_read,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
+            m_async_read_handler = lib::bind(
+                &type::safe_callback_wrapper<
+                    lib::asio::error_code const&, size_t>,
+                &type::handle_async_read,
+                get_handle(), lib::placeholders::_1, lib::placeholders::_2);
 
-            m_async_write_handler = lib::bind(&type::handle_async_write,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
+            m_async_write_handler = lib::bind(
+                &type::safe_callback_wrapper<
+                    lib::asio::error_code const&, size_t>,
+                &type::handle_async_write, get_handle(), lib::placeholders::_1,
+                lib::placeholders::_2);
         }
 
         lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
@@ -503,8 +531,10 @@ protected:
             post_timer = set_timer(
                 config::timeout_socket_post_init,
                 lib::bind(
+                    &type::safe_callback_wrapper<
+                        timer_ptr, init_handler, lib::error_code const &>,
                     &type::handle_post_init_timeout,
-                    get_shared(),
+                    get_handle(),
                     post_timer,
                     m_init_handler,
                     lib::placeholders::_1
@@ -514,8 +544,10 @@ protected:
 
         socket_con_type::post_init(
             lib::bind(
+                &type::safe_callback_wrapper<
+                    timer_ptr, init_handler, lib::error_code const &>,
                 &type::handle_post_init,
-                get_shared(),
+                get_handle(),
                 post_timer,
                 m_init_handler,
                 lib::placeholders::_1
@@ -616,8 +648,10 @@ protected:
         m_proxy_data->timer = this->set_timer(
             m_proxy_data->timeout_proxy,
             lib::bind(
+                &type::safe_callback_wrapper<
+                    init_handler, lib::error_code const &>,
                 &type::handle_proxy_timeout,
-                get_shared(),
+                get_handle(),
                 m_init_handler,
                 lib::placeholders::_1
             )
@@ -629,7 +663,9 @@ protected:
                 socket_con_type::get_next_layer(),
                 m_bufs,
                 m_strand->wrap(lib::bind(
-                    &type::handle_proxy_write, get_shared(),
+                    &type::safe_callback_wrapper<
+                        init_handler, lib::asio::error_code const &>,
+                    &type::handle_proxy_write, get_handle(),
                     m_init_handler,
                     lib::placeholders::_1
                 ))
@@ -639,7 +675,9 @@ protected:
                 socket_con_type::get_next_layer(),
                 m_bufs,
                 lib::bind(
-                    &type::handle_proxy_write, get_shared(),
+                    &type::safe_callback_wrapper<
+                        init_handler, lib::asio::error_code const &>,
+                    &type::handle_proxy_write, get_handle(),
                     m_init_handler,
                     lib::placeholders::_1
                 )
@@ -713,7 +751,9 @@ protected:
                 m_proxy_data->read_buf,
                 "\r\n\r\n",
                 m_strand->wrap(lib::bind(
-                    &type::handle_proxy_read, get_shared(),
+                    &type::safe_callback_wrapper<
+                        init_handler, lib::asio::error_code const&, size_t>,
+                    &type::handle_proxy_read, get_handle(),
                     callback,
                     lib::placeholders::_1, lib::placeholders::_2
                 ))
@@ -724,7 +764,9 @@ protected:
                 m_proxy_data->read_buf,
                 "\r\n\r\n",
                 lib::bind(
-                    &type::handle_proxy_read, get_shared(),
+                    &type::safe_callback_wrapper<
+                        init_handler, lib::asio::error_code const&, size_t>,
+                    &type::handle_proxy_read, get_handle(),
                     callback,
                     lib::placeholders::_1, lib::placeholders::_2
                 )
@@ -1028,8 +1070,10 @@ protected:
         shutdown_timer = set_timer(
             config::timeout_socket_shutdown,
             lib::bind(
+                &type::safe_callback_wrapper<
+                    timer_ptr, init_handler, lib::error_code const &>,
                 &type::handle_async_shutdown_timeout,
-                get_shared(),
+                get_handle(),
                 shutdown_timer,
                 callback,
                 lib::placeholders::_1
@@ -1038,8 +1082,11 @@ protected:
 
         socket_con_type::async_shutdown(
             lib::bind(
+                &type::safe_callback_wrapper<
+                    timer_ptr, shutdown_handler,
+                    lib::asio::error_code const &>,
                 &type::handle_async_shutdown,
-                get_shared(),
+                get_handle(),
                 shutdown_timer,
                 callback,
                 lib::placeholders::_1
@@ -1077,6 +1124,7 @@ protected:
         callback(ret_ec);
     }
 
+    /// Async shutdown timeout handler
     void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler
         callback, lib::asio::error_code const & ec)
     {
