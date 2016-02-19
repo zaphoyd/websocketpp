@@ -343,8 +343,8 @@ public:
     static void safe_callback_wrapper(
         lib::function<void(type*, Args...)> callback,
         connection_hdl weak_this, Args... args) {
-      if (auto shared_this = weak_this.lock()) {
-        auto bound_callback = lib::bind(
+      if (lib::shared_ptr<void> shared_this = weak_this.lock()) {
+        lib::function<void()> bound_callback = lib::bind(
             callback, static_cast<type*>(shared_this.get()), args...);
         bound_callback();
       }

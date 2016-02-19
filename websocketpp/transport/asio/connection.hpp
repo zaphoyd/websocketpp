@@ -302,8 +302,8 @@ public:
     static void safe_callback_wrapper(
         lib::function<void(type*, Args...)> callback,
         connection_hdl weak_this, Args... args) {
-      if (auto shared_this = weak_this.lock()) {
-        auto bound_callback = lib::bind(
+      if (lib::shared_ptr<void> shared_this = weak_this.lock()) {
+        lib::function<void()> bound_callback = lib::bind(
             callback, static_cast<type*>(shared_this.get()), args...);
         bound_callback();
       }
@@ -466,6 +466,32 @@ protected:
         return lib::error_code();
     }
 
+    /// Create a read handler with a shared pointer to this connection.
+    async_read_handler get_async_read_handler() {
+        if (config::enable_multithreading) {
+            return m_strand->wrap(lib::bind(
+                &type::handle_async_read, get_shared(), lib::placeholders::_1,
+                lib::placeholders::_2));
+        } else {
+            return lib::bind(
+                &type::handle_async_read, get_shared(), lib::placeholders::_1,
+                lib::placeholders::_2);
+        }
+    }
+
+    /// Create a write handler with a shared pointer to this connection.
+    async_write_handler get_async_write_handler() {
+        if (config::enable_multithreading) {
+            return m_strand->wrap(lib::bind(
+                &type::handle_async_write, get_shared(), lib::placeholders::_1,
+                lib::placeholders::_2));
+        } else {
+            return lib::bind(
+                &type::handle_async_write, get_shared(), lib::placeholders::_1,
+                lib::placeholders::_2);
+        }
+    }
+
     /// Finish constructing the transport
     /**
      * init_asio is called once immediately after construction to initialize
@@ -483,27 +509,9 @@ protected:
             m_strand = lib::make_shared<lib::asio::io_service::strand>(
                 lib::ref(*io_service));
         }
-        m_async_read_handler = lib::bind(
-            &type::safe_callback_wrapper<
-                lib::asio::error_code const&, size_t>,
-            &type::handle_async_read,
-            get_handle(), lib::placeholders::_1, lib::placeholders::_2);
-
-        m_async_write_handler = lib::bind(
-            &type::safe_callback_wrapper<
-                lib::asio::error_code const&, size_t>,
-            &type::handle_async_write,
-            get_handle(), lib::placeholders::_1, lib::placeholders::_2);
 
         lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
             m_is_server);
-
-        if (ec) {
-            // reset the handlers to break the circular reference:
-            // this->handler->this
-            lib::clear_function(m_async_read_handler);
-            lib::clear_function(m_async_write_handler);
-        }
 
         return ec;
     }
@@ -881,13 +889,6 @@ protected:
             m_alog.write(log::alevel::devel,s.str());
         }
 
-        if (!m_async_read_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_read_at_least called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown),0);
-            return;
-        }
-
         // TODO: safety vs speed ?
         // maybe move into an if devel block
         /*if (num_bytes > len) {
@@ -913,7 +914,7 @@ protected:
                 m_strand->wrap(
                     make_custom_alloc_handler(
                         m_read_handler_allocator,
-                        m_async_read_handler))
+                        get_async_read_handler()))
             );
         } else {
             lib::asio::async_read(
@@ -922,11 +923,10 @@ protected:
                 lib::asio::transfer_at_least(num_bytes),
                 make_custom_alloc_handler(
                     m_read_handler_allocator,
-                    m_async_read_handler
+                    get_async_read_handler()
                 )
             );    
         }
-        
     }
 
     void handle_async_read(lib::asio::error_code const & ec,
@@ -966,13 +966,6 @@ protected:
     }
 
     void async_write(const char* buf, size_t len, write_handler handler) {
-        if (!m_async_write_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_write (single) called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown));
-            return;
-        }
-
         m_bufs.push_back(lib::asio::buffer(buf,len));
 
         m_write_handler = handler;
@@ -984,7 +977,7 @@ protected:
                 m_strand->wrap(
                     make_custom_alloc_handler(
                         m_write_handler_allocator,
-                        m_async_write_handler))
+                        get_async_write_handler()))
             );
         } else {
             lib::asio::async_write(
@@ -992,19 +985,13 @@ protected:
                 m_bufs,
                 make_custom_alloc_handler(
                     m_write_handler_allocator,
-                    m_async_write_handler
+                    get_async_write_handler()
                 )
             );
         }
     }
 
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
-        if (!m_async_write_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_write (vector) called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown));
-            return;
-        }
         std::vector<buffer>::const_iterator it;
 
         for (it = bufs.begin(); it != bufs.end(); ++it) {
@@ -1020,7 +1007,7 @@ protected:
                 m_strand->wrap(
                     make_custom_alloc_handler(
                         m_write_handler_allocator,
-                        m_async_write_handler))
+                        get_async_write_handler()))
             );
         } else {
             lib::asio::async_write(
@@ -1028,7 +1015,7 @@ protected:
                 m_bufs,
                 make_custom_alloc_handler(
                     m_write_handler_allocator,
-                    m_async_write_handler
+                    get_async_write_handler()
                 )
             );
         }
@@ -1101,16 +1088,6 @@ protected:
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
-
-        // Reset cached handlers now that we won't be reading or writing anymore
-        // These cached handlers store shared pointers to this connection and
-        // will leak the connection if not destroyed.
-        lib::clear_function(m_async_read_handler);
-        lib::clear_function(m_async_write_handler);
-        lib::clear_function(m_init_handler);
-
-        lib::clear_function(m_read_handler);
-        lib::clear_function(m_write_handler);
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
@@ -1277,9 +1254,6 @@ private:
     read_handler        m_read_handler;
     write_handler       m_write_handler;
     init_handler        m_init_handler;
-
-    async_read_handler  m_async_read_handler;
-    async_write_handler m_async_write_handler;
 };
 
 
