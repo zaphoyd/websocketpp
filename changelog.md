@@ -46,6 +46,12 @@ HEAD
   Bastien Brunnenstein for reporting and a patch. #462
 - Bug: Fix an issue where TLS includes were broken for Asio Standalone builds.
   Thank you giachi and Bastien Brunnenstein for reporting. #491
+- Bug: Remove the use of cached read and write handlers in the Asio transport.
+  This feature caused memory leaks when the io_service the connection was
+  running on was abruptly stopped. There isn't a clean and safe way of using
+  this optimization without global state and the associated locks. The locks
+  perform worse. Thank you Xavier Gibert for reporting, test cases, and code.
+  Fixes #490.
 - Compatibility: Fixes a number of build & config issues on Visual Studio 2015
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
 - Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr
