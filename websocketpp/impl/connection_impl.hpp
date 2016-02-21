@@ -772,7 +772,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 
 template <typename config>
 void connection<config>::read_handshake(size_t num_bytes) {
-    m_alog.write(log::alevel::devel,"connection read");
+    m_alog.write(log::alevel::devel,"connection read_handshake");
 
     if (m_open_handshake_timeout_dur > 0) {
         m_handshake_timer = transport_con_type::set_timer(
