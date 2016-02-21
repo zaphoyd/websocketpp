@@ -54,20 +54,21 @@ public:
         int state = 0;
 
         it = uri_string.begin();
+        size_t uri_len = uri_string.length();
 
-        if (std::equal(it,it+6,"wss://")) {
+        if (uri_len >= 7 && std::equal(it,it+6,"wss://")) {
             m_secure = true;
             m_scheme = "wss";
             it += 6;
-        } else if (std::equal(it,it+5,"ws://")) {
+        } else if (uri_len >= 6 && std::equal(it,it+5,"ws://")) {
             m_secure = false;
             m_scheme = "ws";
             it += 5;
-        } else if (std::equal(it,it+7,"http://")) {
+        } else if (uri_len >= 8 && std::equal(it,it+7,"http://")) {
             m_secure = false;
             m_scheme = "http";
             it += 7;
-        } else if (std::equal(it,it+8,"https://")) {
+        } else if (uri_len >= 9 && std::equal(it,it+8,"https://")) {
             m_secure = true;
             m_scheme = "https";
             it += 8;
