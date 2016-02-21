@@ -8,6 +8,8 @@ HEAD
   This allows inspection of the address and port in cases where they are chosen
   by the operating system rather than the user. Thank you Andreas Weis and 
   Muzahid Hussain for reporting and related code. #458
+- Feature: Add support for subprotocols in Hybi00. Thank you Lukas Obermann
+  for reporting and a patch. #518
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be
   used to build all of the examples and the test suite. Thank you Thijs Wenker
@@ -52,6 +54,8 @@ HEAD
   this optimization without global state and the associated locks. The locks
   perform worse. Thank you Xavier Gibert for reporting, test cases, and code.
   Fixes #490.
+- Bug: Fix a heap buffer overflow when checking very short URIs. Thank you 
+  Xavier Gibert for reporting and a patch #524
 - Compatibility: Fixes a number of build & config issues on Visual Studio 2015
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
 - Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr

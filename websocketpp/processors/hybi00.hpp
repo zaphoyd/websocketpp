@@ -29,6 +29,8 @@
 #define WEBSOCKETPP_PROCESSOR_HYBI00_HPP
 
 #include <websocketpp/frame.hpp>
+#include <websocketpp/http/constants.hpp>
+
 #include <websocketpp/utf8_validator.hpp>
 #include <websocketpp/common/network.hpp>
 #include <websocketpp/common/md5.hpp>
