@@ -381,31 +381,31 @@ BOOST_AUTO_TEST_CASE( websocket_fail_unsupported_version ) {
     BOOST_CHECK(called);
 }
 
-/*BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri ) {
-    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+// BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri ) {
+//     std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
 
-    server s;
-    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
-    bool called = false;
-    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
-    s.set_open_handler(bind(&on_open_print,&s,::_1));
+//     server s;
+//     websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+//     bool called = false;
+//     s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+//     s.set_open_handler(bind(&on_open_print,&s,::_1));
 
-    std::cout << run_server_test(s,input,true) << std::endl;
-    BOOST_CHECK(called);
-}
+//     std::cout << run_server_test(s,input,true) << std::endl;
+//     BOOST_CHECK(called);
+// }
 
-BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri_http ) {
-    std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
+// BOOST_AUTO_TEST_CASE( websocket_fail_invalid_uri_http ) {
+//     std::string input = "GET http://345.123.123.123/foo HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
 
-    server s;
-    websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
-    bool called = false;
-    s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
-    s.set_open_handler(bind(&on_open_print,&s,::_1));
+//     server s;
+//     websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
+//     bool called = false;
+//     s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+//     s.set_open_handler(bind(&on_open_print,&s,::_1));
 
-    std::cout << run_server_test(s,input,true) << std::endl;
-    BOOST_CHECK(called);
-}*/
+//     std::cout << run_server_test(s,input,true) << std::endl;
+//     BOOST_CHECK(called);
+// }
 
 BOOST_AUTO_TEST_CASE( websocket_fail_upgrade_required ) {
     std::string input = "GET /foo/bar HTTP/1.1\r\nHost: www.example.com\r\nOrigin: http://www.example.com\r\n\r\n";
@@ -423,26 +423,26 @@ BOOST_AUTO_TEST_CASE( websocket_fail_upgrade_required ) {
 // TODO: set max message size mid connection test case
 // TODO: [maybe] set max message size in open handler
 
-/*
 
-BOOST_AUTO_TEST_CASE( user_reject_origin ) {
-    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example2.com\r\n\r\n";
-    std::string output = "HTTP/1.1 403 Forbidden\r\nServer: "+websocketpp::USER_AGENT+"\r\n\r\n";
 
-    BOOST_CHECK(run_server_test(input) == output);
-}
+// BOOST_AUTO_TEST_CASE( user_reject_origin ) {
+//     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example2.com\r\n\r\n";
+//     std::string output = "HTTP/1.1 403 Forbidden\r\nServer: "+websocketpp::USER_AGENT+"\r\n\r\n";
 
-BOOST_AUTO_TEST_CASE( basic_text_message ) {
-    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+//     BOOST_CHECK(run_server_test(input) == output);
+// }
 
-    unsigned char frames[8] = {0x82,0x82,0xFF,0xFF,0xFF,0xFF,0xD5,0xD5};
-    input.append(reinterpret_cast<char*>(frames),8);
+// BOOST_AUTO_TEST_CASE( basic_text_message ) {
+//     std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
 
-    std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: "+websocketpp::USER_AGENT+"\r\nUpgrade: websocket\r\n\r\n**";
+//     unsigned char frames[8] = {0x82,0x82,0xFF,0xFF,0xFF,0xFF,0xD5,0xD5};
+//     input.append(reinterpret_cast<char*>(frames),8);
 
-    BOOST_CHECK( run_server_test(input) == output);
-}
-*/
+//     std::string output = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\nServer: "+websocketpp::USER_AGENT+"\r\nUpgrade: websocket\r\n\r\n**";
+
+//     BOOST_CHECK( run_server_test(input) == output);
+// }
+
 
 
 
