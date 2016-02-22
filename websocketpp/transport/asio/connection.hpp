@@ -366,6 +366,29 @@ public:
         return m_strand;
     }
 
+    /// Get the internal transport error code for a closed/failed connection
+    /**
+     * Retrieves a machine readable detailed error code indicating the reason
+     * that the connection was closed or failed. Valid only after the close or
+     * fail handler is called.
+     *
+     * Primarily used if you are using mismatched asio / system_error
+     * implementations such as `boost::asio` with `std::system_error`. In these
+     * cases the transport error type is different than the library error type
+     * and some WebSocket++ functions that return transport errors via the 
+     * library error code type will be coerced into a catch all `pass_through`
+     * or `tls_error` error. This method will return the original machine 
+     * readable transport error in the native type.
+     *
+     * @since 0.7.0
+     *
+     * @return Error code indicating the reason the connection was closed or 
+     * failed
+     */
+    lib::asio::error_code get_transport_ec() const {
+        return m_tec;
+    }
+
     /// Initialize transport for reading
     /**
      * init_asio is called once immediately after construction to initialize
@@ -392,12 +415,11 @@ protected:
         // TODO: pre-init timeout. Right now no implemented socket policies
         // actually have an asyncronous pre-init
 
-        m_init_handler = callback;
-
         socket_con_type::pre_init(
             lib::bind(
                 &type::handle_pre_init,
                 get_shared(),
+                callback,
                 lib::placeholders::_1
             )
         );
@@ -441,36 +463,15 @@ protected:
         if (config::enable_multithreading) {
             m_strand = lib::make_shared<lib::asio::io_service::strand>(
                 lib::ref(*io_service));
-
-            m_async_read_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_read, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-
-            m_async_write_handler = m_strand->wrap(lib::bind(
-                &type::handle_async_write, get_shared(),lib::placeholders::_1,
-                lib::placeholders::_2));
-        } else {
-            m_async_read_handler = lib::bind(&type::handle_async_read,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
-
-            m_async_write_handler = lib::bind(&type::handle_async_write,
-                get_shared(), lib::placeholders::_1, lib::placeholders::_2);
         }
 
         lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
             m_is_server);
 
-        if (ec) {
-            // reset the handlers to break the circular reference:
-            // this->handler->this
-            lib::clear_function(m_async_read_handler);
-            lib::clear_function(m_async_write_handler);
-        }
-
         return ec;
     }
 
-    void handle_pre_init(lib::error_code const & ec) {
+    void handle_pre_init(init_handler callback, lib::error_code const & ec) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection handle pre_init");
         }
@@ -480,19 +481,19 @@ protected:
         }
 
         if (ec) {
-            m_init_handler(ec);
+            callback(ec);
         }
 
         // If we have a proxy set issue a proxy connect, otherwise skip to
         // post_init
         if (!m_proxy.empty()) {
-            proxy_write();
+            proxy_write(callback);
         } else {
-            post_init();
+            post_init(callback);
         }
     }
 
-    void post_init() {
+    void post_init(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection post_init");
         }
@@ -506,7 +507,7 @@ protected:
                     &type::handle_post_init_timeout,
                     get_shared(),
                     post_timer,
-                    m_init_handler,
+                    callback,
                     lib::placeholders::_1
                 )
             );
@@ -517,7 +518,7 @@ protected:
                 &type::handle_post_init,
                 get_shared(),
                 post_timer,
-                m_init_handler,
+                callback,
                 lib::placeholders::_1
             )
         );
@@ -554,8 +555,8 @@ protected:
             }
         }
 
-        m_alog.write(log::alevel::devel,"Asio transport post-init timed out");
-        socket_con_type::cancel_socket();
+        m_alog.write(log::alevel::devel, "Asio transport post-init timed out");
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -593,7 +594,7 @@ protected:
         callback(ec);
     }
 
-    void proxy_write() {
+    void proxy_write(init_handler callback) {
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection proxy_write");
         }
@@ -601,7 +602,7 @@ protected:
         if (!m_proxy_data) {
             m_elog.write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_write");
-            m_init_handler(make_error_code(error::general));
+            callback(make_error_code(error::general));
             return;
         }
 
@@ -618,7 +619,7 @@ protected:
             lib::bind(
                 &type::handle_proxy_timeout,
                 get_shared(),
-                m_init_handler,
+                callback,
                 lib::placeholders::_1
             )
         );
@@ -630,7 +631,7 @@ protected:
                 m_bufs,
                 m_strand->wrap(lib::bind(
                     &type::handle_proxy_write, get_shared(),
-                    m_init_handler,
+                    callback,
                     lib::placeholders::_1
                 ))
             );
@@ -640,7 +641,7 @@ protected:
                 m_bufs,
                 lib::bind(
                     &type::handle_proxy_write, get_shared(),
-                    m_init_handler,
+                    callback,
                     lib::placeholders::_1
                 )
             );
@@ -659,7 +660,7 @@ protected:
         } else {
             m_alog.write(log::alevel::devel,
                 "asio handle_proxy_write timer expired");
-            socket_con_type::cancel_socket();
+            cancel_socket_checked();
             callback(make_error_code(transport::error::timeout));
         }
     }
@@ -811,15 +812,11 @@ protected:
             m_proxy_data.reset();
 
             // Continue with post proxy initialization
-            post_init();
+            post_init(callback);
         }
     }
 
     /// read at least num_bytes bytes into buf and then call handler.
-    /**
-     *
-     *
-     */
     void async_read_at_least(size_t num_bytes, char *buf, size_t len,
         read_handler handler)
     {
@@ -827,13 +824,6 @@ protected:
             std::stringstream s;
             s << "asio async_read_at_least: " << num_bytes;
             m_alog.write(log::alevel::devel,s.str());
-        }
-
-        if (!m_async_read_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_read_at_least called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown),0);
-            return;
         }
 
         // TODO: safety vs speed ?
@@ -846,25 +836,39 @@ protected:
             return;
         }*/
 
-        m_read_handler = handler;
-
-        if (!m_read_handler) {
-            m_alog.write(log::alevel::devel,
-                "asio con async_read_at_least called with bad handler");
+        if (config::enable_multithreading) {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                m_strand->wrap(make_custom_alloc_handler(
+                    m_read_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_read, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                ))
+            );
+        } else {
+            lib::asio::async_read(
+                socket_con_type::get_socket(),
+                lib::asio::buffer(buf,len),
+                lib::asio::transfer_at_least(num_bytes),
+                make_custom_alloc_handler(
+                    m_read_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_read, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                )
+            );    
         }
-
-        lib::asio::async_read(
-            socket_con_type::get_socket(),
-            lib::asio::buffer(buf,len),
-            lib::asio::transfer_at_least(num_bytes),
-            make_custom_alloc_handler(
-                m_read_handler_allocator,
-                m_async_read_handler
-            )
-        );
+        
     }
 
-    void handle_async_read(lib::asio::error_code const & ec,
+    void handle_async_read(read_handler handler, lib::asio::error_code const & ec,
         size_t bytes_transferred)
     {
         m_alog.write(log::alevel::devel, "asio con handle_async_read");
@@ -877,6 +881,7 @@ protected:
             // We don't know much more about the error at this point. As our
             // socket/security policy if it knows more:
             tec = socket_con_type::translate_ec(ec);
+            m_tec = ec;
 
             if (tec == transport::error::tls_error ||
                 tec == transport::error::pass_through)
@@ -887,10 +892,8 @@ protected:
                 log_err(log::elevel::info,"asio async_read_at_least",ec);
             }
         }
-        if (m_read_handler) {
-            m_read_handler(tec,bytes_transferred);
-            // TODO: why does this line break things?
-            //m_read_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        if (handler) {
+            handler(tec,bytes_transferred);
         } else {
             // This can happen in cases where the connection is terminated while
             // the transport is waiting on a read.
@@ -899,51 +902,74 @@ protected:
         }
     }
 
+    /// Initiate a potentially asyncronous write of the given buffer
     void async_write(const char* buf, size_t len, write_handler handler) {
-        if (!m_async_write_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_write (single) called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown));
-            return;
-        }
-
         m_bufs.push_back(lib::asio::buffer(buf,len));
 
-        m_write_handler = handler;
-
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_write, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                ))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_write, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                )
+            );
+        }
     }
 
+    /// Initiate a potentially asyncronous write of the given buffers
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
-        if (!m_async_write_handler) {
-            m_alog.write(log::alevel::devel,
-                "async_write (vector) called after async_shutdown");
-            handler(make_error_code(transport::error::action_after_shutdown));
-            return;
-        }
         std::vector<buffer>::const_iterator it;
 
         for (it = bufs.begin(); it != bufs.end(); ++it) {
             m_bufs.push_back(lib::asio::buffer((*it).buf,(*it).len));
         }
 
-        m_write_handler = handler;
-
-        lib::asio::async_write(
-            socket_con_type::get_socket(),
-            m_bufs,
-            make_custom_alloc_handler(
-                m_write_handler_allocator,
-                m_async_write_handler
-            )
-        );
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                m_strand->wrap(make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_write, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                ))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_socket(),
+                m_bufs,
+                make_custom_alloc_handler(
+                    m_write_handler_allocator,
+                    lib::bind(
+                        &type::handle_async_write, get_shared(),
+                        handler,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    )
+                )
+            );
+        }
     }
 
     /// Async write callback
@@ -951,17 +977,15 @@ protected:
      * @param ec The status code
      * @param bytes_transferred The number of bytes read
      */
-    void handle_async_write(lib::asio::error_code const & ec, size_t) {
+    void handle_async_write(write_handler handler, lib::asio::error_code const & ec, size_t) {
         m_bufs.clear();
         lib::error_code tec;
         if (ec) {
             log_err(log::elevel::info,"asio async_write",ec);
             tec = make_error_code(transport::error::pass_through);
         }
-        if (m_write_handler) {
-            m_write_handler(tec);
-            // TODO: why does this line break things?
-            //m_write_handler = _WEBSOCKETPP_NULL_FUNCTION_;
+        if (handler) {
+            handler(tec);
         } else {
             // This can happen in cases where the connection is terminated while
             // the transport is waiting on a read.
@@ -1014,16 +1038,6 @@ protected:
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
 
-        // Reset cached handlers now that we won't be reading or writing anymore
-        // These cached handlers store shared pointers to this connection and
-        // will leak the connection if not destroyed.
-        lib::clear_function(m_async_read_handler);
-        lib::clear_function(m_async_write_handler);
-        lib::clear_function(m_init_handler);
-
-        lib::clear_function(m_read_handler);
-        lib::clear_function(m_write_handler);
-
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
             config::timeout_socket_shutdown,
@@ -1073,7 +1087,7 @@ protected:
 
         m_alog.write(log::alevel::devel,
             "Asio transport socket shutdown timed out");
-        socket_con_type::cancel_socket();
+        cancel_socket_checked();
         callback(ret_ec);
     }
 
@@ -1100,6 +1114,7 @@ protected:
                 // We don't know anything more about this error, give our
                 // socket/security policy a crack at it.
                 tec = socket_con_type::translate_ec(ec);
+                m_tec = ec;
 
                 if (tec == transport::error::tls_short_read) {
                     // TLS short read at this point is somewhat expected if both
@@ -1121,6 +1136,20 @@ protected:
         }
         callback(tec);
     }
+
+    /// Cancel the underlying socket and log any errors
+    void cancel_socket_checked() {
+        lib::asio::error_code cec = socket_con_type::cancel_socket();
+        if (cec) {
+            if (cec == lib::asio::error::operation_not_supported) {
+                // cancel not supported on this OS, ignore and log at dev level
+                m_alog.write(log::alevel::devel, "socket cancel not supported");
+            } else {
+                log_err(log::elevel::warn, "socket cancel failed", cec);
+            }
+        }
+    }
+
 private:
     /// Convenience method for logging the code and message for an error_code
     template <typename error_type>
@@ -1156,19 +1185,15 @@ private:
 
     std::vector<lib::asio::const_buffer> m_bufs;
 
+    /// Detailed internal error code
+    lib::asio::error_code m_tec;
+
     // Handlers
     tcp_init_handler    m_tcp_pre_init_handler;
     tcp_init_handler    m_tcp_post_init_handler;
 
     handler_allocator   m_read_handler_allocator;
     handler_allocator   m_write_handler_allocator;
-
-    read_handler        m_read_handler;
-    write_handler       m_write_handler;
-    init_handler        m_init_handler;
-
-    async_read_handler  m_async_read_handler;
-    async_write_handler m_async_write_handler;
 };
 
 

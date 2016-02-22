@@ -230,7 +230,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
         cursor = http::parser::extract_all_lws(cursor,end);
         ret = http::parser::extract_token(cursor,end);
 
-        if (ret.first == "") {
+        if (ret.first.empty()) {
             // error: expected a token
             return begin;
         } else {
@@ -242,7 +242,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
         if (cursor == end || *cursor != '=') {
             // if there is an equals sign, read the attribute value. Otherwise
             // record a blank value and continue
-            attributes[name] = "";
+            attributes[name].clear();
             continue;
         }
 
@@ -263,7 +263,7 @@ InputIterator extract_attributes(InputIterator begin, InputIterator end,
         }
 
         ret = http::parser::extract_token(cursor,end);
-        if (ret.first == "") {
+        if (ret.first.empty()) {
             // error : expected token or quoted string
             return begin;
         } else {
@@ -321,7 +321,7 @@ InputIterator extract_parameters(InputIterator begin, InputIterator end,
 
         ret = http::parser::extract_token(cursor,end);
 
-        if (ret.first == "") {
+        if (ret.first.empty()) {
             // error: expected a token
             return begin;
         } else {
@@ -381,9 +381,13 @@ inline std::string strip_lws(std::string const & input) {
     if (begin == input.end()) {
         return std::string();
     }
-    std::string::const_reverse_iterator end = extract_all_lws(input.rbegin(),input.rend());
 
-    return std::string(begin,end.base());
+    std::string::const_reverse_iterator rbegin = extract_all_lws(input.rbegin(),input.rend());
+    if (rbegin == input.rend()) {
+        return std::string();
+    }
+
+    return std::string(begin,rbegin.base());
 }
 
 /// Base HTTP parser

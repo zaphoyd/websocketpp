@@ -1,6 +1,69 @@
 HEAD
 
-0.6.0
+0.7.0 - 2016-02-22
+- MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
+  `cancel_socket` will now return `lib::asio::error_code` instead of `void`.
+  Custom Asio transport socket policies will need to be updated accordingly.
+  This does not affect anyone using the bundled socket policies.
+- Feature: Basic support for the permessage-deflate extension. #344
+- Feature: Allow accessing the local endpoint when using the Asio transport.
+  This allows inspection of the address and port in cases where they are chosen
+  by the operating system rather than the user. Thank you Andreas Weis and 
+  Muzahid Hussain for reporting and related code. #458
+- Feature: Add support for subprotocols in Hybi00. Thank you Lukas Obermann
+  for reporting and a patch. #518
+- Improvement: Better automatic std::chrono feature detection for Visual Studio
+- Improvement: Major refactoring to bundled CMake build system. CMake can now be
+  used to build all of the examples and the test suite. Thank you Thijs Wenker
+  for a significant portion of this code. #378, #435, #449
+- Improvement: In build environments where `lib::error_code` and 
+  `lib::asio::error_code` match (such as using `boost::asio` with 
+  `boost::system_error` or standalone asio with `std::system_error`, transport
+  errors are passed through natively rather than being reported as a translated 
+  `pass_through` error type.
+- Improvement: Add a `get_transport_error` method to Asio transport connections
+  to allow retrieving a machine readable native transport error.
+- Improvement: Add `connection::get_response`, `connection::get_response_code`,
+  and `connection::get_response_msg` methods to allow accessing additional
+  information about the HTTP responses that WebSocket++ sends. #465 Thank you
+  Flow86 for reporting.
+- Improvement: Removes use of empty strings ("") in favor of `string::clear()`
+  and `string::empty()`. This avoids generating unnecessary temporary objects.
+  #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
+- Documentation: Adds an example demonstrating the use of external `io_service`
+- Documentation: Adds a simple echo_client example.
+- Documentation: Begins migration of the web based user manual into Doxygen.
+- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
+  Grimes for reporting and fixing.
+- Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli 
+  Fidler for reporting, test cases, and a patch. #456
+- Bug: Fix an issue where standalone Asio builds that use TLS would not compile
+  due to lingering boost code. #448 Thank you mjsp for reporting
+- Bug: Fix an issue where canceling a socket could throw an exception on some
+  older Windows XP platforms. It now prints an appropriate set of log messages
+  instead. Thank you Thijs Wenker for reporting and researching solutions. #460
+- Bug: Fix an issue where deferred HTTP connections that start sending a very 
+  long response before their HTTP handler ends would result in a second set of
+  HTTP headers being injected into the output. Thank you Kevin Smith for
+  reporting and providing test case details. #443
+- Bug: Fix an issue where the wrong type of strand was being created. Thank you 
+  Bastien Brunnenstein for reporting and a patch. #462
+- Bug: Fix an issue where TLS includes were broken for Asio Standalone builds.
+  Thank you giachi and Bastien Brunnenstein for reporting. #491
+- Bug: Remove the use of cached read and write handlers in the Asio transport.
+  This feature caused memory leaks when the io_service the connection was
+  running on was abruptly stopped. There isn't a clean and safe way of using
+  this optimization without global state and the associated locks. The locks
+  perform worse. Thank you Xavier Gibert for reporting, test cases, and code.
+  Fixes #490.
+- Bug: Fix a heap buffer overflow when checking very short URIs. Thank you 
+  Xavier Gibert for reporting and a patch #524
+- Compatibility: Fixes a number of build & config issues on Visual Studio 2015
+- Compatibility: Removes non-standards compliant masking behavior. #395, #469
+- Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr
+  is available.
+
+0.6.0 - 2015-06-02
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be
   required to include a new method `void set_uri(uri_ptr u)`. An implementation
   is not required. The stub transport policy includes an example stub method

@@ -61,7 +61,7 @@ public:
     void on_message(connection_hdl hdl, server::message_ptr msg) {
         connection_ptr con = m_server.get_con_from_hdl(hdl);
         
-        if (con->name == "") {
+        if (con->name.empty()) {
             con->name = msg->get_payload();
             std::cout << "Setting name of connection with sessionid " 
                       << con->sessionid << " to " << con->name << std::endl;

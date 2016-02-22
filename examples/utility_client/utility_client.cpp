@@ -289,7 +289,7 @@ int main() {
             
             std::string cmd;
             int id;
-            std::string message = "";
+            std::string message;
             
             ss >> cmd >> id;
             std::getline(ss,message);
@@ -301,7 +301,7 @@ int main() {
             std::string cmd;
             int id;
             int close_code = websocketpp::close::status::normal;
-            std::string reason = "";
+            std::string reason;
             
             ss >> cmd >> id >> close_code;
             std::getline(ss,reason);

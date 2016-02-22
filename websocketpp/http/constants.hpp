@@ -59,7 +59,7 @@ namespace http {
     static char const header_separator[] = ":";
 
     /// Literal value of an empty header
-    static std::string const empty_header = "";
+    static std::string const empty_header;
 
     /// Maximum size in bytes before rejecting an HTTP header as too big.
     size_t const max_header_size = 16000;
@@ -284,8 +284,8 @@ namespace http {
     public:
         exception(const std::string& log_msg,
                   status_code::value error_code,
-                  const std::string& error_msg = "",
-                  const std::string& body = "")
+                  const std::string& error_msg = std::string(),
+                  const std::string& body = std::string())
           : m_msg(log_msg)
           , m_error_msg(error_msg)
           , m_body(body)

@@ -100,7 +100,11 @@ public:
 
     ~endpoint() {
         // clean up our io_service if we were initialized with an internal one.
+
+        // Explicitly destroy local objects
         m_acceptor.reset();
+        m_resolver.reset();
+        m_work.reset();
         if (m_state != UNINITIALIZED && !m_external_io_service) {
             delete m_io_service;
         }
@@ -218,7 +222,17 @@ public:
      * @param ec Set to indicate what error occurred, if any.
      */
     void init_asio(lib::error_code & ec) {
-        init_asio(new lib::asio::io_service(), ec);
+        // Use a smart pointer until the call is successful and ownership has 
+        // successfully been taken. Use unique_ptr when available.
+        // TODO: remove the use of auto_ptr when C++98/03 support is no longer
+        //       necessary.
+#ifdef _WEBSOCKETPP_CPP11_MEMORY_
+        lib::unique_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#else
+        lib::auto_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#endif
+        init_asio(service.get(), ec);
+        if( !ec ) service.release(); // Call was successful, transfer ownership
         m_external_io_service = false;
     }
 
@@ -230,7 +244,18 @@ public:
      * @see init_asio(io_service_ptr ptr)
      */
     void init_asio() {
-        init_asio(new lib::asio::io_service());
+        // Use a smart pointer until the call is successful and ownership has 
+        // successfully been taken. Use unique_ptr when available.
+        // TODO: remove the use of auto_ptr when C++98/03 support is no longer
+        //       necessary.
+#ifdef _WEBSOCKETPP_CPP11_MEMORY_
+        lib::unique_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#else
+        lib::auto_ptr<lib::asio::io_service> service(new lib::asio::io_service());
+#endif
+        init_asio( service.get() );
+        // If control got this far without an exception, then ownership has successfully been taken
+        service.release();
         m_external_io_service = false;
     }
 
@@ -331,6 +356,28 @@ public:
      */
     lib::asio::io_service & get_io_service() {
         return *m_io_service;
+    }
+    
+    /// Get local TCP endpoint
+    /**
+     * Extracts the local endpoint from the acceptor. This represents the
+     * address that WebSocket++ is listening on.
+     *
+     * Sets a bad_descriptor error if the acceptor is not currently listening
+     * or otherwise unavailable.
+     * 
+     * @since 0.7.0
+     *
+     * @param ec Set to indicate what error occurred, if any.
+     * @return The local endpoint
+     */
+    lib::asio::ip::tcp::endpoint get_local_endpoint(lib::asio::error_code & ec) {
+        if (m_acceptor) {
+            return m_acceptor->local_endpoint(ec);
+        } else {
+            ec = lib::asio::error::make_error_code(lib::asio::error::bad_descriptor);
+            return lib::asio::ip::tcp::endpoint();
+        }
     }
 
     /// Set up endpoint for listening manually (exception free)
@@ -998,7 +1045,7 @@ protected:
         }
 
         m_alog->write(log::alevel::devel,"TCP connect timed out");
-        tcon->cancel_socket();
+        tcon->cancel_socket_checked();
         callback(ret_ec);
     }
 
