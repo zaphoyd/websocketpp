@@ -1,4 +1,6 @@
 HEAD
+
+0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
   `cancel_socket` will now return `lib::asio::error_code` instead of `void`.
   Custom Asio transport socket policies will need to be updated accordingly.
