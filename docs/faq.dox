@@ -77,4 +77,10 @@ If your application detects conditions above the protocol level that you believe
 
 Please note that usage of these disconnect methods results in a violation of the WebSocket protocol and may have negative reprocusions for the remote endpoint with respect to network timeouts. Please use caution when using them.
 
+## Build Issues
+
+### Getting compile errors related to `std::chrono`, `boost::chrono`, `waitable_timer`, or `steady_clock`
+
+Your build system may be confused about whether it is supposed to be using `boost::chrono` or `std::chrono`. Boost automatically detects this setup on some compilers but not others. Defining `BOOST_ASIO_HAS_STD_CHRONO` can help. See http://www.boost.org/doc/libs/1_60_0/doc/html/boost_asio/overview/cpp2011/chrono.html for more details.
+
 */
