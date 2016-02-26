@@ -171,6 +171,10 @@ protected:
         m_socket = lib::make_shared<lib::asio::ip::tcp::socket>(
             lib::ref(*service));
 
+        if (m_socket_init_handler) {
+            m_socket_init_handler(m_hdl, *m_socket);
+        }
+
         m_state = READY;
 
         return lib::error_code();
@@ -202,10 +206,6 @@ protected:
         if (m_state != READY) {
             callback(socket::make_error_code(socket::error::invalid_state));
             return;
-        }
-
-        if (m_socket_init_handler) {
-            m_socket_init_handler(m_hdl,*m_socket);
         }
 
         m_state = READING;
