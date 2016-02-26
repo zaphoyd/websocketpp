@@ -580,6 +580,16 @@ BOOST_AUTO_TEST_CASE( shutdown_handler ) {
     BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::transport::error::general) );
 }
 
+BOOST_AUTO_TEST_CASE( clear_handler ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+
+    con->set_shutdown_handler(&sd_handler);
+    con->set_shutdown_handler(NULL);
+    BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::error::test) );
+    con->shutdown();
+    BOOST_CHECK_EQUAL( con->ec, websocketpp::lib::error_code() );
+}
+
 BOOST_AUTO_TEST_CASE( shared_pointer_memory_cleanup ) {
     stub_con::ptr con(new stub_con(true,alogger,elogger));
 
