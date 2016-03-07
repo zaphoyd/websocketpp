@@ -69,6 +69,9 @@ public:
     /// Type of message pointers that this endpoint uses
     typedef typename connection_type::message_ptr message_ptr;
 
+    /// Type of reconnect handler (invoked if reconect required)
+    typedef typename connection_type::reconnect_handler reconnect_handler;
+
     /// Type of error logger
     typedef typename config::elog_type elog_type;
     /// Type of access logger
@@ -84,6 +87,9 @@ public:
 
     // TODO: organize these
     typedef typename connection_type::termination_handler termination_handler;
+
+    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
+    typedef typename config::proxy_authenticator_type::ptr proxy_authenticator_type_ptr;
 
     // This would be ideal. Requires C++11 though
     //friend connection;
@@ -324,6 +330,11 @@ public:
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
     }
+    void set_reconnect_handler(reconnect_handler h) {
+        m_alog.write(log::alevel::devel, "set_reconnect_handler");
+        scoped_lock_type guard(m_mutex);
+        m_reconnect_handler = h;
+    }
 
     //////////////////////////////////////////
     // Connection timeouts and other limits //
@@ -465,6 +476,16 @@ public:
      */
     void set_max_http_body_size(size_t new_value) {
         m_max_http_body_size = new_value;
+    }
+
+    void set_proxy(const std::string& proxy) {
+        m_proxy_authenticator = lib::make_shared<proxy_authenticator_type>(proxy);
+    }
+
+    void set_proxy_basic_auth(std::string const& username, std::string const& password) {
+        if (m_proxy_authenticator) {
+            m_proxy_authenticator->set_basic_auth(username, password);
+        }
     }
 
     /*************************************/
@@ -677,12 +698,15 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
+    reconnect_handler           m_reconnect_handler;
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;
+
+    proxy_authenticator_type_ptr  m_proxy_authenticator;
 
     rng_type m_rng;
 
