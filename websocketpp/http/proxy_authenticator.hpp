@@ -66,7 +66,7 @@ namespace websocketpp {
                 std::string m_proxy;
                 std::string m_auth_scheme_name;
                 std::string m_auth_token;
-                bool authenticated=false;
+                bool authenticated;
 
                 struct
                 {
@@ -94,7 +94,7 @@ namespace websocketpp {
                 *
                 * @param proxy: Complete proxy URI eg http://proxy.example.com:8080/
                 */
-                proxy_authenticator(std::string const& proxy) : m_proxy(proxy) {
+                proxy_authenticator(std::string const& proxy) : m_proxy(proxy), authenticated(false) {
                 }
 
                 /// Set Basice authentication credentials
