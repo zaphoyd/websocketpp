@@ -49,7 +49,7 @@ namespace websocketpp {
                 class SecurityContext
                 {
                 public:
-                    using Ptr = std::shared_ptr<SecurityContext>;
+                    typedef std::shared_ptr<SecurityContext> Ptr;
 
                     static SecurityContext::Ptr build(const std::string& proxyName, const std::string& authScheme) {
                         return  lib::make_shared<SecurityContext>(proxyName, authScheme);
