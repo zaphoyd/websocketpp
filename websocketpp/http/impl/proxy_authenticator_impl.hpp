@@ -121,7 +121,7 @@ namespace websocketpp {
                     }
 
                     template <typename InputIterator>
-                    inline InputIterator parse(InputIterator begin, InputIterator end) {
+                    InputIterator parse(InputIterator begin, InputIterator end) {
                         auto cursor = http::parser::extract_all_lws(begin, end);
 
                         switch (m_type)
@@ -129,6 +129,10 @@ namespace websocketpp {
                         case Basic:     return parse_basic(cursor, end);
                         case NTLM:      return parse_ntlm_negotiate(cursor, end);
                         case Negotiate: return parse_ntlm_negotiate(cursor, end);
+                        
+                        case Unknown:   break;
+                        case Digest:    break;
+                        default:        break;
                         }
 
                         return begin;
@@ -143,7 +147,7 @@ namespace websocketpp {
                     std::string m_realm;
 
                     template <typename InputIterator>
-                    inline InputIterator parse_basic(InputIterator begin, InputIterator end) {
+                    InputIterator parse_basic(InputIterator begin, InputIterator end) {
                         auto cursor = begin;
 
                         while (cursor != end) {
@@ -227,7 +231,7 @@ namespace websocketpp {
                 typedef std::vector<AuthScheme> AuthSchemes;
 
                 template <typename InputIterator>
-                inline std::pair<AuthScheme, InputIterator> parse_auth_scheme(InputIterator begin, InputIterator end) {
+                std::pair<AuthScheme, InputIterator> parse_auth_scheme(InputIterator begin, InputIterator end) {
                     auto cursor = http::parser::extract_all_lws(begin, end);
 
                     auto next = http::parser::extract_token(cursor, end);
@@ -246,7 +250,7 @@ namespace websocketpp {
                 }
 
                 template <typename InputIterator>
-                inline AuthSchemes parse_auth_schemes(InputIterator begin, InputIterator end) {
+                AuthSchemes parse_auth_schemes(InputIterator begin, InputIterator end) {
                     AuthSchemes auth_schemes;
 
                     InputIterator cursor = begin;
