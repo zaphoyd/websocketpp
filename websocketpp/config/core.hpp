@@ -110,6 +110,7 @@ struct core {
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
+        typedef type::proxy_authenticator_type proxy_authenticator_type;
 
         /// Controls compile time enabling/disabling of thread syncronization
         /// code Disabling can provide a minor performance improvement to single

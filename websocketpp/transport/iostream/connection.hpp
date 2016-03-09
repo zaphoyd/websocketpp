@@ -76,11 +76,7 @@ public:
     typedef typename concurrency_type::mutex_type mutex_type;
 
     typedef lib::shared_ptr<timer> timer_ptr;
-    
-    /// Type of proxy authentication policy
-    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
-    typedef typename proxy_authenticator_type::ptr proxy_authenticator_ptr;
-    
+
     explicit connection(bool is_server, alog_type & alog, elog_type & elog)
       : m_output_stream(NULL)
       , m_reading(false)
@@ -97,12 +93,6 @@ public:
     ptr get_shared() {
         return type::shared_from_this();
     }
-    
-    //
-    // To Do: Remove this - only adding to fix a build break. 
-    //
-    void set_proxy_authenticator(proxy_authenticator_ptr p) {
-    }    
 
     /// Register a std::ostream with the transport for writing output
     /**
