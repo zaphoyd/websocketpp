@@ -75,6 +75,10 @@ public:
     typedef typename concurrency_type::scoped_lock_type scoped_lock_type;
     typedef typename concurrency_type::mutex_type mutex_type;
 
+    /// Type of proxy authentication policy
+    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
+    typedef typename proxy_authenticator_type::ptr proxy_authenticator_ptr;
+    
     typedef lib::shared_ptr<timer> timer_ptr;
 
     explicit connection(bool is_server, alog_type & alog, elog_type & elog)
@@ -92,6 +96,11 @@ public:
     /// Get a shared pointer to this component
     ptr get_shared() {
         return type::shared_from_this();
+    }
+
+    /// NB: REMOVE ME 
+    //  Only included to help figure out CI build break.
+    void set_proxy_authenticator(proxy_authenticator_ptr p) {
     }
 
     /// Register a std::ostream with the transport for writing output
