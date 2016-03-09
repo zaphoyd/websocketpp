@@ -27,8 +27,8 @@
 * project by Colie McGarry.
 */
 
-#ifndef WEBSOCKETPP_CONFIG_ASIO_TLS_CLIENT_HPP
-#define WEBSOCKETPP_CONFIG_ASIO_TLS_CLIENT_HPP
+#ifndef WEBSOCKETPP_CONFIG_ASIO_TLS_CLIENT_PROXY_AUTHENTICATED_HPP
+#define WEBSOCKETPP_CONFIG_ASIO_TLS_CLIENT_PROXY_AUTHENTICATED_HPP
 
 #include <websocketpp/config/core_client.hpp>
 #include <websocketpp/transport/asio/endpoint.hpp>
