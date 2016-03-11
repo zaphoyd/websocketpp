@@ -122,7 +122,7 @@ namespace websocketpp {
 
                     template <typename InputIterator>
                     InputIterator parse(InputIterator begin, InputIterator end) {
-                        auto cursor = http::parser::extract_all_lws(begin, end);
+                        InputIterator cursor = http::parser::extract_all_lws(begin, end);
 
                         switch (m_type)
                         {
@@ -148,12 +148,12 @@ namespace websocketpp {
 
                     template <typename InputIterator>
                     InputIterator parse_basic(InputIterator begin, InputIterator end) {
-                        auto cursor = begin;
+                        InputIterator cursor = begin;
 
                         while (cursor != end) {
                             cursor = http::parser::extract_all_lws(cursor, end);
 
-                            auto next = http::parser::extract_token(cursor, end);
+                            std::pair<std::string, InputIterator> next = http::parser::extract_token(cursor, end);
 
                             if (next.first.empty()) {
                                 return cursor;
@@ -163,7 +163,7 @@ namespace websocketpp {
                                 return cursor;
                             }
 
-                            auto key = next.first;
+                            std::string key = next.first;
 
                             cursor = next.second;
 
@@ -213,9 +213,9 @@ namespace websocketpp {
 
                     template <typename InputIterator>
                     InputIterator parse_ntlm_negotiate(InputIterator begin, InputIterator end) {
-                        auto cursor = http::parser::extract_all_lws(begin, end);
+                        InputIterator cursor = http::parser::extract_all_lws(begin, end);
 
-                        auto next = extract_token68(cursor, end);
+                        std::pair<std::string, InputIterator> next = extract_token68(cursor, end);
 
                         if (!next.first.empty()) {
                             m_challenge = next.first;
@@ -232,9 +232,9 @@ namespace websocketpp {
 
                 template <typename InputIterator>
                 std::pair<AuthScheme, InputIterator> parse_auth_scheme(InputIterator begin, InputIterator end) {
-                    auto cursor = http::parser::extract_all_lws(begin, end);
+                    InputIterator cursor = http::parser::extract_all_lws(begin, end);
 
-                    auto next = http::parser::extract_token(cursor, end);
+                    std::pair<std::string, InputIterator> next = http::parser::extract_token(cursor, end);
 
                     AuthScheme scheme(next.first);
 
@@ -256,7 +256,7 @@ namespace websocketpp {
                     InputIterator cursor = begin;
 
                     while (cursor != end) {
-                        auto next = parse_auth_scheme(cursor, end);
+                        std::pair<AuthScheme,InputIterator> next = parse_auth_scheme(cursor, end);
 
                         if (!next.first.is_known()) {
                             return AuthSchemes();
@@ -276,7 +276,7 @@ namespace websocketpp {
 
                 AuthScheme select_auth_scheme(std::string const & auth_headers)
                 {
-                    auto auth_schemes = parse_auth_schemes(auth_headers.begin(), auth_headers.end());
+                    AuthSchemes auth_schemes = parse_auth_schemes(auth_headers.begin(), auth_headers.end());
 
                     if (auth_schemes.empty()) {
                         return AuthScheme();
@@ -288,7 +288,7 @@ namespace websocketpp {
                 }
 
                 AuthScheme parse_auth_scheme(std::string const & auth_header) {
-                    auto result = parse_auth_scheme(auth_header.begin(), auth_header.end());
+                    std::pair<AuthScheme, std::string::const_iterator> result = parse_auth_scheme(auth_header.begin(), auth_header.end());
 
                     return result.first;
                 }
