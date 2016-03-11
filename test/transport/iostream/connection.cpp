@@ -41,12 +41,19 @@
 #include <websocketpp/concurrency/basic.hpp>
 #include <websocketpp/logger/basic.hpp>
 
+// Proxy Authentication Policy
+#include <websocketpp/common/security_context.hpp>
+#include <websocketpp/http/proxy_authenticator.hpp>
+
 struct config {
     typedef websocketpp::concurrency::basic concurrency_type;
     typedef websocketpp::log::basic<concurrency_type,
         websocketpp::log::elevel> elog_type;
     typedef websocketpp::log::basic<concurrency_type,
         websocketpp::log::alevel> alog_type;
+        
+    typedef websocketpp::lib::security::SecurityContext security_context;
+    typedef websocketpp::http::proxy::proxy_authenticator<security_context> proxy_authenticator_type;            
 };
 
 typedef websocketpp::transport::iostream::connection<config> iostream_con;
