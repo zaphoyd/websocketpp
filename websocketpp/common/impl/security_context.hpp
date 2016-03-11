@@ -30,6 +30,8 @@
 #ifndef WEBSOCKETPP_COMMON_SECURITY_CONTEXT_WIN32_HPP
 #define WEBSOCKETPP_COMMON_SECURITY_CONTEXT_WIN32_HPP
 
+#include <websocketpp/common/memory.hpp>
+
 #ifdef _WIN32
 
 #include <websocketpp/base64/base64.hpp>
@@ -49,7 +51,7 @@ namespace websocketpp {
                 class SecurityContext
                 {
                 public:
-                    typedef std::shared_ptr<SecurityContext> Ptr;
+                    typedef lib::shared_ptr<SecurityContext> Ptr;
 
                     static SecurityContext::Ptr build(const std::string& proxyName, const std::string& authScheme) {
                         return  lib::make_shared<SecurityContext>(proxyName, authScheme);
@@ -205,7 +207,7 @@ namespace websocketpp {
                 class SecurityContext
                 {
                 public:
-                    typedef std::shared_ptr<SecurityContext> Ptr;
+                    typedef lib::shared_ptr<SecurityContext> Ptr;
 
                     static Ptr build(const std::string& , const std::string& )  { return  Ptr(); }
 

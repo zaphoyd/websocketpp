@@ -38,7 +38,7 @@ namespace websocketpp {
             class SecurityContext
             {
             public:
-                typedef std::shared_ptr<SecurityContext> Ptr;
+                typedef lib::shared_ptr<SecurityContext> Ptr;
 
                 static Ptr build(const std::string& , const std::string& )  { return  Ptr(); }
 
