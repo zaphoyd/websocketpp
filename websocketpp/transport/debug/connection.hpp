@@ -72,7 +72,11 @@ public:
     typedef typename concurrency_type::mutex_type mutex_type;
 
     typedef lib::shared_ptr<timer> timer_ptr;
-
+    
+    /// Type of proxy authentication policy
+    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
+    typedef typename proxy_authenticator_type::ptr proxy_authenticator_ptr;
+    
     explicit connection(bool is_server, alog_type & alog, elog_type & elog)
       : m_reading(false), m_is_server(is_server), m_alog(alog), m_elog(elog)
     {
@@ -207,6 +211,11 @@ public:
     void fullfil_write() {
         m_write_handler(lib::error_code());
     }
+
+    // NB: Remove me. Only added to debug build break
+    void set_proxy_authenticator(proxy_authenticator_ptr) {
+    }
+    
 protected:
     /// Initialize the connection transport
     /**
