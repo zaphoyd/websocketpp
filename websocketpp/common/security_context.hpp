@@ -28,6 +28,10 @@
 #ifndef WEBSOCKETPP_COMMON_SECURITY_CONTEXT_HPP
 #define WEBSOCKETPP_COMMON_SECURITY_CONTEXT_HPP
 
+#include <websocketpp/common/memory.hpp>
+
+#include <string>
+
 namespace websocketpp {
     namespace lib {
         namespace security {
