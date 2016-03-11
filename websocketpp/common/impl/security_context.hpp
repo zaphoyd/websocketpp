@@ -30,7 +30,7 @@
 #ifndef WEBSOCKETPP_COMMON_SECURITY_CONTEXT_WIN32_HPP
 #define WEBSOCKETPP_COMMON_SECURITY_CONTEXT_WIN32_HPP
 
-#if defined(_WIN32)
+#ifdef _WIN32
 
 #include <websocketpp/base64/base64.hpp>
 
@@ -191,6 +191,29 @@ namespace websocketpp {
 
                     bool              freeCredentials = false;
                 };
+            }
+        }       // security
+    }           // lib
+}               // websocket
+
+#else // _WIN32
+
+namespace websocketpp {
+    namespace lib {
+        namespace security {
+            namespace platform {
+                class SecurityContext
+                {
+                public:
+                    typedef std::shared_ptr<SecurityContext> Ptr;
+
+                    static Ptr build(const std::string& , const std::string& )  { return  Ptr(); }
+
+                    SecurityContext(const std::string& , const std::string& )   { }
+
+                    bool nextAuthToken(const std::string&)                      { return ""; }
+                    std::string getUpdatedToken() const                         { return ""; }
+               };
             }
         }       // security
     }           // lib
