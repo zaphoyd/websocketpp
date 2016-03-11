@@ -817,7 +817,7 @@ protected:
 
             bool reconnect = false;
 
-            atd::string connection_header = m_proxy_data->res.get_header("Connection");
+            std::string connection_header = m_proxy_data->res.get_header("Connection");
 
             if (connection_header == "Close") {
                 reconnect = true;
