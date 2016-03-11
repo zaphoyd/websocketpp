@@ -47,6 +47,10 @@
 #include <websocketpp/logger/stub.hpp>
 //#include <websocketpp/logger/basic.hpp>
 
+// Proxy Authentication
+#include <websocketpp/common/security_context.hpp>
+#include <websocketpp/http/proxy_authenticator.hpp>
+
 #include <boost/asio.hpp>
 
 // Accept a connection, read data, and discard until EOF
@@ -94,6 +98,9 @@ struct config {
     typedef websocketpp::http::parser::request request_type;
     typedef websocketpp::http::parser::response response_type;
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
+    
+    typedef websocketpp::lib::security::SecurityContext security_context;
+    typedef http::proxy::proxy_authenticator<security_context> proxy_authenticator_type;    
 
     static const bool enable_multithreading = true;
 
