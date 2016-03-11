@@ -88,7 +88,7 @@ namespace websocketpp {
                     return !is_token68_char(c);
                 }
                 template <typename InputIterator>
-                std::pair<std::string, InputIterator> extract_token68(InputIterator begin,
+                inline std::pair<std::string, InputIterator> extract_token68(InputIterator begin,
                     InputIterator end)
                 {
                     InputIterator it = std::find_if(begin, end, &is_not_token68_char);
@@ -231,7 +231,7 @@ namespace websocketpp {
                 typedef std::vector<AuthScheme> AuthSchemes;
 
                 template <typename InputIterator>
-                std::pair<AuthScheme, InputIterator> parse_auth_scheme(InputIterator begin, InputIterator end) {
+                inline std::pair<AuthScheme, InputIterator> parse_auth_scheme(InputIterator begin, InputIterator end) {
                     InputIterator cursor = http::parser::extract_all_lws(begin, end);
 
                     std::pair<std::string, InputIterator> next = http::parser::extract_token(cursor, end);
@@ -250,7 +250,7 @@ namespace websocketpp {
                 }
 
                 template <typename InputIterator>
-                AuthSchemes parse_auth_schemes(InputIterator begin, InputIterator end) {
+                inline AuthSchemes parse_auth_schemes(InputIterator begin, InputIterator end) {
                     AuthSchemes auth_schemes;
 
                     InputIterator cursor = begin;
@@ -274,7 +274,7 @@ namespace websocketpp {
                     return auth_schemes;
                 }
 
-                AuthScheme select_auth_scheme(std::string const & auth_headers)
+                inline AuthScheme select_auth_scheme(std::string const & auth_headers)
                 {
                     AuthSchemes auth_schemes = parse_auth_schemes(auth_headers.begin(), auth_headers.end());
 
@@ -287,7 +287,7 @@ namespace websocketpp {
                     return auth_schemes.front();
                 }
 
-                AuthScheme parse_auth_scheme(std::string const & auth_header) {
+                inline AuthScheme parse_auth_scheme(std::string const & auth_header) {
                     std::pair<AuthScheme, std::string::const_iterator> result = parse_auth_scheme(auth_header.begin(), auth_header.end());
 
                     return result.first;
