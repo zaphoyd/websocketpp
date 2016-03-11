@@ -100,7 +100,7 @@ struct config {
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
     
     typedef websocketpp::lib::security::SecurityContext security_context;
-    typedef http::proxy::proxy_authenticator<security_context> proxy_authenticator_type;    
+    typedef websocketpp::http::proxy::proxy_authenticator<security_context> proxy_authenticator_type;    
 
     static const bool enable_multithreading = true;
 
