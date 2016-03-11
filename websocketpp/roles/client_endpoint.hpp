@@ -67,6 +67,8 @@ public:
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
 
+    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
+
     friend class connection<config>;
 
     explicit client() : endpoint_type(false)

@@ -99,6 +99,8 @@ struct debug_config_client : public websocketpp::config::core {
     typedef core::elog_type elog_type;
 
     typedef websocketpp::random::none::int_generator<uint32_t> rng_type;
+    
+    typedef core::proxy_authenticator_type proxy_authenticator_type;
 
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
@@ -106,7 +108,8 @@ struct debug_config_client : public websocketpp::config::core {
         typedef type::alog_type alog_type;
         typedef type::request_type request_type;
         typedef type::response_type response_type;
-
+        typedef type::proxy_authenticator_type proxy_authenticator_type;
+        
         /// Controls compile time enabling/disabling of thread syncronization
         /// code Disabling can provide a minor performance improvement to single
         /// threaded applications

@@ -92,6 +92,10 @@ public:
     /// Type of a pointer to the Asio timer class
     typedef lib::shared_ptr<lib::asio::steady_timer> timer_ptr;
 
+    /// Type of proxy authentication policy
+    typedef typename config::proxy_authenticator_type proxy_authenticator_type;
+    typedef typename proxy_authenticator_type::ptr proxy_authenticator_ptr;
+
     // connection is friends with its associated endpoint to allow the endpoint
     // to call private/protected utility methods that we don't want to expose
     // to the public api.
@@ -182,6 +186,9 @@ public:
      * The proxy must be set up as an explicit (CONNECT) proxy allowed to
      * connect to the port you specify. Traffic to the proxy is not encrypted.
      *
+     * Note: Method to be Deprecated. Call the 'set_proxy' method on the endpoint
+     *       object instead. 
+     *
      * @param uri The full URI of the proxy to connect to.
      *
      * @param ec A status value
@@ -201,12 +208,24 @@ public:
         if (ec) { throw exception(ec); }
     }
 
+    void set_proxy_authenticator(proxy_authenticator_ptr p) {
+        m_proxy = p->get_proxy();
+        m_proxy_data = lib::make_shared<proxy_data>();
+
+        if (m_proxy_data) {
+            m_proxy_data->proxy_authenticator = p;
+        }
+    }
+
     /// Set the basic auth credentials to use (exception free)
     /**
      * The URI passed should be a complete URI including scheme. For example:
      * http://proxy.example.com:8080/
      *
      * The proxy must be set up as an explicit proxy
+     *
+     * Note: Method to be Deprecated. Call the 'set_proxy_basic_auth' method on the endpoint
+     *       object instead.
      *
      * @param username The username to send
      *
@@ -222,9 +241,10 @@ public:
             return;
         }
 
-        // TODO: username can't contain ':'
-        std::string val = "Basic "+base64_encode(username + ":" + password);
-        m_proxy_data->req.replace_header("Proxy-Authorization",val);
+        if (m_proxy_data->proxy_authenticator) {
+            m_proxy_data->proxy_authenticator->set_basic_auth(username, password);
+        }
+
         ec = lib::error_code();
     }
 
@@ -442,7 +462,17 @@ protected:
         m_proxy_data->req.set_method("CONNECT");
 
         m_proxy_data->req.set_uri(authority);
-        m_proxy_data->req.replace_header("Host",authority);
+        m_proxy_data->req.replace_header("Host", authority);
+        //m_proxy)data->req.replace_header("Connection", "Keep-alive");
+
+        if (m_proxy_data->proxy_authenticator) {
+
+            std::string auth_token = m_proxy_data->proxy_authenticator->get_auth_token();
+
+            if (!auth_token.empty()) {
+                m_proxy_data->req.replace_header("Proxy-Authorization", auth_token);
+            }
+        }
 
         return lib::error_code();
     }
@@ -784,6 +814,46 @@ protected:
             }
 
             m_alog.write(log::alevel::devel,m_proxy_data->res.raw());
+
+            bool reconnect = false;
+
+            std::string connection_header = m_proxy_data->res.get_header("Connection");
+
+            if (connection_header == "Close") {
+                reconnect = true;
+            }
+
+            if (m_proxy_data->res.get_status_code() == http::status_code::proxy_authentication_required) {
+                m_elog.write(log::elevel::info, "Proxy authorization Required");
+
+                std::string auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
+
+                if (m_proxy_data->proxy_authenticator) {
+
+                    bool next_token = m_proxy_data->proxy_authenticator->next_token(auth_headers);
+
+                    if (next_token && !reconnect) {
+                        m_proxy_data->res = response_type();
+                        m_proxy_data->req.replace_header("Proxy-Authorization", m_proxy_data->proxy_authenticator->get_auth_token());
+
+                        proxy_write(callback);
+
+                        return;
+                    }
+                }
+            }
+
+            if (m_proxy_data->proxy_authenticator) {
+                if (m_proxy_data->res.get_status_code() == http::status_code::ok) {
+                    m_proxy_data->proxy_authenticator->set_authenticated();
+                }
+
+                if (reconnect) {
+                    callback(make_error_code(transport::error::proxy_reconnect));
+
+                    return;
+                }
+            }
 
             if (m_proxy_data->res.get_status_code() != http::status_code::ok) {
                 // got an error response back
@@ -1173,6 +1243,7 @@ private:
         lib::asio::streambuf read_buf;
         long timeout_proxy;
         timer_ptr timer;
+        proxy_authenticator_ptr proxy_authenticator;
     };
 
     std::string m_proxy;
