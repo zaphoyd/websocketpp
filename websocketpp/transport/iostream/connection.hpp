@@ -100,7 +100,7 @@ public:
 
     /// NB: REMOVE ME 
     //  Only included to help figure out CI build break.
-    void set_proxy_authenticator(proxy_authenticator_ptr p) {
+    void set_proxy_authenticator(proxy_authenticator_ptr) {
     }
 
     /// Register a std::ostream with the transport for writing output
