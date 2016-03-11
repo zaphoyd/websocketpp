@@ -467,7 +467,7 @@ protected:
 
         if (m_proxy_data->proxy_authenticator) {
 
-            auto auth_token = m_proxy_data->proxy_authenticator->get_auth_token();
+            std::string auth_token = m_proxy_data->proxy_authenticator->get_auth_token();
 
             if (!auth_token.empty()) {
                 m_proxy_data->req.replace_header("Proxy-Authorization", auth_token);
@@ -817,7 +817,7 @@ protected:
 
             bool reconnect = false;
 
-            auto connection_header = m_proxy_data->res.get_header("Connection");
+            atd::string connection_header = m_proxy_data->res.get_header("Connection");
 
             if (connection_header == "Close") {
                 reconnect = true;
@@ -826,11 +826,11 @@ protected:
             if (m_proxy_data->res.get_status_code() == http::status_code::proxy_authentication_required) {
                 m_elog.write(log::elevel::info, "Proxy authorization Required");
 
-                auto auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
+                std::string auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
 
                 if (m_proxy_data->proxy_authenticator) {
 
-                    auto next_token = m_proxy_data->proxy_authenticator->next_token(auth_headers);
+                    bool next_token = m_proxy_data->proxy_authenticator->next_token(auth_headers);
 
                     if (next_token && !reconnect) {
                         m_proxy_data->res = response_type();

@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(auth_scheme_parser) {
     // Valid Basic Auth - with quoted string
     std::string auth_headers = "Basic realm=\"some realm with \\\"quoted string\\\"\",type=1";
 
-    auto auth_schemes = websocketpp::http::proxy::auth_parser::parse_auth_schemes(auth_headers.begin(), auth_headers.end());
+    websocketpp::http::proxy::auth_parser::AuthSchemes auth_schemes = websocketpp::http::proxy::auth_parser::parse_auth_schemes(auth_headers.begin(), auth_headers.end());
 
     BOOST_CHECK(auth_schemes.size() == 1);
     BOOST_CHECK(auth_schemes.front().is_basic());
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(auth_scheme_parser) {
     BOOST_CHECK(auth_schemes[1].is_ntlm());
     BOOST_CHECK(auth_schemes[1].get_challenge().empty());
 
-    auto auth_scheme = websocketpp::http::proxy::auth_parser::select_auth_scheme(auth_headers);
+    websocketpp::http::proxy::auth_parser::AuthScheme auth_scheme = websocketpp::http::proxy::auth_parser::select_auth_scheme(auth_headers);
 
     BOOST_CHECK(auth_scheme.is_ntlm());
     BOOST_CHECK(auth_scheme.get_challenge().empty());
@@ -137,7 +137,7 @@ public:
     static ReportContext report_context;
 
     static fake_security_context::Ptr build(const std::string& proxyName, const std::string& authScheme) {
-        auto context = websocketpp::lib::make_shared<fake_security_context>(proxyName, authScheme);
+        fake_security_context::Ptr context = websocketpp::lib::make_shared<fake_security_context>(proxyName, authScheme);
 
         if (report_context) {
             report_context(context);
