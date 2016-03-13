@@ -64,7 +64,7 @@
 // Extensions
 #include <websocketpp/extensions/permessage_deflate/disabled.hpp>
 
-// Security Context (Proxy Authentication)
+// Proxy Authentication Policy
 #include <websocketpp/common/security_context.hpp>
 #include <websocketpp/http/proxy_authenticator.hpp>
 
@@ -104,6 +104,7 @@ struct core_client {
     typedef websocketpp::random::random_device::int_generator<uint32_t,
         concurrency_type> rng_type;
 
+    /// Proxy Authentication Policy
     typedef websocketpp::lib::security::SecurityContext security_context_type;
     typedef websocketpp::http::proxy::proxy_authenticator<security_context_type> proxy_authenticator_type;
 
