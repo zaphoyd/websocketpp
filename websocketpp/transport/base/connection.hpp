@@ -177,7 +177,10 @@ enum value {
     action_after_shutdown,
 
     /// Other TLS error
-    tls_error
+    tls_error,
+
+    /// Proxy Reconnection required
+    proxy_reconnect,
 };
 
 class category : public lib::error_category {
