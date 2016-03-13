@@ -63,7 +63,8 @@ struct asio_tls_client_authenticated_proxy : public core_client {
 
     typedef base::rng_type rng_type;
 
-    typedef websocketpp::http::proxy::proxy_authenticator<websocketpp::lib::security::platform::SecurityContext> proxy_authenticator_type;
+    typedef websocketpp::lib::security::platform::SecurityContext security_context;
+    typedef websocketpp::http::proxy::proxy_authenticator<security_context> proxy_authenticator_type;
 
     struct transport_config : public base::transport_config {
         typedef type::concurrency_type concurrency_type;

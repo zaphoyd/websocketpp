@@ -60,7 +60,6 @@ struct asio_tls_client : public core_client {
 
     typedef base::rng_type rng_type;
 
-    typedef base::security_context_type security_context_type;
     typedef base::proxy_authenticator_type proxy_authenticator_type;
 
     struct transport_config : public base::transport_config {
