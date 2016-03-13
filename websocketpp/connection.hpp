@@ -350,8 +350,8 @@ public:
         m_alog.write(log::alevel::devel,"connection constructor");
     }
 
-    explicit connection(const connection& connection)
-        : transport_con_type(connection)
+    explicit connection(const connection& prev_con)
+        : transport_con_type(prev_con)
         , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
             this,
@@ -363,7 +363,7 @@ public:
             this,
             lib::placeholders::_1
             ))
-        , m_user_agent(connection.m_user_agent)
+        , m_user_agent(prev_con.m_user_agent)
         , m_open_handshake_timeout_dur(config::timeout_open_handshake)
         , m_close_handshake_timeout_dur(config::timeout_close_handshake)
         , m_pong_timeout_dur(config::timeout_pong)
@@ -374,17 +374,17 @@ public:
         , m_send_buffer_size(0)
         , m_write_flag(false)
         , m_read_flag(true)
-        , m_is_server(connection.m_is_server)
-        , m_alog(connection.m_alog)
-        , m_elog(connection.m_elog)
-        , m_rng(connection.m_rng)
+        , m_is_server(prev_con.m_is_server)
+        , m_alog(prev_con.m_alog)
+        , m_elog(prev_con.m_elog)
+        , m_rng(prev_con.m_rng)
         , m_local_close_code(close::status::abnormal_close)
         , m_remote_close_code(close::status::abnormal_close)
         , m_is_http(false)
         , m_http_state(session::http_state::init)
         , m_was_clean(false)
     {
-        m_alog.write(log::alevel::devel, "connection constructor");
+        m_alog.write(log::alevel::devel, "connection copy constructor");
     }
 
     /// Get a shared pointer to this component
