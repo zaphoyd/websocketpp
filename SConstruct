@@ -1,5 +1,5 @@
 import os, sys, commands
-env = Environment(ENV = os.environ)
+env = Environment(ENV = os.environ, TARGET_ARCH = 'x86')
 
 # figure out a better way to configure this
 if os.environ.has_key('CXX'):
@@ -215,7 +215,7 @@ Export('polyfill_libs')
 
 ## TARGETS:
 
-if not env['PLATFORM'].startswith('win'):
+if env['PLATFORM'].startswith('win'):
     # Unit tests, add test folders with SConscript files to to_test list.
     to_test = ['utility','http','logger','random','processors','message_buffer','extension','transport/iostream','transport/asio','roles','endpoint','connection','transport'] #,'http','processors','connection'
 
