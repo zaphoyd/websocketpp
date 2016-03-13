@@ -88,7 +88,18 @@ public:
     {
         m_alog.write(log::alevel::devel,"iostream con transport constructor");
     }
-
+    
+    // Note: Only including this copy constructor to address a build break
+    // build a new connection object from an existing one
+    explicit connection(const connection& con)
+        : m_is_server(con.m_is_server)
+        , m_alog(con.m_alog)
+        , m_elog(con.m_elog)
+        , m_proxy(con.m_proxy)
+        , m_proxy_data(con.m_proxy_data)
+    {
+    }
+    
     /// Get a shared pointer to this component
     ptr get_shared() {
         return type::shared_from_this();
