@@ -59,7 +59,7 @@ namespace websocketpp {
  * `connection_hdl` and any error that occurred.
  *
  * **init_logging**
- * `void init_logging(alog_type * a, elog_type * e)`\n
+ * `void init_logging(const lib::shared_ptr<alog_type>& a, const lib::shared_ptr<elog_type>& e)`\n
  * Called once after construction to provide pointers to the endpoint's access
  * and error loggers. These may be stored and used to log messages or ignored.
  */
