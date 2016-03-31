@@ -3,6 +3,9 @@ HEAD
   rather than connection pre_init. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
   reporting #530.
+- Compatibility: Make sure the chrono library used by Boost/Asio is in sync
+  with what the websocketpp is using. Thank you Flow86 for reporting and a
+  patch.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
