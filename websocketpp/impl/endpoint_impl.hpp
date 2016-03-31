@@ -35,7 +35,7 @@ namespace websocketpp {
 template <typename connection, typename config>
 typename endpoint<connection,config>::connection_ptr
 endpoint<connection,config>::create_connection() {
-    m_alog.write(log::alevel::devel,"create_connection");
+    m_alog->write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
 
     /*if (m_state == STOPPING || m_state == STOPPED) {
@@ -45,7 +45,7 @@ endpoint<connection,config>::create_connection() {
     //scoped_lock_type guard(m_mutex);
     // Create a connection on the heap and manage it using a shared pointer
     connection_ptr con = lib::make_shared<connection_type>(m_is_server,
-        m_user_agent, lib::ref(m_alog), lib::ref(m_elog), lib::ref(m_rng));
+        m_user_agent, m_alog, m_elog, lib::ref(m_rng));
 
     connection_weak_ptr w(con);
 
@@ -85,7 +85,7 @@ endpoint<connection,config>::create_connection() {
 
     ec = transport_type::init(con);
     if (ec) {
-        m_elog.write(log::elevel::fatal,ec.message());
+        m_elog->write(log::elevel::fatal,ec.message());
         return connection_ptr();
     }
 
@@ -98,7 +98,7 @@ void endpoint<connection,config>::interrupt(connection_hdl hdl, lib::error_code 
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
 
-    m_alog.write(log::alevel::devel,"Interrupting connection");
+    m_alog->write(log::alevel::devel,"Interrupting connection");
 
     ec = con->interrupt();
 }

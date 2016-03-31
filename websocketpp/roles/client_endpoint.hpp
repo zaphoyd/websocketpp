@@ -71,7 +71,7 @@ public:
 
     explicit client() : endpoint_type(false)
     {
-        endpoint_type::m_alog.write(log::alevel::devel, "client constructor");
+        endpoint_type::m_alog->write(log::alevel::devel, "client constructor");
     }
 
     /// Get a new connection
@@ -157,10 +157,10 @@ private:
         if (ec) {
             con->terminate(ec);
 
-            endpoint_type::m_elog.write(log::elevel::rerror,
+            endpoint_type::m_elog->write(log::elevel::rerror,
                     "handle_connect error: "+ec.message());
         } else {
-            endpoint_type::m_alog.write(log::alevel::connect,
+            endpoint_type::m_alog->write(log::alevel::connect,
                 "Successful connection");
 
             con->start();
