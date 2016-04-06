@@ -1120,7 +1120,7 @@ protected:
                     // TLS short read at this point is somewhat expected if both
                     // sides try and end the connection at the same time or if
                     // SSLv2 is being used. In general there is nothing that can
-                    // be done here other than a low level development log->
+                    // be done here other than a low level development log.
                 } else {
                     // all other errors are effectively pass through errors of
                     // some sort so print some detail on the info channel for
