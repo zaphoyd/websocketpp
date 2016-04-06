@@ -68,7 +68,7 @@ public:
 
     explicit server() : endpoint_type(true)
     {
-        endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
+        endpoint_type::m_alog->write(log::alevel::devel, "server constructor");
     }
 
     /// Destructor
@@ -163,10 +163,10 @@ public:
             con->terminate(ec);
 
             if (ec == error::operation_canceled) {
-                endpoint_type::m_elog.write(log::elevel::info,
+                endpoint_type::m_elog->write(log::elevel::info,
                     "handle_accept error: "+ec.message());
             } else {
-                endpoint_type::m_elog.write(log::elevel::rerror,
+                endpoint_type::m_elog->write(log::elevel::rerror,
                     "handle_accept error: "+ec.message());
             }
         } else {
@@ -176,10 +176,10 @@ public:
         lib::error_code start_ec;
         start_accept(start_ec);
         if (start_ec == error::async_accept_not_listening) {
-            endpoint_type::m_elog.write(log::elevel::info,
+            endpoint_type::m_elog->write(log::elevel::info,
                 "Stopping acceptance of new connections because the underlying transport is no longer listening.");
         } else if (start_ec) {
-            endpoint_type::m_elog.write(log::elevel::rerror,
+            endpoint_type::m_elog->write(log::elevel::rerror,
                 "Restarting async_accept loop failed: "+ec.message());
         }
     }

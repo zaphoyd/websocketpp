@@ -49,6 +49,7 @@
 
 // Loggers
 #include <websocketpp/logger/basic.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 // RNG
 #include <websocketpp/random/none.hpp>

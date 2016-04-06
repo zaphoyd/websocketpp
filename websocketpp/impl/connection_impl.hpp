@@ -53,7 +53,7 @@ template <typename config>
 void connection<config>::set_termination_handler(
     termination_handler new_handler)
 {
-    m_alog.write(log::alevel::devel,
+    m_alog->write(log::alevel::devel,
         "connection set_termination_handler");
 
     //scoped_lock_type lock(m_connection_state_lock);
@@ -103,8 +103,8 @@ lib::error_code connection<config>::send(void const * payload, size_t len,
 template <typename config>
 lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection send");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection send");
     }
 
     {
@@ -153,8 +153,8 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
 template <typename config>
 void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection ping");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection ping");
     }
 
     {
@@ -162,7 +162,7 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
         if (m_state != session::state::open) {
             std::stringstream ss;
             ss << "connection::ping called from invalid state " << m_state;
-            m_alog.write(log::alevel::devel,ss.str());
+            m_alog->write(log::alevel::devel,ss.str());
             ec = error::make_error_code(error::invalid_state);
             return;
         }
@@ -198,7 +198,7 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
 
         if (!m_ping_timer) {
             // Our transport doesn't support timers
-            m_elog.write(log::elevel::warn,"Warning: a pong_timeout_handler is \
+            m_elog->write(log::elevel::warn,"Warning: a pong_timeout_handler is \
                 set but the transport in use does not support timeouts.");
         }
     }
@@ -239,7 +239,7 @@ void connection<config>::handle_pong_timeout(std::string payload,
             return;
         }
 
-        m_elog.write(log::elevel::devel,"pong_timeout error: "+ec.message());
+        m_elog->write(log::elevel::devel,"pong_timeout error: "+ec.message());
         return;
     }
 
@@ -250,8 +250,8 @@ void connection<config>::handle_pong_timeout(std::string payload,
 
 template <typename config>
 void connection<config>::pong(std::string const& payload, lib::error_code& ec) {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection pong");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection pong");
     }
 
     {
@@ -259,7 +259,7 @@ void connection<config>::pong(std::string const& payload, lib::error_code& ec) {
         if (m_state != session::state::open) {
             std::stringstream ss;
             ss << "connection::pong called from invalid state " << m_state;
-            m_alog.write(log::alevel::devel,ss.str());
+            m_alog->write(log::alevel::devel,ss.str());
             ec = error::make_error_code(error::invalid_state);
             return;
         }
@@ -304,8 +304,8 @@ template <typename config>
 void connection<config>::close(close::status::value const code,
     std::string const & reason, lib::error_code & ec)
 {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection close");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection close");
     }
 
     // Truncate reason to maximum size allowable in a close frame.
@@ -339,7 +339,7 @@ void connection<config>::close(close::status::value const code,
  */
 template <typename config>
 lib::error_code connection<config>::interrupt() {
-    m_alog.write(log::alevel::devel,"connection connection::interrupt");
+    m_alog->write(log::alevel::devel,"connection connection::interrupt");
     return transport_con_type::interrupt(
         lib::bind(
             &type::handle_interrupt,
@@ -358,7 +358,7 @@ void connection<config>::handle_interrupt() {
 
 template <typename config>
 lib::error_code connection<config>::pause_reading() {
-    m_alog.write(log::alevel::devel,"connection connection::pause_reading");
+    m_alog->write(log::alevel::devel,"connection connection::pause_reading");
     return transport_con_type::dispatch(
         lib::bind(
             &type::handle_pause_reading,
@@ -370,13 +370,13 @@ lib::error_code connection<config>::pause_reading() {
 /// Pause reading handler. Not safe to call directly
 template <typename config>
 void connection<config>::handle_pause_reading() {
-    m_alog.write(log::alevel::devel,"connection connection::handle_pause_reading");
+    m_alog->write(log::alevel::devel,"connection connection::handle_pause_reading");
     m_read_flag = false;
 }
 
 template <typename config>
 lib::error_code connection<config>::resume_reading() {
-    m_alog.write(log::alevel::devel,"connection connection::resume_reading");
+    m_alog->write(log::alevel::devel,"connection connection::resume_reading");
     return transport_con_type::dispatch(
         lib::bind(
             &type::handle_resume_reading,
@@ -714,10 +714,10 @@ void connection<config>::send_http_response() {
 
 template <typename config>
 void connection<config>::start() {
-    m_alog.write(log::alevel::devel,"connection start");
+    m_alog->write(log::alevel::devel,"connection start");
 
     if (m_internal_state != istate::USER_INIT) {
-        m_alog.write(log::alevel::devel,"Start called in invalid state");
+        m_alog->write(log::alevel::devel,"Start called in invalid state");
         this->terminate(error::make_error_code(error::invalid_state));
         return;
     }
@@ -738,12 +738,12 @@ void connection<config>::start() {
 
 template <typename config>
 void connection<config>::handle_transport_init(lib::error_code const & ec) {
-    m_alog.write(log::alevel::devel,"connection handle_transport_init");
+    m_alog->write(log::alevel::devel,"connection handle_transport_init");
 
     lib::error_code ecm = ec;
 
     if (m_internal_state != istate::TRANSPORT_INIT) {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
           "handle_transport_init must be called from transport init state");
         ecm = error::make_error_code(error::invalid_state);
     }
@@ -751,7 +751,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
     if (ecm) {
         std::stringstream s;
         s << "handle_transport_init received error: "<< ecm.message();
-        m_elog.write(log::elevel::rerror,s.str());
+        m_elog->write(log::elevel::rerror,s.str());
 
         this->terminate(ecm);
         return;
@@ -772,7 +772,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 
 template <typename config>
 void connection<config>::read_handshake(size_t num_bytes) {
-    m_alog.write(log::alevel::devel,"connection read_handshake");
+    m_alog->write(log::alevel::devel,"connection read_handshake");
 
     if (m_open_handshake_timeout_dur > 0) {
         m_handshake_timer = transport_con_type::set_timer(
@@ -804,7 +804,7 @@ template <typename config>
 void connection<config>::handle_read_handshake(lib::error_code const & ec,
     size_t bytes_transferred)
 {
-    m_alog.write(log::alevel::devel,"connection handle_read_handshake");
+    m_alog->write(log::alevel::devel,"connection handle_read_handshake");
 
     lib::error_code ecm = ec;
 
@@ -819,7 +819,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
             // The connection was canceled while the response was being sent,
             // usually by the handshake timer. This is basically expected
             // (though hopefully rare) and there is nothing we can do so ignore.
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                 "handle_read_handshake invoked after connection was closed");
             return;
         } else {
@@ -830,7 +830,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
     if (ecm) {
         if (ecm == transport::error::eof && m_state == session::state::closed) {
             // we expect to get eof if the connection is closed already
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                     "got (expected) eof/state error from closed con");
             return;
         }
@@ -842,7 +842,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 
     // Boundaries checking. TODO: How much of this should be done?
     if (bytes_transferred > config::connection_read_buffer_size) {
-        m_elog.write(log::elevel::fatal,"Fatal boundaries checking error.");
+        m_elog->write(log::elevel::fatal,"Fatal boundaries checking error.");
         this->terminate(make_error_code(error::general));
         return;
     }
@@ -861,16 +861,16 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
     // More paranoid boundaries checking.
     // TODO: Is this overkill?
     if (bytes_processed > bytes_transferred) {
-        m_elog.write(log::elevel::fatal,"Fatal boundaries checking error.");
+        m_elog->write(log::elevel::fatal,"Fatal boundaries checking error.");
         this->terminate(make_error_code(error::general));
         return;
     }
 
-    if (m_alog.static_test(log::alevel::devel)) {
+    if (m_alog->static_test(log::alevel::devel)) {
         std::stringstream s;
         s << "bytes_transferred: " << bytes_transferred
           << " bytes, bytes processed: " << bytes_processed << " bytes";
-        m_alog.write(log::alevel::devel,s.str());
+        m_alog->write(log::alevel::devel,s.str());
     }
 
     if (m_request.ready()) {
@@ -891,17 +891,17 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
                 bytes_processed += 8;
             } else {
                 // TODO: need more bytes
-                m_alog.write(log::alevel::devel,"short key3 read");
+                m_alog->write(log::alevel::devel,"short key3 read");
                 m_response.set_status(http::status_code::internal_server_error);
                 this->write_http_response_error(processor::error::make_error_code(processor::error::short_key3));
                 return;
             }
         }
 
-        if (m_alog.static_test(log::alevel::devel)) {
-            m_alog.write(log::alevel::devel,m_request.raw());
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,m_request.raw());
             if (!m_request.get_header("Sec-WebSocket-Key3").empty()) {
-                m_alog.write(log::alevel::devel,
+                m_alog->write(log::alevel::devel,
                     utility::to_hex(m_request.get_header("Sec-WebSocket-Key3")));
             }
         }
@@ -948,7 +948,7 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
 template <typename config>
 void connection<config>::write_http_response_error(lib::error_code const & ec) {
     if (m_internal_state != istate::READ_HTTP_REQUEST) {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
             "write_http_response_error called in invalid state");
         this->terminate(error::make_error_code(error::invalid_state));
         return;
@@ -965,7 +965,7 @@ template <typename config>
 void connection<config>::handle_read_frame(lib::error_code const & ec,
     size_t bytes_transferred)
 {
-    //m_alog.write(log::alevel::devel,"connection handle_read_frame");
+    //m_alog->write(log::alevel::devel,"connection handle_read_frame");
 
     lib::error_code ecm = ec;
 
@@ -980,7 +980,7 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             if (m_state == session::state::closed) {
                 // we expect to get eof if the connection is closed already
                 // just ignore it
-                m_alog.write(log::alevel::devel,"got eof from closed con");
+                m_alog->write(log::alevel::devel,"got eof from closed con");
                 return;
             } else if (m_state == session::state::closing && !m_is_server) {
                 // If we are a client we expect to get eof in the closing state,
@@ -995,7 +995,7 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             // changed and should be ignored as they pose no problems and there
             // is nothing useful that we can do about them.
             if (m_state == session::state::closed) {
-                m_alog.write(log::alevel::devel,
+                m_alog->write(log::alevel::devel,
                     "handle_read_frame: got invalid istate in closed state");
                 return;
             }
@@ -1019,32 +1019,32 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
 
     // Boundaries checking. TODO: How much of this should be done?
     /*if (bytes_transferred > config::connection_read_buffer_size) {
-        m_elog.write(log::elevel::fatal,"Fatal boundaries checking error");
+        m_elog->write(log::elevel::fatal,"Fatal boundaries checking error");
         this->terminate(make_error_code(error::general));
         return;
     }*/
 
     size_t p = 0;
 
-    if (m_alog.static_test(log::alevel::devel)) {
+    if (m_alog->static_test(log::alevel::devel)) {
         std::stringstream s;
         s << "p = " << p << " bytes transferred = " << bytes_transferred;
-        m_alog.write(log::alevel::devel,s.str());
+        m_alog->write(log::alevel::devel,s.str());
     }
 
     while (p < bytes_transferred) {
-        if (m_alog.static_test(log::alevel::devel)) {
+        if (m_alog->static_test(log::alevel::devel)) {
             std::stringstream s;
             s << "calling consume with " << bytes_transferred-p << " bytes";
-            m_alog.write(log::alevel::devel,s.str());
+            m_alog->write(log::alevel::devel,s.str());
         }
 
         lib::error_code consume_ec;
 
-        if (m_alog.static_test(log::alevel::devel)) {
+        if (m_alog->static_test(log::alevel::devel)) {
             std::stringstream s;
             s << "Processing Bytes: " << utility::to_hex(reinterpret_cast<uint8_t*>(m_buf)+p,bytes_transferred-p);
-            m_alog.write(log::alevel::devel,s.str());
+            m_alog->write(log::alevel::devel,s.str());
         }
 
         p += m_processor->consume(
@@ -1053,10 +1053,10 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
             consume_ec
         );
 
-        if (m_alog.static_test(log::alevel::devel)) {
+        if (m_alog->static_test(log::alevel::devel)) {
             std::stringstream s;
             s << "bytes left after consume: " << bytes_transferred-p;
-            m_alog.write(log::alevel::devel,s.str());
+            m_alog->write(log::alevel::devel,s.str());
         }
         if (consume_ec) {
             log_err(log::elevel::rerror, "consume", consume_ec);
@@ -1082,20 +1082,20 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
         }
 
         if (m_processor->ready()) {
-            if (m_alog.static_test(log::alevel::devel)) {
+            if (m_alog->static_test(log::alevel::devel)) {
                 std::stringstream s;
                 s << "Complete message received. Dispatching";
-                m_alog.write(log::alevel::devel,s.str());
+                m_alog->write(log::alevel::devel,s.str());
             }
 
             message_ptr msg = m_processor->get_message();
 
             if (!msg) {
-                m_alog.write(log::alevel::devel, "null message from m_processor");
+                m_alog->write(log::alevel::devel, "null message from m_processor");
             } else if (!is_control(msg->get_opcode())) {
                 // data message, dispatch to user
                 if (m_state != session::state::open) {
-                    m_elog.write(log::elevel::warn, "got non-close frame while closing");
+                    m_elog->write(log::elevel::warn, "got non-close frame while closing");
                 } else if (m_message_handler) {
                     m_message_handler(m_connection_hdl, msg);
                 }
@@ -1132,7 +1132,7 @@ void connection<config>::read_frame() {
 
 template <typename config>
 lib::error_code connection<config>::initialize_processor() {
-    m_alog.write(log::alevel::devel,"initialize_processor");
+    m_alog->write(log::alevel::devel,"initialize_processor");
 
     // if it isn't a websocket handshake nothing to do.
     if (!processor::is_websocket_handshake(m_request)) {
@@ -1142,7 +1142,7 @@ lib::error_code connection<config>::initialize_processor() {
     int version = processor::get_websocket_version(m_request);
 
     if (version < 0) {
-        m_alog.write(log::alevel::devel, "BAD REQUEST: can't determine version");
+        m_alog->write(log::alevel::devel, "BAD REQUEST: can't determine version");
         m_response.set_status(http::status_code::bad_request);
         return error::make_error_code(error::invalid_version);
     }
@@ -1156,7 +1156,7 @@ lib::error_code connection<config>::initialize_processor() {
 
     // We don't have a processor for this version. Return bad request
     // with Sec-WebSocket-Version header filled with values we do accept
-    m_alog.write(log::alevel::devel, "BAD REQUEST: no processor for version");
+    m_alog->write(log::alevel::devel, "BAD REQUEST: no processor for version");
     m_response.set_status(http::status_code::bad_request);
 
     std::stringstream ss;
@@ -1174,11 +1174,11 @@ lib::error_code connection<config>::initialize_processor() {
 
 template <typename config>
 lib::error_code connection<config>::process_handshake_request() {
-    m_alog.write(log::alevel::devel,"process handshake request");
+    m_alog->write(log::alevel::devel,"process handshake request");
 
     if (!processor::is_websocket_handshake(m_request)) {
         // this is not a websocket handshake. Process as plain HTTP
-        m_alog.write(log::alevel::devel,"HTTP REQUEST");
+        m_alog->write(log::alevel::devel,"HTTP REQUEST");
 
         // extract URI from request
         m_uri = processor::get_uri_from_host(
@@ -1187,7 +1187,7 @@ lib::error_code connection<config>::process_handshake_request() {
         );
 
         if (!m_uri->get_valid()) {
-            m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
+            m_alog->write(log::alevel::devel, "Bad request: failed to parse uri");
             m_response.set_status(http::status_code::bad_request);
             return error::make_error_code(error::invalid_uri);
         }
@@ -1212,7 +1212,7 @@ lib::error_code connection<config>::process_handshake_request() {
     // Validate: make sure all required elements are present.
     if (ec){
         // Not a valid handshake request
-        m_alog.write(log::alevel::devel, "Bad request " + ec.message());
+        m_alog->write(log::alevel::devel, "Bad request " + ec.message());
         m_response.set_status(http::status_code::bad_request);
         return ec;
     }
@@ -1225,7 +1225,7 @@ lib::error_code connection<config>::process_handshake_request() {
     if (neg_results.first) {
         // There was a fatal error in extension parsing that should result in
         // a failed connection attempt.
-        m_alog.write(log::alevel::devel, "Bad request: " + neg_results.first.message());
+        m_alog->write(log::alevel::devel, "Bad request: " + neg_results.first.message());
         m_response.set_status(http::status_code::bad_request);
         return neg_results.first;
     } else {
@@ -1243,7 +1243,7 @@ lib::error_code connection<config>::process_handshake_request() {
 
 
     if (!m_uri->get_valid()) {
-        m_alog.write(log::alevel::devel, "Bad request: failed to parse uri");
+        m_alog->write(log::alevel::devel, "Bad request: failed to parse uri");
         m_response.set_status(http::status_code::bad_request);
         return error::make_error_code(error::invalid_uri);
     }
@@ -1267,14 +1267,14 @@ lib::error_code connection<config>::process_handshake_request() {
         if (ec) {
             std::stringstream s;
             s << "Processing error: " << ec << "(" << ec.message() << ")";
-            m_alog.write(log::alevel::devel, s.str());
+            m_alog->write(log::alevel::devel, s.str());
 
             m_response.set_status(http::status_code::internal_server_error);
             return ec;
         }
     } else {
         // User application has rejected the handshake
-        m_alog.write(log::alevel::devel, "USER REJECT");
+        m_alog->write(log::alevel::devel, "USER REJECT");
 
         // Use Bad Request if the user handler did not provide a more
         // specific http response error code.
@@ -1291,10 +1291,10 @@ lib::error_code connection<config>::process_handshake_request() {
 
 template <typename config>
 void connection<config>::write_http_response(lib::error_code const & ec) {
-    m_alog.write(log::alevel::devel,"connection write_http_response");
+    m_alog->write(log::alevel::devel,"connection write_http_response");
 
     if (ec == error::make_error_code(error::http_connection_ended)) {
-        m_alog.write(log::alevel::http,"An HTTP handler took over the connection.");
+        m_alog->write(log::alevel::http,"An HTTP handler took over the connection.");
         return;
     }
 
@@ -1324,10 +1324,10 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
         m_handshake_buffer = m_response.raw();
     }
 
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
         if (!m_response.get_header("Sec-WebSocket-Key3").empty()) {
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                 utility::to_hex(m_response.get_header("Sec-WebSocket-Key3")));
         }
     }
@@ -1346,7 +1346,7 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
 
 template <typename config>
 void connection<config>::handle_write_http_response(lib::error_code const & ec) {
-    m_alog.write(log::alevel::devel,"handle_write_http_response");
+    m_alog->write(log::alevel::devel,"handle_write_http_response");
 
     lib::error_code ecm = ec;
 
@@ -1361,7 +1361,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
             // The connection was canceled while the response was being sent,
             // usually by the handshake timer. This is basically expected
             // (though hopefully rare) and there is nothing we can do so ignore.
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                 "handle_write_http_response invoked after connection was closed");
             return;
         } else {
@@ -1372,7 +1372,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
     if (ecm) {
         if (ecm == transport::error::eof && m_state == session::state::closed) {
             // we expect to get eof if the connection is closed already
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                     "got (expected) eof/state error from closed con");
             return;
         }
@@ -1397,7 +1397,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
             std::stringstream s;
             s << "Handshake ended with HTTP error: "
               << m_response.get_status_code();
-            m_elog.write(log::elevel::rerror,s.str());
+            m_elog->write(log::elevel::rerror,s.str());
         } else {
             // if this was not a websocket connection, we have written
             // the expected response and the connection can be closed.
@@ -1405,7 +1405,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
             this->log_http_result();
             
             if (m_ec) {
-                m_alog.write(log::alevel::devel,
+                m_alog->write(log::alevel::devel,
                     "got to writing HTTP results with m_ec set: "+m_ec.message());
             }
             m_ec = make_error_code(error::http_connection_ended);
@@ -1429,7 +1429,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
 
 template <typename config>
 void connection<config>::send_http_request() {
-    m_alog.write(log::alevel::devel,"connection send_http_request");
+    m_alog->write(log::alevel::devel,"connection send_http_request");
 
     // TODO: origin header?
 
@@ -1445,7 +1445,7 @@ void connection<config>::send_http_request() {
             return;
         }
     } else {
-        m_elog.write(log::elevel::fatal,"Internal library error: missing processor");
+        m_elog->write(log::elevel::fatal,"Internal library error: missing processor");
         return;
     }
 
@@ -1460,8 +1460,8 @@ void connection<config>::send_http_request() {
 
     m_handshake_buffer = m_request.raw();
 
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"Raw Handshake request:\n"+m_handshake_buffer);
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"Raw Handshake request:\n"+m_handshake_buffer);
     }
 
     if (m_open_handshake_timeout_dur > 0) {
@@ -1488,7 +1488,7 @@ void connection<config>::send_http_request() {
 
 template <typename config>
 void connection<config>::handle_send_http_request(lib::error_code const & ec) {
-    m_alog.write(log::alevel::devel,"handle_send_http_request");
+    m_alog->write(log::alevel::devel,"handle_send_http_request");
 
     lib::error_code ecm = ec;
 
@@ -1505,7 +1505,7 @@ void connection<config>::handle_send_http_request(lib::error_code const & ec) {
             // The connection was canceled while the response was being sent,
             // usually by the handshake timer. This is basically expected
             // (though hopefully rare) and there is nothing we can do so ignore.
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                 "handle_send_http_request invoked after connection was closed");
             return;
         } else {
@@ -1516,7 +1516,7 @@ void connection<config>::handle_send_http_request(lib::error_code const & ec) {
     if (ecm) {
         if (ecm == transport::error::eof && m_state == session::state::closed) {
             // we expect to get eof if the connection is closed already
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                     "got (expected) eof/state error from closed con");
             return;
         }
@@ -1543,7 +1543,7 @@ template <typename config>
 void connection<config>::handle_read_http_response(lib::error_code const & ec,
     size_t bytes_transferred)
 {
-    m_alog.write(log::alevel::devel,"handle_read_http_response");
+    m_alog->write(log::alevel::devel,"handle_read_http_response");
 
     lib::error_code ecm = ec;
 
@@ -1558,7 +1558,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             // The connection was canceled while the response was being sent,
             // usually by the handshake timer. This is basically expected
             // (though hopefully rare) and there is nothing we can do so ignore.
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                 "handle_read_http_response invoked after connection was closed");
             return;
         } else {
@@ -1569,7 +1569,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     if (ecm) {
         if (ecm == transport::error::eof && m_state == session::state::closed) {
             // we expect to get eof if the connection is closed already
-            m_alog.write(log::alevel::devel,
+            m_alog->write(log::alevel::devel,
                     "got (expected) eof/state error from closed con");
             return;
         }
@@ -1584,13 +1584,13 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     try {
         bytes_processed = m_response.consume(m_buf,bytes_transferred);
     } catch (http::exception & e) {
-        m_elog.write(log::elevel::rerror,
+        m_elog->write(log::elevel::rerror,
             std::string("error in handle_read_http_response: ")+e.what());
         this->terminate(make_error_code(error::general));
         return;
     }
 
-    m_alog.write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
+    m_alog->write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
     if (m_response.headers_ready()) {
         if (m_handshake_timer) {
@@ -1621,7 +1621,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             // doesn't match the options requested by the client. Its possible
             // that the best behavior in this cases is to log and continue with
             // an unextended connection.
-            m_alog.write(log::alevel::devel, "Extension negotiation failed: " 
+            m_alog->write(log::alevel::devel, "Extension negotiation failed: "
                 + neg_results.first.message());
             this->terminate(make_error_code(error::extension_neg_failed));
             // TODO: close connection with reason 1010 (and list extensions)
@@ -1664,13 +1664,13 @@ void connection<config>::handle_open_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,"open handshake timer cancelled");
+        m_alog->write(log::alevel::devel,"open handshake timer cancelled");
     } else if (ec) {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
             "open handle_open_handshake_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog.write(log::alevel::devel,"open handshake timer expired");
+        m_alog->write(log::alevel::devel,"open handshake timer expired");
         terminate(make_error_code(error::open_handshake_timeout));
     }
 }
@@ -1680,21 +1680,21 @@ void connection<config>::handle_close_handshake_timeout(
     lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog.write(log::alevel::devel,"asio close handshake timer cancelled");
+        m_alog->write(log::alevel::devel,"asio close handshake timer cancelled");
     } else if (ec) {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
             "asio open handle_close_handshake_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog.write(log::alevel::devel, "asio close handshake timer expired");
+        m_alog->write(log::alevel::devel, "asio close handshake timer expired");
         terminate(make_error_code(error::close_handshake_timeout));
     }
 }
 
 template <typename config>
 void connection<config>::terminate(lib::error_code const & ec) {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection terminate");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection terminate");
     }
 
     // Cancel close handshake timer
@@ -1727,7 +1727,7 @@ void connection<config>::terminate(lib::error_code const & ec) {
         m_state = session::state::closed;
         tstat = closed;
     } else {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
             "terminate called on connection that was already terminated");
         return;
     }
@@ -1748,8 +1748,8 @@ template <typename config>
 void connection<config>::handle_terminate(terminate_status tstat,
     lib::error_code const & ec)
 {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection handle_terminate");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection handle_terminate");
     }
 
     if (ec) {
@@ -1770,7 +1770,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
         }
         log_close_result();
     } else {
-        m_elog.write(log::elevel::rerror,"Unknown terminate_status");
+        m_elog->write(log::elevel::rerror,"Unknown terminate_status");
     }
 
     // call the termination handler if it exists
@@ -1780,7 +1780,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
         try {
             m_termination_handler(type::get_shared());
         } catch (std::exception const & e) {
-            m_elog.write(log::elevel::warn,
+            m_elog->write(log::elevel::warn,
                 std::string("termination_handler call failed. Reason was: ")+e.what());
         }
     }
@@ -1788,7 +1788,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
 template <typename config>
 void connection<config>::write_frame() {
-    //m_alog.write(log::alevel::devel,"connection write_frame");
+    //m_alog->write(log::alevel::devel,"connection write_frame");
 
     {
         scoped_lock_type lock(m_write_lock);
@@ -1834,8 +1834,8 @@ void connection<config>::write_frame() {
     }
 
     // Print detailed send stats if those log levels are enabled
-    if (m_alog.static_test(log::alevel::frame_header)) {
-    if (m_alog.dynamic_test(log::alevel::frame_header)) {
+    if (m_alog->static_test(log::alevel::frame_header)) {
+    if (m_alog->dynamic_test(log::alevel::frame_header)) {
         std::stringstream general,header,payload;
         
         general << "Dispatching write containing " << m_current_msgs.size()
@@ -1855,8 +1855,8 @@ void connection<config>::write_frame() {
                    << m_current_msgs[i]->get_header().size() << ") " 
                    << utility::to_hex(m_current_msgs[i]->get_header()) << "\n";
 
-            if (m_alog.static_test(log::alevel::frame_payload)) {
-            if (m_alog.dynamic_test(log::alevel::frame_payload)) {
+            if (m_alog->static_test(log::alevel::frame_payload)) {
+            if (m_alog->dynamic_test(log::alevel::frame_payload)) {
                 payload << "[" << i << "] (" 
                         << m_current_msgs[i]->get_payload().size() << ") ["<<m_current_msgs[i]->get_opcode()<<"] "
                         << (m_current_msgs[i]->get_opcode() == frame::opcode::text ? 
@@ -1870,9 +1870,9 @@ void connection<config>::write_frame() {
         
         general << hbytes << " header bytes and " << pbytes << " payload bytes";
         
-        m_alog.write(log::alevel::frame_header,general.str());
-        m_alog.write(log::alevel::frame_header,header.str());
-        m_alog.write(log::alevel::frame_payload,payload.str());
+        m_alog->write(log::alevel::frame_header,general.str());
+        m_alog->write(log::alevel::frame_header,header.str());
+        m_alog->write(log::alevel::frame_payload,payload.str());
     }
     }
 
@@ -1885,8 +1885,8 @@ void connection<config>::write_frame() {
 template <typename config>
 void connection<config>::handle_write_frame(lib::error_code const & ec)
 {
-    if (m_alog.static_test(log::alevel::devel)) {
-        m_alog.write(log::alevel::devel,"connection handle_write_frame");
+    if (m_alog->static_test(log::alevel::devel)) {
+        m_alog->write(log::alevel::devel,"connection handle_write_frame");
     }
 
     bool terminal = m_current_msgs.back()->get_terminal();
@@ -1933,21 +1933,21 @@ std::vector<int> const & connection<config>::get_supported_versions() const
 template <typename config>
 void connection<config>::process_control_frame(typename config::message_type::ptr msg)
 {
-    m_alog.write(log::alevel::devel,"process_control_frame");
+    m_alog->write(log::alevel::devel,"process_control_frame");
 
     frame::opcode::value op = msg->get_opcode();
     lib::error_code ec;
 
     std::stringstream s;
     s << "Control frame received with opcode " << op;
-    m_alog.write(log::alevel::control,s.str());
+    m_alog->write(log::alevel::control,s.str());
 
     if (m_state == session::state::closed) {
-        m_elog.write(log::elevel::warn,"got frame in state closed");
+        m_elog->write(log::elevel::warn,"got frame in state closed");
         return;
     }
     if (op != frame::opcode::CLOSE && m_state != session::state::open) {
-        m_elog.write(log::elevel::warn,"got non-close frame in state closing");
+        m_elog->write(log::elevel::warn,"got non-close frame in state closing");
         return;
     }
 
@@ -1972,7 +1972,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             m_ping_timer->cancel();
         }
     } else if (op == frame::opcode::CLOSE) {
-        m_alog.write(log::alevel::devel,"got close frame");
+        m_alog->write(log::alevel::devel,"got close frame");
         // record close code and reason somewhere
 
         m_remote_close_code = close::extract_code(msg->get_payload(),ec);
@@ -1981,12 +1981,12 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             if (config::drop_on_protocol_error) {
                 s << "Received invalid close code " << m_remote_close_code
                   << " dropping connection per config.";
-                m_elog.write(log::elevel::devel,s.str());
+                m_elog->write(log::elevel::devel,s.str());
                 this->terminate(ec);
             } else {
                 s << "Received invalid close code " << m_remote_close_code
                   << " sending acknowledgement and closing";
-                m_elog.write(log::elevel::devel,s.str());
+                m_elog->write(log::elevel::devel,s.str());
                 ec = send_close_ack(close::status::protocol_error,
                     "Invalid close code");
                 if (ec) {
@@ -1999,11 +1999,11 @@ void connection<config>::process_control_frame(typename config::message_type::pt
         m_remote_close_reason = close::extract_reason(msg->get_payload(),ec);
         if (ec) {
             if (config::drop_on_protocol_error) {
-                m_elog.write(log::elevel::devel,
+                m_elog->write(log::elevel::devel,
                     "Received invalid close reason. Dropping connection per config");
                 this->terminate(ec);
             } else {
-                m_elog.write(log::elevel::devel,
+                m_elog->write(log::elevel::devel,
                     "Received invalid close reason. Sending acknowledgement and closing");
                 ec = send_close_ack(close::status::protocol_error,
                     "Invalid close reason");
@@ -2018,7 +2018,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             s.str("");
             s << "Received close frame with code " << m_remote_close_code
               << " and reason " << m_remote_close_reason;
-            m_alog.write(log::alevel::devel,s.str());
+            m_alog->write(log::alevel::devel,s.str());
 
             ec = send_close_ack();
             if (ec) {
@@ -2026,7 +2026,7 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             }
         } else if (m_state == session::state::closing && !m_was_clean) {
             // ack of our close
-            m_alog.write(log::alevel::devel, "Got acknowledgement of close");
+            m_alog->write(log::alevel::devel, "Got acknowledgement of close");
 
             m_was_clean = true;
 
@@ -2042,11 +2042,11 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             }
         } else {
             // spurious, ignore
-            m_elog.write(log::elevel::devel, "Got close frame in wrong state");
+            m_elog->write(log::elevel::devel, "Got close frame in wrong state");
         }
     } else {
         // got an invalid control opcode
-        m_elog.write(log::elevel::devel, "Got control frame with invalid opcode");
+        m_elog->write(log::elevel::devel, "Got control frame with invalid opcode");
         // initiate protocol error shutdown
     }
 }
@@ -2062,7 +2062,7 @@ template <typename config>
 lib::error_code connection<config>::send_close_frame(close::status::value code,
     std::string const & reason, bool ack, bool terminal)
 {
-    m_alog.write(log::alevel::devel,"send_close_frame");
+    m_alog->write(log::alevel::devel,"send_close_frame");
 
     // check for special codes
 
@@ -2073,24 +2073,24 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     // send blank info. If it is an ack then echo the close information from
     // the remote endpoint.
     if (config::silent_close) {
-        m_alog.write(log::alevel::devel,"closing silently");
+        m_alog->write(log::alevel::devel,"closing silently");
         m_local_close_code = close::status::no_status;
         m_local_close_reason.clear();
     } else if (code != close::status::blank) {
-        m_alog.write(log::alevel::devel,"closing with specified codes");
+        m_alog->write(log::alevel::devel,"closing with specified codes");
         m_local_close_code = code;
         m_local_close_reason = reason;
     } else if (!ack) {
-        m_alog.write(log::alevel::devel,"closing with no status code");
+        m_alog->write(log::alevel::devel,"closing with no status code");
         m_local_close_code = close::status::no_status;
         m_local_close_reason.clear();
     } else if (m_remote_close_code == close::status::no_status) {
-        m_alog.write(log::alevel::devel,
+        m_alog->write(log::alevel::devel,
             "acknowledging a no-status close with normal code");
         m_local_close_code = close::status::normal;
         m_local_close_reason.clear();
     } else {
-        m_alog.write(log::alevel::devel,"acknowledging with remote codes");
+        m_alog->write(log::alevel::devel,"acknowledging with remote codes");
         m_local_close_code = m_remote_close_code;
         m_local_close_reason = m_remote_close_reason;
     }
@@ -2098,7 +2098,7 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     std::stringstream s;
     s << "Closing with code: " << m_local_close_code << ", and reason: "
       << m_local_close_reason;
-    m_alog.write(log::alevel::devel,s.str());
+    m_alog->write(log::alevel::devel,s.str());
 
     message_ptr msg = m_msg_manager->get_message();
     if (!msg) {
@@ -2213,11 +2213,11 @@ void connection<config>::write_push(typename config::message_type::ptr msg)
     m_send_buffer_size += msg->get_payload().size();
     m_send_queue.push(msg);
 
-    if (m_alog.static_test(log::alevel::devel)) {
+    if (m_alog->static_test(log::alevel::devel)) {
         std::stringstream s;
         s << "write_push: message count: " << m_send_queue.size()
           << " buffer size: " << m_send_buffer_size;
-        m_alog.write(log::alevel::devel,s.str());
+        m_alog->write(log::alevel::devel,s.str());
     }
 }
 
@@ -2235,11 +2235,11 @@ typename config::message_type::ptr connection<config>::write_pop()
     m_send_buffer_size -= msg->get_payload().size();
     m_send_queue.pop();
 
-    if (m_alog.static_test(log::alevel::devel)) {
+    if (m_alog->static_test(log::alevel::devel)) {
         std::stringstream s;
         s << "write_pop: message count: " << m_send_queue.size()
           << " buffer size: " << m_send_buffer_size;
-        m_alog.write(log::alevel::devel,s.str());
+        m_alog->write(log::alevel::devel,s.str());
     }
     return msg;
 }
@@ -2282,7 +2282,7 @@ void connection<config>::log_open_result()
     // Status code
     s << m_response.get_status_code();
 
-    m_alog.write(log::alevel::connect,s.str());
+    m_alog->write(log::alevel::connect,s.str());
 }
 
 template <typename config>
@@ -2296,7 +2296,7 @@ void connection<config>::log_close_result()
       << "] remote:[" << m_remote_close_code
       << (m_remote_close_reason.empty() ? "" : ","+m_remote_close_reason) << "]";
 
-    m_alog.write(log::alevel::disconnect,s.str());
+    m_alog->write(log::alevel::disconnect,s.str());
 }
 
 template <typename config>
@@ -2335,7 +2335,7 @@ void connection<config>::log_fail_result()
     // WebSocket++ error code & reason
     s << " " << m_ec << " " << m_ec.message();
 
-    m_alog.write(log::alevel::fail,s.str());
+    m_alog->write(log::alevel::fail,s.str());
 }
 
 template <typename config>
@@ -2343,7 +2343,7 @@ void connection<config>::log_http_result() {
     std::stringstream s;
 
     if (processor::is_websocket_handshake(m_request)) {
-        m_alog.write(log::alevel::devel,"Call to log_http_result for WebSocket");
+        m_alog->write(log::alevel::devel,"Call to log_http_result for WebSocket");
         return;
     }  
 
@@ -2364,7 +2364,7 @@ void connection<config>::log_http_result() {
         s << " \"" << utility::string_replace_all(ua,"\"","\\\"") << "\" ";
     }
 
-    m_alog.write(log::alevel::http,s.str());
+    m_alog->write(log::alevel::http,s.str());
 }
 
 } // namespace websocketpp

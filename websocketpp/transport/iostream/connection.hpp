@@ -77,7 +77,7 @@ public:
 
     typedef lib::shared_ptr<timer> timer_ptr;
 
-    explicit connection(bool is_server, alog_type & alog, elog_type & elog)
+    explicit connection(bool is_server, const lib::shared_ptr<alog_type> & alog, const lib::shared_ptr<elog_type> & elog)
       : m_output_stream(NULL)
       , m_reading(false)
       , m_is_server(is_server)
@@ -86,7 +86,7 @@ public:
       , m_elog(elog)
       , m_remote_endpoint("iostream transport")
     {
-        m_alog.write(log::alevel::devel,"iostream con transport constructor");
+        m_alog->write(log::alevel::devel,"iostream con transport constructor");
     }
 
     /// Get a shared pointer to this component
@@ -408,7 +408,7 @@ protected:
      * @param handler The `init_handler` to call when initialization is done
      */
     void init(init_handler handler) {
-        m_alog.write(log::alevel::devel,"iostream connection init");
+        m_alog->write(log::alevel::devel,"iostream connection init");
         handler(lib::error_code());
     }
 
@@ -441,7 +441,7 @@ protected:
     {
         std::stringstream s;
         s << "iostream_con async_read_at_least: " << num_bytes;
-        m_alog.write(log::alevel::devel,s.str());
+        m_alog->write(log::alevel::devel,s.str());
 
         if (num_bytes > len) {
             handler(make_error_code(error::invalid_num_bytes),size_t(0));
@@ -487,7 +487,7 @@ protected:
     void async_write(char const * buf, size_t len, transport::write_handler
         handler)
     {
-        m_alog.write(log::alevel::devel,"iostream_con async_write");
+        m_alog->write(log::alevel::devel,"iostream_con async_write");
         // TODO: lock transport state?
 
         lib::error_code ec;
@@ -527,7 +527,7 @@ protected:
     void async_write(std::vector<buffer> const & bufs, transport::write_handler
         handler)
     {
-        m_alog.write(log::alevel::devel,"iostream_con async_write buffer list");
+        m_alog->write(log::alevel::devel,"iostream_con async_write buffer list");
         // TODO: lock transport state?
 
         lib::error_code ec;
@@ -601,18 +601,18 @@ protected:
     }
 private:
     void read(std::istream &in) {
-        m_alog.write(log::alevel::devel,"iostream_con read");
+        m_alog->write(log::alevel::devel,"iostream_con read");
 
         while (in.good()) {
             if (!m_reading) {
-                m_elog.write(log::elevel::devel,"write while not reading");
+                m_elog->write(log::elevel::devel,"write while not reading");
                 break;
             }
 
             in.read(m_buf+m_cursor,static_cast<std::streamsize>(m_len-m_cursor));
 
             if (in.gcount() == 0) {
-                m_elog.write(log::elevel::devel,"read zero bytes");
+                m_elog->write(log::elevel::devel,"read zero bytes");
                 break;
             }
 
@@ -632,10 +632,10 @@ private:
     }
 
     size_t read_some_impl(char const * buf, size_t len) {
-        m_alog.write(log::alevel::devel,"iostream_con read_some");
+        m_alog->write(log::alevel::devel,"iostream_con read_some");
 
         if (!m_reading) {
-            m_elog.write(log::elevel::devel,"write while not reading");
+            m_elog->write(log::elevel::devel,"write while not reading");
             return 0;
         }
 
@@ -694,8 +694,8 @@ private:
     bool            m_reading;
     bool const      m_is_server;
     bool            m_is_secure;
-    alog_type &     m_alog;
-    elog_type &     m_elog;
+    lib::shared_ptr<alog_type>     m_alog;
+    lib::shared_ptr<elog_type>     m_elog;
     std::string     m_remote_endpoint;
 
     // This lock ensures that only one thread can edit read data for this
