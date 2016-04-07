@@ -259,6 +259,18 @@ inline size_t response::process_body(char const * buf, size_t len) {
     return to_read;
 }
 
+inline void response::reset() {
+
+  parser::reset();
+
+  m_status_msg.clear();
+  m_read = 0;
+  m_buf = lib::make_shared<std::string>();
+  m_status_code = status_code::uninitialized;
+  m_state = RESPONSE_LINE;
+
+}
+
 } // namespace parser
 } // namespace http
 } // namespace websocketpp

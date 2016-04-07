@@ -157,6 +157,9 @@ public:
     const std::string& get_status_msg() const {
         return m_status_msg;
     }
+
+    void reset();
+
 private:
     /// Helper function for consume. Process response line
     void process(std::string::iterator begin, std::string::iterator end);

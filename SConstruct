@@ -270,6 +270,10 @@ telemetry_server = SConscript('#/examples/telemetry_server/SConscript',variant_d
 # external_io_service
 external_io_service = SConscript('#/examples/external_io_service/SConscript',variant_dir = builddir + 'external_io_service',duplicate = 0)
 
+# http_echo_server
+http_echo_server = SConscript('#/examples/http_echo_server/SConscript',variant_dir = builddir + 'http_echo_server',duplicate = 0)
+
+
 if not env['PLATFORM'].startswith('win'):
     # iostream_server
     iostream_server = SConscript('#/examples/iostream_server/SConscript',variant_dir = builddir + 'iostream_server',duplicate = 0)

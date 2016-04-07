@@ -1316,6 +1316,11 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
         }
     }
 
+    // Close the connection if not HTTP/1.1 or client requested Connection: close
+    if (m_request.get_version() != "HTTP/1.1" || m_request.get_header("Connection") == "close") {
+        m_response.replace_header("Connection", "close");
+    }
+
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
         m_handshake_buffer = m_processor->get_raw(m_response);
@@ -1408,9 +1413,25 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
                 m_alog->write(log::alevel::devel,
                     "got to writing HTTP results with m_ec set: "+m_ec.message());
             }
-            m_ec = make_error_code(error::http_connection_ended);
-        }        
-        
+
+            if (config::enable_persistent_connections == false) {
+                m_ec = make_error_code(error::http_connection_ended);
+            }
+        }
+
+        if (config::enable_persistent_connections == true
+         && m_request.get_version() == "HTTP/1.1"
+         && get_request_header("Connection") != "close"
+         && get_response_header("Connection") != "close") {
+            m_internal_state = istate::READ_HTTP_REQUEST;
+            m_state = session::state::connecting;
+            this->read_handshake(1);
+
+            m_request.reset();
+            m_response.reset();
+            return;
+        }
+
         this->terminate(m_ec);
         return;
     }

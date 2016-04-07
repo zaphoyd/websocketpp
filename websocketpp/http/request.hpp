@@ -105,6 +105,8 @@ public:
         return m_uri;
     }
 
+    void reset();
+
 private:
     /// Helper function for message::consume. Process request line
     void process(std::string::iterator begin, std::string::iterator end);

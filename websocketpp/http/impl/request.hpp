@@ -184,6 +184,17 @@ inline void request::process(std::string::iterator begin, std::string::iterator
     set_version(std::string(cursor_end+1,end));
 }
 
+inline void request::reset() {
+
+  parser::reset();
+
+  m_buf = lib::make_shared<std::string>();
+  m_method.clear();
+  m_uri.clear();
+  m_ready = false;
+  
+}
+
 } // namespace parser
 } // namespace http
 } // namespace websocketpp

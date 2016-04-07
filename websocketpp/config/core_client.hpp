@@ -105,6 +105,14 @@ struct core_client {
     /// applications
     static bool const enable_multithreading = true;
 
+
+    // Controls compile time enabling/disabling of HTTP persistent connection
+    // support in HTTP server mode. This will reduce SSL negotiation rates if
+    // websocketpp is also used to serve REST requests or small resources.
+    // NOTE: This is unsupported in client mode, but needs to be here to
+    // not fail builds.
+    static bool const enable_persistent_connections = false;
+
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
