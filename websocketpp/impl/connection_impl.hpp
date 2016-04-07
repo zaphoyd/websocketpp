@@ -1427,6 +1427,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
             m_state = session::state::connecting;
             this->read_handshake(1);
 
+            m_uri = lib::make_shared<uri>("");
             m_request.reset();
             m_response.reset();
             return;
