@@ -159,6 +159,9 @@ struct core {
     static const long timeout_close_handshake = 5000;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 5000;
+    /// Length of time to wait before another request is aborted in persistent
+    /// HTTP connections
+    static const long timeout_waiting_handshake = 5 * 60000;
 
     /// WebSocket Protocol version to use as a client
     /**

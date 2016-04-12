@@ -760,7 +760,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
     // At this point the transport is ready to read and write bytes.
     if (m_is_server) {
         m_internal_state = istate::READ_HTTP_REQUEST;
-        this->read_handshake(1);
+        this->read_open_handshake(1);
     } else {
         // We are a client. Set the processor to the version specified in the
         // config file and send a handshake request.
@@ -771,17 +771,47 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 }
 
 template <typename config>
-void connection<config>::read_handshake(size_t num_bytes) {
+void connection<config>::read_open_handshake(size_t num_bytes) {
+    m_alog->write(log::alevel::devel,"connection read_open_handshake");
+
+    read_handshake(
+        num_bytes,
+        m_open_handshake_timeout_dur,
+        lib::bind(
+            &type::handle_open_handshake_timeout,
+            type::get_shared(),
+            lib::placeholders::_1
+        )
+    );
+
+}
+
+template <typename config>
+void connection<config>::read_waiting_handshake(size_t num_bytes) {
+    m_alog->write(log::alevel::devel,"connection read_open_handshake");
+
+    read_handshake(
+        num_bytes,
+        m_waiting_handshake_timeout_dur,
+        lib::bind(
+            &type::handle_waiting_handshake_timeout,
+            type::get_shared(),
+            lib::placeholders::_1
+        )
+    );
+
+}
+
+template <typename config>
+void connection<config>::read_handshake(size_t num_bytes,
+    long timeout_dur,
+    transport::timer_handler callback) {
     m_alog->write(log::alevel::devel,"connection read_handshake");
 
-    if (m_open_handshake_timeout_dur > 0) {
+    if (timeout_dur > 0) {
         m_handshake_timer = transport_con_type::set_timer(
-            m_open_handshake_timeout_dur,
-            lib::bind(
-                &type::handle_open_handshake_timeout,
-                type::get_shared(),
-                lib::placeholders::_1
-            )
+            timeout_dur,
+            callback
         );
     }
 
@@ -796,7 +826,7 @@ void connection<config>::read_handshake(size_t num_bytes) {
             lib::placeholders::_2
         )
     );
-}
+};
 
 // All exit paths for this function need to call write_http_response() or submit
 // a new read request with this function as the handler.
@@ -1425,7 +1455,7 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
          && get_response_header("Connection") != "close") {
             m_internal_state = istate::READ_HTTP_REQUEST;
             m_state = session::state::connecting;
-            this->read_handshake(1);
+            this->read_waiting_handshake(1);
 
             m_uri = lib::make_shared<uri>("");
             m_request.reset();
@@ -1694,6 +1724,22 @@ void connection<config>::handle_open_handshake_timeout(
     } else {
         m_alog->write(log::alevel::devel,"open handshake timer expired");
         terminate(make_error_code(error::open_handshake_timeout));
+    }
+}
+
+template <typename config>
+void connection<config>::handle_waiting_handshake_timeout(
+    lib::error_code const & ec)
+{
+    if (ec == transport::error::operation_aborted) {
+        m_alog->write(log::alevel::devel,"waiting handshake timer cancelled");
+    } else if (ec) {
+        m_alog->write(log::alevel::devel,
+            "open handle_waiting_handshake_timeout error: "+ec.message());
+        // TODO: ignore or fail here?
+    } else {
+        m_alog->write(log::alevel::devel,"waiting handshake timer expired");
+        terminate(make_error_code(error::waiting_handshake_timeout));
     }
 }
 
