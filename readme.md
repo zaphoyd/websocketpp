@@ -28,7 +28,7 @@ Get Involved
 http://www.zaphoyd.com/websocketpp/
 
 **User Manual**
-http://www.zaphoyd.com/websocketpp/manual/
+http://docs.websocketpp.org/
 
 **GitHub Repository**
 https://github.com/zaphoyd/websocketpp/

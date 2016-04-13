@@ -1,5 +1,32 @@
 /** \page faq FAQ
 
+## General Library Usage
+
+### Can a handler be changed after a connection is established? Can one be removed?
+Yes, but not globally.
+
+Handlers assigned to endpoints will be automatically copied to the connections created by that endpoint. Changing a handler on an endpoint will only affect future connections.
+
+Once a particular connection is created, it's handlers can be changed individually by calling the `set_*_handler` methods. Once changed, all future events of that type for that connection will use the new handler.
+
+To remove a handler that was previously set, call the set method with `nullptr` or `NULL`.
+
+### Can I reject or conditionally accept a connection
+Yes. The `validate` handler is called after the initial handshake has been recieved but before WebSocket++ has responded. This gives you the opportunity to inspect the incoming connection request, its headers, origin, subprotocols, and the remote endpoint IP. Return `true` from the validate handler to accept the connection and `false` to reject it.
+
+To set a custom HTTP error message for your rejection, use `websocketpp::connection::set_status` and (optionally) `websocketpp::connection::set_body()` to set the HTTP status code and error message body text. If you do not set body text a message will be generated automatically based on the status code.
+
+### How do I negotiate subprotocols?
+WebSocket connections may offer a particular subprotocol they want to use. The WebSocket protocol does not define the meaning or interpretation of the subprotocol. This interpretation is left up to the individual application endpoints.
+
+WebSocket++ servers can read the requested subprotocols during the `validate` handler by calling `websocketpp::connection::get_requested_subprotocols`. The list is ordered by client priority. You may optionally choose one of these subprotocols with `websocketpp::connection::select_subprotocol`. The handshake will then complete and let the client know which one was chosen. If you do not choose any, the "blank"/empty/none subprotocol will be used.
+
+WebSocket++ clients can add a subprotocol to an outgoing connection by calling `websocketpp::connection::add_subprotocol` before calling `websocketpp::client::connect`. The order of adding will be interpreted as the order of preference.
+
+In both caases, after the connection has been established, the selected subprotocol is available via the `websocketpp::connection::get_subprotocol` method.
+
+Note: some browsers will allow the connection to continue if they requested a subprotocol and your server doesn't select one. Others will reject the connection. 
+
 ## Dependency Management
 
 ### Can WebSocket++ be used without Boost?
@@ -19,6 +46,8 @@ Whether an Asio endpoint uses TLS or not is determined by its config template pa
 
 The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` headers will include both the TLS and non-TLS varients of their respective configs and require the presence of OpenSSL. The `<websocketpp/config/asio_no_tls.hpp>` and `<websocketpp/config/asio_no_tls_client.hpp>` headers will include only the non-TLS configs and do not require OpenSSL.
 
+### Build issues with TLS on recent versions of OS X
+Mac OS X ships a severely outdated version of the OpenSSL library. To securely use TLS with WebSocket++ on OS X you will need to install a modern version of OpenSSL via homebrew or compiling from source.
 
 ## Compression
 

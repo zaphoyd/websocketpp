@@ -132,11 +132,14 @@ struct debug_config_client : public websocketpp::config::core {
 };
 
 struct connection_setup {
-    connection_setup(bool p_is_server) : c(p_is_server, "", alog, elog, rng) {}
+    connection_setup(bool p_is_server)
+            : alog(websocketpp::lib::make_shared<stub_config::alog_type>())
+            , elog(websocketpp::lib::make_shared<stub_config::elog_type>())
+            , c(p_is_server, "", alog, elog, rng) {}
 
     websocketpp::lib::error_code ec;
-    stub_config::alog_type alog;
-    stub_config::elog_type elog;
+    websocketpp::lib::shared_ptr<stub_config::alog_type> alog;
+    websocketpp::lib::shared_ptr<stub_config::elog_type> elog;
     stub_config::rng_type rng;
     websocketpp::connection<stub_config> c;
 };
