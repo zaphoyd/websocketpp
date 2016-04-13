@@ -31,6 +31,7 @@
 #define HTTP_PROXY_AUTHENTICATOR_IMPL_HPP
 
 #include <websocketpp/base64/base64.hpp>
+#include <websocketpp/common/string_utils.hpp>
 
 #include <string>
 #include <algorithm>
@@ -57,14 +58,6 @@ namespace websocketpp {
                 *
                 * Note: Digest is not implemented - we do parse, but we do not calculate tokens (yet)!
                 */
-
-                inline bool icompareCh(char lhs, char rhs) {
-                    return(::toupper(lhs) == ::toupper(rhs));
-                }
-                inline bool icompare(const std::string& s1, const std::string& s2) {
-                    return((s1.size() == s2.size()) &&
-                        std::equal(s1.begin(), s1.end(), s2.begin(), icompareCh));
-                }
 
                 /// Read and return the next token in the stream
                 inline bool is_token68_char(unsigned char c) {
@@ -100,6 +93,8 @@ namespace websocketpp {
                 public:
                     AuthScheme(const std::string& name="") : m_name(name), m_type(Unknown)
                     {
+                        using namespace websocketpp::lib::string_utils;
+                        
                         if (icompare(m_name, "basic"))      m_type = Basic;
                         if (icompare(m_name, "digest"))     m_type = Digest;
                         if (icompare(m_name, "ntlm"))       m_type = NTLM;
@@ -197,7 +192,7 @@ namespace websocketpp {
                                 return cursor;
                             }
 
-                            if (icompare(key, "Realm")) {
+                            if (websocketpp::lib::string_utils::icompare(key, "Realm")) {
                                 m_realm = next.first;
                             }
 

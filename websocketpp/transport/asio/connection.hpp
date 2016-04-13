@@ -45,6 +45,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/string_utils.hpp>
 
 #include <istream>
 #include <sstream>
@@ -820,7 +821,7 @@ protected:
 
             std::string connection_header = m_proxy_data->res.get_header("Connection");
 
-            if (connection_header == "Close") {
+            if (websocketpp::lib::string_utils::icompare(connection_header, "Close")) {
                 reconnect = true;
             }
 
