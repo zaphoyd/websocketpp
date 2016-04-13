@@ -31,6 +31,7 @@
 #define WEBSOCKETPP_COMMON_SECURITY_CONTEXT_WIN32_HPP
 
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/string_utils.hpp>
 
 #ifdef _WIN32
 
@@ -106,7 +107,7 @@ namespace websocketpp {
 
                         std::string target;
 
-                        if (authScheme == "Negotiate")
+                        if (websocketpp::lib::string_utils::icompare(authScheme,"Negotiate"))
                             target = "http/" + proxyName; // Service Principle Name
 
                         if (challenge.empty())
