@@ -50,7 +50,7 @@ endpoint<connection,config>::create_connection(connection_ptr previous_con) {
         con = lib::make_shared<connection_type>(*previous_con);
     }
     else {
-        con = lib::make_shared<connection_type>(m_is_server, m_user_agent, m_alog, m_elog, lib::ref(m_rng));
+        con = lib::make_shared<connection_type>(m_is_server, m_user_agent, lib::ref(m_alog), lib::ref(m_elog), lib::ref(m_rng));
     }
 
     connection_weak_ptr w(con);

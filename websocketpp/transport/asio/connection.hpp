@@ -45,6 +45,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/string_utils.hpp>
 
 #include <istream>
 #include <sstream>
@@ -101,9 +102,8 @@ public:
     // to the public api.
     friend class endpoint<config>;
 
-
     // generate and manage our own io_service
-    explicit connection(bool is_server, const lib::shared_ptr<alog_type>& alog, const lib::shared_ptr<elog_type>& elog)
+    explicit connection(bool is_server, const lib::shared_ptr<alog_type> & alog, const lib::shared_ptr<elog_type> & elog)
       : m_is_server(is_server)
       , m_alog(alog)
       , m_elog(elog)
@@ -120,11 +120,6 @@ public:
         , m_proxy_data(con.m_proxy_data)
     {
         m_alog->write(log::alevel::devel, "asio con transport constructor");
-    }
-
-    ~connection()
-    {
-        m_alog->write(log::alevel::devel, "Destroy old connection...");
     }
 
     /// Get a shared pointer to this component
@@ -748,7 +743,7 @@ protected:
         if (config::enable_multithreading) {
             lib::asio::async_read_until(
                 socket_con_type::get_next_layer(),
-                m_proxy_read_buf,
+                m_proxy_data->read_buf,
                 "\r\n\r\n",
                 m_strand->wrap(lib::bind(
                     &type::handle_proxy_read, get_shared(),
@@ -759,7 +754,7 @@ protected:
         } else {
             lib::asio::async_read_until(
                 socket_con_type::get_next_layer(),
-                m_proxy_read_buf,
+                m_proxy_data->read_buf,
                 "\r\n\r\n",
                 lib::bind(
                     &type::handle_proxy_read, get_shared(),
@@ -781,7 +776,7 @@ protected:
     {
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
-                "asio connection handle_proxy_read...");
+                "asio connection handle_proxy_read");
         }
 
         // Timer expired or the operation was aborted for some reason.
@@ -798,41 +793,27 @@ protected:
         m_proxy_data->timer->cancel();
 
         if (ec) {
-            m_alog->write(log::elevel::info,
+            m_elog->write(log::elevel::info,
                 "asio handle_proxy_read error: "+ec.message());
             callback(make_error_code(error::pass_through));
         } else {
             if (!m_proxy_data) {
-                m_alog->write(log::elevel::library,
+                m_elog->write(log::elevel::library,
                     "assertion failed: !m_proxy_data in asio::connection::handle_proxy_read");
                 callback(make_error_code(error::general));
                 return;
             }
 
-            m_alog->write(log::alevel::devel, "Create istream from proxy read buffer");
+            std::istream input(&m_proxy_data->read_buf);
 
-            std::istream input(&m_proxy_read_buf);
-
-            std::string temp{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-
-            m_alog->write(log::alevel::devel, "ReadBuffer: " + temp);
-
-            m_alog->write(log::alevel::devel, "consume read buffer");
-
-            m_proxy_data->res.consume(temp.c_str(), temp.length());
-
-            m_alog->write(log::alevel::devel, "consume complete...");
+            m_proxy_data->res.consume(input);
 
             if (!m_proxy_data->res.headers_ready()) {
-                m_alog->write(log::alevel::devel, "Headers NOT ready - fire error...");
-
                 // we read until the headers were done in theory but apparently
                 // they aren't. Internal endpoint error.
                 callback(make_error_code(error::general));
                 return;
             }
-
-            m_alog->write(log::alevel::devel, "About to log actual response");
 
             m_alog->write(log::alevel::devel,m_proxy_data->res.raw());
 
@@ -840,12 +821,12 @@ protected:
 
             std::string connection_header = m_proxy_data->res.get_header("Connection");
 
-            if (connection_header == "Close" || connection_header == "close") {
+            if (websocketpp::lib::string_utils::icompare(connection_header, "Close")) {
                 reconnect = true;
             }
 
             if (m_proxy_data->res.get_status_code() == http::status_code::proxy_authentication_required) {
-                m_alog->write(log::elevel::devel, "Proxy authorization Required...");
+                m_elog->write(log::elevel::info, "Proxy authorization Required");
 
                 std::string auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
 
@@ -872,7 +853,6 @@ protected:
                 if (reconnect) {
                     m_proxy_data->res = response_type();
                     callback(make_error_code(transport::error::proxy_reconnect));
-                    m_alog->write(log::elevel::devel, "Do reconnect...");
 
                     return;
                 }
@@ -902,7 +882,7 @@ protected:
 
             // free the proxy buffers and req/res objects as they aren't needed
             // anymore
-            //m_proxy_data.reset();
+            m_proxy_data.reset();
 
             // Continue with post proxy initialization
             post_init(callback);
@@ -1254,8 +1234,8 @@ private:
 
     // static settings
     const bool m_is_server;
-    const lib::shared_ptr<alog_type> m_alog;
-    const lib::shared_ptr<elog_type> m_elog;
+    lib::shared_ptr<alog_type> m_alog;
+    lib::shared_ptr<elog_type> m_elog;
 
     struct proxy_data {
         proxy_data() : timeout_proxy(config::timeout_proxy) {}
@@ -1263,6 +1243,7 @@ private:
         request_type req;
         response_type res;
         std::string write_buf;
+        lib::asio::streambuf read_buf;
         long timeout_proxy;
         timer_ptr timer;
         proxy_authenticator_ptr proxy_authenticator;
@@ -1270,7 +1251,6 @@ private:
 
     std::string m_proxy;
     lib::shared_ptr<proxy_data> m_proxy_data;
-    lib::asio::streambuf m_proxy_read_buf;
 
     // transport resources
     io_service_ptr  m_io_service;
