@@ -137,20 +137,19 @@ inline size_t response::consume(char const * buf, size_t len) {
 }
 
 inline size_t response::consume(std::istream & s) {
-    char buf[istream_buffer];
-    size_t bytes_read;
-    size_t bytes_processed;
     size_t total = 0;
 
     while (s.good()) {
-        s.getline(buf,istream_buffer);
-        bytes_read = static_cast<size_t>(s.gcount());
+        std::string line;
+        size_t bytes_processed=0;
+
+        std::getline(s, line);
 
         if (s.fail() || s.eof()) {
-            bytes_processed = this->consume(buf,bytes_read);
+            bytes_processed = this->consume(line.c_str(),line.length());
             total += bytes_processed;
 
-            if (bytes_processed != bytes_read) {
+            if (bytes_processed != line.length()) {
                 // problem
                 break;
             }
@@ -161,11 +160,11 @@ inline size_t response::consume(std::istream & s) {
             // the delimiting newline was found. Replace the trailing null with
             // the newline that was discarded, since our raw consume function
             // expects the newline to be be there.
-            buf[bytes_read-1] = '\n';
-            bytes_processed = this->consume(buf,bytes_read);
+            line += '\n';
+            bytes_processed = this->consume(line.c_str(),line.length());
             total += bytes_processed;
 
-            if (bytes_processed != bytes_read) {
+            if (bytes_processed != line.length()) {
                 // problem
                 break;
             }
