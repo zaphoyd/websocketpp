@@ -765,6 +765,44 @@ protected:
         }
     }
 
+    void proxy_read_body(init_handler callback) {
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel, "asio connection proxy_read_body");
+        }
+
+        if (!m_proxy_data) {
+            m_elog->write(log::elevel::library,
+                "assertion failed: !m_proxy_data in asio::connection::proxy_read_body");
+            m_proxy_data->timer->cancel();
+            callback(make_error_code(error::general));
+            return;
+        }
+
+        auto toRead = m_proxy_data->res.get_content_length();
+
+        auto completionCondition = [toRead](lib::asio::error_code const & ec, size_t transferred)
+        {
+            size_t result = 512; // istream_buffer;
+
+            if (transferred >= toRead) {
+                result = 0;
+            }
+
+            return result;
+        };
+
+        lib::asio::async_read(
+            socket_con_type::get_next_layer(),
+            m_proxy_data->read_buf,
+            completionCondition,
+            m_strand->wrap(lib::bind(
+                &type::handle_proxy_read, get_shared(),
+                callback,
+                lib::placeholders::_1, lib::placeholders::_2
+                ))
+            );
+    }
+
     /// Proxy read callback
     /**
      * @param init_handler The function to call back
@@ -812,6 +850,12 @@ protected:
                 // we read until the headers were done in theory but apparently
                 // they aren't. Internal endpoint error.
                 callback(make_error_code(error::general));
+                return;
+            }
+
+            if (m_proxy_data->res.get_content_length() > 0 && !m_proxy_data->res.ready())
+            {
+                proxy_read_body(callback);
                 return;
             }
 
