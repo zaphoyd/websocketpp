@@ -765,6 +765,17 @@ protected:
         }
     }
 
+    size_t proxy_read_body_completion(size_t to_read, lib::asio::error_code const & ec, size_t transferred)
+    {
+        size_t result = 512; // istream_buffer;
+
+        if (transferred >= to_read) {
+            result = 0;
+        }
+
+        return result;
+    }
+
     void proxy_read_body(init_handler callback) {
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel, "asio connection proxy_read_body");
@@ -778,23 +789,16 @@ protected:
             return;
         }
 
-        auto toRead = m_proxy_data->res.get_content_length();
-
-        auto completionCondition = [toRead](lib::asio::error_code const & ec, size_t transferred)
-        {
-            size_t result = 512; // istream_buffer;
-
-            if (transferred >= toRead) {
-                result = 0;
-            }
-
-            return result;
-        };
+        size_t to_read = m_proxy_data->res.get_content_length();
 
         lib::asio::async_read(
             socket_con_type::get_next_layer(),
             m_proxy_data->read_buf,
-            completionCondition,
+            lib::bind(
+                &type::proxy_read_body_completion, get_shared(), 
+                to_read,
+                lib::placeholders::_1, lib::placeholders::_2
+                ),
             m_strand->wrap(lib::bind(
                 &type::handle_proxy_read, get_shared(),
                 callback,
