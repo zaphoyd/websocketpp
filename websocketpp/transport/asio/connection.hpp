@@ -765,7 +765,7 @@ protected:
         }
     }
 
-    size_t proxy_read_body_completion(size_t to_read, lib::asio::error_code const & ec, size_t transferred)
+    size_t proxy_read_body_completion(size_t to_read, lib::asio::error_code const & /*ec*/, size_t transferred)
     {
         size_t result = 512; // istream_buffer;
 
