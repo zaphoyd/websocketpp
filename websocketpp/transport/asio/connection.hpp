@@ -119,7 +119,7 @@ public:
         , m_proxy(con.m_proxy)
         , m_proxy_data(con.m_proxy_data)
     {
-        m_alog.write(log::alevel::devel, "asio con transport constructor");
+        m_alog->write(log::alevel::devel, "asio con transport constructor");
     }
 
     /// Get a shared pointer to this component
@@ -826,7 +826,7 @@ protected:
             }
 
             if (m_proxy_data->res.get_status_code() == http::status_code::proxy_authentication_required) {
-                m_elog.write(log::elevel::info, "Proxy authorization Required");
+                m_elog->write(log::elevel::info, "Proxy authorization Required");
 
                 std::string auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
 
