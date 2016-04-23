@@ -328,10 +328,13 @@ public:
     /// Sets whether to use the SO_REUSEADDR flag when opening listening sockets
     /**
      * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What
-     * this flag does depends on your operating system. Please consult operating
-     * system documentation for more details.
+     * this flag does depends on your operating system.
      *
-     * New values affect future calls to listen only.
+     * Please consult operating system documentation for more details. There
+     * may be security consequences to enabling this option.
+     *
+     * New values affect future calls to listen only so set this value prior to
+     * calling listen.
      *
      * The default is false.
      *
