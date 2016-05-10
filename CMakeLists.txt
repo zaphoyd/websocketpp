@@ -2,7 +2,7 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.8)
 
 ############ Paths
 
@@ -22,12 +22,20 @@ if (WIN32)
 endif ()
 
 ############ Project name and version
-project (websocketpp)
-
 set (WEBSOCKETPP_MAJOR_VERSION 0)
 set (WEBSOCKETPP_MINOR_VERSION 8)
 set (WEBSOCKETPP_PATCH_VERSION 0)
 set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
+
+if(POLICY CMP0048)
+  cmake_policy(GET CMP0048 _version_policy)
+endif()
+
+if(_version_allowed STREQUAL NEW)
+  project (websocketpp VERSION ${WEBSOCKETPP_VERSION})
+else()
+  project (websocketpp)
+endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
