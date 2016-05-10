@@ -1,12 +1,28 @@
 
 ############ Setup project and cmake
-
-# Project name
-project (websocketpp)
-
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
 cmake_minimum_required (VERSION 2.6)
+
+############ Paths
+
+set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set (WEBSOCKETPP_INCLUDE ${WEBSOCKETPP_ROOT}/websocketpp)
+set (WEBSOCKETPP_BUILD_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+set (WEBSOCKETPP_BIN ${WEBSOCKETPP_BUILD_ROOT}/bin)
+set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
+
+# CMake install step prefix. I assume linux users want the prefix to
+# be the default /usr or /usr/local so this is only adjusted on Windows.
+# This must be set prior to any call to project or it will not be read correctly.
+# - Windows: Build the INSTALL project in your solution file.
+# - Linux/OSX: make install.
+if (WIN32)
+    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install" CACHE PATH "")
+endif ()
+
+############ Project name and version
+project (websocketpp)
 
 set (WEBSOCKETPP_MAJOR_VERSION 0)
 set (WEBSOCKETPP_MINOR_VERSION 8)
@@ -44,21 +60,6 @@ set (CMAKE_CONFIGURATION_TYPES "Release;RelWithDebInfo;Debug" CACHE STRING "Conf
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include (CMakeHelpers)
 
-############ Paths
-
-set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-set (WEBSOCKETPP_INCLUDE ${WEBSOCKETPP_ROOT}/websocketpp)
-set (WEBSOCKETPP_BUILD_ROOT ${CMAKE_CURRENT_BINARY_DIR})
-set (WEBSOCKETPP_BIN ${WEBSOCKETPP_BUILD_ROOT}/bin)
-set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
-
-# CMake install step prefix. I assume linux users want the prefix to
-# be the default /usr or /usr/local so this is only adjusted on Windows.
-# - Windows: Build the INSTALL project in your solution file.
-# - Linux/OSX: make install.
-if (MSVC)
-    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install")
-endif ()
 
 ############  Build customization
 
