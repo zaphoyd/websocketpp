@@ -259,8 +259,16 @@ print_used_build_config()
 
 export (PACKAGE websocketpp)
 
-configure_file (websocketpp-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake" @ONLY)
-configure_file (websocketpp-configVersion.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake" @ONLY)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(websocketpp-config.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake"
+  PATH_VARS INSTALL_INCLUDE_DIR
+  INSTALL_DESTINATION "${INSTALL_CMAKE_DIR}"
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
+  VERSION ${WEBSOCKETPP_VERSION}
+  COMPATIBILITY ExactVersion)
 
 # Install the websocketpp-config.cmake and websocketpp-configVersion.cmake
 install (FILES
