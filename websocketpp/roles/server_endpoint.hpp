@@ -123,8 +123,7 @@ public:
             ec = error::make_error_code(error::async_accept_not_listening);
             return;
         }
-        
-        ec = lib::error_code();
+
         connection_ptr con = get_connection();
 
         transport_type::async_accept(
