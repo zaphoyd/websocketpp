@@ -127,6 +127,11 @@ public:
         ec = lib::error_code();
         connection_ptr con = get_connection();
 
+        if (!con) {
+          ec = error::make_error_code(error::con_creation_failed);
+          return;
+        }
+
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(&type::handle_accept,this,con,lib::placeholders::_1),
