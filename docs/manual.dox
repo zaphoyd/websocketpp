@@ -16,6 +16,8 @@ In order to accommodate the wide variety of use cases WebSocket++ has collected,
 - \subpage md_changelog "Change Log / Version History"
 - Reference
  - \subpage reference.handlers "Handler Reference"
+ - \subpage reference.config "Config Reference"
+ - \subpage reference.logging "Logging Reference"
 
 */
 

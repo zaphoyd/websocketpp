@@ -294,8 +294,8 @@ private:
     };
 public:
 
-    explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
-        elog_type& elog, rng_type & rng)
+    explicit connection(bool p_is_server, std::string const & ua, const lib::shared_ptr<alog_type>& alog,
+                        const lib::shared_ptr<elog_type>& elog, rng_type & rng)
       : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
@@ -329,7 +329,7 @@ public:
       , m_http_state(session::http_state::init)
       , m_was_clean(false)
     {
-        m_alog.write(log::alevel::devel,"connection constructor");
+        m_alog->write(log::alevel::devel,"connection constructor");
     }
 
     /// Get a shared pointer to this component
@@ -1486,7 +1486,7 @@ private:
     void log_err(log::level l, char const * msg, error_type const & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
-        m_elog.write(l, s.str());
+        m_elog->write(l, s.str());
     }
 
     // internal handler functions
@@ -1603,8 +1603,8 @@ private:
     std::vector<std::string> m_requested_subprotocols;
 
     bool const              m_is_server;
-    alog_type& m_alog;
-    elog_type& m_elog;
+    const lib::shared_ptr<alog_type> m_alog;
+    const lib::shared_ptr<elog_type> m_elog;
 
     rng_type & m_rng;
 

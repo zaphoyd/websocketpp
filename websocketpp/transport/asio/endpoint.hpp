@@ -328,10 +328,13 @@ public:
     /// Sets whether to use the SO_REUSEADDR flag when opening listening sockets
     /**
      * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What
-     * this flag does depends on your operating system. Please consult operating
-     * system documentation for more details.
+     * this flag does depends on your operating system.
      *
-     * New values affect future calls to listen only.
+     * Please consult operating system documentation for more details. There
+     * may be security consequences to enabling this option.
+     *
+     * New values affect future calls to listen only so set this value prior to
+     * calling listen.
      *
      * The default is false.
      *
@@ -743,7 +746,7 @@ public:
     void async_accept(transport_con_ptr tcon, accept_handler callback,
         lib::error_code & ec)
     {
-        if (m_state != LISTENING) {
+        if (m_state != LISTENING || !m_acceptor) {
             using websocketpp::error::make_error_code;
             ec = make_error_code(websocketpp::error::async_accept_not_listening);
             return;
@@ -795,7 +798,7 @@ protected:
      * haven't been constructed yet, and cannot be used in the transport
      * destructor as they will have been destroyed by then.
      */
-    void init_logging(alog_type* a, elog_type* e) {
+    void init_logging(const lib::shared_ptr<alog_type>& a, const lib::shared_ptr<elog_type>& e) {
         m_alog = a;
         m_elog = e;
     }
@@ -1133,8 +1136,8 @@ private:
     int                 m_listen_backlog;
     bool                m_reuse_addr;
 
-    elog_type* m_elog;
-    alog_type* m_alog;
+    lib::shared_ptr<elog_type> m_elog;
+    lib::shared_ptr<alog_type> m_alog;
 
     // Transport state
     state               m_state;

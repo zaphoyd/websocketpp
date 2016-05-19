@@ -103,7 +103,7 @@ protected:
      * @param a A pointer to the access logger to use.
      * @param e A pointer to the error logger to use.
      */
-    void init_logging(alog_type *, elog_type *) {}
+    void init_logging(lib::shared_ptr<alog_type>, lib::shared_ptr<elog_type>) {}
 
     /// Initiate a new connection
     /**

@@ -58,7 +58,7 @@ struct stub_con : public iostream_con {
     typedef websocketpp::lib::shared_ptr<type> ptr;
     typedef iostream_con::timer_ptr timer_ptr;
 
-    stub_con(bool is_server, config::alog_type & a, config::elog_type & e)
+    stub_con(bool is_server, const websocketpp::lib::shared_ptr<config::alog_type>& a, const websocketpp::lib::shared_ptr<config::elog_type>& e)
         : iostream_con(is_server,a,e)
         // Set the error to a known code that is unused by the library
         // This way we can easily confirm that the handler was run at all.
@@ -164,8 +164,8 @@ struct stub_con : public iostream_con {
 };
 
 // Stubs
-config::alog_type alogger;
-config::elog_type elogger;
+websocketpp::lib::shared_ptr<config::alog_type> alogger = websocketpp::lib::make_shared<config::alog_type>();
+websocketpp::lib::shared_ptr<config::elog_type> elogger = websocketpp::lib::make_shared<config::elog_type>();
 
 BOOST_AUTO_TEST_CASE( const_methods ) {
     iostream_con::ptr con(new iostream_con(true,alogger,elogger));
@@ -578,6 +578,16 @@ BOOST_AUTO_TEST_CASE( shutdown_handler ) {
     BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::error::test) );
     con->shutdown();
     BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::transport::error::general) );
+}
+
+BOOST_AUTO_TEST_CASE( clear_handler ) {
+    stub_con::ptr con(new stub_con(true,alogger,elogger));
+
+    con->set_shutdown_handler(&sd_handler);
+    con->set_shutdown_handler(NULL);
+    BOOST_CHECK_EQUAL( con->ec, make_error_code(websocketpp::error::test) );
+    con->shutdown();
+    BOOST_CHECK_EQUAL( con->ec, websocketpp::lib::error_code() );
 }
 
 BOOST_AUTO_TEST_CASE( shared_pointer_memory_cleanup ) {
