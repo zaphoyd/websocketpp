@@ -77,7 +77,7 @@ public:
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy constructor because endpoints are not copyable
     server<config>(server<config> &) = delete;
-    
+
     // no copy assignment operator because endpoints are not copyable
     server<config> & operator=(server<config> const &) = delete;
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
@@ -115,7 +115,7 @@ public:
      *
      * Refer to documentation for the transport policy you are using for
      * instructions on how to stop this acceptance loop.
-     * 
+     *
      * @param [out] ec A status code indicating an error, if any.
      */
     void start_accept(lib::error_code & ec) {
@@ -126,13 +126,13 @@ public:
         
         ec = lib::error_code();
         connection_ptr con = get_connection();
-        
+
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(&type::handle_accept,this,con,lib::placeholders::_1),
             ec
         );
-        
+
         if (ec && con) {
             // If the connection was constructed but the accept failed,
             // terminate the connection to prevent memory leaks
