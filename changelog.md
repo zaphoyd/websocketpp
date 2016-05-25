@@ -10,6 +10,9 @@ HEAD
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
   patch. #539 #501
+- Bug: Change default listen backlog from 0 to socket_base::max_connections.
+  #549. Thank you derwassi and zwelab for reporting and na1pir for providing
+  access to hardware to debug the issue.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
