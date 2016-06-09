@@ -13,6 +13,8 @@ HEAD
 - Bug: Change default listen backlog from 0 to socket_base::max_connections.
   #549. Thank you derwassi and zwelab for reporting and na1pir for providing
   access to hardware to debug the issue.
+- Bug: Fix a crash in the accept loop when get_connection fails. #551 Thank you
+  Walter Gray for a patch.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
