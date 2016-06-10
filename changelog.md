@@ -1,4 +1,9 @@
 HEAD
+- Examples: Add print_client example. This demonstrates a minimal non-TLS
+  client that connects to a server and prints out the messages it receives.
+- Examples: Add print_client_tls example. This demonstrates a minimal TLS
+  client, including basic support via Asio+OpenSSL for certificate chain
+  and hostname verification.
 - Improvement: Move the socket_init_handler to execute as a part of init_asio
   rather than connection pre_init. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
