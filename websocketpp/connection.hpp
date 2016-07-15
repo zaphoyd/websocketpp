@@ -384,7 +384,7 @@ public:
         , m_http_state(session::http_state::init)
         , m_was_clean(false)
     {
-        m_alog.write(log::alevel::devel, "connection copy constructor");
+        m_alog->write(log::alevel::devel, "connection copy constructor");
     }
 
     /// Get a shared pointer to this component

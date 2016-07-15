@@ -35,7 +35,7 @@ namespace websocketpp {
 template <typename connection, typename config>
 typename endpoint<connection,config>::connection_ptr
 endpoint<connection,config>::create_connection(connection_ptr previous_con) {
-    m_alog.write(log::alevel::devel,"create_connection");
+    m_alog->write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
 
     /*if (m_state == STOPPING || m_state == STOPPED) {

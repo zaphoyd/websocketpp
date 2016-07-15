@@ -750,7 +750,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 
     if (ecm == transport::error::proxy_reconnect)
     {
-        m_elog.write(log::elevel::rerror, "handle_transport_init proxy reconned required");
+        m_elog->write(log::elevel::rerror, "handle_transport_init proxy reconned required");
 
         if(m_reconnect_handler) {
             m_reconnect_handler(m_connection_hdl);
