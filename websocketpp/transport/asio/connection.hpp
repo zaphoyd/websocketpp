@@ -869,11 +869,11 @@ protected:
 
             std::string connection_header = m_proxy_data->res.get_header("Connection");
 
-            if (websocketpp::lib::string_utils::icompare(connection_header, "Close")) {
-                reconnect = true;
-            }
-
             if (m_proxy_data->res.get_status_code() == http::status_code::proxy_authentication_required) {
+                if (websocketpp::lib::string_utils::icompare(connection_header, "Close")) {
+                    reconnect = true;
+                }
+
                 m_elog->write(log::elevel::info, "Proxy authorization Required");
 
                 std::string auth_headers = m_proxy_data->res.get_header("Proxy-Authenticate");
