@@ -150,9 +150,12 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
-/// Reconnection handler
+/// Reconnection function handler type
 /**
-  * 
+  * When connection via a proxy, there are cases where a disconnect/reconnect_handler
+  * is required. This reconnect handler fires, passing a handle to the previous 
+  * connection. A new connection is created, migrating some state from the previous
+  * connection (specifically related to proxy authentication fields).
   */
 typedef lib::function<void(connection_hdl)> reconnect_handler;
 
