@@ -4,4 +4,4 @@
 #  WEBSOCKETPP_INCLUDE_DIR - include directories
 
 set(WEBSOCKETPP_FOUND TRUE)
-set(WEBSOCKETPP_INCLUDE_DIR "@INSTALL_INCLUDE_DIR@")
+find_path(WEBSOCKETPP_INCLUDE_DIR "websocketpp/version.hpp")
