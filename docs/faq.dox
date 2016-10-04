@@ -61,6 +61,14 @@ The clean close strategy won't help in the case of crashes or other abnormal clo
 
 __Please note__: how this works exactly depends on your operating system. Additionally, not exclusively locking your listening socket could allow hijacking by other programs if you are running in a shared resource environment. For development this is generally no problem. For a production environment, think carefully about the security model. `websocketpp::transport::asio::endpoint::set_reuse_addr` is the method to do this. You must specify this setting before calling `websocketpp::transport::asio::endpoint::listen`.
 
+### How do I send and recieve binary messages?
+
+When supported by the remote endpoint, WebSocket++ allows reading and sending messages in the two formats specified in RFC6455, UTF8 text and binary. WebSocket++ performs UTF8 validation on all outgoing text messages to ensure that they meet the specification. Binary messages do not have any additional processing and their interpretation is left entirely to the library user.
+
+To determine the type of an incoming message, use `websocketpp::message_buffer::message::get_opcode`. The relevant return values are `websocketpp::frame::opcode::text` and `websocketpp::frame::opcode::binary`. There is no difference in how payloads are retrieved between these modes, only in how WebSocket++ validated the contents and how the library user is to interpret the data.
+
+To specify the type of an outgoing message, use the frame opcode values listed above as the second op parameter for `websocketpp::connection::send`. There are two relevant overloads of send. One that takes a `std::string` and defaults to op=text. The other that takes a `void const *` and a `size_t` length and defaults to op=binary. Note: You can send binary messages via the string overload and text messages via the void * overload. In the case that you are manually building a message buffer rather than using the automatic send member functions, you can pass the opcode in as a parameter to the message buffer constructor or user the `websocketpp::message_buffer::message::set_opcode` member function to set or re-set it later.
+
 ## Dependency Management
 
 ### Can WebSocket++ be used without Boost?
