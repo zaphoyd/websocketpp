@@ -11,6 +11,9 @@ HEAD
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
   with what the websocketpp is using. Thank you Flow86 for reporting and a
   patch.
+- Compatibility: Update `telemetry_client` to use a slightly more cross platform
+  method of sleeping. Should work on windows now. Thank you Meir Yanovich for
+  reporting.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
@@ -55,9 +58,9 @@ HEAD
   and `string::empty()`. This avoids generating unnecessary temporary objects.
   #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
 - Documentation: Adds an example demonstrating the use of external `io_service`
-- Documentation: Adds a simple echo_client example.
+- Documentation: Adds a simple `echo_client` example.
 - Documentation: Begins migration of the web based user manual into Doxygen.
-- Bug: Fix memory leak when init_asio produces an error. #454 Thank you Mark 
+- Bug: Fix memory leak when `init_asio` produces an error. #454 Thank you Mark 
   Grimes for reporting and fixing.
 - Bug: Fix crash when processing a specially crafted HTTP header. Thank you Eli 
   Fidler for reporting, test cases, and a patch. #456
@@ -75,7 +78,7 @@ HEAD
 - Bug: Fix an issue where TLS includes were broken for Asio Standalone builds.
   Thank you giachi and Bastien Brunnenstein for reporting. #491
 - Bug: Remove the use of cached read and write handlers in the Asio transport.
-  This feature caused memory leaks when the io_service the connection was
+  This feature caused memory leaks when the `io_service` the connection was
   running on was abruptly stopped. There isn't a clean and safe way of using
   this optimization without global state and the associated locks. The locks
   perform worse. Thank you Xavier Gibert for reporting, test cases, and code.
@@ -84,8 +87,8 @@ HEAD
   Xavier Gibert for reporting and a patch #524
 - Compatibility: Fixes a number of build & config issues on Visual Studio 2015
 - Compatibility: Removes non-standards compliant masking behavior. #395, #469
-- Compatibility: Replace deprecated use of auto_ptr on systems where unique_ptr
-  is available.
+- Compatibility: Replace deprecated use of `auto_ptr` on systems where 
+  `unique_ptr` is available.
 
 0.6.0 - 2015-06-02
 - MINOR BREAKING TRANSPORT POLICY CHANGE: Custom transport policies will now be

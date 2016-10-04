@@ -7,6 +7,17 @@
 #include <websocketpp/common/thread.hpp>
 
 /**
+ * Define a semi-cross platform helper method that waits/sleeps for a bit.
+ */
+void wait_a_bit() {
+#ifdef WIN32
+    Sleep(1000);
+#else
+    sleep(1);
+#endif
+}
+
+/**
  * The telemetry client connects to a WebSocket server and sends a message every
  * second containing an integer count. This example can be used as the basis for
  * programs where a client connects and pushes data for logging, stress/load
@@ -111,7 +122,7 @@ public:
             }
 
             if (wait) {
-                sleep(1);
+                wait_a_bit();
                 continue;
             }
 
@@ -132,7 +143,7 @@ public:
                 break;
             }
 
-            sleep(1);
+            wait_a_bit();
         }
     }
 private:
