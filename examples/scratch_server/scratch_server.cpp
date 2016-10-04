@@ -60,9 +60,9 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     */
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
-    } catch (const websocketpp::lib::error_code& e) {
-        std::cout << "Echo failed because: " << e  
-                  << "(" << e.message() << ")" << std::endl;
+    } catch (websocketpp::exception const & e) {
+        std::cout << "Echo failed because: " 
+                  << "(" << e.what() << ")" << std::endl;
     }
 }
 
@@ -96,10 +96,10 @@ int main(int argc, char * argv[]) {
 	    
 	    // Start the ASIO io_service run loop
         echo_server.run();
+    } catch (websocketpp::exception const & e) {
+        std::cout << e.what() << std::endl;
     } catch (const std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (websocketpp::lib::error_code e) {
-        std::cout << e.message() << std::endl;
     } catch (...) {
         std::cout << "other exception" << std::endl;
     }

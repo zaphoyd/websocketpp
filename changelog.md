@@ -1,11 +1,11 @@
 HEAD
-- Examples: Add print_client example. This demonstrates a minimal non-TLS
+- Examples: Add `print_client` example. This demonstrates a minimal non-TLS
   client that connects to a server and prints out the messages it receives.
-- Examples: Add print_client_tls example. This demonstrates a minimal TLS
+- Examples: Add `print_client_tls` example. This demonstrates a minimal TLS
   client, including basic support via Asio+OpenSSL for certificate chain
   and hostname verification.
-- Improvement: Move the socket_init_handler to execute as a part of init_asio
-  rather than connection pre_init. This allows setting of socket options prior
+- Improvement: Move the `socket_init_handler` to execute as a part of `init_asio`
+  rather than connection `pre_init`. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
   reporting #530.
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
@@ -15,11 +15,14 @@ HEAD
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
   patch. #539 #501
-- Bug: Change default listen backlog from 0 to socket_base::max_connections.
+- Bug: Change default listen backlog from 0 to `socket_base::max_connections`.
   #549. Thank you derwassi and zwelab for reporting and na1pir for providing
   access to hardware to debug the issue.
-- Bug: Fix a crash in the accept loop when get_connection fails. #551 Thank you
+- Bug: Fix a crash in the accept loop when `get_connection` fails. #551 Thank you
   Walter Gray for a patch.
+- Bug/Documentation: Fix incorrect example code that used 
+  `websocketpp::lib::error_code` instead of `websocketpp::exception`. Thank you
+  heretic13 for reporting
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
