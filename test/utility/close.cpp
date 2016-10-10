@@ -39,7 +39,6 @@ using namespace websocketpp;
 BOOST_AUTO_TEST_CASE( reserved_values ) {
     BOOST_CHECK( !close::status::reserved(999) );
     BOOST_CHECK( close::status::reserved(1004) );
-    BOOST_CHECK( close::status::reserved(1014) );
     BOOST_CHECK( close::status::reserved(1016) );
     BOOST_CHECK( close::status::reserved(2999) );
     BOOST_CHECK( !close::status::reserved(1000) );
