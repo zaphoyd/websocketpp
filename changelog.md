@@ -4,6 +4,9 @@ HEAD
 - Examples: Add `print_client_tls` example. This demonstrates a minimal TLS
   client, including basic support via Asio+OpenSSL for certificate chain
   and hostname verification.
+- Feature: Add getter for all headers to the HTTP parsers. This allows a
+  wrapping library to enumerate all headers to send upstream. Thank you Jupp
+  Müller for reporting and an initial pull request.
 - Improvement: Move the `socket_init_handler` to execute as a part of `init_asio`
   rather than connection `pre_init`. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
