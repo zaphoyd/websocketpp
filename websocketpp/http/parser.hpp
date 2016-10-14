@@ -590,6 +590,12 @@ protected:
         return (m_body_bytes_needed == 0);
     }
 
+    /// Return a list of all HTTP headers
+    /**
+     * Return a list of all HTTP headers
+     */
+    header_list headers() const;
+
     /// Generate and return the HTTP headers as a string
     /**
      * Each headers will be followed by the \r\n sequence including the last one.
