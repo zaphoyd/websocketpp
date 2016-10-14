@@ -176,7 +176,7 @@ inline void parser::process_header(std::string::iterator begin,
                   strip_lws(std::string(cursor+sizeof(header_separator)-1,end)));
 }
 
-inline header_list headers() const {
+inline header_list const & parser::get_headers() const {
     return m_headers;
 }
 

@@ -441,6 +441,16 @@ public:
     bool get_header_as_plist(std::string const & key, parameter_list & out)
         const;
 
+    /// Return a list of all HTTP headers
+    /**
+     * Return a list of all HTTP headers
+     *
+     * @since 0.8.0
+     *
+     * @return A list of all HTTP headers
+     */
+    header_list const & get_headers() const;
+
     /// Append a value to an existing HTTP header
     /**
      * This method will set the value of the HTTP header `key` with the
@@ -589,12 +599,6 @@ protected:
     bool body_ready() const {
         return (m_body_bytes_needed == 0);
     }
-
-    /// Return a list of all HTTP headers
-    /**
-     * Return a list of all HTTP headers
-     */
-    header_list headers() const;
 
     /// Generate and return the HTTP headers as a string
     /**
