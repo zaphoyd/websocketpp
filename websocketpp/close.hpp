@@ -256,7 +256,7 @@ namespace status {
             case service_restart:
                 return "Service restart";
             case try_again_later:
-                return "Try again laster";
+                return "Try again later";
             case bad_gateway:
                 return "Bad gateway";
             case tls_handshake:
