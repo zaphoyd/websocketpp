@@ -57,7 +57,9 @@ set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
 # - Windows: Build the INSTALL project in your solution file.
 # - Linux/OSX: make install.
 if (MSVC)
-    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install")
+  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install" CACHE PATH "Install Prefix" FORCE)
+  endif ()
 endif ()
 
 ############  Build customization
@@ -250,6 +252,7 @@ print_used_build_config()
 
 export (PACKAGE websocketpp)
 
+file(RELATIVE_PATH RELATIVE_INSTALL "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
 configure_file (websocketpp-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake" @ONLY)
 configure_file (websocketpp-configVersion.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake" @ONLY)
 
