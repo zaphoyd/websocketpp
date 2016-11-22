@@ -241,7 +241,7 @@ public:
 
         for (int i = 0; i < 4; i++) {
             conv.i = m_rng();
-            std::copy(conv.c,conv.c+4,&raw_key[i*4]);
+            std::memcpy(&raw_key[i * 4], conv.c, 4);
         }
 
         req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
@@ -754,7 +754,7 @@ protected:
     size_t copy_extended_header_bytes(uint8_t const * buf, size_t len) {
         size_t bytes_to_read = (std::min)(m_bytes_needed,len);
 
-        std::copy(buf,buf+bytes_to_read,m_extended_header.bytes+m_cursor);
+        std::memcpy(m_extended_header.bytes + m_cursor, buf, bytes_to_read);
         m_cursor += bytes_to_read;
         m_bytes_needed -= bytes_to_read;
 
