@@ -34,7 +34,7 @@ namespace websocketpp {
 
 template <typename connection, typename config>
 typename endpoint<connection,config>::connection_ptr
-endpoint<connection,config>::create_connection() {
+endpoint<connection,config>::create_connection(connection_ptr previous_con) {
     m_alog->write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
 
@@ -44,8 +44,14 @@ endpoint<connection,config>::create_connection() {
 
     //scoped_lock_type guard(m_mutex);
     // Create a connection on the heap and manage it using a shared pointer
-    connection_ptr con = lib::make_shared<connection_type>(m_is_server,
-        m_user_agent, m_alog, m_elog, lib::ref(m_rng));
+    connection_ptr con;
+
+    if (previous_con) {
+        con = lib::make_shared<connection_type>(*previous_con);
+    }
+    else {
+        con = lib::make_shared<connection_type>(m_is_server, m_user_agent, lib::ref(m_alog), lib::ref(m_elog), lib::ref(m_rng));
+    }
 
     connection_weak_ptr w(con);
 
@@ -66,7 +72,8 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
-
+    con->set_reconnect_handler(m_reconnect_handler);
+    
     if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);
     }
