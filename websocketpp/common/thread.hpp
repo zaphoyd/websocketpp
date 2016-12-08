@@ -40,6 +40,10 @@
         #ifndef _WEBSOCKETPP_CPP11_THREAD_
             #define _WEBSOCKETPP_CPP11_THREAD_
         #endif
+    #else
+        #ifndef _WEBSOCKETPP_MINGW_THREAD_
+            #define _WEBSOCKETPP_MINGW_THREAD_
+        #endif
     #endif
 #endif
 
@@ -55,6 +59,10 @@
     #include <thread>
     #include <mutex>
     #include <condition_variable>
+#elif defined(_WEBSOCKETPP_MINGW_THREAD_)
+    #include <mingw-threads/mingw.thread.h>
+    #include <mingw-threads/mingw.mutex.h>
+    #include <mingw-threads/mingw.condition_variable.h>
 #else
     #include <boost/thread.hpp>
     #include <boost/thread/mutex.hpp>
@@ -64,7 +72,7 @@
 namespace websocketpp {
 namespace lib {
 
-#ifdef _WEBSOCKETPP_CPP11_THREAD_
+#if defined(_WEBSOCKETPP_CPP11_THREAD_) || defined(_WEBSOCKETPP_MINGW_THREAD_)
     using std::mutex;
     using std::lock_guard;
     using std::thread;
