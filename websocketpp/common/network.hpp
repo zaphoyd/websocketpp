@@ -31,6 +31,7 @@
 // For ntohs and htons
 #if defined(_WIN32)
     #include <winsock2.h>
+    typedef unsigned __int64 uint64_t;
 #else
     //#include <arpa/inet.h>
     #include <netinet/in.h>
