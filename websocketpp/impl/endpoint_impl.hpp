@@ -66,6 +66,7 @@ endpoint<connection,config>::create_connection() {
     con->set_http_handler(m_http_handler);
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
+    con->set_resume_send_handler(m_resume_send_handler);
 
     if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);
@@ -80,6 +81,7 @@ endpoint<connection,config>::create_connection() {
         con->set_max_message_size(m_max_message_size);
     }
     con->set_max_http_body_size(m_max_http_body_size);
+    con->set_min_send_buffer_size(m_min_send_buffer_size);
 
     lib::error_code ec;
 

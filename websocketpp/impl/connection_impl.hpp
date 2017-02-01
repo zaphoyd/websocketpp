@@ -1907,6 +1907,8 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
     }
 
     bool needs_writing = false;
+    bool notify_resume_send = false;
+    size_t send_buffer_size;
     {
         scoped_lock_type lock(m_write_lock);
 
@@ -1914,11 +1916,30 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
         m_write_flag = false;
 
         needs_writing = !m_send_queue.empty();
+
+        send_buffer_size = m_send_buffer_size;
+    }
+
+    if (m_resume_send_handler) {
+        if (!m_min_send_buffer_flag)
+            m_min_send_buffer_flag = send_buffer_size >= m_min_send_buffer_size;
+
+        if (m_min_send_buffer_flag) {
+            notify_resume_send = send_buffer_size <= m_min_send_buffer_size;
+            m_min_send_buffer_flag = !notify_resume_send;
+        }
     }
 
     if (needs_writing) {
         transport_con_type::dispatch(lib::bind(
             &type::write_frame,
+            type::get_shared()
+        ));
+    }
+
+    if (notify_resume_send) {
+        transport_con_type::dispatch(lib::bind(
+            m_resume_send_handler,
             type::get_shared()
         ));
     }

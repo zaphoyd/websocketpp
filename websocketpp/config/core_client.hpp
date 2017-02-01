@@ -251,6 +251,15 @@ struct core_client {
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;
 
+    /// Default minimum buffer size threshold.
+    /**
+     * Default value for notifying that the amount of buffered bytes is below
+     * the threshold. If 0 it notifies when the send queue becomes empty.
+     *
+     * @since 0.8.0
+     */
+    static const size_t min_send_buffer_size = 0;
+
     /// Extension specific settings:
 
     /// permessage_deflate extension

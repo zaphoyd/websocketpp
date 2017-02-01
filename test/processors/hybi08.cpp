@@ -55,6 +55,8 @@ struct stub_config {
     /// Extension related config
     static const bool enable_extensions = false;
 
+    static const size_t min_send_buffer_size = 0;
+
     /// Extension specific config
 
     /// permessage_deflate_config

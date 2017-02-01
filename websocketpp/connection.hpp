@@ -150,6 +150,13 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
+/// The type and function signature of a resume send handler
+/**
+ * The handler is called when the amount of buffered bytes drops lower thab
+ * the minimum buffered size and the send can resume.
+ */
+typedef lib::function<void(connection_hdl)> resume_send_handler;
+
 //
 typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
 typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
@@ -319,6 +326,7 @@ public:
       , m_send_buffer_size(0)
       , m_write_flag(false)
       , m_read_flag(true)
+      , m_min_send_buffer_flag(false)
       , m_is_server(p_is_server)
       , m_alog(alog)
       , m_elog(elog)
@@ -474,6 +482,17 @@ public:
         m_message_handler = h;
     }
 
+    /// Set resume send handler
+    /**
+     * The handler is called when the amount of buffered bytes is below the
+     * threshold.
+     *
+     * @param h The new can_write_handler
+     */
+    void set_resume_send_handler(resume_send_handler h) {
+        m_resume_send_handler = h;
+    }
+
     //////////////////////////////////////////
     // Connection timeouts and other limits //
     //////////////////////////////////////////
@@ -609,6 +628,22 @@ public:
      */
     void set_max_http_body_size(size_t new_value) {
         m_request.set_max_body_size(new_value);
+    }
+
+    /// Set minimum send buffer suze.
+    /**
+     * Set minimum buffer suze. When the minimum buffer size is reached the
+     * resume_send_handler will be called.
+     *
+     * @since 0.8.0
+     *
+     * @param new_value The value to set as the minmum buffer suze.
+     */
+    void set_min_send_buffer_size(size_t new_value) {
+        m_min_send_buffer_size = new_value;
+        if (m_processor) {
+            m_processor->set_min_send_buffer_size(new_value);
+        }
     }
 
     //////////////////////////////////
@@ -1510,12 +1545,14 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+    resume_send_handler     m_resume_send_handler;
 
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
     long                    m_pong_timeout_dur;
     size_t                  m_max_message_size;
+    size_t                  m_min_send_buffer_size;
 
     /// External connection state
     /**
@@ -1591,6 +1628,9 @@ private:
 
     /// True if this connection is presently reading new data
     bool m_read_flag;
+
+    /// True if the min_send_buffer_size limit has been exceeded.
+    bool m_min_send_buffer_flag;
 
     // connection data
     request_type            m_request;

@@ -62,6 +62,7 @@ struct stub_config {
 
     static const size_t max_message_size = 16000000;
     static const bool enable_extensions = false;
+    static const size_t min_send_buffer_size = 0;
 };
 
 struct stub_config_ext {
@@ -84,6 +85,7 @@ struct stub_config_ext {
 
     static const size_t max_message_size = 16000000;
     static const bool enable_extensions = true;
+    static const size_t min_send_buffer_size = 0;
 };
 
 typedef stub_config::con_msg_manager_type con_msg_manager_type;
