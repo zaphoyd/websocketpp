@@ -475,14 +475,14 @@ public:
         m_max_http_body_size = new_value;
     }
 
-    /// Set minimum send buffer suze.
+    /// Set minimum send buffer size.
     /**
-     * Set minimum buffer suze. When the minimum buffer size is reached the
+     * Set minimum buffer size. When the minimum buffer size is reached the
      * resume_send_handler will be called.
      *
      * @since 0.8.0
      *
-     * @param new_value The value to set as the minmum buffer suze.
+     * @param new_value The value to set as the minmum buffer size.
      */
     void set_min_send_buffer_size(size_t new_value) {
         m_min_send_buffer_size = new_value;
