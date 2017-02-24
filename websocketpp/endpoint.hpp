@@ -138,6 +138,7 @@ public:
          , m_http_handler(std::move(o.m_http_handler))
          , m_validate_handler(std::move(o.m_validate_handler))
          , m_message_handler(std::move(o.m_message_handler))
+         , m_send_empty_handler(std::move(o.m_send_empty_handler))
 
          , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
          , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
@@ -323,6 +324,11 @@ public:
         m_alog->write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
+    }
+    void set_send_empty_handler(send_empty_handler h) {
+        m_alog.write(log::alevel::devel,"set_send_empty_handler");
+        scoped_lock_type guard(m_mutex);
+        m_send_empty_handler = h;
     }
 
     //////////////////////////////////////////
@@ -677,7 +683,8 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
-
+    send_empty_handler          m_send_empty_handler;
+    
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
     long                        m_pong_timeout_dur;
