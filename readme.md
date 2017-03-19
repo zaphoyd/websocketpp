@@ -1,3 +1,12 @@
+This repository is a fork for RPM builds.
+------------------------------------------
+
+To build, run sudo ./build_rpm.sh
+
+
+Below is the original README.md
+
+
 WebSocket++ (0.7.0)
 ==========================
 
