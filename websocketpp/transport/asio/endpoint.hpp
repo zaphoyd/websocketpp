@@ -87,6 +87,9 @@ public:
     /// Type of a shared pointer to an io_service work object
     typedef lib::shared_ptr<lib::asio::io_service::work> work_ptr;
 
+    /// Type of socket pre-bind handler
+    typedef lib::function<boost::system::error_code(acceptor_ptr)> tcp_pre_bind_handler;
+
     // generate and manage our own io_service
     explicit endpoint()
       : m_io_service(NULL)
@@ -259,6 +262,19 @@ public:
         m_external_io_service = false;
     }
 
+    /// Sets the tcp pre bind handler
+    /**
+     * The tcp pre bind handler is called after the listen acceptor has
+     * been created but before the socket bind is performed.
+     *
+     * @since 0.8.0
+     *
+     * @param h The handler to call on tcp pre bind init.
+     */
+    void set_tcp_pre_bind_handler(tcp_pre_bind_handler h) {
+        m_tcp_pre_bind_handler = h;
+    }
+
     /// Sets the tcp pre init handler
     /**
      * The tcp pre init handler is called after the raw tcp connection has been
@@ -405,6 +421,9 @@ public:
         m_acceptor->open(ep.protocol(),bec);
         if (!bec) {
             m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
+        }
+        if (!bec && m_tcp_pre_bind_handler) {
+            bec = m_tcp_pre_bind_handler(m_acceptor);
         }
         if (!bec) {
             m_acceptor->bind(ep,bec);
@@ -1119,6 +1138,7 @@ private:
     };
 
     // Handlers
+    tcp_pre_bind_handler    m_tcp_pre_bind_handler;
     tcp_init_handler    m_tcp_pre_init_handler;
     tcp_init_handler    m_tcp_post_init_handler;
 
