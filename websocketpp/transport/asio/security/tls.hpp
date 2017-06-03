@@ -353,6 +353,7 @@ protected:
      * @return The translated error code
      */
     template <typename ErrorCodeType>
+    static
     lib::error_code translate_ec(ErrorCodeType ec) {
         if (ec.category() == lib::asio::error::get_ssl_category()) {
             if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
@@ -368,7 +369,8 @@ protected:
             return make_error_code(transport::error::pass_through);
         }
     }
-    
+
+    static
     /// Overload of translate_ec to catch cases where lib::error_code is the
     /// same type as lib::asio::error_code
     lib::error_code translate_ec(lib::error_code ec) {

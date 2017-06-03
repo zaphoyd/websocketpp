@@ -280,11 +280,13 @@ protected:
      * @return The translated error code
      */
     template <typename ErrorCodeType>
+    static
     lib::error_code translate_ec(ErrorCodeType) {
         // We don't know any more information about this error so pass through
         return make_error_code(transport::error::pass_through);
     }
-    
+
+    static
     /// Overload of translate_ec to catch cases where lib::error_code is the 
     /// same type as lib::asio::error_code
     lib::error_code translate_ec(lib::error_code ec) {
