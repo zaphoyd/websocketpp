@@ -333,6 +333,7 @@ protected:
         }
     }
 
+public:
     /// Translate any security policy specific information about an error code
     /**
      * Translate_ec takes an Asio error code and attempts to convert its value

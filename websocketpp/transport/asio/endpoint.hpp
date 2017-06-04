@@ -423,7 +423,7 @@ public:
                 m_acceptor->close();
             }
             log_err(log::elevel::info,"asio listen",bec);
-            ec = make_error_code(error::pass_through);
+            ec = socket_con_type::translate_ec(ec);
         } else {
             m_state = LISTENING;
             ec = lib::error_code();
@@ -733,7 +733,7 @@ public:
                 m_elog->write(log::elevel::info,
                     "asio handle_timer error: "+ec.message());
                 log_err(log::elevel::info,"asio handle_timer",ec);
-                callback(make_error_code(error::pass_through));
+                callback(socket_con_type::translate_ec(ec));
             }
         } else {
             callback(lib::error_code());
@@ -818,7 +818,7 @@ protected:
                 ret_ec = make_error_code(websocketpp::error::operation_canceled);
             } else {
                 log_err(log::elevel::info,"asio handle_accept",asio_ec);
-                ret_ec = make_error_code(error::pass_through);
+                ret_ec = socket_con_type::translate_ec(asio_ec);
             }
         }
 
@@ -961,7 +961,7 @@ protected:
 
         if (ec) {
             log_err(log::elevel::info,"asio async_resolve",ec);
-            callback(make_error_code(error::pass_through));
+            callback(socket_con_type::translate_ec(ec));
             return;
         }
 
@@ -1069,7 +1069,7 @@ protected:
 
         if (ec) {
             log_err(log::elevel::info,"asio async_connect",ec);
-            callback(make_error_code(error::pass_through));
+            callback(socket_con_type::translate_ec(ec));
             return;
         }
 
