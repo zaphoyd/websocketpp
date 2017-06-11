@@ -32,6 +32,7 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/platforms.hpp>
+#include <websocketpp/common/stdint.hpp>
 #include <websocketpp/common/system_error.hpp>
 #include <websocketpp/error.hpp>
 

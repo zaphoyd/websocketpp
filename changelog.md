@@ -33,6 +33,8 @@ HEAD
   a build error. It wasn't being used for anything particularly important
   (slightly improving error reporting) and there isn't a great replacement.
   #599 Thank you Gianfranco Costamagna for reporting.
+- Compatibility: Add missing `<stdint>` headers. Fixes issues with g++ 5.4.0.
+  #638 Thank you Alex Korotkin for reporting and a patch.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
