@@ -1219,17 +1219,17 @@ lib::error_code connection<config>::process_handshake_request() {
     std::pair<lib::error_code,std::string> neg_results;
     neg_results = m_processor->negotiate_extensions(m_request);
 
-    if (neg_results.first == error::make_error_code(error::extension_parse_error)) {
+    if (neg_results.first == processor::error::make_error_code(processor::error::extension_parse_error)) {
         // There was a fatal error in extension parsing that should result in
         // a failed connection attempt.
-        m_alog->write(log::alevel::info, "Bad request: " + neg_results.first.message());
+        m_elog->write(log::elevel::info, "Bad request: " + neg_results.first.message());
         m_response.set_status(http::status_code::bad_request);
         return neg_results.first;
     } else if (neg_results.first) {
         // There was a fatal error in extension processing that is probably our
         // fault. Consider extension negotiation to have failed and continue as
         // if extensions were not supported
-        m_alog->write(log::alevel::info, 
+        m_elog->write(log::elevel::info, 
             "Extension negotiation failed: " + neg_results.first.message());
     } else {
         // extension negotiation succeeded, set response header accordingly
