@@ -49,6 +49,10 @@ HEAD
   heretic13 for reporting
 - Bug: Fix uninitialized shared pointer in Asio transport test suite. #647
   Thank you Alex Korotkin for reporting and a patch.
+- Bug: Fix a thread safety issue in the permessage-deflate extension that
+  caused message corruption when sending compressed messages from a different
+  thread than the main I/O thread. #615 Thank you KyleNyenhuis and Pieter De 
+  Gendt for reporting and a patch.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 

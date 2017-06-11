@@ -226,7 +226,7 @@ public:
       , m_server_max_window_bits_mode(mode::accept)
       , m_client_max_window_bits_mode(mode::accept)
       , m_initialized(false)
-      , m_compress_buffer_size(16384)
+      , m_compress_buffer_size(8192)
     {
         m_dstate.zalloc = Z_NULL;
         m_dstate.zfree = Z_NULL;
@@ -305,6 +305,7 @@ public:
         }
 
         m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
+        m_decompress_buffer.reset(new unsigned char[m_compress_buffer_size]);
         if ((m_server_no_context_takeover && is_server) ||
             (m_client_no_context_takeover && !is_server))
         {
@@ -596,7 +597,7 @@ public:
 
         do {
             m_istate.avail_out = m_compress_buffer_size;
-            m_istate.next_out = m_compress_buffer.get();
+            m_istate.next_out = m_decompress_buffer.get();
 
             ret = inflate(&m_istate, Z_SYNC_FLUSH);
 
@@ -605,7 +606,7 @@ public:
             }
 
             out.append(
-                reinterpret_cast<char *>(m_compress_buffer.get()),
+                reinterpret_cast<char *>(m_decompress_buffer.get()),
                 m_compress_buffer_size - m_istate.avail_out
             );
         } while (m_istate.avail_out == 0);
@@ -804,6 +805,7 @@ private:
     int m_flush;
     size_t m_compress_buffer_size;
     lib::unique_ptr_uchar_array m_compress_buffer;
+    lib::unique_ptr_uchar_array m_decompress_buffer;
     z_stream m_dstate;
     z_stream m_istate;
 };
