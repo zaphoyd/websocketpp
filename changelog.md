@@ -12,6 +12,10 @@ HEAD
   Muzahid Hussain for reporting and related code. #458
 - Feature: Add support for subprotocols in Hybi00. Thank you Lukas Obermann
   for reporting and a patch. #518
+- Feature: Adds tcp_pre_bind handler to Asio transport. This allows setting
+  arbitrary socket options after the listen acceptor has been created but before
+  the socket bind has been performed. #634 #439 Thank you Gregor Jasny for
+  the patch.
 - Improvement: Better automatic std::chrono feature detection for Visual Studio
 - Improvement: Major refactoring to bundled CMake build system. CMake can now be
   used to build all of the examples and the test suite. Thank you Thijs Wenker
