@@ -185,6 +185,8 @@ BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
     dummy_server.detach();
     timer.detach();
 
+    sleep(1); // give the server thread some time to start
+
     mock_endpoint endpoint;
     endpoint.set_tls_init_handler(&on_tls_init);
     endpoint.connect("wss://localhost:9005");
