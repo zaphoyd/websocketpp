@@ -60,6 +60,8 @@ HEAD
   caused message corruption when sending compressed messages from a different
   thread than the main I/O thread. #615 Thank you KyleNyenhuis and Pieter De 
   Gendt for reporting and a patch.
+- Bug: Fix an undefined behavior issue performing a 64 bit wide shift on a 64
+  bit value. #636 Thank you Gregor Jasny for reporting and a patch
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
