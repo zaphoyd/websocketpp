@@ -11,6 +11,9 @@ HEAD
   rather than connection `pre_init`. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
   reporting #530.
+- Improvement: Timers in transport integration tests should only fail if their
+  own test times out, rather than any test. #643 Thank you Alex Korotkin for
+  reporting and a patch.
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
   with what the websocketpp is using. Thank you Flow86 for reporting and a
   patch.
