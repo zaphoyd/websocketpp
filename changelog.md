@@ -35,6 +35,10 @@ HEAD
   #599 Thank you Gianfranco Costamagna for reporting.
 - Compatibility: Add missing `<stdint>` headers. Fixes issues with g++ 5.4.0.
   #638 Thank you Alex Korotkin for reporting and a patch.
+- Compatibility: Remove the use of `std::auto_ptr` and `std::binary_function`
+  from builds with C++11 or later. These features are deprecated and were
+  removed entirely in C++17. This change allows building WebSocket++ on
+  C++17 compilers. #592 Thank you Michal Fojtak for reporting and a patch
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
