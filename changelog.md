@@ -39,6 +39,9 @@ HEAD
   from builds with C++11 or later. These features are deprecated and were
   removed entirely in C++17. This change allows building WebSocket++ on
   C++17 compilers. #592 Thank you Michal Fojtak for reporting and a patch
+- Compatibility: Add 1014 close code and adds missing descriptions for codes
+  1012 and 1013. #589 Thank you jbwdevries and ronneke1996 for reporting and
+  patches.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
