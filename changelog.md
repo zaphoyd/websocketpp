@@ -11,12 +11,28 @@ HEAD
   rather than connection `pre_init`. This allows setting of socket options prior
   to the bind/listen/accept system calls. Thank you ChristianRobl3D for
   reporting #530.
+- Improvement: Timers in transport integration tests should only fail if their
+  own test times out, rather than any test. #643 Thank you Alex Korotkin for
+  reporting and a patch.
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
   with what the websocketpp is using. Thank you Flow86 for reporting and a
   patch.
 - Compatibility: Update `telemetry_client` to use a slightly more cross platform
   method of sleeping. Should work on windows now. Thank you Meir Yanovich for
   reporting.
+- Compatibility: Updated permessage-deflate support to reflect that the zlib
+  library does not actually support a sliding window size of 256 bits. 
+  WebSocket++ will no longer negotiate 256 bit deflate windows. If the user
+  of the library tries to request a 256 bit window a 512 bit window will be
+  specified instead (This was the previous behavior). #596 #653 Thank you 
+  Vinnie Falco and Gianfranco Costamagna for reporting.
+- Compatibility: Better error handling and logging in cases where extension
+  requests parse correctly but negotiation fails.
+- Compatibility: Removed custom handling of SSL_R_SHORT_READ error condition.
+  This error code no longer exists in modern versions of OpenSSL and causes
+  a build error. It wasn't being used for anything particularly important
+  (slightly improving error reporting) and there isn't a great replacement.
+  #599 Thank you Gianfranco Costamagna for reporting.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
@@ -29,6 +45,8 @@ HEAD
 - Bug/Documentation: Fix incorrect example code that used 
   `websocketpp::lib::error_code` instead of `websocketpp::exception`. Thank you
   heretic13 for reporting
+- Bug: Fix uninitialized shared pointer in Asio transport test suite. #647
+  Thank you Alex Korotkin for reporting and a patch.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 

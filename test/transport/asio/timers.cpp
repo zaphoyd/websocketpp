@@ -140,7 +140,10 @@ typedef websocketpp::lib::shared_ptr<mock_con> connection_ptr;
 struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
     typedef websocketpp::transport::asio::endpoint<config> base;
 
-    mock_endpoint() {
+    mock_endpoint()
+        : alog(websocketpp::lib::make_shared<config::alog_type>())
+        , elog(websocketpp::lib::make_shared<config::elog_type>())
+    {
         alog->set_channels(websocketpp::log::alevel::all);
         base::init_logging(alog,elog);
         init_asio();
@@ -181,6 +184,8 @@ BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
     websocketpp::lib::thread timer(websocketpp::lib::bind(&run_test_timer,5000));
     dummy_server.detach();
     timer.detach();
+
+    sleep(1); // give the server thread some time to start
 
     mock_endpoint endpoint;
     endpoint.set_tls_init_handler(&on_tls_init);

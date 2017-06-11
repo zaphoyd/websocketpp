@@ -1116,17 +1116,10 @@ protected:
                 tec = socket_con_type::translate_ec(ec);
                 m_tec = ec;
 
-                if (tec == transport::error::tls_short_read) {
-                    // TLS short read at this point is somewhat expected if both
-                    // sides try and end the connection at the same time or if
-                    // SSLv2 is being used. In general there is nothing that can
-                    // be done here other than a low level development log.
-                } else {
-                    // all other errors are effectively pass through errors of
-                    // some sort so print some detail on the info channel for
-                    // library users to look up if needed.
-                    log_err(log::elevel::info,"asio async_shutdown",ec);
-                }
+                // all other errors are effectively pass through errors of
+				// some sort so print some detail on the info channel for
+				// library users to look up if needed.
+				log_err(log::elevel::info,"asio async_shutdown",ec);
             }
         } else {
             if (m_alog->static_test(log::alevel::devel)) {
