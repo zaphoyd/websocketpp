@@ -610,6 +610,9 @@ inline size_t prepare_masking_key(const masking_key_type& key) {
  * to zero and less than sizeof(size_t).
  */
 inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
+    if (offset == 0) {
+        return prepared_key;
+    }
     if (lib::net::is_little_endian()) {
         size_t temp = prepared_key << (sizeof(size_t)-offset)*8;
         return (prepared_key >> offset*8) | temp;
