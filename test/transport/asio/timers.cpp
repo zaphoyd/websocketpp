@@ -140,7 +140,10 @@ typedef websocketpp::lib::shared_ptr<mock_con> connection_ptr;
 struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
     typedef websocketpp::transport::asio::endpoint<config> base;
 
-    mock_endpoint() {
+    mock_endpoint()
+        : alog(websocketpp::lib::make_shared<config::alog_type>())
+        , elog(websocketpp::lib::make_shared<config::elog_type>())
+    {
         alog->set_channels(websocketpp::log::alevel::all);
         base::init_logging(alog,elog);
         init_asio();

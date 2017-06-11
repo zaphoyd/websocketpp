@@ -42,6 +42,8 @@ HEAD
 - Bug/Documentation: Fix incorrect example code that used 
   `websocketpp::lib::error_code` instead of `websocketpp::exception`. Thank you
   heretic13 for reporting
+- Bug: Fix uninitialized shared pointer in Asio transport test suite. #647
+  Thank you Alex Korotkin for reporting and a patch.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
