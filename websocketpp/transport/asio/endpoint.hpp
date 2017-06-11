@@ -88,12 +88,22 @@ public:
     /// Type of a shared pointer to an io_service work object
     typedef lib::shared_ptr<lib::asio::io_service::work> work_ptr;
 
+    /// Used to decide if the IPV6_V6ONLY socket option should be set,
+    /// and if so, to what value.
+    /// V6ONLY_DEFAULT means don't set it at all - leave it as the OS default.
+    enum v6only_option {
+        V6ONLY_DEFAULT = 0,
+        V6ONLY_ON = 1,
+        V6ONLY_OFF = 2
+    };
+    
     // generate and manage our own io_service
     explicit endpoint()
       : m_io_service(NULL)
       , m_external_io_service(false)
       , m_listen_backlog(lib::asio::socket_base::max_connections)
       , m_reuse_addr(false)
+      , m_v6only(V6ONLY_DEFAULT)
       , m_state(UNINITIALIZED)
     {
         //std::cout << "transport::asio::endpoint constructor" << std::endl;
@@ -134,6 +144,7 @@ public:
       , m_acceptor(src.m_acceptor)
       , m_listen_backlog(lib::asio::socket_base::max_connections)
       , m_reuse_addr(src.m_reuse_addr)
+      , m_v6only(src.m_v6only)
       , m_elog(src.m_elog)
       , m_alog(src.m_alog)
       , m_state(src.m_state)
@@ -348,6 +359,24 @@ public:
     void set_reuse_addr(bool value) {
         m_reuse_addr = value;
     }
+    
+    /// Specifies whether to set the IPV6_V6ONLY flag when opening listening sockets
+    /**
+     * Specifies whether or not to set the IPV6_V6ONLY socket option.
+     * Possible values are:
+     * - V6ONLY_DEFAULT - This is the default. Means do not set the option at all,
+     *      either to on or off. The OS default is used.
+     *      This is appropriate for IPv4 sockets.
+     * - V6ONLY_ON - set IPV6_V6ONLY to on. IPv6 sockets will not listen on IPv4.
+     * - V6ONLY_OFF - set IPV6_V6ONLY to off. IPv6 sockets will also listen on IPv4.
+     *
+     * New values affect future calls to listen only.
+     *
+     * @param option Whether or not to set the IPV6_V6ONLY option, and if so, to what value
+     */
+    void set_v6only_option(v6only_option option) {
+        m_v6only = option;
+    }
 
     /// Retrieve a reference to the endpoint's io_service
     /**
@@ -411,6 +440,9 @@ public:
         m_acceptor->open(ep.protocol(),bec);
         if (!bec) {
             m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
+        }
+        if (!bec && m_v6only != V6ONLY_DEFAULT) {
+            m_acceptor->set_option(lib::asio::ip::v6_only(m_v6only == V6ONLY_ON), bec);
         }
         if (!bec) {
             m_acceptor->bind(ep,bec);
@@ -1138,6 +1170,7 @@ private:
     // Network constants
     int                 m_listen_backlog;
     bool                m_reuse_addr;
+    v6only_option       m_v6only;
 
     lib::shared_ptr<elog_type> m_elog;
     lib::shared_ptr<alog_type> m_alog;
