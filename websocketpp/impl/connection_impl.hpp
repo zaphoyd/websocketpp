@@ -999,18 +999,15 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
                     "handle_read_frame: got invalid istate in closed state");
                 return;
             }
-        } else if (ecm == transport::error::tls_short_read) {
-            if (m_state == session::state::closed) {
-                // We expect to get a TLS short read if we try to read after the
-                // connection is closed. If this happens ignore and exit the
-                // read frame path.
-                terminate(lib::error_code());
-                return;
-            }
-            echannel = log::elevel::rerror;
         } else if (ecm == transport::error::action_after_shutdown) {
             echannel = log::elevel::info;
+        } else {
+            // TODO: more generally should we do something different here in the
+            // case that m_state is cosed? Are errors after the connection is
+            // already closed really an rerror?
         }
+        
+        
         
         log_err(echannel, "handle_read_frame", ecm);
         this->terminate(ecm);

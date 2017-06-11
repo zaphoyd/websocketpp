@@ -24,7 +24,12 @@ HEAD
   specified instead (This was the previous behavior). #596 #653 Thank you 
   Vinnie Falco and Gianfranco Costamagna for reporting.
 - Compatibility: Better error handling and logging in cases where extension
-  requests parse correctly but negotiation fails. 
+  requests parse correctly but negotiation fails.
+- Compatibility: Removed custom handling of SSL_R_SHORT_READ error condition.
+  This error code no longer exists in modern versions of OpenSSL and causes
+  a build error. It wasn't being used for anything particularly important
+  (slightly improving error reporting) and there isn't a great replacement.
+  #599 Thank you Gianfranco Costamagna for reporting.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
