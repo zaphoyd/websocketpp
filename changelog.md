@@ -17,6 +17,14 @@ HEAD
 - Compatibility: Update `telemetry_client` to use a slightly more cross platform
   method of sleeping. Should work on windows now. Thank you Meir Yanovich for
   reporting.
+- Compatibility: Updated permessage-deflate support to reflect that the zlib
+  library does not actually support a sliding window size of 256 bits. 
+  WebSocket++ will no longer negotiate 256 bit deflate windows. If the user
+  of the library tries to request a 256 bit window a 512 bit window will be
+  specified instead (This was the previous behavior). #596 #653 Thank you 
+  Vinnie Falco and Gianfranco Costamagna for reporting.
+- Compatibility: Better error handling and logging in cases where extension
+  requests parse correctly but negotiation fails. 
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 

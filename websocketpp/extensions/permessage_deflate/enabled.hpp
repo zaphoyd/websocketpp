@@ -46,7 +46,7 @@
 namespace websocketpp {
 namespace extensions {
 
-/// Implementation of the draft permessage-deflate WebSocket extension
+/// Implementation of RFC 7692, the permessage-deflate WebSocket extension
 /**
  * ### permessage-deflate interface
  *
@@ -174,18 +174,30 @@ namespace websocketpp {
 namespace extensions {
 namespace permessage_deflate {
 
-/// Default value for server_max_window_bits as defined by draft 17
+/// Default value for server_max_window_bits as defined by RFC 7692
 static uint8_t const default_server_max_window_bits = 15;
-/// Minimum value for server_max_window_bits as defined by draft 17
+/// Minimum value for server_max_window_bits as defined by RFC 7692
+/**
+ * NOTE: A value of 8 is not actually supported by zlib, the deflate
+ * library that WebSocket++ uses. To preserve backwards compatibility
+ * with RFC 7692 and previous versions of the library a value of 8
+ * is accepted by the library but will always be negotiated as 9.
+ */
 static uint8_t const min_server_max_window_bits = 8;
-/// Maximum value for server_max_window_bits as defined by draft 17
+/// Maximum value for server_max_window_bits as defined by RFC 7692
 static uint8_t const max_server_max_window_bits = 15;
 
-/// Default value for client_max_window_bits as defined by draft 17
+/// Default value for client_max_window_bits as defined by RFC 7692
 static uint8_t const default_client_max_window_bits = 15;
-/// Minimum value for client_max_window_bits as defined by draft 17
+/// Minimum value for client_max_window_bits as defined by RFC 7692
+/**
+ * NOTE: A value of 8 is not actually supported by zlib, the deflate
+ * library that WebSocket++ uses. To preserve backwards compatibility
+ * with RFC 7692 and previous versions of the library a value of 8
+ * is accepted by the library but will always be negotiated as 9.
+ */
 static uint8_t const min_client_max_window_bits = 8;
-/// Maximum value for client_max_window_bits as defined by draft 17
+/// Maximum value for client_max_window_bits as defined by RFC 7692
 static uint8_t const max_client_max_window_bits = 15;
 
 namespace mode {
@@ -372,7 +384,7 @@ public:
     /**
      * The bits setting is the base 2 logarithm of the maximum window size that
      * the server must use to compress outgoing messages. The permitted range
-     * is 8 to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB
+     * is 9 to 15 inclusive. 9 represents a 512 byte window and 15 a 32KiB
      * window. The default setting is 15.
      *
      * Mode Options:
@@ -386,6 +398,14 @@ public:
      * adjusted by the server. A server may unilaterally set this value without
      * client support.
      *
+     * NOTE: The permessage-deflate spec specifies that a value of 8 is allowed.
+     * Prior to version 0.8.0 a value of 8 was also allowed by this library.
+     * zlib, the deflate compression library that WebSocket++ uses has always
+     * silently adjusted a value of 8 to 9. In recent versions of zlib (1.2.9 
+     * and greater) a value of 8 is now explicitly rejected. WebSocket++ 0.8.0
+     * continues to perform the 8->9 conversion for backwards compatibility
+     * purposes but this should be considered deprecated functionality.
+     *
      * @param bits The size to request for the outgoing window size
      * @param mode The mode to use for negotiating this parameter
      * @return A status code
@@ -394,6 +414,12 @@ public:
         if (bits < min_server_max_window_bits || bits > max_server_max_window_bits) {
             return error::make_error_code(error::invalid_max_window_bits);
         }
+
+        // See note in doc comment above about what is happening here
+        if (bits == 8) {
+            bits = 9;
+        }
+
         m_server_max_window_bits = bits;
         m_server_max_window_bits_mode = mode;
 
@@ -403,8 +429,8 @@ public:
     /// Limit client LZ77 sliding window size
     /**
      * The bits setting is the base 2 logarithm of the window size that the
-     * client must use to compress outgoing messages. The permitted range is 8
-     * to 15 inclusive. 8 represents a 256 byte window and 15 a 32KiB window.
+     * client must use to compress outgoing messages. The permitted range is 9
+     * to 15 inclusive. 9 represents a 512 byte window and 15 a 32KiB window.
      * The default setting is 15.
      *
      * Mode Options:
@@ -417,6 +443,14 @@ public:
      * outgoing window size unilaterally. A server may only limit the client's
      * window size if the remote client supports that feature.
      *
+     * NOTE: The permessage-deflate spec specifies that a value of 8 is allowed.
+     * Prior to version 0.8.0 a value of 8 was also allowed by this library.
+     * zlib, the deflate compression library that WebSocket++ uses has always
+     * silently adjusted a value of 8 to 9. In recent versions of zlib (1.2.9 
+     * and greater) a value of 8 is now explicitly rejected. WebSocket++ 0.8.0
+     * continues to perform the 8->9 conversion for backwards compatibility
+     * purposes but this should be considered deprecated functionality.
+     *
      * @param bits The size to request for the outgoing window size
      * @param mode The mode to use for negotiating this parameter
      * @return A status code
@@ -425,6 +459,12 @@ public:
         if (bits < min_client_max_window_bits || bits > max_client_max_window_bits) {
             return error::make_error_code(error::invalid_max_window_bits);
         }
+
+        // See note in doc comment above about what is happening here
+        if (bits == 8) {
+            bits = 9;
+        }
+
         m_client_max_window_bits = bits;
         m_client_max_window_bits_mode = mode;
 
@@ -642,10 +682,16 @@ private:
      * client requested that we use.
      *
      * options:
-     * - decline (refuse to use the attribute)
-     * - accept (use whatever the client says)
-     * - largest (use largest possible value)
+     * - decline (ignore value, offer our default instead)
+     * - accept (use the value requested by the client)
+     * - largest (use largest value acceptable to both)
      * - smallest (use smallest possible value)
+     *
+     * NOTE: As a value of 8 is no longer explicitly supported by zlib but might
+     * be requested for negotiation by an older client/server, if the result of
+     * the negotiation would be to send a value of 8, a value of 9 is offered
+     * instead. This ensures that WebSocket++ will only ever negotiate connections
+     * with compression settings explicitly supported by zlib.
      *
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
@@ -678,6 +724,11 @@ private:
                 ec = make_error_code(error::invalid_mode);
                 m_server_max_window_bits = default_server_max_window_bits;
         }
+
+        // See note in doc comment
+        if (m_server_max_window_bits == 8) {
+            m_server_max_window_bits = 9;
+        }
     }
 
     /// Negotiate client_max_window_bits attribute
@@ -687,10 +738,16 @@ private:
      * negotiation mode.
      *
      * options:
-     * - decline (refuse to use the attribute)
-     * - accept (use whatever the client says)
-     * - largest (use largest possible value)
+     * - decline (ignore value, offer our default instead)
+     * - accept (use the value requested by the client)
+     * - largest (use largest value acceptable to both)
      * - smallest (use smallest possible value)
+     *
+     * NOTE: As a value of 8 is no longer explicitly supported by zlib but might
+     * be requested for negotiation by an older client/server, if the result of
+     * the negotiation would be to send a value of 8, a value of 9 is offered
+     * instead. This ensures that WebSocket++ will only ever negotiate connections
+     * with compression settings explicitly supported by zlib.
      *
      * @param [in] value The value of the attribute from the offer
      * @param [out] ec A reference to the error code to return errors via
@@ -726,6 +783,11 @@ private:
             default:
                 ec = make_error_code(error::invalid_mode);
                 m_client_max_window_bits = default_client_max_window_bits;
+        }
+
+        // See note in doc comment
+        if (m_client_max_window_bits == 8) {
+            m_client_max_window_bits = 9;
         }
     }
 

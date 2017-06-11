@@ -97,6 +97,11 @@ public:
     /**
      * This exists mostly because the code for requests and responses is
      * identical and I can't have virtual template methods.
+     *
+     * NOTE: this method makes assumptions that the permessage-deflate
+     * extension is the only one supported. If additional extensions are
+     * ever supported it should be reviewed carefully. Most cases where
+     * that assumption is made are explicitly noted.
      */
     template <typename header_type>
     err_str_pair negotiate_extensions_helper(header_type const & header) {
@@ -149,9 +154,26 @@ public:
                     } else {
                         // Note: this list will need commas if WebSocket++ ever
                         // supports more than one extension
-                        ret.second += neg_ret.second;
-                        m_permessage_deflate.init(base::m_server);
-                        continue;
+                        
+                        // Actually try to initialize the extension before we
+                        // deem negotiation complete
+                        ret.first = m_permessage_deflate.init(base::m_server);
+                        if (!ret.first) {
+
+                            // TODO: support multiple extensions.
+                            // right now, because there is only one extension 
+                            // supported, it failing to negotiate means we are
+                            // done with all negotiating. In the future if more
+                            // extensions are supported a better solution will
+                            // be needed here.
+                            break;
+                        } else {
+                            ret.second += neg_ret.second;
+
+                            // continue looking for more extensions
+                            continue;
+                        }
+                        
                     }
                 }
             }
