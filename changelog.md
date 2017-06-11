@@ -14,6 +14,9 @@ HEAD
 - Compatibility: Update `telemetry_client` to use a slightly more cross platform
   method of sleeping. Should work on windows now. Thank you Meir Yanovich for
   reporting.
+- Compatibility: Add 1014 close code and adds missing descriptions for codes
+  1012 and 1013. #589 Thank you jbwdevries and ronneke1996 for reporting and
+  patches.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
