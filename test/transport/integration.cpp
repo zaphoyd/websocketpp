@@ -399,6 +399,8 @@ BOOST_AUTO_TEST_CASE( pong_no_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
+    sleep(1); // give the server thread some time to start
+
     // Run a client that closes the connection after 1 seconds
     run_time_limited_client(c, "http://localhost:9005", 1, false);
 
@@ -422,7 +424,10 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
         websocketpp::lib::error_code(),::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
+    sleep(1); // give the server thread some time to start
+
     test_deadline_timer deadline(10);
+
     run_client(c, "http://localhost:9005",false);
 
     sthread.join();
@@ -440,7 +445,10 @@ BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_dummy_server,9005));
     sthread.detach();
 
+    sleep(1); // give the server thread some time to start
+
     test_deadline_timer deadline(10);
+
     run_client(c, "http://localhost:9005");
 }
 
@@ -456,6 +464,8 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
     test_deadline_timer deadline(10);
+
+    sleep(1); // give the server thread some time to start
 
     run_dummy_client("9005");
 
@@ -479,6 +489,8 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
     test_deadline_timer deadline(10);
+
+    sleep(1); // give the server thread some time to start
 
     run_client(c, "http://localhost:9005", false);
 
@@ -511,7 +523,9 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     test_deadline_timer deadline(10);
 
-    run_client(c, "http://localhost:9005",false);
+    sleep(1); // give the server thread some time to start
+
+    run_client(c, "http://localhost:9005", false);
 
     sthread.join();
 }
@@ -587,7 +601,9 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     test_deadline_timer deadline(5);
 
-    run_client(c, "http://localhost:9005",false);
+    sleep(1); // give the server thread some time to start
+
+    run_client(c, "http://localhost:9005", false);
 
     sthread.join();
 }
