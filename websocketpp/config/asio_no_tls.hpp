@@ -61,6 +61,7 @@ struct asio : public core {
         typedef type::response_type response_type;
         typedef websocketpp::transport::asio::basic_socket::endpoint
             socket_type;
+        typedef websocketpp::transport::asio::default_connector_policy connector_policy;
     };
 
     typedef websocketpp::transport::asio::endpoint<transport_config>

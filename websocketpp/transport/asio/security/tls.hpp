@@ -78,6 +78,51 @@ public:
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<lib::asio::ssl::context> context_ptr;
 
+    static socket_type::lowest_layer_type & get_raw_socket(socket_type & socket) {
+        return socket.lowest_layer();
+    }
+
+    static lib::asio::error_code cancel_socket(socket_type & socket) {
+        lib::asio::error_code ec;
+        socket.lowest_layer().cancel(ec);
+        return ec;
+    }
+
+    static socket_ptr clone_socket(io_service_ptr service, ptr connection) {
+        auto socket = lib::make_shared<socket_type>(
+                _WEBSOCKETPP_REF(*service), lib::ref(*connection->m_context)
+        );
+        if (connection->m_socket_init_handler) {
+            connection->m_socket_init_handler(connection->m_hdl, *socket);
+        }
+        pre_init(*socket, connection->m_is_server, connection->m_uri);
+        return socket;
+    }
+
+    static void pre_init(socket_type & socket,
+                         bool is_server,
+                         uri_ptr uri,
+                         init_handler callback = [](lib::error_code const & er) {}) {
+        // TODO: is this the best way to check whether this function is
+        //       available in the version of OpenSSL being used?
+        // TODO: consider case where host is an IP address
+#if OPENSSL_VERSION_NUMBER >= 0x90812f
+        if (!is_server) {
+            // For clients on systems with a suitable OpenSSL version, set the
+            // TLS SNI hostname header so connecting to TLS servers using SNI
+            // will work.
+            long res = SSL_set_tlsext_host_name(
+                    socket.native_handle(), uri->get_host().c_str());
+            if (!(1 == res)) {
+                callback(socket::make_error_code(socket::error::tls_failed_sni_hostname));
+                return;
+            }
+        }
+#endif
+
+        callback(lib::error_code());
+    }
+
     explicit connection() {
         //std::cout << "transport::asio::tls_socket::connection constructor"
         //          << std::endl;
@@ -118,6 +163,10 @@ public:
      */
     socket_type & get_socket() {
         return *m_socket;
+    }
+
+    socket_ptr get_socket_ptr() {
+        return m_socket;
     }
 
     /// Set the socket initialization handler
@@ -172,6 +221,7 @@ public:
             return s.str();
         }
     }
+
 protected:
     /// Perform one time initializations
     /**
@@ -233,23 +283,7 @@ protected:
      * @param callback Handler to call back with completion information
      */
     void pre_init(init_handler callback) {
-        // TODO: is this the best way to check whether this function is 
-        //       available in the version of OpenSSL being used?
-        // TODO: consider case where host is an IP address
-#if OPENSSL_VERSION_NUMBER >= 0x90812f
-        if (!m_is_server) {
-            // For clients on systems with a suitable OpenSSL version, set the
-            // TLS SNI hostname header so connecting to TLS servers using SNI
-            // will work.
-            long res = SSL_set_tlsext_host_name(
-                get_socket().native_handle(), m_uri->get_host().c_str());
-            if (!(1 == res)) {
-                callback(socket::make_error_code(socket::error::tls_failed_sni_hostname));
-            }
-        }
-#endif
-
-        callback(lib::error_code());
+        pre_init(*m_socket, m_is_server, m_uri, callback);
     }
 
     /// Post-initialize security policy
@@ -296,6 +330,12 @@ protected:
         m_hdl = hdl;
     }
 
+    void set_socket(socket_ptr socket) {
+        if (m_socket != socket) {
+            m_socket = socket;
+        }
+    }
+
     void handle_init(init_handler callback,lib::asio::error_code const & ec) {
         if (ec) {
             m_ec = socket::make_error_code(socket::error::tls_handshake_failed);
@@ -320,9 +360,7 @@ protected:
      * @return The error that occurred, if any.
      */
     lib::asio::error_code cancel_socket() {
-        lib::asio::error_code ec;
-        get_raw_socket().cancel(ec);
-        return ec;
+        return cancel_socket(*m_socket);
     }
 
     void async_shutdown(socket::shutdown_handler callback) {

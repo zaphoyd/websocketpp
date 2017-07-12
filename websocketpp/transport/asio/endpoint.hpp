@@ -40,11 +40,80 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace websocketpp {
 namespace transport {
 namespace asio {
 
+// Structure to hold the information about connection attempts
+// Is used by async_connect() implementation
+struct connection_attempt_info {
+    using ptr = lib::shared_ptr<connection_attempt_info>;
+
+    size_t attempts = 0;
+    bool connected = false;
+
+    explicit connection_attempt_info(size_t attempts)
+        : attempts(attempts) {}
+
+    bool is_last_connection_attempt() const {
+        return (!connected && attempts == 0);
+    }
+};
+
+// Returns container with the element provided in the argument
+class default_connector_policy {
+public:
+    using iterator_type = lib::asio::ip::tcp::resolver::iterator;
+    using iterator_container = std::vector<iterator_type>;
+
+    static iterator_container split(iterator_type iter) {
+        iterator_container container;
+        container.push_back(iter);
+        return container;
+    }
+};
+
+// Split endpoints based on their family own
+// The result is an container with two iterators on ipv4 endpoints and ipv6
+class rfc6555_connector_policy {
+public:
+    using iterator_type = lib::asio::ip::tcp::resolver::iterator;
+    using iterator_container = std::vector<iterator_type>;
+
+    static iterator_container split(iterator_type iter) {
+        iterator_type end;
+
+        using endpoint_type = decltype(iter->endpoint());
+        std::vector<endpoint_type> ipv4_endpoints;
+        std::vector<endpoint_type> ipv6_endpoints;
+
+        for (auto it = iter; it != end; ++it) {
+            if (it->endpoint().address().is_v4()) {
+                ipv4_endpoints.push_back(it->endpoint());
+            } else if (it->endpoint().address().is_v6()) {
+                ipv6_endpoints.push_back(it->endpoint());
+            }
+        }
+
+        iterator_container container;
+
+        auto insert = [&container, iter](const std::vector<endpoint_type> &endpoints) {
+            if (!endpoints.empty()) {
+                container.push_back(iterator_type::create(
+                    endpoints.begin(), endpoints.end(),
+                    iter->host_name(), iter->service_name()
+                ));
+            }
+        };
+
+        insert(ipv4_endpoints);
+        insert(ipv6_endpoints);
+
+        return container;
+    }
+};
 /// Asio based endpoint transport component
 /**
  * transport::asio::endpoint implements an endpoint transport component using
@@ -69,6 +138,13 @@ public:
     typedef typename socket_type::socket_con_type socket_con_type;
     /// Type of a shared pointer to the socket connection component
     typedef typename socket_con_type::ptr socket_con_ptr;
+    /// Type of the raw socket owned by socket connection component
+    typedef typename socket_con_type::socket_type raw_socket_type;
+    /// Type of a shared pointer to the raw socket owned by connection component
+    typedef typename socket_con_type::socket_ptr raw_socket_ptr;
+    /// Type of the strategy to split endpoint iterator to make connection in parallel
+    /// to the several endpoints
+    typedef typename config::connector_policy connector_policy;
 
     /// Type of the connection transport component associated with this
     /// endpoint transport component
@@ -89,7 +165,7 @@ public:
     typedef lib::shared_ptr<lib::asio::io_service::work> work_ptr;
 
     /// Type of socket pre-bind handler
-    typedef lib::function<boost::system::error_code(acceptor_ptr)> tcp_pre_bind_handler;
+    typedef lib::function<lib::asio::error_code(acceptor_ptr)> tcp_pre_bind_handler;
 
     // generate and manage our own io_service
     explicit endpoint()
@@ -998,46 +1074,43 @@ protected:
 
         m_alog->write(log::alevel::devel,"Starting async connect");
 
-        timer_ptr con_timer;
+        auto split_iterators = connector_policy::split(iterator);
+        auto connection_info = lib::make_shared<connection_attempt_info>(
+                std::distance(split_iterators.begin(), split_iterators.end()));
 
-        con_timer = tcon->set_timer(
-            config::timeout_connect,
-            lib::bind(
-                &type::handle_connect_timeout,
-                this,
-                tcon,
-                con_timer,
-                callback,
-                lib::placeholders::_1
-            )
-        );
-
-        if (config::enable_multithreading) {
-            lib::asio::async_connect(
-                tcon->get_raw_socket(),
-                iterator,
-                tcon->get_strand()->wrap(lib::bind(
-                    &type::handle_connect,
-                    this,
-                    tcon,
-                    con_timer,
-                    callback,
-                    lib::placeholders::_1
-                ))
-            );
+        if (connection_info->attempts == 0) {
+            callback(make_error_code(websocketpp::error::bad_connection));
         } else {
-            lib::asio::async_connect(
-                tcon->get_raw_socket(),
-                iterator,
-                lib::bind(
-                    &type::handle_connect,
-                    this,
-                    tcon,
-                    con_timer,
-                    callback,
-                    lib::placeholders::_1
-                )
-            );
+            for (const auto & it: split_iterators) {
+                auto socket = ((connection_info->attempts == 1) ?
+                               tcon->get_socket_ptr() :
+                               socket_con_type::clone_socket(m_io_service, tcon));
+
+                timer_ptr con_timer;
+                con_timer = tcon->set_timer(config::timeout_connect,
+                     [this, socket, connection_info, con_timer, callback] (lib::error_code const & ec) {
+                         handle_connect_timeout(socket, connection_info, con_timer, callback, ec);
+                 });
+
+                auto on_connected = [this, tcon, socket, con_timer, connection_info, callback]
+                        (lib::error_code const & ec, lib::asio::ip::tcp::resolver::iterator) {
+                    handle_connect(tcon, socket, con_timer, connection_info, callback, ec);
+                };
+
+                if (config::enable_multithreading) {
+                    lib::asio::async_connect(
+                            socket_con_type::get_raw_socket(*socket),
+                            it,
+                            tcon->get_strand()->wrap(on_connected)
+                    );
+                } else {
+                    lib::asio::async_connect(
+                            socket_con_type::get_raw_socket(*socket),
+                            it,
+                            on_connected
+                    );
+                }
+            }
         }
     }
 
@@ -1046,13 +1119,17 @@ protected:
      * The timer pointer is included to ensure the timer isn't destroyed until
      * after it has expired.
      *
-     * @param tcon Pointer to the transport connection that is being connected
+     * @param socket Pointer to the socket that is being connected
+     * @param connection_info Pointer to the structure that holds information about connection attempts
      * @param con_timer Pointer to the timer in question
      * @param callback The function to call back
      * @param ec A status code indicating an error, if any.
      */
-    void handle_connect_timeout(transport_con_ptr tcon, timer_ptr,
-        connect_handler callback, lib::error_code const & ec)
+    void handle_connect_timeout(raw_socket_ptr socket,
+                                connection_attempt_info::ptr connection_info,
+                                timer_ptr con_timer,
+                                connect_handler callback,
+                                lib::error_code const & ec)
     {
         lib::error_code ret_ec;
 
@@ -1069,13 +1146,22 @@ protected:
             ret_ec = make_error_code(transport::error::timeout);
         }
 
+        --connection_info->attempts;
+
         m_alog->write(log::alevel::devel,"TCP connect timed out");
-        tcon->cancel_socket_checked();
-        callback(ret_ec);
+        socket_con_type::cancel_socket(*socket);
+
+        if (connection_info->is_last_connection_attempt()) {
+            callback(ret_ec);
+        }
     }
 
-    void handle_connect(transport_con_ptr tcon, timer_ptr con_timer,
-        connect_handler callback, lib::asio::error_code const & ec)
+    void handle_connect(transport_con_ptr tcon,
+                        raw_socket_ptr socket,
+                        timer_ptr con_timer,
+                        connection_attempt_info::ptr connection_info,
+                        connect_handler callback,
+                        lib::asio::error_code const & ec)
     {
         if (ec == lib::asio::error::operation_aborted ||
             lib::asio::is_neg(con_timer->expires_from_now()))
@@ -1086,17 +1172,28 @@ protected:
 
         con_timer->cancel();
 
+        --connection_info->attempts;
+
         if (ec) {
-            log_err(log::elevel::info,"asio async_connect",ec);
-            callback(make_error_code(error::pass_through));
+            if (connection_info->is_last_connection_attempt()) {
+                log_err(log::elevel::info,"asio async_connect",ec);
+                callback(make_error_code(error::pass_through));
+            }
             return;
         }
 
+        if (connection_info->connected) {
+            m_alog->write(log::alevel::devel,"async_connect succedded but ignored");
+            return;
+        }
+
+        connection_info->connected = true;
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
                 "Async connect to "+tcon->get_remote_endpoint()+" successful.");
         }
 
+        tcon->set_socket(socket);
         callback(lib::error_code());
     }
 

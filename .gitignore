@@ -92,3 +92,5 @@ Makefile
 bin
 
 Testing/Temporary/CTestCostData.txt
+.idea/
+cmake-build-*

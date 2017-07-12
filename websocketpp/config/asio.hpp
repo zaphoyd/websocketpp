@@ -65,6 +65,7 @@ struct asio_tls : public core {
         typedef type::request_type request_type;
         typedef type::response_type response_type;
         typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
+        typedef websocketpp::transport::asio::default_connector_polity connector_policy;
     };
 
     typedef websocketpp::transport::asio::endpoint<transport_config>

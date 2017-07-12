@@ -1006,6 +1006,10 @@ protected:
         socket_con_type::set_handle(hdl);
     }
 
+    void set_socket(typename socket_con_type::socket_ptr socket) {
+        socket_con_type::set_socket(socket);
+    }
+
     /// Trigger the on_interrupt handler
     /**
      * This needs to be thread safe

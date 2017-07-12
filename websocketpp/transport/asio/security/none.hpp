@@ -71,6 +71,25 @@ public:
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<socket_type> socket_ptr;
 
+
+    static socket_type & get_raw_socket(socket_type & socket) {
+        return socket;
+    }
+
+    static lib::asio::error_code cancel_socket(socket_type & socket) {
+        lib::asio::error_code ec;
+        socket.cancel(ec);
+        return ec;
+    }
+
+    static socket_ptr clone_socket(io_service_ptr service, ptr connection) {
+        auto socket = lib::make_shared<socket_type>(lib::ref(*service));
+        if (connection->m_socket_init_handler) {
+            connection->m_socket_init_handler(connection->m_hdl, *socket);
+        }
+        return socket;
+    }
+
     explicit connection() : m_state(UNINITIALIZED) {
         //std::cout << "transport::asio::basic_socket::connection constructor"
         //          << std::endl;
@@ -125,6 +144,10 @@ public:
         return *m_socket;
     }
 
+    socket_ptr get_socket_ptr() {
+        return m_socket;
+    }
+
     /// Get the remote endpoint address
     /**
      * The iostream transport has no information about the ultimate remote
@@ -152,6 +175,8 @@ public:
             return s.str();
         }
     }
+
+
 protected:
     /// Perform one time initializations
     /**
@@ -236,6 +261,12 @@ protected:
         m_hdl = hdl;
     }
 
+    void set_socket(socket_ptr socket) {
+        if (socket != m_socket) {
+            m_socket = socket;
+        }
+    }
+
     /// Cancel all async operations on this socket
     /**
      * Attempts to cancel all async operations on this socket and reports any
@@ -246,9 +277,7 @@ protected:
      * @return The error that occurred, if any.
      */
     lib::asio::error_code cancel_socket() {
-        lib::asio::error_code ec;
-        m_socket->cancel(ec);
-        return ec;
+        return cancel_socket(get_raw_socket());
     }
 
     void async_shutdown(socket::shutdown_handler h) {
