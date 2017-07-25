@@ -89,8 +89,6 @@ namespace lib {
             return lib::chrono::milliseconds(duration);
         }
         
-        } // namespace error
-        } // namespace ssl
     } // namespace asio
     
 #else
