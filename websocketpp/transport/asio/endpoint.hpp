@@ -89,7 +89,7 @@ public:
     typedef lib::shared_ptr<lib::asio::io_service::work> work_ptr;
 
     /// Type of socket pre-bind handler
-    typedef lib::function<boost::system::error_code(acceptor_ptr)> tcp_pre_bind_handler;
+    typedef lib::function<lib::error_code(acceptor_ptr)> tcp_pre_bind_handler;
 
     // generate and manage our own io_service
     explicit endpoint()
