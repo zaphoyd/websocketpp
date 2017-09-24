@@ -147,8 +147,11 @@ BOOST_AUTO_TEST_CASE( listen_after_listen_failure ) {
     server1.listen(ep1, ec);
     BOOST_CHECK(!ec);
 
+    // This should return some sort of problem. Usually either "pass through" or
+    // a more specific address in use error. It is hard to capture the full range
+    // of 'correctly wrong' values.
     server2.listen(ep1, ec);
-    BOOST_REQUIRE_EQUAL(ec, make_error_code(pass_through));
+    BOOST_REQUIRE(ec);
 
     server2.listen(ep2, ec);
     BOOST_CHECK(!ec);
