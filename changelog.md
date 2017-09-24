@@ -14,13 +14,15 @@ HEAD
 - Improvement: Timers in transport integration tests should only fail if their
   own test times out, rather than any test. #643 Thank you Alex Korotkin for
   reporting and a patch.
+- Improvement: Preserve transport layer error codes in more cases, particularly
+  during calls to `endpoint::listen`. #652 Thank you vadz for reporting and
+  patches.
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
   with what the websocketpp is using. Thank you Flow86 for reporting and a
   patch.
 - Compatibility: Update `telemetry_client` to use a slightly more cross platform
   method of sleeping. Should work on windows now. Thank you Meir Yanovich for
   reporting.
-<<<<<<< HEAD
 - Compatibility: Updated permessage-deflate support to reflect that the zlib
   library does not actually support a sliding window size of 256 bits. 
   WebSocket++ will no longer negotiate 256 bit deflate windows. If the user
@@ -43,11 +45,9 @@ HEAD
 - Compatibility: Add 1014 close code and adds missing descriptions for codes
   1012 and 1013. #589 Thank you jbwdevries and ronneke1996 for reporting and
   patches.
-=======
 - Compatibility: Add hooks to support `mingw-std-threads` C++11 thread and mutex
   polyfill library as an alternative to Boost. #608 Thank you Peter Taylor for
   reporting and an initial patch.
->>>>>>> pr/608
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
