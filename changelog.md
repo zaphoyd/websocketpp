@@ -20,6 +20,7 @@ HEAD
 - Compatibility: Update `telemetry_client` to use a slightly more cross platform
   method of sleeping. Should work on windows now. Thank you Meir Yanovich for
   reporting.
+<<<<<<< HEAD
 - Compatibility: Updated permessage-deflate support to reflect that the zlib
   library does not actually support a sliding window size of 256 bits. 
   WebSocket++ will no longer negotiate 256 bit deflate windows. If the user
@@ -42,6 +43,11 @@ HEAD
 - Compatibility: Add 1014 close code and adds missing descriptions for codes
   1012 and 1013. #589 Thank you jbwdevries and ronneke1996 for reporting and
   patches.
+=======
+- Compatibility: Add hooks to support `mingw-std-threads` C++11 thread and mutex
+  polyfill library as an alternative to Boost. #608 Thank you Peter Taylor for
+  reporting and an initial patch.
+>>>>>>> pr/608
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
