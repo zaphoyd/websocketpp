@@ -1633,15 +1633,6 @@ private:
     session::http_state::value m_http_state;
 
     bool m_was_clean;
-
-    /// Whether or not this endpoint initiated the closing handshake.
-    bool                    m_closed_by_me;
-
-    /// ???
-    bool                    m_failed_by_me;
-
-    /// Whether or not this endpoint initiated the drop of the TCP connection
-    bool                    m_dropped_by_me;
 };
 
 } // namespace websocketpp
