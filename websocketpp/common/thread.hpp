@@ -40,10 +40,6 @@
         #ifndef _WEBSOCKETPP_CPP11_THREAD_
             #define _WEBSOCKETPP_CPP11_THREAD_
         #endif
-    #else
-        #ifndef _WEBSOCKETPP_MINGW_THREAD_
-            #define _WEBSOCKETPP_MINGW_THREAD_
-        #endif
     #endif
 #endif
 
@@ -55,14 +51,14 @@
     #endif
 #endif
 
-#ifdef _WEBSOCKETPP_CPP11_THREAD_
-    #include <thread>
-    #include <mutex>
-    #include <condition_variable>
-#elif defined(_WEBSOCKETPP_MINGW_THREAD_)
+#ifdef defined(_WEBSOCKETPP_MINGW_THREAD_)
     #include <mingw-threads/mingw.thread.h>
     #include <mingw-threads/mingw.mutex.h>
     #include <mingw-threads/mingw.condition_variable.h>
+#elif _WEBSOCKETPP_CPP11_THREAD_
+    #include <thread>
+    #include <mutex>
+    #include <condition_variable>
 #else
     #include <boost/thread.hpp>
     #include <boost/thread/mutex.hpp>
