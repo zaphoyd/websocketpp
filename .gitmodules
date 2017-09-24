@@ -1,3 +1,0 @@
-[submodule "MinGW-Threads"]
-	path = MinGW-Threads
-	url = https://github.com/meganz/mingw-std-threads
