@@ -72,11 +72,13 @@ To specify the type of an outgoing message, use the frame opcode values listed a
 ## Dependency Management
 
 ### Can WebSocket++ be used without Boost?
-Yes. WebSocket++ only uses Boost features as polyfills for C++11 language features and libraries. If you have a C++11 compiler and standard library you can use WebSocket++ without Boost. In most cases setting your build environment to use the C++11 (or later) language dialect is sufficient to enable this mode of use. 
+Yes. WebSocket++ only uses Boost features as polyfills for C++11 language features and libraries. If you have a C++11 compiler and standard library you can use WebSocket++ without Boost. In most cases setting your build environment to use the C++11 (or later) language dialect is sufficient to enable this mode of use.
 
 With less common compilers (and sometimes very recently release compilers) there may be specific issues with certain libraries that aren't automatically detected by the library. For these situations there are additional defines available to fine tune which C++11 libraries and features are used. TODO: more details about them.
 
 For the iostream/raw transport the C++11 standard library is sufficient. For the Asio based transports, there is no C++11 library that provides the networking capabilaties that Asio does. As such even with a C++11 build system, you will need a standalone copy of Asio to use if Boost Asio is not available.
+
+MinGW users who want to avoid Boost should also consult the nearby question about MinGW compatibility.
 
 ### Can WebSocket++ be used with standalone Asio
 Yes. The process is the same as used with standalone Asio itself. Define `ASIO_STANDALONE` before including Asio or WebSocket++ headers. You will need to download a copy of the Asio headers separately (http://www.think-async.com) and make sure they are in your build system's include path.
@@ -90,6 +92,9 @@ The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` h
 
 ### Build issues with TLS on recent versions of OS X
 Mac OS X ships a severely outdated version of the OpenSSL library. To securely use TLS with WebSocket++ on OS X you will need to install a modern version of OpenSSL via homebrew or compiling from source.
+
+### Can WebSocket++ be used with MinGW
+Generally, yes. Note that in C++11 mode MinGW does not currently support the C++11 STL `<thread>` library. WebSocket++ requires a thread/mutex library. Options include Boost thread (the default when a compatible C++11 `<thread>` can't be found) or `mingw-std-threads` (https://github.com/meganz/mingw-std-threads) by including those headers and defining `_WEBSOCKETPP_MINGW_THREAD_`.
 
 ## Compression
 
