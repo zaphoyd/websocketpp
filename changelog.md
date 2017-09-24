@@ -28,7 +28,7 @@ HEAD
   Vinnie Falco and Gianfranco Costamagna for reporting.
 - Compatibility: Better error handling and logging in cases where extension
   requests parse correctly but negotiation fails.
-- Compatibility: Removed custom handling of SSL_R_SHORT_READ error condition.
+- Compatibility: Removed custom handling of `SSL_R_SHORT_READ` error condition.
   This error code no longer exists in modern versions of OpenSSL and causes
   a build error. It wasn't being used for anything particularly important
   (slightly improving error reporting) and there isn't a great replacement.
@@ -62,6 +62,8 @@ HEAD
   Gendt for reporting and a patch.
 - Bug: Fix an undefined behavior issue performing a 64 bit wide shift on a 64
   bit value. #636 Thank you Gregor Jasny for reporting and a patch
+- Bug: Fix some compile issues with ASIO_STANDALONE. #662 #665 Thank you
+  chronoxor and Guillaume Egles for reporting and patches.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
@@ -75,7 +77,7 @@ HEAD
   Muzahid Hussain for reporting and related code. #458
 - Feature: Add support for subprotocols in Hybi00. Thank you Lukas Obermann
   for reporting and a patch. #518
-- Feature: Adds tcp_pre_bind handler to Asio transport. This allows setting
+- Feature: Adds `tcp_pre_bind handler` to Asio transport. This allows setting
   arbitrary socket options after the listen acceptor has been created but before
   the socket bind has been performed. #634 #439 Thank you Gregor Jasny for
   the patch.
