@@ -47,6 +47,8 @@ struct stub_config {
         con_msg_manager_type;
         
     static const size_t max_message_size = 16000000;
+
+    static const size_t min_send_buffer_size = 0;
 };
 
 struct processor_setup {

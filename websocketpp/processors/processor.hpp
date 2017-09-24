@@ -169,6 +169,7 @@ public:
       : m_secure(secure)
       , m_server(p_is_server)
       , m_max_message_size(config::max_message_size)
+      , m_min_send_buffer_size(config::min_send_buffer_size)
     {}
 
     virtual ~processor() {}
@@ -202,6 +203,19 @@ public:
      */
     void set_max_message_size(size_t new_value) {
         m_max_message_size = new_value;
+    }
+
+    /// Set minimum send buffer size.
+    /**
+     * Set minimum buffer size. When the minimum buffer size is reached the
+     * resume_send_handler will be called.
+     *
+     * @since 0.8.0
+     *
+     * @param new_value The value to set as the minmum buffer size.
+     */
+    void set_min_send_buffer_size(size_t new_value) {
+        m_min_send_buffer_size = new_value;
     }
 
     /// Returns whether or not the permessage_compress extension is implemented
@@ -399,6 +413,7 @@ protected:
     bool const m_secure;
     bool const m_server;
     size_t m_max_message_size;
+    size_t m_min_send_buffer_size;
 };
 
 } // namespace processor

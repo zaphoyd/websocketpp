@@ -97,6 +97,7 @@ public:
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
+      , m_min_send_buffer_size(config::min_send_buffer_size)
       , m_is_server(p_is_server)
     {
         m_alog->set_channels(config::alog_level);
@@ -138,12 +139,14 @@ public:
          , m_http_handler(std::move(o.m_http_handler))
          , m_validate_handler(std::move(o.m_validate_handler))
          , m_message_handler(std::move(o.m_message_handler))
+         , m_resume_send_handler(std::move(o.m_resume_send_handler))
 
          , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
          , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
          , m_pong_timeout_dur(o.m_pong_timeout_dur)
          , m_max_message_size(o.m_max_message_size)
          , m_max_http_body_size(o.m_max_http_body_size)
+         , m_min_send_buffer_size(o.m_min_send_buffer_size)
 
          , m_rng(std::move(o.m_rng))
          , m_is_server(o.m_is_server)         
@@ -324,6 +327,11 @@ public:
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
     }
+    void set_resume_send_handler(resume_send_handler h) {
+        m_alog->write(log::alevel::devel,"set_resume_send_handler");
+        scoped_lock_type guard(m_mutex);
+        m_resume_send_handler = h;
+    }
 
     //////////////////////////////////////////
     // Connection timeouts and other limits //
@@ -465,6 +473,19 @@ public:
      */
     void set_max_http_body_size(size_t new_value) {
         m_max_http_body_size = new_value;
+    }
+
+    /// Set minimum send buffer size.
+    /**
+     * Set minimum buffer size. When the minimum buffer size is reached the
+     * resume_send_handler will be called.
+     *
+     * @since 0.8.0
+     *
+     * @param new_value The value to set as the minmum buffer size.
+     */
+    void set_min_send_buffer_size(size_t new_value) {
+        m_min_send_buffer_size = new_value;
     }
 
     /*************************************/
@@ -677,12 +698,14 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
+    resume_send_handler         m_resume_send_handler;
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;
+    size_t                      m_min_send_buffer_size;
 
     rng_type m_rng;
 

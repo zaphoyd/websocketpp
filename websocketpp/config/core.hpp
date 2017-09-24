@@ -254,6 +254,15 @@ struct core {
     /// Global flag for enabling/disabling extensions
     static const bool enable_extensions = true;
 
+    /// Default minimum buffer size threshold.
+    /**
+     * Default value for notifying that the minimum amount of buffered bytes.
+     * has been reached..
+     *
+     * @since 0.8.0
+     */
+    static const size_t min_send_buffer_size = 0;
+
     /// Extension specific settings:
 
     /// permessage_compress extension
