@@ -501,29 +501,32 @@ public:
         lib::asio::error_code bec;
 
         m_acceptor->open(ep.protocol(),bec);
-        if (!bec) {
-            m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
-        }
-        if (!bec && m_tcp_pre_bind_handler) {
-            bec = m_tcp_pre_bind_handler(m_acceptor);
-        }
-        if (!bec) {
-            m_acceptor->bind(ep,bec);
-        }
-        if (!bec) {
-            m_acceptor->listen(m_listen_backlog,bec);
-        }
-        if (bec) {
-            if (m_acceptor->is_open()) {
-                m_acceptor->close();
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        // if a TCP pre-bind handler is present, run it
+        if (m_tcp_pre_bind_handler) {
+            ec = m_tcp_pre_bind_handler(m_acceptor);
+            if (ec) {
+                ec = clean_up_listen_after_error(ec);
+                return;
             }
-            log_err(log::elevel::info,"asio listen",bec);
-            ec = make_error_code(error::pass_through);
-        } else {
-            m_state = LISTENING;
-            ec = lib::error_code();
         }
+        
+        m_acceptor->bind(ep,bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        m_acceptor->listen(m_listen_backlog,bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        // Success
+        m_state = LISTENING;
+        ec = lib::error_code();
     }
+
+
 
     /// Set up endpoint for listening manually
     /**
@@ -828,7 +831,7 @@ public:
                 m_elog->write(log::elevel::info,
                     "asio handle_timer error: "+ec.message());
                 log_err(log::elevel::info,"asio handle_timer",ec);
-                callback(make_error_code(error::pass_through));
+                callback(socket_con_type::translate_ec(ec));
             }
         } else {
             callback(lib::error_code());
@@ -913,7 +916,7 @@ protected:
                 ret_ec = make_error_code(websocketpp::error::operation_canceled);
             } else {
                 log_err(log::elevel::info,"asio handle_accept",asio_ec);
-                ret_ec = make_error_code(error::pass_through);
+                ret_ec = socket_con_type::translate_ec(asio_ec);
             }
         }
 
@@ -1056,7 +1059,7 @@ protected:
 
         if (ec) {
             log_err(log::elevel::info,"asio async_resolve",ec);
-            callback(make_error_code(error::pass_through));
+            callback(socket_con_type::translate_ec(ec));
             return;
         }
 
@@ -1232,6 +1235,16 @@ private:
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
         m_elog->write(l,s.str());
+    }
+
+    /// Helper for cleaning up in the listen method after an error
+    template <typename error_type>
+    lib::error_code clean_up_listen_after_error(error_type const & ec) {
+        if (m_acceptor->is_open()) {
+            m_acceptor->close();
+        }
+        log_err(log::elevel::info,"asio listen",ec);
+        return socket_con_type::translate_ec(ec);
     }
 
     enum state {

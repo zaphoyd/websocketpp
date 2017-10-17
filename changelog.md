@@ -14,6 +14,9 @@ HEAD
 - Improvement: Timers in transport integration tests should only fail if their
   own test times out, rather than any test. #643 Thank you Alex Korotkin for
   reporting and a patch.
+- Improvement: Preserve transport layer error codes in more cases, particularly
+  during calls to `endpoint::listen`. #652 Thank you vadz for reporting and
+  patches.
 - Compatibility: Make sure the chrono library used by Boost/Asio is in sync
   with what the websocketpp is using. Thank you Flow86 for reporting and a
   patch.
@@ -28,7 +31,7 @@ HEAD
   Vinnie Falco and Gianfranco Costamagna for reporting.
 - Compatibility: Better error handling and logging in cases where extension
   requests parse correctly but negotiation fails.
-- Compatibility: Removed custom handling of SSL_R_SHORT_READ error condition.
+- Compatibility: Removed custom handling of `SSL_R_SHORT_READ` error condition.
   This error code no longer exists in modern versions of OpenSSL and causes
   a build error. It wasn't being used for anything particularly important
   (slightly improving error reporting) and there isn't a great replacement.
@@ -42,6 +45,9 @@ HEAD
 - Compatibility: Add 1014 close code and adds missing descriptions for codes
   1012 and 1013. #589 Thank you jbwdevries and ronneke1996 for reporting and
   patches.
+- Compatibility: Add hooks to support `mingw-std-threads` C++11 thread and mutex
+  polyfill library as an alternative to Boost. #608 Thank you Peter Taylor for
+  reporting and an initial patch.
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
@@ -60,6 +66,10 @@ HEAD
   caused message corruption when sending compressed messages from a different
   thread than the main I/O thread. #615 Thank you KyleNyenhuis and Pieter De 
   Gendt for reporting and a patch.
+- Bug: Fix an undefined behavior issue performing a 64 bit wide shift on a 64
+  bit value. #636 Thank you Gregor Jasny for reporting and a patch
+- Bug: Fix some compile issues with ASIO_STANDALONE. #662 #665 Thank you
+  chronoxor and Guillaume Egles for reporting and patches.
 
 0.7.0 - 2016-02-22
 - MINOR BREAKING SOCKET POLICY CHANGE: Asio transport socket policy method 
@@ -73,7 +83,7 @@ HEAD
   Muzahid Hussain for reporting and related code. #458
 - Feature: Add support for subprotocols in Hybi00. Thank you Lukas Obermann
   for reporting and a patch. #518
-- Feature: Adds tcp_pre_bind handler to Asio transport. This allows setting
+- Feature: Adds `tcp_pre_bind handler` to Asio transport. This allows setting
   arbitrary socket options after the listen acceptor has been created but before
   the socket bind has been performed. #634 #439 Thank you Gregor Jasny for
   the patch.
