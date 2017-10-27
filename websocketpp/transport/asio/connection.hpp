@@ -42,6 +42,9 @@
 
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
+// airtime: start
+#include <boost/lexical_cast.hpp>
+// airtime: end
 
 #include <sstream>
 #include <vector>
