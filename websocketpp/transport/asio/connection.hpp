@@ -42,6 +42,9 @@
 
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
+// airtime: start
+#include <boost/lexical_cast.hpp>
+// airtime: end
 
 #include <sstream>
 #include <vector>
@@ -988,6 +991,9 @@ protected:
 
     /// close and clean up the underlying socket
     void async_shutdown(shutdown_handler callback) {
+        // airtime: start
+        log_err_with_handle(log::elevel::info, "BXB-2143: async_shutdown");
+        // airtime: end
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
@@ -1049,6 +1055,10 @@ protected:
             ret_ec = make_error_code(transport::error::timeout);
         }
 
+        // airtime: start
+        log_err_with_handle(log::elevel::info, "BXB-2143: handle_async_shutdown_timeout");
+        // airtime: end
+
         m_alog.write(log::alevel::devel,
             "Asio transport socket shutdown timed out");
         socket_con_type::cancel_socket();
@@ -1058,6 +1068,9 @@ protected:
     void handle_async_shutdown(timer_ptr shutdown_timer, shutdown_handler
         callback, boost::system::error_code const & ec)
     {
+        // airtime: start
+        log_err_with_handle(log::elevel::info, "BXB-2143: handle_async_shutdown");
+        // airtime: end
         if (ec == boost::asio::error::operation_aborted ||
             shutdown_timer->expires_from_now().is_negative())
         {
@@ -1107,6 +1120,14 @@ private:
         s << msg << " error: " << ec << " (" << ec.message() << ")";
         m_elog.write(l,s.str());
     }
+
+    // airtime: start
+    void log_err_with_handle(log::level l, const char* msg) {
+      std::stringstream s;
+      s << msg << "(hdl = " << boost::lexical_cast<std::string>(m_connection_hdl.lock().get()) << ")";
+      m_elog.write(l, s.str());
+    }
+    // airtime: end
 
     // static settings
     const bool m_is_server;
