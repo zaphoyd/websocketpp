@@ -191,6 +191,7 @@ public:
 
         m_io_service = ptr;
         m_external_io_service = true;
+        m_listen_backlog = lib::asio::socket_base::max_connections;
         m_acceptor = lib::make_shared<lib::asio::ip::tcp::acceptor>(
             lib::ref(*m_io_service));
 
