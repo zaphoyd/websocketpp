@@ -51,6 +51,11 @@
     // C++11 compiler via the __cplusplus macro or the user/build system
     // supplies one of the two preprocessor defines below:
     
+    // This is defined to allow other WebSocket++ common headers to enable
+    // C++11 features when they are detected by this file rather than
+    // duplicating the above logic in every common header.
+    #define _WEBSOCKETPP_CPP11_INTERNAL_
+    
     // _WEBSOCKETPP_CPP11_STRICT_
     //
     // This define reports to WebSocket++ that 100% of the language and library
@@ -75,6 +80,12 @@
     #ifndef _WEBSOCKETPP_NULLPTR_TOKEN_
         #define _WEBSOCKETPP_NULLPTR_TOKEN_ 0
     #endif
+    #ifndef _WEBSOCKETPP_MOVE_SEMANTICS_
+        #define _WEBSOCKETPP_MOVE_SEMANTICS_
+    #endif
+    #ifndef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+        #define _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    #endif
     
     #ifndef __GNUC__
         // GCC as of version 4.9 (latest) does not support std::put_time yet.
@@ -94,6 +105,9 @@
             #if __has_feature(cxx_noexcept)
                 // clang feature detect says we have noexcept
                 #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
+            #elif defined(_MSC_VER) && _MSC_VER >= 1900
+            	// Visual Studio 2015+ has noexcept
+                #define _WEBSOCKETPP_NOEXCEPT_TOKEN_ noexcept
             #else
                 // assume we don't have noexcept
                 #define _WEBSOCKETPP_NOEXCEPT_TOKEN_
@@ -109,6 +123,9 @@
         #else
             #if __has_feature(cxx_constexpr)
                 // clang feature detect says we have constexpr
+                #define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
+            #elif defined(_MSC_VER) && _MSC_VER >= 1900
+            	// Visual Studio 2015+ has constexpr
                 #define _WEBSOCKETPP_CONSTEXPR_TOKEN_ constexpr
             #else
                 // assume we don't have constexpr
@@ -131,7 +148,7 @@
             #if __has_feature(cxx_nullptr)
                 // clang feature detect says we have nullptr
                 #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
-            #elif _MSC_VER >= 1600
+            #elif defined(_MSC_VER) &&_MSC_VER >= 1600
                 // Visual Studio version that has nullptr
                 #define _WEBSOCKETPP_NULLPTR_TOKEN_ nullptr
             #else

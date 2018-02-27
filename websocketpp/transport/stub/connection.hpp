@@ -28,13 +28,18 @@
 #ifndef WEBSOCKETPP_TRANSPORT_STUB_CON_HPP
 #define WEBSOCKETPP_TRANSPORT_STUB_CON_HPP
 
+#include <websocketpp/transport/stub/base.hpp>
+
+#include <websocketpp/transport/base/connection.hpp>
+
+#include <websocketpp/logger/levels.hpp>
+
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/common/platforms.hpp>
-#include <websocketpp/logger/levels.hpp>
 
-#include <websocketpp/transport/base/connection.hpp>
-#include <websocketpp/transport/stub/base.hpp>
+#include <string>
+#include <vector>
 
 namespace websocketpp {
 namespace transport {
@@ -68,6 +73,7 @@ public:
     typedef lib::shared_ptr<timer> timer_ptr;
 
     explicit connection(bool is_server, alog_type & alog, elog_type & elog)
+      : m_alog(alog), m_elog(elog)
     {
         m_alog.write(log::alevel::devel,"stub con transport constructor");
     }
@@ -96,6 +102,20 @@ public:
     bool is_secure() const {
         return false;
     }
+
+    /// Set uri hook
+    /**
+     * Called by the endpoint as a connection is being established to provide
+     * the uri being connected to to the transport layer.
+     *
+     * Implementation is optional and can be ignored if the transport has no
+     * need for this information.
+     *
+     * @since 0.6.0
+     *
+     * @param u The uri to set
+     */
+    void set_uri(uri_ptr) {}
 
     /// Set human readable remote endpoint address
     /**
@@ -156,7 +176,7 @@ protected:
      */
     void init(init_handler handler) {
         m_alog.write(log::alevel::devel,"stub connection init");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Initiate an async_read for at least num_bytes bytes into buf
@@ -183,11 +203,11 @@ protected:
      * @param handler The callback to invoke when the operation is complete or
      * ends in an error
      */
-    void async_read_at_least(size_t num_bytes, char *buf, size_t len,
+    void async_read_at_least(size_t num_bytes, char * buf, size_t len,
         read_handler handler)
     {
         m_alog.write(log::alevel::devel, "stub_con async_read_at_least");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented), 0);
     }
 
     /// Asyncronous Transport Write
@@ -204,7 +224,7 @@ protected:
      */
     void async_write(char const * buf, size_t len, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Asyncronous Transport Write (scatter-gather)
@@ -220,7 +240,7 @@ protected:
      */
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         m_alog.write(log::alevel::devel,"stub_con async_write buffer list");
-        handler(make_error_code(error::not_implimented));
+        handler(make_error_code(error::not_implemented));
     }
 
     /// Set Connection Handle
@@ -254,6 +274,8 @@ protected:
     }
 private:
     // member variables!
+    alog_type & m_alog;
+    elog_type & m_elog;
 };
 
 

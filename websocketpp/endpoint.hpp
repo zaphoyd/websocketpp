@@ -29,10 +29,11 @@
 #define WEBSOCKETPP_ENDPOINT_HPP
 
 #include <websocketpp/connection.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/version.hpp>
 
-#include <set>
+#include <string>
 
 namespace websocketpp {
 
@@ -85,7 +86,8 @@ public:
     // TODO: organize these
     typedef typename connection_type::termination_handler termination_handler;
 
-    typedef lib::shared_ptr<connection_weak_ptr> hdl_type;
+    // This would be ideal. Requires C++11 though
+    //friend connection;
 
     explicit endpoint(bool p_is_server)
       : m_alog(config::alog_level, log::channel_type_hint::access)
@@ -95,6 +97,7 @@ public:
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
+      , m_max_http_body_size(config::max_http_body_size)
       , m_is_server(p_is_server)
     {
         m_alog.set_channels(config::alog_level);
@@ -104,6 +107,56 @@ public:
 
         transport_type::init_logging(&m_alog, &m_elog);
     }
+
+
+    /// Destructor
+    ~endpoint<connection,config>() {}
+
+    #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+        // no copy constructor because endpoints are not copyable
+        endpoint(endpoint &) = delete;
+    
+        // no copy assignment operator because endpoints are not copyable
+        endpoint & operator=(endpoint const &) = delete;
+    #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+    #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+        /// Move constructor
+        endpoint(endpoint && o) 
+         : config::transport_type(std::move(o))
+         , config::endpoint_base(std::move(o))
+         , m_alog(std::move(o.m_alog))
+         , m_elog(std::move(o.m_elog))
+         , m_user_agent(std::move(o.m_user_agent))
+         , m_open_handler(std::move(o.m_open_handler))
+         
+         , m_close_handler(std::move(o.m_close_handler))
+         , m_fail_handler(std::move(o.m_fail_handler))
+         , m_ping_handler(std::move(o.m_ping_handler))
+         , m_pong_handler(std::move(o.m_pong_handler))
+         , m_pong_timeout_handler(std::move(o.m_pong_timeout_handler))
+         , m_interrupt_handler(std::move(o.m_interrupt_handler))
+         , m_http_handler(std::move(o.m_http_handler))
+         , m_validate_handler(std::move(o.m_validate_handler))
+         , m_message_handler(std::move(o.m_message_handler))
+
+         , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
+         , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
+         , m_pong_timeout_dur(o.m_pong_timeout_dur)
+         , m_max_message_size(o.m_max_message_size)
+         , m_max_http_body_size(o.m_max_http_body_size)
+
+         , m_rng(std::move(o.m_rng))
+         , m_is_server(o.m_is_server)         
+        {}
+
+    #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+        // no move assignment operator because of const member variables
+        endpoint & operator=(endpoint &&) = delete;
+    #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+    #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
+
 
     /// Returns the user agent string that this endpoint will use
     /**
@@ -351,9 +404,10 @@ public:
 
     /// Get default maximum message size
     /**
-     * Get the default maximum message size that will be used for new connections created
-     * by this endpoint. The maximum message size determines the point at which the
-     * connection will fail a connection with the message_too_big protocol error.
+     * Get the default maximum message size that will be used for new 
+     * connections created by this endpoint. The maximum message size determines
+     * the point at which the connection will fail a connection with the 
+     * message_too_big protocol error.
      *
      * The default is set by the max_message_size value from the template config
      *
@@ -365,9 +419,10 @@ public:
     
     /// Set default maximum message size
     /**
-     * Set the default maximum message size that will be used for new connections created
-     * by this endpoint. Maximum message size determines the point at which the connection
-     * will fail a connection with the message_too_big protocol error.
+     * Set the default maximum message size that will be used for new 
+     * connections created by this endpoint. Maximum message size determines the
+     * point at which the connection will fail a connection with the
+     * message_too_big protocol error.
      *
      * The default is set by the max_message_size value from the template config
      *
@@ -377,6 +432,40 @@ public:
      */
     void set_max_message_size(size_t new_value) {
         m_max_message_size = new_value;
+    }
+
+    /// Get maximum HTTP message body size
+    /**
+     * Get maximum HTTP message body size. Maximum message body size determines
+     * the point at which the connection will stop reading an HTTP request whose
+     * body is too large.
+     *
+     * The default is set by the max_http_body_size value from the template
+     * config
+     *
+     * @since 0.5.0
+     *
+     * @return The maximum HTTP message body size
+     */
+    size_t get_max_http_body_size() const {
+        return m_max_http_body_size;
+    }
+    
+    /// Set maximum HTTP message body size
+    /**
+     * Set maximum HTTP message body size. Maximum message body size determines
+     * the point at which the connection will stop reading an HTTP request whose
+     * body is too large.
+     *
+     * The default is set by the max_http_body_size value from the template
+     * config
+     *
+     * @since 0.5.1
+     *
+     * @param new_value The value to set as the maximum message size.
+     */
+    void set_max_http_body_size(size_t new_value) {
+        m_max_http_body_size = new_value;
     }
 
     /*************************************/
@@ -396,21 +485,21 @@ public:
 
     /// Pause reading of new data (exception free)
     /**
-     * Signals to the connection to halt reading of new data. While reading is paused, 
-     * the connection will stop reading from its associated socket. In turn this will 
-     * result in TCP based flow control kicking in and slowing data flow from the remote
-     * endpoint.
+     * Signals to the connection to halt reading of new data. While reading is 
+     * paused, the connection will stop reading from its associated socket. In
+     * turn this will result in TCP based flow control kicking in and slowing
+     * data flow from the remote endpoint.
      *
-     * This is useful for applications that push new requests to a queue to be processed
-     * by another thread and need a way to signal when their request queue is full without
-     * blocking the network processing thread.
+     * This is useful for applications that push new requests to a queue to be 
+     * processed by another thread and need a way to signal when their request
+     * queue is full without blocking the network processing thread.
      *
      * Use `resume_reading()` to resume.
      *
-     * If supported by the transport this is done asynchronously. As such reading may not
-     * stop until the current read operation completes. Typically you can expect to
-     * receive no more bytes after initiating a read pause than the size of the read 
-     * buffer.
+     * If supported by the transport this is done asynchronously. As such
+     * reading may not stop until the current read operation completes. 
+     * Typically you can expect to receive no more bytes after initiating a read
+     * pause than the size of the read buffer.
      *
      * If reading is paused for this connection already nothing is changed.
      */
@@ -421,8 +510,8 @@ public:
 
     /// Resume reading of new data (exception free)
     /**
-     * Signals to the connection to resume reading of new data after it was paused by
-     * `pause_reading()`.
+     * Signals to the connection to resume reading of new data after it was 
+     * paused by `pause_reading()`.
      *
      * If reading is not paused for this connection already nothing is changed.
      */
@@ -430,6 +519,35 @@ public:
 
     /// Resume reading of new data
     void resume_reading(connection_hdl hdl);
+
+    /// Send deferred HTTP Response
+    /**
+     * Sends an http response to an HTTP connection that was deferred. This will
+     * send a complete response including all headers, status line, and body
+     * text. The connection will be closed afterwards.
+     *
+     * Exception free variant
+     *
+     * @since 0.6.0
+     *
+     * @param hdl The connection to send the response on
+     * @param ec A status code, zero on success, non-zero otherwise
+     */
+    void send_http_response(connection_hdl hdl, lib::error_code & ec);
+        
+    /// Send deferred HTTP Response (exception free)
+    /**
+     * Sends an http response to an HTTP connection that was deferred. This will
+     * send a complete response including all headers, status line, and body
+     * text. The connection will be closed afterwards.
+     *
+     * Exception variant
+     *
+     * @since 0.6.0
+     *
+     * @param hdl The connection to send the response on
+     */
+    void send_http_response(connection_hdl hdl);
 
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
@@ -524,7 +642,6 @@ public:
      * @return the connection_ptr. May be NULL if the handle was invalid.
      */
     connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
-        scoped_lock_type lock(m_mutex);
         connection_ptr con = lib::static_pointer_cast<connection_type>(
             hdl.lock());
         if (!con) {
@@ -570,6 +687,7 @@ private:
     long                        m_close_handshake_timeout_dur;
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
+    size_t                      m_max_http_body_size;
 
     rng_type m_rng;
 

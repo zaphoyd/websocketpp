@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ENDPOINT_IMPL_HPP
 #define WEBSOCKETPP_ENDPOINT_IMPL_HPP
 
+#include <string>
+
 namespace websocketpp {
 
 template <typename connection, typename config>
@@ -78,6 +80,7 @@ endpoint<connection,config>::create_connection() {
     if (m_max_message_size != config::max_message_size) {
         con->set_max_message_size(m_max_message_size);
     }
+    con->set_max_http_body_size(m_max_http_body_size);
 
     lib::error_code ec;
 
@@ -140,7 +143,21 @@ void endpoint<connection,config>::resume_reading(connection_hdl hdl) {
     if (ec) { throw exception(ec); }
 }
 
+template <typename connection, typename config>
+void endpoint<connection,config>::send_http_response(connection_hdl hdl,
+    lib::error_code & ec)
+{
+    connection_ptr con = get_con_from_hdl(hdl,ec);
+    if (ec) {return;}
+    con->send_http_response(ec);
+}
 
+template <typename connection, typename config>
+void endpoint<connection,config>::send_http_response(connection_hdl hdl) {
+    lib::error_code ec;
+    send_http_response(hdl,ec);
+    if (ec) { throw exception(ec); }
+}
 
 template <typename connection, typename config>
 void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload,

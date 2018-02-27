@@ -28,7 +28,7 @@
 #ifndef WEBSOCKETPP_COMMON_TIME_HPP
 #define WEBSOCKETPP_COMMON_TIME_HPP
 
-#include <time.h>
+#include <ctime>
 
 namespace websocketpp {
 namespace lib {
@@ -40,7 +40,9 @@ namespace lib {
 /// Thread safe cross platform localtime
 inline std::tm localtime(std::time_t const & time) {
     std::tm tm_snapshot;
-#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+#if (defined(__MINGW32__) || defined(__MINGW64__))
+    memcpy(&tm_snapshot, ::localtime(&time), sizeof(std::tm));
+#elif (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
     localtime_s(&tm_snapshot, &time); 
 #else
     localtime_r(&time, &tm_snapshot); // POSIX  

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Peter Thorson. All rights reserved.
+ * Copyright (c) 2015, Peter Thorson. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -57,6 +57,35 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
     s.init_asio(&ios);
 }
 
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+BOOST_AUTO_TEST_CASE( move_construct_server_core ) {
+    websocketpp::server<websocketpp::config::core> s1;
+    
+    websocketpp::server<websocketpp::config::core> s2(std::move(s1));
+}
+
+/*
+// temporary disable because library doesn't pass
+BOOST_AUTO_TEST_CASE( emplace ) {
+    std::stringstream out1;
+    std::stringstream out2;
+    
+    std::vector<websocketpp::server<websocketpp::config::asio_tls>> v;
+    
+    v.emplace_back();
+    v.emplace_back();
+    
+    v[0].get_alog().set_ostream(&out1);
+    v[0].get_alog().set_ostream(&out2);
+    
+    v[0].get_alog().write(websocketpp::log::alevel::app,"devel0");
+    v[1].get_alog().write(websocketpp::log::alevel::app,"devel1");
+    BOOST_CHECK( out1.str().size() > 0 );
+    BOOST_CHECK( out2.str().size() > 0 );
+}*/
+
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
+
 struct endpoint_extension {
     endpoint_extension() : extension_value(5) {}
 
@@ -94,8 +123,33 @@ struct stub_config : public websocketpp::config::core {
 BOOST_AUTO_TEST_CASE( endpoint_extensions ) {
     websocketpp::server<stub_config> s;
 
-    BOOST_CHECK( s.extension_value == 5 );
-    BOOST_CHECK( s.extension_method() == 5 );
+    BOOST_CHECK_EQUAL( s.extension_value, 5 );
+    BOOST_CHECK_EQUAL( s.extension_method(), 5 );
 
-    BOOST_CHECK( s.is_server() == true );
+    BOOST_CHECK( s.is_server() );
+}
+
+BOOST_AUTO_TEST_CASE( listen_after_listen_failure ) {
+    using websocketpp::transport::asio::error::make_error_code;
+    using websocketpp::transport::asio::error::pass_through;
+
+    websocketpp::server<websocketpp::config::asio> server1;
+    websocketpp::server<websocketpp::config::asio> server2;
+
+    websocketpp::lib::error_code ec;
+
+    server1.init_asio();
+    server2.init_asio();
+
+    boost::asio::ip::tcp::endpoint ep1(boost::asio::ip::address::from_string("127.0.0.1"), 12345);
+    boost::asio::ip::tcp::endpoint ep2(boost::asio::ip::address::from_string("127.0.0.1"), 23456);
+
+    server1.listen(ep1, ec);
+    BOOST_CHECK(!ec);
+
+    server2.listen(ep1, ec);
+    BOOST_REQUIRE_EQUAL(ec, make_error_code(pass_through));
+
+    server2.listen(ep2, ec);
+    BOOST_CHECK(!ec);
 }

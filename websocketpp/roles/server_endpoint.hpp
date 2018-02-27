@@ -29,12 +29,12 @@
 #define WEBSOCKETPP_SERVER_ENDPOINT_HPP
 
 #include <websocketpp/endpoint.hpp>
+
 #include <websocketpp/logger/levels.hpp>
 
-#include <iostream>
+#include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
-
 
 /// Server endpoint role based on the given config
 /**
@@ -64,14 +64,34 @@ public:
     /// Type of the endpoint component of this server
     typedef endpoint<connection_type,config> endpoint_type;
 
+    friend class connection<config>;
+
     explicit server() : endpoint_type(true)
     {
         endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
     }
 
-    ~server() {
-        endpoint_type::cancel();
-    }
+    /// Destructor
+    ~server<config>() {}
+
+#ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    // no copy constructor because endpoints are not copyable
+    server<config>(server<config> &) = delete;
+    
+    // no copy assignment operator because endpoints are not copyable
+    server<config> & operator=(server<config> const &) = delete;
+#endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+    /// Move constructor
+    server<config>(server<config> && o) : endpoint<connection<config>,config>(std::move(o)) {}
+
+#ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    // no move assignment operator because of const member variables
+    server<config> & operator=(server<config> &&) = delete;
+#endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     /// Create and initialize a new connection
     /**
