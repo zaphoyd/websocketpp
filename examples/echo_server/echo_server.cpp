@@ -19,6 +19,13 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
               << " and message: " << msg->get_payload()
               << std::endl;
 
+    // check for a special command to instruct the server to stop listening so
+    // it can be cleanly exited.
+    if (msg->get_payload() == "stop-listening") {
+        s->stop_listening();
+        return;
+    }
+
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
     } catch (const websocketpp::lib::error_code& e) {
@@ -36,7 +43,7 @@ int main() {
         echo_server.set_access_channels(websocketpp::log::alevel::all);
         echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
-        // Initialize ASIO
+        // Initialize Asio
         echo_server.init_asio();
 
         // Register our message handler
@@ -50,10 +57,8 @@ int main() {
 
         // Start the ASIO io_service run loop
         echo_server.run();
-    } catch (const std::exception & e) {
+    } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;
-    } catch (websocketpp::lib::error_code e) {
-        std::cout << e.message() << std::endl;
     } catch (...) {
         std::cout << "other exception" << std::endl;
     }

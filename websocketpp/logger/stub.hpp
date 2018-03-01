@@ -28,10 +28,11 @@
 #ifndef WEBSOCKETPP_LOGGER_STUB_HPP
 #define WEBSOCKETPP_LOGGER_STUB_HPP
 
-#include <string>
+#include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/common/cpp11.hpp>
-#include <websocketpp/logger/levels.hpp>
+
+#include <string>
 
 namespace websocketpp {
 namespace log {
@@ -44,7 +45,7 @@ public:
      * @param hint A channel type specific hint for how to construct the logger
      */
     explicit stub(channel_type_hint::value) {}
-    
+
     /// Construct the logger
     /**
      * @param default_channels A set of channels to statically enable
@@ -55,16 +56,16 @@ public:
 
     /// Dynamically enable the given list of channels
     /**
-     * All operations on the stub logger are no-ops and all arguments are 
+     * All operations on the stub logger are no-ops and all arguments are
      * ignored
      *
      * @param channels The package of channels to enable
      */
     void set_channels(level) {}
-    
+
     /// Dynamically disable the given list of channels
     /**
-     * All operations on the stub logger are no-ops and all arguments are 
+     * All operations on the stub logger are no-ops and all arguments are
      * ignored
      *
      * @param channels The package of channels to disable
@@ -75,23 +76,23 @@ public:
     /**
      * Writing on the stub logger is a no-op and all arguments are ignored
      *
-     * @param channel The package of channels to write to
+     * @param channel The channel to write to
      * @param msg The message to write
      */
     void write(level, std::string const &) {}
-    
+
     /// Write a cstring message to the given channel
     /**
      * Writing on the stub logger is a no-op and all arguments are ignored
      *
-     * @param channel The package of channels to write to
+     * @param channel The channel to write to
      * @param msg The message to write
      */
     void write(level, char const *) {}
 
     /// Test whether a channel is statically enabled
     /**
-     * The stub logger has no channels so all arguments are ignored and 
+     * The stub logger has no channels so all arguments are ignored and
      * `static_test` always returns false.
      *
      * @param channel The package of channels to test
@@ -99,10 +100,10 @@ public:
     _WEBSOCKETPP_CONSTEXPR_TOKEN_ bool static_test(level) const {
         return false;
     }
-    
+
     /// Test whether a channel is dynamically enabled
     /**
-     * The stub logger has no channels so all arguments are ignored and 
+     * The stub logger has no channels so all arguments are ignored and
      * `dynamic_test` always returns false.
      *
      * @param channel The package of channels to test

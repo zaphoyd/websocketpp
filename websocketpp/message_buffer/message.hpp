@@ -43,7 +43,7 @@ namespace message_buffer {
  *
  * # connection_message_manager:
  * An object that manages all of the message_buffers associated with a given
- * connection. Impliments the get_message_buffer(size) method that returns
+ * connection. Implements the get_message_buffer(size) method that returns
  * a message buffer at least size bytes long.
  *
  * Message buffers are reference counted with shared ownership semantics. Once
@@ -54,7 +54,7 @@ namespace message_buffer {
  * in the manager.
  *
  * # endpoint_message_manager:
- * An object that manages connection_message_managers. Impliments the
+ * An object that manages connection_message_managers. Implements the
  * get_message_manager() method. This is used once by each connection to
  * request the message manager that they are supposed to use to manage message
  * buffers for their own use.
@@ -146,10 +146,10 @@ public:
 
     /// Set or clear the compression flag
     /**
-     * The compression flag is used to indicate whether or not the message is
-     * or should be compressed. Compression is not guaranteed. Both endpoints
-     * must support a compression extension and the connection must have had
-     * that extension negotiated in its handshake.
+     * Setting the compression flag indicates that the data in this message
+     * would benefit from compression. If both endpoints negotiate a compression
+     * extension WebSocket++ will attempt to compress messages with this flag.
+     * Setting this flag does not guarantee that the message will be compressed.
      *
      * @param value The value to set the compressed flag to
      */

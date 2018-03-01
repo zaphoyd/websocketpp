@@ -40,14 +40,16 @@
  *
  */
 
-#include <ctime>
-#include <iostream>
-#include <iomanip>
+#include <websocketpp/logger/levels.hpp>
 
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/stdint.hpp>
 #include <websocketpp/common/time.hpp>
-#include <websocketpp/logger/levels.hpp>
+
+#include <ctime>
+#include <iostream>
+#include <iomanip>
+#include <string>
 
 namespace websocketpp {
 namespace log {
@@ -56,27 +58,57 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(channel_type_hint::value h = 
+    basic<concurrency,names>(channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
-      
+
     basic<concurrency,names>(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, channel_type_hint::value h = 
+    basic<concurrency,names>(level c, channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
-    
+
     basic<concurrency,names>(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}
+
+    /// Destructor
+    ~basic<concurrency,names>() {}
+
+    /// Copy constructor
+    basic<concurrency,names>(basic<concurrency,names> const & other)
+     : m_static_channels(other.m_static_channels)
+     , m_dynamic_channels(other.m_dynamic_channels)
+     , m_out(other.m_out)
+    {}
+    
+#ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    // no copy assignment operator because of const member variables
+    basic<concurrency,names> & operator=(basic<concurrency,names> const &) = delete;
+#endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+    /// Move constructor
+    basic<concurrency,names>(basic<concurrency,names> && other)
+     : m_static_channels(other.m_static_channels)
+     , m_dynamic_channels(other.m_dynamic_channels)
+     , m_out(other.m_out)
+    {}
+
+#ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+    // no move assignment operator because of const member variables
+    basic<concurrency,names> & operator=(basic<concurrency,names> &&) = delete;
+#endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
+
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     void set_ostream(std::ostream * out = &std::cout) {
         m_out = out;
@@ -97,7 +129,12 @@ public:
         m_dynamic_channels &= ~channels;
     }
 
-    virtual void write(level channel, std::string const & msg) {
+    /// Write a string message to the given channel
+    /**
+     * @param channel The channel to write to
+     * @param msg The message to write
+     */
+    void write(level channel, std::string const & msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "
@@ -106,7 +143,12 @@ public:
         m_out->flush();
     }
 
-    virtual void write(level channel, char const * msg) {
+    /// Write a cstring message to the given channel
+    /**
+     * @param channel The channel to write to
+     * @param msg The message to write
+     */
+    void write(level channel, char const * msg) {
         scoped_lock_type lock(m_lock);
         if (!this->dynamic_test(channel)) { return; }
         *m_out << "[" << timestamp << "] "

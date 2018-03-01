@@ -36,13 +36,15 @@
     #include <netinet/in.h>
 #endif
 
+#include <websocketpp/common/stdint.hpp>
+
 namespace websocketpp {
 namespace lib {
 namespace net {
 
 inline bool is_little_endian() {
     short int val = 0x1;
-    char *ptr = (char*)&val;
+    char *ptr = reinterpret_cast<char *>(&val);
     return (ptr[0] == 1);
 }
 
