@@ -1,7 +1,7 @@
 //#ifndef _WEBSOCKETPP_CPP11_STL_
 //    #define _WEBSOCKETPP_CPP11_STL_
 //#endif
-
+/* 込込込込 込込込 */
 #include <random>
 #include <boost/timer/timer.hpp>
 
