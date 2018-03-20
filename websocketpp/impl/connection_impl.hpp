@@ -1754,7 +1754,7 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
     if (ec) {
         // there was an error actually shutting down the connection
-        log_err(log::elevel::devel,"handle_terminate",ec);
+        log_err(log::elevel::rerror,"handle_terminate",ec);
     }
 
     // clean shutdown
@@ -2335,7 +2335,8 @@ void connection<config>::log_fail_result()
     // WebSocket++ error code & reason
     s << " " << m_ec << " " << m_ec.message();
 
-    m_alog.write(log::alevel::fail,s.str());
+    // m_alog.write(log::alevel::fail,s.str());
+    m_elog.write(log::elevel::rerror,s.str());
 }
 
 template <typename config>
