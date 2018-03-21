@@ -861,7 +861,7 @@ protected:
 
         tcp::resolver::query query(host,port);
 
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
         m_elog->write(log::elevel::rerror,
             "starting async DNS resolve for "+host+":"+port);
 #endif
@@ -930,14 +930,14 @@ protected:
             if (ec == transport::error::operation_aborted) {
                 m_alog->write(log::alevel::devel,
                     "asio handle_resolve_timeout timer cancelled");
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
                 m_elog->write(log::elevel::rerror,
                     "asio handle_resolve_timeout timer cancelled");
 #endif
                 return;
             }
 
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             log_err(log::elevel::rerror,"asio handle_resolve_timeout",ec);
 #else
             log_err(log::elevel::devel,"asio handle_resolve_timeout",ec);
@@ -948,7 +948,7 @@ protected:
         }
 
         m_alog->write(log::alevel::devel,"DNS resolution timed out");
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
         m_elog->write(log::elevel::rerror,"DNS resolution timed out");
 #endif
         m_resolver->cancel();
@@ -963,7 +963,7 @@ protected:
             lib::asio::is_neg(dns_timer->expires_from_now()))
         {
             m_alog->write(log::alevel::devel,"async_resolve cancelled");
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             m_elog->write(log::elevel::rerror,"async_resolve cancelled");
 #endif
             return;
@@ -972,7 +972,7 @@ protected:
         dns_timer->cancel();
 
         if (ec) {
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             log_err(log::elevel::rerror,"asio async_resolve",ec);
 #else
             log_err(log::elevel::info,"asio async_resolve",ec);
@@ -1057,14 +1057,14 @@ protected:
             if (ec == transport::error::operation_aborted) {
                 m_alog->write(log::alevel::devel,
                     "asio handle_connect_timeout timer cancelled");
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
                 m_elog->write(log::elevel::rerror,
                     "asio handle_connect_timeout timer cancelled");
 #endif
                 return;
             }
 
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             log_err(log::elevel::rerror,"asio handle_connect_timeout",ec);
 #else
             log_err(log::elevel::devel,"asio handle_connect_timeout",ec);
@@ -1074,7 +1074,7 @@ protected:
             ret_ec = make_error_code(transport::error::timeout);
         }
 
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
         m_elog->write(log::elevel::rerror,"TCP connect timed out");
 #endif
         m_alog->write(log::alevel::devel,"TCP connect timed out");
@@ -1088,7 +1088,7 @@ protected:
         if (ec == lib::asio::error::operation_aborted ||
             lib::asio::is_neg(con_timer->expires_from_now()))
         {
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             m_elog->write(log::elevel::rerror,"async_connect cancelled");
 #endif
             m_alog->write(log::alevel::devel,"async_connect cancelled");
@@ -1098,7 +1098,7 @@ protected:
         con_timer->cancel();
 
         if (ec) {
-#ifdef AT_CHIOS_EXTRA_LOGGING
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
             log_err(log::elevel::rerror,"asio async_connect",ec);
 #else
             log_err(log::elevel::info,"asio async_connect",ec);
