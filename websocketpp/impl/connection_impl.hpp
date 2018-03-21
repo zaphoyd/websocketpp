@@ -2340,9 +2340,6 @@ void connection<config>::log_fail_result()
     s << " " << m_ec << " " << m_ec.message();
 
     m_alog.write(log::alevel::fail,s.str());
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-    m_elog.write(log::elevel::rerror,s.str());
-#endif
 }
 
 template <typename config>
