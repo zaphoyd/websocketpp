@@ -1754,7 +1754,11 @@ void connection<config>::handle_terminate(terminate_status tstat,
 
     if (ec) {
         // there was an error actually shutting down the connection
+#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
+        log_err(log::elevel::rerror,"handle_terminate",ec);
+#else
         log_err(log::elevel::devel,"handle_terminate",ec);
+#endif
     }
 
     // clean shutdown
