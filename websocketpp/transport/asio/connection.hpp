@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_TRANSPORT_ASIO_CON_HPP
 
 #include <websocketpp/transport/asio/base.hpp>
+#include <websocketpp/transport/asio/socks5.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>
 
@@ -189,8 +190,10 @@ public:
     void set_proxy(std::string const & uri, lib::error_code & ec) {
         // TODO: return errors for illegal URIs here?
         // TODO: should https urls be illegal for the moment?
-        m_proxy = uri;
-        m_proxy_data = lib::make_shared<proxy_data>();
+        m_proxy = lib::make_shared<websocketpp::uri>(uri);
+        m_proxy_data =
+            lib::make_shared<proxy_data>(
+                m_proxy->get_scheme() != "socks5" ? proxy_type::http : proxy_type::socks5);
         ec = lib::error_code();
     }
 
@@ -223,8 +226,12 @@ public:
         }
 
         // TODO: username can't contain ':'
-        std::string val = "Basic "+base64_encode(username + ":" + password);
-        m_proxy_data->req.replace_header("Proxy-Authorization",val);
+        if (m_proxy_data->type == proxy_type::http) {
+            std::string val = "Basic "+base64_encode(username + ":" + password);
+            m_proxy_data->req.replace_header("Proxy-Authorization",val);
+        } else {
+            m_proxy_data->sreq.set_basic_auth(username, password);
+        }
         ec = lib::error_code();
     }
 
@@ -264,7 +271,7 @@ public:
         if (ec) { throw exception(ec); }
     }
 
-    std::string const & get_proxy() const {
+    uri_ptr const & get_proxy() const {
         return m_proxy;
     }
 
@@ -433,16 +440,13 @@ protected:
      *
      * @return Status code indicating what errors occurred, if any
      */
-    lib::error_code proxy_init(std::string const & authority) {
+    lib::error_code proxy_init(uri_ptr uri) {
         if (!m_proxy_data) {
             return websocketpp::error::make_error_code(
                 websocketpp::error::invalid_state);
         }
-        m_proxy_data->req.set_version("HTTP/1.1");
-        m_proxy_data->req.set_method("CONNECT");
 
-        m_proxy_data->req.set_uri(authority);
-        m_proxy_data->req.replace_header("Host",authority);
+        m_proxy_data->init(uri);
 
         return lib::error_code();
     }
@@ -486,8 +490,12 @@ protected:
 
         // If we have a proxy set issue a proxy connect, otherwise skip to
         // post_init
-        if (!m_proxy.empty()) {
-            proxy_write(callback);
+        if (m_proxy) {
+            if (m_proxy_data->type == proxy_type::http) {
+                proxy_write(callback);
+            } else {
+                socks5_proxy_write(callback);
+            }
         } else {
             post_init(callback);
         }
@@ -594,7 +602,7 @@ protected:
         callback(ec);
     }
 
-    void proxy_write(init_handler callback) {
+   void proxy_write(init_handler callback) {
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,"asio connection proxy_write");
         }
@@ -607,10 +615,8 @@ protected:
         }
 
         m_proxy_data->write_buf = m_proxy_data->req.raw();
-
         m_bufs.push_back(lib::asio::buffer(m_proxy_data->write_buf.data(),
                                            m_proxy_data->write_buf.size()));
-
         m_alog->write(log::alevel::devel,m_proxy_data->write_buf);
 
         // Set a timer so we don't wait forever for the proxy to respond
@@ -692,9 +698,16 @@ protected:
             return;
         }
 
+        // get server reply
         proxy_read(callback);
     }
 
+    /// Proxy read callback
+    /**
+     * @param init_handler The function to call back
+     * @param ec The status code
+     * @param bytes_transferred The number of bytes read
+     */
     void proxy_read(init_handler callback) {
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,"asio connection proxy_read");
@@ -703,7 +716,6 @@ protected:
         if (!m_proxy_data) {
             m_elog->write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_read");
-            m_proxy_data->timer->cancel();
             callback(make_error_code(error::general));
             return;
         }
@@ -730,6 +742,248 @@ protected:
                     lib::placeholders::_1, lib::placeholders::_2
                 )
             );
+        }
+    }
+
+    /// SOCKS5 proxy read callback
+    /**
+     * @param init_handler The function to call back
+     * @param ec The status code
+     * @param bytes_transferred The number of bytes read
+     */
+    void socks5_proxy_read(init_handler callback) {
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,"asio connection socks5_proxy_read");
+        }
+
+        if (!m_proxy_data) {
+            m_elog->write(log::elevel::library,
+                "assertion failed: !m_proxy_data in asio::connection::socks5_proxy_read");
+            callback(make_error_code(error::general));
+            return;
+        }
+
+        std::vector<lib::asio::mutable_buffer> buf;
+        size_t min_read_size;
+        switch (m_proxy_data->sphase) {
+            case negotiation_phase::method_selection:
+                buf = m_proxy_data->srep.get_method_selection_buf();
+                min_read_size = buf.size();
+                break;
+            case negotiation_phase::basic_authentication:
+                buf = m_proxy_data->srep.get_basic_authentication_buf();
+                min_read_size = buf.size();
+                break;
+            case negotiation_phase::connect:
+                buf = m_proxy_data->srep.get_connect_buf();
+                min_read_size = m_proxy_data->srep.get_min_connect_size();
+                break;
+            default:
+                callback(make_error_code(error::general));
+                return;
+        }
+
+        if (config::enable_multithreading) {
+            lib::asio::async_read(
+                socket_con_type::get_next_layer(),
+                buf,
+                lib::asio::transfer_at_least(min_read_size),
+                m_strand->wrap(lib::bind(
+                    &type::handle_socks5_proxy_read, get_shared(),
+                    callback,
+                    lib::placeholders::_1, lib::placeholders::_2
+                ))
+            );
+        } else {
+            lib::asio::async_read(
+                socket_con_type::get_next_layer(),
+                buf,
+                lib::asio::transfer_at_least(min_read_size),
+                lib::bind(
+                    &type::handle_socks5_proxy_read, get_shared(),
+                    callback,
+                    lib::placeholders::_1, lib::placeholders::_2
+                )
+            );
+        }
+    }
+
+    void handle_socks5_proxy_write(init_handler callback,
+        lib::asio::error_code const & ec)
+    {
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,
+                "asio connection handle_socks5_proxy_write");
+        }
+
+        m_bufs.clear();
+
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == lib::asio::error::operation_aborted ||
+            lib::asio::is_neg(m_proxy_data->timer->expires_from_now()))
+        {
+            m_elog->write(log::elevel::devel,"write operation aborted");
+            return;
+        }
+
+        if (ec) {
+            log_err(log::elevel::info,"asio handle_socks5_proxy_write",ec);
+            m_proxy_data->timer->cancel();
+            callback(make_error_code(error::pass_through));
+            return;
+        }
+
+        socks5_proxy_read(callback);
+    }
+
+
+    void socks5_proxy_write(init_handler callback) {
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,"asio connection socks5_proxy_write");
+        }
+
+        if (!m_proxy_data) {
+            m_elog->write(log::elevel::library,
+                "assertion failed: !m_proxy_data in asio::connection::socks5_proxy_write");
+            callback(make_error_code(error::general));
+            return;
+        }
+
+        switch (m_proxy_data->sphase) {
+            case negotiation_phase::method_selection:
+                m_bufs.push_back(lib::asio::buffer(m_proxy_data->sreq.get_method_selection_buf()));
+                break;
+            case negotiation_phase::basic_authentication:
+                m_bufs.push_back(lib::asio::buffer(m_proxy_data->sreq.get_basic_authentication_buf()));
+                break;
+            case negotiation_phase::connect:
+                m_bufs.push_back(lib::asio::buffer(m_proxy_data->sreq.get_connect_buf()));
+                break;
+            default:
+                callback(make_error_code(error::general));
+                return;
+        }
+
+        // Set a timer so we don't wait forever for the proxy to respond
+        m_proxy_data->timer = this->set_timer(
+            m_proxy_data->timeout_proxy,
+            lib::bind(
+                &type::handle_proxy_timeout,
+                get_shared(),
+                callback,
+                lib::placeholders::_1
+            )
+        );
+
+        // Send proxy request
+        if (config::enable_multithreading) {
+            lib::asio::async_write(
+                socket_con_type::get_next_layer(),
+                m_bufs,
+                m_strand->wrap(lib::bind(
+                    &type::handle_socks5_proxy_write, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                ))
+            );
+        } else {
+            lib::asio::async_write(
+                socket_con_type::get_next_layer(),
+                m_bufs,
+                lib::bind(
+                    &type::handle_socks5_proxy_write, get_shared(),
+                    callback,
+                    lib::placeholders::_1
+                )
+            );
+        }
+    }
+
+    void handle_socks5_proxy_read(init_handler callback,
+        lib::asio::error_code const & ec, size_t)
+    {
+        if (m_alog->static_test(log::alevel::devel)) {
+            m_alog->write(log::alevel::devel,
+                "asio connection handle_socks5_proxy_read");
+        }
+
+        // Timer expired or the operation was aborted for some reason.
+        // Whatever aborted it will be issuing the callback so we are safe to
+        // return
+        if (ec == lib::asio::error::operation_aborted ||
+            lib::asio::is_neg(m_proxy_data->timer->expires_from_now()))
+        {
+            m_elog->write(log::elevel::devel,"read operation aborted");
+            return;
+        }
+
+        // At this point there is no need to wait for the timer anymore
+        m_proxy_data->timer->cancel();
+
+        if (ec) {
+            m_elog->write(log::elevel::info,
+                "asio handle_socks5_proxy_read error: "+ec.message());
+            callback(make_error_code(error::pass_through));
+        } else {
+            if (!m_proxy_data) {
+                m_elog->write(log::elevel::library,
+                    "assertion failed: !m_proxy_data in asio::connection::handle_socks5_proxy_read");
+                callback(make_error_code(error::general));
+                return;
+            }
+
+            switch (m_proxy_data->sphase) {
+                case negotiation_phase::method_selection:
+                    if (m_alog->static_test(log::alevel::devel)) {
+                        std::stringstream s;
+                        s << "asio handle_socks5_proxy_read: method selected: 0x"
+                          << std::hex << static_cast<unsigned int>(m_proxy_data->srep.get_method());
+                        m_alog->write(log::alevel::devel, s.str());
+                    }
+
+                    if (m_proxy_data->srep.get_method() == 0) {
+                        // no authentication
+                        m_proxy_data->sphase = negotiation_phase::connect;
+                    } else if (m_proxy_data->srep.get_method() == 2) {
+                        m_proxy_data->sphase = negotiation_phase::basic_authentication;
+                    } else {
+                        m_elog->write(log::elevel::info,
+                            "asio handle_socks5_proxy_read error: no method available");
+                        callback(make_error_code(error::general));
+                        return;
+                    }
+                    break;
+                case negotiation_phase::basic_authentication:
+                    if (m_proxy_data->srep.get_status()) {
+                        m_elog->write(log::elevel::info,
+                            "asio handle_socks5_proxy_read error: basic authentication failed");
+                        callback(make_error_code(error::general));
+                        return;
+                    }
+                    m_proxy_data->sphase = negotiation_phase::connect;
+                    break;
+                case negotiation_phase::connect:
+                    if (m_proxy_data->srep.get_reply()) {
+                        std::stringstream s;
+                        s << "asio handle_socks5_proxy_read error: connect failed: reply status: 0x"
+                          << static_cast<unsigned int>(m_proxy_data->srep.get_reply());
+                        m_elog->write(log::elevel::info, s.str());
+                        callback(make_error_code(error::general));
+                        return;
+                    }
+                    m_proxy.reset();
+                    m_proxy_data.reset();
+                    // Continue with post proxy initialization
+                    post_init(callback);
+                    return;
+                default:
+                    callback(make_error_code(error::general));
+                    return;
+            }
+
+            socks5_proxy_write(callback);
         }
     }
 
@@ -809,6 +1063,7 @@ protected:
 
             // free the proxy buffers and req/res objects as they aren't needed
             // anymore
+            m_proxy.reset();
             m_proxy_data.reset();
 
             // Continue with post proxy initialization
@@ -1157,18 +1412,50 @@ private:
     lib::shared_ptr<alog_type> m_alog;
     lib::shared_ptr<elog_type> m_elog;
 
-    struct proxy_data {
-        proxy_data() : timeout_proxy(config::timeout_proxy) {}
+    enum proxy_type {
+        http,
+        socks5
+    };
 
+    struct proxy_data {
+        proxy_data(proxy_type ptype)
+            : sphase(negotiation_phase::method_selection)
+            , timeout_proxy(config::timeout_proxy)
+            , type(ptype)
+        {}
+
+        void init(uri_ptr uri) {
+            // only SOCKS5 and HTTP proxies are implemented.
+            if (type == proxy_type::http) {
+                req.set_version("HTTP/1.1");
+                req.set_method("CONNECT");
+
+                const std::string authority = uri->get_authority();
+                req.set_uri(authority);
+                req.replace_header("Host",authority);
+            } else {
+                sreq.set_uri(uri);
+            }
+        }
+
+        // http proxy related data
         request_type req;
         response_type res;
         std::string write_buf;
         lib::asio::streambuf read_buf;
+
+        // socks5 proxy related data
+        socks5_request sreq;
+        socks5_reply srep;
+        negotiation_phase sphase;
+
         long timeout_proxy;
         timer_ptr timer;
+
+        enum proxy_type type;
     };
 
-    std::string m_proxy;
+    uri_ptr m_proxy;
     lib::shared_ptr<proxy_data> m_proxy_data;
 
     // transport resources
