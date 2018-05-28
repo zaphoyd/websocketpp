@@ -235,10 +235,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     else ()
         message (FATAL_ERROR "Failed to find required dependency: boost")
     endif ()
-
-    find_package(OpenSSL)
-    find_package(ZLIB)
 endif()
+
+find_package(OpenSSL)
+find_package(ZLIB)
 
 ############ Add projects
 
@@ -275,4 +275,37 @@ install (FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+  # CPack
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_SET_DESTDIR true)
+set(CPACK_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_VENDOR "websocketpp")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "websocketpp. Target ${CMAKE_SYSTEM_VERSION}")
+
+set(CPACK_PACKAGE_VERSION_MAJOR "${WEBSOCKETPP_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${WEBSOCKETPP_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${WEBSOCKETPP_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION "${WEBSOCKETPP_VERSION}")
+
+# set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Copyright.txt")
+
+set(CPACK_DEBIAN_FILE_NAME "websocketpp-${WEBSOCKETPP_VERSION}-${CMAKE_SYSTEM_PROCESSOR}.deb")
+set(CPACK_DEBIAN_PACKAGE_SECTION "admin")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "required")
+set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "build master")
+
+# autogenerate dependency information
+#set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "zlib")
+
+#set(CPACK_STRIP_FILES        "bin/MyExecutable")
+set(CPACK_SOURCE_STRIP_FILES "")
+
+include(CPack)
 
