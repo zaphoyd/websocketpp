@@ -1,4 +1,6 @@
 HEAD
+
+0.8.0 - 2018-07-12
 - Examples: Add `print_client` example. This demonstrates a minimal non-TLS
   client that connects to a server and prints out the messages it receives.
 - Examples: Add `print_client_tls` example. This demonstrates a minimal TLS
