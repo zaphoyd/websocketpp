@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
     websocketpp::http::parser::response response;
     websocketpp::processor::hybi00<websocketpp::http::parser::request,websocketpp::http::parser::response> p(false);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","WjN}|M(6");
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( non_get_method ) {
     websocketpp::http::parser::request r;
     websocketpp::processor::hybi00<websocketpp::http::parser::request,websocketpp::http::parser::response> p(false);
 
-    std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
+    std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","janelle!");
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
     websocketpp::http::parser::request r;
     websocketpp::processor::hybi00<websocketpp::http::parser::request,websocketpp::http::parser::response> p(false);
 
-    std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","janelle!");
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
     websocketpp::http::parser::request r;
     websocketpp::processor::hybi00<websocketpp::http::parser::request,websocketpp::http::parser::response> p(false);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","janelle!");
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
     websocketpp::http::parser::request r;
     websocketpp::processor::hybi00<websocketpp::http::parser::request,websocketpp::http::parser::response> p(false);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","janelle!");
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
     websocketpp::uri_ptr u;
     bool exception = false;
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
     r.replace_header("Sec-WebSocket-Key3","janelle!");
