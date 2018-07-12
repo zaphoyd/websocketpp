@@ -48,6 +48,11 @@ HEAD
 - Compatibility: Add hooks to support `mingw-std-threads` C++11 thread and mutex
   polyfill library as an alternative to Boost. #608 Thank you Peter Taylor for
   reporting and an initial patch.
+- Compatibility: Changed the handshake connection token to 'Upgrade' from
+  'upgrade'. Technically this header is supposed to be processed case
+  insensitively. In practice, there are browsers (such as Edge) that don't do
+  this and they tend to use the uppercase value used as an example in RFC6455.
+  Thank you Johann Bauer for reporting and a patch. #727
 - Bug: Store loggers in shared pointers to avoid crashes related to connections
   trying to write logs entries after their respective endpoint has been
   deallocated. Thank you Thalhammer for reporting and Jupp Müller for the 
