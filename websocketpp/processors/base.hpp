@@ -44,7 +44,7 @@ namespace processor {
 namespace constants {
 
 static char const upgrade_token[] = "websocket";
-static char const connection_token[] = "upgrade";
+static char const connection_token[] = "Upgrade";
 static char const handshake_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 } // namespace constants
