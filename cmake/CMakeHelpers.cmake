@@ -79,12 +79,9 @@ macro (final_target)
                  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
     endif ()
 
-    # install headers, directly from current source dir and look for subfolders with headers
-    file (GLOB_RECURSE TARGET_INSTALL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
-    foreach (hppfile ${TARGET_INSTALL_HEADERS})
-      get_filename_component (currdir ${hppfile} PATH)
-      install (FILES ${hppfile} DESTINATION "include/${TARGET_NAME}/${currdir}")
-    endforeach()
+    install (DIRECTORY ${CMAKE_SOURCE_DIR}/${TARGET_NAME}
+             DESTINATION include/
+             FILES_MATCHING PATTERN "*.hpp*")
 endmacro ()
 
 macro (link_boost)
