@@ -1,5 +1,13 @@
 HEAD
 
+0.8.1 - 2018-07-16
+Note: This release does not change library behavior. It only corrects issues
+in the installer and test system.
+- Test Suite: Adjust test suite to match behavior introduced in 0.8.0. Thank
+  you Gianfranco Costamagna for reporting and a patch. #731
+- CMake: Update cmake installer to only install library files globally.
+  Thank you Gianfraco Costamanga for reporting and a patch. #732
+
 0.8.0 - 2018-07-12
 - Examples: Add `print_client` example. This demonstrates a minimal non-TLS
   client that connects to a server and prints out the messages it receives.
