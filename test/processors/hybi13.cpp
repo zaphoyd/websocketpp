@@ -120,7 +120,7 @@ struct processor_setup_ext {
 BOOST_AUTO_TEST_CASE( exact_match ) {
     processor_setup env(true);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 
     env.p.process_handshake(env.req,"",env.res);
 
-    BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "upgrade");
+    BOOST_CHECK_EQUAL(env.res.get_header("Connection"), "Upgrade");
     BOOST_CHECK_EQUAL(env.res.get_header("Upgrade"), "websocket");
     BOOST_CHECK_EQUAL(env.res.get_header("Sec-WebSocket-Accept"), "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 }
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 BOOST_AUTO_TEST_CASE( non_get_method ) {
     processor_setup env(true);
 
-    std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
+    std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE( non_get_method ) {
 BOOST_AUTO_TEST_CASE( old_http_version ) {
     processor_setup env(true);
 
-    std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
     processor_setup env(true);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
 BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
     processor_setup env(true);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
 BOOST_AUTO_TEST_CASE( bad_host ) {
     processor_setup env(true);
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
     env.req.consume(handshake.c_str(),handshake.size());
 

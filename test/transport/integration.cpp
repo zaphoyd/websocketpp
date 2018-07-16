@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
 
 BOOST_AUTO_TEST_CASE( pause_reading ) {
     iostream_server s;
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
     char buffer[2] = { char(0x81), char(0x80) };
 
     // suppress output (it needs a place to go to avoid error but we don't care what it is)
