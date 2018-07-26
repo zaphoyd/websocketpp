@@ -268,7 +268,7 @@ configure_package_config_file(websocketpp-config.cmake.in
 )
 write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
   VERSION ${WEBSOCKETPP_VERSION}
-  COMPATIBILITY ExactVersion)
+  COMPATIBILITY AnyNewerVersion)
 
 # Install the websocketpp-config.cmake and websocketpp-configVersion.cmake
 install (FILES
