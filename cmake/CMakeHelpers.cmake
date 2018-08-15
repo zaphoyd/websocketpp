@@ -79,7 +79,7 @@ macro (final_target)
                  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
     endif ()
 
-    install (DIRECTORY ${CMAKE_SOURCE_DIR}/${TARGET_NAME}
+    install (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
              DESTINATION include/
              FILES_MATCHING PATTERN "*.hpp*")
 endmacro ()
