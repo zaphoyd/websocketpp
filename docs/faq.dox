@@ -55,7 +55,7 @@ If you handle errors from methods like send, ping, close, etc correctly then you
 
 Normally, for security purposes, operating systems prevent programs from listening on sockets created by other programs. When your program crashes and restarts, the new instance is a different program from the perspective of the operating system. As such it can’t listen on the socket address/port that the previous program was using until after a timeout occurs to make sure the old program was done with it.
 
-The the first step for handling this is to make sure that you provide a method (signal handler, admin websocket message, etc) to perform a clean server shutdown. There is a question elsewhere in this FAQ that describes the steps necessary for this.
+The first step for handling this is to make sure that you provide a method (signal handler, admin websocket message, etc) to perform a clean server shutdown. There is a question elsewhere in this FAQ that describes the steps necessary for this.
 
 The clean close strategy won't help in the case of crashes or other abnormal closures. An option to consider for these cases is the use of the SO_REUSEADDR socket option. This instructs the OS to not request an exclusive lock on the socket. This means that after your program crashes the replacement you start can immediately listen on that address/port combo again.
 
