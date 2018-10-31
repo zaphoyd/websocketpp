@@ -266,6 +266,8 @@ configure_package_config_file(websocketpp-config.cmake.in
   INSTALL_DESTINATION "${INSTALL_CMAKE_DIR}"
   NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
+# Disable check for same 32/64bit-ness in websocketpp-configVersion.cmake by setting CMAKE_SIZEOF_VOID_P
+set (CMAKE_SIZEOF_VOID_P "")
 write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
   VERSION ${WEBSOCKETPP_VERSION}
   COMPATIBILITY ExactVersion)
