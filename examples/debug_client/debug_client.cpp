@@ -37,6 +37,7 @@
 #include <chrono>
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
+typedef websocketpp::client<websocketpp::config::asio_tls_client> client_tls;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -46,9 +47,11 @@ using websocketpp::lib::bind;
 typedef websocketpp::config::asio_tls_client::message_type::ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 typedef client::connection_ptr connection_ptr;
+typedef client_tls::connection_ptr connection_ptr_tls;
 
 
 
+template <typename T1, typename T2>
 class perftest {
 public:
     typedef perftest type;
@@ -63,16 +66,20 @@ public:
 
         // Register our handlers
         m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
-        //m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
+        secure_handler();
         m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
         m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
         m_endpoint.set_close_handler(bind(&type::on_close,this,::_1));
         m_endpoint.set_fail_handler(bind(&type::on_fail,this,::_1));
     }
 
+    void secure_handler() {
+        // empty dummy, override via template
+    }
+
     void start(std::string uri) {
         websocketpp::lib::error_code ec;
-        client::connection_ptr con = m_endpoint.get_connection(uri, ec);
+        T2 con = m_endpoint.get_connection(uri, ec);
 
         if (ec) {
             m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
@@ -108,7 +115,7 @@ public:
     }
 
     void on_fail(websocketpp::connection_hdl hdl) {
-        client::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
+        T2 con = m_endpoint.get_con_from_hdl(hdl);
         
         std::cout << "Fail handler" << std::endl;
         std::cout << con->get_state() << std::endl;
@@ -137,7 +144,7 @@ public:
         std::cout << "Close: " << std::chrono::duration_cast<dur_type>(m_close-m_start).count() << std::endl;
     }
 private:
-    client m_endpoint;
+    T1 m_endpoint;
 
     std::chrono::high_resolution_clock::time_point m_start;
     std::chrono::high_resolution_clock::time_point m_socket_init;
@@ -147,16 +154,41 @@ private:
     std::chrono::high_resolution_clock::time_point m_close;
 };
 
+template<>
+void perftest<client, connection_ptr>::secure_handler() {
+    // NOP
+    // this template is explicit to show that this code is reached
+    std::cout << "perftest::secure_handler() (insecure)" << std::endl;
+}
+
+template<>
+void perftest<client_tls, connection_ptr_tls>::secure_handler() {
+    // show that this code is reached
+    std::cout << "perftest::secure_handler() (secure)" << std::endl;
+    m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
+}
+
+
 int main(int argc, char* argv[]) {
     std::string uri = "wss://echo.websocket.org";
 
-    if (argc == 2) {
+    if (argc >= 2) {
         uri = argv[1];
     }
 
+    bool is_secure = (uri.find("wss://", 0) == 0);
+
+    std::cout << "Trying to connect to '" << uri << "' (" << (is_secure ? "" : "not ") << "secure)" << std::endl;
+
     try {
-        perftest endpoint;
-        endpoint.start(uri);
+        if (is_secure) {
+            perftest<client_tls, connection_ptr_tls> endpoint;
+            endpoint.start(uri);
+        }
+        else {
+            perftest<client, connection_ptr> endpoint;
+            endpoint.start(uri);
+        }
     } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;
     } catch (std::exception const & e) {
