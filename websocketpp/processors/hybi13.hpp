@@ -555,7 +555,7 @@ public:
         std::fill_n(
             m_extended_header.bytes,
             frame::MAX_EXTENDED_HEADER_LENGTH,
-            0x00
+            uint8_t{}
         );
     }
 

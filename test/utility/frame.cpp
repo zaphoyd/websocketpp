@@ -391,15 +391,15 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask ) {
     // One call
     size_t pkey,pkey_temp;
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(input,16,0x00);
-    std::fill_n(output,16,0x00);
+    std::fill_n(input,16,uint8_t{});
+    std::fill_n(output,16,uint8_t{});
     frame::word_mask_circ(input,output,15,pkey);
     BOOST_CHECK( std::equal(output,output+16,masked) );
 
     // calls not split on word boundaries
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(input,16,0x00);
-    std::fill_n(output,16,0x00);
+    std::fill_n(input,16,uint8_t{});
+    std::fill_n(output,16,uint8_t{});
 
     pkey_temp = frame::word_mask_circ(input,output,7,pkey);
     BOOST_CHECK( std::equal(output,output+7,masked) );
@@ -428,15 +428,15 @@ BOOST_AUTO_TEST_CASE( continuous_byte_mask ) {
     // One call
     size_t pkey,pkey_temp;
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(input,16,0x00);
-    std::fill_n(output,16,0x00);
+    std::fill_n(input,16,uint8_t{});
+    std::fill_n(output,16,uint8_t{});
     frame::byte_mask_circ(input,output,15,pkey);
     BOOST_CHECK( std::equal(output,output+16,masked) );
 
     // calls not split on word boundaries
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(input,16,0x00);
-    std::fill_n(output,16,0x00);
+    std::fill_n(input,16,uint8_t{});
+    std::fill_n(output,16,uint8_t{});
 
     pkey_temp = frame::byte_mask_circ(input,output,7,pkey);
     BOOST_CHECK( std::equal(output,output+7,masked) );
@@ -464,13 +464,13 @@ BOOST_AUTO_TEST_CASE( continuous_word_mask_inplace ) {
     // One call
     size_t pkey,pkey_temp;
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(buffer,16,0x00);
+    std::fill_n(buffer,16,uint8_t{});
     frame::word_mask_circ(buffer,15,pkey);
     BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
 
     // calls not split on word boundaries
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(buffer,16,0x00);
+    std::fill_n(buffer,16,uint8_t{});
 
     pkey_temp = frame::word_mask_circ(buffer,7,pkey);
     BOOST_CHECK( std::equal(buffer,buffer+7,masked) );
@@ -498,13 +498,13 @@ BOOST_AUTO_TEST_CASE( continuous_byte_mask_inplace ) {
     // One call
     size_t pkey,pkey_temp;
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(buffer,16,0x00);
+    std::fill_n(buffer,16,uint8_t{});
     frame::byte_mask_circ(buffer,15,pkey);
     BOOST_CHECK( std::equal(buffer,buffer+16,masked) );
 
     // calls not split on word boundaries
     pkey = frame::prepare_masking_key(key);
-    std::fill_n(buffer,16,0x00);
+    std::fill_n(buffer,16,uint8_t{});
 
     pkey_temp = frame::byte_mask_circ(buffer,7,pkey);
     BOOST_CHECK( std::equal(buffer,buffer+7,masked) );
