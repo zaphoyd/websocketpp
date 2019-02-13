@@ -149,7 +149,7 @@ public:
         response.assign((std::istreambuf_iterator<char>(file)),
                         std::istreambuf_iterator<char>());
     
-        con->set_body(response);
+        con->set_body(std::move(response));
         con->set_status(websocketpp::http::status_code::ok);
     }
 
