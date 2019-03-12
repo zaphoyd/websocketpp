@@ -86,11 +86,11 @@ class category : public lib::error_category {
     public:
     category() {}
 
-    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp.transport.iostream";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case general:
                 return "Generic iostream transport policy error";

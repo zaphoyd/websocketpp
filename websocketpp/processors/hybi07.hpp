@@ -61,12 +61,12 @@ public:
      * @param [in] subprotocols The list of subprotocols to request
      */
     lib::error_code client_handshake_request(request_type &, uri_ptr,
-        std::vector<std::string> const &) const
+        std::vector<std::string> const &) const override
     {
         return error::make_error_code(error::no_protocol_support);
     }
 
-    int get_version() const {
+    int get_version() const override {
         return 7;
     }
 private:

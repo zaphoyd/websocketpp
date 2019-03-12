@@ -293,7 +293,7 @@ namespace http {
 
         ~exception() throw() {}
 
-        virtual const char* what() const throw() {
+        virtual const char* what() const throw() override {
             return m_msg.c_str();
         }
 

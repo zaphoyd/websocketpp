@@ -162,11 +162,11 @@ class processor_category : public lib::error_category {
 public:
     processor_category() {}
 
-    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp.processor";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case error::general:
                 return "Generic processor error";

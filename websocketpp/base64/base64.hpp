@@ -36,25 +36,50 @@
 #ifndef _BASE64_HPP_
 #define _BASE64_HPP_
 
+#include <memory>
 #include <string>
+#include <sstream>
 
 namespace websocketpp {
 
 static std::string const base64_chars =
-             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             "abcdefghijklmnopqrstuvwxyz"
-             "0123456789+/";
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz"
+            "0123456789+/";
 
 /// Test whether a character is a valid base64 character
 /**
  * @param c The character to test
  * @return true if c is a valid base64 character
- */
+ */	
 static inline bool is_base64(unsigned char c) {
     return (c == 43 || // +
-           (c >= 47 && c <= 57) || // /-9
-           (c >= 65 && c <= 90) || // A-Z
-           (c >= 97 && c <= 122)); // a-z
+        (c >= 47 && c <= 57) || // /-9
+        (c >= 65 && c <= 90) || // A-Z
+        (c >= 97 && c <= 122)); // a-z
+}
+
+template<typename TStringBuilder>
+void charAppender(TStringBuilder& builder, char c) {
+    throw std::runtime_error("Not Implemented");
+}
+
+template<>
+inline void charAppender(std::string& builder, char c) {
+    builder.append(1, c);
+}
+
+template<>
+inline void charAppender(std::shared_ptr<std::string>& builder, char c) {
+    if (builder == nullptr) {
+        builder = std::make_shared<std::string>();
+    }
+    builder->append(1, c);
+}
+
+template <>
+inline void charAppender(std::stringstream& builder, char c) {
+    builder.put(c);
 }
 
 /// Encode a char buffer into a base64 string
@@ -63,8 +88,9 @@ static inline bool is_base64(unsigned char c) {
  * @param len The length of input in bytes
  * @return A base64 encoded string representing input
  */
-inline std::string base64_encode(unsigned char const * input, size_t len) {
-    std::string ret;
+template<typename T>
+inline T base64_encode(unsigned char const * input, size_t len) {
+    T ret;
     int i = 0;
     int j = 0;
     unsigned char char_array_3[3];
@@ -75,13 +101,13 @@ inline std::string base64_encode(unsigned char const * input, size_t len) {
         if (i == 3) {
             char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
             char_array_4[1] = ((char_array_3[0] & 0x03) << 4) +
-                              ((char_array_3[1] & 0xf0) >> 4);
+                            ((char_array_3[1] & 0xf0) >> 4);
             char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) +
-                              ((char_array_3[2] & 0xc0) >> 6);
+                            ((char_array_3[2] & 0xc0) >> 6);
             char_array_4[3] = char_array_3[2] & 0x3f;
 
             for(i = 0; (i <4) ; i++) {
-                ret += base64_chars[char_array_4[i]];
+                charAppender<T>(ret, base64_chars[char_array_4[i]]);
             }
             i = 0;
         }
@@ -94,17 +120,17 @@ inline std::string base64_encode(unsigned char const * input, size_t len) {
 
         char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
         char_array_4[1] = ((char_array_3[0] & 0x03) << 4) +
-                          ((char_array_3[1] & 0xf0) >> 4);
+                        ((char_array_3[1] & 0xf0) >> 4);
         char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) +
-                          ((char_array_3[2] & 0xc0) >> 6);
+                        ((char_array_3[2] & 0xc0) >> 6);
         char_array_4[3] = char_array_3[2] & 0x3f;
 
         for (j = 0; (j < i + 1); j++) {
-            ret += base64_chars[char_array_4[j]];
+            charAppender<T>(ret, base64_chars[char_array_4[j]]);
         }
 
         while((i++ < 3)) {
-            ret += '=';
+            charAppender<T>(ret, '=');
         }
     }
 
@@ -116,8 +142,9 @@ inline std::string base64_encode(unsigned char const * input, size_t len) {
  * @param input The input data
  * @return A base64 encoded string representing input
  */
-inline std::string base64_encode(std::string const & input) {
-    return base64_encode(
+template<typename T>
+inline T base64_encode(std::string const & input) {
+    return base64_encode<T>(
         reinterpret_cast<const unsigned char *>(input.data()),
         input.size()
     );
@@ -128,13 +155,14 @@ inline std::string base64_encode(std::string const & input) {
  * @param input The base64 encoded input data
  * @return A string representing the decoded raw bytes
  */
-inline std::string base64_decode(std::string const & input) {
+template<typename T>
+inline T base64_decode(std::string const & input) {
     size_t in_len = input.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    std::string ret;
+    T ret;
 
     while (in_len-- && ( input[in_] != '=') && is_base64(input[in_])) {
         char_array_4[i++] = input[in_]; in_++;
@@ -148,7 +176,7 @@ inline std::string base64_decode(std::string const & input) {
             char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
             for (i = 0; (i < 3); i++) {
-                ret += char_array_3[i];
+                charAppender<T>(ret, char_array_3[i]);
             }
             i = 0;
         }
@@ -166,7 +194,7 @@ inline std::string base64_decode(std::string const & input) {
         char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
         for (j = 0; (j < i - 1); j++) {
-            ret += static_cast<std::string::value_type>(char_array_3[j]);
+            charAppender<T>(ret, static_cast<std::string::value_type>(char_array_3[j]));
         }
     }
 

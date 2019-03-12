@@ -183,11 +183,11 @@ enum value {
 /// Asio transport error category
 class category : public lib::error_category {
 public:
-    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp.transport.asio";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case error::general:
                 return "Generic asio transport policy error";

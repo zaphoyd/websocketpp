@@ -77,7 +77,7 @@ public:
         reset_headers();
     }
 
-    int get_version() const {
+    int get_version() const override {
         return 13;
     }
 
@@ -85,11 +85,11 @@ public:
         return m_permessage_deflate.is_implemented();
     }
 
-    err_str_pair negotiate_extensions(request_type const & request) {
+    err_str_pair negotiate_extensions(request_type const & request) override {
         return negotiate_extensions_helper(request);
     }
     
-    err_str_pair negotiate_extensions(response_type const & response) {
+    err_str_pair negotiate_extensions(response_type const & response) override {
         return negotiate_extensions_helper(response);
     }
     
@@ -182,7 +182,7 @@ public:
         return ret;
     }
 
-    lib::error_code validate_handshake(request_type const & r) const {
+    lib::error_code validate_handshake(request_type const & r) const override {
         if (r.get_method() != "GET") {
             return make_error_code(error::invalid_http_method);
         }
@@ -207,7 +207,7 @@ public:
      * are found.
      */
     lib::error_code process_handshake(request_type const & request, 
-        std::string const & subprotocol, response_type & response) const
+        std::string const & subprotocol, response_type & response) const override
     {
         std::string server_key = request.get_header("Sec-WebSocket-Key");
 
@@ -235,7 +235,7 @@ public:
      * @param [in] subprotocols The list of subprotocols to request
      */
     lib::error_code client_handshake_request(request_type & req, uri_ptr
-        uri, std::vector<std::string> const & subprotocols) const
+        uri, std::vector<std::string> const & subprotocols) const override
     {
         req.set_method("GET");
         req.set_uri(uri->get_resource());
@@ -266,7 +266,7 @@ public:
             std::copy(conv.c,conv.c+4,&raw_key[i*4]);
         }
 
-        req.replace_header("Sec-WebSocket-Key",base64_encode(raw_key, 16));
+        req.replace_header("Sec-WebSocket-Key",base64_encode<std::string>(raw_key, 16));
 
         if (m_permessage_deflate.is_implemented()) {
             std::string offer = m_permessage_deflate.generate_offer();
@@ -285,7 +285,7 @@ public:
      * @return An error code, 0 on success, non-zero for other errors
      */
     lib::error_code validate_server_handshake_response(request_type const & req,
-        response_type& res) const
+        response_type& res) const override
     {
         // A valid response has an HTTP 101 switching protocols code
         if (res.get_status_code() != http::status_code::switching_protocols) {
@@ -321,16 +321,16 @@ public:
         return lib::error_code();
     }
 
-    std::string get_raw(response_type const & res) const {
+    std::string get_raw(response_type const & res) const override {
         return res.raw();
     }
 
-    std::string const & get_origin(request_type const & r) const {
+    std::string const & get_origin(request_type const & r) const override {
         return r.get_header("Origin");
     }
 
     lib::error_code extract_subprotocols(request_type const & req,
-        std::vector<std::string> & subprotocol_list)
+        std::vector<std::string> & subprotocol_list) override
     {
         if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
             http::parameter_list p;
@@ -348,7 +348,7 @@ public:
         return lib::error_code();
     }
 
-    uri_ptr get_uri(request_type const & request) const {
+    uri_ptr get_uri(request_type const & request) const override {
         return get_uri_from_host(request,(base::m_secure ? "wss" : "ws"));
     }
 
@@ -379,7 +379,7 @@ public:
      *
      * @return Number of bytes processed or zero on error
      */
-    size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
+    size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) override {
         size_t p = 0;
 
         ec = lib::error_code();
@@ -560,11 +560,11 @@ public:
     }
 
     /// Test whether or not the processor has a message ready
-    bool ready() const {
+    bool ready() const override {
         return (m_state == READY);
     }
 
-    message_ptr get_message() {
+    message_ptr get_message() override {
         if (!ready()) {
             return message_ptr();
         }
@@ -583,11 +583,11 @@ public:
     }
 
     /// Test whether or not the processor is in a fatal error state.
-    bool get_error() const {
+    bool get_error() const override {
         return m_state == FATAL_ERROR;
     }
 
-    size_t get_bytes_needed() const {
+    size_t get_bytes_needed() const override {
         return m_bytes_needed;
     }
 
@@ -602,7 +602,7 @@ public:
      * @param out A message to be overwritten with the prepared message
      * @return error code
      */
-    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) override
     {
         if (!in || !out) {
             return make_error_code(error::invalid_arguments);
@@ -685,16 +685,16 @@ public:
     }
 
     /// Get URI
-    lib::error_code prepare_ping(std::string const & in, message_ptr out) const {
+    lib::error_code prepare_ping(std::string const & in, message_ptr out) const override {
         return this->prepare_control(frame::opcode::PING,in,out);
     }
 
-    lib::error_code prepare_pong(std::string const & in, message_ptr out) const {
+    lib::error_code prepare_pong(std::string const & in, message_ptr out) const override {
         return this->prepare_control(frame::opcode::PONG,in,out);
     }
 
     virtual lib::error_code prepare_close(close::status::value code,
-        std::string const & reason, message_ptr out) const
+        std::string const & reason, message_ptr out) const override 
     {
         if (close::status::reserved(code)) {
             return make_error_code(error::reserved_close_code);
@@ -735,7 +735,7 @@ protected:
 
         unsigned char message_digest[20];
         sha1::calc(key.c_str(),key.length(),message_digest);
-        key = base64_encode(message_digest,20);
+        key = base64_encode<std::string>(message_digest,20);
 
         return lib::error_code();
     }

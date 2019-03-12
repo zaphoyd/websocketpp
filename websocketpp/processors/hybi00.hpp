@@ -70,11 +70,11 @@ public:
       , m_state(HEADER)
       , m_msg_manager(manager) {}
 
-    int get_version() const {
+    int get_version() const override {
         return 0;
     }
 
-    lib::error_code validate_handshake(request_type const & r) const {
+    lib::error_code validate_handshake(request_type const & r) const override {
         if (r.get_method() != "GET") {
             return make_error_code(error::invalid_http_method);
         }
@@ -98,7 +98,7 @@ public:
     }
 
     lib::error_code process_handshake(request_type const & req,
-        std::string const & subprotocol, response_type & res) const
+        std::string const & subprotocol, response_type & res) const override
     {
         char key_final[16];
 
@@ -156,7 +156,7 @@ public:
      * @param [in] subprotocols The list of subprotocols to request
      */
     lib::error_code client_handshake_request(request_type &, uri_ptr,
-        std::vector<std::string> const &) const
+        std::vector<std::string> const &) const override
     {
         return error::make_error_code(error::no_protocol_support);
     }
@@ -171,18 +171,18 @@ public:
      * @return An error code, 0 on success, non-zero for other errors
      */
     lib::error_code validate_server_handshake_response(request_type const &,
-        response_type &) const
+        response_type &) const override
     {
         return error::make_error_code(error::no_protocol_support);
     }
 
-    std::string get_raw(response_type const & res) const {
+    std::string get_raw(response_type const & res) const override {
         response_type temp = res;
         temp.remove_header("Sec-WebSocket-Key3");
         return temp.raw() + res.get_header("Sec-WebSocket-Key3");
     }
 
-    std::string const & get_origin(request_type const & r) const {
+    std::string const & get_origin(request_type const & r) const override {
         return r.get_header("Origin");
     }
 
@@ -196,7 +196,7 @@ public:
      * the results in.
      */
     lib::error_code extract_subprotocols(request_type const & req,
-        std::vector<std::string> & subprotocol_list)
+        std::vector<std::string> & subprotocol_list) override
     {
         if (!req.get_header("Sec-WebSocket-Protocol").empty()) {
             http::parameter_list p;
@@ -214,7 +214,7 @@ public:
         return lib::error_code();
     }
 
-    uri_ptr get_uri(request_type const & request) const {
+    uri_ptr get_uri(request_type const & request) const override {
         std::string h = request.get_header("Host");
 
         size_t last_colon = h.rfind(":");
@@ -249,7 +249,7 @@ public:
     }
 
     /// Process new websocket connection bytes
-    size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) {
+    size_t consume(uint8_t * buf, size_t len, lib::error_code & ec) override {
         // if in state header we are expecting a 0x00 byte, if we don't get one
         // it is a fatal error
         size_t p = 0; // bytes processed
@@ -306,15 +306,15 @@ public:
         return p;
     }
 
-    bool ready() const {
+    bool ready() const override {
         return (m_state == READY);
     }
 
-    bool get_error() const {
+    bool get_error() const override {
         return false;
     }
 
-    message_ptr get_message() {
+    message_ptr get_message() override {
         message_ptr ret = m_msg_ptr;
         m_msg_ptr = message_ptr();
         m_state = HEADER;
@@ -326,7 +326,7 @@ public:
      * Performs validation, masking, compression, etc. will return an error if
      * there was an error, otherwise msg will be ready to be written
      */
-    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out)
+    virtual lib::error_code prepare_data_frame(message_ptr in, message_ptr out) override
     {
         if (!in || !out) {
             return make_error_code(error::invalid_arguments);
@@ -370,7 +370,7 @@ public:
      * @param out The message buffer to prepare the ping in.
      * @return Status code, zero on success, non-zero on failure
      */
-    lib::error_code prepare_ping(std::string const &, message_ptr) const
+    lib::error_code prepare_ping(std::string const &, message_ptr) const override
     {
         return lib::error_code(error::no_protocol_support);
     }
@@ -383,7 +383,7 @@ public:
      * @param out The message buffer to prepare the pong in.
      * @return Status code, zero on success, non-zero on failure
      */
-    lib::error_code prepare_pong(std::string const &, message_ptr) const
+    lib::error_code prepare_pong(std::string const &, message_ptr) const override
     {
         return lib::error_code(error::no_protocol_support);
     }
@@ -399,7 +399,7 @@ public:
      * @return Status code, zero on success, non-zero on failure
      */
     lib::error_code prepare_close(close::status::value, std::string const &, 
-        message_ptr out) const
+        message_ptr out) const override
     {
         if (!out) {
             return lib::error_code(error::invalid_arguments);

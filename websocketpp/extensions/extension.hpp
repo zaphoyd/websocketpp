@@ -62,11 +62,11 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    const char *name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp.extension";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case general:
                 return "Generic extension error";

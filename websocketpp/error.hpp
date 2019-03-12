@@ -151,11 +151,11 @@ class category : public lib::error_category {
 public:
     category() {}
 
-    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case error::general:
                 return "Generic error";
@@ -260,7 +260,7 @@ public:
 
     ~exception() throw() {}
 
-    virtual char const * what() const throw() {
+    virtual char const * what() const throw() override {
         return m_msg.c_str();
     }
 

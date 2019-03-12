@@ -109,11 +109,11 @@ namespace error {
 /// Error category related to asio transport socket policies
 class socket_category : public lib::error_category {
 public:
-    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ {
+    char const * name() const _WEBSOCKETPP_NOEXCEPT_TOKEN_ override {
         return "websocketpp.transport.asio.socket";
     }
 
-    std::string message(int value) const {
+    std::string message(int value) const override {
         switch(value) {
             case error::security:
                 return "Security policy error";
