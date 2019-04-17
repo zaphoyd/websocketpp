@@ -202,7 +202,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 	endif ()
 
     if (NOT Boost_USE_STATIC_LIBS)
-        add_definitions (/DBOOST_TEST_DYN_LINK)
+        add_definitions (-DBOOST_TEST_DYN_LINK)
     endif ()
 
     set (Boost_FIND_REQUIRED TRUE)
