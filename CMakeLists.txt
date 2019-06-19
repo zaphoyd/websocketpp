@@ -123,7 +123,11 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 
     # g++
     if (CMAKE_COMPILER_IS_GNUCXX)
-        set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        if (NOT APPLE)
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        else()
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread)
+        endif()
         set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
         set (WEBSOCKETPP_BOOST_LIBS system thread)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
