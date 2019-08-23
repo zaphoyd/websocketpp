@@ -576,6 +576,9 @@ protected:
     void handle_post_init(timer_ptr post_timer, init_handler callback,
         lib::error_code const & ec)
     {
+// TODO(Art): temp
+m_elog.write(log::elevel::rerror, "### WebsocketPP.connection.handle_post_init. error? " + std::string(ec ? "yes":"no") +
+             " socket FD=" + std::to_string(this->get_socket().lowest_layer().native()));
         if (ec == transport::error::operation_aborted ||
             (post_timer && lib::asio::is_neg(post_timer->expires_from_now())))
         {
@@ -1044,6 +1047,9 @@ protected:
         if (m_alog.static_test(log::alevel::devel)) {
             m_alog.write(log::alevel::devel,"asio connection async_shutdown");
         }
+// TODO(Art): temp
+m_elog.write(log::elevel::rerror, "### WebsocketPP.connection.async_shutdown socket FD=" +
+  std::to_string(this->get_socket().lowest_layer().native()));
 
         timer_ptr shutdown_timer;
         shutdown_timer = set_timer(
