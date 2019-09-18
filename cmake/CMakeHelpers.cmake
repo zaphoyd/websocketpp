@@ -80,7 +80,7 @@ macro (final_target)
     endif ()
 
     install (DIRECTORY ${CMAKE_SOURCE_DIR}/${TARGET_NAME}
-             DESTINATION include/
+             DESTINATION ${INSTALL_INCLUDE_DIR}/
              FILES_MATCHING PATTERN "*.hpp*")
 endmacro ()
 
