@@ -1,4 +1,6 @@
 HEAD
+- CMake: Update cmake installer to better handle dependencies when using
+  g++ on MacOS. Thank you Luca Palano for reporting and a patch. #831
 - CMake: Update cmake installer to use a variable for the include directory
   improving the ability of the install to be customized. THank you Schrijvers
   Luc and Gianfranco Costamanga for reporting and a patch. #842
