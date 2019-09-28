@@ -45,6 +45,8 @@ namespace websocketpp {
 static uint16_t const uri_default_port = 80;
 /// Default port for wss://
 static uint16_t const uri_default_secure_port = 443;
+/// Default port for socks5://
+static uint16_t const socks5_default_port = 1080;
 
 class uri {
 public:
@@ -73,6 +75,10 @@ public:
             m_secure = true;
             m_scheme = "https";
             it += 8;
+        } else if (uri_len >= 10 && std::equal(it,it+9,"socks5://")) {
+            m_secure = false;
+            m_scheme = "socks5";
+            it += 9;
         } else {
             return;
         }
@@ -209,9 +215,16 @@ public:
       : m_scheme(scheme)
       , m_host(host)
       , m_resource(resource.empty() ? "/" : resource)
-      , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
       , m_secure(scheme == "wss" || scheme == "https")
-      , m_valid(true) {}
+      , m_valid(true) {
+          if (scheme == "wss" || scheme == "https") {
+              m_port = uri_default_secure_port;
+          } else if (scheme != "socks5") {
+              m_port = uri_default_port;
+          } else {
+              m_port = socks5_default_port;
+          }
+      }
 
     uri(std::string const & scheme, std::string const & host,
         std::string const & port, std::string const & resource)
@@ -242,7 +255,7 @@ public:
     }
 
     std::string get_host_port() const {
-        if (m_port == (m_secure ? uri_default_secure_port : uri_default_port)) {
+        if (m_port == (m_secure ? uri_default_secure_port : uri_default_port) || m_port == socks5_default_port) {
             return m_host;
         } else {
             std::stringstream p;
@@ -276,7 +289,7 @@ public:
 
         s << m_scheme << "://" << m_host;
 
-        if (m_port != (m_secure ? uri_default_secure_port : uri_default_port)) {
+        if (m_port != (m_secure ? uri_default_secure_port : uri_default_port) || m_port != socks5_default_port) {
             s << ":" << m_port;
         }
 
@@ -324,7 +337,11 @@ private:
         ec = lib::error_code();
 
         if (port.empty()) {
-            return (m_secure ? uri_default_secure_port : uri_default_port);
+            if (m_scheme != "socks5") {
+                return m_secure ? uri_default_secure_port : uri_default_port;
+            } else {
+                return socks5_default_port;
+            }
         }
 
         unsigned int t_port = static_cast<unsigned int>(atoi(port.c_str()));
