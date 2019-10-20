@@ -243,6 +243,14 @@ void connection<config>::handle_pong_timeout(std::string payload,
         return;
     }
 
+    {
+        scoped_lock_type lock(m_connection_state_lock);
+        // to avoid call this handler if state is not open.
+        if (m_state != session::state::open) {
+           return;
+         }
+    }
+    
     if (m_pong_timeout_handler) {
         m_pong_timeout_handler(m_connection_hdl,payload);
     }
