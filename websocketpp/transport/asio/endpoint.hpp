@@ -192,7 +192,7 @@ public:
         m_io_service = ptr;
         m_external_io_service = true;
         m_acceptor = lib::make_shared<lib::asio::ip::tcp::acceptor>(
-            lib::ref(*m_io_service));
+            *m_io_service);  // airtime - BXB-2993
 
         m_state = READY;
         ec = lib::error_code();

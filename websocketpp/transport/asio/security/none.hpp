@@ -169,7 +169,7 @@ protected:
         }
 
         m_socket = lib::make_shared<lib::asio::ip::tcp::socket>(
-            lib::ref(*service));
+            *service);  // airtime - BXB-2993
 
         m_state = READY;
 
