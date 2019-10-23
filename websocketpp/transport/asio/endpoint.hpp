@@ -827,7 +827,7 @@ protected:
         // Create a resolver
         if (!m_resolver) {
             m_resolver = lib::make_shared<lib::asio::ip::tcp::resolver>(
-               *m_io_service);  // airtime - BXB-2993
+                *m_io_service);  // airtime - BXB-2993
         }
 
         tcon->set_uri(u);
