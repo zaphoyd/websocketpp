@@ -316,7 +316,7 @@ public:
      */
     timer_ptr set_timer(long duration, timer_handler callback) {
         timer_ptr new_timer = lib::make_shared<lib::asio::steady_timer>(
-            lib::ref(*m_io_service),
+            *m_io_service,  // airtime - BXB-2993 - this isn't an important functional change that we need to keep around.
             lib::asio::milliseconds(duration)
         );
 
