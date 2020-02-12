@@ -1171,7 +1171,7 @@ private:
     void log_err_with_handle(log::level l, const char* msg) {
       std::stringstream s;
       s << msg << "(hdl = " << boost::lexical_cast<std::string>(m_connection_hdl.lock().get()) << ")";
-      m_elog.write(l, s.str());
+      m_elog->write(l, s.str());
     }
     // airtime: end
 
