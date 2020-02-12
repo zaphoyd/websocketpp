@@ -72,9 +72,7 @@ public:
     }
 
     /// Destructor
-    ~server<config>() {
-      endpoint_type::cancel();  // airtime 52d39b0
-    }
+    ~server<config>() {}
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy constructor because endpoints are not copyable
