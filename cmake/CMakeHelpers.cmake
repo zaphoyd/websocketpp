@@ -14,15 +14,15 @@ macro (print_used_build_config)
     message (STATUS "WEBSOCKETPP_BOOST_LIBS        = ${WEBSOCKETPP_BOOST_LIBS}")
     message (STATUS "WEBSOCKETPP_PLATFORM_LIBS     = ${WEBSOCKETPP_PLATFORM_LIBS}")
     message (STATUS "WEBSOCKETPP_PLATFORM_TLS_LIBS = ${WEBSOCKETPP_PLATFORM_TLS_LIBS}")
-    message ("") 
+    message ("")
     message (STATUS "OPENSSL_FOUND        = ${OPENSSL_FOUND}")
     message (STATUS "OPENSSL_INCLUDE_DIR     = ${OPENSSL_INCLUDE_DIR}")
     message (STATUS "OPENSSL_LIBRARIES = ${OPENSSL_LIBRARIES}")
     message (STATUS "OPENSSL_VERSION = ${OPENSSL_VERSION}")
-    message ("") 
+    message ("")
 endmacro ()
 
-# Adds the given folder_name into the source files of the current project. 
+# Adds the given folder_name into the source files of the current project.
 # Use this macro when your module contains .cpp and .h files in several subdirectories.
 # Your sources variable needs to be WSPP_SOURCE_FILES and headers variable WSPP_HEADER_FILES.
 macro(add_source_folder folder_name)
@@ -39,7 +39,7 @@ macro (init_target NAME)
     set (TARGET_NAME ${NAME})
     message ("** " ${TARGET_NAME})
 
-    # Include our own module path. This makes #include "x.h" 
+    # Include our own module path. This makes #include "x.h"
     # work in project subfolders to include the main directory headers.
     include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 endmacro ()
@@ -74,29 +74,29 @@ endmacro ()
 # Finalize target for all types
 macro (final_target)
     if ("${TARGET_LIB_TYPE}" STREQUAL "EXECUTABLE")
-        install (TARGETS ${TARGET_NAME} 
-                 RUNTIME DESTINATION "bin" 
+        install (TARGETS ${TARGET_NAME}
+                 RUNTIME DESTINATION "bin"
                  CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
     endif ()
 
-    # install headers, directly from current source dir and look for subfolders with headers
-    file (GLOB_RECURSE TARGET_INSTALL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
-    foreach (hppfile ${TARGET_INSTALL_HEADERS})
-      get_filename_component (currdir ${hppfile} PATH)
-      install (FILES ${hppfile} DESTINATION "include/${TARGET_NAME}/${currdir}")
-    endforeach()
+    install (DIRECTORY ${CMAKE_SOURCE_DIR}/${TARGET_NAME}
+             DESTINATION include/
+             FILES_MATCHING PATTERN "*.hpp*")
 endmacro ()
 
 macro (link_boost)
     target_link_libraries (${TARGET_NAME} ${Boost_LIBRARIES})
+    set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
 endmacro ()
 
 macro (link_openssl)
     target_link_libraries (${TARGET_NAME} ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+    set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 endmacro ()
 
 macro (link_zlib)
 	target_link_libraries (${TARGET_NAME} ${ZLIB_LIBRARIES})
+    set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIR})
 endmacro ()
 
 macro (include_subdirs PARENT)

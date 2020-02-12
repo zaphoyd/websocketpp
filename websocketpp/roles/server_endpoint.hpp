@@ -68,16 +68,18 @@ public:
 
     explicit server() : endpoint_type(true)
     {
-        endpoint_type::m_alog.write(log::alevel::devel, "server constructor");
+        endpoint_type::m_alog->write(log::alevel::devel, "server constructor");
     }
 
     /// Destructor
-    ~server<config>() {}
+    ~server<config>() {
+      endpoint_type::cancel();  // airtime 52d39b0
+    }
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy constructor because endpoints are not copyable
     server<config>(server<config> &) = delete;
-    
+
     // no copy assignment operator because endpoints are not copyable
     server<config> & operator=(server<config> const &) = delete;
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
@@ -115,7 +117,7 @@ public:
      *
      * Refer to documentation for the transport policy you are using for
      * instructions on how to stop this acceptance loop.
-     * 
+     *
      * @param [out] ec A status code indicating an error, if any.
      */
     void start_accept(lib::error_code & ec) {
@@ -127,18 +129,25 @@ public:
         ec = lib::error_code();
         connection_ptr con = get_connection();
 
+        if (!con) {
+          ec = error::make_error_code(error::con_creation_failed);
+          return;
+        }
+
         transport_type::async_accept(
             lib::static_pointer_cast<transport_con_type>(con),
             lib::bind(&type::handle_accept,this,con,lib::placeholders::_1),
             ec
         );
-        
+
         if (ec && con) {
             // If the connection was constructed but the accept failed,
             // terminate the connection to prevent memory leaks
             con->terminate(lib::error_code());
+        // airtime: start 52d39b0
         } else {
             m_pending_accept_con = con;
+        // airtime: end
         }
     }
 
@@ -165,6 +174,7 @@ public:
         }
     }
 
+    // airtime: start 52d39b0
     /// Stops the server's async connection acceptance loop
     void stop_accept() {
         lib::error_code ec;
@@ -173,6 +183,7 @@ public:
             throw exception(ec);
         }
     }
+    // airtime: end
 
     /// Handler callback for start_accept
     void handle_accept(connection_ptr con, lib::error_code const & ec) {
@@ -180,10 +191,10 @@ public:
             con->terminate(ec);
 
             if (ec == error::operation_canceled) {
-                endpoint_type::m_elog.write(log::elevel::info,
+                endpoint_type::m_elog->write(log::elevel::info,
                     "handle_accept error: "+ec.message());
             } else {
-                endpoint_type::m_elog.write(log::elevel::rerror,
+                endpoint_type::m_elog->write(log::elevel::rerror,
                     "handle_accept error: "+ec.message());
             }
         } else {
@@ -193,16 +204,18 @@ public:
         lib::error_code start_ec;
         start_accept(start_ec);
         if (start_ec == error::async_accept_not_listening) {
-            endpoint_type::m_elog.write(log::elevel::info,
+            endpoint_type::m_elog->write(log::elevel::info,
                 "Stopping acceptance of new connections because the underlying transport is no longer listening.");
         } else if (start_ec) {
-            endpoint_type::m_elog.write(log::elevel::rerror,
+            endpoint_type::m_elog->write(log::elevel::rerror,
                 "Restarting async_accept loop failed: "+ec.message());
         }
-        m_pending_accept_con.reset();
+        m_pending_accept_con.reset();  // airtime 52d39b0
     }
+// airtime: start 52d39b0
 private:
     connection_ptr m_pending_accept_con;
+// airtime: end
 };
 
 } // namespace websocketpp

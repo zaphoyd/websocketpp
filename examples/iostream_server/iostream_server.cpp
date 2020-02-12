@@ -26,9 +26,9 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
-    } catch (const websocketpp::lib::error_code& e) {
+    } catch (websocketpp::exception const & e) {
         s->get_alog().write(websocketpp::log::alevel::app,
-                    "Echo Failed: "+e.message());
+                    std::string("Echo Failed: ")+e.what());
     }
 }
 

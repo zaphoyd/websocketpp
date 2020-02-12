@@ -37,7 +37,7 @@
 BOOST_AUTO_TEST_CASE( exact_match ) {
     websocketpp::http::parser::request r;
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade\r\nUpgrade: websocket\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE( ci_exact_match ) {
 BOOST_AUTO_TEST_CASE( non_exact_match1 ) {
     websocketpp::http::parser::request r;
 
-    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: upgrade,foo\r\nUpgrade: websocket,foo\r\n\r\n";
+    std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade,foo\r\nUpgrade: websocket,foo\r\n\r\n";
 
     r.consume(handshake.c_str(),handshake.size());
 

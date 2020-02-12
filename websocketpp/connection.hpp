@@ -296,8 +296,9 @@ private:
     };
 public:
 
-    explicit connection(bool p_is_server, std::string const & ua, alog_type& alog,
-        elog_type& elog, rng_type & rng, endpoint_hdl endpoint)
+    explicit connection(bool p_is_server, std::string const & ua, const lib::shared_ptr<alog_type>& alog,
+                        const lib::shared_ptr<elog_type>& elog, rng_type & rng,
+                        endpoint_hdl endpoint)  // airtime 52d39b0
       : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
@@ -325,14 +326,14 @@ public:
       , m_alog(alog)
       , m_elog(elog)
       , m_rng(rng)
-      , m_endpoint_hdl(endpoint)
+      , m_endpoint_hdl(endpoint)  // airtime 52d39b0
       , m_local_close_code(close::status::abnormal_close)
       , m_remote_close_code(close::status::abnormal_close)
       , m_is_http(false)
       , m_http_state(session::http_state::init)
       , m_was_clean(false)
     {
-        m_alog.write(log::alevel::devel,"connection constructor");
+        m_alog->write(log::alevel::devel,"connection constructor");
     }
 
     /// Get a shared pointer to this component
@@ -1489,7 +1490,7 @@ private:
     void log_err(log::level l, char const * msg, error_type const & ec) {
         std::stringstream s;
         s << msg << " error: " << ec << " (" << ec.message() << ")";
-        m_elog.write(l, s.str());
+        m_elog->write(l, s.str());
     }
 
     // internal handler functions
@@ -1606,12 +1607,12 @@ private:
     std::vector<std::string> m_requested_subprotocols;
 
     bool const              m_is_server;
-    alog_type& m_alog;
-    elog_type& m_elog;
+    const lib::shared_ptr<alog_type> m_alog;
+    const lib::shared_ptr<elog_type> m_elog;
 
     rng_type & m_rng;
 
-    endpoint_hdl m_endpoint_hdl;
+    endpoint_hdl m_endpoint_hdl;  // airtime 52d39b0
 
     // Close state
     /// Close code that was sent on the wire by this endpoint
@@ -1638,15 +1639,6 @@ private:
     session::http_state::value m_http_state;
 
     bool m_was_clean;
-
-    /// Whether or not this endpoint initiated the closing handshake.
-    bool                    m_closed_by_me;
-
-    /// ???
-    bool                    m_failed_by_me;
-
-    /// Whether or not this endpoint initiated the drop of the TCP connection
-    bool                    m_dropped_by_me;
 };
 
 } // namespace websocketpp

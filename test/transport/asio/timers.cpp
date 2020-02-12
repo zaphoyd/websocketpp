@@ -115,7 +115,9 @@ context_ptr on_tls_init(websocketpp::connection_hdl) {
 struct mock_con: public websocketpp::transport::asio::connection<config> {
     typedef websocketpp::transport::asio::connection<config> base;
 
-    mock_con(bool a, config::alog_type& b, config::elog_type& c) : base(a,b,c) {}
+    mock_con(bool a, const websocketpp::lib::shared_ptr<config::alog_type>& b,
+             const websocketpp::lib::shared_ptr<config::elog_type>& c)
+            : base(a,b,c) {}
 
     void start() {
         base::init(websocketpp::lib::bind(&mock_con::handle_start,this,
@@ -138,9 +140,12 @@ typedef websocketpp::lib::shared_ptr<mock_con> connection_ptr;
 struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
     typedef websocketpp::transport::asio::endpoint<config> base;
 
-    mock_endpoint() {
-        alog.set_channels(websocketpp::log::alevel::all);
-        base::init_logging(&alog,&elog);
+    mock_endpoint()
+        : alog(websocketpp::lib::make_shared<config::alog_type>())
+        , elog(websocketpp::lib::make_shared<config::elog_type>())
+    {
+        alog->set_channels(websocketpp::log::alevel::all);
+        base::init_logging(alog,elog);
         init_asio();
     }
 
@@ -170,8 +175,8 @@ struct mock_endpoint : public websocketpp::transport::asio::endpoint<config> {
     }
 
     connection_ptr m_con;
-    config::alog_type alog;
-    config::elog_type elog;
+    websocketpp::lib::shared_ptr<config::alog_type> alog;
+    websocketpp::lib::shared_ptr<config::elog_type> elog;
 };
 
 BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
@@ -179,6 +184,8 @@ BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
     websocketpp::lib::thread timer(websocketpp::lib::bind(&run_test_timer,5000));
     dummy_server.detach();
     timer.detach();
+
+    sleep(1); // give the server thread some time to start
 
     mock_endpoint endpoint;
     endpoint.set_tls_init_handler(&on_tls_init);

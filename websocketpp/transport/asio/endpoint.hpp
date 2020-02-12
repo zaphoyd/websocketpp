@@ -35,6 +35,7 @@
 #include <websocketpp/uri.hpp>
 #include <websocketpp/logger/levels.hpp>
 
+#include <websocketpp/common/asio.hpp>
 #include <websocketpp/common/functional.hpp>
 
 #include <sstream>
@@ -87,11 +88,14 @@ public:
     /// Type of a shared pointer to an io_service work object
     typedef lib::shared_ptr<lib::asio::io_service::work> work_ptr;
 
+    /// Type of socket pre-bind handler
+    typedef lib::function<lib::error_code(acceptor_ptr)> tcp_pre_bind_handler;
+
     // generate and manage our own io_service
     explicit endpoint()
       : m_io_service(NULL)
       , m_external_io_service(false)
-      , m_listen_backlog(0)
+      , m_listen_backlog(lib::asio::socket_base::max_connections)
       , m_reuse_addr(false)
       , m_state(UNINITIALIZED)
     {
@@ -259,6 +263,19 @@ public:
         m_external_io_service = false;
     }
 
+    /// Sets the tcp pre bind handler
+    /**
+     * The tcp pre bind handler is called after the listen acceptor has
+     * been created but before the socket bind is performed.
+     *
+     * @since 0.8.0
+     *
+     * @param h The handler to call on tcp pre bind init.
+     */
+    void set_tcp_pre_bind_handler(tcp_pre_bind_handler h) {
+        m_tcp_pre_bind_handler = h;
+    }
+
     /// Sets the tcp pre init handler
     /**
      * The tcp pre init handler is called after the raw tcp connection has been
@@ -314,8 +331,10 @@ public:
      *
      * New values affect future calls to listen only.
      *
-     * A value of zero will use the operating system default. This is the
-     * default value.
+     * The default value is specified as *::asio::socket_base::max_connections
+     * which uses the operating system defined maximum queue length. Your OS
+     * may restrict or silently lower this value. A value of zero may cause
+     * all connections to be rejected.
      *
      * @since 0.3.0
      *
@@ -328,10 +347,13 @@ public:
     /// Sets whether to use the SO_REUSEADDR flag when opening listening sockets
     /**
      * Specifies whether or not to use the SO_REUSEADDR TCP socket option. What
-     * this flag does depends on your operating system. Please consult operating
-     * system documentation for more details.
+     * this flag does depends on your operating system.
      *
-     * New values affect future calls to listen only.
+     * Please consult operating system documentation for more details. There
+     * may be security consequences to enabling this option.
+     *
+     * New values affect future calls to listen only so set this value prior to
+     * calling listen.
      *
      * The default is false.
      *
@@ -403,26 +425,32 @@ public:
         lib::asio::error_code bec;
 
         m_acceptor->open(ep.protocol(),bec);
-        if (!bec) {
-            m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
-        }
-        if (!bec) {
-            m_acceptor->bind(ep,bec);
-        }
-        if (!bec) {
-            m_acceptor->listen(m_listen_backlog,bec);
-        }
-        if (bec) {
-            if (m_acceptor->is_open()) {
-                m_acceptor->close();
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        // if a TCP pre-bind handler is present, run it
+        if (m_tcp_pre_bind_handler) {
+            ec = m_tcp_pre_bind_handler(m_acceptor);
+            if (ec) {
+                ec = clean_up_listen_after_error(ec);
+                return;
             }
-            log_err(log::elevel::info,"asio listen",bec);
-            ec = make_error_code(error::pass_through);
-        } else {
-            m_state = LISTENING;
-            ec = lib::error_code();
         }
+        
+        m_acceptor->bind(ep,bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        m_acceptor->listen(m_listen_backlog,bec);
+        if (bec) {ec = clean_up_listen_after_error(bec);return;}
+        
+        // Success
+        m_state = LISTENING;
+        ec = lib::error_code();
     }
+
+
 
     /// Set up endpoint for listening manually
     /**
@@ -727,7 +755,7 @@ public:
                 m_elog->write(log::elevel::info,
                     "asio handle_timer error: "+ec.message());
                 log_err(log::elevel::info,"asio handle_timer",ec);
-                callback(make_error_code(error::pass_through));
+                callback(socket_con_type::translate_ec(ec));
             }
         } else {
             callback(lib::error_code());
@@ -743,7 +771,7 @@ public:
     void async_accept(transport_con_ptr tcon, accept_handler callback,
         lib::error_code & ec)
     {
-        if (m_state != LISTENING) {
+        if (m_state != LISTENING || !m_acceptor) {
             using websocketpp::error::make_error_code;
             ec = make_error_code(websocketpp::error::async_accept_not_listening);
             return;
@@ -795,7 +823,7 @@ protected:
      * haven't been constructed yet, and cannot be used in the transport
      * destructor as they will have been destroyed by then.
      */
-    void init_logging(alog_type* a, elog_type* e) {
+    void init_logging(const lib::shared_ptr<alog_type>& a, const lib::shared_ptr<elog_type>& e) {
         m_alog = a;
         m_elog = e;
     }
@@ -812,7 +840,7 @@ protected:
                 ret_ec = make_error_code(websocketpp::error::operation_canceled);
             } else {
                 log_err(log::elevel::info,"asio handle_accept",asio_ec);
-                ret_ec = make_error_code(error::pass_through);
+                ret_ec = socket_con_type::translate_ec(asio_ec);
             }
         }
 
@@ -861,10 +889,6 @@ protected:
 
         tcp::resolver::query query(host,port);
 
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-        m_elog->write(log::elevel::rerror,
-            "starting async DNS resolve for "+host+":"+port);
-#endif
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
                 "starting async DNS resolve for "+host+":"+port);
@@ -930,27 +954,16 @@ protected:
             if (ec == transport::error::operation_aborted) {
                 m_alog->write(log::alevel::devel,
                     "asio handle_resolve_timeout timer cancelled");
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-                m_elog->write(log::elevel::rerror,
-                    "asio handle_resolve_timeout timer cancelled");
-#endif
                 return;
             }
 
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            log_err(log::elevel::rerror,"asio handle_resolve_timeout",ec);
-#else
             log_err(log::elevel::devel,"asio handle_resolve_timeout",ec);
-#endif
             ret_ec = ec;
         } else {
             ret_ec = make_error_code(transport::error::timeout);
         }
 
         m_alog->write(log::alevel::devel,"DNS resolution timed out");
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-        m_elog->write(log::elevel::rerror,"DNS resolution timed out");
-#endif
         m_resolver->cancel();
         callback(ret_ec);
     }
@@ -963,21 +976,13 @@ protected:
             lib::asio::is_neg(dns_timer->expires_from_now()))
         {
             m_alog->write(log::alevel::devel,"async_resolve cancelled");
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            m_elog->write(log::elevel::rerror,"async_resolve cancelled");
-#endif
             return;
         }
 
         dns_timer->cancel();
 
         if (ec) {
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            log_err(log::elevel::rerror,"asio async_resolve",ec);
-#else
-            log_err(log::elevel::info,"asio async_resolve",ec);
-#endif
-            callback(make_error_code(error::pass_through));
+            callback(socket_con_type::translate_ec(ec));
             return;
         }
 
@@ -1057,26 +1062,15 @@ protected:
             if (ec == transport::error::operation_aborted) {
                 m_alog->write(log::alevel::devel,
                     "asio handle_connect_timeout timer cancelled");
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-                m_elog->write(log::elevel::rerror,
-                    "asio handle_connect_timeout timer cancelled");
-#endif
                 return;
             }
 
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            log_err(log::elevel::rerror,"asio handle_connect_timeout",ec);
-#else
             log_err(log::elevel::devel,"asio handle_connect_timeout",ec);
-#endif
             ret_ec = ec;
         } else {
             ret_ec = make_error_code(transport::error::timeout);
         }
 
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-        m_elog->write(log::elevel::rerror,"TCP connect timed out");
-#endif
         m_alog->write(log::alevel::devel,"TCP connect timed out");
         tcon->cancel_socket_checked();
         callback(ret_ec);
@@ -1088,9 +1082,6 @@ protected:
         if (ec == lib::asio::error::operation_aborted ||
             lib::asio::is_neg(con_timer->expires_from_now()))
         {
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            m_elog->write(log::elevel::rerror,"async_connect cancelled");
-#endif
             m_alog->write(log::alevel::devel,"async_connect cancelled");
             return;
         }
@@ -1098,12 +1089,7 @@ protected:
         con_timer->cancel();
 
         if (ec) {
-#ifdef AIRTIME_CHIOS_EXTRA_LOGGING
-            log_err(log::elevel::rerror,"asio async_connect",ec);
-#else
-            log_err(log::elevel::info,"asio async_connect",ec);
-#endif
-            callback(make_error_code(error::pass_through));
+            callback(socket_con_type::translate_ec(ec));
             return;
         }
 
@@ -1152,6 +1138,16 @@ private:
         m_elog->write(l,s.str());
     }
 
+    /// Helper for cleaning up in the listen method after an error
+    template <typename error_type>
+    lib::error_code clean_up_listen_after_error(error_type const & ec) {
+        if (m_acceptor->is_open()) {
+            m_acceptor->close();
+        }
+        log_err(log::elevel::info,"asio listen",ec);
+        return socket_con_type::translate_ec(ec);
+    }
+
     enum state {
         UNINITIALIZED = 0,
         READY = 1,
@@ -1159,6 +1155,7 @@ private:
     };
 
     // Handlers
+    tcp_pre_bind_handler    m_tcp_pre_bind_handler;
     tcp_init_handler    m_tcp_pre_init_handler;
     tcp_init_handler    m_tcp_post_init_handler;
 
@@ -1173,8 +1170,8 @@ private:
     int                 m_listen_backlog;
     bool                m_reuse_addr;
 
-    elog_type* m_elog;
-    alog_type* m_alog;
+    lib::shared_ptr<elog_type> m_elog;
+    lib::shared_ptr<alog_type> m_alog;
 
     // Transport state
     state               m_state;

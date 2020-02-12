@@ -40,7 +40,7 @@ namespace websocketpp {
 /// Creates and manages connections associated with a WebSocket endpoint
 template <typename connection, typename config>
 class endpoint : public config::transport_type, public config::endpoint_base,
-    public lib::enable_shared_from_this<endpoint<connection, config> > {
+    public lib::enable_shared_from_this<endpoint<connection, config> > {  // airtime 52d39b0
 public:
     // Import appropriate types from our helper class
     // See endpoint_types for more details.
@@ -90,8 +90,8 @@ public:
     //friend connection;
 
     explicit endpoint(bool p_is_server)
-      : m_alog(config::alog_level, log::channel_type_hint::access)
-      , m_elog(config::elog_level, log::channel_type_hint::error)
+      : m_alog(new alog_type(config::alog_level, log::channel_type_hint::access))
+      , m_elog(new elog_type(config::elog_level, log::channel_type_hint::error))
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
@@ -100,12 +100,12 @@ public:
       , m_max_http_body_size(config::max_http_body_size)
       , m_is_server(p_is_server)
     {
-        m_alog.set_channels(config::alog_level);
-        m_elog.set_channels(config::elog_level);
+        m_alog->set_channels(config::alog_level);
+        m_elog->set_channels(config::elog_level);
 
-        m_alog.write(log::alevel::devel, "endpoint constructor");
+        m_alog->write(log::alevel::devel, "endpoint constructor");
 
-        transport_type::init_logging(&m_alog, &m_elog);
+        transport_type::init_logging(m_alog, m_elog);
     }
 
 
@@ -219,7 +219,7 @@ public:
      * @param channels The channel value(s) to set
      */
     void set_access_channels(log::level channels) {
-        m_alog.set_channels(channels);
+        m_alog->set_channels(channels);
     }
 
     /// Clear Access logging channels
@@ -230,7 +230,7 @@ public:
      * @param channels The channel value(s) to clear
      */
     void clear_access_channels(log::level channels) {
-        m_alog.clear_channels(channels);
+        m_alog->clear_channels(channels);
     }
 
     /// Set Error logging channel
@@ -241,7 +241,7 @@ public:
      * @param channels The channel value(s) to set
      */
     void set_error_channels(log::level channels) {
-        m_elog.set_channels(channels);
+        m_elog->set_channels(channels);
     }
 
     /// Clear Error logging channels
@@ -252,7 +252,7 @@ public:
      * @param channels The channel value(s) to clear
      */
     void clear_error_channels(log::level channels) {
-        m_elog.clear_channels(channels);
+        m_elog->clear_channels(channels);
     }
 
     /// Get reference to access logger
@@ -260,7 +260,7 @@ public:
      * @return A reference to the access logger
      */
     alog_type & get_alog() {
-        return m_alog;
+        return *m_alog;
     }
 
     /// Get reference to error logger
@@ -268,7 +268,7 @@ public:
      * @return A reference to the error logger
      */
     elog_type & get_elog() {
-        return m_elog;
+        return *m_elog;
     }
 
     /*************************/
@@ -276,52 +276,52 @@ public:
     /*************************/
 
     void set_open_handler(open_handler h) {
-        m_alog.write(log::alevel::devel,"set_open_handler");
+        m_alog->write(log::alevel::devel,"set_open_handler");
         scoped_lock_type guard(m_mutex);
         m_open_handler = h;
     }
     void set_close_handler(close_handler h) {
-        m_alog.write(log::alevel::devel,"set_close_handler");
+        m_alog->write(log::alevel::devel,"set_close_handler");
         scoped_lock_type guard(m_mutex);
         m_close_handler = h;
     }
     void set_fail_handler(fail_handler h) {
-        m_alog.write(log::alevel::devel,"set_fail_handler");
+        m_alog->write(log::alevel::devel,"set_fail_handler");
         scoped_lock_type guard(m_mutex);
         m_fail_handler = h;
     }
     void set_ping_handler(ping_handler h) {
-        m_alog.write(log::alevel::devel,"set_ping_handler");
+        m_alog->write(log::alevel::devel,"set_ping_handler");
         scoped_lock_type guard(m_mutex);
         m_ping_handler = h;
     }
     void set_pong_handler(pong_handler h) {
-        m_alog.write(log::alevel::devel,"set_pong_handler");
+        m_alog->write(log::alevel::devel,"set_pong_handler");
         scoped_lock_type guard(m_mutex);
         m_pong_handler = h;
     }
     void set_pong_timeout_handler(pong_timeout_handler h) {
-        m_alog.write(log::alevel::devel,"set_pong_timeout_handler");
+        m_alog->write(log::alevel::devel,"set_pong_timeout_handler");
         scoped_lock_type guard(m_mutex);
         m_pong_timeout_handler = h;
     }
     void set_interrupt_handler(interrupt_handler h) {
-        m_alog.write(log::alevel::devel,"set_interrupt_handler");
+        m_alog->write(log::alevel::devel,"set_interrupt_handler");
         scoped_lock_type guard(m_mutex);
         m_interrupt_handler = h;
     }
     void set_http_handler(http_handler h) {
-        m_alog.write(log::alevel::devel,"set_http_handler");
+        m_alog->write(log::alevel::devel,"set_http_handler");
         scoped_lock_type guard(m_mutex);
         m_http_handler = h;
     }
     void set_validate_handler(validate_handler h) {
-        m_alog.write(log::alevel::devel,"set_validate_handler");
+        m_alog->write(log::alevel::devel,"set_validate_handler");
         scoped_lock_type guard(m_mutex);
         m_validate_handler = h;
     }
     void set_message_handler(message_handler h) {
-        m_alog.write(log::alevel::devel,"set_message_handler");
+        m_alog->write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
     }
@@ -662,12 +662,14 @@ public:
 protected:
     connection_ptr create_connection();
 
+    // airtime: start 52d39b0
     lib::shared_ptr<endpoint> get_shared() {
       return this->shared_from_this();
     }
+    // airtime: end
 
-    alog_type m_alog;
-    elog_type m_elog;
+    lib::shared_ptr<alog_type> m_alog;
+    lib::shared_ptr<elog_type> m_elog;
 private:
     // dynamic settings
     std::string                 m_user_agent;

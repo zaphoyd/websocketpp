@@ -506,6 +506,18 @@ BOOST_AUTO_TEST_CASE( basic_request_with_body ) {
     BOOST_CHECK_EQUAL( r.get_header("Host"), "www.example.com" );
     BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "5" );
     BOOST_CHECK_EQUAL( r.get_body(), "abcde" );
+    
+    BOOST_CHECK_EQUAL( r.get_headers().size(), 2);
+    
+    websocketpp::http::parser::header_list::const_iterator it = r.get_headers().begin();
+    
+    BOOST_CHECK_EQUAL( it->first, "Content-Length");
+    BOOST_CHECK_EQUAL( it->second, "5");
+    
+    it++;
+    
+    BOOST_CHECK_EQUAL( it->first, "Host");
+    BOOST_CHECK_EQUAL( it->second, "www.example.com");
 }
 
 BOOST_AUTO_TEST_CASE( basic_request_with_body_split ) {

@@ -31,6 +31,7 @@
 #include <websocketpp/error.hpp>
 
 #include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/stdint.hpp>
 
 #include <algorithm>
 #include <sstream>

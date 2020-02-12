@@ -52,9 +52,9 @@ void on_message(ws_echo_server* s, websocketpp::connection_hdl hdl, ws_echo_serv
 
     try {
         s->send(hdl, msg->get_payload(), msg->get_opcode());
-    } catch (websocketpp::lib::error_code const & e) {
-        std::cout << "Echo failed because: " << e
-                  << "(" << e.message() << ")" << std::endl;
+    } catch (websocketpp::exception const & e) {
+        std::cout << "Echo failed because: "
+                  << "(" << e.what() << ")" << std::endl;
     }
 }
 

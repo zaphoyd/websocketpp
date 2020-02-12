@@ -49,6 +49,7 @@
 
 // Loggers
 #include <websocketpp/logger/basic.hpp>
+#include <websocketpp/logger/levels.hpp>
 
 // RNG
 #include <websocketpp/random/none.hpp>
@@ -188,7 +189,18 @@ struct core {
     static const websocketpp::log::level alog_level =
         websocketpp::log::alevel::all ^ websocketpp::log::alevel::devel;
 
-    ///
+    /// Size of the per-connection read buffer
+    /**
+     * Each connection has an internal buffer of this size. A larger value will
+     * result in fewer trips through the library and less CPU overhead at the
+     * expense of increased memory usage per connection.
+     *
+     * If your application primarily deals in very large messages you may want
+     * to try setting this value higher.
+     *
+     * If your application has a lot of connections or primarily deals in small
+     * messages you may want to try setting this smaller.
+     */
     static const size_t connection_read_buffer_size = 16384;
 
     /// Drop connections immediately on protocol error.
