@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE( frame_extended_binary_unmasked ) {
     frame[1] = 0x7E;
     frame[2] = 0x00;
     frame[3] = 0x7E;
-    std::fill_n(frame+4,126,0x2A);
+    std::fill_n(frame+4,126,uint8_t{0x2A});
 
     BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
     BOOST_CHECK_EQUAL( env.p.consume(frame,130,env.ec), 130 );
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE( frame_jumbo_binary_unmasked ) {
     processor_setup env(false);
 
     uint8_t frame[130] = {0x82, 0x7E, 0x00, 0x7E};
-    std::fill_n(frame+4,126,0x2A);
+    std::fill_n(frame+4,126,uint8_t{0x2A});
 
     BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
     BOOST_CHECK_EQUAL( env.p.consume(frame,130,env.ec), 130 );
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE( control_frame_too_large ) {
     processor_setup env(false);
 
     uint8_t frame[130] = {0x88, 0x7E, 0x00, 0x7E};
-    std::fill_n(frame+4,126,0x2A);
+    std::fill_n(frame+4,126,uint8_t{0x2A});
 
     BOOST_CHECK_EQUAL( env.p.get_message(), message_ptr() );
     BOOST_CHECK_GT( env.p.consume(frame,130,env.ec), 0 );
