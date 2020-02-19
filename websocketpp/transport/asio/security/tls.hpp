@@ -194,7 +194,7 @@ protected:
             return socket::make_error_code(socket::error::invalid_tls_context);
         }
         m_socket = lib::make_shared<socket_type>(
-            _WEBSOCKETPP_REF(*service),lib::ref(*m_context));
+            lib::ref(*service),lib::ref(*m_context));
 
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl, get_socket());
