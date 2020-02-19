@@ -193,8 +193,7 @@ protected:
         if (!m_context) {
             return socket::make_error_code(socket::error::invalid_tls_context);
         }
-        m_socket = lib::make_shared<socket_type>(
-            lib::ref(*service),lib::ref(*m_context));
+        m_socket = lib::make_shared<socket_type>(*service, lib::ref(*m_context));
 
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl, get_socket());
