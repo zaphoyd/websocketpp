@@ -318,12 +318,15 @@ public:
         );
 
         if (config::enable_multithreading) {
-            new_timer->async_wait(m_strand->wrap(lib::bind(
-                &type::handle_timer, get_shared(),
-                new_timer,
-                callback,
-                lib::placeholders::_1
-            )));
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, new_timer, callback]{
+                new_timer->async_wait(m_strand->wrap(lib::bind(
+                    &type::handle_timer, strong_this,
+                    new_timer,
+                    callback,
+                    lib::placeholders::_1
+                )));
+            }));
         } else {
             new_timer->async_wait(lib::bind(
                 &type::handle_timer, get_shared(),
@@ -626,15 +629,18 @@ protected:
 
         // Send proxy request
         if (config::enable_multithreading) {
-            lib::asio::async_write(
-                socket_con_type::get_next_layer(),
-                m_bufs,
-                m_strand->wrap(lib::bind(
-                    &type::handle_proxy_write, get_shared(),
-                    callback,
-                    lib::placeholders::_1
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, callback]{
+                lib::asio::async_write(
+                    socket_con_type::get_next_layer(),
+                    m_bufs,
+                    m_strand->wrap(lib::bind(
+                        &type::handle_proxy_write, strong_this,
+                        callback,
+                        lib::placeholders::_1
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_write(
                 socket_con_type::get_next_layer(),
@@ -709,16 +715,19 @@ protected:
         }
 
         if (config::enable_multithreading) {
-            lib::asio::async_read_until(
-                socket_con_type::get_next_layer(),
-                m_proxy_data->read_buf,
-                "\r\n\r\n",
-                m_strand->wrap(lib::bind(
-                    &type::handle_proxy_read, get_shared(),
-                    callback,
-                    lib::placeholders::_1, lib::placeholders::_2
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, callback]{
+                lib::asio::async_read_until(
+                    socket_con_type::get_next_layer(),
+                    m_proxy_data->read_buf,
+                    "\r\n\r\n",
+                    m_strand->wrap(lib::bind(
+                        &type::handle_proxy_read, strong_this,
+                        callback,
+                        lib::placeholders::_1, lib::placeholders::_2
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_read_until(
                 socket_con_type::get_next_layer(),
@@ -837,19 +846,22 @@ protected:
         }*/
 
         if (config::enable_multithreading) {
-            lib::asio::async_read(
-                socket_con_type::get_socket(),
-                lib::asio::buffer(buf,len),
-                lib::asio::transfer_at_least(num_bytes),
-                m_strand->wrap(make_custom_alloc_handler(
-                    m_read_handler_allocator,
-                    lib::bind(
-                        &type::handle_async_read, get_shared(),
-                        handler,
-                        lib::placeholders::_1, lib::placeholders::_2
-                    )
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, handler, buf, len, num_bytes]{
+                lib::asio::async_read(
+                    socket_con_type::get_socket(),
+                    lib::asio::buffer(buf,len),
+                    lib::asio::transfer_at_least(num_bytes),
+                    m_strand->wrap(make_custom_alloc_handler(
+                        m_read_handler_allocator,
+                        lib::bind(
+                            &type::handle_async_read, strong_this,
+                            handler,
+                            lib::placeholders::_1, lib::placeholders::_2
+                        )
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_read(
                 socket_con_type::get_socket(),
@@ -907,18 +919,21 @@ protected:
         m_bufs.push_back(lib::asio::buffer(buf,len));
 
         if (config::enable_multithreading) {
-            lib::asio::async_write(
-                socket_con_type::get_socket(),
-                m_bufs,
-                m_strand->wrap(make_custom_alloc_handler(
-                    m_write_handler_allocator,
-                    lib::bind(
-                        &type::handle_async_write, get_shared(),
-                        handler,
-                        lib::placeholders::_1, lib::placeholders::_2
-                    )
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, handler]{
+                lib::asio::async_write(
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    m_strand->wrap(make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        lib::bind(
+                            &type::handle_async_write, strong_this,
+                            handler,
+                            lib::placeholders::_1, lib::placeholders::_2
+                        )
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_write(
                 socket_con_type::get_socket(),
@@ -944,18 +959,21 @@ protected:
         }
 
         if (config::enable_multithreading) {
-            lib::asio::async_write(
-                socket_con_type::get_socket(),
-                m_bufs,
-                m_strand->wrap(make_custom_alloc_handler(
-                    m_write_handler_allocator,
-                    lib::bind(
-                        &type::handle_async_write, get_shared(),
-                        handler,
-                        lib::placeholders::_1, lib::placeholders::_2
-                    )
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, handler]{
+                lib::asio::async_write(
+                    socket_con_type::get_socket(),
+                    m_bufs,
+                    m_strand->wrap(make_custom_alloc_handler(
+                        m_write_handler_allocator,
+                        lib::bind(
+                            &type::handle_async_write, strong_this,
+                            handler,
+                            lib::placeholders::_1, lib::placeholders::_2
+                        )
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_write(
                 socket_con_type::get_socket(),

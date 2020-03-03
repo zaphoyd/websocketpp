@@ -264,14 +264,17 @@ protected:
 
         // TLS handshake
         if (m_strand) {
-            m_socket->async_handshake(
-                get_handshake_type(),
-                m_strand->wrap(lib::bind(
-                    &type::handle_init, get_shared(),
-                    callback,
-                    lib::placeholders::_1
-                ))
-            );
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, callback]{
+                m_socket->async_handshake(
+                    get_handshake_type(),
+                    m_strand->wrap(lib::bind(
+                        &type::handle_init, strong_this,
+                        callback,
+                        lib::placeholders::_1
+                    ))
+                );
+            }));
         } else {
             m_socket->async_handshake(
                 get_handshake_type(),
@@ -326,7 +329,10 @@ protected:
 
     void async_shutdown(socket::shutdown_handler callback) {
         if (m_strand) {
-            m_socket->async_shutdown(m_strand->wrap(callback));
+            auto strong_this = get_shared();
+            lib::asio::dispatch(m_strand->wrap([this, strong_this, callback]{
+                m_socket->async_shutdown(m_strand->wrap(callback));
+            }));
         } else {
             m_socket->async_shutdown(callback);
         }

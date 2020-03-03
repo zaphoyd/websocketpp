@@ -777,15 +777,17 @@ public:
         m_alog->write(log::alevel::devel, "asio::async_accept");
 
         if (config::enable_multithreading) {
-            m_acceptor->async_accept(
-                tcon->get_raw_socket(),
-                tcon->get_strand()->wrap(lib::bind(
-                    &type::handle_accept,
-                    this,
-                    callback,
-                    lib::placeholders::_1
-                ))
-            );
+            lib::asio::dispatch(tcon->get_strand()->wrap([this, tcon, callback]{
+                m_acceptor->async_accept(
+                    tcon->get_raw_socket(),
+                    tcon->get_strand()->wrap(lib::bind(
+                        &type::handle_accept,
+                        this,
+                        callback,
+                        lib::placeholders::_1
+                    ))
+                );
+            }));
         } else {
             m_acceptor->async_accept(
                 tcon->get_raw_socket(),
@@ -904,18 +906,20 @@ protected:
         );
 
         if (config::enable_multithreading) {
-            m_resolver->async_resolve(
-                query,
-                tcon->get_strand()->wrap(lib::bind(
-                    &type::handle_resolve,
-                    this,
-                    tcon,
-                    dns_timer,
-                    cb,
-                    lib::placeholders::_1,
-                    lib::placeholders::_2
-                ))
-            );
+            lib::asio::dispatch(tcon->get_strand()->wrap([this, query, tcon, dns_timer, cb]{
+                m_resolver->async_resolve(
+                    query,
+                    tcon->get_strand()->wrap(lib::bind(
+                        &type::handle_resolve,
+                        this,
+                        tcon,
+                        dns_timer,
+                        cb,
+                        lib::placeholders::_1,
+                        lib::placeholders::_2
+                    ))
+                );
+            }));
         } else {
             m_resolver->async_resolve(
                 query,
@@ -1012,18 +1016,20 @@ protected:
         );
 
         if (config::enable_multithreading) {
-            lib::asio::async_connect(
-                tcon->get_raw_socket(),
-                iterator,
-                tcon->get_strand()->wrap(lib::bind(
-                    &type::handle_connect,
-                    this,
-                    tcon,
-                    con_timer,
-                    callback,
-                    lib::placeholders::_1
-                ))
-            );
+            lib::asio::dispatch(tcon->get_strand()->wrap([this, tcon, iterator, con_timer, callback]{
+                lib::asio::async_connect(
+                    tcon->get_raw_socket(),
+                    iterator,
+                    tcon->get_strand()->wrap(lib::bind(
+                        &type::handle_connect,
+                        this,
+                        tcon,
+                        con_timer,
+                        callback,
+                        lib::placeholders::_1
+                    ))
+                );
+            }));
         } else {
             lib::asio::async_connect(
                 tcon->get_raw_socket(),
