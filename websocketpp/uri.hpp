@@ -48,7 +48,7 @@ static uint16_t const uri_default_secure_port = 443;
 
 class uri {
 public:
-    explicit uri(std::string const & uri_string) : m_valid(false) {
+    explicit uri(std::string const & uri_string) : m_valid(false), m_is_ipv6(false) {
         std::string::const_iterator it;
         std::string::const_iterator temp;
 
@@ -82,6 +82,7 @@ public:
         // an IPv4 address
         // or an IPv6 address
         if (*it == '[') {
+            m_is_ipv6 = true;
             ++it;
             // IPv6 literal
             // extract IPv6 digits until ]
@@ -170,26 +171,29 @@ public:
     uri(bool secure, std::string const & host, uint16_t port,
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_port(port)
       , m_secure(secure)
-      , m_valid(true) {}
+      , m_valid(true)
+      , m_is_ipv6(std::string::npos != host.find(':')) {}
 
     uri(bool secure, std::string const & host, std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_port(secure ? uri_default_secure_port : uri_default_port)
       , m_secure(secure)
-      , m_valid(true) {}
+      , m_valid(true)
+      , m_is_ipv6(std::string::npos != host.find(':')) {}
 
     uri(bool secure, std::string const & host, std::string const & port,
         std::string const & resource)
       : m_scheme(secure ? "wss" : "ws")
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_secure(secure)
+      , m_is_ipv6(std::string::npos != host.find(":"))
     {
         lib::error_code ec;
         m_port = get_port_from_string(port,ec);
@@ -199,26 +203,29 @@ public:
     uri(std::string const & scheme, std::string const & host, uint16_t port,
         std::string const & resource)
       : m_scheme(scheme)
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_port(port)
       , m_secure(scheme == "wss" || scheme == "https")
-      , m_valid(true) {}
+      , m_valid(true)
+      , m_is_ipv6(std::string::npos != host.find(":")) {}
 
     uri(std::string scheme, std::string const & host, std::string const & resource)
       : m_scheme(scheme)
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
       , m_secure(scheme == "wss" || scheme == "https")
-      , m_valid(true) {}
+      , m_valid(true)
+      , m_is_ipv6(std::string::npos != host.find(":")) {}
 
     uri(std::string const & scheme, std::string const & host,
         std::string const & port, std::string const & resource)
       : m_scheme(scheme)
-      , m_host(host)
+      , m_host(parse_host(host))
       , m_resource(resource.empty() ? "/" : resource)
       , m_secure(scheme == "wss" || scheme == "https")
+      , m_is_ipv6(std::string::npos != host.find(":"))
     {
         lib::error_code ec;
         m_port = get_port_from_string(port,ec);
@@ -242,18 +249,19 @@ public:
     }
 
     std::string get_host_port() const {
+        std::stringstream p;
+        p << (m_is_ipv6 ? "[" : "") << m_host << (m_is_ipv6 ? "]" : "");
         if (m_port == (m_secure ? uri_default_secure_port : uri_default_port)) {
-            return m_host;
+            return p.str();
         } else {
-            std::stringstream p;
-            p << m_host << ":" << m_port;
+            p << ":" << m_port;
             return p.str();
         }
     }
 
     std::string get_authority() const {
         std::stringstream p;
-        p << m_host << ":" << m_port;
+        p << (m_is_ipv6 ? "[" : "") << m_host << (m_is_ipv6 ? "]" : "") << ":" << m_port;
         return p.str();
     }
 
@@ -274,7 +282,7 @@ public:
     std::string str() const {
         std::stringstream s;
 
-        s << m_scheme << "://" << m_host;
+        s << m_scheme << "://" << (m_is_ipv6 ? "[" : "") << m_host << (m_is_ipv6 ? "]" : "");
 
         if (m_port != (m_secure ? uri_default_secure_port : uri_default_port)) {
             s << ":" << m_port;
@@ -340,12 +348,30 @@ private:
         return static_cast<uint16_t>(t_port);
     }
 
+    // Strip brackets off of an IPv6 address, to ensure all constructors behave the same
+    std::string parse_host(std::string const & host)
+    {
+        std::string t_host(host);
+        std::size_t pos;
+        if(std::string::npos != (pos = t_host.find_first_of("[")))
+        {
+            t_host.erase(pos, 1);
+        }
+        if(std::string::npos != (pos = t_host.find_last_of("]")))
+        {
+            t_host.erase(pos, 1);
+        }
+
+        return t_host;
+    }
+
     std::string m_scheme;
     std::string m_host;
     std::string m_resource;
     uint16_t    m_port;
     bool        m_secure;
     bool        m_valid;
+    bool        m_is_ipv6;
 };
 
 /// Pointer to a URI
