@@ -1,9 +1,11 @@
 HEAD
+
+0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
   OpenSSL functions.
 - Compatibility: Removes the use of make_shared in a number of cases where
   it would be incompatible with newer versions of ASIO. Thank you Stefan
-  Floeren for the patch.
+  Floeren for the patch. #810 #814 #862 #843 #794 #808
 - CMake: Update cmake installer to better handle dependencies when using
   g++ on MacOS. Thank you Luca Palano for reporting and a patch. #831
 - CMake: Update cmake installer to use a variable for the include directory
