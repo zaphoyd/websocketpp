@@ -1,4 +1,6 @@
 HEAD
+- Examples: Update print_client_tls example to remove use of deprecated
+  OpenSSL functions.
 - CMake: Update cmake installer to better handle dependencies when using
   g++ on MacOS. Thank you Luca Palano for reporting and a patch. #831
 - CMake: Update cmake installer to use a variable for the include directory
