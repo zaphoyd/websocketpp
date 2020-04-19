@@ -61,7 +61,7 @@ bool verify_subject_alternative_name(const char * hostname, X509 * cert) {
             continue;
         }
         
-        char * dns_name = (char *) ASN1_STRING_data(current_name->d.dNSName);
+        char const * dns_name = (char const *) ASN1_STRING_get0_data(current_name->d.dNSName);
         
         // Make sure there isn't an embedded NUL character in the DNS name
         if (ASN1_STRING_length(current_name->d.dNSName) != strlen(dns_name)) {
@@ -76,7 +76,7 @@ bool verify_subject_alternative_name(const char * hostname, X509 * cert) {
 }
 
 /// Verify that the certificate common name matches the given hostname
-bool verify_common_name(const char * hostname, X509 * cert) {
+bool verify_common_name(char const * hostname, X509 * cert) {
     // Find the position of the CN field in the Subject field of the certificate
     int common_name_loc = X509_NAME_get_index_by_NID(X509_get_subject_name(cert), NID_commonName, -1);
     if (common_name_loc < 0) {
@@ -95,7 +95,7 @@ bool verify_common_name(const char * hostname, X509 * cert) {
         return false;
     }
     
-    char * common_name_str = (char *) ASN1_STRING_data(common_name_asn1);
+    char const * common_name_str = (char const *) ASN1_STRING_get0_data(common_name_asn1);
     
     // Make sure there isn't an embedded NUL character in the CN
     if (ASN1_STRING_length(common_name_asn1) != strlen(common_name_str)) {

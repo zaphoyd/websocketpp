@@ -24,7 +24,7 @@ endif ()
 ############ Project name and version
 set (WEBSOCKETPP_MAJOR_VERSION 0)
 set (WEBSOCKETPP_MINOR_VERSION 8)
-set (WEBSOCKETPP_PATCH_VERSION 1)
+set (WEBSOCKETPP_PATCH_VERSION 2)
 set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
 
 if(POLICY CMP0048)
@@ -123,7 +123,11 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 
     # g++
     if (CMAKE_COMPILER_IS_GNUCXX)
-        set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        if (NOT APPLE)
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
+        else()
+            set (WEBSOCKETPP_PLATFORM_LIBS pthread)
+        endif()
         set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
         set (WEBSOCKETPP_BOOST_LIBS system thread)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
@@ -202,7 +206,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 	endif ()
 
     if (NOT Boost_USE_STATIC_LIBS)
-        add_definitions (/DBOOST_TEST_DYN_LINK)
+        add_definitions (-DBOOST_TEST_DYN_LINK)
     endif ()
 
     set (Boost_FIND_REQUIRED TRUE)
