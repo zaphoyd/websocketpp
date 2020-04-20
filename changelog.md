@@ -9,6 +9,9 @@ HEAD
   testing. #601 #879
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
   value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
+- CMake: Fix typo in CMakeLists.txt that caused CXX_FLAGS to be improperly
+  quoted. Removed unnecessary hardcoded dependency on libc++ for clang.
+  Thank you kraj for reporting and a patch. #859
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
