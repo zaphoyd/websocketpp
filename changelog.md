@@ -7,6 +7,8 @@ HEAD
   compliant URIs when IPv6 literals are involved. Thank you Jeff Davie, 
   thorsten-klein, mstaz, and barsnick for reporting, example patches, and
   testing. #601 #879
+- SCons: Fix typo in SConstruct that prevented clang from getting the right
+  value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
