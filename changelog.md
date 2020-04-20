@@ -1,4 +1,12 @@
 HEAD
+- Compatibility: Overhauled the URI authority parsing logic to be more 
+  compliant with RFC3986. WebSocket++ is now able to detect invalid registry
+  hosts, invalid IPv4 and IPv6 literal addresses. Dozens of additional
+  uri tests added (thank you to the uriparser project for inspiration & test
+  cases). URI methods that produce URI strings will now produce RFC3986
+  compliant URIs when IPv6 literals are involved. Thank you Jeff Davie, 
+  thorsten-klein, mstaz, and barsnick for reporting, example patches, and
+  testing. #601 #879
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
