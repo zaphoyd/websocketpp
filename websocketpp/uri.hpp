@@ -58,7 +58,7 @@ namespace uri_helper {
  * @param c the char to test
  * @return True if the character is considered `unreserved`
  */
-bool unreserved(char c) {
+inline bool unreserved(char c) {
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
         return true;
     } else if (c >= '0' && c <= '9') {
@@ -75,7 +75,7 @@ bool unreserved(char c) {
  * @param c the char to test
  * @return True if the character is considered a generic delimiter
  */
-bool gen_delim(char c) {
+inline bool gen_delim(char c) {
     switch(c) {
         case ':':
         case '/':
@@ -97,7 +97,7 @@ bool gen_delim(char c) {
  * @param c the char to test
  * @return True if the character is considered a subcomponent delimiter
  */
-bool sub_delim(char c) {
+inline bool sub_delim(char c) {
     switch(c) {
         case '!':
         case '$':
@@ -125,7 +125,7 @@ bool sub_delim(char c) {
  * @param c the char to test
  * @return True if the character is considered a hexadecimal digit
  */
-bool hexdigit(char c) {
+inline bool hexdigit(char c) {
     switch(c) {
         case '0':
         case '1':
@@ -162,7 +162,7 @@ bool hexdigit(char c) {
  * @param c the char to test
  * @return True if the character is considered a valid character for a uri scheme
  */
-bool scheme(char c) {
+inline bool scheme(char c) {
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
         return true;
     } else if (c >= '0' && c <= '9') {
@@ -181,7 +181,7 @@ bool scheme(char c) {
  * @param c the char to test
  * @return True if the character is considered a digit (0-9)
  */
-bool digit(char c) {
+inline bool digit(char c) {
     return c >= '0' && c <= '9';
 }
 
@@ -192,7 +192,7 @@ bool digit(char c) {
  * @param c the char to test
  * @return True if the character is considered a digit (0-9)
  */
-bool digit(std::string::const_iterator it) {
+inline bool digit(std::string::const_iterator it) {
     return digit(*it);
 }
 
@@ -208,7 +208,7 @@ bool digit(std::string::const_iterator it) {
  * @return True if both the character pointed at by the iterator and
  *         the next one represent a valid RFC3986 percent encoding
  */
-bool pct_encoded(std::string::const_iterator it) {
+inline bool pct_encoded(std::string::const_iterator it) {
     return hexdigit(*it) && hexdigit(*(it + 1));
 }
 
@@ -220,7 +220,7 @@ bool pct_encoded(std::string::const_iterator it) {
  * @param start An iterator to the last character of the range to check (exclusive)
  * @return True if the range represents a valid IPv4 decimal octet (0-255)
  */
-bool dec_octet(std::string::const_iterator start, std::string::const_iterator end) {
+inline bool dec_octet(std::string::const_iterator start, std::string::const_iterator end) {
     if (end-start == 1) {
         return digit(start);
     } else if (end-start == 2) {
@@ -247,7 +247,7 @@ bool dec_octet(std::string::const_iterator start, std::string::const_iterator en
  * @param start An iterator to the last character of the range to check (exclusive)
  * @return True if the range represents a valid IPv4 literal address
  */
-bool ipv4_literal(std::string::const_iterator start, std::string::const_iterator end) {
+inline bool ipv4_literal(std::string::const_iterator start, std::string::const_iterator end) {
     std::string::const_iterator cursor = start;
     size_t counter = 0;
     for (std::string::const_iterator it = start; it != end; ++it) {
@@ -276,7 +276,7 @@ bool ipv4_literal(std::string::const_iterator start, std::string::const_iterator
  * @param start An iterator to the last character of the range to check (exclusive)
  * @return True if the range represents a valid IPv6 hex quad
  */
-bool hex4(std::string::const_iterator start, std::string::const_iterator end) {
+inline bool hex4(std::string::const_iterator start, std::string::const_iterator end) {
     if (end-start == 0 || end-start >4) {
         return false;
     }
@@ -296,7 +296,7 @@ bool hex4(std::string::const_iterator start, std::string::const_iterator end) {
  * @param start An iterator to the last character of the range to check (exclusive)
  * @return True if the range represents a valid IPv6 literal
  */
-bool ipv6_literal(std::string::const_iterator start, std::string::const_iterator end) {
+inline bool ipv6_literal(std::string::const_iterator start, std::string::const_iterator end) {
     // initial range check
     if (end-start > 45 && end-start >= 2) {
         return false;
@@ -358,7 +358,7 @@ bool ipv6_literal(std::string::const_iterator start, std::string::const_iterator
  * @param c The character to test
  * @return True if the range represents a valid IPv6 literal
  */
-bool reg_name(char c) {
+inline bool reg_name(char c) {
     return unreserved(c) || sub_delim(c);
 }
 
@@ -370,7 +370,7 @@ bool reg_name(char c) {
  * @param start An iterator to the last character of the range to check (exclusive)
  * @return True if the range represents a valid registry name
  */
-bool reg_name(std::string::const_iterator start, std::string::const_iterator end) {
+inline bool reg_name(std::string::const_iterator start, std::string::const_iterator end) {
     std::string::const_iterator it = start;
     while (it != end) {
         if (*it == '%') {
