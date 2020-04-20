@@ -162,7 +162,7 @@ bool hexdigit(char c) {
  * @param c the char to test
  * @return True if the character is considered a valid character for a uri scheme
  */
-bool scheme_valid(char c) {
+bool scheme(char c) {
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
         return true;
     } else if (c >= '0' && c <= '9') {
@@ -475,7 +475,6 @@ public:
             // IPv4 or hostname
             // extract until : or first path component
             while (state == 0) {
-                //std::cout << ">>" << *it << "<< "<< (uri_helper::reg_name(*it) ? "T" : "F") << std::endl;
                 if (it == uri_string.end()) {
                     state = 2;
                     break;

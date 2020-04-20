@@ -384,4 +384,4 @@ BOOST_AUTO_TEST_CASE( uri_invalid_no_scheme ) {
     BOOST_CHECK( !uri.get_valid() );
 }
 
-// TODO: tests for the other two constructors
+// TODO: tests for the other constructors, especially with IP literals
