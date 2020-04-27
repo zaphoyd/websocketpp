@@ -15,6 +15,9 @@ HEAD
 - CMake: Fix issue in CMakeLists.txt that caused boost dependencies to be
   seen as a single library rather than multiple. Thank you Gianfranco
   Costamagna for reporting and a patch. #855
+- CMake: Adjust CMake config to use GNUInstallDirs to choose install
+  directories rather than hard coding. Thank you Khem Raj for reporting and
+  a patch. #854
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
