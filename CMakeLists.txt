@@ -215,7 +215,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     set (Boost_USE_MULTITHREADED TRUE)
     set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
 
-    find_package (Boost 1.39.0 COMPONENTS "${WEBSOCKETPP_BOOST_LIBS}")
+    find_package (Boost 1.39.0 COMPONENTS ${WEBSOCKETPP_BOOST_LIBS})
 
     if (Boost_FOUND)
         # Boost is a project wide global dependency.
