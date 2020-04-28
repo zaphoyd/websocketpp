@@ -1,4 +1,5 @@
-import os, sys, subprocess, SCons.Errors
+import os, sys, SCons.Errors
+from subprocess import check_output
 
 env = Environment(ENV = os.environ)
 
