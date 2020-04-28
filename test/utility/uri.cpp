@@ -159,6 +159,17 @@ BOOST_AUTO_TEST_CASE( uri_invalid_ipv6 ) {
 }
 
 BOOST_AUTO_TEST_CASE( uri_valid_no_slash ) {
+    websocketpp::uri uri("ws://localhost");
+
+    BOOST_CHECK( uri.get_valid() );
+    BOOST_CHECK( !uri.get_secure() );
+    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
+    BOOST_CHECK_EQUAL( uri.get_port(), 80 );
+    BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
+}
+
+BOOST_AUTO_TEST_CASE( uri_valid_no_slash_with_fragment ) {
     websocketpp::uri uri("ws://localhost#foo");
 
     BOOST_CHECK( uri.get_valid() );

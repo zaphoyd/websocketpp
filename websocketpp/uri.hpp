@@ -463,9 +463,13 @@ public:
             } else if (*it == '/' || *it == '?' || *it == '#') {
                 // todo: better path parsing
                 state = 2;
-                ++it;
+                
+                // we don't increment the iterator here because we want the 
+                // delimiter to be read again as a part of the path
             } else if (*it == ':') {
                 state = 1;
+
+                // start reading port after the delimiter
                 ++it;
             } else {
                 // problem
@@ -483,7 +487,6 @@ public:
                     if (it+2 < uri_string.end() && uri_helper::pct_encoded(it+1)) {
                         m_host.append(it,it+2);
                         it += 3;
-                        continue;
                     }
                 } else if (!uri_helper::reg_name(*it)) {
                     // we hit one of the general delimiters
@@ -491,10 +494,16 @@ public:
                         // got host vs port delimiter
                         // end hostname start port
                         state = 1;
+
+                        // start reading port after the delimiter
+                        ++it;
                     } else if (*it == '/' || *it == '#' || *it == '?') {
                         // one of the normal authority vs path delimiters
                         // end hostname and start parsing path
                         state = 2;
+
+                        // we don't increment the iterator here because we want the 
+                        // delimiter to be read again as a part of the path
                     } else {
                         // either @, [, or ]
                         // @ = userinfo fragment
@@ -503,8 +512,9 @@ public:
                     }
                 } else {
                     m_host += *it;
+                    ++it;
                 }
-                ++it;
+                
             }
         }
 
@@ -520,6 +530,7 @@ public:
                 state = 3;
             } else if (uri_helper::digit(it)) {
                 port += *it;
+                ++it;
             } else {
                 // if we stop parsing the port and there wasn't actually a port
                 // we have an invalid URI
@@ -527,8 +538,11 @@ public:
                     return;
                 }
                 state = 3;
+
+                // we don't increment the iterator here because we want the 
+                // delimiter to be read again as a part of the path
             }
-            ++it;
+            
         }
 
         lib::error_code ec;
@@ -539,7 +553,7 @@ public:
         }
 
         // step back one so the first char of the path delimiter doesn't get eaten
-        m_resource.append(it-1,uri_string.end());
+        m_resource.append(it,uri_string.end());
         
         if (m_resource.empty()) {
             m_resource = "/";
