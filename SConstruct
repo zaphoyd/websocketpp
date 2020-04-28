@@ -33,7 +33,7 @@ elif 'BOOST_INCLUDES' in os.environ and 'BOOST_LIBS' in os.environ:
    env['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES']
    env['BOOST_LIBS'] = os.environ['BOOST_LIBS']
 else:
-   raise SCons.Errors.UserError("Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!")
+   raise SCons.Errors.UserError("Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS were set!")
 
 ## Custom OpenSSL
 if 'OPENSSL_PATH' in os.environ:
@@ -77,7 +77,7 @@ if env['PLATFORM'].startswith('win'):
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
 elif env['PLATFORM'] == 'posix':
-   if env.has_key('DEBUG'):
+   if 'DEBUG' in env:
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
@@ -87,7 +87,7 @@ elif env['PLATFORM'] == 'posix':
 elif env['PLATFORM'] == 'darwin':
    if not 'CXX' in os.environ:
       env['CXX'] = "clang++"
-   if env.has_key('DEBUG'):
+   if 'DEBUG' in env:
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
@@ -158,7 +158,7 @@ env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
    # TODO: check g++ version
-   GCC_VERSION = subprocess.check_output([env_cpp11['CXX'], '-dumpversion']).decode("utf-8")
+   GCC_VERSION = check_output([env_cpp11['CXX'], '-dumpversion']).decode("utf-8")
 
    if GCC_VERSION > "4.4.0":
       print("C++11 build environment partially enabled")
