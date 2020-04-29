@@ -111,7 +111,12 @@ public:
             bool wait = false;
 
             {
-                scoped_lock guard(m_lock);
+                // FIXME: Removed the lock line below to avoid race condition.
+                // this is read=only thread, so lock should not be needed. Alternative, is
+                // making sure that the sleep(1) happens before locking the mutex.
+                
+                //scoped_lock guard(m_lock);
+                
                 // If the connection has been closed, stop generating telemetry
                 if (m_done) {break;}
 
