@@ -272,9 +272,20 @@ configure_package_config_file(websocketpp-config.cmake.in
   INSTALL_DESTINATION "${INSTALL_CMAKE_DIR}"
   NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
-write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
-  VERSION ${WEBSOCKETPP_VERSION}
-  COMPATIBILITY ExactVersion)
+if (${CMAKE_VERSION} VERSION_LESS "3.14.0")
+    # Disable check for same 32/64bit-ness in websocketpp-configVersion.cmake by setting CMAKE_SIZEOF_VOID_P
+    set (CMAKE_SIZEOF_VOID_P "")
+    write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
+      VERSION ${WEBSOCKETPP_VERSION}
+      COMPATIBILITY AnyNewerVersion)
+else ()
+    # Use ARCH_INDEPENDENT option introduced in CMake 3.14
+    # ARCH_INDEPENDENT is intended for header-only libraries or similar packages with no binaries
+    write_basic_package_version_file("${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
+      VERSION ${WEBSOCKETPP_VERSION}
+      COMPATIBILITY AnyNewerVersion
+      ARCH_INDEPENDENT)
+endif ()
 
 # Install the websocketpp-config.cmake and websocketpp-configVersion.cmake
 install (FILES
