@@ -113,7 +113,7 @@ public:
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable
-        endpoint(endpoint &) = delete;
+        endpoint(endpoint const &) = delete;
     
         // no copy assignment operator because endpoints are not copyable
         endpoint & operator=(endpoint const &) = delete;
