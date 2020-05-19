@@ -1,3 +1,12 @@
+#include <boost/version.hpp>
+#include <boost/config.hpp>
+
+#if defined( BOOST_WINDOWS )
+// Disable warnings only for asio/websocketpp code, I take care of mine.
+#pragma warning(push)
+#pragma warning(disable : 4996 )
+#endif
+
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
@@ -5,6 +14,15 @@
 // select between boost::thread and std::thread based on how the build system
 // is configured.
 #include <websocketpp/common/thread.hpp>
+
+#if defined( BOOST_WINDOWS )
+#pragma warning(pop)
+#endif
+
+#if defined( BOOST_WINDOWS )
+// sleep is not defined within Windows, Sleep does the same job
+#define sleep Sleep
+#endif
 
 /**
  * Define a semi-cross platform helper method that waits/sleeps for a bit.
