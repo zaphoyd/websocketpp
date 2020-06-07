@@ -925,6 +925,15 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
             this->write_http_response(handshake_ec);
         }
     } else {
+        // The HTTP parser reported that it was not ready and wants more data.
+        // Assert that it actually consumed all the data present before overwriting
+        // the buffer. This should always be the case.
+        if (bytes_transferred != bytes_processed) {
+            m_elog->write(log::elevel::fatal,"Assertion Failed: HTTP request parser failed to consume all bytes from a read request.");
+            this->terminate(make_error_code(error::general));
+            return;
+        }
+
         // read at least 1 more byte
         transport_con_type::async_read_at_least(
             1,
@@ -1648,6 +1657,15 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 
         this->handle_read_frame(lib::error_code(), m_buf_cursor);
     } else {
+        // The HTTP parser reported that it was not ready and wants more data.
+        // Assert that it actually consumed all the data present before overwriting
+        // the buffer. This should always be the case.
+        if (bytes_transferred != bytes_processed) {
+            m_elog->write(log::elevel::fatal,"Assertion Failed: HTTP response parser failed to consume all bytes from a read request.");
+            this->terminate(make_error_code(error::general));
+            return;
+        }
+
         transport_con_type::async_read_at_least(
             1,
             m_buf,

@@ -11,6 +11,8 @@ HEAD
   This should reduce any unnecessary expiration logic done to a timer
   that is going to be cancelled regardless. Thank you Oleh Derevenko
   for reporting. #901
+- Reliability: Add a few defensive assertions to guard against corrupted
+  HTTP message reads. Thank you Oleh Derevenko for reporting. #899
 - Documentation: Added language to explicitly clarify that the library
   license is in fact the 3-Clause BSD license. #906
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
