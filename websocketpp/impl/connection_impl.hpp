@@ -1968,11 +1968,11 @@ void connection<config>::process_control_frame(typename config::message_type::pt
             }
         }
     } else if (op == frame::opcode::PONG) {
-        if (m_pong_handler) {
-            m_pong_handler(m_connection_hdl, msg->get_payload());
-        }
         if (m_ping_timer) {
             m_ping_timer->cancel();
+        }
+        if (m_pong_handler) {
+            m_pong_handler(m_connection_hdl, msg->get_payload());
         }
     } else if (op == frame::opcode::CLOSE) {
         m_alog->write(log::alevel::devel,"got close frame");

@@ -7,6 +7,10 @@ HEAD
   compliant URIs when IPv6 literals are involved. Thank you Jeff Davie, 
   thorsten-klein, mstaz, and barsnick for reporting, example patches, and
   testing. #601 #879
+- Improvement: Cancel ping timer before calling blocking pong handler.
+  This should reduce any unnecessary expiration logic done to a timer
+  that is going to be cancelled regardless. Thank you Oleh Derevenko
+  for reporting. #901
 - Documentation: Added language to explicitly clarify that the library
   license is in fact the 3-Clause BSD license. #906
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
