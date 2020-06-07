@@ -44,6 +44,10 @@ http://groups.google.com/group/websocketpp-announcements/
 **Discussion / Development / Support Mailing List / Forum**
 http://groups.google.com/group/websocketpp/
 
+License
+======
+3-Clause BSD (See COPYING for more details)
+
 Author
 ======
 Peter Thorson - websocketpp@zaphoyd.com
