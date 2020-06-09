@@ -49,6 +49,10 @@
 
 #include <boost/asio.hpp>
 
+// Proxy Authentication Policy
+#include <websocketpp/common/security_context.hpp>
+#include <websocketpp/http/proxy_authenticator.hpp>
+
 // Accept a connection, read data, and discard until EOF
 void run_dummy_server(int port) {
     using boost::asio::ip::tcp;
@@ -94,6 +98,7 @@ struct config {
     typedef websocketpp::http::parser::request request_type;
     typedef websocketpp::http::parser::response response_type;
     typedef websocketpp::transport::asio::tls_socket::endpoint socket_type;
+    typedef websocketpp::http::proxy::proxy_authenticator<websocketpp::lib::security::SecurityContext> proxy_authenticator_type;
 
     static const bool enable_multithreading = true;
 

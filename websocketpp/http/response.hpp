@@ -157,6 +157,11 @@ public:
     const std::string& get_status_msg() const {
         return m_status_msg;
     }
+
+    size_t get_content_length() const {
+        return m_read;
+    }
+
 private:
     /// Helper function for consume. Process response line
     void process(std::string::iterator begin, std::string::iterator end);

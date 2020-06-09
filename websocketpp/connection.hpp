@@ -150,6 +150,15 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  */
 typedef lib::function<void(connection_hdl)> http_handler;
 
+/// Reconnection function handler type
+/**
+  * When connection via a proxy, there are cases where a disconnect/reconnect_handler
+  * is required. This reconnect handler fires, passing a handle to the previous 
+  * connection. A new connection is created, migrating some state from the previous
+  * connection (specifically related to proxy authentication fields).
+  */
+typedef lib::function<void(connection_hdl)> reconnect_handler;
+
 //
 typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
 typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
@@ -161,7 +170,15 @@ typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
      * @todo Move this to configs to allow compile/runtime disabling or enabling
      * of protocol versions
      */
+#ifdef _WIN32
+// Incorrect warning from VStudio compiler
+#pragma warning(push)
+#pragma warning(disable:4592)
+#endif
     static std::vector<int> const versions_supported = {0,7,8,13};
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 #else
     /// Helper array to get around lack of initializer lists pre C++11
     static int const helper[] = {0,7,8,13};
@@ -286,10 +303,14 @@ public:
     // Misc Convenience Types
     typedef session::internal_state::value istate_type;
 
+    // Reconnect handler (Signalled if we require a reconnection)
+    typedef lib::function<void(websocketpp::connection_hdl)> reconnect_handler;
+
 private:
     enum terminate_status {
         failed = 1,
         closed,
+        proxy_reconnect,
         unknown
     };
 public:
@@ -330,6 +351,43 @@ public:
       , m_was_clean(false)
     {
         m_alog->write(log::alevel::devel,"connection constructor");
+    }
+
+    explicit connection(const connection& prev_con)
+        : transport_con_type(prev_con)
+        , m_handle_read_frame(lib::bind(
+            &type::handle_read_frame,
+            this,
+            lib::placeholders::_1,
+            lib::placeholders::_2
+            ))
+        , m_write_frame_handler(lib::bind(
+            &type::handle_write_frame,
+            this,
+            lib::placeholders::_1
+            ))
+        , m_user_agent(prev_con.m_user_agent)
+        , m_open_handshake_timeout_dur(config::timeout_open_handshake)
+        , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+        , m_pong_timeout_dur(config::timeout_pong)
+        , m_max_message_size(config::max_message_size)
+        , m_state(session::state::connecting)
+        , m_internal_state(session::internal_state::USER_INIT)
+        , m_msg_manager(new con_msg_manager_type())
+        , m_send_buffer_size(0)
+        , m_write_flag(false)
+        , m_read_flag(true)
+        , m_is_server(prev_con.m_is_server)
+        , m_alog(prev_con.m_alog)
+        , m_elog(prev_con.m_elog)
+        , m_rng(prev_con.m_rng)
+        , m_local_close_code(close::status::abnormal_close)
+        , m_remote_close_code(close::status::abnormal_close)
+        , m_is_http(false)
+        , m_http_state(session::http_state::init)
+        , m_was_clean(false)
+    {
+        m_alog->write(log::alevel::devel, "connection copy constructor");
     }
 
     /// Get a shared pointer to this component
@@ -472,6 +530,10 @@ public:
      */
     void set_message_handler(message_handler h) {
         m_message_handler = h;
+    }
+
+    void set_reconnect_handler(reconnect_handler h) {
+        m_reconnect_handler = h;
     }
 
     //////////////////////////////////////////
@@ -1510,6 +1572,7 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+    reconnect_handler       m_reconnect_handler;
 
     /// constant values
     long                    m_open_handshake_timeout_dur;

@@ -27,6 +27,8 @@ struct deflate_config : public websocketpp::config::debug_core {
     typedef base::elog_type elog_type;
     
     typedef base::rng_type rng_type;
+
+    typedef base::proxy_authenticator_type proxy_authenticator_type;
     
     struct transport_config : public base::transport_config {
         typedef type::concurrency_type concurrency_type;
@@ -36,6 +38,7 @@ struct deflate_config : public websocketpp::config::debug_core {
         typedef type::response_type response_type;
         typedef websocketpp::transport::asio::basic_socket::endpoint 
             socket_type;
+        typedef type::proxy_authenticator_type proxy_authenticator_type;
     };
 
     typedef websocketpp::transport::asio::endpoint<transport_config> 

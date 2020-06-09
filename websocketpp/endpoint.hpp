@@ -69,6 +69,9 @@ public:
     /// Type of message pointers that this endpoint uses
     typedef typename connection_type::message_ptr message_ptr;
 
+    /// Type of reconnect handler (invoked if reconect required)
+    typedef typename connection_type::reconnect_handler reconnect_handler;
+
     /// Type of error logger
     typedef typename config::elog_type elog_type;
     /// Type of access logger
@@ -323,6 +326,11 @@ public:
         m_alog->write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
+    }
+    void set_reconnect_handler(reconnect_handler h) {
+        m_alog.write(log::alevel::devel, "set_reconnect_handler");
+        scoped_lock_type guard(m_mutex);
+        m_reconnect_handler = h;
     }
 
     //////////////////////////////////////////
@@ -659,7 +667,7 @@ public:
         return con;
     }
 protected:
-    connection_ptr create_connection();
+    connection_ptr create_connection(connection_ptr previous_con = connection_ptr());
 
     lib::shared_ptr<alog_type> m_alog;
     lib::shared_ptr<elog_type> m_elog;
@@ -677,6 +685,7 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
+    reconnect_handler           m_reconnect_handler;
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
