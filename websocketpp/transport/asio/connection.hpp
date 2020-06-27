@@ -772,9 +772,19 @@ protected:
                 return;
             }
 
+            // todo: switch this to using non-istream based consume
             std::istream input(&m_proxy_data->read_buf);
 
-            m_proxy_data->res.consume(input);
+            lib::error_code istream_ec;
+            m_proxy_data->res.consume(input, istream_ec);
+            if (istream_ec) {
+                // there was an error while reading from the proxy
+                m_elog->write(log::elevel::info,
+                    "An HTTP handling error occurred while reading a response from the proxy server: "+istream_ec.message());
+                // todo: do we need to translate this error?
+                callback(istream_ec);
+                return;
+            }
 
             if (!m_proxy_data->res.headers_ready()) {
                 // we read until the headers were done in theory but apparently

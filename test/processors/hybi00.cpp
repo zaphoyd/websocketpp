@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","WjN}|M(6");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
@@ -100,7 +101,8 @@ BOOST_AUTO_TEST_CASE( non_get_method ) {
 
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","janelle!");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
@@ -113,7 +115,8 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","janelle!");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
@@ -126,7 +129,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","janelle!");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
@@ -139,7 +143,8 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","janelle!");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
@@ -153,7 +158,8 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nOrigin: http://example.com\r\nSec-WebSocket-Key1: 3e6b263  4 17 80\r\nSec-WebSocket-Key2: 17  9 G`ZD9   2 2b 7X 3 /r90\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    env.req.consume(handshake.c_str(),handshake.size(),env.ec);
+    BOOST_CHECK_EQUAL(env.ec, websocketpp::lib::error_code());
     env.req.replace_header("Sec-WebSocket-Key3","janelle!");
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));

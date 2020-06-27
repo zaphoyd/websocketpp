@@ -122,7 +122,10 @@ BOOST_AUTO_TEST_CASE( exact_match ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
     BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
@@ -149,7 +152,10 @@ BOOST_AUTO_TEST_CASE( non_get_method ) {
 
     std::string handshake = "POST / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
     BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
@@ -161,7 +167,10 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 
     std::string handshake = "GET / HTTP/1.0\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK(websocketpp::processor::is_websocket_handshake(env.req));
     BOOST_CHECK_EQUAL(websocketpp::processor::get_websocket_version(env.req), env.p.get_version());
@@ -173,7 +182,10 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key1 ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
     BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
@@ -185,7 +197,10 @@ BOOST_AUTO_TEST_CASE( missing_handshake_key2 ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
     BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
@@ -197,7 +212,10 @@ BOOST_AUTO_TEST_CASE( bad_host ) {
 
     std::string handshake = "GET / HTTP/1.1\r\nHost: www.example.com:70000\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: foo\r\n\r\n";
 
-    env.req.consume(handshake.c_str(),handshake.size());
+    websocketpp::lib::error_code ec;
+
+    env.req.consume(handshake.c_str(),handshake.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( websocketpp::processor::is_websocket_handshake(env.req) );
     BOOST_CHECK_EQUAL( websocketpp::processor::get_websocket_version(env.req), env.p.get_version() );
@@ -558,7 +576,10 @@ BOOST_AUTO_TEST_CASE( client_handshake_response_404 ) {
     processor_setup env(false);
 
     std::string res = "HTTP/1.1 404 Not Found\r\n\r\n";
-    env.res.consume(res.data(),res.size());
+
+    websocketpp::lib::error_code ec;
+    env.res.consume(res.data(),res.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::invalid_http_status );
 }
@@ -567,7 +588,9 @@ BOOST_AUTO_TEST_CASE( client_handshake_response_no_upgrade ) {
     processor_setup env(false);
 
     std::string res = "HTTP/1.1 101 Switching Protocols\r\n\r\n";
-    env.res.consume(res.data(),res.size());
+    websocketpp::lib::error_code ec;
+    env.res.consume(res.data(),res.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
 }
@@ -576,7 +599,9 @@ BOOST_AUTO_TEST_CASE( client_handshake_response_no_connection ) {
     processor_setup env(false);
 
     std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\n\r\n";
-    env.res.consume(res.data(),res.size());
+    websocketpp::lib::error_code ec;
+    env.res.consume(res.data(),res.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
 }
@@ -585,7 +610,9 @@ BOOST_AUTO_TEST_CASE( client_handshake_response_no_accept ) {
     processor_setup env(false);
 
     std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\nConnection: bar, UpGrAdE\r\n\r\n";
-    env.res.consume(res.data(),res.size());
+    websocketpp::lib::error_code ec;
+    env.res.consume(res.data(),res.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( env.p.validate_server_handshake_response(env.req,env.res), websocketpp::processor::error::missing_required_header );
 }
@@ -596,7 +623,9 @@ BOOST_AUTO_TEST_CASE( client_handshake_response ) {
     env.req.append_header("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==");
 
     std::string res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: foo, wEbsOckEt\r\nConnection: bar, UpGrAdE\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n";
-    env.res.consume(res.data(),res.size());
+    websocketpp::lib::error_code ec;
+    env.res.consume(res.data(),res.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( !env.p.validate_server_handshake_response(env.req,env.res) );
 }

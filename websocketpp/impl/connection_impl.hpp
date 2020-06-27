@@ -510,6 +510,7 @@ void connection<config>::select_subprotocol(std::string const & value,
     }
 
     m_subprotocol = value;
+    ec = lib::error_code();
 }
 
 template <typename config>
@@ -540,109 +541,165 @@ connection<config>::get_response_header(std::string const & key) const {
     return m_response.get_header(key);
 }
 
-// TODO: EXCEPTION_FREE
+template <typename config>
+void connection<config>::set_status(http::status_code::value code,
+    lib::error_code & ec)
+{
+    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
+        ec = error::make_error_code(error::invalid_state);
+        return;
+    }
+    m_response.set_status(code);
+    ec = lib::error_code();
+}
+
 template <typename config>
 void connection<config>::set_status(http::status_code::value code)
 {
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw exception("Call to set_status from invalid state",
-                      error::make_error_code(error::invalid_state));
+    lib::error_code ec;
+    this->set_status(code, ec);
+    if (ec) {
+        throw exception("Call to set_status from invalid state", ec);
     }
-    m_response.set_status(code);
 }
 
-// TODO: EXCEPTION_FREE
+template <typename config>
+void connection<config>::set_status(http::status_code::value code,
+    std::string const & msg, lib::error_code & ec)
+{
+    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
+        ec = error::make_error_code(error::invalid_state);
+        return;
+    }
+
+    m_response.set_status(code,msg);
+    ec = lib::error_code();
+}
+
 template <typename config>
 void connection<config>::set_status(http::status_code::value code,
     std::string const & msg)
 {
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw exception("Call to set_status from invalid state",
-                      error::make_error_code(error::invalid_state));
+    lib::error_code ec;
+    this->set_status(code, msg);
+    if (ec) {
+        throw exception("Call to set_status from invalid state", ec);
     }
-
-    m_response.set_status(code,msg);
 }
 
-// TODO: EXCEPTION_FREE
+template <typename config>
+void connection<config>::set_body(std::string const & value,
+    lib::error_code & ec)
+{
+    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
+        ec = error::make_error_code(error::invalid_state);
+        return;
+    }
+
+    ec = m_response.set_body(value);
+}
+
 template <typename config>
 void connection<config>::set_body(std::string const & value) {
-    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
-        throw exception("Call to set_status from invalid state",
-                      error::make_error_code(error::invalid_state));
+    lib::error_code ec;
+    this->set_body(value, ec);
+    if (ec) {
+        throw exception("Call to set_status from invalid state", ec);
     }
-
-    m_response.set_body(value);
 }
 
-// TODO: EXCEPTION_FREE
+template <typename config>
+void connection<config>::append_header(std::string const & key,
+    std::string const & val, lib::error_code & ec)
+{
+    if (m_is_server) {
+        if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
+            // we are setting response headers for an incoming server connection
+            ec = m_response.append_header(key, val);
+        } else {
+            ec = error::make_error_code(error::invalid_state);
+        }
+    } else {
+        if (m_internal_state == istate::USER_INIT) {
+            // we are setting initial headers for an outgoing client connection
+            ec = m_request.append_header(key, val);
+        } else {
+            ec = error::make_error_code(error::invalid_state);
+        }
+    }
+}
+
 template <typename config>
 void connection<config>::append_header(std::string const & key,
     std::string const & val)
 {
+    lib::error_code ec;
+    this->append_header(key, val, ec);
+    if (ec) {
+        throw exception("Call to append_header from invalid state", ec);
+    }
+}
+
+template <typename config>
+void connection<config>::replace_header(std::string const & key,
+    std::string const & val, lib::error_code & ec)
+{
     if (m_is_server) {
         if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
             // we are setting response headers for an incoming server connection
-            m_response.append_header(key,val);
+            ec = m_response.replace_header(key, val);
         } else {
-            throw exception("Call to append_header from invalid state",
-                      error::make_error_code(error::invalid_state));
+            ec = error::make_error_code(error::invalid_state);
         }
     } else {
         if (m_internal_state == istate::USER_INIT) {
             // we are setting initial headers for an outgoing client connection
-            m_request.append_header(key,val);
+            ec = m_request.replace_header(key, val);
         } else {
-            throw exception("Call to append_header from invalid state",
-                      error::make_error_code(error::invalid_state));
+            ec = error::make_error_code(error::invalid_state);
         }
     }
 }
 
-// TODO: EXCEPTION_FREE
 template <typename config>
 void connection<config>::replace_header(std::string const & key,
     std::string const & val)
 {
-    if (m_is_server) {
-        if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
-            // we are setting response headers for an incoming server connection
-            m_response.replace_header(key,val);
-        } else {
-            throw exception("Call to replace_header from invalid state",
-                        error::make_error_code(error::invalid_state));
-        }
-    } else {
-        if (m_internal_state == istate::USER_INIT) {
-            // we are setting initial headers for an outgoing client connection
-            m_request.replace_header(key,val);
-        } else {
-            throw exception("Call to replace_header from invalid state",
-                        error::make_error_code(error::invalid_state));
-        }
+    lib::error_code ec;
+    this->replace_header(key, val, ec);
+    if (ec) {
+        throw exception("Call to replace_header from invalid state", ec);
     }
 }
 
-// TODO: EXCEPTION_FREE
 template <typename config>
-void connection<config>::remove_header(std::string const & key)
+void connection<config>::remove_header(std::string const & key,
+    lib::error_code & ec)
 {
     if (m_is_server) {
         if (m_internal_state == istate::PROCESS_HTTP_REQUEST) {
             // we are setting response headers for an incoming server connection
-            m_response.remove_header(key);
+            ec = m_response.remove_header(key);
         } else {
-            throw exception("Call to remove_header from invalid state",
-                        error::make_error_code(error::invalid_state));
+            ec = error::make_error_code(error::invalid_state);
         }
     } else {
         if (m_internal_state == istate::USER_INIT) {
             // we are setting initial headers for an outgoing client connection
-            m_request.remove_header(key);
+            ec = m_request.remove_header(key);
         } else {
-            throw exception("Call to remove_header from invalid state",
-                        error::make_error_code(error::invalid_state));
+            ec = error::make_error_code(error::invalid_state);
         }
+    }
+}
+
+template <typename config>
+void connection<config>::remove_header(std::string const & key)
+{
+    lib::error_code ec;
+    this->remove_header(key, ec);
+    if (ec) {
+        throw exception("Call to remove_header from invalid state", ec);
     }
 }
 
@@ -848,12 +905,14 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
     }
 
     size_t bytes_processed = 0;
-    try {
-        bytes_processed = m_request.consume(m_buf,bytes_transferred);
-    } catch (http::exception &e) {
-        // All HTTP exceptions will result in this request failing and an error
+    lib::error_code consume_ec;
+
+    bytes_processed = m_request.consume(m_buf, bytes_transferred, consume_ec);
+    if (consume_ec) {
+        // All HTTP errors will result in this request failing and an error
         // response being returned. No more bytes will be read in this con.
-        m_response.set_status(e.m_error_code,e.m_error_msg);
+        m_response.set_status(http::error::get_status_code(http::error::value(consume_ec.value())));
+        log_err(log::elevel::fatal,"Fatal error reading request: ",consume_ec);
         this->write_http_response_error(error::make_error_code(error::http_parse_error));
         return;
     }
@@ -1592,12 +1651,15 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     }
     
     size_t bytes_processed = 0;
-    // TODO: refactor this to use error codes rather than exceptions
-    try {
-        bytes_processed = m_response.consume(m_buf,bytes_transferred);
-    } catch (http::exception & e) {
-        m_elog->write(log::elevel::rerror,
-            std::string("error in handle_read_http_response: ")+e.what());
+
+    lib::error_code consume_ec;
+
+    bytes_processed = m_response.consume(m_buf, bytes_transferred, consume_ec);
+    if (consume_ec) {
+        // An HTTP error while reading a response doesn't give us many options other than log
+        // and terminate.
+        m_response.set_status(http::error::get_status_code(http::error::value(consume_ec.value())));
+        log_err(log::elevel::rerror,"error in handle_read_http_response: ",consume_ec);
         this->terminate(make_error_code(error::general));
         return;
     }
