@@ -1,6 +1,6 @@
 /** \page reference.config Config Reference
 
-WebSocket++ uses a config template parameter to supply a number of compile type policy types and default numerical values for buffer sizes, timeouts, security behavior, etc. Swapping policies allows changing certain core library behavior designed to be pluggable.
+WebSocket++ uses a config template parameter to supply a number of compile time policy types and default numerical values for buffer sizes, timeouts, security behavior, etc. Swapping policies allows changing certain core library behavior designed to be pluggable.
 
 A custom config can be made standalone or can subclass one of the bundled configs and just override a few things.
 
