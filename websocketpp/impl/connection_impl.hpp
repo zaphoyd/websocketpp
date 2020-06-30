@@ -1786,6 +1786,12 @@ void connection<config>::terminate(lib::error_code const & ec) {
         m_handshake_timer.reset();
     }
 
+    // Cancel ping timer
+    if (m_ping_timer) {
+        m_ping_timer->cancel();
+        m_handshake_timer.reset();
+    }
+
     terminate_status tstat = unknown;
     if (ec) {
         m_ec = ec;
@@ -2202,6 +2208,13 @@ lib::error_code connection<config>::send_close_frame(close::status::value code,
     }
 
     m_state = session::state::closing;
+
+    // Cancel any outstanding ping timers. Once we are in state closing the
+    // library no longer processes non-close frames, so any pongs will be
+    // dropped.
+    if (m_ping_timer) {
+        m_ping_timer->cancel();
+    }
 
     if (ack) {
         m_was_clean = true;
