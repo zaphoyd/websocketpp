@@ -19,6 +19,9 @@ HEAD
 - Improvement: Cancel ping timer on connection close. Once the close handeshake
   begins, pong responses can no longer be delivered and any outstanding pings
   can be assumed to have been preempted by the close. fixes #664
+- Performance: Refactor to_hex utility method to reduce unecessary copying,
+  std::string construction, and duplicated code. Add tests. Thank you Dmitry
+  Matrokhin for reporting and the patch. #914
 - Reliability: Add a few defensive assertions to guard against corrupted
   HTTP message reads. Thank you Oleh Derevenko for reporting. #899
 - Documentation: Added language to explicitly clarify that the library
