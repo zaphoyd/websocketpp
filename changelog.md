@@ -34,7 +34,7 @@ HEAD
   Thank you kautsig for reporting and the patch. #893
 - CMake: Fix typo in CMakeLists.txt that caused CXX_FLAGS to be improperly
   quoted. Removed unnecessary hardcoded dependency on libc++ for clang.
-  Thank you kraj for reporting and a patch. #859
+  Thank you kraj and leochan2009 for reporting and a patch. #614 #859
 - CMake: Fix issue in CMakeLists.txt that caused boost dependencies to be
   seen as a single library rather than multiple. Thank you Gianfranco
   Costamagna for reporting and a patch. #855
