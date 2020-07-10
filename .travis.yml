@@ -1,13 +1,14 @@
 language: cpp
+dist: bionic
 compiler:
   - gcc
 addons:
   apt:
     packages:
-      - libboost-random1.58-dev
-      - libboost-system1.58-dev
-      - libboost-test1.58-dev
-      - libboost-thread1.58-dev
+      - libboost-random-dev
+      - libboost-system-dev
+      - libboost-test-dev
+      - libboost-thread-dev
       - scons
 env:
   global:
