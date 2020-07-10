@@ -26,6 +26,8 @@ HEAD
   HTTP message reads. Thank you Oleh Derevenko for reporting. #899
 - Documentation: Added language to explicitly clarify that the library
   license is in fact the 3-Clause BSD license. #906
+- Travis/CI: Updated Travis config to use newer version of ubuntu, and use
+  CMake based build & tests.
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
   value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
 - SCons: Improve compatibility with Python 3. Thank you Jochen Jägers and 
@@ -41,6 +43,8 @@ HEAD
 - CMake: Adjust CMake config to use GNUInstallDirs to choose install
   directories rather than hard coding. Thank you Khem Raj for reporting and
   a patch. #854
+- CMake: Improve support for building tests & examples on the Haiku platform
+  Thank you Schrijvers Luc for reporting and the patch. #849
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
