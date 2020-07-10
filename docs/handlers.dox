@@ -46,13 +46,22 @@ operations have been run. Common pre-handshake operations include TLS handshakes
 
 ### TCP Post-init Handler
 
+| Event                                              | Signature                       | Availability         |
+| -------------------------------------------------- | ------------------------------- | -------------------- |
+| TCP established, pre-handshake operations complete | `tcp_post_init(connection_hdl)` | 0.3.0 Asio Transport |
+
+This hook is triggered after all pre-WebSocket handshake operations have been run. Common pre-handshake
+operations include TLS handshakes and proxy connections.
+
+### TLS Initialization Handler
+
 | Event                   | Signature                                  | Availability                  |
 | ----------------------- | ------------------------------------------ | ----------------------------- |
 | Request for TLS context | `tls_context_ptr tls_init(connection_hdl)` | 0.3.0 Asio Transport with TLS |
 
-This hook is triggered before the TLS handshake to request the TLS context to use. You must 
-return a pointer to a configured TLS conext to continue. This provides the opportuinity to 
-set up the TLS settings, certificates, etc.
+This hook is triggered before the TLS handshake to request the TLS context to use. The user program must 
+return a pointer to a configured TLS context to continue. This provides the opportuinity to set up TLS 
+settings, certificates, etc.
 
 ### Validate Handler
 
@@ -99,7 +108,8 @@ Close is not called for failed connections.
 Message Handlers
 ----------------
 
-These handers are called in response to incoming messages or message like events. They only will be called while the connection is in the open state.
+These handers are called in response to incoming messages or message like events. 
+They only will be called while the connection is in the open state.
 
 ### Message Handler
 
@@ -145,7 +155,7 @@ Triggered if there is no response to a ping after the configured duration. The s
 | HTTP request recieved | `http(connection_hdl` | 0.3.0 Core, Server role only |
 
 Called when HTTP requests that are not WebSocket handshake upgrade requests are
-recieved. Allows responding to regular HTTP requests. If no handler is registered
+received. Allows responding to regular HTTP requests. If no handler is registered
 a 426/Upgrade Required error is returned.
 
 ### Interrupt Handler
@@ -157,9 +167,7 @@ a 426/Upgrade Required error is returned.
 Interrupt events can be triggered by calling `endpoint::interrupt` or `connection::interrupt`. 
 Interrupt is similar to a timer event with duration zero but with lower overhead. It is useful
 for single threaded programs to allow breaking up a very long handler into multiple parts and 
-for multi threaded programs as a way for worker threads to signale to the main/network thread 
+for multi threaded programs as a way for worker threads to signal to the main/network thread 
 that an event is ready.
-
-todo: write low and high watermark handlers
 
 */

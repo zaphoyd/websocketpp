@@ -949,6 +949,9 @@ protected:
     void async_write(std::vector<buffer> const & bufs, write_handler handler) {
         std::vector<buffer>::const_iterator it;
 
+        // todo: check if this underlying socket supports efficient scatter/gather io
+        // if not, coalesce buffers before we send to the underlying transport.
+
         for (it = bufs.begin(); it != bufs.end(); ++it) {
             m_bufs.push_back(lib::asio::buffer((*it).buf,(*it).len));
         }
