@@ -9,12 +9,13 @@ addons:
       - libboost-system-dev
       - libboost-test-dev
       - libboost-thread-dev
-      - scons
+      - zlib1g-dev
+      - cmake
 env:
   global:
     - BOOST_INCLUDES=/usr/include
     - BOOST_LIBS=/usr/lib/x86_64-linux-gnu
-script: scons -j 2 && scons test
+script: cmake -DBUILD_EXAMPLES=1 -DBUILD_TESTS=1 . && make -j 2 && make test
 branches:
   except:
     - 0.2.x
