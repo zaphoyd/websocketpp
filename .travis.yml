@@ -14,6 +14,12 @@ env:
     - BOOST_INCLUDES=/usr/include
     - BOOST_LIBS=/usr/lib/x86_64-linux-gnu
 script: scons -j 2 && scons test
+branches:
+  except:
+    - 0.2.x
+    - experimental
+    - legacy
+
 notifications:
   recipients:
     - travis@zaphoyd.com
