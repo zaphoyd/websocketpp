@@ -1007,8 +1007,7 @@ public:
      * callbacks.
      *
      * @param code Code to set
-     * @param msg Message to set
-     * @see websocketpp::http::response::set_status
+     * @see websocketpp::http::parser::response::set_status
      */
     void set_status(http::status_code::value code);
 
@@ -1023,7 +1022,7 @@ public:
      *
      * @param code Code to set
      * @param msg Message to set
-     * @see websocketpp::http::response::set_status
+     * @see websocketpp::http::parser::response::set_status
      */
     void set_status(http::status_code::value code, std::string const & msg);
 
@@ -1038,10 +1037,13 @@ public:
      * callbacks.
      *
      * @param value String data to include as the body content.
-     * @see websocketpp::http::response::set_body
+     * @see websocketpp::http::parser::response::set_body
      */
     void set_body(std::string const & value);
-    void set_body( std::string&& value );
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+    /// @copydoc websocketpp::connection::set_body(std::string const &)
+    void set_body(std::string && value);
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     /// Append a header
     /**

@@ -575,6 +575,7 @@ void connection<config>::set_body(std::string const & value) {
     m_response.set_body(value);
 }
 
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 template <typename config>
 void connection<config>::set_body( std::string&& value ) {
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -584,6 +585,7 @@ void connection<config>::set_body( std::string&& value ) {
 
     m_response.set_body(std::move(value));
 }
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
 // TODO: EXCEPTION_FREE
 template <typename config>
