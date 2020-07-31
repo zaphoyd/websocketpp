@@ -1014,6 +1014,7 @@ public:
      */
     void set_status(http::status_code::value code, lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set response status code and message (exception)
     /**
      * Sets the response status code and message to independent custom values.
@@ -1026,10 +1027,11 @@ public:
      * @param[in] code Code to set
      * @param[in] msg Message to set
      * @throw websocketpp::exception
-     * @see websocketpp::http::response::set_status()
+     * @see websocketpp::http::parser::response::set_status()
      * @see websocketpp::http::status_code::value (list of valid codes)
      */
     void set_status(http::status_code::value code);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Set response status code and message (exception free)
     /**
@@ -1063,7 +1065,7 @@ public:
      * @param[in] code Code to set
      * @param[in] msg Message to set
      * @throw websocketpp::exception
-     * @see websocketpp::http::response::set_status()
+     * @see websocketpp::http::parser::response::set_status()
      * @see websocketpp::http::status_code::value (list of valid codes)
      */
     void set_status(http::status_code::value code, std::string const & msg);
@@ -1087,6 +1089,7 @@ public:
      */
     void set_body(std::string const & value, lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set response body content (exception)
     /**
      * Set the body content of the HTTP response to the parameter string. Note
@@ -1104,6 +1107,17 @@ public:
      *      (exception free version)
      */
     void set_body(std::string const & value);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+    /// @copydoc websocketpp::connection::set_body(std::string const &, lib::error_code &)
+    void set_body(std::string && value, lib::error_code & ec);
+
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+    /// @copydoc websocketpp::connection::set_body(std::string const &)
+    void set_body(std::string && value);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     /// Append a header (exception free)
     /**

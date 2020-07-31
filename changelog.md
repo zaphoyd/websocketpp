@@ -4,6 +4,11 @@ HEAD
   of the core library APIs. If any users are calling into the underlying HTTP
   libraries directly (classes in the namespace `websocketpp::http::*`) they 
   should review any error handling they do.
+- Feature: WebSocket++ can now be compiled without exceptions by defining
+  `_WEBSOCKETPP_NO_EXCEPTIONS` in the C++ preprocessor. All internal use of
+  exceptions have been removed. External interfaces that throw exceptions are
+  still avaliable and supported (except in exception free mode) but now have
+  overloads that allow `error_code` based error handling.
 - Compatibility: Overhauled the URI authority parsing logic to be more 
   compliant with RFC3986. WebSocket++ is now able to detect invalid registry
   hosts, invalid IPv4 and IPv6 literal addresses. Dozens of additional

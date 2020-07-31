@@ -649,6 +649,7 @@ public:
         return con;
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Retrieves a connection_ptr from a connection_hdl (exception version)
     connection_ptr get_con_from_hdl(connection_hdl hdl) {
         lib::error_code ec;
@@ -658,6 +659,7 @@ public:
         }
         return con;
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 protected:
     connection_ptr create_connection();
 

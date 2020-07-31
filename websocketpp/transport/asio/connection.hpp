@@ -194,12 +194,14 @@ public:
         ec = lib::error_code();
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set the proxy to connect through (exception)
     void set_proxy(std::string const & uri) {
         lib::error_code ec;
         set_proxy(uri,ec);
         if (ec) { throw exception(ec); }
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Set the basic auth credentials to use (exception free)
     /**
@@ -228,6 +230,7 @@ public:
         ec = lib::error_code();
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set the basic auth credentials to use (exception)
     void set_proxy_basic_auth(std::string const & username, std::string const &
         password)
@@ -236,6 +239,7 @@ public:
         set_proxy_basic_auth(username,password,ec);
         if (ec) { throw exception(ec); }
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Set the proxy timeout duration (exception free)
     /**
@@ -257,12 +261,14 @@ public:
         ec = lib::error_code();
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set the proxy timeout duration (exception)
     void set_proxy_timeout(long duration) {
         lib::error_code ec;
         set_proxy_timeout(duration,ec);
         if (ec) { throw exception(ec); }
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     std::string const & get_proxy() const {
         return m_proxy;

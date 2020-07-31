@@ -220,6 +220,7 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
     ec = lib::error_code();
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template<typename config>
 void connection<config>::ping(std::string const & payload) {
     lib::error_code ec;
@@ -228,6 +229,7 @@ void connection<config>::ping(std::string const & payload) {
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template<typename config>
 void connection<config>::handle_pong_timeout(std::string payload,
@@ -291,6 +293,7 @@ void connection<config>::pong(std::string const& payload, lib::error_code& ec) {
     ec = lib::error_code();
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template<typename config>
 void connection<config>::pong(std::string const & payload) {
     lib::error_code ec;
@@ -299,6 +302,7 @@ void connection<config>::pong(std::string const & payload) {
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
 void connection<config>::close(close::status::value const code,
@@ -322,6 +326,7 @@ void connection<config>::close(close::status::value const code,
     ec = this->send_close_frame(code,tr,false,close::status::terminal(code));
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template<typename config>
 void connection<config>::close(close::status::value const code,
     std::string const & reason)
@@ -332,6 +337,7 @@ void connection<config>::close(close::status::value const code,
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 /// Trigger the on_interrupt handler
 /**
@@ -474,6 +480,7 @@ void connection<config>::add_subprotocol(std::string const & value,
     m_requested_subprotocols.push_back(value);
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::add_subprotocol(std::string const & value) {
     lib::error_code ec;
@@ -482,6 +489,7 @@ void connection<config>::add_subprotocol(std::string const & value) {
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 
 template <typename config>
@@ -513,6 +521,7 @@ void connection<config>::select_subprotocol(std::string const & value,
     ec = lib::error_code();
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::select_subprotocol(std::string const & value) {
     lib::error_code ec;
@@ -521,6 +530,7 @@ void connection<config>::select_subprotocol(std::string const & value) {
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 
 template <typename config>
@@ -549,10 +559,10 @@ void connection<config>::set_status(http::status_code::value code,
         ec = error::make_error_code(error::invalid_state);
         return;
     }
-    m_response.set_status(code);
-    ec = lib::error_code();
+    ec = m_response.set_status(code);
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::set_status(http::status_code::value code)
 {
@@ -562,6 +572,7 @@ void connection<config>::set_status(http::status_code::value code)
         throw exception("Call to set_status from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
 void connection<config>::set_status(http::status_code::value code,
@@ -572,10 +583,10 @@ void connection<config>::set_status(http::status_code::value code,
         return;
     }
 
-    m_response.set_status(code,msg);
-    ec = lib::error_code();
+    ec = m_response.set_status(code,msg);
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::set_status(http::status_code::value code,
     std::string const & msg)
@@ -586,6 +597,7 @@ void connection<config>::set_status(http::status_code::value code,
         throw exception("Call to set_status from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
 void connection<config>::set_body(std::string const & value,
@@ -599,14 +611,41 @@ void connection<config>::set_body(std::string const & value,
     ec = m_response.set_body(value);
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::set_body(std::string const & value) {
     lib::error_code ec;
     this->set_body(value, ec);
     if (ec) {
-        throw exception("Call to set_status from invalid state", ec);
+        throw exception("Call to set_body from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+template <typename config>
+void connection<config>::set_body(std::string && value,
+    lib::error_code & ec)
+{
+    if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
+        ec = error::make_error_code(error::invalid_state);
+        return;
+    }
+
+    ec = m_response.set_body(std::move(value));
+}
+
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+template <typename config>
+void connection<config>::set_body(std::string && value) {
+    lib::error_code ec;
+    this->set_body(std::move(value), ec);
+    if (ec) {
+        throw exception("Call to set_body from invalid state", ec);
+    }
+}
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
 template <typename config>
 void connection<config>::append_header(std::string const & key,
@@ -629,6 +668,7 @@ void connection<config>::append_header(std::string const & key,
     }
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::append_header(std::string const & key,
     std::string const & val)
@@ -639,6 +679,7 @@ void connection<config>::append_header(std::string const & key,
         throw exception("Call to append_header from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
 void connection<config>::replace_header(std::string const & key,
@@ -661,6 +702,7 @@ void connection<config>::replace_header(std::string const & key,
     }
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::replace_header(std::string const & key,
     std::string const & val)
@@ -671,6 +713,7 @@ void connection<config>::replace_header(std::string const & key,
         throw exception("Call to replace_header from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
 void connection<config>::remove_header(std::string const & key,
@@ -693,6 +736,7 @@ void connection<config>::remove_header(std::string const & key,
     }
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::remove_header(std::string const & key)
 {
@@ -702,6 +746,7 @@ void connection<config>::remove_header(std::string const & key)
         throw exception("Call to remove_header from invalid state", ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 /// Defer HTTP Response until later
 /**
@@ -755,6 +800,7 @@ void connection<config>::send_http_response(lib::error_code & ec) {
     ec = lib::error_code();
 }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
 void connection<config>::send_http_response() {
     lib::error_code ec;
@@ -763,6 +809,7 @@ void connection<config>::send_http_response() {
         throw exception(ec);
     }
 }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 
 
@@ -1265,7 +1312,7 @@ lib::error_code connection<config>::process_handshake_request() {
                 return error::make_error_code(error::http_connection_ended);
             }
         } else {
-            set_status(http::status_code::upgrade_required);
+            m_response.set_status(http::status_code::upgrade_required);
             return error::make_error_code(error::upgrade_required);
         }
 
@@ -1370,6 +1417,7 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
     }
 
     if (m_response.get_status_code() == http::status_code::uninitialized) {
+        lib::error_code status_ec;
         m_response.set_status(http::status_code::internal_server_error);
         m_ec = error::make_error_code(error::general);
     } else {
@@ -1865,13 +1913,18 @@ void connection<config>::handle_terminate(terminate_status tstat,
     // call the termination handler if it exists
     // if it exists it might (but shouldn't) refer to a bad memory location.
     // If it does, we don't care and should catch and ignore it.
+    // todo: there has to be a better way to do this.
     if (m_termination_handler) {
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
         try {
             m_termination_handler(type::get_shared());
         } catch (std::exception const & e) {
             m_elog->write(log::elevel::warn,
                 std::string("termination_handler call failed. Reason was: ")+e.what());
         }
+#else
+        m_termination_handler(type::get_shared());
+#endif
     }
 }
 

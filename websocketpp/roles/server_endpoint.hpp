@@ -145,6 +145,7 @@ public:
         }
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Starts the server's async connection acceptance loop
     /**
      * Initiates the server connection acceptance loop. Must be called after
@@ -161,6 +162,7 @@ public:
             throw exception(ec);
         }
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Handler callback for start_accept
     void handle_accept(connection_ptr con, lib::error_code const & ec) {
