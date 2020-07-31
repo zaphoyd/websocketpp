@@ -31,6 +31,8 @@ HEAD
   later compilers. Thank you Matus Kysel for the patch & tests. #792
 - Reliability: Add a few defensive assertions to guard against corrupted
   HTTP message reads. Thank you Oleh Derevenko for reporting. #899
+- Bug: Fix null pointer deference in proxy error handling code. Thank you
+  abitmore for reporting and stkaufer for a patch. #820 #825
 - Documentation: Added language to explicitly clarify that the library
   license is in fact the 3-Clause BSD license. #906
 - Travis/CI: Updated Travis config to use newer version of ubuntu, and use

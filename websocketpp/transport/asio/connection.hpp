@@ -709,7 +709,6 @@ protected:
         if (!m_proxy_data) {
             m_elog->write(log::elevel::library,
                 "assertion failed: !m_proxy_data in asio::connection::proxy_read");
-            m_proxy_data->timer->cancel();
             callback(make_error_code(error::general));
             return;
         }
