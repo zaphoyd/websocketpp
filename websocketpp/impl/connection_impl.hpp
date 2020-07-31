@@ -667,7 +667,6 @@ void connection<config>::append_header(std::string const & key,
         }
     }
 }
-#endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
