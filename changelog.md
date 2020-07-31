@@ -1,4 +1,6 @@
 HEAD
+- Bug: Fix null pointer deference in proxy error handling code. Thank you
+  abitmore for reporting and stkaufer for a patch. #820 #825
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
