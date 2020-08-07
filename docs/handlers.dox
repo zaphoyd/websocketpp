@@ -108,7 +108,24 @@ Close is not called for failed connections.
 Endpoint Handlers
 -----------------
 
-## Acceptance Loop End Handler
+### Socket Init Handler
+
+| Event          | Signature                                                                     | Availability         |
+| -------------- | ----------------------------------------------------------------------------- | -------------------- |
+| Listen Prebind | `lib::error_code tcp_pre_bind(lib::shared_ptr<lib::asio::ip::tcp::acceptor>)` | 0.8.0 Asio Transport |
+
+This hook is triggered during the call to `endpoint::listen` after the acceptor
+is initialized and open but before bind or listen are called. It provides an
+opportunity to make application specific configuation to the acceptor, most
+commonly setting socket options on the listening socket, such as SO_REUSEPORT
+or IPV6_ONLY.
+
+The return value of the callback will be used to determine whether to proceed
+with listening. Return an empty/0 error code to proceed, or another error code
+to fail. In the fail case, the error code will be reported back to the caller
+of `endpoint::listen`.
+
+### Acceptance Loop End Handler
 
 | Event                                 | Signature                                                             | Availability                 |
 | ------------------------------------- | --------------------------------------------------------------------- | ---------------------------- |

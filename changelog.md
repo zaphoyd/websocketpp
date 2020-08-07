@@ -45,6 +45,9 @@ HEAD
   later compilers. Thank you Matus Kysel for the patch & tests. #792
 - Reliability: Add a few defensive assertions to guard against corrupted
   HTTP message reads. Thank you Oleh Derevenko for reporting. #899
+- Fix Regression: Correct a regression introduced in 0.8.0 that broke
+  functionality for setting accepted socket options like TCP_NODELAY.
+  #530 #812
 - Bug: Fix null pointer deference in proxy error handling code. Thank you
   abitmore for reporting and stkaufer for a patch. #820 #825
 - Documentation: Added language to explicitly clarify that the library
