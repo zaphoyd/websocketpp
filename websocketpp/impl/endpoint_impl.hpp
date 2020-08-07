@@ -34,7 +34,7 @@ namespace websocketpp {
 
 template <typename connection, typename config>
 typename endpoint<connection,config>::connection_ptr
-endpoint<connection,config>::create_connection() {
+endpoint<connection,config>::create_connection(lib::error_code & ec) {
     m_alog->write(log::alevel::devel,"create_connection");
     //scoped_lock_type lock(m_state_lock);
 
@@ -80,8 +80,6 @@ endpoint<connection,config>::create_connection() {
         con->set_max_message_size(m_max_message_size);
     }
     con->set_max_http_body_size(m_max_http_body_size);
-
-    lib::error_code ec;
 
     ec = transport_type::init(con);
     if (ec) {

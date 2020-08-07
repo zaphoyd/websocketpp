@@ -17,6 +17,20 @@ HEAD
   compliant URIs when IPv6 literals are involved. Thank you Jeff Davie, 
   thorsten-klein, mstaz, and barsnick for reporting, example patches, and
   testing. #601 #879
+- Improvement: The error handling system for the server role's async start
+  accept loop and connection generation has been significantly improved. 
+  `endpoint::get_connection` now takes an output parameter ec that gives
+  a detailed error code if connection creation fails. `endpoint::start_accept`
+  now accepts a handler function as a parameter instead of an error code.
+  This handler function allows the client program to be alerted when the
+  async accept loop stops (for any reason, including explicit cancellation)
+  at any time. Previously, it was only possible to tell if the initial loop 
+  start had failed, making it difficult to tell when/if the async accept loop
+  needed to be restarted. The loop handler returns two error codes, a higher
+  level library code and a second more specific transport level code. The
+  old `endpoint::get_connection` and `endpoint::start_accept` functions 
+  remain for backwards compatibility but are deprecated. Thank you Oleh
+  Derevenko for reporting. #896
 - Improvement: Cancel ping timer before calling blocking pong handler.
   This should reduce any unnecessary expiration logic done to a timer
   that is going to be cancelled regardless. Thank you Oleh Derevenko

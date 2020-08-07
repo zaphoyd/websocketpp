@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ENDPOINT_HPP
 #define WEBSOCKETPP_ENDPOINT_HPP
 
+#include <websocketpp/transport/base/endpoint.hpp>
+
 #include <websocketpp/connection.hpp>
 
 #include <websocketpp/logger/levels.hpp>
@@ -661,7 +663,7 @@ public:
     }
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 protected:
-    connection_ptr create_connection();
+    connection_ptr create_connection(lib::error_code & ec);
 
     lib::shared_ptr<alog_type> m_alog;
     lib::shared_ptr<elog_type> m_elog;
