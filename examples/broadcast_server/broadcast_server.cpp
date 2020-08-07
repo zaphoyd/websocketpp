@@ -47,8 +47,12 @@ struct action {
 class broadcast_server {
 public:
     broadcast_server() {
+        websocketpp::lib::error_code ec;
         // Initialize Asio Transport
-        m_server.init_asio();
+        m_server.init_asio(ec);
+        if (!ec) {
+            return;
+        }
 
         // Register handler callbacks
         m_server.set_open_handler(bind(&broadcast_server::on_open,this,::_1));
@@ -57,18 +61,26 @@ public:
     }
 
     void run(uint16_t port) {
+        websocketpp::lib::error_code ec;
+
         // listen on specified port
-        m_server.listen(port);
+        m_server.listen(port,ec);
+        if (!ec) {
+            return;
+        }
 
         // Start the server accept loop
-        m_server.start_accept();
+        m_server.start_accept(ec);
+        if (!ec) {
+            return;
+        }
 
         // Start the ASIO io_service run loop
-        try {
+        //try {
             m_server.run();
-        } catch (const std::exception & e) {
-            std::cout << e.what() << std::endl;
-        }
+        //} catch (const std::exception & e) {
+        //    std::cout << e.what() << std::endl;
+        //}
     }
 
     void on_open(connection_hdl hdl) {
@@ -100,6 +112,7 @@ public:
     }
 
     void process_messages() {
+        websocketpp::lib::error_code ec;
         while(1) {
             unique_lock<mutex> lock(m_action_lock);
 
@@ -123,7 +136,10 @@ public:
 
                 con_list::iterator it;
                 for (it = m_connections.begin(); it != m_connections.end(); ++it) {
-                    m_server.send(*it,a.msg);
+                    m_server.send(*it,a.msg,ec);
+                    if (ec) {
+                        return;
+                    }
                 }
             } else {
                 // undefined.
@@ -143,7 +159,7 @@ private:
 };
 
 int main() {
-    try {
+    //try {
     broadcast_server server_instance;
 
     // Start a thread to run the processing loop
@@ -154,7 +170,7 @@ int main() {
 
     t.join();
 
-    } catch (websocketpp::exception const & e) {
-        std::cout << e.what() << std::endl;
-    }
+    //} catch (websocketpp::exception const & e) {
+    //    std::cout << e.what() << std::endl;
+    //}
 }
