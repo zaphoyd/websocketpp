@@ -137,6 +137,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
             return ec;
         }
 
+        outgoing_msg->set_compressed(msg->get_compressed());  // TODO: move to `prepare_data_frame`.
         write_push(outgoing_msg);
         needs_writing = !m_write_flag && !m_send_queue.empty();
     }
@@ -2001,7 +2002,7 @@ void connection<config>::write_frame() {
             if (m_alog->dynamic_test(log::alevel::frame_payload)) {
                 payload << "[" << i << "] (" 
                         << m_current_msgs[i]->get_payload().size() << ") ["<<m_current_msgs[i]->get_opcode()<<"] "
-                        << (m_current_msgs[i]->get_opcode() == frame::opcode::text ? 
+                        << ((m_current_msgs[i]->get_opcode() == frame::opcode::text && !m_current_msgs[i]->get_compressed() && m_is_server) ? 
                                 m_current_msgs[i]->get_payload() : 
                                 utility::to_hex(m_current_msgs[i]->get_payload())
                            ) 
