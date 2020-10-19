@@ -833,7 +833,7 @@ protected:
         m_alog->write(log::alevel::devel, "asio::handle_accept");
 
         if (asio_ec) {
-            if (asio_ec == lib::asio::errc::operation_canceled) {
+            if (asio_ec == lib::asio::error::operation_aborted) {
                 ret_ec = make_error_code(websocketpp::error::operation_canceled);
             } else {
                 log_err(log::elevel::info,"asio handle_accept",asio_ec);
