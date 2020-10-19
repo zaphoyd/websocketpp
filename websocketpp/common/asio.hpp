@@ -72,10 +72,6 @@ namespace lib {
 #ifdef ASIO_STANDALONE
     namespace asio {
         using namespace ::asio;
-        // Here we assume that we will be using std::error_code with standalone
-        // Asio. This is probably a good assumption, but it is possible in rare
-        // cases that local Asio versions would be used.
-        using std::errc;
         
         // See note above about boost <1.49 compatibility. Because we require
         // a standalone Asio version of 1.8+ we are guaranteed to have 
@@ -130,7 +126,6 @@ namespace lib {
         #endif
         
         using boost::system::error_code;
-        namespace errc = boost::system::errc;
     } // namespace asio
 #endif
 
