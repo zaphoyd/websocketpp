@@ -34,6 +34,7 @@ using websocketpp::connection_hdl;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 class print_server {
 public:
@@ -57,6 +58,11 @@ public:
         std::cout << "Closing connection " << con->name 
                   << " with sessionid " << con->sessionid << std::endl;
     }
+
+    void on_end_accept(error_code lib_ec, error_code trans_ec) {
+        std::cout << "Accept loop ended "
+                  << lib_ec.message() << "/" << trans_ec.message() << std::endl;
+    }
     
     void on_message(connection_hdl hdl, server::message_ptr msg) {
         connection_ptr con = m_server.get_con_from_hdl(hdl);
@@ -73,7 +79,7 @@ public:
     
     void run(uint16_t port) {
         m_server.listen(port);
-        m_server.start_accept();
+        m_server.start_accept(bind(&print_server::on_end_accept,this,::_1,::_2));
         m_server.run();
     }
 private:

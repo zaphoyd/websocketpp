@@ -28,6 +28,8 @@
 #ifndef WEBSOCKETPP_ENDPOINT_HPP
 #define WEBSOCKETPP_ENDPOINT_HPP
 
+#include <websocketpp/transport/base/endpoint.hpp>
+
 #include <websocketpp/connection.hpp>
 
 #include <websocketpp/logger/levels.hpp>
@@ -649,6 +651,7 @@ public:
         return con;
     }
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Retrieves a connection_ptr from a connection_hdl (exception version)
     connection_ptr get_con_from_hdl(connection_hdl hdl) {
         lib::error_code ec;
@@ -658,8 +661,9 @@ public:
         }
         return con;
     }
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 protected:
-    connection_ptr create_connection();
+    connection_ptr create_connection(lib::error_code & ec);
 
     lib::shared_ptr<alog_type> m_alog;
     lib::shared_ptr<elog_type> m_elog;

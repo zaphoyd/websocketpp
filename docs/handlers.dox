@@ -46,13 +46,22 @@ operations have been run. Common pre-handshake operations include TLS handshakes
 
 ### TCP Post-init Handler
 
+| Event                                              | Signature                       | Availability         |
+| -------------------------------------------------- | ------------------------------- | -------------------- |
+| TCP established, pre-handshake operations complete | `tcp_post_init(connection_hdl)` | 0.3.0 Asio Transport |
+
+This hook is triggered after all pre-WebSocket handshake operations have been run. Common pre-handshake
+operations include TLS handshakes and proxy connections.
+
+### TLS Initialization Handler
+
 | Event                   | Signature                                  | Availability                  |
 | ----------------------- | ------------------------------------------ | ----------------------------- |
 | Request for TLS context | `tls_context_ptr tls_init(connection_hdl)` | 0.3.0 Asio Transport with TLS |
 
-This hook is triggered before the TLS handshake to request the TLS context to use. You must 
-return a pointer to a configured TLS conext to continue. This provides the opportuinity to 
-set up the TLS settings, certificates, etc.
+This hook is triggered before the TLS handshake to request the TLS context to use. The user program must 
+return a pointer to a configured TLS context to continue. This provides the opportuinity to set up TLS 
+settings, certificates, etc.
 
 ### Validate Handler
 
@@ -96,10 +105,49 @@ that fail will never have a close handler called.
 Close will be called exactly once for every connection that open was called for.
 Close is not called for failed connections.
 
+Endpoint Handlers
+-----------------
+
+### Socket Init Handler
+
+| Event          | Signature                                                                     | Availability         |
+| -------------- | ----------------------------------------------------------------------------- | -------------------- |
+| Listen Prebind | `lib::error_code tcp_pre_bind(lib::shared_ptr<lib::asio::ip::tcp::acceptor>)` | 0.8.0 Asio Transport |
+
+This hook is triggered during the call to `endpoint::listen` after the acceptor
+is initialized and open but before bind or listen are called. It provides an
+opportunity to make application specific configuation to the acceptor, most
+commonly setting socket options on the listening socket, such as SO_REUSEPORT
+or IPV6_ONLY.
+
+The return value of the callback will be used to determine whether to proceed
+with listening. Return an empty/0 error code to proceed, or another error code
+to fail. In the fail case, the error code will be reported back to the caller
+of `endpoint::listen`.
+
+### Acceptance Loop End Handler
+
+| Event                                 | Signature                                                             | Availability                 |
+| ------------------------------------- | --------------------------------------------------------------------- | ---------------------------- |
+| Async Accept Loop end (after opening) | `accept_loop(void(lib::error_code const &, lib::error_code const &))` | 0.9.0 Core, Server role only |
+
+This handler is passed to the `endpoint::start_accept()` function, which initiates an
+asyncronous loop that accepts new connections, and is invoked when that loop ends. The
+handler will be called exactly once for each call of `start_accept` no matter when or
+how it exits (it might exit immediately).
+
+The handler may be called inside the call to `start_accept` if that function has enough
+information to determine that accepting connections will be impossible. Otherwise, it
+may be invoked at a later time from a different asyncronous handler.
+
+The handler returns two error codes. The first from the core library and the second a 
+more detailed code passed through from the underlying transport.
+
 Message Handlers
 ----------------
 
-These handers are called in response to incoming messages or message like events. They only will be called while the connection is in the open state.
+These handers are called in response to incoming messages or message like events. 
+They only will be called while the connection is in the open state.
 
 ### Message Handler
 
@@ -145,7 +193,7 @@ Triggered if there is no response to a ping after the configured duration. The s
 | HTTP request recieved | `http(connection_hdl` | 0.3.0 Core, Server role only |
 
 Called when HTTP requests that are not WebSocket handshake upgrade requests are
-recieved. Allows responding to regular HTTP requests. If no handler is registered
+received. Allows responding to regular HTTP requests. If no handler is registered
 a 426/Upgrade Required error is returned.
 
 ### Interrupt Handler
@@ -157,9 +205,7 @@ a 426/Upgrade Required error is returned.
 Interrupt events can be triggered by calling `endpoint::interrupt` or `connection::interrupt`. 
 Interrupt is similar to a timer event with duration zero but with lower overhead. It is useful
 for single threaded programs to allow breaking up a very long handler into multiple parts and 
-for multi threaded programs as a way for worker threads to signale to the main/network thread 
+for multi threaded programs as a way for worker threads to signal to the main/network thread 
 that an event is ready.
-
-todo: write low and high watermark handlers
 
 */

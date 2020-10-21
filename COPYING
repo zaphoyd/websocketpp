@@ -1,5 +1,7 @@
 Main Library:
 
+BSD 3-Clause License
+
 Copyright (c) 2014, Peter Thorson. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -63,6 +65,8 @@ library (http://code.google.com/p/smallsha1/) into a single header suitable for
 use as a header only library. This conversion was done by Peter Thorson
 (webmaster@zaphoyd.com) in 2013. All modifications to the code are redistributed
 under the same license as the original, which is listed below.
+
+New BSD License / 3-Clause BSD License
 
  Copyright (c) 2011, Micael Hildenborg
  All rights reserved.

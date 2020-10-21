@@ -195,10 +195,6 @@ protected:
         }
         m_socket.reset(new socket_type(*service, *m_context));
 
-        if (m_socket_init_handler) {
-            m_socket_init_handler(m_hdl, get_socket());
-        }
-
         m_io_service = service;
         m_strand = strand;
         m_is_server = is_server;
@@ -247,6 +243,9 @@ protected:
             }
         }
 #endif
+        if (m_socket_init_handler) {
+            m_socket_init_handler(m_hdl, get_socket());
+        }
 
         callback(lib::error_code());
     }

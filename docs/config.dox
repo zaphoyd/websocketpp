@@ -1,6 +1,6 @@
 /** \page reference.config Config Reference
 
-WebSocket++ uses a config template parameter to supply a number of compile type policy types and default numerical values for buffer sizes, timeouts, security behavior, etc. Swapping policies allows changing certain core library behavior designed to be pluggable.
+WebSocket++ uses a config template parameter to supply a number of compile time policy types and default numerical values for buffer sizes, timeouts, security behavior, etc. Swapping policies allows changing certain core library behavior designed to be pluggable.
 
 A custom config can be made standalone or can subclass one of the bundled configs and just override a few things.
 
@@ -38,20 +38,21 @@ Core Config Options
 
 Policies are classes used to allow clean swapping of behavior without changing the core library
 
-| Typedef Name              | Effect                                 |
-| ------------------------- | -------------------------------------- |
-| concurrency_type          | Concurrency policy                     |
-| elog_type                 | Error logger type                      |
-| alog_type                 | Access logger type                     |
-| request_type              | HTTP request type                      |
-| response_type             | HTTP response type                     |
-| message_type              | Type to deliver recieved messages      |
-| con_msg_manager_type      | Connection level message manager       |
-| endpoint_msg_manager_type | Endpoint level message manager         |
-| rng_type                  | Random Number Generation policy        |
-| transport_type            | Transport policy to use                |
-| endpoint_base             | User overridable Endpoint base class   |
-| connection_base           | User overridable Connection base class |
+| Typedef Name              | Effect                                 | Core policies |
+| ------------------------- | -------------------------------------- | ------------- |
+| concurrency_type          | Provides concurrency primitives        | **None** Stub to disable concurrency overhead & dependencies in single threaded environments |
+| ^                         | ^                                      | **Basic** Primities provided by the C++11 STL or Boost.Atomic |
+| elog_type                 | Provides error logging functionality                      | |
+| alog_type                 | Provides access logging functionality  | |
+| request_type              | Stores and manipulates HTTP requests   | |
+| response_type             | Stores and manipulates HTTP responses  | |
+| message_type              | Stores and manipulates WebSocket Messages | |
+| con_msg_manager_type      | Connection level message manager       | |
+| endpoint_msg_manager_type | Endpoint level message manager         | |
+| rng_type                  | Random Number Generation policy        | |
+| transport_type            | Provides network I/O and timers        | |
+| endpoint_base             | User overridable Endpoint base class   | |
+| connection_base           | User overridable Connection base class | |
 
 ### Timeouts Values
 
@@ -91,7 +92,7 @@ If your application has a lot of connections or primarily deals in small message
 Drop connections on protocol error rather than sending a close frame. Off by default. This may result in legitimate messages near the error being dropped as well. It may free up resources otherwise spent dealing with misbehaving clients.
 
 #### Silent Close
-Silence close suppresses the return of detailed connection close information during the closing handshake. This information is useful for debugging and presenting useful errors to end users but may be undesirable for security reasons in some production environments. Close reasons could be used by an attacker to confirm that the endpoint is out of resources or be used to identify the WebSocket implementation in use.
+Silenct close suppresses the return of detailed connection close information during the closing handshake. This information is useful for debugging and presenting useful errors to end users but may be undesirable for security reasons in some production environments. Close reasons could be used by an attacker to confirm that the endpoint is out of resources or be used to identify the WebSocket implementation in use.
 
 Note: this will suppress *all* close codes, including those explicitly sent by local applications.
 

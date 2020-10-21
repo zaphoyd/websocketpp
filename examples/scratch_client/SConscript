@@ -19,6 +19,6 @@ if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
    prgs += env_cpp11.Program('scratch_client', ["scratch_client.cpp"], LIBS = ALL_LIBS)
 else:
    ALL_LIBS = boostlibs(['system','random'],env) + [platform_libs] + [polyfill_libs]
-   prgs += env.Program('utility_client', ["utility_client.cpp"], LIBS = ALL_LIBS)
+   prgs += env.Program('scratch_client', ["scratch_client.cpp"], LIBS = ALL_LIBS)
    
 Return('prgs')
