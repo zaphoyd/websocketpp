@@ -224,7 +224,7 @@ int main() {
         std::cout << "Enter Command: ";
         std::getline(std::cin, input);
 
-        if (input == "quit") {
+        if (input == "quit" || std::cin.eof()) {
             done = true;
         } else if (input == "help") {
             std::cout
