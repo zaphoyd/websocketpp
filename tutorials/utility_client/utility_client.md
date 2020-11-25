@@ -845,7 +845,7 @@ A handshake, followed by a split into 2 independent control strands
 -- use information specified before the call to endpoint::connect to construct a WebSocket handshake request.
 -- Pass the WebSocket handshake request to the transport policy. The transport policy determines how to get these bytes to the endpoint playing the server role. Depending on which transport policy your endpoint uses this method will be different.
 -- Receive a handshake response from the underlying transport. This is parsed and checked for conformance to RFC6455. If the validation fails, the fail handler is called. Otherwise the open handler is called.
-- At this point control splits into two separate strands. One that reads new bytes from the transport policy on the incoming channle, the other that accepts new messages from the local application for framing and writing to the outgoing transport channel.
+- At this point control splits into two separate strands. One that reads new bytes from the transport policy on the incoming channel, the other that accepts new messages from the local application for framing and writing to the outgoing transport channel.
 - Read strand
 -- Read and process new bytes from transport
 -- If the bytes contain at least one complete message dispatch each message by calling the appropriate handler. This is either the message handler for data messages, or ping/pong/close handlers for each respective control message. If no handler is registered for a particular message it is ignored.
