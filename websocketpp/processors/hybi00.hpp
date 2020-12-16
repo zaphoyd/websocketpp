@@ -435,7 +435,7 @@ private:
                       reinterpret_cast<char*>(&num)+4,
                       result);
         } else {
-            std::fill(result,result+4,0);
+            std::fill(result,result+4,static_cast<char>(0));
         }
     }
 
