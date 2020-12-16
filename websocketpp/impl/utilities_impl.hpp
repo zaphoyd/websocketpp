@@ -36,7 +36,7 @@ namespace utility {
 
 inline std::string to_lower(std::string const & in) {
     std::string out = in;
-    std::transform(out.begin(),out.end(),out.begin(),::tolower);
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c)->char { return static_cast<char>(std::tolower(c)); });
     return out;
 }
 
