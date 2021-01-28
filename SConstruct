@@ -158,10 +158,8 @@ polyfill_libs = [] # boost libraries used as drop in replacements for incomplete
 env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
-   # TODO: check g++ version
-   GCC_VERSION = check_output([env_cpp11['CXX'], '-dumpversion']).decode("utf-8")
-
-   if GCC_VERSION > "4.4.0":
+   GCC_VERSION = check_output([env_cpp11['CXX'], '-dumpversion']).decode("utf-8").strip().split(".")
+   if int(GCC_VERSION[0]) > 4 or (int(GCC_VERSION[0]) == 4 and int(GCC_VERSION[1]) > 4):
       print("C++11 build environment partially enabled")
       env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
    else:
