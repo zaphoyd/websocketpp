@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<head>
+    <title>Basic WebSocket Test</title>
+</head>
+<script language="javascript" type="text/javascript">
+
+    "use strict";
+    var webSocket; // http://dev.w3.org/html5/websockets/#websocket
+
+    function doOpen(portNumber) {
+        console.info("function doOpen("+portNumber+")");
+        var wsUri = "ws://localhost:" + portNumber;
+        webSocket = new WebSocket(wsUri);
+        webSocket.onopen = function(evt) { onOpen(evt) };
+        webSocket.onclose = function(evt) { onClose(evt) };
+        webSocket.onmessage = function(evt) { onMessage(evt) };
+        webSocket.onerror = function(evt) { onError(evt) };
+    }
+    
+    function doClose() {
+        console.info("function doClose");
+        webSocket.close();
+    }
+
+    function onOpen(evt) {
+        console.info("function onOpen:" + evt.data );
+    }
+
+    function onClose(evt) {
+        console.info("function onClose:" + evt.data);
+    }
+
+    function onMessage(evt) {
+        console.info("function onMessage:" + evt.data);
+        document.getElementById('text_receive_message').value = evt.data;
+    }
+
+    function onError(evt) {
+        console.error("function onError:" + evt.data);
+    }
+
+    function doSend(message) {
+        console.info("function doSend:" + message);
+        webSocket.send( message );
+    }
+
+</script>
+
+<body>
+
+<h1>Basic WebSocket Test</h1>
+    <p>Launch &ltwebsocketpp_root&gt/examples/echo_server as the WebSocket server.</p><br>
+
+<p>Type port number: 
+    <input type=text 
+           value="9002" 
+           id="socketPortNumber"/>
+    <input type="checkbox" 
+           onclick=
+            "if (this.checked)
+                doOpen(document.getElementById('socketPortNumber').value);
+             else
+                doClose();"
+    />
+    Check/unCheck to open/close
+</p>
+<p>Type string to send: 
+    <input type=text 
+           value="Hello world !" 
+           id="text_send_message"/>
+    <input type="button" 
+           value="Click me to send"
+           id="button_message"
+           onclick="doSend(document.getElementById('text_send_message').value)" />
+</p>
+<p>Received from server: <br>
+    <textarea rows="7" cols="50"
+           contenteditable="false"
+           disabled
+           id="text_receive_message"></textarea>
+</p>
+</body>
