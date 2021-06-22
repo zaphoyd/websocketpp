@@ -75,7 +75,7 @@ int main() {
         // messages being buffered forever. The non-buffered strategy below
         // reads characters from stdin one at a time. This is inefficient and
         // for more serious uses should be replaced with a platform specific
-        // asyncronous i/o technique like select, poll, IOCP, etc
+        // asynchronous i/o technique like select, poll, IOCP, etc
         bool buffered_io = false;
 
         if (buffered_io) {

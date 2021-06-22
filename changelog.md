@@ -5,7 +5,7 @@ HEAD
   libraries directly (classes in the namespace `websocketpp::http::*`) they 
   should review any error handling they do.
 - MINOR BREAKING BUNDLED LIBRARY CHANGE: The `websocketpp::utility::to_lower`
-  function, from the bundled utility library has been removed. This vestigial
+  function, from the bundled utility library, has been removed. This vestigial
   code was not used by the library at all and throwing warnings in MSVC.
   Thank you fedor-strelkov and maksis for reporting and remediation ideas. #956
 - Feature: WebSocket++ can now be compiled without exceptions by defining

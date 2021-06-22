@@ -108,7 +108,7 @@ Close is not called for failed connections.
 Endpoint Handlers
 -----------------
 
-### Socket Init Handler
+### TCP Listen Pre-bind handler
 
 | Event          | Signature                                                                     | Availability         |
 | -------------- | ----------------------------------------------------------------------------- | -------------------- |
