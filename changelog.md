@@ -49,6 +49,9 @@ HEAD
   later compilers. Thank you Matus Kysel for the patch & tests. #792
 - Reliability: Add a few defensive assertions to guard against corrupted
   HTTP message reads. Thank you Oleh Derevenko for reporting. #899
+- Compatibility: Remove use of simple template ids in constructors. This was
+  required to compile in C++20 mode and higher. Thank you yushb0602 for
+  reporting and jcelerier for a patch.
 - Fix Regression: Correct a regression introduced in 0.8.0 that broke
   functionality for setting accepted socket options like TCP_NODELAY.
   #530 #812
