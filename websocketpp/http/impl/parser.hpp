@@ -223,6 +223,15 @@ inline std::string parser::raw_headers() const {
     return raw.str();
 }
 
+inline void parser::reset() {
+  m_version.clear();
+  m_headers.clear();
+  m_header_bytes = 0;
+  m_body.clear();
+  m_body_bytes_needed = 0;
+  m_body_bytes_max = max_body_size;
+  m_body_encoding = body_encoding::unknown;
+}
 
 
 } // namespace parser

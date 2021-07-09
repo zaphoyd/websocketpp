@@ -564,6 +564,12 @@ public:
      */
     bool parse_parameter_list(std::string const & in, parameter_list & out)
         const;
+
+    /**
+     * Resets the parser back to the initial state.
+     */
+    void reset();
+
 protected:
     /// Process a header line
     /**

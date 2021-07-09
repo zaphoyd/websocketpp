@@ -311,6 +311,7 @@ public:
       , m_user_agent(ua)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+      , m_waiting_handshake_timeout_dur(config::timeout_waiting_handshake)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
@@ -500,6 +501,30 @@ public:
      */
     void set_open_handshake_timeout(long dur) {
         m_open_handshake_timeout_dur = dur;
+    }
+
+    /**
+     * Sets the length of time the library will wait after an HTTP request has
+     * been processed in persistent HTTP connections before the next one has
+     * to arrive. This timeout is used to control the lifetime of persistent
+     * connections keeping the open handshake short to prevent Sloloris style
+     * attacks.
+     *
+     * Connections that time out will have their fail handlers called with the
+     * waiting_handshake_timeout error code.
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_waiting_handshake'. The default value in the core config
+     * is 5 minutes. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+     *
+     * @param dur The length of the open handshake timeout in ms
+     */
+    void set_waiting_handshake_timeout(long dur) {
+        m_waiting_handshake_timeout_dur = dur;
     }
 
     /// Set close handshake timeout
@@ -1439,7 +1464,11 @@ public:
 
     
 
-    void read_handshake(size_t num_bytes);
+    void read_open_handshake(size_t num_bytes);
+    void read_waiting_handshake(size_t num_bytes);
+    void read_handshake(size_t num_bytes,
+        long timeout_dur,
+        transport::timer_handler callback);
 
     void handle_read_handshake(lib::error_code const & ec,
         size_t bytes_transferred);
@@ -1452,6 +1481,7 @@ public:
 
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
+    void handle_waiting_handshake_timeout(lib::error_code const & ec);
 
     void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
     void read_frame();
@@ -1665,6 +1695,7 @@ private:
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
+    long                    m_waiting_handshake_timeout_dur;
     long                    m_pong_timeout_dur;
     size_t                  m_max_message_size;
 

@@ -97,6 +97,11 @@ struct core {
     /// threaded applications
     static bool const enable_multithreading = true;
 
+    // Controls compile time enabling/disabling of HTTP persistent connection
+    // support in HTTP server mode. This will reduce SSL negotiation rates if
+    // websocketpp is also used to serve REST requests or small resources.
+    static bool const enable_persistent_connections = false;
+
     struct transport_config {
         typedef type::concurrency_type concurrency_type;
         typedef type::elog_type elog_type;
@@ -154,6 +159,9 @@ struct core {
     static const long timeout_close_handshake = 5000;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 5000;
+    /// Length of time to wait before another request is aborted in persistent
+    /// HTTP connections
+    static const long timeout_waiting_handshake = 5 * 60000;
 
     /// WebSocket Protocol version to use as a client
     /**

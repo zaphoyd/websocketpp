@@ -116,6 +116,9 @@ enum value {
     /// WebSocket close handshake timed out
     close_handshake_timeout,
 
+    /// WebSocket waiting handshake timed out
+    waiting_handshake_timeout,
+
     /// Invalid port in URI
     invalid_port,
 
