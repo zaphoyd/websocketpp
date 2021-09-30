@@ -69,6 +69,7 @@ public:
 
     /// Type of the ASIO socket being used
     typedef lib::asio::ssl::stream<lib::asio::ip::tcp::socket> socket_type;
+    typedef lib::asio::ip::tcp socket_family;
     /// Type of a shared pointer to the ASIO socket being used
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_service being used

@@ -79,8 +79,11 @@ public:
 
     /// Type of a pointer to the ASIO io_service being used
     typedef lib::asio::io_service * io_service_ptr;
+
+    typedef typename config::socket_type::socket_con_type::socket_suite socket_suite;
+
     /// Type of a shared pointer to the acceptor being used
-    typedef lib::shared_ptr<lib::asio::ip::tcp::acceptor> acceptor_ptr;
+    typedef lib::shared_ptr<typename socket_suite::acceptor> acceptor_ptr;
     /// Type of a shared pointer to the resolver being used
     typedef lib::shared_ptr<lib::asio::ip::tcp::resolver> resolver_ptr;
     /// Type of timer handle
@@ -161,7 +164,7 @@ public:
             rhs.m_acceptor = NULL;
             rhs.m_listen_backlog = lib::asio::socket_base::max_connections;
             rhs.m_state = UNINITIALIZED;
-            
+
             // TODO: this needs to be updated
         }
         return *this;
@@ -195,7 +198,7 @@ public:
 
         m_io_service = ptr;
         m_external_io_service = true;
-        m_acceptor.reset(new lib::asio::ip::tcp::acceptor(*m_io_service));
+        m_acceptor.reset(new typename socket_suite::acceptor(*m_io_service));
 
         m_state = READY;
         ec = lib::error_code();
@@ -225,7 +228,7 @@ public:
      * @param ec Set to indicate what error occurred, if any.
      */
     void init_asio(lib::error_code & ec) {
-        // Use a smart pointer until the call is successful and ownership has 
+        // Use a smart pointer until the call is successful and ownership has
         // successfully been taken. Use unique_ptr when available.
         // TODO: remove the use of auto_ptr when C++98/03 support is no longer
         //       necessary.
@@ -247,7 +250,7 @@ public:
      * @see init_asio(io_service_ptr ptr)
      */
     void init_asio() {
-        // Use a smart pointer until the call is successful and ownership has 
+        // Use a smart pointer until the call is successful and ownership has
         // successfully been taken. Use unique_ptr when available.
         // TODO: remove the use of auto_ptr when C++98/03 support is no longer
         //       necessary.
@@ -378,7 +381,7 @@ public:
     lib::asio::io_service & get_io_service() {
         return *m_io_service;
     }
-    
+
     /// Get local TCP endpoint
     /**
      * Extracts the local endpoint from the acceptor. This represents the
@@ -386,18 +389,18 @@ public:
      *
      * Sets a bad_descriptor error if the acceptor is not currently listening
      * or otherwise unavailable.
-     * 
+     *
      * @since 0.7.0
      *
      * @param ec Set to indicate what error occurred, if any.
      * @return The local endpoint
      */
-    lib::asio::ip::tcp::endpoint get_local_endpoint(lib::asio::error_code & ec) {
+    typename socket_suite::endpoint get_local_endpoint(lib::asio::error_code & ec) {
         if (m_acceptor) {
             return m_acceptor->local_endpoint(ec);
         } else {
             ec = lib::asio::error::make_error_code(lib::asio::error::bad_descriptor);
-            return lib::asio::ip::tcp::endpoint();
+            return socket_suite::endpoint();
         }
     }
 
@@ -409,7 +412,7 @@ public:
      * @param ep An endpoint to read settings from
      * @param ec Set to indicate what error occurred, if any.
      */
-    void listen(lib::asio::ip::tcp::endpoint const & ep, lib::error_code & ec)
+    void listen(typename socket_suite::endpoint const & ep, lib::error_code & ec)
     {
         if (m_state != READY) {
             m_elog->write(log::elevel::library,
@@ -425,10 +428,10 @@ public:
 
         m_acceptor->open(ep.protocol(),bec);
         if (bec) {ec = clean_up_listen_after_error(bec);return;}
-        
+
         m_acceptor->set_option(lib::asio::socket_base::reuse_address(m_reuse_addr),bec);
         if (bec) {ec = clean_up_listen_after_error(bec);return;}
-        
+
         // if a TCP pre-bind handler is present, run it
         if (m_tcp_pre_bind_handler) {
             ec = m_tcp_pre_bind_handler(m_acceptor);
@@ -437,13 +440,13 @@ public:
                 return;
             }
         }
-        
+
         m_acceptor->bind(ep,bec);
         if (bec) {ec = clean_up_listen_after_error(bec);return;}
-        
+
         m_acceptor->listen(m_listen_backlog,bec);
         if (bec) {ec = clean_up_listen_after_error(bec);return;}
-        
+
         // Success
         m_state = LISTENING;
         ec = lib::error_code();
@@ -457,7 +460,7 @@ public:
      *
      * @param ep An endpoint to read settings from
      */
-    void listen(lib::asio::ip::tcp::endpoint const & ep) {
+    void listen(typename socket_suite::endpoint const & ep) {
         lib::error_code ec;
         listen(ep,ec);
         if (ec) { throw exception(ec); }
@@ -498,11 +501,20 @@ public:
      * @param internet_protocol The internet protocol to use.
      * @param port The port to listen on.
      */
-    template <typename InternetProtocol>
-    void listen(InternetProtocol const & internet_protocol, uint16_t port)
-    {
-        lib::asio::ip::tcp::endpoint ep(internet_protocol, port);
+    template <typename InternetProtocol, typename SockSuite = socket_suite>
+    typename std::enable_if<std::is_same<SockSuite, lib::asio::ip::tcp>::value, void>::type
+    listen(InternetProtocol const &internet_protocol, uint16_t port) {
+        typename lib::asio::ip::tcp::endpoint ep(internet_protocol, port);
         listen(ep);
+    }
+
+    template <typename SockSuite = socket_suite>
+    typename std::enable_if<std::is_same<SockSuite, lib::asio::local::stream_protocol>::value, void>::type
+    listen(const char* path) {
+        ::unlink(path);
+        lib::asio::local::stream_protocol::endpoint ep(path);
+        listen(ep);
+        chmod(path, S_IRWXG ^ S_IRWXU ^ S_IRWXO);
     }
 
     /// Set up endpoint for listening on a port (exception free)
@@ -553,7 +565,9 @@ public:
      * descriptive name or a numeric string corresponding to a port number.
      * @param ec Set to indicate what error occurred, if any.
      */
-    void listen(std::string const & host, std::string const & service,
+    template <typename SockSuite = socket_suite>
+    typename std::enable_if<std::is_same<SockSuite, lib::asio::ip::tcp>::value, void>::type
+    listen(std::string const & host, std::string const & service,
         lib::error_code & ec)
     {
         using lib::asio::ip::tcp;

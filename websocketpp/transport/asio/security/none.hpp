@@ -46,19 +46,18 @@ namespace asio {
 /// socket
 namespace basic_socket {
 
-/// The signature of the socket init handler for this socket policy
-typedef lib::function<void(connection_hdl,lib::asio::ip::tcp::socket&)>
-    socket_init_handler;
+namespace generic {
 
 /// Basic Asio connection socket component
 /**
- * transport::asio::basic_socket::connection implements a connection socket
- * component using Asio ip::tcp::socket.
+ * transport::asio::basic_socket::generic::connection implements a connection socket
+ * component using a specified Asio socket
  */
-class connection : public lib::enable_shared_from_this<connection> {
+template <typename SocketSuite_T>
+class connection : public lib::enable_shared_from_this<connection<SocketSuite_T>> {
 public:
     /// Type of this connection socket component
-    typedef connection type;
+    typedef connection<SocketSuite_T> type;
     /// Type of a shared pointer to this connection socket component
     typedef lib::shared_ptr<type> ptr;
 
@@ -67,9 +66,12 @@ public:
     /// Type of a pointer to the Asio io_service strand being used
     typedef lib::shared_ptr<lib::asio::io_service::strand> strand_ptr;
     /// Type of the ASIO socket being used
-    typedef lib::asio::ip::tcp::socket socket_type;
+    typedef SocketSuite_T socket_suite;
+    typedef typename SocketSuite_T::socket socket_type;
     /// Type of a shared pointer to the socket being used.
     typedef lib::shared_ptr<socket_type> socket_ptr;
+    /// The signature of the socket init handler for this socket policy
+    typedef lib::function<void(connection_hdl, socket_type &)> socket_init_handler;
 
     explicit connection() : m_state(UNINITIALIZED) {
         //std::cout << "transport::asio::basic_socket::connection constructor"
@@ -78,7 +80,7 @@ public:
 
     /// Get a shared pointer to this component
     ptr get_shared() {
-        return shared_from_this();
+        return lib::enable_shared_from_this<connection<SocketSuite_T>>::shared_from_this();
     }
 
     /// Check whether or not this connection is secure
@@ -105,7 +107,7 @@ public:
     /**
      * This is used internally. It can also be used to set socket options, etc
      */
-    lib::asio::ip::tcp::socket & get_socket() {
+    socket_type & get_socket() {
         return *m_socket;
     }
 
@@ -113,7 +115,7 @@ public:
     /**
      * This is used internally.
      */
-    lib::asio::ip::tcp::socket & get_next_layer() {
+    socket_type & get_next_layer() {
         return *m_socket;
     }
 
@@ -121,7 +123,7 @@ public:
     /**
      * This is used internally. It can also be used to set socket options, etc
      */
-    lib::asio::ip::tcp::socket & get_raw_socket() {
+    socket_type & get_raw_socket() {
         return *m_socket;
     }
 
@@ -139,7 +141,7 @@ public:
         std::stringstream s;
 
         lib::asio::error_code aec;
-        lib::asio::ip::tcp::endpoint ep = m_socket->remote_endpoint(aec);
+        auto ep = m_socket->remote_endpoint(aec);
 
         if (aec) {
             ec = error::make_error_code(error::pass_through);
@@ -168,7 +170,7 @@ protected:
             return socket::make_error_code(socket::error::invalid_state);
         }
 
-        m_socket.reset(new lib::asio::ip::tcp::socket(*service));
+        m_socket.reset(new socket_type(*service));
 
         if (m_socket_init_handler) {
             m_socket_init_handler(m_hdl, *m_socket);
@@ -252,7 +254,7 @@ protected:
 
     void async_shutdown(socket::shutdown_handler h) {
         lib::asio::error_code ec;
-        m_socket->shutdown(lib::asio::ip::tcp::socket::shutdown_both, ec);
+        m_socket->shutdown(socket_type::shutdown_both, ec);
         h(ec);
     }
 
@@ -263,14 +265,14 @@ protected:
 public:
     /// Translate any security policy specific information about an error code
     /**
-     * Translate_ec takes an Asio error code and attempts to convert its value 
+     * Translate_ec takes an Asio error code and attempts to convert its value
      * to an appropriate websocketpp error code. In the case that the Asio and
      * Websocketpp error types are the same (such as using boost::asio and
      * boost::system_error or using standalone asio and std::system_error the
      * code will be passed through natively.
      *
      * In the case of a mismatch (boost::asio with std::system_error) a
-     * translated code will be returned. The plain socket policy does not have 
+     * translated code will be returned. The plain socket policy does not have
      * any additional information so all such errors will be reported as the
      * generic transport pass_through error.
      *
@@ -287,7 +289,7 @@ public:
     }
 
     static
-    /// Overload of translate_ec to catch cases where lib::error_code is the 
+    /// Overload of translate_ec to catch cases where lib::error_code is the
     /// same type as lib::asio::error_code
     lib::error_code translate_ec(lib::error_code ec) {
         // We don't know any more information about this error, but the error is
@@ -310,20 +312,17 @@ private:
 };
 
 /// Basic ASIO endpoint socket component
-/**
- * transport::asio::basic_socket::endpoint implements an endpoint socket
- * component that uses Boost ASIO's ip::tcp::socket.
- */
-class endpoint {
+template <typename SocketSuite_T> class endpoint {
 public:
     /// The type of this endpoint socket component
-    typedef endpoint type;
+    typedef endpoint<SocketSuite_T> type;
 
     /// The type of the corresponding connection socket component
-    typedef connection socket_con_type;
+    typedef connection<SocketSuite_T> socket_con_type;
     /// The type of a shared pointer to the corresponding connection socket
     /// component.
-    typedef socket_con_type::ptr socket_con_ptr;
+    typedef typename socket_con_type::ptr socket_con_ptr;
+    typedef typename socket_con_type::socket_init_handler socket_init_handler;
 
     explicit endpoint() {}
 
@@ -363,6 +362,27 @@ protected:
 private:
     socket_init_handler m_socket_init_handler;
 };
+
+} // namespace generic
+
+
+/**
+ * transport::asio::basic_socket::connection implements a connection socket
+ * component using Asio ip::tcp::socket.
+ *
+ * To use other socket suits specialize the template
+ * transport::asio::basic_socket::generic::connection
+ */
+class connection : public generic::connection<lib::asio::ip::tcp> {};
+
+/**
+ * transport::asio::basic_socket::endpoint implements an endpoint socket
+ * component that uses Boost ASIO's ip::tcp::socket.
+ *
+ * To use other socket suits specialize the template
+ * transport::asio::basic_socket::generic::endpoint
+ */
+class endpoint : public generic::endpoint<lib::asio::ip::tcp> {};
 
 } // namespace basic_socket
 } // namespace asio
