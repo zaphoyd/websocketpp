@@ -19,7 +19,7 @@ prgs = env.Program('test_iostream_base_boost', ["iostream_base_boost.o"], LIBS =
 prgs += env.Program('test_iostream_connection_boost', ["iostream_connection_boost.o"], LIBS = BOOST_LIBS)
 prgs += env.Program('test_iostream_endpoint_boost', ["iostream_endpoint_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('iostream_base_stl.o', ["base.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('iostream_connection_stl.o', ["connection.cpp"], LIBS = BOOST_LIBS_CPP11)

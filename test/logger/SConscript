@@ -15,7 +15,7 @@ BOOST_LIBS = boostlibs(['unit_test_framework','system'],env) + [platform_libs]
 objs = env.Object('logger_basic_boost.o', ["basic.cpp"], LIBS = BOOST_LIBS)
 prgs = env.Program('logger_basic_boost', ["logger_basic_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework','system'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('logger_basic_stl.o', ["basic.cpp"], LIBS = BOOST_LIBS_CPP11)
    prgs += env_cpp11.Program('logger_basic_stl', ["logger_basic_stl.o"], LIBS = BOOST_LIBS_CPP11)

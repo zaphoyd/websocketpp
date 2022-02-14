@@ -17,7 +17,7 @@ objs += env.Object('alloc_boost.o', ["alloc.cpp"], LIBS = BOOST_LIBS)
 prgs = env.Program('test_message_boost', ["message_boost.o"], LIBS = BOOST_LIBS)
 prgs += env.Program('test_alloc_boost', ["alloc_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('message_stl.o', ["message.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('alloc_stl.o', ["alloc.cpp"], LIBS = BOOST_LIBS_CPP11)
