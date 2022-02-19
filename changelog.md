@@ -64,7 +64,7 @@ HEAD
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
   value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
 - SCons: Improve compatibility with Python 3. Thank you Jochen Jägers and 
-  Gianfranco Costamagna for reporting and the patches. #885 #857
+  Gianfranco Costamagna for reporting and the patches. #885 #857 #1024
 - SCons: Correct copy/paste error in `scratch_client` SConstruct file.
   Thank you kautsig for reporting and the patch. #893
 - CMake: Fix typo in CMakeLists.txt that caused CXX_FLAGS to be improperly
