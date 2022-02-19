@@ -235,11 +235,17 @@ protected:
             // For clients on systems with a suitable OpenSSL version, set the
             // TLS SNI hostname header so connecting to TLS servers using SNI
             // will work.
-            auto host = m_uri->get_host();
+            std::string const & host = m_uri->get_host();
             lib::asio::error_code ec_addr;
-            boost::asio::ip::address addr = boost::asio::ip::make_address(host, ec_addr);
+            
+            // run the hostname through make_address to check if it is a valid IP literal
+            lib::asio::ip::address addr = lib::asio::ip::make_address(host, ec_addr);
+            
+            // If the parsing as an IP literal fails, proceed to register the hostname
+            // with the TLS handshake via SNI.
+            // The SNI applies only to DNS host names, not for IP addresses
+            // See RFC3546 Section 3.1
             if (ec_addr) {
-                // The SNI applies only to DNS host names, not for IP addresses
                 long res = SSL_set_tlsext_host_name(
                     get_socket().native_handle(), host.c_str());
                 if (!(1 == res)) {
