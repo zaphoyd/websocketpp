@@ -11,7 +11,7 @@ env_cpp11 = env_cpp11.Clone ()
 
 prgs = []
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework','system','timer','chrono'],env_cpp11) + [platform_libs] + [polyfill_libs]
    prgs += env_cpp11.Program('main', ["main.cpp"], LIBS = BOOST_LIBS_CPP11)
 

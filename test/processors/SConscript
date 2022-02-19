@@ -26,7 +26,7 @@ prgs += env.Program('test_hybi07_boost', ["test_hybi07_boost.o"], LIBS = BOOST_L
 prgs += env.Program('test_hybi00_boost', ["test_hybi00_boost.o"], LIBS = BOOST_LIBS)
 prgs += env.Program('test_extension_permessage_compress_boost', ["test_extension_permessage_compress_boost.o"], LIBS = BOOST_LIBS + ['z'])
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs] + ['z']
    # no C++11 features are used in processor so there are no C++11 versions of
    # these tests.

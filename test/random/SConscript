@@ -17,7 +17,7 @@ objs += env.Object('random_device_boost.o', ["random_device.cpp"], LIBS = BOOST_
 prgs = env.Program('test_random_none_boost', ["random_none_boost.o"], LIBS = BOOST_LIBS)
 prgs += env.Program('test_random_device_boost', ["random_device_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('random_none_stl.o', ["none.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('random_device_stl.o', ["random_device.cpp"], LIBS = BOOST_LIBS_CPP11)
