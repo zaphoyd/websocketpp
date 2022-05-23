@@ -2177,7 +2177,7 @@ connection<config>::get_processor(int version) const {
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
-                lib::ref(m_rng)
+                m_rng
             );
             break;
         case 8:
@@ -2185,7 +2185,7 @@ connection<config>::get_processor(int version) const {
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
-                lib::ref(m_rng)
+                m_rng
             );
             break;
         case 13:
@@ -2193,7 +2193,7 @@ connection<config>::get_processor(int version) const {
                 transport_con_type::is_secure(),
                 m_is_server,
                 m_msg_manager,
-                lib::ref(m_rng)
+                m_rng
             );
             break;
         default:
