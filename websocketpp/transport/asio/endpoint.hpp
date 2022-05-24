@@ -51,10 +51,12 @@ namespace asio {
  * Asio.
  */
 template <typename config>
-class endpoint : public config::socket_type {
+class endpoint : public config::socket_type, public lib::enable_shared_from_this<endpoint<config>> {
 public:
     /// Type of this endpoint transport component
     typedef endpoint<config> type;
+    /// Type of a shared pointer to this endpoint transport component
+    typedef lib::shared_ptr<type> ptr;
 
     /// Type of the concurrency policy
     typedef typename config::concurrency_type concurrency_type;
@@ -167,6 +169,11 @@ public:
         return *this;
     }*/
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
+
+    /// Get a shared pointer to this component
+    ptr get_shared() {
+        return this->shared_from_this();
+    }
 
     /// Return whether or not the endpoint produces secure connections.
     bool is_secure() const {
@@ -723,7 +730,7 @@ public:
         new_timer->async_wait(
             lib::bind(
                 &type::handle_timer,
-                this,
+                get_shared(),
                 new_timer,
                 callback,
                 lib::placeholders::_1
@@ -781,7 +788,7 @@ public:
                 tcon->get_raw_socket(),
                 tcon->get_strand()->wrap(lib::bind(
                     &type::handle_accept,
-                    this,
+                    get_shared(),
                     callback,
                     lib::placeholders::_1
                 ))
@@ -791,7 +798,7 @@ public:
                 tcon->get_raw_socket(),
                 lib::bind(
                     &type::handle_accept,
-                    this,
+                    get_shared(),
                     callback,
                     lib::placeholders::_1
                 )
@@ -896,7 +903,7 @@ protected:
             config::timeout_dns_resolve,
             lib::bind(
                 &type::handle_resolve_timeout,
-                this,
+                get_shared(),
                 dns_timer,
                 cb,
                 lib::placeholders::_1
@@ -908,7 +915,7 @@ protected:
                 query,
                 tcon->get_strand()->wrap(lib::bind(
                     &type::handle_resolve,
-                    this,
+                    get_shared(),
                     tcon,
                     dns_timer,
                     cb,
@@ -921,7 +928,7 @@ protected:
                 query,
                 lib::bind(
                     &type::handle_resolve,
-                    this,
+                    get_shared(),
                     tcon,
                     dns_timer,
                     cb,
@@ -1003,7 +1010,7 @@ protected:
             config::timeout_connect,
             lib::bind(
                 &type::handle_connect_timeout,
-                this,
+                get_shared(),
                 tcon,
                 con_timer,
                 callback,
@@ -1017,7 +1024,7 @@ protected:
                 iterator,
                 tcon->get_strand()->wrap(lib::bind(
                     &type::handle_connect,
-                    this,
+                    get_shared(),
                     tcon,
                     con_timer,
                     callback,
@@ -1030,7 +1037,7 @@ protected:
                 iterator,
                 lib::bind(
                     &type::handle_connect,
-                    this,
+                    get_shared(),
                     tcon,
                     con_timer,
                     callback,
