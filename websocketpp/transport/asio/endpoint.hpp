@@ -176,7 +176,7 @@ public:
     /// initialize asio transport with external io_service (exception free)
     /**
      * Initialize the ASIO transport policy for this endpoint using the provided
-     * io_service object. asio_init must be called exactly once on any endpoint
+     * io_service object. init_asio must be called exactly once on any endpoint
      * that uses transport::asio before it can be used.
      *
      * @param ptr A pointer to the io_service to use for asio events
@@ -205,7 +205,7 @@ public:
     /// initialize asio transport with external io_service
     /**
      * Initialize the ASIO transport policy for this endpoint using the provided
-     * io_service object. asio_init must be called exactly once on any endpoint
+     * io_service object. init_asio must be called exactly once on any endpoint
      * that uses transport::asio before it can be used.
      *
      * @param ptr A pointer to the io_service to use for asio events
