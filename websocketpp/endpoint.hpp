@@ -641,7 +641,7 @@ public:
      *
      * @return the connection_ptr. May be NULL if the handle was invalid.
      */
-    connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
+    connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) const {
         connection_ptr con = lib::static_pointer_cast<connection_type>(
             hdl.lock());
         if (!con) {
@@ -652,7 +652,7 @@ public:
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Retrieves a connection_ptr from a connection_hdl (exception version)
-    connection_ptr get_con_from_hdl(connection_hdl hdl) {
+    connection_ptr get_con_from_hdl(connection_hdl hdl) const {
         lib::error_code ec;
         connection_ptr con = this->get_con_from_hdl(hdl,ec);
         if (ec) {
