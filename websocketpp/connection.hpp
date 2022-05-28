@@ -315,6 +315,7 @@ public:
       , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
       , m_internal_state(session::internal_state::USER_INIT)
+      , m_buf_cursor(0)
       , m_msg_manager(new con_msg_manager_type())
       , m_send_buffer_size(0)
       , m_write_flag(false)

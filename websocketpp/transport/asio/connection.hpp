@@ -102,6 +102,7 @@ public:
       : m_is_server(is_server)
       , m_alog(alog)
       , m_elog(elog)
+      , m_io_service(nullptr)
     {
         m_alog->write(log::alevel::devel,"asio con transport constructor");
     }
