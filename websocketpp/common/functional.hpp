@@ -52,7 +52,7 @@
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
     #include <functional>
 #else
-    #include <boost/bind.hpp>
+    #include <boost/bind/bind.hpp>
     #include <boost/function.hpp>
     #include <boost/ref.hpp>
 #endif
@@ -83,12 +83,7 @@ namespace lib {
     using boost::function;
     using boost::bind;
     using boost::ref;
-    namespace placeholders {
-        /// \todo this feels hacky, is there a better way?
-        using ::_1;
-        using ::_2;
-        using ::_3;
-    }
+    namespace placeholders = boost::placeholders;
 
     // See above definition for more details on what this is and why it exists
     #define _WEBSOCKETPP_REF(x) boost::ref(x)
