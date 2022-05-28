@@ -14,7 +14,16 @@ addons:
 env:
   global:
     - BOOST_INCLUDES=/usr/include
-    - BOOST_LIBS=/usr/lib/x86_64-linux-gnu
+    
+matrix:
+ include:
+    - arch: amd64
+      env:
+       - BOOST_LIBS=/usr/lib/x86_64-linux-gnu
+    - arch: ppc64le
+      env: 
+       - BOOST_LIBS=/usr/lib/powerpc64le-linux-gnu
+
 script: cmake -DBUILD_EXAMPLES=1 -DBUILD_TESTS=1 . && make -j 2 && make test
 branches:
   except:
