@@ -33,7 +33,7 @@ These handlers will be called at most once per connection in the order specified
 | Socket initialization | `socket_init(connection_hdl, asio::ip::tcp::socket&)` | 0.3.0 Asio Transport |
 
 This hook is triggered after the socket has been initialized but before a connection is established. 
-It allows setting arbitrary socket options before connections are sent/recieved.
+It allows setting arbitrary socket options before connections are sent/received.
 
 ### TCP Pre-init Handler
 
@@ -105,7 +105,7 @@ These handers are called in response to incoming messages or message like events
 
 | Event                 | Signature                              | Availability |
 | --------------------- | -------------------------------------- | ------------ |
-| Data message recieved | `message(connection_hdl, message_ptr)` | 0.3.0 Core   |
+| Data message received | `message(connection_hdl, message_ptr)` | 0.3.0 Core   |
 
 Applies to all non-control messages, including both text and binary opcodes. The
 `message_ptr` type and its API depends on your endpoint type and its config.
@@ -114,7 +114,7 @@ Applies to all non-control messages, including both text and binary opcodes. The
 
 | Event         | Signature                                | Availability |
 | ------------- | ---------------------------------------- | ------------ |
-| Ping recieved | `bool ping(connection_hdl, std::string)` | 0.3.0 Core   |
+| Ping received | `bool ping(connection_hdl, std::string)` | 0.3.0 Core   |
 
 Second (string) argument is the binary ping payload. Handler return value
 indicates whether or not to respond to the ping with a pong. If no ping handler
@@ -125,7 +125,7 @@ the ping (Per requirements in RFC6455).
 
 | Event         | Signature                           | Availability |
 | ------------- | ----------------------------------- | ------------ |
-| Pong recieved | `pong(connection_hdl, std::string)` | 0.3.0 Core   |
+| Pong received | `pong(connection_hdl, std::string)` | 0.3.0 Core   |
 
 Second (string) argument is the binary pong payload.
 
@@ -142,10 +142,10 @@ Triggered if there is no response to a ping after the configured duration. The s
 
 | Event                 | Signature             | Availability                 |
 | --------------------- | --------------------- | ---------------------------- |
-| HTTP request recieved | `http(connection_hdl` | 0.3.0 Core, Server role only |
+| HTTP request received | `http(connection_hdl` | 0.3.0 Core, Server role only |
 
 Called when HTTP requests that are not WebSocket handshake upgrade requests are
-recieved. Allows responding to regular HTTP requests. If no handler is registered
+received. Allows responding to regular HTTP requests. If no handler is registered
 a 426/Upgrade Required error is returned.
 
 ### Interrupt Handler

@@ -45,7 +45,7 @@ Policies are classes used to allow clean swapping of behavior without changing t
 | alog_type                 | Access logger type                     |
 | request_type              | HTTP request type                      |
 | response_type             | HTTP response type                     |
-| message_type              | Type to deliver recieved messages      |
+| message_type              | Type to deliver received messages      |
 | con_msg_manager_type      | Connection level message manager       |
 | endpoint_msg_manager_type | Endpoint level message manager         |
 | rng_type                  | Random Number Generation policy        |
@@ -61,7 +61,7 @@ These represent the length of time (in ms) before the given operation is aborted
 | ----------------------- | ---- | ------- | --------------------------- |
 | timeout_open_handshake  | long | 5000    | Opening handshake           |
 | timeout_close_handshake | long | 5000    | Closing handshake           |
-| timeout_pong            | long | 5000    | No pong recieved after ping |
+| timeout_pong            | long | 5000    | No pong received after ping |
 
 ### Performance tuning
 
