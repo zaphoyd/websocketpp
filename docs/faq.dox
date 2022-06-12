@@ -12,7 +12,7 @@ Once a particular connection is created, it's handlers can be changed individual
 To remove a handler that was previously set, call the set method with `nullptr` or `NULL`.
 
 ### Can I reject or conditionally accept a connection
-Yes. The `validate` handler is called after the initial handshake has been recieved but before WebSocket++ has responded. This gives you the opportunity to inspect the incoming connection request, its headers, origin, subprotocols, and the remote endpoint IP. Return `true` from the validate handler to accept the connection and `false` to reject it.
+Yes. The `validate` handler is called after the initial handshake has been received but before WebSocket++ has responded. This gives you the opportunity to inspect the incoming connection request, its headers, origin, subprotocols, and the remote endpoint IP. Return `true` from the validate handler to accept the connection and `false` to reject it.
 
 To set a custom HTTP error message for your rejection, use `websocketpp::connection::set_status` and (optionally) `websocketpp::connection::set_body()` to set the HTTP status code and error message body text. If you do not set body text a message will be generated automatically based on the status code.
 
@@ -29,12 +29,12 @@ Note: some browsers will allow the connection to continue if they requested a su
 
 ### How do I cleanly exit an Asio transport based program
 
-The Asio transport based clients and servers use the Asio library's underlying `io_service` to handle asyncronous networking operations. The standard behavior of the io_service is to run until there are no async operations left and then return. WebSocket++, when using the Asio transport, behaves like a standard Asio application. If you want your WebSocket++/Asio based program to stop network operations and cleanly close all sockets you will want to do the following:
+The Asio transport based clients and servers use the Asio library's underlying `io_service` to handle asynchronous networking operations. The standard behavior of the io_service is to run until there are no async operations left and then return. WebSocket++, when using the Asio transport, behaves like a standard Asio application. If you want your WebSocket++/Asio based program to stop network operations and cleanly close all sockets you will want to do the following:
 
 - For servers, call `websocketpp::transport::asio::endpoint::stop_listening` to initiate the closing of the server listening socket.
 - For clients, if you have engaged perpetual mode with `websocketpp::transport::asio::endpoint::start_perpetual`, disable it with `websocketpp::transport::asio::endpoint::stop_perpetual`.
 - For both, run `websocketpp::endpoint::close` or `websocketpp::connection::close` on all currently outstanding connections. This will initiate the WebSocket closing handshake for these connections
-- Wait. Asio is asyncronous. When the calls to the above methods (stop_listening, close, etc) complete the server *will still be listening*, the connections *will still be active* until the io_service gets around to asyncronously processing the socket and WebSocket protocol closing handshakes. The `io_service::run` method will exit cleanly and automatically when all operations are complete.
+- Wait. Asio is asynchronous. When the calls to the above methods (stop_listening, close, etc) complete the server *will still be listening*, the connections *will still be active* until the io_service gets around to asynchronously processing the socket and WebSocket protocol closing handshakes. The `io_service::run` method will exit cleanly and automatically when all operations are complete.
 
 __WARNING__: Asio's `io_service` has a method called `stop`. WebSocket++ wraps this method as `websocketpp::transport::asio::endpoint::stop`. While this operation has a benign sounding name, it is a powerful and destructive operation that should only be used in special cases. If you are using `io_service::stop` or `endpoint::stop` without a very good reason your program is likely broken and may exhibit erratic behavior. Specifically, `io_service::stop` stops the processing of events entirely. This does not give current operations (such as socket closing handshakes) the opportunity to finish. It will leave your sockets in a dangling state that may invoke operating system level timeouts or other errors.
 
@@ -61,7 +61,7 @@ The clean close strategy won't help in the case of crashes or other abnormal clo
 
 __Please note__: how this works exactly depends on your operating system. Additionally, not exclusively locking your listening socket could allow hijacking by other programs if you are running in a shared resource environment. For development this is generally no problem. For a production environment, think carefully about the security model. `websocketpp::transport::asio::endpoint::set_reuse_addr` is the method to do this. You must specify this setting before calling `websocketpp::transport::asio::endpoint::listen`.
 
-### How do I send and recieve binary messages?
+### How do I send and receive binary messages?
 
 When supported by the remote endpoint, WebSocket++ allows reading and sending messages in the two formats specified in RFC6455, UTF8 text and binary. WebSocket++ performs UTF8 validation on all outgoing text messages to ensure that they meet the specification. Binary messages do not have any additional processing and their interpretation is left entirely to the library user.
 
@@ -84,11 +84,11 @@ MinGW users who want to avoid Boost should also consult the nearby question abou
 Yes. The process is the same as used with standalone Asio itself. Define `ASIO_STANDALONE` before including Asio or WebSocket++ headers. You will need to download a copy of the Asio headers separately (http://www.think-async.com) and make sure they are in your build system's include path.
 
 ### Can WebSocket++ be used without TLS or OpenSSL?
-Yes. When using the iostream/raw transport, there are no TLS features and OpenSSL is not required. When using the Asio transport TLS features are optional. You only need OpenSSL if you want to use TLS. You can only make or recieve encrypted connections (https/wss) if you have enabled TLS features.
+Yes. When using the iostream/raw transport, there are no TLS features and OpenSSL is not required. When using the Asio transport TLS features are optional. You only need OpenSSL if you want to use TLS. You can only make or receive encrypted connections (https/wss) if you have enabled TLS features.
 
 Whether an Asio endpoint uses TLS or not is determined by its config template parameter. The default bundled `websocketpp::config::asio` and `websocketpp::config::asio_client` configs do not support TLS, the `websocketpp::config::asio_tls` and `websocketpp::config::asio_tls_client` do.
 
-The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` headers will include both the TLS and non-TLS varients of their respective configs and require the presence of OpenSSL. The `<websocketpp/config/asio_no_tls.hpp>` and `<websocketpp/config/asio_no_tls_client.hpp>` headers will include only the non-TLS configs and do not require OpenSSL.
+The `<websocketpp/config/asio.hpp>` and `<websocketpp/config/asio_client.hpp>` headers will include both the TLS and non-TLS variants of their respective configs and require the presence of OpenSSL. The `<websocketpp/config/asio_no_tls.hpp>` and `<websocketpp/config/asio_no_tls_client.hpp>` headers will include only the non-TLS configs and do not require OpenSSL.
 
 ### Build issues with TLS on recent versions of OS X
 Mac OS X ships a severely outdated version of the OpenSSL library. To securely use TLS with WebSocket++ on OS X you will need to install a modern version of OpenSSL via homebrew or compiling from source.
@@ -145,7 +145,7 @@ typedef websocketpp::client<deflate_client_config> client_endpoint_type;
 
 ### Is it possible to terminate a malicious connection quickly, without tying up resources performing clean close steps, 
 
-Yes. The library will automatically detect and terminate connections that violate the WebSocket protocol. In cases where the library believes the remote endpoint to be malicious or sufficiently broken to be unlikely to understand or process the closing handshake, it will be omited.
+Yes. The library will automatically detect and terminate connections that violate the WebSocket protocol. In cases where the library believes the remote endpoint to be malicious or sufficiently broken to be unlikely to understand or process the closing handshake, it will be omitted.
 
 If your application detects conditions above the protocol level that you believe to be malicious, for example, if you recognize an IP from a known denial of service attack, you can close the connection with two different levels of urgency. Use the standard `websocketpp::endpoint::close` or `websocketpp::connection::close` methods with one of the following special close codes:
 - `websocketpp::close::status::omit_handshake`: Omits the closing handshake, but cleanly closes the TCP connection.
