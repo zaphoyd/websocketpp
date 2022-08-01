@@ -90,6 +90,15 @@ lib::error_code connection<config>::send(std::string const & payload,
     return send(msg);
 }
 
+template<typename config>
+lib::error_code connection<config>::send(std::string_view payload, frame::opcode::value op)
+{
+    message_ptr msg = m_msg_manager->get_message(op,payload.size());
+    msg->append_payload(payload);
+    msg->set_compressed(true);
+    return send(msg);
+}
+
 template <typename config>
 lib::error_code connection<config>::send(void const * payload, size_t len,
     frame::opcode::value op)
