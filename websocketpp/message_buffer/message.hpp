@@ -292,6 +292,16 @@ public:
     /**
      * Append data to the message buffer's payload.
      *
+     * @param payload A string_view containing the data array to append.
+     */
+    void append_payload(std::string_view payload) {
+        m_payload.append(payload);
+    }
+
+    /// Append payload data
+    /**
+     * Append data to the message buffer's payload.
+     *
      * @param payload A pointer to a data array to append
      * @param len The length of payload in bytes
      */
