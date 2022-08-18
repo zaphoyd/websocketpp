@@ -1107,16 +1107,15 @@ public:
      *      (exception free version)
      */
     void set_body(std::string const & value);
+
+    /// @copydoc websocketpp::connection::set_body(std::string const &)
+    void set_body(std::string && value);
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
     /// @copydoc websocketpp::connection::set_body(std::string const &, lib::error_code &)
     void set_body(std::string && value, lib::error_code & ec);
 
-#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
-    /// @copydoc websocketpp::connection::set_body(std::string const &)
-    void set_body(std::string && value);
-#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     /// Append a header (exception free)
