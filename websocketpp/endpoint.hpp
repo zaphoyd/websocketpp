@@ -583,8 +583,10 @@ public:
 
     void close(connection_hdl hdl, close::status::value const code,
         std::string const & reason, lib::error_code & ec);
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     void close(connection_hdl hdl, close::status::value const code,
         std::string const & reason);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Send a ping to a specific connection
     /**

@@ -777,6 +777,11 @@ public:
     /// exception free variant of pong
     void pong(std::string const & payload, lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+    // exception variant of close
+    void close(close::status::value const code, std::string const & reason);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+
     /// Close the connection
     /**
      * Initiates the close handshake process.
@@ -797,9 +802,6 @@ public:
      * @param code The close code to send
      * @param reason The close reason to send
      */
-    void close(close::status::value const code, std::string const & reason);
-
-    /// exception free variant of close
     void close(close::status::value const code, std::string const & reason,
         lib::error_code & ec);
 
@@ -1031,6 +1033,23 @@ public:
      * @see websocketpp::http::status_code::value (list of valid codes)
      */
     void set_status(http::status_code::value code);
+    
+	/// Set response status code and message (exception)
+    /**
+     * Sets the response status code and message to independent custom values.
+     * use set_status(status_code::value) to set the code and have the standard
+     * message be automatically set.
+     *
+     * This member function is valid only from the http() and validate() handler
+     * callbacks.
+     *
+     * @param[in] code Code to set
+     * @param[in] msg Message to set
+     * @throw websocketpp::exception
+     * @see websocketpp::http::parser::response::set_status()
+     * @see websocketpp::http::status_code::value (list of valid codes)
+     */
+    void set_status(http::status_code::value code, std::string const & msg);
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Set response status code and message (exception free)
@@ -1052,23 +1071,6 @@ public:
      */
     void set_status(http::status_code::value code, std::string const & msg,
         lib::error_code & ec);
-
-    /// Set response status code and message (exception)
-    /**
-     * Sets the response status code and message to independent custom values.
-     * use set_status(status_code::value) to set the code and have the standard
-     * message be automatically set.
-     *
-     * This member function is valid only from the http() and validate() handler
-     * callbacks.
-     *
-     * @param[in] code Code to set
-     * @param[in] msg Message to set
-     * @throw websocketpp::exception
-     * @see websocketpp::http::parser::response::set_status()
-     * @see websocketpp::http::status_code::value (list of valid codes)
-     */
-    void set_status(http::status_code::value code, std::string const & msg);
 
     /// Set response body content (exception free)
     /**
@@ -1145,6 +1147,7 @@ public:
     void append_header(std::string const & key, std::string const & val,
         lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Append a header (exception)
     /**
      * Set the value of a header in the handshake HTTP request or response. If
@@ -1165,6 +1168,7 @@ public:
      *      lib::error_code &) (exception free version)
      */
     void append_header(std::string const & key, std::string const & val);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Replace a header (exception free)
     /**
