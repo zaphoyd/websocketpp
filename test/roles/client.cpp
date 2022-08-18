@@ -57,8 +57,8 @@ struct stub_config : public websocketpp::config::core {
 
     typedef core::endpoint_base endpoint_base;
 
-    static const websocketpp::log::level elog_level = websocketpp::log::elevel::none;
-    static const websocketpp::log::level alog_level = websocketpp::log::alevel::none;
+    static constexpr websocketpp::log::level elog_level = websocketpp::log::elevel::none;
+    static constexpr websocketpp::log::level alog_level = websocketpp::log::alevel::none;
 };
 
 typedef websocketpp::client<stub_config> client;

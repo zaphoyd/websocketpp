@@ -199,7 +199,7 @@ struct minimal_server {
      *
      * Default is all except for development/debug level errors
      */
-    static const websocketpp::log::level elog_level =
+    static constexpr websocketpp::log::level elog_level =
         websocketpp::log::elevel::none;
 
     /// Default static access logging channels
@@ -212,7 +212,7 @@ struct minimal_server {
      *
      * Default is all except for development/debug level access messages
      */
-    static const websocketpp::log::level alog_level =
+    static constexpr websocketpp::log::level alog_level =
         websocketpp::log::alevel::none;
 
     ///

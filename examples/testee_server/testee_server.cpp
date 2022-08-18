@@ -61,9 +61,9 @@ struct testee_config : public websocketpp::config::asio {
     typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
 
-    static const websocketpp::log::level elog_level =
+    static constexpr websocketpp::log::level elog_level =
         websocketpp::log::elevel::none;
-    static const websocketpp::log::level alog_level =
+    static constexpr websocketpp::log::level alog_level =
         websocketpp::log::alevel::none;
         
     /// permessage_compress extension

@@ -32,6 +32,7 @@
 
 #include <websocketpp/connection.hpp>
 
+#include <websocketpp/logger/basic.hpp>
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/version.hpp>
 
@@ -91,8 +92,8 @@ public:
     //friend connection;
 
     explicit endpoint(bool p_is_server)
-      : m_alog(new alog_type(config::alog_level, log::channel_type_hint::access))
-      , m_elog(new elog_type(config::elog_level, log::channel_type_hint::error))
+      : m_alog(lib::make_shared<alog_type>(config::alog_level, log::channel_type_hint::access))
+      , m_elog(lib::make_shared<elog_type>(config::elog_level, log::channel_type_hint::error))
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)

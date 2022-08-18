@@ -173,7 +173,7 @@ struct debug_core {
      *
      * Default is all except for development/debug level errors
      */
-    static const websocketpp::log::level elog_level =
+    static constexpr websocketpp::log::level elog_level =
         websocketpp::log::elevel::all;
 
     /// Default static access logging channels
@@ -186,7 +186,7 @@ struct debug_core {
      *
      * Default is all except for development/debug level access messages
      */
-    static const websocketpp::log::level alog_level =
+    static constexpr websocketpp::log::level alog_level =
         websocketpp::log::alevel::all;
 
     ///

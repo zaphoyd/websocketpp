@@ -69,8 +69,8 @@ struct config : public websocketpp::config::asio_client {
     typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
 
-    //static const websocketpp::log::level elog_level = websocketpp::log::elevel::all;
-    //static const websocketpp::log::level alog_level = websocketpp::log::alevel::all;
+    //static constexpr websocketpp::log::level elog_level = websocketpp::log::elevel::all;
+    //static constexpr websocketpp::log::level alog_level = websocketpp::log::alevel::all;
 
     /// Length of time before an opening handshake is aborted
     static const long timeout_open_handshake = 500;
