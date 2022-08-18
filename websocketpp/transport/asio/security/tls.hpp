@@ -238,8 +238,12 @@ protected:
             std::string const & host = m_uri->get_host();
             lib::asio::error_code ec_addr;
             
-            // run the hostname through make_address to check if it is a valid IP literal
+        	// run the hostname through make_address to check if it is a valid IP literal
+#if (BOOST_VERSION/100000) == 1 && ((BOOST_VERSION/100)%1000) < 66
+            lib::asio::ip::address::from_string(host, ec_addr);
+#else
             lib::asio::ip::make_address(host, ec_addr);
+#endif // BOOST_VERSION
             
             // If the parsing as an IP literal fails, proceed to register the hostname
             // with the TLS handshake via SNI.
