@@ -81,7 +81,7 @@ public:
       , m_out(out) {}
 
     /// Destructor
-    ~basic<concurrency,names>() {}
+    ~basic() {}
 
     /// Copy constructor
     basic(basic<concurrency,names> const & other)
