@@ -339,11 +339,27 @@ protected:
     }
 
     void async_shutdown(socket::shutdown_handler callback) {
+		callback = lib::bind(&connection::handle_async_shutdown, this, callback, lib::placeholders::_1);
         if (m_strand) {
             m_socket->async_shutdown(m_strand->wrap(callback));
         } else {
             m_socket->async_shutdown(callback);
         }
+    }
+
+	void handle_async_shutdown(socket::shutdown_handler callback, lib::asio::error_code const & ec)
+    {
+        if (ec == lib::asio::error::operation_aborted)
+		{
+			const int shutdownState = SSL_get_shutdown(get_socket().native_handle());
+			if (shutdownState & SSL_RECEIVED_SHUTDOWN)
+			{
+				callback(lib::asio::error_code(lib::asio::error::not_connected, ec.category()));
+				return;
+			}
+		}
+
+		callback(ec);
     }
 
 public:
