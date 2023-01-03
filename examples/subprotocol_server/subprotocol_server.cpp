@@ -12,7 +12,7 @@ using websocketpp::lib::bind;
 using websocketpp::lib::ref;
 
 
-bool validate(server & s, connection_hdl hdl) {
+session::validation::value validate(server & s, connection_hdl hdl) {
     server::connection_ptr con = s.get_con_from_hdl(hdl);
 
     std::cout << "Cache-Control: " << con->get_request_header("Cache-Control") << std::endl;
@@ -28,7 +28,7 @@ bool validate(server & s, connection_hdl hdl) {
         con->select_subprotocol(subp_requests[0]);
     }
 
-    return true;
+    return session::validation::accept;
 }
 
 int main() {

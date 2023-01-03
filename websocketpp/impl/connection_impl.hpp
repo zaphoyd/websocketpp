@@ -1022,12 +1022,13 @@ void connection<config>::handle_read_handshake(lib::error_code const & ec,
         m_internal_state = istate::PROCESS_HTTP_REQUEST;
         
         // We have the complete request. Process it.
-        lib::error_code handshake_ec = this->process_handshake_request();
+        lib::error_code handshake_ec;
+		session::validation::value action = this->process_handshake_request(handshake_ec);
         
         // Write a response if this is a websocket connection or if it is an
         // HTTP connection for which the response has not been deferred or
         // started yet by a different system (i.e. still in init state).
-        if (!m_is_http || m_http_state == session::http_state::init) {
+        if ((!m_is_http && action != session::validation::defer) || (m_is_http && m_http_state == session::http_state::init)) {
             this->write_http_response(handshake_ec);
         }
     } else {
@@ -1153,11 +1154,11 @@ void connection<config>::handle_read_frame(lib::error_code const & ec,
 
         lib::error_code consume_ec;
 
-        if (m_alog->static_test(log::alevel::devel)) {
+        /*if (m_alog->static_test(log::alevel::devel)) {
             std::stringstream s;
             s << "Processing Bytes: " << utility::to_hex(reinterpret_cast<uint8_t*>(m_buf)+p,bytes_transferred-p);
             m_alog->write(log::alevel::devel,s.str());
-        }
+        }*/
 
         p += m_processor->consume(
             reinterpret_cast<uint8_t*>(m_buf)+p,
@@ -1285,7 +1286,7 @@ lib::error_code connection<config>::initialize_processor() {
 }
 
 template <typename config>
-lib::error_code connection<config>::process_handshake_request() {
+session::validation::value connection<config>::process_handshake_request(lib::error_code & ec) {
     m_alog->write(log::alevel::devel,"process handshake request");
 
     if (!processor::is_websocket_handshake(m_request)) {
@@ -1301,7 +1302,8 @@ lib::error_code connection<config>::process_handshake_request() {
         if (!m_uri->get_valid()) {
             m_alog->write(log::alevel::devel, "Bad request: failed to parse uri");
             m_response.set_status(http::status_code::bad_request);
-            return error::make_error_code(error::invalid_uri);
+            ec = error::make_error_code(error::invalid_uri);
+			return session::validation::reject;
         }
 
         if (m_http_handler) {
@@ -1309,24 +1311,27 @@ lib::error_code connection<config>::process_handshake_request() {
             m_http_handler(m_connection_hdl);
             
             if (m_state == session::state::closed) {
-                return error::make_error_code(error::http_connection_ended);
+                ec = error::make_error_code(error::http_connection_ended);
+				return session::validation::reject;
             }
         } else {
             m_response.set_status(http::status_code::upgrade_required);
-            return error::make_error_code(error::upgrade_required);
+            ec = error::make_error_code(error::upgrade_required);
+			return session::validation::reject;
         }
 
-        return lib::error_code();
+        ec.clear();
+		return session::validation::reject;
     }
 
-    lib::error_code ec = m_processor->validate_handshake(m_request);
+    ec = m_processor->validate_handshake(m_request);
 
     // Validate: make sure all required elements are present.
     if (ec){
         // Not a valid handshake request
         m_alog->write(log::alevel::devel, "Bad request " + ec.message());
         m_response.set_status(http::status_code::bad_request);
-        return ec;
+        return session::validation::reject;
     }
 
     // Read extension parameters and set up values necessary for the end user
@@ -1339,7 +1344,8 @@ lib::error_code connection<config>::process_handshake_request() {
         // a failed connection attempt.
         m_elog->write(log::elevel::info, "Bad request: " + neg_results.first.message());
         m_response.set_status(http::status_code::bad_request);
-        return neg_results.first;
+        ec = neg_results.first;
+		return session::validation::reject;
     } else if (neg_results.first) {
         // There was a fatal error in extension processing that is probably our
         // fault. Consider extension negotiation to have failed and continue as
@@ -1363,7 +1369,8 @@ lib::error_code connection<config>::process_handshake_request() {
     if (!m_uri->get_valid()) {
         m_alog->write(log::alevel::devel, "Bad request: failed to parse uri");
         m_response.set_status(http::status_code::bad_request);
-        return error::make_error_code(error::invalid_uri);
+        ec = error::make_error_code(error::invalid_uri);
+		return session::validation::reject;
     }
 
     // extract subprotocols
@@ -1375,7 +1382,20 @@ lib::error_code connection<config>::process_handshake_request() {
     }
 
     // Ask application to validate the connection
-    if (!m_validate_handler || m_validate_handler(m_connection_hdl)) {
+	session::validation::value action = session::validation::accept;
+	if (m_validate_handler)
+		action = m_validate_handler(m_connection_hdl);
+	
+	if (action != session::validation::defer)
+		ec = finalize_handshake_response(action == session::validation::accept);
+
+	return action;
+}
+
+template <typename config>
+lib::error_code connection<config>::finalize_handshake_response(bool accept) {
+	lib::error_code ec;
+	if (accept) {
         m_response.set_status(http::status_code::switching_protocols);
 
         // Write the appropriate response headers based on request and
@@ -1383,12 +1403,9 @@ lib::error_code connection<config>::process_handshake_request() {
         ec = m_processor->process_handshake(m_request,m_subprotocol,m_response);
 
         if (ec) {
-            std::stringstream s;
-            s << "Processing error: " << ec << "(" << ec.message() << ")";
-            m_alog->write(log::alevel::devel, s.str());
+            log_err(log::elevel::devel, "Processing", ec);
 
             m_response.set_status(http::status_code::internal_server_error);
-            return ec;
         }
     } else {
         // User application has rejected the handshake
@@ -1401,10 +1418,18 @@ lib::error_code connection<config>::process_handshake_request() {
             m_response.set_status(http::status_code::bad_request);
         }
         
-        return error::make_error_code(error::rejected);
+        ec = error::make_error_code(error::rejected);
     }
 
-    return lib::error_code();
+	return ec;
+}
+
+template <typename config>
+lib::error_code connection<config>::deferred_accept(bool accept)
+{
+	const lib::error_code ec = finalize_handshake_response(accept);
+	this->write_http_response(ec);
+	return get_ec();
 }
 
 template <typename config>

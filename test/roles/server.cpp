@@ -91,7 +91,7 @@ void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-bool validate_func_subprotocol(server* s, std::string* out, std::string accept,
+session::validation::value validate_func_subprotocol(server* s, std::string* out, std::string accept,
     websocketpp::connection_hdl hdl)
 {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -111,7 +111,7 @@ bool validate_func_subprotocol(server* s, std::string* out, std::string accept,
         con->select_subprotocol(accept);
     }
 
-    return true;
+    return session::validation::accept;
 }
 
 void open_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {

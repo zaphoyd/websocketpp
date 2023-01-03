@@ -155,10 +155,10 @@ void validate_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) 
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-bool validate_set_ua(server* s, websocketpp::connection_hdl hdl) {
+session::validation::value validate_set_ua(server* s, websocketpp::connection_hdl hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     con->replace_header("Server","foo");
-    return true;
+    return session::validation::accept;
 }
 
 void http_func(server* s, websocketpp::connection_hdl hdl) {

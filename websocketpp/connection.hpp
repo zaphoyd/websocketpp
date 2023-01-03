@@ -48,6 +48,17 @@
 
 namespace websocketpp {
 
+namespace session{
+	namespace validation {
+    	// validation types supported by the validate handler
+		enum value {
+			reject = 0,
+			accept = 1,
+			defer = 2
+		};
+	} // namespace http_state
+} // namespace session
+
 /// The type and function signature of an open handler
 /**
  * The open handler is called once for every successful WebSocket connection
@@ -126,7 +137,7 @@ typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
  * should be accepted. Additional methods may be called during the function to
  * set response headers, set HTTP return/error codes, etc.
  */
-typedef lib::function<bool(connection_hdl)> validate_handler;
+typedef lib::function<session::validation::value(connection_hdl)> validate_handler;
 
 /// The type and function signature of a http handler
 /**
@@ -1514,6 +1525,12 @@ public:
         m_connection_hdl = hdl;
         transport_con_type::set_handle(hdl);
     }
+
+	/// Accept or reject a websocket connection request that was previouslly deferred by the validate handler
+    /**
+     * @param accept True to accept the websocket connection, false to reject it.
+     */
+	lib::error_code deferred_accept(bool accept);
 protected:
     void handle_transport_init(lib::error_code const & ec);
 
@@ -1523,7 +1540,9 @@ protected:
 
     /// Perform WebSocket handshake validation of m_request using m_processor.
     /// set m_response and return an error code indicating status.
-    lib::error_code process_handshake_request();
+    session::validation::value process_handshake_request(lib::error_code & ec);
+
+	lib::error_code finalize_handshake_response(bool accept);
 private:
     
 

@@ -93,9 +93,9 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
 
-bool validate(server *, websocketpp::connection_hdl) {
+session::validation::value validate(server *, websocketpp::connection_hdl) {
     //sleep(6);
-    return true;
+    return session::validation::accept;
 }
 
 void on_http(server* s, websocketpp::connection_hdl hdl) {
