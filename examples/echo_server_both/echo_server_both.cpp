@@ -20,7 +20,7 @@ typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 // The shared on_message handler takes a template parameter so the function can
 // resolve any endpoint dependent types like message_ptr or connection_ptr
 template <typename EndpointType>
-void on_message(EndpointType* s, websocketpp::connection_hdl hdl,
+void on_message(EndpointType* s, websocketpp::connection_hdl_ref hdl,
     typename EndpointType::message_ptr msg)
 {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
@@ -46,7 +46,7 @@ std::string get_password() {
     return "test";
 }
 
-context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+context_ptr on_tls_init(websocketpp::connection_hdl_ref hdl) {
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
     context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 

@@ -1019,7 +1019,7 @@ protected:
      * @param hdl A connection_hdl that the transport will use to refer
      * to itself
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_connection_hdl = hdl;
         socket_con_type::set_handle(hdl);
     }

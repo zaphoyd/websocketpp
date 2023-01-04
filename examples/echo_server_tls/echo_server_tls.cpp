@@ -51,7 +51,7 @@ using websocketpp::lib::error_code;
 typedef websocketpp::config::asio::message_type::ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
               << " and message: " << msg->get_payload()
               << std::endl;
@@ -70,7 +70,7 @@ void on_end_accept(error_code lib_ec, error_code trans_ec) {
                 << lib_ec.message() << "/" << trans_ec.message() << std::endl;
 }
 
-void on_http(server* s, websocketpp::connection_hdl hdl) {
+void on_http(server* s, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     
     con->set_body("Hello World!");
@@ -88,7 +88,7 @@ enum tls_mode {
     MOZILLA_MODERN = 2
 };
 
-context_ptr on_tls_init(tls_mode mode, websocketpp::connection_hdl hdl) {
+context_ptr on_tls_init(tls_mode mode, websocketpp::connection_hdl_ref hdl) {
     namespace asio = websocketpp::lib::asio;
 
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;

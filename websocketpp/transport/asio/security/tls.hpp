@@ -52,7 +52,7 @@ namespace tls_socket {
 typedef lib::function<void(connection_hdl,lib::asio::ssl::stream<
     lib::asio::ip::tcp::socket>&)> socket_init_handler;
 /// The signature of the tls_init_handler for this socket policy
-typedef lib::function<lib::shared_ptr<lib::asio::ssl::context>(connection_hdl)>
+typedef lib::function<lib::shared_ptr<lib::asio::ssl::context>(connection_hdl_ref)>
     tls_init_handler;
 
 /// TLS enabled Asio connection socket component
@@ -305,7 +305,7 @@ protected:
      *
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_hdl = hdl;
     }
 

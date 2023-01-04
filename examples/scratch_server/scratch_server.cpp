@@ -53,7 +53,7 @@ typedef websocketpp::server<deflate_config> server;
 typedef server::message_ptr message_ptr;
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     /*std::cout << "on_message called with hdl: " << hdl.lock().get() 
               << " and message (" << msg->get_payload().size() << "): " << msg->get_payload()
               << std::endl;

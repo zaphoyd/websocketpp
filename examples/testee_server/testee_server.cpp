@@ -84,11 +84,11 @@ using websocketpp::lib::error_code;
 typedef server::message_ptr message_ptr;
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-void on_socket_init(websocketpp::connection_hdl, boost::asio::ip::tcp::socket & s) {
+void on_socket_init(websocketpp::connection_hdl_ref, boost::asio::ip::tcp::socket & s) {
     boost::asio::ip::tcp::no_delay option(true);
     s.set_option(option);
 }

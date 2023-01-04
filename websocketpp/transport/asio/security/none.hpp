@@ -232,7 +232,7 @@ protected:
      *
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_hdl = hdl;
     }
 

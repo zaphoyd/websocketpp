@@ -482,8 +482,8 @@ public:
      * default and an exception free variant.
      */
 
-    void interrupt(connection_hdl hdl, lib::error_code & ec);
-    void interrupt(connection_hdl hdl);
+    void interrupt(connection_hdl_ref hdl, lib::error_code & ec);
+    void interrupt(connection_hdl_ref hdl);
 
     /// Pause reading of new data (exception free)
     /**
@@ -505,10 +505,10 @@ public:
      *
      * If reading is paused for this connection already nothing is changed.
      */
-    void pause_reading(connection_hdl hdl, lib::error_code & ec);
+    void pause_reading(connection_hdl_ref hdl, lib::error_code & ec);
     
     /// Pause reading of new data
-    void pause_reading(connection_hdl hdl);
+    void pause_reading(connection_hdl_ref hdl);
 
     /// Resume reading of new data (exception free)
     /**
@@ -517,10 +517,10 @@ public:
      *
      * If reading is not paused for this connection already nothing is changed.
      */
-    void resume_reading(connection_hdl hdl, lib::error_code & ec);
+    void resume_reading(connection_hdl_ref hdl, lib::error_code & ec);
 
     /// Resume reading of new data
-    void resume_reading(connection_hdl hdl);
+    void resume_reading(connection_hdl_ref hdl);
 
     /// Send deferred HTTP Response
     /**
@@ -535,7 +535,7 @@ public:
      * @param hdl The connection to send the response on
      * @param ec A status code, zero on success, non-zero otherwise
      */
-    void send_http_response(connection_hdl hdl, lib::error_code & ec);
+    void send_http_response(connection_hdl_ref hdl, lib::error_code & ec);
         
     /// Send deferred HTTP Response (exception free)
     /**
@@ -549,7 +549,7 @@ public:
      *
      * @param hdl The connection to send the response on
      */
-    void send_http_response(connection_hdl hdl);
+    void send_http_response(connection_hdl_ref hdl);
 
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
@@ -560,7 +560,7 @@ public:
      * @param [in] op The opcode to generated the message with.
      * @param [out] ec A code to fill in for errors
      */
-    void send(connection_hdl hdl, std::string const & payload,
+    void send(connection_hdl_ref hdl, std::string const & payload,
         frame::opcode::value op, lib::error_code & ec);
     /// Create a message and add it to the outgoing send queue
     /**
@@ -570,21 +570,21 @@ public:
      * @param [in] payload The payload string to generated the message with
      * @param [in] op The opcode to generated the message with.
      */
-    void send(connection_hdl hdl, std::string const & payload,
+    void send(connection_hdl_ref hdl, std::string const & payload,
         frame::opcode::value op);
 
-    void send(connection_hdl hdl, void const * payload, size_t len,
+    void send(connection_hdl_ref hdl, void const * payload, size_t len,
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, void const * payload, size_t len,
+    void send(connection_hdl_ref hdl, void const * payload, size_t len,
         frame::opcode::value op);
 
-    void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
-    void send(connection_hdl hdl, message_ptr msg);
+    void send(connection_hdl_ref hdl, message_ptr msg, lib::error_code & ec);
+    void send(connection_hdl_ref hdl, message_ptr msg);
 
-    void close(connection_hdl hdl, close::status::value const code,
+    void close(connection_hdl_ref hdl, close::status::value const code,
         std::string const & reason, lib::error_code & ec);
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
-    void close(connection_hdl hdl, close::status::value const code,
+    void close(connection_hdl_ref hdl, close::status::value const code,
         std::string const & reason);
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
@@ -596,7 +596,7 @@ public:
      * @param [in] payload The payload string to send.
      * @param [out] ec A reference to an error code to fill in
      */
-    void ping(connection_hdl hdl, std::string const & payload,
+    void ping(connection_hdl_ref hdl, std::string const & payload,
         lib::error_code & ec);
     /// Send a ping to a specific connection
     /**
@@ -607,7 +607,7 @@ public:
      * @param [in] hdl The connection_hdl of the connection to send to.
      * @param [in] payload The payload string to send.
      */
-    void ping(connection_hdl hdl, std::string const & payload);
+    void ping(connection_hdl_ref hdl, std::string const & payload);
 
     /// Send a pong to a specific connection
     /**
@@ -617,7 +617,7 @@ public:
      * @param [in] payload The payload string to send.
      * @param [out] ec A reference to an error code to fill in
      */
-    void pong(connection_hdl hdl, std::string const & payload,
+    void pong(connection_hdl_ref hdl, std::string const & payload,
         lib::error_code & ec);
     /// Send a pong to a specific connection
     /**
@@ -628,7 +628,7 @@ public:
      * @param [in] hdl The connection_hdl of the connection to send to.
      * @param [in] payload The payload string to send.
      */
-    void pong(connection_hdl hdl, std::string const & payload);
+    void pong(connection_hdl_ref hdl, std::string const & payload);
 
     /// Retrieves a connection_ptr from a connection_hdl (exception free)
     /**
@@ -644,7 +644,7 @@ public:
      *
      * @return the connection_ptr. May be NULL if the handle was invalid.
      */
-    connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
+    connection_ptr get_con_from_hdl(connection_hdl_ref hdl, lib::error_code & ec) {
         connection_ptr con = lib::static_pointer_cast<connection_type>(
             hdl.lock());
         if (!con) {
@@ -655,7 +655,7 @@ public:
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Retrieves a connection_ptr from a connection_hdl (exception version)
-    connection_ptr get_con_from_hdl(connection_hdl hdl) {
+    connection_ptr get_con_from_hdl(connection_hdl_ref hdl) {
         lib::error_code ec;
         connection_ptr con = this->get_con_from_hdl(hdl,ec);
         if (ec) {

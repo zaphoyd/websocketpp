@@ -136,7 +136,7 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 template <typename T>
-void close_after_timeout(T & e, websocketpp::connection_hdl hdl, long timeout) {
+void close_after_timeout(T & e, websocketpp::connection_hdl_ref hdl, long timeout) {
     sleep(timeout);
 
     websocketpp::lib::error_code ec;
@@ -273,16 +273,16 @@ void run_dummy_client(std::string port) {
     }
 }
 
-bool on_ping(server * s, websocketpp::connection_hdl, std::string) {
+bool on_ping(server * s, websocketpp::connection_hdl_ref, std::string) {
     s->get_alog().write(websocketpp::log::alevel::app,"got ping");
     return false;
 }
 
-void cancel_on_open(server * s, websocketpp::connection_hdl) {
+void cancel_on_open(server * s, websocketpp::connection_hdl_ref) {
     s->stop_listening();
 }
 
-void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
+void stop_on_close(server * s, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     //BOOST_CHECK_EQUAL( con->get_local_close_code(), websocketpp::close::status::normal );
     //BOOST_CHECK_EQUAL( con->get_remote_close_code(), websocketpp::close::status::normal );
@@ -290,38 +290,38 @@ void stop_on_close(server * s, websocketpp::connection_hdl hdl) {
 }
 
 template <typename T>
-void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl hdl) {
+void ping_on_open(T * c, std::string payload, websocketpp::connection_hdl_ref hdl) {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
     websocketpp::lib::error_code ec;
     con->ping(payload,ec);
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 }
 
-void fail_on_pong(websocketpp::connection_hdl, std::string) {
+void fail_on_pong(websocketpp::connection_hdl_ref, std::string) {
     BOOST_FAIL( "expected no pong handler" );
 }
 
-void fail_on_pong_timeout(websocketpp::connection_hdl, std::string) {
+void fail_on_pong_timeout(websocketpp::connection_hdl_ref, std::string) {
     BOOST_FAIL( "expected no pong timeout" );
 }
 
-void req_pong(std::string expected_payload, websocketpp::connection_hdl,
+void req_pong(std::string expected_payload, websocketpp::connection_hdl_ref,
     std::string payload)
 {
     BOOST_CHECK_EQUAL( expected_payload, payload );
 }
 
-void fail_on_open(websocketpp::connection_hdl) {
+void fail_on_open(websocketpp::connection_hdl_ref) {
     BOOST_FAIL( "expected no open handler" );
 }
 
-void delay(websocketpp::connection_hdl, long duration) {
+void delay(websocketpp::connection_hdl_ref, long duration) {
     sleep(duration);
 }
 
 template <typename T>
 void check_ec(T * c, websocketpp::lib::error_code ec,
-    websocketpp::connection_hdl hdl)
+    websocketpp::connection_hdl_ref hdl)
 {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
     BOOST_CHECK_EQUAL( con->get_ec(), ec );
@@ -331,7 +331,7 @@ void check_ec(T * c, websocketpp::lib::error_code ec,
 
 template <typename T>
 void check_ec_and_stop(T * e, websocketpp::lib::error_code ec,
-    websocketpp::connection_hdl hdl)
+    websocketpp::connection_hdl_ref hdl)
 {
     typename T::connection_ptr con = e->get_con_from_hdl(hdl);
     BOOST_CHECK_EQUAL( con->get_ec(), ec );
@@ -342,7 +342,7 @@ void check_ec_and_stop(T * e, websocketpp::lib::error_code ec,
 
 template <typename T>
 void req_pong_timeout(T * c, std::string expected_payload,
-    websocketpp::connection_hdl hdl, std::string payload)
+    websocketpp::connection_hdl_ref hdl, std::string payload)
 {
     typename T::connection_ptr con = c->get_con_from_hdl(hdl);
     BOOST_CHECK_EQUAL( payload, expected_payload );
@@ -350,7 +350,7 @@ void req_pong_timeout(T * c, std::string expected_payload,
 }
 
 template <typename T>
-void close(T * e, websocketpp::connection_hdl hdl) {
+void close(T * e, websocketpp::connection_hdl_ref hdl) {
     e->get_con_from_hdl(hdl)->close(websocketpp::close::status::normal,"");
 }
 

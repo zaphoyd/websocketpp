@@ -67,7 +67,7 @@ namespace session{
  * upgrade the connection to the WebSocket protocol will trigger the http
  * handler instead of fail/open.
  */
-typedef lib::function<void(connection_hdl)> open_handler;
+typedef lib::function<void(connection_hdl_ref)> open_handler;
 
 /// The type and function signature of a close handler
 /**
@@ -77,7 +77,7 @@ typedef lib::function<void(connection_hdl)> open_handler;
  * The close handler will be called exactly once for every connection for which
  * the open handler was called.
  */
-typedef lib::function<void(connection_hdl)> close_handler;
+typedef lib::function<void(connection_hdl_ref)> close_handler;
 
 /// The type and function signature of a fail handler
 /**
@@ -87,7 +87,7 @@ typedef lib::function<void(connection_hdl)> close_handler;
  * upgrade the connection to the WebSocket protocol will trigger the http
  * handler instead of fail/open.
  */
-typedef lib::function<void(connection_hdl)> fail_handler;
+typedef lib::function<void(connection_hdl_ref)> fail_handler;
 
 /// The type and function signature of an interrupt handler
 /**
@@ -99,7 +99,7 @@ typedef lib::function<void(connection_hdl)> fail_handler;
  * This is typically used by another application thread to schedule some tasks
  * that can only be run from within the handler chain for thread safety reasons.
  */
-typedef lib::function<void(connection_hdl)> interrupt_handler;
+typedef lib::function<void(connection_hdl_ref)> interrupt_handler;
 
 /// The type and function signature of a ping handler
 /**
@@ -109,7 +109,7 @@ typedef lib::function<void(connection_hdl)> interrupt_handler;
  * true if a pong response should be sent, false if the pong response should be
  * suppressed.
  */
-typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
+typedef lib::function<bool(connection_hdl_ref,std::string)> ping_handler;
 
 /// The type and function signature of a pong handler
 /**
@@ -117,14 +117,14 @@ typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
  * control frame. The string argument contains the pong payload. The payload is
  * a binary string up to 126 bytes in length.
  */
-typedef lib::function<void(connection_hdl,std::string)> pong_handler;
+typedef lib::function<void(connection_hdl_ref,std::string)> pong_handler;
 
 /// The type and function signature of a pong timeout handler
 /**
  * The pong timeout handler is called when a ping goes unanswered by a pong for
  * longer than the locally specified timeout period.
  */
-typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
+typedef lib::function<void(connection_hdl_ref,std::string)> pong_timeout_handler;
 
 /// The type and function signature of a validate handler
 /**
@@ -137,7 +137,7 @@ typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
  * should be accepted. Additional methods may be called during the function to
  * set response headers, set HTTP return/error codes, etc.
  */
-typedef lib::function<session::validation::value(connection_hdl)> validate_handler;
+typedef lib::function<session::validation::value(connection_hdl_ref)> validate_handler;
 
 /// The type and function signature of a http handler
 /**
@@ -159,7 +159,7 @@ typedef lib::function<session::validation::value(connection_hdl)> validate_handl
  * handlers may override the response status code to deliver any type of
  * response.
  */
-typedef lib::function<void(connection_hdl)> http_handler;
+typedef lib::function<void(connection_hdl_ref)> http_handler;
 
 //
 typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
@@ -1521,7 +1521,7 @@ public:
      * @param hdl A connection_hdl that the connection will use to refer
      * to itself.
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_connection_hdl = hdl;
         transport_con_type::set_handle(hdl);
     }

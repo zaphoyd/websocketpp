@@ -75,7 +75,7 @@ namespace websocketpp {
  * write
  *
  * **set_handle**\n
- * `void set_handle(connection_hdl hdl)`\n
+ * `void set_handle(connection_hdl_ref hdl)`\n
  * Called by WebSocket++ to let this policy know the hdl to the connection. It
  * may be stored for later use or ignored/discarded. This handle should be used
  * if the policy adds any connection handlers. Connection handlers must be
