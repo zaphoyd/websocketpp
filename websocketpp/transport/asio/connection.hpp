@@ -106,6 +106,8 @@ public:
         m_alog->write(log::alevel::devel,"asio con transport constructor");
     }
 
+	virtual ~connection() {}
+
     /// Get a shared pointer to this component
     ptr get_shared() {
         return lib::static_pointer_cast<type>(socket_con_type::get_shared());
@@ -791,7 +793,7 @@ protected:
                 return;
             }
 
-            if (!m_proxy_data->res.headers_ready()) {
+            if (!m_proxy_data->res.has_received(response_type::state::HEADERS)) {
                 // we read until the headers were done in theory but apparently
                 // they aren't. Internal endpoint error.
                 callback(make_error_code(error::general));

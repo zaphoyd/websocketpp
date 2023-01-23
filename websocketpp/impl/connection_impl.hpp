@@ -109,7 +109,7 @@ lib::error_code connection<config>::send(typename config::message_type::ptr msg)
 
     {
         scoped_lock_type lock(m_connection_state_lock);
-        if (m_state != session::state::open) {
+        if (m_state != session::state::open || m_is_http) {
            return error::make_error_code(error::invalid_state);
         }
     }
@@ -159,7 +159,7 @@ void connection<config>::ping(std::string const& payload, lib::error_code& ec) {
 
     {
         scoped_lock_type lock(m_connection_state_lock);
-        if (m_state != session::state::open) {
+        if (m_state != session::state::open || m_is_http) {
             std::stringstream ss;
             ss << "connection::ping called from invalid state " << m_state;
             m_alog->write(log::alevel::devel,ss.str());
@@ -442,6 +442,7 @@ template <typename config>
 void connection<config>::set_uri(uri_ptr uri) {
     //scoped_lock_type lock(m_connection_state_lock);
     m_uri = uri;
+	m_is_http = m_uri && m_uri->get_type() == uri::http;
 }
 
 
@@ -646,6 +647,18 @@ void connection<config>::set_body(std::string && value) {
 }
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
+
+template <typename config>
+void connection<config>::set_request(request_type const & req,
+	lib::error_code& ec)
+{
+    if (m_internal_state != istate::USER_INIT) {
+        ec = error::make_error_code(error::invalid_state);
+        return;
+    }
+
+	m_request = req;
+}
 
 template <typename config>
 void connection<config>::append_header(std::string const & key,
@@ -866,11 +879,30 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
         m_internal_state = istate::READ_HTTP_REQUEST;
         this->read_handshake(1);
     } else {
-        // We are a client. Set the processor to the version specified in the
-        // config file and send a handshake request.
-        m_internal_state = istate::WRITE_HTTP_REQUEST;
-        m_processor = get_processor(config::client_version);
-        this->send_http_request();
+        // We are a client.
+		m_internal_state = istate::WRITE_HTTP_REQUEST;
+		if (!m_is_http)
+		{
+			// Set the processor to the version specified in the config file and send a handshake request.
+			m_processor = get_processor(config::client_version);
+
+			// Have the protocol processor fill in the appropriate fields based on the
+			// selected client version
+			if (m_processor) {
+				lib::error_code ec;
+				ec = m_processor->client_handshake_request(m_request,m_uri,
+					m_requested_subprotocols);
+
+				if (ec) {
+					log_err(log::elevel::fatal,"Internal library error: Processor",ec);
+					return;
+				}
+			} else {
+				m_elog->write(log::elevel::fatal,"Internal library error: missing processor");
+				return;
+			}
+		}
+		this->send_http_request();
     }
 }
 
@@ -1294,10 +1326,7 @@ session::validation::value connection<config>::process_handshake_request(lib::er
         m_alog->write(log::alevel::devel,"HTTP REQUEST");
 
         // extract URI from request
-        m_uri = processor::get_uri_from_host(
-            m_request,
-            (transport_con_type::is_secure() ? "https" : "http")
-        );
+        m_uri = processor::get_uri_from_host(m_request, uri::http, transport_con_type::is_secure());
 
         if (!m_uri->get_valid()) {
             m_alog->write(log::alevel::devel, "Bad request: failed to parse uri");
@@ -1409,7 +1438,7 @@ lib::error_code connection<config>::finalize_handshake_response(bool accept) {
         }
     } else {
         // User application has rejected the handshake
-        m_alog->write(log::alevel::devel, "USER REJECT");
+        m_alog->write(log::alevel::devel, "WebSocket connection rejected");
 
         // Use Bad Request if the user handler did not provide a more
         // specific http response error code.
@@ -1462,14 +1491,14 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
 
     // have the processor generate the raw bytes for the wire (if it exists)
     if (m_processor) {
-        m_handshake_buffer = m_processor->get_raw(m_response);
+        m_http_message_buffer = m_processor->get_raw(m_response);
     } else {
         // a processor wont exist for raw HTTP responses.
-        m_handshake_buffer = m_response.raw();
+        m_http_message_buffer = m_response.raw();
     }
 
     if (m_alog->static_test(log::alevel::devel)) {
-        m_alog->write(log::alevel::devel,"Raw Handshake response:\n"+m_handshake_buffer);
+        m_alog->write(log::alevel::devel,"Raw Handshake response:\n"+m_http_message_buffer);
         if (!m_response.get_header("Sec-WebSocket-Key3").empty()) {
             m_alog->write(log::alevel::devel,
                 utility::to_hex(m_response.get_header("Sec-WebSocket-Key3")));
@@ -1478,8 +1507,8 @@ void connection<config>::write_http_response(lib::error_code const & ec) {
 
     // write raw bytes
     transport_con_type::async_write(
-        m_handshake_buffer.data(),
-        m_handshake_buffer.size(),
+        m_http_message_buffer.data(),
+        m_http_message_buffer.size(),
         lib::bind(
             &type::handle_write_http_response,
             type::get_shared(),
@@ -1577,23 +1606,7 @@ void connection<config>::send_http_request() {
 
     // TODO: origin header?
 
-    // Have the protocol processor fill in the appropriate fields based on the
-    // selected client version
-    if (m_processor) {
-        lib::error_code ec;
-        ec = m_processor->client_handshake_request(m_request,m_uri,
-            m_requested_subprotocols);
-
-        if (ec) {
-            log_err(log::elevel::fatal,"Internal library error: Processor",ec);
-            return;
-        }
-    } else {
-        m_elog->write(log::elevel::fatal,"Internal library error: missing processor");
-        return;
-    }
-
-    // Unless the user has overridden the user agent, send generic WS++ UA.
+    // Unless the user has overridden the user agent, send generic UA.
     if (m_request.get_header("User-Agent").empty()) {
         if (!m_user_agent.empty()) {
             m_request.replace_header("User-Agent",m_user_agent);
@@ -1602,10 +1615,10 @@ void connection<config>::send_http_request() {
         }
     }
 
-    m_handshake_buffer = m_request.raw();
+    m_http_message_buffer = m_request.raw();
 
     if (m_alog->static_test(log::alevel::devel)) {
-        m_alog->write(log::alevel::devel,"Raw Handshake request:\n"+m_handshake_buffer);
+        m_alog->write(log::alevel::devel,"Raw Handshake request:\n"+m_http_message_buffer);
     }
 
     if (m_open_handshake_timeout_dur > 0) {
@@ -1620,8 +1633,8 @@ void connection<config>::send_http_request() {
     }
 
     transport_con_type::async_write(
-        m_handshake_buffer.data(),
-        m_handshake_buffer.size(),
+        m_http_message_buffer.data(),
+        m_http_message_buffer.size(),
         lib::bind(
             &type::handle_send_http_request,
             type::get_shared(),
@@ -1644,6 +1657,8 @@ void connection<config>::handle_send_http_request(lib::error_code const & ec) {
                 ecm = error::make_error_code(error::invalid_state);
              } else {
                 m_internal_state = istate::READ_HTTP_RESPONSE;
+				if (m_is_http)
+					m_state = session::state::open;
              }
         } else if (m_state == session::state::closed) {
             // The connection was canceled while the response was being sent,
@@ -1694,7 +1709,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     if (!ecm) {
         scoped_lock_type lock(m_connection_state_lock);
         
-        if (m_state == session::state::connecting) {
+        if (m_state == session::state::connecting || (m_is_http && m_state == session::state::open)) {
             if (m_internal_state != istate::READ_HTTP_RESPONSE) {
                 ecm = error::make_error_code(error::invalid_state);
             }
@@ -1718,9 +1733,13 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             return;
         }
         
-        log_err(log::elevel::rerror,"handle_read_http_response",ecm);
-        this->terminate(ecm);
-        return;
+		// for http requests, it's normal to receive EOF
+		if (!(ecm == transport::error::eof && m_is_http))
+		{
+			log_err(log::elevel::rerror,"handle_read_http_response",ecm);
+			this->terminate(ecm);
+			return;
+		}
     }
     
     size_t bytes_processed = 0;
@@ -1739,11 +1758,55 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 
     m_alog->write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
-    if (m_response.headers_ready()) {
-        if (m_handshake_timer) {
+    if (m_response.has_received(response_type::state::HEADERS)) {
+		if (m_handshake_timer) {
             m_handshake_timer->cancel();
             m_handshake_timer.reset();
         }
+
+		if (m_is_http)
+		{
+			if (m_response.has_received(response_type::state::BODY))
+			{
+            	this->terminate({});
+			} else {
+				// The HTTP parser reported that it was not ready and wants more data.
+				// Assert that it actually consumed all the data present before overwriting
+				// the buffer. This should always be the case.
+				if (bytes_transferred != bytes_processed) {
+					m_elog->write(log::elevel::fatal,"Assertion Failed: HTTP response parser failed to consume all bytes from a read request.");
+					this->terminate(make_error_code(error::general));
+					return;
+				}
+
+				// Start a timer  if we have not yet
+				// so we don't wait forever for the http body
+				// it's okay to use the handskahe timer as it's not being used by anything else
+				if (m_http_read_timeout_dur > 0 && !m_handshake_timer) {
+					m_handshake_timer = transport_con_type::set_timer(
+						m_http_read_timeout_dur,
+						lib::bind(
+							&type::handle_close_handshake_timeout,
+							type::get_shared(),
+							lib::placeholders::_1
+						)
+					);
+				}
+
+				transport_con_type::async_read_at_least(
+					1,
+					m_buf,
+					config::connection_read_buffer_size,
+					lib::bind(
+						&type::handle_read_http_response,
+						type::get_shared(),
+						lib::placeholders::_1,
+						lib::placeholders::_2
+					)
+				);
+			}
+			return;
+		}
 
         lib::error_code validate_ec = m_processor->validate_server_handshake_response(
             m_request,
@@ -1848,6 +1911,21 @@ void connection<config>::handle_close_handshake_timeout(
 }
 
 template <typename config>
+void connection<config>::handle_read_body_timeout(lib::error_code const & ec)
+{
+    if (ec == transport::error::operation_aborted) {
+        m_alog->write(log::alevel::devel,"asio http read body timer cancelled");
+    } else if (ec) {
+        m_alog->write(log::alevel::devel,
+            "asio handle_read_body_timeout error: "+ec.message());
+        // TODO: ignore or fail here?
+    } else {
+        m_alog->write(log::alevel::devel, "asio http read body timer expired");
+        terminate(make_error_code(error::http_body_read_timeout));
+    }
+}
+
+template <typename config>
 void connection<config>::terminate(lib::error_code const & ec) {
     if (m_alog->static_test(log::alevel::devel)) {
         m_alog->write(log::alevel::devel,"connection terminate");
@@ -1862,7 +1940,7 @@ void connection<config>::terminate(lib::error_code const & ec) {
     // Cancel ping timer
     if (m_ping_timer) {
         m_ping_timer->cancel();
-        m_handshake_timer.reset();
+        m_ping_timer.reset();
     }
 
     terminate_status tstat = unknown;
@@ -1875,6 +1953,8 @@ void connection<config>::terminate(lib::error_code const & ec) {
     // TODO: does any of this need a mutex?
     if (m_is_http) {
         m_http_state = session::http_state::closed;
+		if (m_http_handler)
+			m_http_handler(m_connection_hdl);
     }
     if (m_state == session::state::connecting) {
         m_state = session::state::closed;

@@ -322,6 +322,7 @@ public:
       , m_user_agent(ua)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+      , m_http_read_timeout_dur(config::timeout_http_read_body)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
@@ -535,6 +536,32 @@ public:
      */
     void set_close_handshake_timeout(long dur) {
         m_close_handshake_timeout_dur = dur;
+    }
+
+	/// Set http body read timeout
+    /**
+     * Sets the length of time the library will wait after the HTTP body begins
+     * to be read before cancelling it. This can be used to guard from http
+	 * responses which are much larger than you anticipate (eg. files) or when
+	 * the responder takes too long to write the body of the response.
+     *
+     * Connections that time out will have their http handlers called with the
+     * http_body_read_timeout error code stored in the connection (use get_ec).
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_close_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+	 * 
+	 * @since 0.8.4
+     *
+     * @param dur The length of the http body read timeout in ms
+     */
+    void set_http_body_read_timeout(long dur) {
+        m_http_read_timeout_dur = dur;
     }
 
     /// Set pong timeout
@@ -1270,6 +1297,23 @@ public:
     request_type const & get_request() const {
         return m_request;
     }
+
+	/// Set request object
+    /**
+     * Direct access to setting the request object.
+	 * This can be used to set the request that the should be sent when using
+	 * the connection as a HTTP request instead of a WS initiator.
+	 * Do not use this in WS connections!
+     *
+     * Note use of this method involves using behavior specific to the
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.8.4
+	 * 
+	 * @param req the request object to use
+     */
+	void set_request(request_type const & req, lib::error_code& ec);
     
     /// Get response object
     /**
@@ -1289,6 +1333,31 @@ public:
     response_type const & get_response() const {
         return m_response;
     }
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+	/// Get response object by using std::move
+    /**
+     * Direct access to the HTTP response sent or received as a part of the
+     * opening handshake. This can be used to call methods of the response
+     * object that are not part of the standard request API that connection
+     * wraps.
+	 * 
+	 * IMPORTANT: The response in this connection object is invalid for use
+	 * after this operation. Intended only to be used on a throw-away
+	 * single-use HTTP request connection to prevent copying the response. 
+     *
+     * Note use of this method involves using behavior specific to the
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.8.4
+     *
+     * @return A const reference to the raw response object
+     */
+    response_type take_response() {
+        return std::move(m_response);
+    }
+#endif
     
     /// Defer HTTP Response until later (Exception free)
     /**
@@ -1469,6 +1538,8 @@ public:
 
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
+
+    void handle_read_body_timeout(lib::error_code const & ec);
 
     void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
     void read_frame();
@@ -1690,6 +1761,7 @@ private:
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
+    long                    m_http_read_timeout_dur;
     long                    m_pong_timeout_dur;
     size_t                  m_max_message_size;
 
@@ -1724,7 +1796,7 @@ private:
 
     /// @todo this is not memory efficient. this value is not used after the
     /// handshake.
-    std::string m_handshake_buffer;
+    std::string m_http_message_buffer;
 
     /// Pointer to the processor object for this connection
     /**

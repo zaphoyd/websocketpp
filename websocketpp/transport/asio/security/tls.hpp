@@ -349,17 +349,24 @@ protected:
 
 	void handle_async_shutdown(socket::shutdown_handler callback, lib::asio::error_code const & ec)
     {
+		lib::asio::error_code code { ec };
         if (ec == lib::asio::error::operation_aborted)
 		{
 			const int shutdownState = SSL_get_shutdown(get_socket().native_handle());
 			if (shutdownState & SSL_RECEIVED_SHUTDOWN)
 			{
-				callback(lib::asio::error_code(lib::asio::error::not_connected, ec.category()));
-				return;
+				code = lib::asio::error_code(lib::asio::error::not_connected, ec.category());
 			}
 		}
 
-		callback(ec);
+		if (ec == lib::asio::error::eof)
+        {
+            // Rationale:
+            // http://stackoverflow.com/questions/25587403/boost-asio-ssl-async-shutdown-always-finishes-with-an-error
+            code.clear();
+        }
+
+		callback(code);
     }
 
 public:

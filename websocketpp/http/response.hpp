@@ -59,11 +59,18 @@ public:
     typedef response type;
     typedef lib::shared_ptr<type> ptr;
 
+	enum class state {
+        RESPONSE_LINE = 0,
+        HEADERS = 1,
+        BODY = 2,
+        DONE = 3
+    };
+
     response()
       : m_read(0)
       , m_buf(lib::make_shared<std::string>())
       , m_status_code(status_code::uninitialized)
-      , m_state(RESPONSE_LINE) {}
+      , m_state(state::RESPONSE_LINE) {}
 
     /// Process bytes in the input buffer
     /**
@@ -142,12 +149,12 @@ public:
      * @note will never return true if the content length header is not present
      */
     bool ready() const {
-        return m_state == DONE;
+        return m_state == state::DONE;
     }
 
-    /// Returns true if the response headers are fully parsed.
-    bool headers_ready() const {
-        return (m_state == BODY || m_state == DONE);
+    /// Returns true if a particular state has been passed
+    bool has_received(state s) const {
+        return m_state > s;
     }
 
     /// Returns the full raw response
@@ -196,13 +203,6 @@ private:
 
     /// Helper function for processing body bytes
     size_t process_body(char const * buf, size_t len, lib::error_code & ec);
-
-    enum state {
-        RESPONSE_LINE = 0,
-        HEADERS = 1,
-        BODY = 2,
-        DONE = 3
-    };
 
     std::string                     m_status_msg;
     size_t                          m_read;

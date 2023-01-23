@@ -76,6 +76,8 @@ struct config : public websocketpp::config::asio_client {
     static const long timeout_open_handshake = 500;
     /// Length of time before a closing handshake is aborted
     static const long timeout_close_handshake = 500;
+	/// Length of time before a HTTP body read is aborted
+	static const long timeout_http_read_body = 500;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 500;
 };
@@ -118,6 +120,8 @@ struct config_tls : public websocketpp::config::asio_tls_client {
     static const long timeout_open_handshake = 500;
     /// Length of time before a closing handshake is aborted
     static const long timeout_close_handshake = 500;
+	/// Length of time before a HTTP body read is aborted
+	static const long timeout_http_read_body = 500;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 500;
 };

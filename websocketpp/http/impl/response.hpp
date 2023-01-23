@@ -40,13 +40,13 @@ namespace http {
 namespace parser {
 
 inline size_t response::consume(char const * buf, size_t len, lib::error_code & ec) {
-    if (m_state == DONE) {
+    if (m_state == state::DONE) {
         // the response is already complete. End immediately without reading.
         ec = lib::error_code();
         return 0;
     }
 
-    if (m_state == BODY) {
+    if (m_state == state::BODY) {
         // The headers are complete, but we are still expecting more body
         // bytes. Process body bytes.
         return this->process_body(buf,len,ec);
@@ -119,7 +119,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
 
             // If we are still looking for a response line then this request
             // is incomplete
-            if (m_state == RESPONSE_LINE) {
+            if (m_state == state::RESPONSE_LINE) {
                 ec = error::make_error_code(error::incomplete_request);
                 return 0;
             }
@@ -140,7 +140,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             }
 
             // transition state to reading the response body
-            m_state = BODY;
+            m_state = state::BODY;
 
             // calculate how many bytes in the local buffer are bytes we didn't
             // use for the headers. 
@@ -168,9 +168,9 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             return read;
         } else {
             // we got a line 
-            if (m_state == RESPONSE_LINE) {
+            if (m_state == state::RESPONSE_LINE) {
                 ec = this->process(begin,end);
-                m_state = HEADERS;
+                m_state = state::HEADERS;
             } else {
                 ec = this->process_header(begin,end);
             }
@@ -322,7 +322,7 @@ inline lib::error_code response::process(std::string::iterator begin,
 inline size_t response::process_body(char const * buf, size_t len, lib::error_code & ec) {
     // If no content length was set then we read forever and never set m_ready
     if (m_read == 0) {
-        m_state = DONE;
+        m_state = state::DONE;
         ec = lib::error_code();
         return 0;
     }
@@ -334,7 +334,7 @@ inline size_t response::process_body(char const * buf, size_t len, lib::error_co
         // if we have more bytes than we need read, read only the amount needed
         // then set done state
         to_read = m_read;
-        m_state = DONE;
+        m_state = state::DONE;
     } else {
         // we need more bytes than are available, read them all
         to_read = len;

@@ -97,6 +97,7 @@ public:
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+	  , m_http_read_timeout_dur(config::timeout_http_read_body)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
@@ -112,7 +113,7 @@ public:
 
 
     /// Destructor
-    ~endpoint() {}
+    virtual ~endpoint() {}
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable
@@ -144,6 +145,7 @@ public:
 
          , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
          , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
+		 , m_http_read_timeout_dur(o.m_http_read_timeout_dur)
          , m_pong_timeout_dur(o.m_pong_timeout_dur)
          , m_max_message_size(o.m_max_message_size)
          , m_max_http_body_size(o.m_max_http_body_size)
@@ -380,6 +382,33 @@ public:
     void set_close_handshake_timeout(long dur) {
         scoped_lock_type guard(m_mutex);
         m_close_handshake_timeout_dur = dur;
+    }
+
+	/// Set http body read timeout
+    /**
+     * Sets the length of time the library will wait after the HTTP body begins
+     * to be read before cancelling it. This can be used to guard from http
+	 * responses which are much larger than you anticipate (eg. files) or when
+	 * the responder takes too long to write the body of the response.
+     *
+     * Connections that time out will have their http handlers called with the
+     * http_body_read_timeout error code stored in the connection (use get_ec).
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_close_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+	 * 
+	 * @since 0.8.4
+     *
+     * @param dur The length of the http body read timeout in ms
+     */
+    void set_http_body_read_timeout(long dur) {
+		scoped_lock_type guard(m_mutex);
+        m_http_read_timeout_dur = dur;
     }
 
     /// Set pong timeout
@@ -686,6 +715,7 @@ private:
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
+    long                        m_http_read_timeout_dur;
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;

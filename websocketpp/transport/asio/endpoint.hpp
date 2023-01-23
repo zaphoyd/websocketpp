@@ -102,7 +102,7 @@ public:
         //std::cout << "transport::asio::endpoint constructor" << std::endl;
     }
 
-    ~endpoint() {
+    virtual ~endpoint() {
         // clean up our io_service if we were initialized with an internal one.
 
         // Explicitly destroy local objects

@@ -349,7 +349,7 @@ public:
     }
 
     uri_ptr get_uri(request_type const & request) const {
-        return get_uri_from_host(request,(base::m_secure ? "wss" : "ws"));
+        return get_uri_from_host(request, uri::websocket, base::m_secure);
     }
 
     /// Process new websocket connection bytes
