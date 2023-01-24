@@ -901,6 +901,9 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 				m_elog->write(log::elevel::fatal,"Internal library error: missing processor");
 				return;
 			}
+		} else {
+			if (m_request.get_version().empty())
+				m_request.set_version("HTTP/1.1");
 		}
 		this->send_http_request();
     }
