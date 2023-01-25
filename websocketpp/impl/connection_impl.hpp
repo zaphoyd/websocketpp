@@ -904,6 +904,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 		} else {
 			if (m_request.get_version().empty())
 				m_request.set_version("HTTP/1.1");
+			m_request.append_header("Host", m_uri->get_host_port());
 		}
 		this->send_http_request();
     }
@@ -1728,26 +1729,29 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
         }
     }
 
-    if (ecm) {
-        if (ecm == transport::error::eof && m_state == session::state::closed) {
+	bool should_parse = !ecm;
+    if (ecm.value() == transport::error::eof) {
+        if (m_state == session::state::closed) {
             // we expect to get eof if the connection is closed already
             m_alog->write(log::alevel::devel,
                     "got (expected) eof/state error from closed con");
             return;
-        }
-        
-		// for http requests, it's normal to receive EOF
-		if (!(ecm == transport::error::eof && m_is_http))
-		{
-			log_err(log::elevel::rerror,"handle_read_http_response",ecm);
-			this->terminate(ecm);
-			return;
+        } else if (m_is_http) {
+			// for http requests, it's normal to receive EOF
+			should_parse = true;
 		}
     }
+	
+	if (!should_parse)
+	{
+		log_err(log::elevel::rerror,"handle_read_http_response",ecm);
+		this->terminate(ecm);
+		return;
+	}
     
     size_t bytes_processed = 0;
 
-    lib::error_code consume_ec;
+    lib::error_code consume_ec(ecm);
 
     bytes_processed = m_response.consume(m_buf, bytes_transferred, consume_ec);
     if (consume_ec) {

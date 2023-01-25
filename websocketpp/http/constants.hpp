@@ -55,8 +55,8 @@ typedef std::map<std::string,std::string> attribute_list;
  */
 typedef std::vector< std::pair<std::string,attribute_list> > parameter_list;
 
-/// Literal value of the HTTP header delimiter
-static char const header_delimiter[] = "\r\n";
+/// The sequency used for new lines
+static char const http_crlf[] = "\r\n";
 
 /// Literal value of the HTTP header separator
 static char const header_separator[] = ":";

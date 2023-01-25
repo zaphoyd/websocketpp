@@ -402,6 +402,8 @@ public:
       , m_body_bytes_needed(0)
       , m_body_bytes_max(max_body_size)
       , m_body_encoding(body_encoding::unknown) {}
+
+	virtual ~parser() {}
     
     /// Get the HTTP version string
     /**
@@ -605,7 +607,7 @@ protected:
      * @param [out] ec A status code describing the outcome of the operation.
      * @return The number of bytes processed
      */
-    size_t process_body(char const * buf, size_t len, lib::error_code & ec);
+    virtual size_t process_body(char const * buf, size_t len, lib::error_code & ec);
 
     /// Check if the parser is done parsing the body
     /**

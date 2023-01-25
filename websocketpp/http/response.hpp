@@ -67,8 +67,7 @@ public:
     };
 
     response()
-      : m_read(0)
-      , m_buf(lib::make_shared<std::string>())
+      : m_buf(lib::make_shared<std::string>())
       , m_status_code(status_code::uninitialized)
       , m_state(state::RESPONSE_LINE) {}
 
@@ -201,11 +200,9 @@ private:
     /// Helper function for consume. Process response line
     lib::error_code process(std::string::iterator begin, std::string::iterator end);
 
-    /// Helper function for processing body bytes
-    size_t process_body(char const * buf, size_t len, lib::error_code & ec);
+	virtual size_t process_body(char const * buf, size_t len, lib::error_code & ec) override;
 
     std::string                     m_status_msg;
-    size_t                          m_read;
     lib::shared_ptr<std::string>    m_buf;
     status_code::value              m_status_code;
     state                           m_state;

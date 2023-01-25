@@ -70,8 +70,8 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
         end = std::search(
             begin,
             m_buf->end(),
-            header_delimiter,
-            header_delimiter + sizeof(header_delimiter) - 1
+            http_crlf,
+            http_crlf + sizeof(http_crlf) - 1
         );
 
         if (end == m_buf->end()) {
@@ -95,8 +95,6 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 m_buf->resize(static_cast<std::string::size_type>(end-begin));
             }
 
-            m_read += len;
-
             ec = lib::error_code();
             return len;
         }
@@ -105,7 +103,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
         // represents a line to be processed
 
         // update count of header bytes read so far
-        m_header_bytes += (end-begin+sizeof(header_delimiter));
+        m_header_bytes += (end-begin+sizeof(http_crlf));
         
         if (m_header_bytes > max_header_size) {
             // This read exceeded max header size
@@ -124,20 +122,8 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 return 0;
             }
 
-            // TODO: grab content-length
-            std::string length = get_header("Content-Length");
-
-            if (length.empty()) {
-                // no content length found, read indefinitely?
-                m_read = 0;
-            } else {
-                std::istringstream ss(length);
-
-                if ((ss >> m_read).fail()) {
-                    ec = error::make_error_code(error::invalid_format);
-                    return 0;
-                }
-            }
+			if (!prepare_body(ec))
+				return 0;
 
             // transition state to reading the response body
             m_state = state::BODY;
@@ -146,7 +132,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             // use for the headers. 
             size_t read = (
                 len - static_cast<std::string::size_type>(m_buf->end() - end)
-                + sizeof(header_delimiter) - 1
+                + sizeof(http_crlf) - 1
             );
 
             // if there were bytes left process them as body bytes.
@@ -158,8 +144,13 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 read += this->process_body(buf+read,(len-read),ec);
             }
             if (ec) {
+				m_state = state::DONE;
                 return 0;
             }
+
+			if (m_body_bytes_needed == 0) {
+				m_state = state::DONE;
+			}
 
             // frees memory used temporarily during header parsing
             m_buf.reset();
@@ -182,7 +173,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
         // if we got here it means there is another header line to read.
         // advance our cursor to the first character after the most recent
         // delimiter found.
-        begin = end+(sizeof(header_delimiter) - 1);
+        begin = end+(sizeof(http_crlf) - 1);
     }
 }
 
@@ -320,30 +311,19 @@ inline lib::error_code response::process(std::string::iterator begin,
 }
 
 inline size_t response::process_body(char const * buf, size_t len, lib::error_code & ec) {
-    // If no content length was set then we read forever and never set m_ready
-    if (m_read == 0) {
-        m_state = state::DONE;
-        ec = lib::error_code();
-        return 0;
-    }
+	size_t processed = 0;
+	do
+	{
+		const size_t processed_chunk = parser::process_body(buf, len, ec);
+		buf += processed_chunk;
+		len -= processed_chunk;
+		processed += processed_chunk;
+	} while (!ec && m_body_bytes_needed && len);
 
-    // Otherwise m_read is the number of bytes left.
-    size_t to_read;
+    if (ec || m_body_bytes_needed == 0)
+		m_state = state::DONE;
 
-    if (len >= m_read) {
-        // if we have more bytes than we need read, read only the amount needed
-        // then set done state
-        to_read = m_read;
-        m_state = state::DONE;
-    } else {
-        // we need more bytes than are available, read them all
-        to_read = len;
-    }
-
-    m_body.append(buf,to_read);
-    m_read -= to_read;
-    ec = lib::error_code();
-    return to_read;
+	return processed;
 }
 
 } // namespace parser

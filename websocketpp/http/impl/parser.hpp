@@ -149,6 +149,10 @@ inline bool parser::prepare_body(lib::error_code & ec) {
         // I believe this will only work up to 32bit sizes. Is there a need for
         // > 4GiB HTTP payloads?
         m_body_bytes_needed = std::strtoul(cl_header.c_str(),&end,10);
+		if (end != cl_header.cend().base()) {
+			ec = error::make_error_code(error::invalid_format);
+            return false;
+		}
         
         if (m_body_bytes_needed > m_body_bytes_max) {
             ec = error::make_error_code(error::body_too_large);
@@ -159,10 +163,8 @@ inline bool parser::prepare_body(lib::error_code & ec) {
         ec = lib::error_code();
         return true;
     } else if (get_header("Transfer-Encoding") == "chunked") {
-        // ec = error::make_error_code(error::unsupported_transfer_encoding);
-        // TODO: support for chunked transfers? Is that too much HTTP logic?
-        //m_body_encoding = body_encoding::chunked;
-        return false;
+        m_body_encoding = body_encoding::chunked;
+        return true;
     } else {
         ec = lib::error_code();
         return false;
@@ -173,13 +175,49 @@ inline size_t parser::process_body(char const * buf, size_t len,
     lib::error_code & ec)
 {
     if (m_body_encoding == body_encoding::plain) {
-        size_t processed = (std::min)(m_body_bytes_needed,len);
+        const size_t processed = std::min(m_body_bytes_needed, len);
         m_body.append(buf,processed);
         m_body_bytes_needed -= processed;
         ec = lib::error_code();
         return processed;
     } else if (m_body_encoding == body_encoding::chunked) {
-        ec = error::make_error_code(error::unsupported_transfer_encoding);
+        // for chunked encoding, read chunks of the body
+		if (m_body_bytes_needed) { // reading previouslly started chunk, same as plain encoding!
+			const size_t processed = std::min(m_body_bytes_needed, len);
+			m_body.append(buf,processed);
+			m_body_bytes_needed -= processed;
+			ec = lib::error_code();
+			return processed;
+		} else { // new chunk
+			// sizes of chunks which are given by the first byte of the response body
+			const char* newline = std::search(buf, buf + len, http_crlf, http_crlf + sizeof(http_crlf) - 1);
+			if (newline == buf + len)
+			{
+				ec = error::make_error_code(error::invalid_format);
+				return 0;
+			} else {
+				const std::string chunkSizeHex(buf, newline);
+
+				char * end;
+				m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
+				if (end != chunkSizeHex.cend().base()) {
+					ec = error::make_error_code(error::invalid_format);
+					return 0;
+				}
+				
+				if (m_body_bytes_needed + m_body.size() > m_body_bytes_max) {
+					ec = error::make_error_code(error::body_too_large);
+					return 0;
+				}
+
+				if (m_body_bytes_needed == 0) { // this is how the last chunk is marked
+					return len; // pretend we handled everything!
+				}
+
+				const size_t processed = (newline - buf) + sizeof(http_crlf) - 1;
+				return processed + process_body(buf + processed, len - processed, ec);
+			}
+		}
         return 0;
         // TODO: support for chunked transfers?
     } else {

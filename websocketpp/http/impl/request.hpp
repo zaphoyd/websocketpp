@@ -80,8 +80,8 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
         end = std::search(
             begin,
             m_buf->end(),
-            header_delimiter,
-            header_delimiter+sizeof(header_delimiter)-1
+            http_crlf,
+            http_crlf+sizeof(http_crlf)-1
         );
 
         if (end == m_buf->end()) {
@@ -113,7 +113,7 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
         // represents a line to be processed
 
         // update count of header bytes read so far
-        m_header_bytes += (end-begin+sizeof(header_delimiter));
+        m_header_bytes += (end-begin+sizeof(http_crlf));
         
 
         if (m_header_bytes > max_header_size) {
@@ -138,7 +138,7 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
             // other logic.
             bytes_processed = (
                 len - static_cast<std::string::size_type>(m_buf->end()-end)
-                    + sizeof(header_delimiter) - 1
+                    + sizeof(http_crlf) - 1
             );
 
             // frees memory used temporarily during request parsing
@@ -187,7 +187,7 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
         // if we got here it means there is another header line to read.
         // advance our cursor to the first character after the most recent
         // delimiter found.
-        begin = end+(sizeof(header_delimiter)-1);
+        begin = end+(sizeof(http_crlf)-1);
 
     }
 }
