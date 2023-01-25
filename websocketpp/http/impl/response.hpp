@@ -42,7 +42,7 @@ namespace parser {
 inline size_t response::consume(char const * buf, size_t len, lib::error_code & ec) {
     if (m_state == state::DONE) {
         // the response is already complete. End immediately without reading.
-        ec = lib::error_code();
+        ec.clear();
         return 0;
     }
 
@@ -95,7 +95,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 m_buf->resize(static_cast<std::string::size_type>(end-begin));
             }
 
-            ec = lib::error_code();
+            ec.clear();
             return len;
         }
 
@@ -124,6 +124,13 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
 
 			if (!prepare_body(ec))
 				return 0;
+
+			if (m_body_encoding == body_encoding::unknown) {
+				m_state = state::DONE;
+				m_buf.reset();
+            	ec.clear();
+				return len; // pretend we read everything!
+			}
 
             // transition state to reading the response body
             m_state = state::BODY;
@@ -155,7 +162,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             // frees memory used temporarily during header parsing
             m_buf.reset();
 
-            ec = lib::error_code();
+            ec.clear();
             return read;
         } else {
             // we got a line 

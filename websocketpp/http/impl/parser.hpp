@@ -167,7 +167,7 @@ inline bool parser::prepare_body(lib::error_code & ec) {
         return true;
     } else {
         ec = lib::error_code();
-        return false;
+        return true; // valid! means there is no body to read
     }
 }
 
