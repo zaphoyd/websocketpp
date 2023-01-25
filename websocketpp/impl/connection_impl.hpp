@@ -904,7 +904,7 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 		} else {
 			if (m_request.get_version().empty())
 				m_request.set_version("HTTP/1.1");
-			m_request.append_header("Host", m_uri->get_host_port());
+			m_request.replace_header("Host", m_uri->get_host_port());
 			if (m_request.get_uri().empty())
 				m_request.set_uri(get_uri()->get_resource());
 		}

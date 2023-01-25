@@ -141,6 +141,8 @@ inline bool parser::parse_parameter_list(std::string const & in,
 }
 
 inline bool parser::prepare_body(lib::error_code & ec) {
+	ec.clear();
+
     if (!get_header("Content-Length").empty()) {
         std::string const & cl_header = get_header("Content-Length");
         char * end;
@@ -160,14 +162,12 @@ inline bool parser::prepare_body(lib::error_code & ec) {
         }
         
         m_body_encoding = body_encoding::plain;
-        ec = lib::error_code();
-        return true;
+        return m_body_bytes_needed;
     } else if (get_header("Transfer-Encoding") == "chunked") {
         m_body_encoding = body_encoding::chunked;
         return true;
     } else {
-        ec = lib::error_code();
-        return true; // valid! means there is no body to read
+        return false;
     }
 }
 
@@ -218,8 +218,6 @@ inline size_t parser::process_body(char const * buf, size_t len,
 				return processed + process_body(buf + processed, len - processed, ec);
 			}
 		}
-        return 0;
-        // TODO: support for chunked transfers?
     } else {
         ec = error::make_error_code(error::unknown_transfer_encoding);
         return 0;

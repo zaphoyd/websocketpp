@@ -122,10 +122,12 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 return 0;
             }
 
-			if (!prepare_body(ec))
+			const bool need_more = prepare_body(ec);
+			if (ec) {
 				return 0;
+			}
 
-			if (m_body_encoding == body_encoding::unknown) {
+			if (m_body_encoding == body_encoding::unknown || !need_more) {
 				m_state = state::DONE;
 				m_buf.reset();
             	ec.clear();
