@@ -427,12 +427,12 @@ public:
 			}
 			else if (schema == "https")
 			{
-				m_secure = false;
+				m_secure = true;
             	m_type = http;
 			}
 			else if (schema == "http")
 			{
-				m_secure = true;
+				m_secure = false;
             	m_type = http;
 			} else {
 				return;
