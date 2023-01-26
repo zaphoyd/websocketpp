@@ -122,20 +122,13 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 return 0;
             }
 
+			// transition state to reading the response body
+            m_state = state::BODY;
+
 			const bool need_more = prepare_body(ec);
 			if (ec) {
 				return 0;
 			}
-
-			if (m_body_encoding == body_encoding::unknown || !need_more) {
-				m_state = state::DONE;
-				m_buf.reset();
-            	ec.clear();
-				return len; // pretend we read everything!
-			}
-
-            // transition state to reading the response body
-            m_state = state::BODY;
 
             // calculate how many bytes in the local buffer are bytes we didn't
             // use for the headers. 
@@ -149,11 +142,10 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             // It is possible that there are still some bytes not read. These
             // will be 'returned' to the caller by having the return value be
             // less than len.
-            if (read < len) {
+            if (read < len && need_more) {
                 read += this->process_body(buf+read,(len-read),ec);
             }
             if (ec) {
-				m_state = state::DONE;
                 return 0;
             }
 

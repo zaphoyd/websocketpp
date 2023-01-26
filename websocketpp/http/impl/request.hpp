@@ -161,15 +161,13 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
                 if (body_ready()) {
                     m_ready = true;
                 }
-                ec = lib::error_code();
-                return bytes_processed;
             } else {
                 m_ready = true;
-
-                // return number of bytes processed (starting bytes - bytes left)
-                ec = lib::error_code();
-                return bytes_processed;
             }
+
+			// return number of bytes processed (starting bytes - bytes left)
+			ec = lib::error_code();
+			return bytes_processed;
         } else {
             // we got a line with content
             if (m_method.empty()) {

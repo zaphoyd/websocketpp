@@ -174,6 +174,10 @@ inline bool parser::prepare_body(lib::error_code & ec) {
 inline size_t parser::process_body(char const * buf, size_t len,
     lib::error_code & ec)
 {
+	if (!len) {
+		return 0;
+	}
+
     if (m_body_encoding == body_encoding::plain) {
         const size_t processed = std::min(m_body_bytes_needed, len);
         m_body.append(buf,processed);
@@ -195,28 +199,27 @@ inline size_t parser::process_body(char const * buf, size_t len,
 			{
 				ec = error::make_error_code(error::invalid_format);
 				return 0;
-			} else {
-				const std::string chunkSizeHex(buf, newline);
-
-				char * end;
-				m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
-				if (end != chunkSizeHex.cend().base()) {
-					ec = error::make_error_code(error::invalid_format);
-					return 0;
-				}
-				
-				if (m_body_bytes_needed + m_body.size() > m_body_bytes_max) {
-					ec = error::make_error_code(error::body_too_large);
-					return 0;
-				}
-
-				if (m_body_bytes_needed == 0) { // this is how the last chunk is marked
-					return len; // pretend we handled everything!
-				}
-
-				const size_t processed = (newline - buf) + sizeof(http_crlf) - 1;
-				return processed + process_body(buf + processed, len - processed, ec);
 			}
+
+			const std::string chunkSizeHex(buf, newline);
+			char * end;
+			m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
+			if (end != chunkSizeHex.cend().base()) {
+				ec = error::make_error_code(error::invalid_format);
+				return 0;
+			}
+			
+			if (m_body_bytes_needed + m_body.size() > m_body_bytes_max) {
+				ec = error::make_error_code(error::body_too_large);
+				return 0;
+			}
+
+			if (m_body_bytes_needed == 0) { // this is how the last chunk is marked
+				return len; // pretend we handled everything!
+			}
+
+			const size_t processed = (newline - buf) + sizeof(http_crlf) - 1;
+			return processed + process_body(buf + processed, len - processed, ec);
 		}
     } else {
         ec = error::make_error_code(error::unknown_transfer_encoding);

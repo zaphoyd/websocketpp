@@ -901,12 +901,27 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 				m_elog->write(log::elevel::fatal,"Internal library error: missing processor");
 				return;
 			}
-		} else {
+		} else { // regular http request
 			if (m_request.get_version().empty())
 				m_request.set_version("HTTP/1.1");
-			m_request.replace_header("Host", m_uri->get_host_port());
-			if (m_request.get_uri().empty())
-				m_request.set_uri(get_uri()->get_resource());
+
+			std::string host_port;
+			std::string resource;
+
+			const uri request_uri(m_request.get_uri());
+			if (request_uri.is_absolute()) {
+				host_port = request_uri.get_host_port();
+				resource = request_uri.get_resource();
+			} else {
+				host_port = m_uri->get_host_port();
+				resource = m_uri->get_resource();
+				if (resource.ends_with('/')) // prevent double slashes!
+					resource.pop_back();
+				resource += request_uri.get_resource(); // get_resource should always have a leading slash
+			}
+
+			m_request.replace_header("Host", host_port);;
+			m_request.set_uri(resource);
 		}
 		this->send_http_request();
     }
