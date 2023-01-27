@@ -1975,9 +1975,9 @@ void connection<config>::terminate(lib::error_code const & ec) {
     }
 
     // TODO: does any of this need a mutex?
-    if (m_is_http) {
+    if (m_is_http && m_http_state != session::http_state::closed) {
         m_http_state = session::http_state::closed;
-		if (m_http_handler)
+		if (!m_is_server && m_http_handler) // only call m_http_handler here for client connections
 			m_http_handler(m_connection_hdl);
     }
     if (m_state == session::state::connecting) {
