@@ -320,6 +320,7 @@ public:
             lib::placeholders::_1
         ))
       , m_user_agent(ua)
+	  , m_max_redirects(0)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
       , m_http_read_timeout_dur(config::timeout_http_read_body)
@@ -615,6 +616,30 @@ public:
         if (m_processor) {
             m_processor->set_max_message_size(new_value);
         }
+    }
+
+	/// Get maximum number of redirects
+    /**
+     * Get maximum number of redirects to follow before returning.
+	 * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     */
+    size_t get_max_redirects() const {
+        return m_max_redirects;
+    }
+    
+    /// Set maximum number of redirects
+    /**
+     * Set maximum number of redirects to follow before returning.
+     * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     *
+     * @param new_value The value to set as the max number of redirects to.
+     */
+    void set_max_redirects(size_t new_value) {
+        m_max_redirects = new_value;
     }
     
     /// Get maximum HTTP message body size
@@ -1742,6 +1767,9 @@ private:
 
     // static settings
     std::string const       m_user_agent;
+
+	// dynamic settings (per-connection)
+	size_t					m_max_redirects;
 
     /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;

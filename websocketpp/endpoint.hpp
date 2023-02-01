@@ -101,6 +101,7 @@ public:
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
+	  , m_max_redirects(0)
       , m_is_server(p_is_server)
     {
         m_alog->set_channels(config::alog_level);
@@ -465,6 +466,30 @@ public:
         m_max_message_size = new_value;
     }
 
+	/// Get maximum number of redirects
+    /**
+     * Get maximum number of redirects to follow before returning.
+	 * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     */
+    size_t get_max_redirects() const {
+        return m_max_redirects;
+    }
+    
+    /// Set maximum number of redirects
+    /**
+     * Set maximum number of redirects to follow before returning.
+     * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     *
+     * @param new_value The value to set as the max number of redirects to.
+     */
+    void set_max_redirects(size_t new_value) {
+        m_max_redirects = new_value;
+    }
+
     /// Get maximum HTTP message body size
     /**
      * Get maximum HTTP message body size. Maximum message body size determines
@@ -719,6 +744,7 @@ private:
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;
+	size_t						m_max_redirects;
 
     rng_type m_rng;
 

@@ -1788,8 +1788,34 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             m_handshake_timer.reset();
         }
 
-		if (m_is_http)
-		{
+		// follow redirect if possible
+		if (m_max_redirects && http::status_code::is_redirect(m_response.get_status_code())) {
+			m_max_redirects--;
+
+			const uri redirect_uri(m_response.get_header("Location"));
+			if (redirect_uri.get_valid()) {
+				std::string host_port;
+				std::string resource;
+
+				if (redirect_uri.is_absolute()) {
+					host_port = redirect_uri.get_host_port();
+					resource = redirect_uri.get_resource();
+				} else {
+					host_port = m_uri->get_host_port();
+					resource = m_uri->get_resource();
+					if (resource.ends_with('/')) // prevent double slashes!
+						resource.pop_back();
+					resource += redirect_uri.get_resource(); // get_resource should always have a leading slash
+				}
+
+				m_request.replace_header("Host", host_port);;
+				m_request.set_uri(resource);
+				this->send_http_request();
+				return;
+			}
+		}
+
+		if (m_is_http) {
 			if (m_response.has_received(response_type::state::BODY))
 			{
             	this->terminate({});

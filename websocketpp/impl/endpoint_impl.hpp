@@ -67,6 +67,8 @@ endpoint<connection,config>::create_connection(lib::error_code & ec) {
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
 
+    con->set_max_redirects(m_max_redirects);
+
     if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);
     }

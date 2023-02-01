@@ -179,6 +179,18 @@ enum value {
     network_authentication_required = 511
 };
 
+/// Given a status code value, return true if it is a redirect
+/**
+ * 
+ * @param[in] code The HTTP status code to check
+ * @return True if the status code is a redirect code
+ * @see websocketpp::http::status_code::value (list of valid codes)
+ */
+inline bool is_redirect(value code) {
+	// multiple_choices is not a valid redirect as we can't just go to the location specified in the Location header
+	return code > multiple_choices && code <= temporary_redirect;
+}
+
 /// Given a status code value, return the default status message
 /**
  * 
