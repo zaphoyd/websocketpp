@@ -254,6 +254,7 @@ protected:
                     get_socket().native_handle(), host.c_str());
                 if (!(1 == res)) {
                     callback(socket::make_error_code(socket::error::tls_failed_sni_hostname));
+					return;
                 }
             }
         }
