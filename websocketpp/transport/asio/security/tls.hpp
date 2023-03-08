@@ -320,6 +320,11 @@ protected:
      */
     lib::asio::error_code cancel_socket() {
         lib::asio::error_code ec;
+        /* Fixed need wait 18mins to shutdown socket after lost network connection */
+        if(m_io_service)
+        {
+            m_io_service->stop();
+        }
         get_raw_socket().cancel(ec);
         return ec;
     }
