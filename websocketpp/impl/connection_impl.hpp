@@ -904,6 +904,9 @@ void connection<config>::handle_transport_init(lib::error_code const & ec) {
 		} else { // regular http request
 			if (m_request.get_version().empty())
 				m_request.set_version("HTTP/1.1");
+			
+			if (m_request.get_method().empty())
+				m_request.set_method("GET");
 
 			std::string host_port;
 			std::string resource;
