@@ -58,33 +58,32 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
-    basic<concurrency,names>(channel_type_hint::value h =
-        channel_type_hint::access)
+    basic(channel_type_hint::value h = channel_type_hint::access)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
 
-    basic<concurrency,names>(std::ostream * out)
+    basic(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
-    basic<concurrency,names>(level c, channel_type_hint::value h =
+    basic(level c, channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
 
-    basic<concurrency,names>(level c, std::ostream * out)
+    basic(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}
 
     /// Destructor
-    ~basic<concurrency,names>() {}
+    ~basic() {}
 
     /// Copy constructor
-    basic<concurrency,names>(basic<concurrency,names> const & other)
+    basic(basic<concurrency,names> const & other)
      : m_static_channels(other.m_static_channels)
      , m_dynamic_channels(other.m_dynamic_channels)
      , m_out(other.m_out)
@@ -92,12 +91,12 @@ public:
     
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy assignment operator because of const member variables
-    basic<concurrency,names> & operator=(basic<concurrency,names> const &) = delete;
+    basic & operator=(basic<concurrency,names> const &) = delete;
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
     /// Move constructor
-    basic<concurrency,names>(basic<concurrency,names> && other)
+    basic(basic<concurrency,names> && other)
      : m_static_channels(other.m_static_channels)
      , m_dynamic_channels(other.m_dynamic_channels)
      , m_out(other.m_out)
@@ -105,7 +104,7 @@ public:
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no move assignment operator because of const member variables
-    basic<concurrency,names> & operator=(basic<concurrency,names> &&) = delete;
+    basic & operator=(basic<concurrency,names> &&) = delete;
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
 
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
