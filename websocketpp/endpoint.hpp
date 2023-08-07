@@ -97,7 +97,7 @@ public:
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
-	  , m_http_read_timeout_dur(config::timeout_http_read_body)
+	  , m_http_read_timeout_dur(config::timeout_read_http_response)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
@@ -393,7 +393,7 @@ public:
 	 * the responder takes too long to write the body of the response.
      *
      * Connections that time out will have their http handlers called with the
-     * http_body_read_timeout error code stored in the connection (use get_ec).
+     * http_read_response_timeout error code stored in the connection (use get_ec).
      *
      * The default value is specified via the compile time config value
      * 'timeout_close_handshake'. The default value in the core config
@@ -407,7 +407,7 @@ public:
      *
      * @param dur The length of the http body read timeout in ms
      */
-    void set_http_body_read_timeout(long dur) {
+    void set_http_response_timeout(long dur) {
 		scoped_lock_type guard(m_mutex);
         m_http_read_timeout_dur = dur;
     }

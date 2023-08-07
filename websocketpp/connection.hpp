@@ -323,7 +323,7 @@ public:
 	  , m_max_redirects(0)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
-      , m_http_read_timeout_dur(config::timeout_http_read_body)
+      , m_http_response_timeout_dur(config::timeout_read_http_response)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
@@ -539,18 +539,19 @@ public:
         m_close_handshake_timeout_dur = dur;
     }
 
-	/// Set http body read timeout
+	/// Set http response timeout
     /**
-     * Sets the length of time the library will wait after the HTTP body begins
-     * to be read before cancelling it. This can be used to guard from http
+     * Sets the length of time the library will wait for the response to be read
+     * before cancelling the request. This can be used to guard from http
 	 * responses which are much larger than you anticipate (eg. files) or when
 	 * the responder takes too long to write the body of the response.
+	 * Timer starts when the request has been fully sent.
      *
      * Connections that time out will have their http handlers called with the
-     * http_body_read_timeout error code stored in the connection (use get_ec).
+     * http_read_response_timeout error code stored in the connection (use get_ec).
      *
      * The default value is specified via the compile time config value
-     * 'timeout_close_handshake'. The default value in the core config
+     * 'timeout_http_read_response'. The default value in the core config
      * is 5000ms. A value of 0 will disable the timer entirely.
      *
      * To be effective, the transport you are using must support timers. See
@@ -559,10 +560,10 @@ public:
 	 * 
 	 * @since 0.8.4
      *
-     * @param dur The length of the http body read timeout in ms
+     * @param dur The length of the http response timeout in ms
      */
-    void set_http_body_read_timeout(long dur) {
-        m_http_read_timeout_dur = dur;
+    void set_http_response_timeout(long dur) {
+        m_http_response_timeout_dur = dur;
     }
 
     /// Set pong timeout
@@ -1563,8 +1564,7 @@ public:
 
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
-
-    void handle_read_body_timeout(lib::error_code const & ec);
+    void handle_read_response_timeout(lib::error_code const & ec);
 
     void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
     void read_frame();
@@ -1789,7 +1789,7 @@ private:
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
-    long                    m_http_read_timeout_dur;
+    long                    m_http_response_timeout_dur;
     long                    m_pong_timeout_dur;
     size_t                  m_max_message_size;
 

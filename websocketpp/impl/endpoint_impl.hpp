@@ -75,8 +75,8 @@ endpoint<connection,config>::create_connection(lib::error_code & ec) {
     if (m_close_handshake_timeout_dur != config::timeout_close_handshake) {
         con->set_close_handshake_timeout(m_close_handshake_timeout_dur);
     }
-	if (m_http_read_timeout_dur != config::timeout_http_read_body) {
-        con->set_http_body_read_timeout(m_http_read_timeout_dur);
+	if (m_http_read_timeout_dur != config::timeout_read_http_response) {
+        con->set_http_response_timeout(m_http_read_timeout_dur);
     }
     if (m_pong_timeout_dur != config::timeout_pong) {
         con->set_pong_timeout(m_pong_timeout_dur);

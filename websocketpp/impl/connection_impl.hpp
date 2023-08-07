@@ -1709,6 +1709,27 @@ void connection<config>::handle_send_http_request(lib::error_code const & ec) {
         return;
     }
 
+	if (m_is_http)
+	{
+		if (m_handshake_timer) {
+			m_handshake_timer->cancel();
+			m_handshake_timer.reset();
+		}
+
+		// Start a timer so we don't wait forever for the http body
+		// it's okay to use the handskahe timer as it's not being used by anything else
+		if (m_http_response_timeout_dur > 0) {
+			m_handshake_timer = transport_con_type::set_timer(
+				m_http_response_timeout_dur,
+				lib::bind(
+					&type::handle_read_response_timeout,
+					type::get_shared(),
+					lib::placeholders::_1
+				)
+			);
+		}
+	}
+
     transport_con_type::async_read_at_least(
         1,
         m_buf,
@@ -1786,11 +1807,13 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
     m_alog->write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
     if (m_response.has_received(response_type::state::HEADERS)) {
-		if (m_handshake_timer) {
-            m_handshake_timer->cancel();
-            m_handshake_timer.reset();
-        }
-
+		if (!m_is_http)
+		{
+			if (m_handshake_timer) {
+				m_handshake_timer->cancel();
+				m_handshake_timer.reset();
+			}
+		}
 		// follow redirect if possible
 		if (m_max_redirects && http::status_code::is_redirect(m_response.get_status_code())) {
 			m_max_redirects--;
@@ -1830,20 +1853,6 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 					m_elog->write(log::elevel::fatal,"Assertion Failed: HTTP response parser failed to consume all bytes from a read request.");
 					this->terminate(make_error_code(error::general));
 					return;
-				}
-
-				// Start a timer  if we have not yet
-				// so we don't wait forever for the http body
-				// it's okay to use the handskahe timer as it's not being used by anything else
-				if (m_http_read_timeout_dur > 0 && !m_handshake_timer) {
-					m_handshake_timer = transport_con_type::set_timer(
-						m_http_read_timeout_dur,
-						lib::bind(
-							&type::handle_close_handshake_timeout,
-							type::get_shared(),
-							lib::placeholders::_1
-						)
-					);
 				}
 
 				transport_con_type::async_read_at_least(
@@ -1964,17 +1973,17 @@ void connection<config>::handle_close_handshake_timeout(
 }
 
 template <typename config>
-void connection<config>::handle_read_body_timeout(lib::error_code const & ec)
+void connection<config>::handle_read_response_timeout(lib::error_code const & ec)
 {
     if (ec == transport::error::operation_aborted) {
-        m_alog->write(log::alevel::devel,"asio http read body timer cancelled");
+        m_alog->write(log::alevel::devel,"asio read http response timer cancelled");
     } else if (ec) {
         m_alog->write(log::alevel::devel,
-            "asio handle_read_body_timeout error: "+ec.message());
+            "asio handle_read_response_timeout error: "+ec.message());
         // TODO: ignore or fail here?
     } else {
-        m_alog->write(log::alevel::devel, "asio http read body timer expired");
-        terminate(make_error_code(error::http_body_read_timeout));
+        m_alog->write(log::alevel::devel, "asio read http response timer expired");
+        terminate(make_error_code(error::http_read_response_timeout));
     }
 }
 
