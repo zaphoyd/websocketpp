@@ -115,7 +115,7 @@ inline lib::error_code parser::set_body(std::string const & value) {
         return lib::error_code();
     }
 
-    if (value.size() > m_body_bytes_max) {
+    if (m_body_bytes_max && value.size() > m_body_bytes_max) {
         return error::make_error_code(error::body_too_large);
     }
 
@@ -126,6 +126,11 @@ inline lib::error_code parser::set_body(std::string const & value) {
 
     m_body = value;
     return lib::error_code();
+}
+
+inline void parser::consume_body()
+{
+	m_body.clear();
 }
 
 inline bool parser::parse_parameter_list(std::string const & in,
@@ -150,13 +155,13 @@ inline bool parser::prepare_body(lib::error_code & ec) {
         // TODO: not 100% sure what the compatibility of this method is. Also,
         // I believe this will only work up to 32bit sizes. Is there a need for
         // > 4GiB HTTP payloads?
-        m_body_bytes_needed = std::strtoul(cl_header.c_str(),&end,10);
+        m_body_bytes_total = m_body_bytes_needed = std::strtoul(cl_header.c_str(),&end,10);
 		if (end != cl_header.cend().base()) {
 			ec = error::make_error_code(error::invalid_format);
             return false;
 		}
         
-        if (m_body_bytes_needed > m_body_bytes_max) {
+        if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
             ec = error::make_error_code(error::body_too_large);
             return false;
         }
@@ -180,7 +185,7 @@ inline size_t parser::process_body(char const * buf, size_t len,
 
     if (m_body_encoding == body_encoding::plain) {
         const size_t processed = std::min(m_body_bytes_needed, len);
-        m_body.append(buf,processed);
+		m_body.append(buf, processed);
         m_body_bytes_needed -= processed;
         ec = lib::error_code();
         return processed;
@@ -188,7 +193,7 @@ inline size_t parser::process_body(char const * buf, size_t len,
         // for chunked encoding, read chunks of the body
 		if (m_body_bytes_needed) { // reading previouslly started chunk, same as plain encoding!
 			const size_t processed = std::min(m_body_bytes_needed, len);
-			m_body.append(buf,processed);
+			m_body.append(buf, processed);
 			m_body_bytes_needed -= processed;
 			ec = lib::error_code();
 			return processed;
@@ -204,12 +209,13 @@ inline size_t parser::process_body(char const * buf, size_t len,
 			const std::string chunkSizeHex(buf, newline);
 			char * end;
 			m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
+			m_body_bytes_total += m_body_bytes_needed;
 			if (end != chunkSizeHex.cend().base()) {
 				ec = error::make_error_code(error::invalid_format);
 				return 0;
 			}
 			
-			if (m_body_bytes_needed + m_body.size() > m_body_bytes_max) {
+			if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
 				ec = error::make_error_code(error::body_too_large);
 				return 0;
 			}

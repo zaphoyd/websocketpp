@@ -400,6 +400,7 @@ public:
     parser()
       : m_header_bytes(0)
       , m_body_bytes_needed(0)
+	  , m_body_bytes_total(0)
       , m_body_bytes_max(max_body_size)
       , m_body_encoding(body_encoding::unknown) {}
 
@@ -518,6 +519,27 @@ public:
         return m_body;
     }
 
+	/// Get the progress of the HTTP body download relative to the expected body size.
+    /**
+     * Effectively calculated as (downloaded bytes) / get_total_body_size()
+     *
+     * @return The progress (0 to 1 range)
+     */
+	float get_progress() const {
+		return m_body_bytes_total ? (double(m_body_bytes_total - m_body_bytes_needed) / m_body_bytes_total) : 1.f;
+	}
+
+	/// Get the expected HTTP body size
+    /**
+     * For plain encoding, this is the Content-Length
+	 * For chunked encoding, this is the total number of bytes transfered (changes as new chunks are processed).
+     *
+     * @return The total size of the HTTP body.
+     */
+	size_t get_total_body_size() const {
+		return m_body_bytes_total;
+	}
+
     /// Set body content
     /**
      * Set the body content of the HTTP response to the parameter string. Note
@@ -531,6 +553,14 @@ public:
      * @return A status code describing the outcome of the operation.
      */
     lib::error_code set_body(std::string const & value);
+
+	/// Consume body content (keep string at current capacity )
+    /**
+     * Keeps the body string at current capacity, but resets its size
+     *
+     * @since 0.8.5
+     */
+    void consume_body();
 
     /// Get body size limit
     /**
@@ -637,6 +667,7 @@ protected:
     
     std::string             m_body;
     size_t                  m_body_bytes_needed;
+    size_t                  m_body_bytes_total;
     size_t                  m_body_bytes_max;
     body_encoding::value    m_body_encoding;
 };

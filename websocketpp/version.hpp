@@ -44,7 +44,7 @@ static int const major_version = 0;
 /// Library minor version number
 static int const minor_version = 8;
 /// Library patch version number
-static int const patch_version = 4;
+static int const patch_version = 5;
 /// Library pre-release flag
 /**
  * This is a textual flag indicating the type and number for pre-release

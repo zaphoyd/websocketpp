@@ -657,7 +657,9 @@ void connection<config>::set_request(request_type const & req,
         return;
     }
 
+	const size_t max_body_size = req.get_max_body_size();
 	m_request = req;
+	m_request.set_max_body_size(max_body_size);
 }
 
 template <typename config>
@@ -1804,7 +1806,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
         return;
     }
 
-    m_alog->write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
+    // m_alog->write(log::alevel::devel,std::string("Raw response: ")+m_response.raw());
 
     if (m_response.has_received(response_type::state::HEADERS)) {
 		if (!m_is_http)
@@ -1842,6 +1844,9 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 		}
 
 		if (m_is_http) {
+			if (m_progress_handler)
+				m_progress_handler(m_connection_hdl, m_response.get_progress());
+
 			if (m_response.has_received(response_type::state::BODY))
 			{
             	this->terminate({});

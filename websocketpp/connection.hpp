@@ -126,6 +126,13 @@ typedef lib::function<void(connection_hdl_ref,std::string)> pong_handler;
  */
 typedef lib::function<void(connection_hdl_ref,std::string)> pong_timeout_handler;
 
+/// The type and function signature of a progress handler
+/**
+ * The progress handler is called when bytes of the HTTP message body are received (for plain HTTP requests)
+ * The float parameter is the progress relative to the full body size (0 to 1 range)
+ */
+typedef lib::function<void(connection_hdl_ref,float)> progress_handler;
+
 /// The type and function signature of a validate handler
 /**
  * The validate handler is called after a WebSocket handshake has been received
@@ -487,6 +494,16 @@ public:
         m_message_handler = h;
     }
 
+	/// Set progress handler
+    /**
+     * The progress handler is called when bytes making up a HTTP body are processed
+     *
+     * @param h The new progress_handler
+     */
+    void set_progress_handler(progress_handler h) {
+        m_progress_handler = h;
+    }
+
     //////////////////////////////////////////
     // Connection timeouts and other limits //
     //////////////////////////////////////////
@@ -673,6 +690,7 @@ public:
      */
     void set_max_http_body_size(size_t new_value) {
         m_request.set_max_body_size(new_value);
+        m_response.set_max_body_size(new_value);
     }
 
     //////////////////////////////////
@@ -1059,6 +1077,10 @@ public:
     std::string const & get_response_msg() const {
         return m_response.get_status_msg();
     }
+
+	void consume_response_body() {
+		m_response.consume_body();
+	}
     
     /// Set response status code and message (exception free)
     /**
@@ -1785,6 +1807,7 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+    progress_handler        m_progress_handler;
 
     /// constant values
     long                    m_open_handshake_timeout_dur;
