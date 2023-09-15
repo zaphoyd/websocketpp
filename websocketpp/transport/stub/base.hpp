@@ -29,6 +29,7 @@
 #define WEBSOCKETPP_TRANSPORT_STUB_BASE_HPP
 
 #include <websocketpp/common/system_error.hpp>
+#include <websocketpp/common/symbol_export.hpp>
 #include <websocketpp/common/cpp11.hpp>
 
 #include <string>
@@ -71,7 +72,7 @@ class category : public lib::error_category {
 };
 
 /// Get a reference to a static copy of the stub transport error category
-inline lib::error_category const & get_category() {
+inline _WEBSOCKETPP_SYMBOL_EXPORT lib::error_category const & get_category() {
     static category instance;
     return instance;
 }

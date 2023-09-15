@@ -33,6 +33,7 @@
 #include <utility>
 
 #include <websocketpp/common/cpp11.hpp>
+#include <websocketpp/common/symbol_export.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
@@ -232,7 +233,7 @@ public:
     }
 };
 
-inline const lib::error_category& get_category() {
+inline _WEBSOCKETPP_SYMBOL_EXPORT const lib::error_category& get_category() {
     static category instance;
     return instance;
 }
@@ -253,7 +254,7 @@ _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_
 
 namespace websocketpp {
 
-class exception : public std::exception {
+class _WEBSOCKETPP_SYMBOL_EXPORT exception : public std::exception {
 public:
     exception(std::string const & msg, lib::error_code ec = make_error_code(error::general))
       : m_msg(msg.empty() ? ec.message() : msg), m_code(ec)
