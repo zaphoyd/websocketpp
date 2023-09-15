@@ -34,6 +34,7 @@
 #include <vector>
 #include <utility>
 
+#include <websocketpp/common/symbol_export.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 namespace websocketpp {
@@ -297,7 +298,7 @@ inline std::string get_string(value code) {
  * HTTP error message, and a body to return with the HTTP
  * error response.
  */
-class exception : public std::exception {
+class _WEBSOCKETPP_SYMBOL_EXPORT exception : public std::exception {
 public:
     exception(const std::string& log_msg,
                 status_code::value error_code,
@@ -435,7 +436,7 @@ public:
 };
 
 /// Get a reference to a static copy of the asio transport error category
-inline lib::error_category const & get_category() {
+inline _WEBSOCKETPP_SYMBOL_EXPORT lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
