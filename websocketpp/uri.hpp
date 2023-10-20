@@ -404,9 +404,9 @@ public:
 		relative
 	};
 
-	uri() : m_type(invalid) {}
-	uri(uri const & copy) = default;
-    explicit uri(std::string const & uri_string) : m_type(invalid), m_ipv6_literal(false) {
+	uri() = default;
+
+    explicit uri(std::string const & uri_string) : m_ipv6_literal(false) {
 		
 		if (uri_string.empty())
 			return;
@@ -779,7 +779,7 @@ private:
         return static_cast<uint16_t>(t_port);
     }
 
-    type        m_type;
+    type        m_type = invalid;
     std::string m_host;
     std::string m_resource;
     uint16_t    m_port;
