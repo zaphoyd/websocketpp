@@ -51,7 +51,7 @@ public:
     /**
      * @param hint A channel type specific hint for how to construct the logger
      */
-    syslog<concurrency,names>(channel_type_hint::value hint =
+    syslog<concurrency,names>(channel_type_hint hint =
         channel_type_hint::access)
       : basic<concurrency,names>(hint), m_channel_type_hint(hint) {}
 
@@ -60,7 +60,7 @@ public:
      * @param channels A set of channels to statically enable
      * @param hint A channel type specific hint for how to construct the logger
      */
-    syslog<concurrency,names>(level channels, channel_type_hint::value hint =
+    syslog<concurrency,names>(level channels, channel_type_hint hint =
         channel_type_hint::access)
       : basic<concurrency,names>(channels, hint), m_channel_type_hint(hint) {}
 
@@ -137,7 +137,7 @@ private:
         return default_level;
     }
 
-    channel_type_hint::value m_channel_type_hint;
+    channel_type_hint m_channel_type_hint;
 };
 
 } // log

@@ -247,7 +247,7 @@ protected:
     /**
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {}
+    void set_handle(connection_hdl_ref hdl) {}
 
     /// Call given handler back within the transport's event system (if present)
     /**

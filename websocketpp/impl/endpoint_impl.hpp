@@ -67,11 +67,16 @@ endpoint<connection,config>::create_connection(lib::error_code & ec) {
     con->set_validate_handler(m_validate_handler);
     con->set_message_handler(m_message_handler);
 
+    con->set_max_redirects(m_max_redirects);
+
     if (m_open_handshake_timeout_dur != config::timeout_open_handshake) {
         con->set_open_handshake_timeout(m_open_handshake_timeout_dur);
     }
     if (m_close_handshake_timeout_dur != config::timeout_close_handshake) {
         con->set_close_handshake_timeout(m_close_handshake_timeout_dur);
+    }
+	if (m_http_read_timeout_dur != config::timeout_read_http_response) {
+        con->set_http_response_timeout(m_http_read_timeout_dur);
     }
     if (m_pong_timeout_dur != config::timeout_pong) {
         con->set_pong_timeout(m_pong_timeout_dur);
@@ -91,7 +96,7 @@ endpoint<connection,config>::create_connection(lib::error_code & ec) {
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::interrupt(connection_hdl hdl, lib::error_code & ec)
+void endpoint<connection,config>::interrupt(connection_hdl_ref hdl, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
@@ -102,7 +107,7 @@ void endpoint<connection,config>::interrupt(connection_hdl hdl, lib::error_code 
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pause_reading(connection_hdl hdl, lib::error_code & ec)
+void endpoint<connection,config>::pause_reading(connection_hdl_ref hdl, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
@@ -111,7 +116,7 @@ void endpoint<connection,config>::pause_reading(connection_hdl hdl, lib::error_c
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::resume_reading(connection_hdl hdl, lib::error_code & ec)
+void endpoint<connection,config>::resume_reading(connection_hdl_ref hdl, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
     if (ec) {return;}
@@ -120,7 +125,7 @@ void endpoint<connection,config>::resume_reading(connection_hdl hdl, lib::error_
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send_http_response(connection_hdl hdl,
+void endpoint<connection,config>::send_http_response(connection_hdl_ref hdl,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -129,7 +134,7 @@ void endpoint<connection,config>::send_http_response(connection_hdl hdl,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload,
+void endpoint<connection,config>::send(connection_hdl_ref hdl, std::string const & payload,
     frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -139,7 +144,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, std::string const & p
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
+void endpoint<connection,config>::send(connection_hdl_ref hdl, void const * payload,
     size_t len, frame::opcode::value op, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -148,7 +153,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg,
+void endpoint<connection,config>::send(connection_hdl_ref hdl, message_ptr msg,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -157,7 +162,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
+void endpoint<connection,config>::close(connection_hdl_ref hdl, close::status::value
     const code, std::string const & reason,
     lib::error_code & ec)
 {
@@ -167,7 +172,7 @@ void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
+void endpoint<connection,config>::ping(connection_hdl_ref hdl, std::string const &
     payload, lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -176,7 +181,7 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const &
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & payload,
+void endpoint<connection,config>::pong(connection_hdl_ref hdl, std::string const & payload,
     lib::error_code & ec)
 {
     connection_ptr con = get_con_from_hdl(hdl,ec);
@@ -188,35 +193,35 @@ void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & p
 // If exceptions are enabled, define wrapper methods that throw exceptions
 
 template <typename connection, typename config>
-void endpoint<connection,config>::interrupt(connection_hdl hdl) {
+void endpoint<connection,config>::interrupt(connection_hdl_ref hdl) {
     lib::error_code ec;
     interrupt(hdl,ec);
     if (ec) { throw exception(ec); }
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pause_reading(connection_hdl hdl) {
+void endpoint<connection,config>::pause_reading(connection_hdl_ref hdl) {
     lib::error_code ec;
     pause_reading(hdl,ec);
     if (ec) { throw exception(ec); }
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::resume_reading(connection_hdl hdl) {
+void endpoint<connection,config>::resume_reading(connection_hdl_ref hdl) {
     lib::error_code ec;
     resume_reading(hdl,ec);
     if (ec) { throw exception(ec); }
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send_http_response(connection_hdl hdl) {
+void endpoint<connection,config>::send_http_response(connection_hdl_ref hdl) {
     lib::error_code ec;
     send_http_response(hdl,ec);
     if (ec) { throw exception(ec); }
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, std::string const & payload,
+void endpoint<connection,config>::send(connection_hdl_ref hdl, std::string const & payload,
     frame::opcode::value op)
 {
     lib::error_code ec;
@@ -225,7 +230,7 @@ void endpoint<connection,config>::send(connection_hdl hdl, std::string const & p
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
+void endpoint<connection,config>::send(connection_hdl_ref hdl, void const * payload,
     size_t len, frame::opcode::value op)
 {
     lib::error_code ec;
@@ -234,14 +239,14 @@ void endpoint<connection,config>::send(connection_hdl hdl, void const * payload,
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::send(connection_hdl hdl, message_ptr msg) {
+void endpoint<connection,config>::send(connection_hdl_ref hdl, message_ptr msg) {
     lib::error_code ec;
     send(hdl,msg,ec);
     if (ec) { throw exception(ec); }
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
+void endpoint<connection,config>::close(connection_hdl_ref hdl, close::status::value
     const code, std::string const & reason)
 {
     lib::error_code ec;
@@ -250,7 +255,7 @@ void endpoint<connection,config>::close(connection_hdl hdl, close::status::value
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & payload)
+void endpoint<connection,config>::ping(connection_hdl_ref hdl, std::string const & payload)
 {
     lib::error_code ec;
     ping(hdl,payload,ec);
@@ -258,7 +263,7 @@ void endpoint<connection,config>::ping(connection_hdl hdl, std::string const & p
 }
 
 template <typename connection, typename config>
-void endpoint<connection,config>::pong(connection_hdl hdl, std::string const & payload)
+void endpoint<connection,config>::pong(connection_hdl_ref hdl, std::string const & payload)
 {
     lib::error_code ec;
     pong(hdl,payload,ec);

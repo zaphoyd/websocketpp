@@ -19,12 +19,12 @@ public:
         m_server.set_close_handler(bind(&count_server::on_close,this,_1));
     }
     
-    void on_open(connection_hdl hdl) {
+    void on_open(connection_hdl_ref hdl) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_connections.insert(hdl);
     }
     
-    void on_close(connection_hdl hdl) {
+    void on_close(connection_hdl_ref hdl) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_connections.erase(hdl);
     }

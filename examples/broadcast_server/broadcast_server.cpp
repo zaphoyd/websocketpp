@@ -83,7 +83,7 @@ public:
         //}
     }
 
-    void on_open(connection_hdl hdl) {
+    void on_open(connection_hdl_ref hdl) {
         {
             lock_guard<mutex> guard(m_action_lock);
             //std::cout << "on_open" << std::endl;
@@ -92,7 +92,7 @@ public:
         m_action_cond.notify_one();
     }
 
-    void on_close(connection_hdl hdl) {
+    void on_close(connection_hdl_ref hdl) {
         {
             lock_guard<mutex> guard(m_action_lock);
             //std::cout << "on_close" << std::endl;
@@ -101,7 +101,7 @@ public:
         m_action_cond.notify_one();
     }
 
-    void on_message(connection_hdl hdl, server::message_ptr msg) {
+    void on_message(connection_hdl_ref hdl, server::message_ptr msg) {
         // queue message up for sending by processing thread
         {
             lock_guard<mutex> guard(m_action_lock);

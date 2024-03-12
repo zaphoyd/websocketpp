@@ -32,6 +32,7 @@
 
 #include <websocketpp/connection.hpp>
 
+#include <websocketpp/logger/basic.hpp>
 #include <websocketpp/logger/levels.hpp>
 #include <websocketpp/version.hpp>
 
@@ -91,14 +92,16 @@ public:
     //friend connection;
 
     explicit endpoint(bool p_is_server)
-      : m_alog(new alog_type(config::alog_level, log::channel_type_hint::access))
-      , m_elog(new elog_type(config::elog_level, log::channel_type_hint::error))
+      : m_alog(lib::make_shared<alog_type>(config::alog_level, log::channel_type_hint::access))
+      , m_elog(lib::make_shared<elog_type>(config::elog_level, log::channel_type_hint::error))
       , m_user_agent(::websocketpp::user_agent)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+	  , m_http_read_timeout_dur(config::timeout_read_http_response)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
+	  , m_max_redirects(0)
       , m_is_server(p_is_server)
     {
         m_alog->set_channels(config::alog_level);
@@ -111,7 +114,7 @@ public:
 
 
     /// Destructor
-    ~endpoint() {}
+    virtual ~endpoint() {}
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable
@@ -143,6 +146,7 @@ public:
 
          , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
          , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
+		 , m_http_read_timeout_dur(o.m_http_read_timeout_dur)
          , m_pong_timeout_dur(o.m_pong_timeout_dur)
          , m_max_message_size(o.m_max_message_size)
          , m_max_http_body_size(o.m_max_http_body_size)
@@ -381,6 +385,33 @@ public:
         m_close_handshake_timeout_dur = dur;
     }
 
+	/// Set http body read timeout
+    /**
+     * Sets the length of time the library will wait after the HTTP body begins
+     * to be read before cancelling it. This can be used to guard from http
+	 * responses which are much larger than you anticipate (eg. files) or when
+	 * the responder takes too long to write the body of the response.
+     *
+     * Connections that time out will have their http handlers called with the
+     * http_read_response_timeout error code stored in the connection (use get_ec).
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_close_handshake'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+	 * 
+	 * @since 0.8.4
+     *
+     * @param dur The length of the http body read timeout in ms
+     */
+    void set_http_response_timeout(long dur) {
+		scoped_lock_type guard(m_mutex);
+        m_http_read_timeout_dur = dur;
+    }
+
     /// Set pong timeout
     /**
      * Sets the length of time the library will wait for a pong response to a
@@ -435,6 +466,30 @@ public:
         m_max_message_size = new_value;
     }
 
+	/// Get maximum number of redirects
+    /**
+     * Get maximum number of redirects to follow before returning.
+	 * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     */
+    size_t get_max_redirects() const {
+        return m_max_redirects;
+    }
+    
+    /// Set maximum number of redirects
+    /**
+     * Set maximum number of redirects to follow before returning.
+     * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     *
+     * @param new_value The value to set as the max number of redirects to.
+     */
+    void set_max_redirects(size_t new_value) {
+        m_max_redirects = new_value;
+    }
+
     /// Get maximum HTTP message body size
     /**
      * Get maximum HTTP message body size. Maximum message body size determines
@@ -481,8 +536,8 @@ public:
      * default and an exception free variant.
      */
 
-    void interrupt(connection_hdl hdl, lib::error_code & ec);
-    void interrupt(connection_hdl hdl);
+    void interrupt(connection_hdl_ref hdl, lib::error_code & ec);
+    void interrupt(connection_hdl_ref hdl);
 
     /// Pause reading of new data (exception free)
     /**
@@ -504,10 +559,10 @@ public:
      *
      * If reading is paused for this connection already nothing is changed.
      */
-    void pause_reading(connection_hdl hdl, lib::error_code & ec);
+    void pause_reading(connection_hdl_ref hdl, lib::error_code & ec);
     
     /// Pause reading of new data
-    void pause_reading(connection_hdl hdl);
+    void pause_reading(connection_hdl_ref hdl);
 
     /// Resume reading of new data (exception free)
     /**
@@ -516,10 +571,10 @@ public:
      *
      * If reading is not paused for this connection already nothing is changed.
      */
-    void resume_reading(connection_hdl hdl, lib::error_code & ec);
+    void resume_reading(connection_hdl_ref hdl, lib::error_code & ec);
 
     /// Resume reading of new data
-    void resume_reading(connection_hdl hdl);
+    void resume_reading(connection_hdl_ref hdl);
 
     /// Send deferred HTTP Response
     /**
@@ -534,7 +589,7 @@ public:
      * @param hdl The connection to send the response on
      * @param ec A status code, zero on success, non-zero otherwise
      */
-    void send_http_response(connection_hdl hdl, lib::error_code & ec);
+    void send_http_response(connection_hdl_ref hdl, lib::error_code & ec);
         
     /// Send deferred HTTP Response (exception free)
     /**
@@ -548,7 +603,7 @@ public:
      *
      * @param hdl The connection to send the response on
      */
-    void send_http_response(connection_hdl hdl);
+    void send_http_response(connection_hdl_ref hdl);
 
     /// Create a message and add it to the outgoing send queue (exception free)
     /**
@@ -559,7 +614,7 @@ public:
      * @param [in] op The opcode to generated the message with.
      * @param [out] ec A code to fill in for errors
      */
-    void send(connection_hdl hdl, std::string const & payload,
+    void send(connection_hdl_ref hdl, std::string const & payload,
         frame::opcode::value op, lib::error_code & ec);
     /// Create a message and add it to the outgoing send queue
     /**
@@ -569,21 +624,23 @@ public:
      * @param [in] payload The payload string to generated the message with
      * @param [in] op The opcode to generated the message with.
      */
-    void send(connection_hdl hdl, std::string const & payload,
+    void send(connection_hdl_ref hdl, std::string const & payload,
         frame::opcode::value op);
 
-    void send(connection_hdl hdl, void const * payload, size_t len,
+    void send(connection_hdl_ref hdl, void const * payload, size_t len,
         frame::opcode::value op, lib::error_code & ec);
-    void send(connection_hdl hdl, void const * payload, size_t len,
+    void send(connection_hdl_ref hdl, void const * payload, size_t len,
         frame::opcode::value op);
 
-    void send(connection_hdl hdl, message_ptr msg, lib::error_code & ec);
-    void send(connection_hdl hdl, message_ptr msg);
+    void send(connection_hdl_ref hdl, message_ptr msg, lib::error_code & ec);
+    void send(connection_hdl_ref hdl, message_ptr msg);
 
-    void close(connection_hdl hdl, close::status::value const code,
+    void close(connection_hdl_ref hdl, close::status::value const code,
         std::string const & reason, lib::error_code & ec);
-    void close(connection_hdl hdl, close::status::value const code,
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+    void close(connection_hdl_ref hdl, close::status::value const code,
         std::string const & reason);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Send a ping to a specific connection
     /**
@@ -593,7 +650,7 @@ public:
      * @param [in] payload The payload string to send.
      * @param [out] ec A reference to an error code to fill in
      */
-    void ping(connection_hdl hdl, std::string const & payload,
+    void ping(connection_hdl_ref hdl, std::string const & payload,
         lib::error_code & ec);
     /// Send a ping to a specific connection
     /**
@@ -604,7 +661,7 @@ public:
      * @param [in] hdl The connection_hdl of the connection to send to.
      * @param [in] payload The payload string to send.
      */
-    void ping(connection_hdl hdl, std::string const & payload);
+    void ping(connection_hdl_ref hdl, std::string const & payload);
 
     /// Send a pong to a specific connection
     /**
@@ -614,7 +671,7 @@ public:
      * @param [in] payload The payload string to send.
      * @param [out] ec A reference to an error code to fill in
      */
-    void pong(connection_hdl hdl, std::string const & payload,
+    void pong(connection_hdl_ref hdl, std::string const & payload,
         lib::error_code & ec);
     /// Send a pong to a specific connection
     /**
@@ -625,7 +682,7 @@ public:
      * @param [in] hdl The connection_hdl of the connection to send to.
      * @param [in] payload The payload string to send.
      */
-    void pong(connection_hdl hdl, std::string const & payload);
+    void pong(connection_hdl_ref hdl, std::string const & payload);
 
     /// Retrieves a connection_ptr from a connection_hdl (exception free)
     /**
@@ -641,7 +698,7 @@ public:
      *
      * @return the connection_ptr. May be NULL if the handle was invalid.
      */
-    connection_ptr get_con_from_hdl(connection_hdl hdl, lib::error_code & ec) {
+    connection_ptr get_con_from_hdl(connection_hdl_ref hdl, lib::error_code & ec) {
         connection_ptr con = lib::static_pointer_cast<connection_type>(
             hdl.lock());
         if (!con) {
@@ -652,7 +709,7 @@ public:
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Retrieves a connection_ptr from a connection_hdl (exception version)
-    connection_ptr get_con_from_hdl(connection_hdl hdl) {
+    connection_ptr get_con_from_hdl(connection_hdl_ref hdl) {
         lib::error_code ec;
         connection_ptr con = this->get_con_from_hdl(hdl,ec);
         if (ec) {
@@ -683,9 +740,11 @@ private:
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
+    long                        m_http_read_timeout_dur;
     long                        m_pong_timeout_dur;
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;
+	size_t						m_max_redirects;
 
     rng_type m_rng;
 

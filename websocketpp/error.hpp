@@ -146,7 +146,10 @@ enum value {
     extension_neg_failed,
 
     /// General transport error, consult more specific transport error code
-    transport_error
+    transport_error,
+
+	/// Reading HTTP response timed out
+    http_read_response_timeout
 }; // enum value
 
 
@@ -226,6 +229,8 @@ public:
                 return "Extension negotiation failed";
             case error::transport_error:
                 return "An error occurred in the underlying transport. Consult transport error code for more details.";
+			case error::http_read_response_timeout:
+				return "Reading the HTTP response timed out";
             default:
                 return "Unknown";
         }

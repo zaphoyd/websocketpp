@@ -48,6 +48,17 @@
 
 namespace websocketpp {
 
+namespace session{
+	namespace validation {
+    	// validation types supported by the validate handler
+		enum value {
+			reject = 0,
+			accept = 1,
+			defer = 2
+		};
+	} // namespace http_state
+} // namespace session
+
 /// The type and function signature of an open handler
 /**
  * The open handler is called once for every successful WebSocket connection
@@ -56,7 +67,7 @@ namespace websocketpp {
  * upgrade the connection to the WebSocket protocol will trigger the http
  * handler instead of fail/open.
  */
-typedef lib::function<void(connection_hdl)> open_handler;
+typedef lib::function<void(connection_hdl_ref)> open_handler;
 
 /// The type and function signature of a close handler
 /**
@@ -66,7 +77,7 @@ typedef lib::function<void(connection_hdl)> open_handler;
  * The close handler will be called exactly once for every connection for which
  * the open handler was called.
  */
-typedef lib::function<void(connection_hdl)> close_handler;
+typedef lib::function<void(connection_hdl_ref)> close_handler;
 
 /// The type and function signature of a fail handler
 /**
@@ -76,7 +87,7 @@ typedef lib::function<void(connection_hdl)> close_handler;
  * upgrade the connection to the WebSocket protocol will trigger the http
  * handler instead of fail/open.
  */
-typedef lib::function<void(connection_hdl)> fail_handler;
+typedef lib::function<void(connection_hdl_ref)> fail_handler;
 
 /// The type and function signature of an interrupt handler
 /**
@@ -88,7 +99,7 @@ typedef lib::function<void(connection_hdl)> fail_handler;
  * This is typically used by another application thread to schedule some tasks
  * that can only be run from within the handler chain for thread safety reasons.
  */
-typedef lib::function<void(connection_hdl)> interrupt_handler;
+typedef lib::function<void(connection_hdl_ref)> interrupt_handler;
 
 /// The type and function signature of a ping handler
 /**
@@ -98,7 +109,7 @@ typedef lib::function<void(connection_hdl)> interrupt_handler;
  * true if a pong response should be sent, false if the pong response should be
  * suppressed.
  */
-typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
+typedef lib::function<bool(connection_hdl_ref,std::string)> ping_handler;
 
 /// The type and function signature of a pong handler
 /**
@@ -106,14 +117,21 @@ typedef lib::function<bool(connection_hdl,std::string)> ping_handler;
  * control frame. The string argument contains the pong payload. The payload is
  * a binary string up to 126 bytes in length.
  */
-typedef lib::function<void(connection_hdl,std::string)> pong_handler;
+typedef lib::function<void(connection_hdl_ref,std::string)> pong_handler;
 
 /// The type and function signature of a pong timeout handler
 /**
  * The pong timeout handler is called when a ping goes unanswered by a pong for
  * longer than the locally specified timeout period.
  */
-typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
+typedef lib::function<void(connection_hdl_ref,std::string)> pong_timeout_handler;
+
+/// The type and function signature of a progress handler
+/**
+ * The progress handler is called when bytes of the HTTP message body are received (for plain HTTP requests)
+ * The float parameter is the progress relative to the full body size (0 to 1 range)
+ */
+typedef lib::function<void(connection_hdl_ref,float)> progress_handler;
 
 /// The type and function signature of a validate handler
 /**
@@ -126,7 +144,7 @@ typedef lib::function<void(connection_hdl,std::string)> pong_timeout_handler;
  * should be accepted. Additional methods may be called during the function to
  * set response headers, set HTTP return/error codes, etc.
  */
-typedef lib::function<bool(connection_hdl)> validate_handler;
+typedef lib::function<session::validation::value(connection_hdl_ref)> validate_handler;
 
 /// The type and function signature of a http handler
 /**
@@ -148,7 +166,7 @@ typedef lib::function<bool(connection_hdl)> validate_handler;
  * handlers may override the response status code to deliver any type of
  * response.
  */
-typedef lib::function<void(connection_hdl)> http_handler;
+typedef lib::function<void(connection_hdl_ref)> http_handler;
 
 //
 typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)> read_handler;
@@ -309,8 +327,10 @@ public:
             lib::placeholders::_1
         ))
       , m_user_agent(ua)
+	  , m_max_redirects(0)
       , m_open_handshake_timeout_dur(config::timeout_open_handshake)
       , m_close_handshake_timeout_dur(config::timeout_close_handshake)
+      , m_http_response_timeout_dur(config::timeout_read_http_response)
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_state(session::state::connecting)
@@ -474,6 +494,16 @@ public:
         m_message_handler = h;
     }
 
+	/// Set progress handler
+    /**
+     * The progress handler is called when bytes making up a HTTP body are processed
+     *
+     * @param h The new progress_handler
+     */
+    void set_progress_handler(progress_handler h) {
+        m_progress_handler = h;
+    }
+
     //////////////////////////////////////////
     // Connection timeouts and other limits //
     //////////////////////////////////////////
@@ -524,6 +554,33 @@ public:
      */
     void set_close_handshake_timeout(long dur) {
         m_close_handshake_timeout_dur = dur;
+    }
+
+	/// Set http response timeout
+    /**
+     * Sets the length of time the library will wait for the response to be read
+     * before cancelling the request. This can be used to guard from http
+	 * responses which are much larger than you anticipate (eg. files) or when
+	 * the responder takes too long to write the body of the response.
+	 * Timer starts when the request has been fully sent.
+     *
+     * Connections that time out will have their http handlers called with the
+     * http_read_response_timeout error code stored in the connection (use get_ec).
+     *
+     * The default value is specified via the compile time config value
+     * 'timeout_http_read_response'. The default value in the core config
+     * is 5000ms. A value of 0 will disable the timer entirely.
+     *
+     * To be effective, the transport you are using must support timers. See
+     * the documentation for your transport policy for details about its
+     * timer support.
+	 * 
+	 * @since 0.8.4
+     *
+     * @param dur The length of the http response timeout in ms
+     */
+    void set_http_response_timeout(long dur) {
+        m_http_response_timeout_dur = dur;
     }
 
     /// Set pong timeout
@@ -578,6 +635,30 @@ public:
             m_processor->set_max_message_size(new_value);
         }
     }
+
+	/// Get maximum number of redirects
+    /**
+     * Get maximum number of redirects to follow before returning.
+	 * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     */
+    size_t get_max_redirects() const {
+        return m_max_redirects;
+    }
+    
+    /// Set maximum number of redirects
+    /**
+     * Set maximum number of redirects to follow before returning.
+     * If 0, never follow redirects (default)
+     *
+     * @since 0.8.4
+     *
+     * @param new_value The value to set as the max number of redirects to.
+     */
+    void set_max_redirects(size_t new_value) {
+        m_max_redirects = new_value;
+    }
     
     /// Get maximum HTTP message body size
     /**
@@ -609,6 +690,7 @@ public:
      */
     void set_max_http_body_size(size_t new_value) {
         m_request.set_max_body_size(new_value);
+        m_response.set_max_body_size(new_value);
     }
 
     //////////////////////////////////
@@ -777,6 +859,11 @@ public:
     /// exception free variant of pong
     void pong(std::string const & payload, lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+    // exception variant of close
+    void close(close::status::value const code, std::string const & reason);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+
     /// Close the connection
     /**
      * Initiates the close handshake process.
@@ -797,9 +884,6 @@ public:
      * @param code The close code to send
      * @param reason The close reason to send
      */
-    void close(close::status::value const code, std::string const & reason);
-
-    /// exception free variant of close
     void close(close::status::value const code, std::string const & reason,
         lib::error_code & ec);
 
@@ -993,6 +1077,10 @@ public:
     std::string const & get_response_msg() const {
         return m_response.get_status_msg();
     }
+
+	void consume_response_body() {
+		m_response.consume_body();
+	}
     
     /// Set response status code and message (exception free)
     /**
@@ -1031,6 +1119,23 @@ public:
      * @see websocketpp::http::status_code::value (list of valid codes)
      */
     void set_status(http::status_code::value code);
+    
+	/// Set response status code and message (exception)
+    /**
+     * Sets the response status code and message to independent custom values.
+     * use set_status(status_code::value) to set the code and have the standard
+     * message be automatically set.
+     *
+     * This member function is valid only from the http() and validate() handler
+     * callbacks.
+     *
+     * @param[in] code Code to set
+     * @param[in] msg Message to set
+     * @throw websocketpp::exception
+     * @see websocketpp::http::parser::response::set_status()
+     * @see websocketpp::http::status_code::value (list of valid codes)
+     */
+    void set_status(http::status_code::value code, std::string const & msg);
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Set response status code and message (exception free)
@@ -1052,23 +1157,6 @@ public:
      */
     void set_status(http::status_code::value code, std::string const & msg,
         lib::error_code & ec);
-
-    /// Set response status code and message (exception)
-    /**
-     * Sets the response status code and message to independent custom values.
-     * use set_status(status_code::value) to set the code and have the standard
-     * message be automatically set.
-     *
-     * This member function is valid only from the http() and validate() handler
-     * callbacks.
-     *
-     * @param[in] code Code to set
-     * @param[in] msg Message to set
-     * @throw websocketpp::exception
-     * @see websocketpp::http::parser::response::set_status()
-     * @see websocketpp::http::status_code::value (list of valid codes)
-     */
-    void set_status(http::status_code::value code, std::string const & msg);
 
     /// Set response body content (exception free)
     /**
@@ -1107,16 +1195,18 @@ public:
      *      (exception free version)
      */
     void set_body(std::string const & value);
+
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
-    /// @copydoc websocketpp::connection::set_body(std::string const &, lib::error_code &)
-    void set_body(std::string && value, lib::error_code & ec);
-
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// @copydoc websocketpp::connection::set_body(std::string const &)
     void set_body(std::string && value);
-#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+#endif
+
+    /// @copydoc websocketpp::connection::set_body(std::string const &, lib::error_code &)
+    void set_body(std::string && value, lib::error_code & ec);
+
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
     /// Append a header (exception free)
@@ -1143,6 +1233,7 @@ public:
     void append_header(std::string const & key, std::string const & val,
         lib::error_code & ec);
 
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Append a header (exception)
     /**
      * Set the value of a header in the handshake HTTP request or response. If
@@ -1163,6 +1254,7 @@ public:
      *      lib::error_code &) (exception free version)
      */
     void append_header(std::string const & key, std::string const & val);
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
     /// Replace a header (exception free)
     /**
@@ -1253,6 +1345,23 @@ public:
     request_type const & get_request() const {
         return m_request;
     }
+
+	/// Set request object
+    /**
+     * Direct access to setting the request object.
+	 * This can be used to set the request that the should be sent when using
+	 * the connection as a HTTP request instead of a WS initiator.
+	 * Do not use this in WS connections!
+     *
+     * Note use of this method involves using behavior specific to the
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.8.4
+	 * 
+	 * @param req the request object to use
+     */
+	void set_request(request_type const & req, lib::error_code& ec);
     
     /// Get response object
     /**
@@ -1272,6 +1381,31 @@ public:
     response_type const & get_response() const {
         return m_response;
     }
+
+#ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
+	/// Get response object by using std::move
+    /**
+     * Direct access to the HTTP response sent or received as a part of the
+     * opening handshake. This can be used to call methods of the response
+     * object that are not part of the standard request API that connection
+     * wraps.
+	 * 
+	 * IMPORTANT: The response in this connection object is invalid for use
+	 * after this operation. Intended only to be used on a throw-away
+	 * single-use HTTP request connection to prevent copying the response. 
+     *
+     * Note use of this method involves using behavior specific to the
+     * configured HTTP policy. Such behavior may not work with alternate HTTP
+     * policies.
+     *
+     * @since 0.8.4
+     *
+     * @return A const reference to the raw response object
+     */
+    response_type take_response() {
+        return std::move(m_response);
+    }
+#endif
     
     /// Defer HTTP Response until later (Exception free)
     /**
@@ -1452,6 +1586,7 @@ public:
 
     void handle_open_handshake_timeout(lib::error_code const & ec);
     void handle_close_handshake_timeout(lib::error_code const & ec);
+    void handle_read_response_timeout(lib::error_code const & ec);
 
     void handle_read_frame(lib::error_code const & ec, size_t bytes_transferred);
     void read_frame();
@@ -1504,10 +1639,16 @@ public:
      * @param hdl A connection_hdl that the connection will use to refer
      * to itself.
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_connection_hdl = hdl;
         transport_con_type::set_handle(hdl);
     }
+
+	/// Accept or reject a websocket connection request that was previouslly deferred by the validate handler
+    /**
+     * @param accept True to accept the websocket connection, false to reject it.
+     */
+	lib::error_code deferred_accept(bool accept);
 protected:
     void handle_transport_init(lib::error_code const & ec);
 
@@ -1517,7 +1658,9 @@ protected:
 
     /// Perform WebSocket handshake validation of m_request using m_processor.
     /// set m_response and return an error code indicating status.
-    lib::error_code process_handshake_request();
+    session::validation::value process_handshake_request(lib::error_code & ec);
+
+	lib::error_code finalize_handshake_response(bool accept);
 private:
     
 
@@ -1647,6 +1790,9 @@ private:
     // static settings
     std::string const       m_user_agent;
 
+	// dynamic settings (per-connection)
+	size_t					m_max_redirects;
+
     /// Pointer to the connection handle
     connection_hdl          m_connection_hdl;
 
@@ -1661,10 +1807,12 @@ private:
     http_handler            m_http_handler;
     validate_handler        m_validate_handler;
     message_handler         m_message_handler;
+    progress_handler        m_progress_handler;
 
     /// constant values
     long                    m_open_handshake_timeout_dur;
     long                    m_close_handshake_timeout_dur;
+    long                    m_http_response_timeout_dur;
     long                    m_pong_timeout_dur;
     size_t                  m_max_message_size;
 
@@ -1699,7 +1847,7 @@ private:
 
     /// @todo this is not memory efficient. this value is not used after the
     /// handshake.
-    std::string m_handshake_buffer;
+    std::string m_http_message_buffer;
 
     /// Pointer to the processor object for this connection
     /**

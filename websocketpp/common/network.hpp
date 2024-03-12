@@ -37,20 +37,11 @@
 #endif
 
 #include <websocketpp/common/stdint.hpp>
+#include <bit>
 
 namespace websocketpp {
 namespace lib {
 namespace net {
-
-inline bool is_little_endian() {
-    short int val = 0x1;
-    char *ptr = reinterpret_cast<char *>(&val);
-    return (ptr[0] == 1);
-}
-
-#define TYP_INIT 0
-#define TYP_SMLE 1
-#define TYP_BIGE 2
 
 /// Convert 64 bit value to network byte order
 /**
@@ -64,18 +55,14 @@ inline bool is_little_endian() {
  * @return src converted to network byte order
  */
 inline uint64_t _htonll(uint64_t src) {
-    static int typ = TYP_INIT;
-    unsigned char c;
+    if constexpr (::std::endian::native == ::std::endian::big)
+        return src;
+
     union {
         uint64_t ull;
         unsigned char c[8];
     } x;
-    if (typ == TYP_INIT) {
-        x.ull = 0x01;
-        typ = (x.c[7] == 0x01ULL) ? TYP_BIGE : TYP_SMLE;
-    }
-    if (typ == TYP_BIGE)
-        return src;
+    unsigned char c;
     x.ull = src;
     c = x.c[0]; x.c[0] = x.c[7]; x.c[7] = c;
     c = x.c[1]; x.c[1] = x.c[6]; x.c[6] = c;

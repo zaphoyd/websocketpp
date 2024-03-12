@@ -11,11 +11,11 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 using websocketpp::lib::ref;
 
-void custom_on_msg(server & s, connection_hdl hdl, server::message_ptr msg) {
+void custom_on_msg(server & s, connection_hdl_ref hdl, server::message_ptr msg) {
         std::cout << "Message sent to custom handler" << std::endl;
 }
 
-void default_on_msg(server & s, connection_hdl hdl, server::message_ptr msg) {
+void default_on_msg(server & s, connection_hdl_ref hdl, server::message_ptr msg) {
     std::cout << "Message sent to default handler" << std::endl;
 
     if (msg->get_payload() == "upgrade") {

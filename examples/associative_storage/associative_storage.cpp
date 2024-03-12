@@ -27,7 +27,7 @@ public:
         m_server.set_message_handler(bind(&print_server::on_message,this,::_1,::_2));
     }
 
-    void on_open(connection_hdl hdl) {
+    void on_open(connection_hdl_ref hdl) {
         connection_data data;
 
         data.sessionid = m_next_sessionid++;
@@ -36,7 +36,7 @@ public:
         m_connections[hdl] = data;
     }
 
-    void on_close(connection_hdl hdl) {
+    void on_close(connection_hdl_ref hdl) {
         connection_data& data = get_data_from_hdl(hdl);
 
         std::cout << "Closing connection " << data.name
@@ -50,7 +50,7 @@ public:
                   << lib_ec.message() << "/" << trans_ec.message() << std::endl;
     }
 
-    void on_message(connection_hdl hdl, server::message_ptr msg) {
+    void on_message(connection_hdl_ref hdl, server::message_ptr msg) {
         connection_data& data = get_data_from_hdl(hdl);
 
         if (data.name.empty()) {
@@ -63,7 +63,7 @@ public:
         }
     }
 
-    connection_data& get_data_from_hdl(connection_hdl hdl) {
+    connection_data& get_data_from_hdl(connection_hdl_ref hdl) {
         auto it = m_connections.find(hdl);
 
         if (it == m_connections.end()) {

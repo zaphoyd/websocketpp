@@ -20,15 +20,15 @@ public:
         m_server.set_message_handler(bind(&broadcast_server::on_message,this,::_1,::_2));
     }
     
-    void on_open(connection_hdl hdl) {
+    void on_open(connection_hdl_ref hdl) {
         m_connections.insert(hdl);
     }
     
-    void on_close(connection_hdl hdl) {
+    void on_close(connection_hdl_ref hdl) {
         m_connections.erase(hdl);
     }
     
-    void on_message(connection_hdl hdl, server::message_ptr msg) {
+    void on_message(connection_hdl_ref hdl, server::message_ptr msg) {
         for (auto it : m_connections) {
             m_server.send(it,msg);
         }

@@ -56,7 +56,7 @@ public:
         ));
     }
 
-    void echo_handler(websocketpp::connection_hdl hdl, server::message_ptr msg) {
+    void echo_handler(websocketpp::connection_hdl_ref hdl, server::message_ptr msg) {
         // write a new message
         m_endpoint.send(hdl, msg->get_payload(), msg->get_opcode());
     }

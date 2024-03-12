@@ -39,7 +39,7 @@ using websocketpp::lib::error_code;
 typedef websocketpp::server<websocketpp::config::asio> ws_echo_server;
 
 // Define a callback to handle incoming messages
-void on_message(ws_echo_server* s, websocketpp::connection_hdl hdl, ws_echo_server::message_ptr msg) {
+void on_message(ws_echo_server* s, websocketpp::connection_hdl_ref hdl, ws_echo_server::message_ptr msg) {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
               << " and message: " << msg->get_payload()
               << std::endl;
