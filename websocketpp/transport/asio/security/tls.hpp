@@ -104,6 +104,10 @@ public:
         return m_socket->lowest_layer();
     }
 
+	const socket_type::lowest_layer_type & get_raw_socket() const {
+		return m_socket->lowest_layer();
+	}
+
     /// Retrieve a pointer to the layer below the ssl stream
     /**
      * This is used internally.

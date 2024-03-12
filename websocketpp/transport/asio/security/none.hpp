@@ -125,6 +125,10 @@ public:
         return *m_socket;
     }
 
+	const lib::asio::ip::tcp::socket & get_raw_socket() const {
+		return *m_socket;
+	}
+
     /// Get the remote endpoint address
     /**
      * The iostream transport has no information about the ultimate remote
