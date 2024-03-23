@@ -245,9 +245,7 @@ public:
         if (m_port == (m_secure ? uri_default_secure_port : uri_default_port)) {
             return m_host;
         } else {
-            std::stringstream p;
-            p << m_host << ":" << m_port;
-            return p.str();
+            return std::to_string(m_port);
         }
     }
 
