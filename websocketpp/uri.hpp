@@ -262,9 +262,7 @@ public:
     }
 
     std::string get_port_str() const {
-        std::stringstream p;
-        p << m_port;
-        return p.str();
+        return std::to_string(m_port);
     }
 
     std::string const & get_resource() const {
