@@ -245,7 +245,9 @@ public:
         if (m_port == (m_secure ? uri_default_secure_port : uri_default_port)) {
             return m_host;
         } else {
-            return std::to_string(m_port);
+            std::stringstream p;
+            p << m_host << ":" << m_port;
+            return p.str();
         }
     }
 
@@ -260,9 +262,7 @@ public:
     }
 
     std::string get_port_str() const {
-        std::stringstream p;
-        p << m_port;
-        return p.str();
+        return std::to_string(m_port);
     }
 
     std::string const & get_resource() const {
