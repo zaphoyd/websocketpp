@@ -517,8 +517,8 @@ public:
      *
      * @return The progress (0 to 1 range)
      */
-	float get_progress() const {
-		return m_body_bytes_total ? (double(m_body_bytes_total - m_body_bytes_needed) / m_body_bytes_total) : 1.f;
+	size_t get_transferred_body_size() const {
+		return m_body_bytes_total ? (m_body_bytes_total - m_body_bytes_needed) : m_body.size();
 	}
 
 	/// Get the expected HTTP body size

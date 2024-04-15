@@ -1908,7 +1908,7 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
 
 		if (m_is_http) {
 			if (m_progress_handler)
-				m_progress_handler(m_connection_hdl, m_response.get_progress());
+				m_progress_handler(m_connection_hdl, m_response.get_transferred_body_size(), m_response.get_total_body_size());
 
 			if (m_response.has_received(response_type::state::BODY))
 			{

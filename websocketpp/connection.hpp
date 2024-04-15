@@ -130,9 +130,9 @@ typedef lib::function<void(connection_hdl_ref,std::string)> pong_timeout_handler
 /// The type and function signature of a progress handler
 /**
  * The progress handler is called when bytes of the HTTP message body are received (for plain HTTP requests)
- * The float parameter is the progress relative to the full body size (0 to 1 range)
+ * The two size parameters passed on are the completed and total size of the HTTP response, respectively.
  */
-typedef lib::function<void(connection_hdl_ref,float)> progress_handler;
+typedef lib::function<void(connection_hdl_ref,size_t,size_t)> progress_handler;
 
 /// The type and function signature of a validate handler
 /**
