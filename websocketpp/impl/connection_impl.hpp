@@ -605,6 +605,7 @@ void connection<config>::set_status(http::status_code::value code,
 template <typename config>
 void connection<config>::check_body_encoding(std::string & body, const http::body_options& opts, lib::error_code & ec)
 {
+	remove_header(http::Header_ContentEncoding, ec);
 	if (opts.input_encoding)
 	{
 		if (m_request.accepts_encoding(*opts.input_encoding)) {

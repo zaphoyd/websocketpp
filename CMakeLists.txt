@@ -329,4 +329,5 @@ install (FILES
 add_library(websocketpp INTERFACE)
 target_link_libraries(websocketpp INTERFACE ${WEBSOCKETPP_ENCODING_LIBS})
 target_compile_definitions(websocketpp INTERFACE ${WEBSOCKETPP_ENCODING_DEFS})
+target_include_directories(websocketpp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
