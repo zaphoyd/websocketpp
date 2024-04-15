@@ -290,84 +290,6 @@ inline std::string decompress(const std::string& data, lib::error_code& ec)
 }    // namespace brotli
 #endif
 
-#if WEBSOCKETPP_WITH_COMPRESS
-namespace lzw
-{
-const int DICTIONARY_SIZE = 256;
-// Compress a string to a list of output symbols.
-// The result will be written to the output iterator
-// starting at "result"; the final iterator is returned.
-inline std::string compress(const std::string& data, lib::error_code& ec)
-{
-	std::vector<int> compressed;
-	auto result = std::back_inserter(compressed);
-
-	// Build the dictionary.
-	int dictSize = DICTIONARY_SIZE;
-	std::map<std::string, int> dictionary;
-	for (int i = 0; i < DICTIONARY_SIZE; i++) dictionary[std::string(1, i)] = i;
-
-	std::string w;
-	for (std::string::const_iterator it = data.begin(); it != data.end(); ++it)
-	{
-		char c = *it;
-		std::string wc = w + c;
-		if (dictionary.count(wc))
-			w = wc;
-		else
-		{
-			*result++ = dictionary[w];
-			// Add wc to the dictionary.
-			dictionary[wc] = dictSize++;
-			w = std::string(1, c);
-		}
-	}
-
-	// Output the code for w.
-	if (!w.empty())
-		*result = dictionary[w];
-
-	return std::string((const char*)compressed.data(), compressed.size() * sizeof(int));
-}
-
-// Decompress a list of output ks to a string.
-// "begin" and "end" must form a valid range of ints
-inline std::string decompress(const std::string& data, lib::error_code& ec)
-{
-	// Build the dictionary.
-	int dictSize = DICTIONARY_SIZE;
-	std::map<int, std::string> dictionary;
-	for (int i = 0; i < DICTIONARY_SIZE; i++) dictionary[i] = std::string(1, i);
-
-	const int* begin = (const int*)data.c_str();
-	const int* const end = (const int*)(data.c_str() + data.size());
-
-	std::string w(1, *begin++);
-	std::string result = w;
-	std::string entry;
-	for (; begin != end; begin++)
-	{
-		const int& k = *begin;
-		if (dictionary.count(k))
-			entry = dictionary[k];
-		else if (k == dictSize)
-			entry = w + w[0];
-		else
-			throw "Bad compressed k";
-
-		result += entry;
-
-		// Add w+entry[0] to the dictionary.
-		dictionary[dictSize++] = w + entry[0];
-
-		w = entry;
-	}
-	return result;
-}
-
-}    // namespace lzw
-#endif
-
 #if WEBSOCKETPP_WITH_ZSTD
 namespace zstd {
 inline std::string compress(const std::string& data, lib::error_code& ec, int compress_level = ZSTD_CLEVEL_DEFAULT) {
@@ -449,11 +371,6 @@ inline std::string compress(http::content_encoding::value encoding, bool is_tran
 #if WEBSOCKETPP_WITH_BROTLI
 		case http::content_encoding::brotli:
 			return brotli::compress(str, ec);
-			break;
-#endif
-#if WEBSOCKETPP_WITH_COMPRESS
-		case http::content_encoding::compress:
-			return lzw::compress(str, ec);
 			break;
 #endif
 #if WEBSOCKETPP_WITH_GZIP
