@@ -33,6 +33,7 @@
 #include <string>
 
 #include <websocketpp/http/parser.hpp>
+#include <websocketpp/http/encoding.hpp>
 
 namespace websocketpp {
 namespace http {
@@ -41,13 +42,13 @@ namespace parser {
 inline size_t request::consume(char const * buf, size_t len, lib::error_code & ec)
 {
     size_t bytes_processed = 0;
-    
+
     if (m_ready) {
         // the request is already complete. End immediately without reading.
         ec = lib::error_code();
         return 0;
     }
-    
+
     if (m_body_bytes_needed > 0) {
         // The headers are complete, but we are still expecting more body
         // bytes. Process body bytes.
@@ -66,7 +67,7 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
     // at this point we have an incomplete request still waiting for headers
 
     // copy new candidate bytes into our local buffer. This buffer may have
-    // leftover bytes from previous calls. Not all of these bytes are 
+    // leftover bytes from previous calls. Not all of these bytes are
     // necessarily header bytes (they might be body or even data after this
     // request entirely for a keepalive request)
     m_buf->append(buf,len);
@@ -95,9 +96,9 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
             }
 
             // We are out of bytes but not over any limits yet. Discard the
-            // processed bytes and copy the remaining unprecessed bytes to the 
+            // processed bytes and copy the remaining unprecessed bytes to the
             // beginning of the buffer in prep for another call to consume.
-            
+
             // If there are no processed bytes in the buffer right now don't
             // copy the unprocessed ones over themselves.
             if (begin != m_buf->begin()) {
@@ -114,7 +115,7 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
 
         // update count of header bytes read so far
         m_header_bytes += (end-begin+sizeof(http_crlf));
-        
+
 
         if (m_header_bytes > max_header_size) {
             // This read exceeded max header size
@@ -145,13 +146,27 @@ inline size_t request::consume(char const * buf, size_t len, lib::error_code & e
             m_buf.reset();
 
             // if this was not an upgrade request and has a content length
-            // continue capturing content-length bytes and expose them as a 
+            // continue capturing content-length bytes and expose them as a
             // request body.
-            
+
             bool need_more = prepare_body(ec);
             if (ec) {
                 return 0;
             }
+
+			parameter_list acc_enc_list;
+			if (!get_header_as_plist(Header_AcceptEncoding, acc_enc_list)) {
+				m_accept_encoding = std::vector<content_encoding::value>();
+				for (const auto& param : acc_enc_list) {
+					auto encoding = content_encoding::from_string(param.first);
+					if (encoding) {
+						m_accept_encoding->push_back(*encoding);
+					} else {
+						ec = error::make_error_code(error::unknown_content_encoding);
+						return 0;
+					}
+				}
+			}
 
             if (need_more) {
                 bytes_processed += process_body(buf+bytes_processed,len-bytes_processed,ec);
@@ -253,6 +268,24 @@ inline lib::error_code request::process(std::string::iterator begin, std::string
     if (ec) { return ec; }
 
     return set_version(std::string(cursor_end+1,end));
+}
+
+inline void request::set_accepted_encodings(std::vector<content_encoding::value> encodings)
+{
+	m_accept_encoding = std::move(encodings);
+	remove_header(Header_AcceptEncoding);
+	for (auto it = m_accept_encoding->begin(); it != m_accept_encoding->end();)
+	{
+		if (!is_encoding_supported(*it))
+		{
+			it = m_accept_encoding->erase(it);
+			continue;
+		}
+
+		append_header(Header_AcceptEncoding, content_encoding::to_string(*it));
+
+		++it;
+	}
 }
 
 } // namespace parser

@@ -202,6 +202,8 @@ private:
 
 	virtual size_t process_body(char const * buf, size_t len, lib::error_code & ec) override;
 
+	void on_parsing_completed(lib::error_code & ec);
+
     std::string                     m_status_msg;
     lib::shared_ptr<std::string>    m_buf;
     status_code::value              m_status_code;

@@ -38,6 +38,8 @@
 #include <websocketpp/common/platforms.hpp>
 #include <websocketpp/common/system_error.hpp>
 
+#include <websocketpp/http/encoding.hpp>
+
 #include <algorithm>
 #include <exception>
 #include <sstream>
@@ -601,7 +603,56 @@ void connection<config>::set_status(http::status_code::value code,
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 template <typename config>
-void connection<config>::set_body(std::string const & value,
+void connection<config>::check_body_encoding(std::string & body, const http::body_options& opts, lib::error_code & ec)
+{
+	if (opts.input_encoding)
+	{
+		if (m_request.accepts_encoding(*opts.input_encoding)) {
+			append_header(http::Header_ContentEncoding, http::content_encoding::to_string(*opts.input_encoding), ec);
+			return; // body already in correct format!
+		}
+		else {
+			body = encoding::decompress(*opts.input_encoding, false, body, ec);
+		}
+	}
+
+	for (http::content_encoding::value encode_body : opts.output_encoding) {
+		if (ec) break;
+
+		if (!http::is_encoding_supported(encode_body)) continue;
+
+		if (!m_request.accepts_encoding(encode_body)) continue;
+
+		body = encoding::compress(encode_body, true, body, ec);
+		if (!ec) {
+			append_header(http::Header_ContentEncoding, http::content_encoding::to_string(encode_body), ec);
+		}
+
+		break; // only encode in a single format
+	}
+
+	for (http::transfer_encoding::value encode_body : opts.transfer_encoding) {
+		if (ec) break;
+
+		if (encode_body == http::transfer_encoding::chunked) continue;
+
+		const http::content_encoding::value as_content_encoding = static_cast<http::content_encoding::value>(encode_body);
+
+		if (!http::is_encoding_supported(as_content_encoding)) continue;
+
+		if (!m_request.accepts_encoding(as_content_encoding)) continue;
+
+		body = encoding::compress(as_content_encoding, true, body, ec);
+		if (!ec) {
+			append_header(http::Header_ContentEncoding, http::content_encoding::to_string(as_content_encoding), ec);
+		}
+
+		// allow multiple encodings
+	}
+}
+
+template <typename config>
+void connection<config>::set_body(std::string const & value, const http::body_options& opts,
     lib::error_code & ec)
 {
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -609,14 +660,20 @@ void connection<config>::set_body(std::string const & value,
         return;
     }
 
-    ec = m_response.set_body(value);
+	std::string body(value);
+	check_body_encoding(body, opts, ec);
+	if (ec) {
+		return;
+	}
+
+    ec = m_response.set_body(std::move(body));
 }
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
-void connection<config>::set_body(std::string const & value) {
+void connection<config>::set_body(std::string const & value, const http::body_options& opts) {
     lib::error_code ec;
-    this->set_body(value, ec);
+    this->set_body(value, opts, ec);
     if (ec) {
         throw exception("Call to set_body from invalid state", ec);
     }
@@ -625,7 +682,7 @@ void connection<config>::set_body(std::string const & value) {
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 template <typename config>
-void connection<config>::set_body(std::string && value,
+void connection<config>::set_body(std::string && value, const http::body_options& opts,
     lib::error_code & ec)
 {
     if (m_internal_state != istate::PROCESS_HTTP_REQUEST) {
@@ -633,14 +690,19 @@ void connection<config>::set_body(std::string && value,
         return;
     }
 
+	check_body_encoding(value, opts, ec);
+	if (ec) {
+		return;
+	}
+
     ec = m_response.set_body(std::move(value));
 }
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
 template <typename config>
-void connection<config>::set_body(std::string && value) {
+void connection<config>::set_body(std::string && value, const http::body_options& opts) {
     lib::error_code ec;
-    this->set_body(std::move(value), ec);
+    this->set_body(std::move(value), opts, ec);
     if (ec) {
         throw exception("Call to set_body from invalid state", ec);
     }
@@ -649,7 +711,7 @@ void connection<config>::set_body(std::string && value) {
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
 template <typename config>
-void connection<config>::set_request(request_type const & req,
+void connection<config>::set_request(request_type req,
 	lib::error_code& ec)
 {
     if (m_internal_state != istate::USER_INIT) {
@@ -658,7 +720,7 @@ void connection<config>::set_request(request_type const & req,
     }
 
 	const size_t max_body_size = req.get_max_body_size();
-	m_request = req;
+	m_request = std::move(req);
 	m_request.set_max_body_size(max_body_size);
 }
 

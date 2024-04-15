@@ -41,6 +41,7 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/functional.hpp>
 
+#include <optional>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -247,6 +248,20 @@ namespace http_state {
 } // namespace http_state
 
 } // namespace session
+
+namespace http{
+struct body_options{
+	// The encoding of the body that was given to connection::set_body()
+	std::optional<content_encoding::value> input_encoding = {};
+
+	// The desired transfer encodings to consider when writing the body
+	std::vector<transfer_encoding::value> transfer_encoding = {};
+
+	// The encodings to consider for body compression, if client indicated they support them via Accept-Encoding.
+	// Specify in order of preference (first is best).
+	std::vector<content_encoding::value> output_encoding = {};
+};
+}
 
 /// Represents an individual WebSocket connection
 template <typename config>
@@ -1175,7 +1190,7 @@ public:
      * @see websocketpp::http::response::set_body
      * @see set_body(std::string const &) (exception version)
      */
-    void set_body(std::string const & value, lib::error_code & ec);
+    void set_body(std::string const & value, const http::body_options& opts, lib::error_code & ec);
 
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// Set response body content (exception)
@@ -1194,18 +1209,18 @@ public:
      * @see set_body(std::string const &, lib::error_code &)
      *      (exception free version)
      */
-    void set_body(std::string const & value);
+    void set_body(std::string const & value, const http::body_options& opts);
 
 #endif // _WEBSOCKETPP_NO_EXCEPTIONS_
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 #ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
     /// @copydoc websocketpp::connection::set_body(std::string const &)
-    void set_body(std::string && value);
+    void set_body(std::string && value, const http::body_options& opts);
 #endif
 
     /// @copydoc websocketpp::connection::set_body(std::string const &, lib::error_code &)
-    void set_body(std::string && value, lib::error_code & ec);
+    void set_body(std::string && value, const http::body_options& opts, lib::error_code & ec);
 
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
 
@@ -1361,7 +1376,7 @@ public:
 	 * 
 	 * @param req the request object to use
      */
-	void set_request(request_type const & req, lib::error_code& ec);
+	void set_request(request_type req, lib::error_code& ec);
     
     /// Get response object
     /**
@@ -1662,7 +1677,9 @@ protected:
 
 	lib::error_code finalize_handshake_response(bool accept);
 private:
-    
+
+ 	/// Server-side check for valid content-encoding when replying to a request
+ 	void check_body_encoding(std::string & body, const http::body_options& opts, lib::error_code & ec);
 
     /// Completes m_response, serializes it, and sends it out on the wire.
     void write_http_response(lib::error_code const & ec);

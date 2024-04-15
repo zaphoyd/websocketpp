@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <optional>
 
 #include <websocketpp/common/system_error.hpp>
 
@@ -352,8 +353,14 @@ enum value {
     /// The transfer encoding is not supported
     unsupported_transfer_encoding,
 
-    /// The transfer encoding is unknown
-    unknown_transfer_encoding,
+	/// The content encoding is not supported
+	unsupported_content_encoding,
+
+	/// The transfer encoding is invalid
+	unknown_transfer_encoding,
+
+	/// The content encoding is invalid
+	unknown_content_encoding,
 
     /// A header line was missing a separator
     missing_header_separator,
@@ -388,8 +395,12 @@ inline status_code::value get_status_code(error::value value) {
             return status_code::request_entity_too_large;
         case error::unsupported_transfer_encoding:
             return status_code::internal_server_error;
-        case error::unknown_transfer_encoding:
-            return status_code::bad_request;
+		case error::unsupported_content_encoding:
+			return status_code::internal_server_error;
+		case error::unknown_transfer_encoding:
+			return status_code::bad_request;
+		case error::unknown_content_encoding:
+			return status_code::bad_request;
         case error::missing_header_separator:
             return status_code::bad_request;
         case error::request_header_fields_too_large:
@@ -458,6 +469,61 @@ inline lib::error_code make_error_code(error::value e) {
 }
 
 } // namespace error
+
+namespace content_encoding {
+enum value : uint8_t {
+	compress = 1,
+	deflate,
+	gzip,
+	brotli,
+	zstd
+};
+
+inline std::string to_string(value encoding) {
+	switch (encoding)
+	{
+		case compress: return "compress";
+		case deflate: return "deflate";
+		case gzip: return "gzip";
+		case brotli: return "br";
+		case zstd: return "zstd";
+		default: return {};
+	}
+}
+inline std::optional<value> from_string(const std::string& str) {
+	if (str == "compress") return compress;
+	else if (str == "deflate") return deflate;
+	else if (str == "gzip" || str == "x-gzip") return gzip;
+	else if (str == "br") return brotli;
+	else if (str == "zstd") return zstd;
+	else return {};
+}
+} // namespace content_encoding
+
+namespace transfer_encoding {
+enum value : uint8_t {
+	chunked,
+	compress,
+	deflate,
+	gzip
+};
+
+inline std::string to_string(value encoding) {
+	switch (encoding)
+	{
+		case chunked:
+			return "chunked";
+		default:
+			return content_encoding::to_string(static_cast<content_encoding::value>(encoding));
+	}
+}
+} // namespace transfer_encoding
+
+const std::string Header_ContentLength = "Content-Length";
+const std::string Header_ContentEncoding = "Content-Encoding";
+const std::string Header_TransferEncoding = "Transfer-Encoding";
+const std::string Header_AcceptEncoding = "Accept-Encoding";
+
 } // namespace http
 } // namespace websocketpp
 

@@ -105,10 +105,10 @@ inline lib::error_code parser::remove_header(std::string const & key)
     return lib::error_code();
 }
 
-inline lib::error_code parser::set_body(std::string const & value) {
+inline lib::error_code parser::set_body(std::string value) {
     lib::error_code ec;
     if (value.size() == 0) {
-        ec = remove_header("Content-Length");
+        ec = remove_header(Header_ContentLength);
         if (ec) { return ec; }
 
         m_body.clear();
@@ -121,10 +121,10 @@ inline lib::error_code parser::set_body(std::string const & value) {
 
     std::stringstream len;
     len << value.size();
-    ec = replace_header("Content-Length", len.str());
+    ec = replace_header(Header_ContentLength, len.str());
     if (ec) { return ec; }
 
-    m_body = value;
+    m_body = std::move(value);
     return lib::error_code();
 }
 
@@ -148,10 +148,58 @@ inline bool parser::parse_parameter_list(std::string const & in,
 inline bool parser::prepare_body(lib::error_code & ec) {
 	ec.clear();
 
-    if (!get_header("Content-Length").empty()) {
-        std::string const & cl_header = get_header("Content-Length");
+	parameter_list ce_list;
+	if (!get_header_as_plist(Header_ContentEncoding, ce_list)) {
+		for (const auto& param : ce_list) {
+			auto encoding = content_encoding::from_string(param.first);
+			if (encoding)
+			{
+				m_content_encoding.push_back(*encoding);
+			}
+			else {
+				ec = error::make_error_code(error::unknown_content_encoding);
+				return false;
+			}
+		}
+
+		if (m_content_encoding.size() > 3)
+		{
+			ec = error::make_error_code(error::unsupported_content_encoding);
+			return false;
+		}
+	}
+
+	parameter_list te_list;
+	if (!get_header_as_plist(Header_TransferEncoding, te_list) && !te_list.empty()) {
+		for (const auto& param : te_list) {
+			if (param.first == "gzip" || param.first == "x-gzip")
+				m_transfer_encoding.push_back(transfer_encoding::gzip);
+			else if (param.first == "compress")
+				m_transfer_encoding.push_back(transfer_encoding::compress);
+			else if (param.first == "deflate")
+				m_transfer_encoding.push_back(transfer_encoding::deflate);
+			else if (param.first == "chunked")
+				m_transfer_encoding.push_back(transfer_encoding::chunked);
+			else {
+				ec = error::make_error_code(error::unknown_transfer_encoding);
+				return false;
+			}
+		}
+
+		if (m_transfer_encoding.size() > 3)
+		{
+			ec = error::make_error_code(error::unsupported_transfer_encoding);
+			return false;
+		}
+
+		if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end())
+			return true; // no Content-Length for chunked encoding!
+	}
+
+	const std::string cl_header = get_header(Header_ContentLength);
+    if (!cl_header.empty()) {
         char * end;
-        
+
         // TODO: not 100% sure what the compatibility of this method is. Also,
         // I believe this will only work up to 32bit sizes. Is there a need for
         // > 4GiB HTTP payloads?
@@ -160,17 +208,13 @@ inline bool parser::prepare_body(lib::error_code & ec) {
 			ec = error::make_error_code(error::invalid_format);
             return false;
 		}
-        
+
         if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
             ec = error::make_error_code(error::body_too_large);
             return false;
         }
-        
-        m_body_encoding = body_encoding::plain;
+
         return m_body_bytes_needed;
-    } else if (get_header("Transfer-Encoding") == "chunked") {
-        m_body_encoding = body_encoding::chunked;
-        return true;
     } else {
         return false;
     }
@@ -179,19 +223,12 @@ inline bool parser::prepare_body(lib::error_code & ec) {
 inline size_t parser::process_body(char const * buf, size_t len,
     lib::error_code & ec)
 {
-	if (!len) {
+	if (!len)
 		return 0;
-	}
 
-    if (m_body_encoding == body_encoding::plain) {
-        const size_t processed = std::min(m_body_bytes_needed, len);
-		m_body.append(buf, processed);
-        m_body_bytes_needed -= processed;
-        ec = lib::error_code();
-        return processed;
-    } else if (m_body_encoding == body_encoding::chunked) {
+    if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end()) {
         // for chunked encoding, read chunks of the body
-		if (m_body_bytes_needed) { // reading previouslly started chunk, same as plain encoding!
+		if (m_body_bytes_needed) { // reading previously started chunk, same as plain encoding!
 			const size_t processed = std::min(m_body_bytes_needed, len);
 			m_body.append(buf, processed);
 			m_body_bytes_needed -= processed;
@@ -214,7 +251,7 @@ inline size_t parser::process_body(char const * buf, size_t len,
 				ec = error::make_error_code(error::invalid_format);
 				return 0;
 			}
-			
+
 			if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
 				ec = error::make_error_code(error::body_too_large);
 				return 0;
@@ -228,8 +265,11 @@ inline size_t parser::process_body(char const * buf, size_t len,
 			return processed + process_body(buf + processed, len - processed, ec);
 		}
     } else {
-        ec = error::make_error_code(error::unknown_transfer_encoding);
-        return 0;
+		const size_t processed = std::min(m_body_bytes_needed, len);
+		m_body.append(buf, processed);
+		m_body_bytes_needed -= processed;
+		ec = lib::error_code();
+		return processed;
     }
 }
 

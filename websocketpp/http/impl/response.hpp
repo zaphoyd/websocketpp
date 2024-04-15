@@ -34,10 +34,19 @@
 #include <string>
 
 #include <websocketpp/http/parser.hpp>
+#include <websocketpp/http/encoding.hpp>
 
 namespace websocketpp {
 namespace http {
 namespace parser {
+
+inline void response::on_parsing_completed(lib::error_code & ec) {
+	m_state = state::DONE;
+
+	for (auto decode = m_content_encoding.rbegin(); !ec && decode != m_content_encoding.rend(); decode++) {
+		m_body = encoding::decompress(*decode, false, m_body, ec);
+	}
+}
 
 inline size_t response::consume(char const * buf, size_t len, lib::error_code & ec) {
     if (m_state == state::DONE) {
@@ -150,7 +159,10 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
             }
 
 			if (m_body_bytes_needed == 0) {
-				m_state = state::DONE;
+				on_parsing_completed(ec);
+				if (ec) {
+					return 0;
+				}
 			}
 
             // frees memory used temporarily during header parsing
@@ -322,7 +334,7 @@ inline size_t response::process_body(char const * buf, size_t len, lib::error_co
 	} while (!ec && m_body_bytes_needed && len);
 
     if (ec || m_body_bytes_needed == 0)
-		m_state = state::DONE;
+		on_parsing_completed(ec);
 
 	return processed;
 }

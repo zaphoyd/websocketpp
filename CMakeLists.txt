@@ -9,8 +9,50 @@ cmake_minimum_required (VERSION 2.8.8)
 set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set (WEBSOCKETPP_INCLUDE ${WEBSOCKETPP_ROOT}/websocketpp)
 set (WEBSOCKETPP_BUILD_ROOT ${CMAKE_CURRENT_BINARY_DIR})
-set (WEBSOCKETPP_BIN ${WEBSOCKETPP_BUILD_ROOT}/bin)
-set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
+set (WEBSOCKETPP_ENCODING_LIBS "")
+set (WEBSOCKETPP_ENCODING_DEFS "")
+
+# Include our cmake macros
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include (CMakeHelpers)
+
+############ Encoding/decoding support
+
+set(WEBSOCKETPP_WITH_GZIP FALSE CACHE BOOL "If true, build support for LZ77 compression. No requirements - added to code via https://github.com/ivan-tkatchev/yalz77.")
+set(WEBSOCKETPP_WITH_DEFLATE FALSE CACHE BOOL "If true, build support for deflate compression. Requires zlib.")
+if (WEBSOCKETPP_WITH_GZIP OR WEBSOCKETPP_WITH_DEFLATE)
+    find_package(ZLIB REQUIRED)
+    if (ZLIB_FOUND)
+        list(APPEND WEBSOCKETPP_ENCODING_LIBS ${ZLIB_LIBRARIES})
+        list(APPEND WEBSOCKETPP_INCLUDE ${ZLIB_INCLUDE_DIRS})
+        if (WEBSOCKETPP_WITH_DEFLATE)
+            list(APPEND WEBSOCKETPP_ENCODING_DEFS WEBSOCKETPP_WITH_DEFLATE=1)
+        endif ()
+        if (WEBSOCKETPP_WITH_GZIP)
+            list(APPEND WEBSOCKETPP_ENCODING_DEFS WEBSOCKETPP_WITH_GZIP=1)
+        endif ()
+    endif ()
+endif ()
+
+set(WEBSOCKETPP_WITH_BROTLI FALSE CACHE BOOL "If true, build support for brotli compression. Requires brotli.")
+if (WEBSOCKETPP_WITH_BROTLI)
+    find_package(Brotli REQUIRED)
+    if (BROTLI_FOUND)
+        list(APPEND WEBSOCKETPP_ENCODING_LIBS ${BROTLI_LIBRARIES})
+        list(APPEND WEBSOCKETPP_INCLUDE ${BROTLI_INCLUDE_DIRS})
+        list(APPEND WEBSOCKETPP_ENCODING_DEFS WEBSOCKETPP_WITH_BROTLI=1)
+    endif ()
+endif ()
+
+set(WEBSOCKETPP_WITH_ZSTD FALSE CACHE BOOL "If true, build support for zstd compression. Requires zstd.")
+if (WEBSOCKETPP_WITH_ZSTD)
+    find_package(zstd REQUIRED)
+    if (ZSTD_FOUND)
+        list(APPEND WEBSOCKETPP_ENCODING_LIBS ${ZSTD_LIBRARIES})
+        list(APPEND WEBSOCKETPP_INCLUDE ${ZSTD_INCLUDE_DIRS})
+        list(APPEND WEBSOCKETPP_ENCODING_DEFS WEBSOCKETPP_WITH_ZSTD=1)
+    endif ()
+endif ()
 
 # CMake install step prefix. I assume linux users want the prefix to
 # be the default /usr or /usr/local so this is only adjusted on Windows.
@@ -23,8 +65,8 @@ endif ()
 
 ############ Project name and version
 set (WEBSOCKETPP_MAJOR_VERSION 0)
-set (WEBSOCKETPP_MINOR_VERSION 8)
-set (WEBSOCKETPP_PATCH_VERSION 3)
+set (WEBSOCKETPP_MINOR_VERSION 9)
+set (WEBSOCKETPP_PATCH_VERSION 0)
 set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
 
 if(POLICY CMP0048)
@@ -65,10 +107,6 @@ endif ()
 
 # Disable unnecessary build types
 set (CMAKE_CONFIGURATION_TYPES "Release;RelWithDebInfo;Debug" CACHE STRING "Configurations" FORCE)
-
-# Include our cmake macros
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include (CMakeHelpers)
 
 
 ############  Build customization
@@ -287,4 +325,8 @@ install (FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+add_library(websocketpp INTERFACE)
+target_link_libraries(websocketpp INTERFACE ${WEBSOCKETPP_ENCODING_LIBS})
+target_compile_definitions(websocketpp INTERFACE ${WEBSOCKETPP_ENCODING_DEFS})
 

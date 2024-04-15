@@ -42,9 +42,9 @@ namespace websocketpp {
 /// Library major version number
 static int const major_version = 0;
 /// Library minor version number
-static int const minor_version = 8;
+static int const minor_version = 9;
 /// Library patch version number
-static int const patch_version = 5;
+static int const patch_version = 0;
 /// Library pre-release flag
 /**
  * This is a textual flag indicating the type and number for pre-release
