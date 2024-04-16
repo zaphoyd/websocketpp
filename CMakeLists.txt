@@ -2,8 +2,8 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 2.8.8)
-
+cmake_minimum_required (VERSION 3.0.0)
+project(websocketpp VERSION 0.9.0)
 ############ Paths
 
 set (WEBSOCKETPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -62,22 +62,6 @@ endif ()
 if (WIN32)
     set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install" CACHE PATH "")
 endif ()
-
-############ Project name and version
-set (WEBSOCKETPP_MAJOR_VERSION 0)
-set (WEBSOCKETPP_MINOR_VERSION 9)
-set (WEBSOCKETPP_PATCH_VERSION 0)
-set (WEBSOCKETPP_VERSION ${WEBSOCKETPP_MAJOR_VERSION}.${WEBSOCKETPP_MINOR_VERSION}.${WEBSOCKETPP_PATCH_VERSION})
-
-if(POLICY CMP0048)
-  cmake_policy(GET CMP0048 _version_policy)
-endif()
-
-if(_version_allowed STREQUAL NEW)
-  project (websocketpp VERSION ${WEBSOCKETPP_VERSION})
-else()
-  project (websocketpp)
-endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -292,9 +276,6 @@ endif()
 
 ############ Add projects
 
-# Add main library
-add_subdirectory (websocketpp)
-
 # Add examples
 if (BUILD_EXAMPLES)
     include_subdirs ("examples")
@@ -306,8 +287,6 @@ if (BUILD_TESTS)
 endif ()
 
 print_used_build_config()
-
-export (PACKAGE websocketpp)
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(websocketpp-config.cmake.in
