@@ -62,7 +62,7 @@ These represent the length of time (in ms) before the given operation is aborted
 | ----------------------- | ---- | ------- | --------------------------- |
 | timeout_open_handshake  | long | 5000    | Opening handshake           |
 | timeout_close_handshake | long | 5000    | Closing handshake           |
-| timeout_pong            | long | 5000    | No pong recieved after ping |
+| timeout_pong            | long | 5000    | No pong received after ping |
 
 ### Performance tuning
 
