@@ -104,11 +104,13 @@ BOOST_AUTO_TEST_CASE( connect_con ) {
     c.register_ostream(&out);
 
     connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     c.connect(con);
 
     o = out.str();
     websocketpp::http::parser::request r;
-    r.consume(o.data(),o.size());
+    r.consume(o.data(),o.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( r.ready() );
     BOOST_CHECK_EQUAL( r.get_method(), "GET");
@@ -174,10 +176,11 @@ BOOST_AUTO_TEST_CASE( add_subprotocols ) {
     c.register_ostream(&out);
 
     connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK( con );
 
     con->add_subprotocol("foo",ec);
-    BOOST_CHECK( !ec );
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_NO_THROW( con->add_subprotocol("bar") );
 
@@ -185,7 +188,8 @@ BOOST_AUTO_TEST_CASE( add_subprotocols ) {
 
     o = out.str();
     websocketpp::http::parser::request r;
-    r.consume(o.data(),o.size());
+    r.consume(o.data(),o.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK( r.ready() );
     BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "foo, bar");

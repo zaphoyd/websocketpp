@@ -56,10 +56,10 @@ BOOST_AUTO_TEST_CASE( substr_not_found ) {
     BOOST_CHECK(websocketpp::utility::ci_find_substr(haystack,needle) == haystack.end());
 }
 
-BOOST_AUTO_TEST_CASE( to_lower ) {
-    std::string in = "AbCd";
+BOOST_AUTO_TEST_CASE( to_hex ) {
+    std::string in = "\x01\x23\x45\x67\x89\xAB\xCD\xEF";
 
-    BOOST_CHECK_EQUAL(websocketpp::utility::to_lower(in), "abcd");
+    BOOST_CHECK_EQUAL(websocketpp::utility::to_hex(in), "01 23 45 67 89 AB CD EF ");
 }
 
 BOOST_AUTO_TEST_CASE( string_replace_all ) {

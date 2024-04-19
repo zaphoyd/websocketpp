@@ -10,6 +10,7 @@ typedef websocketpp::server<websocketpp::config::core> server;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
@@ -55,7 +56,12 @@ int main() {
         // Register our message handler
         s.set_message_handler(bind(&on_message,&s,::_1,::_2));
 
-        server::connection_ptr con = s.get_connection();
+        error_code ec;
+        server::connection_ptr con = s.get_connection(ec);
+        if (ec) {
+            std::cout << "Failed to generate new connection because " << ec.message() << std::endl;
+            return 1;
+        }
 
         con->start();
 
@@ -69,7 +75,7 @@ int main() {
         // messages being buffered forever. The non-buffered strategy below
         // reads characters from stdin one at a time. This is inefficient and
         // for more serious uses should be replaced with a platform specific
-        // asyncronous i/o technique like select, poll, IOCP, etc
+        // asynchronous i/o technique like select, poll, IOCP, etc
         bool buffered_io = false;
 
         if (buffered_io) {

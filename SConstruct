@@ -1,18 +1,20 @@
-import os, sys, commands
+import os, sys, SCons.Errors
+from subprocess import check_output
+
 env = Environment(ENV = os.environ)
 
 # figure out a better way to configure this
-if os.environ.has_key('CXX'):
+if 'CXX' in os.environ:
     env['CXX'] = os.environ['CXX']
 
-if os.environ.has_key('DEBUG'):
+if 'DEBUG' in os.environ:
     env['DEBUG'] = os.environ['DEBUG']
 
-if os.environ.has_key('CXXFLAGS'):
+if 'CXXFLAGS' in os.environ:
     #env['CXXFLAGS'] = os.environ['CXXFLAGS']
     env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
 
-if os.environ.has_key('LINKFLAGS'):
+if 'LINKFLAGS' in os.environ:
     #env['LDFLAGS'] = os.environ['LDFLAGS']
     env.Append(LINKFLAGS = os.environ['LINKFLAGS'])
 
@@ -22,24 +24,24 @@ if os.environ.has_key('LINKFLAGS'):
 ## or set BOOST_INCLUDES and BOOST_LIBS if Boost comes with your OS distro e.g. and
 ## needs BOOST_INCLUDES=/usr/include/boost and BOOST_LIBS=/usr/lib like Ubuntu.
 ##
-if os.environ.has_key('BOOSTROOT'):
+if 'BOOSTROOT' in os.environ:
     os.environ['BOOST_ROOT'] = os.environ['BOOSTROOT']
 
-if os.environ.has_key('BOOST_ROOT'):
+if 'BOOST_ROOT' in os.environ:
    env['BOOST_INCLUDES'] = os.environ['BOOST_ROOT']
    env['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT'], 'stage', 'lib')
-elif os.environ.has_key('BOOST_INCLUDES') and os.environ.has_key('BOOST_LIBS'):
+elif 'BOOST_INCLUDES' in os.environ and 'BOOST_LIBS' in os.environ:
    env['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES']
    env['BOOST_LIBS'] = os.environ['BOOST_LIBS']
 else:
-   raise SCons.Errors.UserError, "Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS was set!"
+   raise SCons.Errors.UserError("Neither BOOST_ROOT, nor BOOST_INCLUDES + BOOST_LIBS were set!")
 
 ## Custom OpenSSL
-if os.environ.has_key('OPENSSL_PATH'):
+if 'OPENSSL_PATH' in os.environ:
    env.Append(CPPPATH = os.path.join(os.environ['OPENSSL_PATH'], 'include'))
    env.Append(LIBPATH = os.environ['OPENSSL_PATH'])
 
-if os.environ.has_key('WSPP_ENABLE_CPP11'):
+if 'WSPP_ENABLE_CPP11' in os.environ:
    env['WSPP_ENABLE_CPP11'] = True
 else:
    env['WSPP_ENABLE_CPP11'] = False
@@ -76,7 +78,7 @@ if env['PLATFORM'].startswith('win'):
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
 elif env['PLATFORM'] == 'posix':
-   if env.has_key('DEBUG'):
+   if 'DEBUG' in env:
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
@@ -84,9 +86,9 @@ elif env['PLATFORM'] == 'posix':
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
 elif env['PLATFORM'] == 'darwin':
-   if not os.environ.has_key('CXX'):
+   if not 'CXX' in os.environ:
       env['CXX'] = "clang++"
-   if env.has_key('DEBUG'):
+   if 'DEBUG' in env:
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
@@ -157,29 +159,29 @@ env_cpp11 = env.Clone ()
 
 if env_cpp11['CXX'].startswith('g++'):
    # TODO: check g++ version
-   GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
+   GCC_VERSION = check_output([env_cpp11['CXX'], '-dumpversion']).decode("utf-8")
 
    if GCC_VERSION > "4.4.0":
-      print "C++11 build environment partially enabled"
+      print("C++11 build environment partially enabled")
       env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
    else:
-      print "C++11 build environment is not supported on this version of G++"
+      print("C++11 build environment is not supported on this version of G++")
 elif env_cpp11['CXX'].startswith('clang++'):
-   print "C++11 build environment enabled"
-   env.Append(CXXFLANGS = ['-stdlib=libc++'],LINKFLAGS=['-stdlib=libc++'])
+   print("C++11 build environment enabled")
+   env.Append(CXXFLAGS = ['-stdlib=libc++'],LINKFLAGS=['-stdlib=libc++'])
    env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
 
    # look for optional second boostroot compiled with clang's libc++ STL library
    # this prevents warnings/errors when linking code built with two different
    # incompatible STL libraries.
-   if os.environ.has_key('BOOST_ROOT_CPP11'):
+   if 'BOOST_ROOT_CPP11' in os.environ:
       env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_ROOT_CPP11']
       env_cpp11['BOOST_LIBS'] = os.path.join(os.environ['BOOST_ROOT_CPP11'], 'stage', 'lib')
-   elif os.environ.has_key('BOOST_INCLUDES_CPP11') and os.environ.has_key('BOOST_LIBS_CPP11'):
+   elif 'BOOST_INCLUDES_CPP11' in os.environ and 'BOOST_LIBS_CPP11' in os.environ:
       env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES_CPP11']
       env_cpp11['BOOST_LIBS'] = os.environ['BOOST_LIBS_CPP11']
 else:
-   print "C++11 build environment disabled"
+   print("C++11 build environment disabled")
 
 # if the build system is known to allow the isystem modifier for library include
 # values then use it for the boost libraries. Otherwise just add them to the

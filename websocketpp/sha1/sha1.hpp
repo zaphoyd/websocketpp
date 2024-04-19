@@ -36,6 +36,8 @@ under the same license as the original, which is listed below.
 #ifndef SHA1_DEFINED
 #define SHA1_DEFINED
 
+#include <cstddef>
+
 namespace websocketpp {
 namespace sha1 {
 
@@ -173,7 +175,7 @@ inline void calc(void const * src, size_t bytelength, unsigned char * hash) {
         innerHash(result, w);
         clearWBuffert(w);
     }
-    w[15] = bytelength << 3;
+    w[15] = static_cast<unsigned int>(bytelength << 3);
     innerHash(result, w);
 
     // Store hash in result pointer, and make sure we get in in the correct

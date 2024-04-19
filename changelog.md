@@ -1,4 +1,83 @@
 HEAD
+- MINOR BREAKING BUNDLED LIBRARY CHANGE: The bundled mini-HTTP library has
+  been refactored to eliminate its use of exceptions. This does not affect any
+  of the core library APIs. If any users are calling into the underlying HTTP
+  libraries directly (classes in the namespace `websocketpp::http::*`) they 
+  should review any error handling they do.
+- MINOR BREAKING BUNDLED LIBRARY CHANGE: The `websocketpp::utility::to_lower`
+  function, from the bundled utility library, has been removed. This vestigial
+  code was not used by the library at all and throwing warnings in MSVC.
+  Thank you fedor-strelkov and maksis for reporting and remediation ideas. #956
+- Feature: WebSocket++ can now be compiled without exceptions by defining
+  `_WEBSOCKETPP_NO_EXCEPTIONS` in the C++ preprocessor. All internal use of
+  exceptions have been removed. External interfaces that throw exceptions are
+  still avaliable and supported (except in exception free mode) but now have
+  overloads that allow `error_code` based error handling.
+- Compatibility: Overhauled the URI authority parsing logic to be more 
+  compliant with RFC3986. WebSocket++ is now able to detect invalid registry
+  hosts, invalid IPv4 and IPv6 literal addresses. Dozens of additional
+  uri tests added (thank you to the uriparser project for inspiration & test
+  cases). URI methods that produce URI strings will now produce RFC3986
+  compliant URIs when IPv6 literals are involved. Thank you Jeff Davie, 
+  thorsten-klein, mstaz, and barsnick for reporting, example patches, and
+  testing. #601 #879
+- Improvement: The error handling system for the server role's async start
+  accept loop and connection generation has been significantly improved. 
+  `endpoint::get_connection` now takes an output parameter ec that gives
+  a detailed error code if connection creation fails. `endpoint::start_accept`
+  now accepts a handler function as a parameter instead of an error code.
+  This handler function allows the client program to be alerted when the
+  async accept loop stops (for any reason, including explicit cancellation)
+  at any time. Previously, it was only possible to tell if the initial loop 
+  start had failed, making it difficult to tell when/if the async accept loop
+  needed to be restarted. The loop handler returns two error codes, a higher
+  level library code and a second more specific transport level code. The
+  old `endpoint::get_connection` and `endpoint::start_accept` functions 
+  remain for backwards compatibility but are deprecated. Thank you Oleh
+  Derevenko for reporting. #896
+- Improvement: Cancel ping timer before calling blocking pong handler.
+  This should reduce any unnecessary expiration logic done to a timer
+  that is going to be cancelled regardless. Thank you Oleh Derevenko
+  for reporting. #901
+- Improvement: Cancel ping timer on connection close. Once the close handeshake
+  begins, pong responses can no longer be delivered and any outstanding pings
+  can be assumed to have been preempted by the close. fixes #664
+- Performance: Refactor to_hex utility method to reduce unecessary copying,
+  std::string construction, and duplicated code. Add tests. Thank you Dmitry
+  Matrokhin for reporting and the patch. #914
+- Performance: Move based overload for connection::set_body for C++11 and
+  later compilers. Thank you Matus Kysel for the patch & tests. #792
+- Reliability: Add a few defensive assertions to guard against corrupted
+  HTTP message reads. Thank you Oleh Derevenko for reporting. #899
+- Compatibility: Remove use of simple template ids in constructors. This was
+  required to compile in C++20 mode and higher. Thank you yushb0602 for
+  reporting and jcelerier for a patch.
+- Fix Regression: Correct a regression introduced in 0.8.0 that broke
+  functionality for setting accepted socket options like TCP_NODELAY.
+  #530 #812
+- Bug: Fix null pointer deference in proxy error handling code. Thank you
+  abitmore for reporting and stkaufer for a patch. #820 #825
+- Documentation: Added language to explicitly clarify that the library
+  license is in fact the 3-Clause BSD license. #906
+- Travis/CI: Updated Travis config to use newer version of ubuntu, and use
+  CMake based build & tests.
+- SCons: Fix typo in SConstruct that prevented clang from getting the right
+  value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
+- SCons: Improve compatibility with Python 3. Thank you Jochen Jägers and 
+  Gianfranco Costamagna for reporting and the patches. #885 #857 #1024
+- SCons: Correct copy/paste error in `scratch_client` SConstruct file.
+  Thank you kautsig for reporting and the patch. #893
+- CMake: Fix typo in CMakeLists.txt that caused CXX_FLAGS to be improperly
+  quoted. Removed unnecessary hardcoded dependency on libc++ for clang.
+  Thank you kraj and leochan2009 for reporting and a patch. #614 #859
+- CMake: Fix issue in CMakeLists.txt that caused boost dependencies to be
+  seen as a single library rather than multiple. Thank you Gianfranco
+  Costamagna for reporting and a patch. #855
+- CMake: Adjust CMake config to use GNUInstallDirs to choose install
+  directories rather than hard coding. Thank you Khem Raj for reporting and
+  a patch. #854
+- CMake: Improve support for building tests & examples on the Haiku platform
+  Thank you Schrijvers Luc for reporting and the patch. #849
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated

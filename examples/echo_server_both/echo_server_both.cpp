@@ -12,6 +12,7 @@ typedef websocketpp::server<websocketpp::config::asio_tls> server_tls;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 // type of the ssl context pointer is long so alias it
 typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
@@ -32,6 +33,12 @@ void on_message(EndpointType* s, websocketpp::connection_hdl hdl,
         std::cout << "Echo failed because: "
                   << "(" << e.what() << ")" << std::endl;
     }
+}
+
+// Define a callback to handle failures accepting connections
+void on_end_accept(error_code lib_ec, error_code trans_ec) {
+    std::cout << "Accept loop ended "
+                << lib_ec.message() << "/" << trans_ec.message() << std::endl;
 }
 
 // No change to TLS init methods from echo_server_tls
@@ -69,7 +76,7 @@ int main() {
     endpoint_plain.set_message_handler(
         bind(&on_message<server_plain>,&endpoint_plain,::_1,::_2));
     endpoint_plain.listen(80);
-    endpoint_plain.start_accept();
+    endpoint_plain.start_accept(&on_end_accept);
 
     // set up tls endpoint
     server_tls endpoint_tls;
@@ -80,7 +87,7 @@ int main() {
     endpoint_tls.set_tls_init_handler(bind(&on_tls_init,::_1));
     // tls endpoint listens on a different port
     endpoint_tls.listen(443);
-    endpoint_tls.start_accept();
+    endpoint_tls.start_accept(&on_end_accept);
 
     // Start the ASIO io_service run loop running both endpoints
     ios.run();

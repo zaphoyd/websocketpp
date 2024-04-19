@@ -39,7 +39,7 @@ int main() {
 
         s.init_asio();
         s.listen(9005);
-        s.start_accept();
+        s.start_accept(NULL); // omit error handling to keep example consise
 
         s.run();
     } catch (websocketpp::exception const & e) {

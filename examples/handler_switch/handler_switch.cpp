@@ -36,7 +36,7 @@ int main() {
 
     s.init_asio();
     s.listen(9002);
-    s.start_accept();
+    s.start_accept(NULL); // ignore errors to keep example code consise
 
     s.run();
 }

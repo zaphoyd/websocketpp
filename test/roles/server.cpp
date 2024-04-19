@@ -35,6 +35,9 @@
 #include <websocketpp/config/core.hpp>
 #include <websocketpp/server.hpp>
 
+#include <websocketpp/transport/base/endpoint.hpp>
+#include <websocketpp/transport/stub/endpoint.hpp>
+
 typedef websocketpp::server<websocketpp::config::core> server;
 typedef websocketpp::config::core::message_type::ptr message_ptr;
 
@@ -71,7 +74,8 @@ std::string run_server_test(server& s, std::string input) {
     s.clear_access_channels(websocketpp::log::alevel::all);
     s.clear_error_channels(websocketpp::log::elevel::all);
 
-    con = s.get_connection();
+    websocketpp::lib::error_code ec;
+    con = s.get_connection(ec);
     con->start();
 
     std::stringstream channel;
@@ -234,6 +238,254 @@ BOOST_AUTO_TEST_CASE( accept_subprotocol_two ) {
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
     BOOST_CHECK_EQUAL(validate, "foo,bar,");
     BOOST_CHECK_EQUAL(open, "bar");
+}
+
+void handle_start_accept(websocketpp::lib::error_code * rec, websocketpp::lib::error_code * rtec, websocketpp::lib::error_code const & ec, websocketpp::lib::error_code const & tec) {
+    *rec = ec;
+    *rtec = tec;
+}
+
+namespace test_transport {
+
+template <typename config>
+struct endpoint : websocketpp::transport::stub::endpoint<config> {
+    void config_test(int accept_cons, bool init_connections) {
+        m_accept_cons = accept_cons;
+        m_init_connections = init_connections;
+    }
+
+    bool is_listening() const {
+        if (m_accept_cons > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    typedef typename websocketpp::transport::stub::endpoint<config>::transport_con_ptr transport_con_ptr;
+
+    websocketpp::lib::error_code init(transport_con_ptr tcon) {
+        if (m_init_connections) {
+            return websocketpp::lib::error_code();
+        } else {
+            return websocketpp::transport::stub::error::make_error_code(websocketpp::transport::stub::error::not_implemented);
+        }
+    }
+
+    void async_accept(transport_con_ptr tcon, websocketpp::transport::accept_handler cb, websocketpp::lib::error_code & ec) {
+        m_accept_cons--;
+
+        ec = websocketpp::lib::error_code();
+        cb(ec);
+    }
+
+    int m_accept_cons;
+    bool m_init_connections;
+};
+
+} // namespace test_transport
+
+struct test_config : public websocketpp::config::core {
+    typedef test_transport::endpoint<websocketpp::config::core::transport_config> transport_type;
+};
+
+void handle_fail(websocketpp::server<test_config> * s, websocketpp::lib::error_code * rec, websocketpp::connection_hdl hdl) {
+    websocketpp::server<test_config>::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    *rec = con->get_ec();
+}
+
+void handle_fail_count(websocketpp::server<test_config> * s, websocketpp::lib::error_code rec, int * count, websocketpp::connection_hdl hdl) {
+    websocketpp::server<test_config>::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    if (con->get_ec() == rec) {
+        (*count)++;
+    }
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_not_listening ) {
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rtec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is not listening or generating connections
+    s.config_test(0, false);
+
+    // attempt to start accepting connections
+    s.start_accept(bind(&handle_start_accept,&rec,&rtec,::_1,::_2));
+
+    // confirm the right library and transport error codes
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::transport_error));
+    BOOST_CHECK_EQUAL(rtec, websocketpp::error::make_error_code(websocketpp::error::async_accept_not_listening));
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_con_creation_failed ) {
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rtec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that is listening but not generating connections
+    s.config_test(1,false);
+
+    // attempt to start accepting connections
+    s.start_accept(bind(&handle_start_accept,&rec,&rtec,::_1,::_2));
+
+    // confirm the right library and transport error codes
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::con_creation_failed));
+    BOOST_CHECK_EQUAL(rtec, websocketpp::transport::stub::error::make_error_code(websocketpp::transport::stub::error::not_implemented));
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_con_1 ) {
+    // this case tests the full successful start accept loop up to connection initialization.
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rtec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rsec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(1,true);
+
+    // we are expecting to fail due to connection initiation being "not implemented"
+    s.set_fail_handler(bind(&handle_fail,&s,&rsec,::_1));
+
+    // attempt to start accepting connections
+    s.start_accept(bind(&handle_start_accept,&rec,&rtec,::_1,::_2));
+
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::transport_error));
+    BOOST_CHECK_EQUAL(rtec, websocketpp::error::make_error_code(websocketpp::error::async_accept_not_listening));
+    BOOST_CHECK_EQUAL(rsec, websocketpp::transport::stub::error::make_error_code(websocketpp::transport::stub::error::not_implemented));
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_con_2 ) {
+    // this case tests the full successful start accept loop up to connection initialization
+    // for two full accept cycles before cancelling listening.
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rtec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(2,true);
+
+    websocketpp::lib::error_code xec = websocketpp::transport::stub::error::make_error_code(websocketpp::transport::stub::error::not_implemented);
+    int count = 0;
+
+    // we are expecting to fail due to connection initiation being "not implemented"
+    // this handler will count the number of times it is called with "not implemented"
+    s.set_fail_handler(bind(&handle_fail_count,&s,xec,&count,::_1));
+
+    // attempt to start accepting connections
+    s.start_accept(bind(&handle_start_accept,&rec,&rtec,::_1,::_2));
+
+    // confirm that the final return was as expected
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::transport_error));
+    BOOST_CHECK_EQUAL(rtec, websocketpp::error::make_error_code(websocketpp::error::async_accept_not_listening));
+    // confirm that we saw two init attempts
+    BOOST_CHECK_EQUAL(count, 2);
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_not_listening_deprecated ) {
+    // test deprecated start_accept(ec) failure path 1
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(0,false);
+
+    // attempt to start accepting connections
+    s.start_accept(rec);
+
+    // confirm that the final return was as expected
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::async_accept_not_listening));
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_con_creation_failed_deprecated ) {
+    // test deprecated start_accept(ec) failure path 2
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(1,false);
+
+    // attempt to start accepting connections
+    s.start_accept(rec);
+
+    // confirm that the final return was as expected
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::con_creation_failed));
+}
+
+BOOST_AUTO_TEST_CASE( start_accept_deprecated ) {
+    // this case tests the full successful start accept loop up to connection initialization.
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+    websocketpp::lib::error_code rsec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(1,true);
+
+    // we are expecting to fail due to connection initiation being "not implemented"
+    s.set_fail_handler(bind(&handle_fail,&s,&rsec,::_1));
+
+    // attempt to start accepting connections
+    s.start_accept(rec);
+
+    BOOST_CHECK_EQUAL(rec, websocketpp::lib::error_code());
+    BOOST_CHECK_EQUAL(rsec, websocketpp::transport::stub::error::make_error_code(websocketpp::transport::stub::error::not_implemented));
+    // we can't automated test how/why the accept loop ends because this version has
+    // no method for capturing that output other than the error log
+}
+
+#ifndef _WEBSOCKETPP_NO_EXCEPTIONS_
+BOOST_AUTO_TEST_CASE( start_accept_exception_con_creation_failed_deprecated ) {
+    // this case tests two things:
+    // 1. the existance of the deprecated start_accept() [with exceptions] function
+    // 2. Error handling of the deprecated start_accept() in the case that the transport
+    //    cannot create new connections.
+
+    websocketpp::lib::error_code rec = websocketpp::error::make_error_code(websocketpp::error::test);
+
+    websocketpp::server<test_config> s;
+
+    // config the test endpoint to report that it is listening for exactly
+    // one connection and generating connections
+    s.config_test(1,false);
+
+    // attempt to start accepting connections
+    try {
+        s.start_accept();
+    } catch (websocketpp::exception const & e) {
+        rec = e.code();
+    }
+
+    // confirm that the final return was as expected
+    BOOST_CHECK_EQUAL(rec, websocketpp::error::make_error_code(websocketpp::error::con_creation_failed));
+}
+#endif // _WEBSOCKETPP_NO_EXCEPTIONS_
+
+BOOST_AUTO_TEST_CASE( get_connection_deprecated ) {
+    // exercise the deprecated get_connection function to help avoid regressions.
+    // this test should be removed if the deprecated function is removed.
+
+    server s;
+    server::connection_ptr con = s.get_connection();
+
+    BOOST_CHECK(con);
 }
 
 /*BOOST_AUTO_TEST_CASE( user_reject_origin ) {

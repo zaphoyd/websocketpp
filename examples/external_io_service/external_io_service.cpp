@@ -34,6 +34,7 @@
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 typedef websocketpp::server<websocketpp::config::asio> ws_echo_server;
 
@@ -58,6 +59,12 @@ void on_message(ws_echo_server* s, websocketpp::connection_hdl hdl, ws_echo_serv
     }
 }
 
+// Define a callback to handle failures accepting connections
+void on_end_accept(error_code lib_ec, error_code trans_ec) {
+    std::cout << "Accept loop ended "
+                << lib_ec.message() << "/" << trans_ec.message() << std::endl;
+}
+
 int main() {
     asio::io_service service;
 
@@ -76,7 +83,7 @@ int main() {
     // Register our message handler
     ws_server.set_message_handler(bind(&on_message,&ws_server,::_1,::_2));
     ws_server.listen(9002);
-    ws_server.start_accept();
+    ws_server.start_accept(&on_end_accept);
 
     // TODO: add a timer?
 

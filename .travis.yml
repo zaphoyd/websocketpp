@@ -1,18 +1,27 @@
 language: cpp
+dist: bionic
 compiler:
   - gcc
-before_install:
- #- sudo apt-get install libboost-chrono1.48-dev libboost-regex1.48-dev libboost-system1.48-dev libboost-thread1.48-dev libboost-test1.48-dev libboost-random1.48-dev -y
- - sudo add-apt-repository -y ppa:boost-latest/ppa && sudo apt-get update -q && sudo apt-get install -y libboost-chrono1.55-dev libboost-random1.55-dev libboost-regex1.55-dev libboost-system1.55-dev libboost-thread1.55-dev libboost-test1.55-dev
+addons:
+  apt:
+    packages:
+      - libboost-random-dev
+      - libboost-system-dev
+      - libboost-test-dev
+      - libboost-thread-dev
+      - zlib1g-dev
+      - cmake
 env:
   global:
     - BOOST_INCLUDES=/usr/include
     - BOOST_LIBS=/usr/lib/x86_64-linux-gnu
-script: scons -j 2 && scons test
+script: cmake -DBUILD_EXAMPLES=1 -DBUILD_TESTS=1 . && make -j 2 && make test
 branches:
-  only:
-    - master
-    - develop
+  except:
+    - 0.2.x
+    - experimental
+    - legacy
+
 notifications:
   recipients:
     - travis@zaphoyd.com

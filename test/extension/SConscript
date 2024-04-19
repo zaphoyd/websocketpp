@@ -17,7 +17,7 @@ objs += env.Object('permessage_deflate_boost.o', ["permessage_deflate.cpp"], LIB
 prgs = env.Program('test_extension_boost', ["extension_boost.o"], LIBS = BOOST_LIBS)
 prgs += env.Program('test_permessage_deflate_boost', ["permessage_deflate_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework'],env_cpp11) + [platform_libs] + [polyfill_libs] + ['z']
    objs += env_cpp11.Object('extension_stl.o', ["extension.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('permessage_deflate_stl.o', ["permessage_deflate.cpp"], LIBS = BOOST_LIBS_CPP11)

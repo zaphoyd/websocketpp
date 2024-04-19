@@ -412,15 +412,10 @@ BOOST_AUTO_TEST_CASE( blank_consume ) {
 
     std::string raw;
 
-    bool exception = false;
-
-    try {
-        r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
-
-    BOOST_CHECK( exception == false );
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
+    
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK( r.ready() == false );
 }
 
@@ -429,15 +424,10 @@ BOOST_AUTO_TEST_CASE( blank_request ) {
 
     std::string raw = "\r\n\r\n";
 
-    bool exception = false;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
-
-    BOOST_CHECK( exception == true );
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(websocketpp::http::error::incomplete_request));
     BOOST_CHECK( r.ready() == false );
 }
 
@@ -446,15 +436,10 @@ BOOST_AUTO_TEST_CASE( bad_request_no_host ) {
 
     std::string raw = "GET / HTTP/1.1\r\n\r\n";
 
-    bool exception = false;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
-
-    BOOST_CHECK( exception == true );
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(websocketpp::http::error::incomplete_request));
     BOOST_CHECK( r.ready() == false );
 }
 
@@ -463,17 +448,12 @@ BOOST_AUTO_TEST_CASE( basic_request ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
 
-    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK( pos == 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
@@ -487,17 +467,12 @@ BOOST_AUTO_TEST_CASE( basic_request_with_body ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 5\r\n\r\nabcdef";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
 
-    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK_EQUAL( pos, 65 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -526,18 +501,15 @@ BOOST_AUTO_TEST_CASE( basic_request_with_body_split ) {
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabc";
     std::string raw2 = "def";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-        pos += r.consume(raw2.c_str(),raw2.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
+    pos += r.consume(raw2.c_str(),raw2.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
     BOOST_CHECK_EQUAL( pos, 66 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -555,16 +527,12 @@ BOOST_AUTO_TEST_CASE( trailing_body_characters ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\na";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
 
-    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK( pos == 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
@@ -579,16 +547,12 @@ BOOST_AUTO_TEST_CASE( trailing_body_characters_beyond_max_lenth ) {
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
     raw.append(websocketpp::http::max_header_size,'*');
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
 
-    BOOST_CHECK( exception == false );
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
     BOOST_CHECK( pos == 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
@@ -603,18 +567,16 @@ BOOST_AUTO_TEST_CASE( basic_split1 ) {
     std::string raw = "GET / HTTP/1.1\r\n";
     std::string raw2 = "Host: www.example.com\r\n\r\na";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-        pos += r.consume(raw2.c_str(),raw2.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( pos == raw.size() );
 
-    BOOST_CHECK( exception == false );
+    pos += r.consume(raw2.c_str(),raw2.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
     BOOST_CHECK( pos == 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
@@ -629,18 +591,16 @@ BOOST_AUTO_TEST_CASE( basic_split2 ) {
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r";
     std::string raw2 = "\n\r\na";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-        pos += r.consume(raw2.c_str(),raw2.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    websocketpp::lib::error_code ec;
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( pos == raw.size() );
 
-    BOOST_CHECK( exception == false );
+    pos += r.consume(raw2.c_str(),raw2.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
     BOOST_CHECK( pos == 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK( r.get_version() == "HTTP/1.1" );
@@ -655,18 +615,11 @@ BOOST_AUTO_TEST_CASE( max_header_len ) {
     std::string raw(websocketpp::http::max_header_size-1,'*');
     raw += "\r\n";
 
-    bool exception = false;
-    size_t pos = 0;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (const websocketpp::http::exception& e) {
-        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-            exception = true;
-        }
-    }
-
-    BOOST_CHECK( exception == true );
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::request_header_fields_too_large));
 }
 
 BOOST_AUTO_TEST_CASE( max_header_len_split ) {
@@ -675,19 +628,16 @@ BOOST_AUTO_TEST_CASE( max_header_len_split ) {
     std::string raw(websocketpp::http::max_header_size-1,'*');
     std::string raw2(2,'*');
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-        pos += r.consume(raw2.c_str(),raw2.size());
-    } catch (const websocketpp::http::exception& e) {
-        if (e.m_error_code == websocketpp::http::status_code::request_header_fields_too_large) {
-            exception = true;
-        }
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK_EQUAL(pos, raw.size());
 
-    BOOST_CHECK( exception == true );
+    r.consume(raw2.c_str(),raw2.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::request_header_fields_too_large));
 }
 
 BOOST_AUTO_TEST_CASE( max_body_len ) {
@@ -697,18 +647,12 @@ BOOST_AUTO_TEST_CASE( max_body_len ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nContent-Length: 6\r\n\r\nabcdef";
 
-    bool exception = false;
-    size_t pos = 0;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (websocketpp::http::exception const & e) {
-        exception = true;
-        BOOST_CHECK_EQUAL(e.m_error_code,websocketpp::http::status_code::request_entity_too_large);
-    }
-
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::body_too_large));
     BOOST_CHECK_EQUAL(r.get_max_body_size(),5);
-    BOOST_CHECK( exception == true );
 }
 
 BOOST_AUTO_TEST_CASE( firefox_full_request ) {
@@ -716,33 +660,30 @@ BOOST_AUTO_TEST_CASE( firefox_full_request ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: localhost:5000\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0) Gecko/20100101 Firefox/10.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-us,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive, Upgrade\r\nSec-WebSocket-Version: 8\r\nSec-WebSocket-Origin: http://zaphoyd.com\r\nSec-WebSocket-Key: pFik//FxwFk0riN4ZiPFjQ==\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nUpgrade: websocket\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    websocketpp::lib::error_code ec;
 
-    BOOST_CHECK( exception == false );
-    BOOST_CHECK( pos == 482 );
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    BOOST_CHECK_EQUAL( pos, 482 );
     BOOST_CHECK( r.ready() == true );
-    BOOST_CHECK( r.get_version() == "HTTP/1.1" );
-    BOOST_CHECK( r.get_method() == "GET" );
-    BOOST_CHECK( r.get_uri() == "/" );
-    BOOST_CHECK( r.get_header("Host") == "localhost:5000" );
-    BOOST_CHECK( r.get_header("User-Agent") == "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0) Gecko/20100101 Firefox/10.0" );
-    BOOST_CHECK( r.get_header("Accept") == "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
-    BOOST_CHECK( r.get_header("Accept-Language") == "en-us,en;q=0.5" );
-    BOOST_CHECK( r.get_header("Accept-Encoding") == "gzip, deflate" );
-    BOOST_CHECK( r.get_header("Connection") == "keep-alive, Upgrade" );
-    BOOST_CHECK( r.get_header("Sec-WebSocket-Version") == "8" );
-    BOOST_CHECK( r.get_header("Sec-WebSocket-Origin") == "http://zaphoyd.com" );
-    BOOST_CHECK( r.get_header("Sec-WebSocket-Key") == "pFik//FxwFk0riN4ZiPFjQ==" );
-    BOOST_CHECK( r.get_header("Pragma") == "no-cache" );
-    BOOST_CHECK( r.get_header("Cache-Control") == "no-cache" );
-    BOOST_CHECK( r.get_header("Upgrade") == "websocket" );
+    BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
+    BOOST_CHECK_EQUAL( r.get_method(), "GET" );
+    BOOST_CHECK_EQUAL( r.get_uri(), "/" );
+    BOOST_CHECK_EQUAL( r.get_header("Host"), "localhost:5000" );
+    BOOST_CHECK_EQUAL( r.get_header("User-Agent"), "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0) Gecko/20100101 Firefox/10.0" );
+    BOOST_CHECK_EQUAL( r.get_header("Accept"), "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" );
+    BOOST_CHECK_EQUAL( r.get_header("Accept-Language"), "en-us,en;q=0.5" );
+    BOOST_CHECK_EQUAL( r.get_header("Accept-Encoding"), "gzip, deflate" );
+    BOOST_CHECK_EQUAL( r.get_header("Connection"), "keep-alive, Upgrade" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Version"), "8" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Origin"),"http://zaphoyd.com" );
+    BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Key"), "pFik//FxwFk0riN4ZiPFjQ==" );
+    BOOST_CHECK_EQUAL( r.get_header("Pragma"), "no-cache" );
+    BOOST_CHECK_EQUAL( r.get_header("Cache-Control"), "no-cache" );
+    BOOST_CHECK_EQUAL( r.get_header("Upgrade"),"websocket" );
 }
 
 BOOST_AUTO_TEST_CASE( bad_method ) {
@@ -750,15 +691,11 @@ BOOST_AUTO_TEST_CASE( bad_method ) {
 
     std::string raw = "GE]T / HTTP/1.1\r\nHost: www.example.com\r\n\r\n";
 
-    bool exception = false;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
-
-    BOOST_CHECK( exception == true );
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::invalid_format));
 }
 
 BOOST_AUTO_TEST_CASE( bad_header_name ) {
@@ -766,15 +703,11 @@ BOOST_AUTO_TEST_CASE( bad_header_name ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHo]st: www.example.com\r\n\r\n";
 
-    bool exception = false;
+    websocketpp::lib::error_code ec;
+    r.consume(raw.c_str(),raw.size(),ec);
 
-    try {
-        r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
-
-    BOOST_CHECK( exception == true );
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::invalid_header_name));
 }
 
 BOOST_AUTO_TEST_CASE( old_http_version ) {
@@ -782,16 +715,12 @@ BOOST_AUTO_TEST_CASE( old_http_version ) {
 
     std::string raw = "GET / HTTP/1.0\r\nHost: www.example.com\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 41 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.0" );
@@ -805,16 +734,12 @@ BOOST_AUTO_TEST_CASE( new_http_version1 ) {
 
     std::string raw = "GET / HTTP/1.12\r\nHost: www.example.com\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 42 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.12" );
@@ -828,16 +753,12 @@ BOOST_AUTO_TEST_CASE( new_http_version2 ) {
 
     std::string raw = "GET / HTTP/12.12\r\nHost: www.example.com\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 43 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/12.12" );
@@ -870,16 +791,12 @@ BOOST_AUTO_TEST_CASE( header_whitespace1 ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost:  www.example.com \r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 43 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -893,16 +810,12 @@ BOOST_AUTO_TEST_CASE( header_whitespace2 ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 40 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -916,16 +829,12 @@ BOOST_AUTO_TEST_CASE( header_aggregation ) {
 
     std::string raw = "GET / HTTP/1.1\r\nHost: www.example.com\r\nFoo: bar\r\nFoo: bat\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos = r.consume(raw.c_str(),raw.size());
-    } catch (...) {
-        exception = true;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 61 );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -939,17 +848,12 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
 
     std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 159 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -967,17 +871,12 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing ) {
     std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
     raw += "a";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 159 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -995,17 +894,12 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing_large ) {
     std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
     raw.append(websocketpp::http::max_header_size,'*');
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 159 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -1022,17 +916,12 @@ BOOST_AUTO_TEST_CASE( response_with_non_standard_lws ) {
 
     std::string raw = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept:HSmrc0sMlYUkAGmm5OPpG2HaGWk=\r\nSec-WebSocket-Protocol: chat\r\n\r\n";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 158 );
     BOOST_CHECK( r.headers_ready() );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
@@ -1049,17 +938,12 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
 
     std::string raw = "HTTP/1.1 200 OK\r\nDate: Thu, 10 May 2012 11:59:25 GMT\r\nServer: Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch\r\nLast-Modified: Tue, 30 Mar 2010 17:41:28 GMT\r\nETag: \"16799d-55-4830823a78200\"\r\nAccept-Ranges: bytes\r\nContent-Length: 85\r\nVary: Accept-Encoding\r\nContent-Type: text/html\r\n\r\n<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(raw.c_str(),raw.size());
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(raw.c_str(),raw.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK( exception == false );
     BOOST_CHECK_EQUAL( pos, 405 );
     BOOST_CHECK( r.headers_ready() == true );
     BOOST_CHECK( r.ready() == true );
@@ -1084,17 +968,12 @@ BOOST_AUTO_TEST_CASE( parse_istream ) {
 
     s << "HTTP/1.1 200 OK\r\nDate: Thu, 10 May 2012 11:59:25 GMT\r\nServer: Apache/2.2.21 (Unix) mod_ssl/2.2.21 OpenSSL/0.9.8r DAV/2 PHP/5.3.8 with Suhosin-Patch\r\nLast-Modified: Tue, 30 Mar 2010 17:41:28 GMT\r\nETag: \"16799d-55-4830823a78200\"\r\nAccept-Ranges: bytes\r\nContent-Length: 85\r\nVary: Accept-Encoding\r\nContent-Type: text/html\r\n\r\n<!doctype html>\n<html>\n<head>\n<title>Thor</title>\n</head>\n<body> \n<p>Thor</p>\n</body>";
 
-    bool exception = false;
     size_t pos = 0;
+    websocketpp::lib::error_code ec;
 
-    try {
-        pos += r.consume(s);
-    } catch (std::exception &e) {
-        exception = true;
-        std::cout << e.what() << std::endl;
-    }
+    pos += r.consume(s,ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
-    BOOST_CHECK_EQUAL( exception, false );
     BOOST_CHECK_EQUAL( pos, 405 );
     BOOST_CHECK_EQUAL( r.headers_ready(), true );
     BOOST_CHECK_EQUAL( r.ready(), true );
@@ -1104,23 +983,47 @@ BOOST_AUTO_TEST_CASE( write_request_basic ) {
     websocketpp::http::parser::request r;
 
     std::string raw = "GET / HTTP/1.1\r\n\r\n";
+    websocketpp::lib::error_code ec;
 
-    r.set_version("HTTP/1.1");
-    r.set_method("GET");
-    r.set_uri("/");
+    ec = r.set_version("HTTP/1.1");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_method("GET");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_uri("/");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( r.raw(), raw );
+}
+
+BOOST_AUTO_TEST_CASE( write_request_bad_method ) {
+    websocketpp::http::parser::request r;
+
+    websocketpp::lib::error_code ec;
+
+    ec = r.set_method("foo bar");
+    BOOST_CHECK_EQUAL(ec, websocketpp::http::error::make_error_code(
+        websocketpp::http::error::invalid_format));
 }
 
 BOOST_AUTO_TEST_CASE( write_request_with_header ) {
     websocketpp::http::parser::request r;
 
     std::string raw = "GET / HTTP/1.1\r\nHost: http://example.com\r\n\r\n";
+    websocketpp::lib::error_code ec;
 
-    r.set_version("HTTP/1.1");
-    r.set_method("GET");
-    r.set_uri("/");
-    r.replace_header("Host","http://example.com");
+    ec = r.set_version("HTTP/1.1");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_method("GET");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_uri("/");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.replace_header("Host","http://example.com");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( r.raw(), raw );
 }
@@ -1129,13 +1032,25 @@ BOOST_AUTO_TEST_CASE( write_request_with_body ) {
     websocketpp::http::parser::request r;
 
     std::string raw = "POST / HTTP/1.1\r\nContent-Length: 48\r\nContent-Type: application/x-www-form-urlencoded\r\nHost: http://example.com\r\n\r\nlicenseID=string&content=string&paramsXML=string";
+    websocketpp::lib::error_code ec;
 
-    r.set_version("HTTP/1.1");
-    r.set_method("POST");
-    r.set_uri("/");
-    r.replace_header("Host","http://example.com");
-    r.replace_header("Content-Type","application/x-www-form-urlencoded");
-    r.set_body("licenseID=string&content=string&paramsXML=string");
+    ec = r.set_version("HTTP/1.1");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_method("POST");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_uri("/");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.replace_header("Host","http://example.com");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.replace_header("Content-Type","application/x-www-form-urlencoded");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    ec = r.set_body("licenseID=string&content=string&paramsXML=string");
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( r.raw(), raw );
 }

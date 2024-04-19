@@ -14,11 +14,11 @@ env_cpp11 = env_cpp11.Clone ()
 prgs = []
 
 # if a C++11 environment is available build using that, otherwise use boost
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    ALL_LIBS = boostlibs(['system'],env_cpp11) + [platform_libs] + [polyfill_libs] + [tls_libs]
    prgs += env_cpp11.Program('scratch_client', ["scratch_client.cpp"], LIBS = ALL_LIBS)
 else:
    ALL_LIBS = boostlibs(['system','random'],env) + [platform_libs] + [polyfill_libs]
-   prgs += env.Program('utility_client', ["utility_client.cpp"], LIBS = ALL_LIBS)
+   prgs += env.Program('scratch_client', ["scratch_client.cpp"], LIBS = ALL_LIBS)
    
 Return('prgs')

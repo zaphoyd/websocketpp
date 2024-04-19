@@ -16,7 +16,7 @@ objs = env.Object('connection_boost.o', ["connection.cpp"], LIBS = BOOST_LIBS)
 objs = env.Object('connection_tu2_boost.o', ["connection_tu2.cpp"], LIBS = BOOST_LIBS)
 prgs = env.Program('test_connection_boost', ["connection_boost.o","connection_tu2_boost.o"], LIBS = BOOST_LIBS)
 
-if env_cpp11.has_key('WSPP_CPP11_ENABLED'):
+if 'WSPP_CPP11_ENABLED' in env_cpp11:
    BOOST_LIBS_CPP11 = boostlibs(['unit_test_framework','system'],env_cpp11) + [platform_libs] + [polyfill_libs]
    objs += env_cpp11.Object('connection_stl.o', ["connection.cpp"], LIBS = BOOST_LIBS_CPP11)
    objs += env_cpp11.Object('connection_tu2_stl.o', ["connection_tu2.cpp"], LIBS = BOOST_LIBS_CPP11)

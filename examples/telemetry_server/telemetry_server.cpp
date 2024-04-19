@@ -8,6 +8,11 @@
 #include <streambuf>
 #include <string>
 
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
+
 /**
  * The telemetry server accepts connections and sends a message every second to
  * each client containing an integer count. This example can be used as the
@@ -43,8 +48,6 @@ public:
         m_endpoint.init_asio();
 
         // Bind the handlers we are using
-        using websocketpp::lib::placeholders::_1;
-        using websocketpp::lib::bind;
         m_endpoint.set_open_handler(bind(&telemetry_server::on_open,this,_1));
         m_endpoint.set_close_handler(bind(&telemetry_server::on_close,this,_1));
         m_endpoint.set_http_handler(bind(&telemetry_server::on_http,this,_1));
@@ -61,7 +64,7 @@ public:
         m_endpoint.listen(port);
 
         // Start the server accept loop
-        m_endpoint.start_accept();
+        m_endpoint.start_accept(bind(&telemetry_server::on_end_accept,this,_1,_2));
 
         // Set the initial timer to start telemetry
         set_timer();
@@ -85,7 +88,7 @@ public:
         );
     }
 
-    void on_timer(websocketpp::lib::error_code const & ec) {
+    void on_timer(error_code const & ec) {
         if (ec) {
             // there was an error, stop telemetry
             m_endpoint.get_alog().write(websocketpp::log::alevel::app,
@@ -149,7 +152,7 @@ public:
         response.assign((std::istreambuf_iterator<char>(file)),
                         std::istreambuf_iterator<char>());
     
-        con->set_body(response);
+        con->set_body(std::move(response));
         con->set_status(websocketpp::http::status_code::ok);
     }
 
@@ -159,6 +162,11 @@ public:
 
     void on_close(connection_hdl hdl) {
         m_connections.erase(hdl);
+    }
+
+    void on_end_accept(error_code lib_ec, error_code trans_ec) {
+        std::cout << "Accept loop ended "
+                  << lib_ec.message() << "/" << trans_ec.message() << std::endl;
     }
 private:
     typedef std::set<connection_hdl,std::owner_less<connection_hdl>> con_list;

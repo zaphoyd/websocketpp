@@ -33,6 +33,9 @@
 
 #include <websocketpp/uri.hpp>
 
+// Many URI tests are inspired by the comprehensive test suite from
+// the uriparser project (https://uriparser.github.io)
+
 // Test a regular valid ws URI
 BOOST_AUTO_TEST_CASE( uri_valid ) {
     websocketpp::uri uri("ws://localhost:9000/chat");
@@ -44,6 +47,137 @@ BOOST_AUTO_TEST_CASE( uri_valid ) {
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
     BOOST_CHECK_EQUAL( uri.get_query(), "" );
+}
+
+BOOST_AUTO_TEST_CASE( uri_valid_ipv4 ) {
+    //BOOST_CHECK( !websocketpp::uri("ws://01.0.0.0").get_valid() );
+    //BOOST_CHECK( !websocketpp::uri("ws://001.0.0.0").get_valid() );
+
+
+}
+
+BOOST_AUTO_TEST_CASE( uri_valid_ipv6 ) {
+    // Quad length
+    BOOST_CHECK( websocketpp::uri("ws://[abcd::]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[abcd::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[abcd::12]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[abcd::123]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[abcd::1234]").get_valid() );
+
+    // Full length
+    BOOST_CHECK( websocketpp::uri("ws://[2001:0db8:0100:f101:0210:a4ff:fee3:9566]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[2001:0DB8:0100:F101:0210:A4FF:FEE3:9566]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[2001:db8:100:f101:210:a4ff:fee3:9566]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[2001:0db8:100:f101:0:0:0:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3:4:5:6:255.255.255.255]").get_valid() );
+
+    // Legal IPv4
+    BOOST_CHECK( websocketpp::uri("ws://[::1.2.3.4]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[3:4::5:1.2.3.4]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[::ffff:1.2.3.4]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[::0.0.0.0]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[::255.255.255.255]").get_valid() );
+
+    // Zipper position
+    BOOST_CHECK( websocketpp::uri("ws://[::1:2:3:4:5:6:7]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1::1:2:3:4:5:6]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2::1:2:3:4:5]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3::1:2:3:4]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3:4::1:2:3]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3:4:5::1:2]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3:4:5:6::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:2:3:4:5:6:7::]").get_valid() );
+
+    // Zipper length
+    BOOST_CHECK( websocketpp::uri("ws://[1:1:1::1:1:1:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:1:1::1:1:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:1:1::1:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:1::1:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1:1::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[1::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[::]").get_valid() );
+
+    // Misc
+    BOOST_CHECK( websocketpp::uri("ws://[21ff:abcd::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[2001:db8:100:f101::1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[a:b:c::12:1]").get_valid() );
+    BOOST_CHECK( websocketpp::uri("ws://[a:b::0:1:2:3]").get_valid() );
+}
+
+BOOST_AUTO_TEST_CASE( uri_invalid_ipv6 ) {
+    // 5 char quad
+    BOOST_CHECK( !websocketpp::uri("ws://[::12345]").get_valid() );
+
+    // Two zippers
+    BOOST_CHECK( !websocketpp::uri("ws://[abcd::abcd::abcd]").get_valid() );
+
+    // Triple-colon zipper
+    BOOST_CHECK( !websocketpp::uri("ws://[:::1234]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[1234:::1234:1234]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[1234:1234:::1234]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[1234:::]").get_valid() );
+
+    // No quads, just IPv4. These are valid uris, just shouldn't parse as IPv6 literal
+    websocketpp::uri ipv4_1("ws://1.2.3.4");
+    BOOST_CHECK( ipv4_1.get_valid() );
+    BOOST_CHECK( !ipv4_1.is_ipv6_literal() );
+
+    // Five quads
+    BOOST_CHECK( !websocketpp::uri("ws://[0000:0000:0000:0000:0000:1.2.3.4]").get_valid() );
+
+    // Seven quads
+    BOOST_CHECK( !websocketpp::uri("ws://[0:0:0:0:0:0:0]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[0:0:0:0:0:0:0:]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[0:0:0:0:0:0:0:1.2.3.4]").get_valid() );
+
+    // Nine quads (or more)
+    BOOST_CHECK( !websocketpp::uri("ws://[1:2:3:4:5:6:7:8:9]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::2:3:4:5:6:7:8:9]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[1:2:3:4::6:7:8:9]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[1:2:3:4:5:6:7:8::]").get_valid() );
+
+    // Invalid IPv4 part
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:001.02.03.004]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3.1111]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3.256]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:311.2.3.4]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3:4]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3.]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3a.4]").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::ffff:1.2.3.4:123]").get_valid() );
+
+    // Nonhex
+    BOOST_CHECK( !websocketpp::uri("ws://[g:0:0:0:0:0:0]").get_valid() );
+
+    // missing end bracket
+    BOOST_CHECK( !websocketpp::uri("ws://[::1").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::1:80").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::1/foo").get_valid() );
+    BOOST_CHECK( !websocketpp::uri("ws://[::1#foo").get_valid() );
+}
+
+BOOST_AUTO_TEST_CASE( uri_valid_no_slash ) {
+    websocketpp::uri uri("ws://localhost");
+
+    BOOST_CHECK( uri.get_valid() );
+    BOOST_CHECK( !uri.get_secure() );
+    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
+    BOOST_CHECK_EQUAL( uri.get_port(), 80 );
+    BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
+}
+
+BOOST_AUTO_TEST_CASE( uri_valid_no_slash_with_fragment ) {
+    websocketpp::uri uri("ws://localhost#foo");
+
+    BOOST_CHECK( uri.get_valid() );
+    BOOST_CHECK( !uri.get_secure() );
+    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
+    BOOST_CHECK_EQUAL( uri.get_port(), 80 );
+    BOOST_CHECK_EQUAL( uri.get_resource(), "#foo" );
 }
 
 // Test a regular valid ws URI
@@ -92,6 +226,24 @@ BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal ) {
     BOOST_CHECK_EQUAL( uri.get_host(), "::1");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
+    BOOST_CHECK_EQUAL( uri.str(), "wss://[::1]:9000/chat" );
+    BOOST_CHECK_EQUAL( uri.get_host_port(), "[::1]:9000" );
+    BOOST_CHECK_EQUAL( uri.get_authority(), "[::1]:9000" );
+}
+
+// Valid URI IPv6 Literal with default port
+BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal_default_port ) {
+    websocketpp::uri uri("wss://[::1]/chat");
+
+    BOOST_CHECK( uri.get_valid() );
+    BOOST_CHECK( uri.get_secure() );
+    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_host(), "::1");
+    BOOST_CHECK_EQUAL( uri.get_port(), 443 );
+    BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
+    BOOST_CHECK_EQUAL( uri.str(), "wss://[::1]/chat" );
+    BOOST_CHECK_EQUAL( uri.get_host_port(), "::1" );
+    BOOST_CHECK_EQUAL( uri.get_authority(), "[::1]:443" );
 }
 
 // Valid URI with more complicated host
@@ -192,6 +344,13 @@ BOOST_AUTO_TEST_CASE( uri_invalid_bad_v6_literal_2 ) {
     BOOST_CHECK( !uri.get_valid() );
 }
 
+// Invalid URI with stray []
+BOOST_AUTO_TEST_CASE( uri_invalid_free_delim ) {
+    websocketpp::uri uri("wss://localhos[]t/chat");
+
+    BOOST_CHECK( !uri.get_valid() );
+}
+
 // Valid URI complicated resource path with query
 BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
     websocketpp::uri uri("wss://localhost:9000/chat/foo/bar?foo=bar");
@@ -236,11 +395,4 @@ BOOST_AUTO_TEST_CASE( uri_invalid_no_scheme ) {
     BOOST_CHECK( !uri.get_valid() );
 }
 
-// Invalid IPv6 literal
-/*BOOST_AUTO_TEST_CASE( uri_invalid_v6_nonhex ) {
-    websocketpp::uri uri("wss://[g::1]:9000/");
-
-    BOOST_CHECK( uri.get_valid() == false );
-}*/
-
-// TODO: tests for the other two constructors
+// TODO: tests for the other constructors, especially with IP literals

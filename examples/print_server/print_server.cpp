@@ -18,7 +18,7 @@ int main() {
 
     print_server.init_asio();
     print_server.listen(9002);
-    print_server.start_accept();
+    print_server.start_accept(NULL); // omit error handling to keep example consise
 
     print_server.run();
 }

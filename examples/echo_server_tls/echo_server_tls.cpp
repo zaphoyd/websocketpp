@@ -45,6 +45,7 @@ typedef websocketpp::server<websocketpp::config::asio_tls> server;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio::message_type::ptr message_ptr;
@@ -61,6 +62,12 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
         std::cout << "Echo failed because: "
                   << "(" << e.what() << ")" << std::endl;
     }
+}
+
+// Define a callback to handle failures accepting connections
+void on_end_accept(error_code lib_ec, error_code trans_ec) {
+    std::cout << "Accept loop ended "
+                << lib_ec.message() << "/" << trans_ec.message() << std::endl;
 }
 
 void on_http(server* s, websocketpp::connection_hdl hdl) {
@@ -146,7 +153,7 @@ int main() {
     echo_server.listen(9002);
 
     // Start the server accept loop
-    echo_server.start_accept();
+    echo_server.start_accept(&on_end_accept);
 
     // Start the ASIO io_service run loop
     echo_server.run();

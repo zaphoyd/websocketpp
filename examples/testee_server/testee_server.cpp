@@ -78,6 +78,7 @@ typedef websocketpp::server<testee_config> server;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using websocketpp::lib::error_code;
 
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
@@ -90,6 +91,12 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 void on_socket_init(websocketpp::connection_hdl, boost::asio::ip::tcp::socket & s) {
     boost::asio::ip::tcp::no_delay option(true);
     s.set_option(option);
+}
+
+// Define a callback to handle failures accepting connections
+void on_end_accept(error_code lib_ec, error_code trans_ec) {
+    std::cout << "Accept loop ended "
+                << lib_ec.message() << "/" << trans_ec.message() << std::endl;
 }
 
 int main(int argc, char * argv[]) {
@@ -122,7 +129,7 @@ int main(int argc, char * argv[]) {
         testee_server.listen(port);
 
         // Start the server accept loop
-        testee_server.start_accept();
+        testee_server.start_accept(&on_end_accept);
 
         // Start the ASIO io_service run loop
         if (num_threads == 1) {
