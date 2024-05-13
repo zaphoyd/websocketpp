@@ -739,6 +739,8 @@ public:
         }
     }
 
+    bool operator==(const uri& rhs) const = default;
+
     // get fragment
 
     // hi <3
