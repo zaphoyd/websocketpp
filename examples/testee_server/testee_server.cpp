@@ -131,7 +131,7 @@ int main(int argc, char * argv[]) {
         // Start the server accept loop
         testee_server.start_accept(&on_end_accept);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         if (num_threads == 1) {
             testee_server.run();
         } else {

@@ -211,7 +211,7 @@ in the installer and test system.
 - Improvement: Removes use of empty strings ("") in favor of `string::clear()`
   and `string::empty()`. This avoids generating unnecessary temporary objects.
   #468 Thank you Vladislav Yaroslavlev for reporting and a patch.
-- Documentation: Adds an example demonstrating the use of external `io_service`
+- Documentation: Adds an example demonstrating the use of external `io_context`
 - Documentation: Adds a simple `echo_client` example.
 - Documentation: Begins migration of the web based user manual into Doxygen.
 - Bug: Fix memory leak when `init_asio` produces an error. #454 Thank you Mark 
@@ -232,7 +232,7 @@ in the installer and test system.
 - Bug: Fix an issue where TLS includes were broken for Asio Standalone builds.
   Thank you giachi and Bastien Brunnenstein for reporting. #491
 - Bug: Remove the use of cached read and write handlers in the Asio transport.
-  This feature caused memory leaks when the `io_service` the connection was
+  This feature caused memory leaks when the `io_context` the connection was
   running on was abruptly stopped. There isn't a clean and safe way of using
   this optimization without global state and the associated locks. The locks
   perform worse. Thank you Xavier Gibert for reporting, test cases, and code.
@@ -315,7 +315,7 @@ in the installer and test system.
 - Improvement: Message payload logging now prints text for text messages rather
   than binary.
 - Improvement: Overhaul of handshake state machine. Should make it impossible
-  for exceptions to bubble out of transport methods like `io_service::run`.
+  for exceptions to bubble out of transport methods like `io_context::run`.
 - Improvement: Overhaul of handshake error reporting. Fail handler error codes
   will be more detailed and precise. Adds new [fail] and [http] logging channels
   that log failed websocket connections and successful HTTP connections
@@ -385,7 +385,7 @@ in the installer and test system.
 
 0.3.0 - 2014-08-10
 - Feature: Adds `start_perpetual` and `stop_perpetual` methods to asio transport
-  These may be used to replace manually managed `asio::io_service::work` objects
+  These may be used to replace manually managed `asio::io_context::work` objects
 - Feature: Allow setting pong and handshake timeouts at runtime.
 - Feature: Allows changing the listen backlog queue length.
 - Feature: Split tcp init into pre and post init.
@@ -427,7 +427,7 @@ in the installer and test system.
   reference counted pointers. #310 Thank you otaras for reporting.
 - Bug: Fix issue with const endpoint accessors (such as `get_user_agent`) not
   compiling due to non-const mutex use. #292 Thank you logofive for reporting.
-- Bug: Fix handler allocation crash with multithreaded `io_service`.
+- Bug: Fix handler allocation crash with multithreaded `io_context`.
 - Bug: Fixes incorrect whitespace handling in header parsing. #301 Thank you
   Wolfram Schroers for reporting
 - Bug: Fix a crash when parsing empty HTTP headers. Thank you Thingol for
@@ -457,7 +457,7 @@ in the installer and test system.
 - Updates bundled sha1 library to one with a cleaner interface and more
   straight-forward license. Thank you lotodore for reporting and Evgeni Golov
   for reviewing. #294
-- Re-introduces strands to asio transport, allowing `io_service` thread pools to
+- Re-introduces strands to asio transport, allowing `io_context` thread pools to
   be used (with some limitations).
 - Removes endpoint code that kept track of a connection list that was never used
   anywhere. Removes a lock and reduces connection creation/deletion complexity
@@ -482,7 +482,7 @@ in the installer and test system.
 - Refactors `asio_transport` endpoint and adds full documentation and exception
   free varients of all methods.
 - Removes `asio_transport` endpoint method cancel(). Use `stop_listen()` instead
-- Wrap internal `io_service` `run_one()` method
+- Wrap internal `io_context` `run_one()` method
 - Suppress error when trying to shut down a connection that was already closed
 
 0.3.0-alpha3 - 2013-07-16

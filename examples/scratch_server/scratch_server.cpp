@@ -94,7 +94,7 @@ int main(int argc, char * argv[]) {
         // Start the server accept loop
         echo_server.start_accept();
 	    
-	    // Start the ASIO io_service run loop
+	    // Start the ASIO io_context run loop
         echo_server.run();
     } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;

@@ -60,7 +60,7 @@ public:
     /// associated connection transport component
     typedef typename transport_con_type::ptr transport_con_ptr;
 
-    // generate and manage our own io_service
+    // generate and manage our own io_context
     explicit endpoint()
     {
         //std::cout << "transport::iostream::endpoint constructor" << std::endl;
