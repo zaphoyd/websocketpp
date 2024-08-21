@@ -297,6 +297,7 @@ inline bool hex4(std::string::const_iterator start, std::string::const_iterator 
  */
 inline bool ipv6_literal(std::string::const_iterator start, std::string::const_iterator end) {
     // initial range check
+    end = std::find(start, end, '%');
     if (end-start > 45 && end-start >= 2) {
         return false;
     }
