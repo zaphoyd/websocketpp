@@ -912,21 +912,16 @@ protected:
             port = pu->get_port_str();
         }
 
-        tcp::resolver::query query(host,port);
-
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
                 "starting async DNS resolve for "+host+":"+port);
         }
 
-        timer_ptr dns_timer;
-
-        dns_timer = tcon->set_timer(
+        timer_ptr dns_timer = tcon->set_timer(
             config::timeout_dns_resolve,
             lib::bind(
                 &type::handle_resolve_timeout,
                 this,
-                dns_timer,
                 cb,
                 lib::placeholders::_1
             )
@@ -934,7 +929,7 @@ protected:
 
         if (config::enable_multithreading) {
             m_resolver->async_resolve(
-                query,
+                host, port,
                 tcon->get_strand()->wrap(lib::bind(
                     &type::handle_resolve,
                     this,
@@ -947,7 +942,7 @@ protected:
             );
         } else {
             m_resolver->async_resolve(
-                query,
+                host, port,
                 lib::bind(
                     &type::handle_resolve,
                     this,
@@ -970,7 +965,7 @@ protected:
      * @param callback The function to call back
      * @param ec A status code indicating an error, if any.
      */
-    void handle_resolve_timeout(timer_ptr, connect_handler callback,
+    void handle_resolve_timeout(connect_handler callback,
         lib::error_code const & ec)
     {
         lib::error_code ret_ec;
@@ -985,7 +980,7 @@ protected:
             log_err(log::elevel::devel,"asio handle_resolve_timeout",ec);
             ret_ec = ec;
         } else {
-            ret_ec = make_error_code(transport::error::timeout);
+            ret_ec = make_error_code(transport::error::resolve_failed);
         }
 
         m_alog->write(log::alevel::devel,"DNS resolution timed out");
@@ -993,7 +988,7 @@ protected:
         callback(ret_ec);
     }
 
-    void handle_resolve(transport_con_ptr tcon, timer_ptr dns_timer,
+    void handle_resolve(transport_con_ptr tcon, const timer_ptr& dns_timer,
         connect_handler callback, lib::asio::error_code const & ec,
         lib::asio::ip::tcp::resolver::iterator iterator)
     {

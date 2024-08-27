@@ -173,6 +173,9 @@ enum value {
     /// Timer expired
     timeout,
 
+    /// Hostname resolution failed or timed out
+    resolve_failed,
+
     /// read or write after shutdown
     action_after_shutdown,
 
@@ -206,6 +209,8 @@ class category : public lib::error_category {
                 return "TLS Short Read";
             case timeout:
                 return "Timer Expired";
+            case resolve_failed:
+                return "Hostname resolution failed or timed out";
             case action_after_shutdown:
                 return "A transport action was requested after shutdown";
             case tls_error:
