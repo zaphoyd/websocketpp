@@ -58,38 +58,80 @@ namespace log {
 template <typename concurrency, typename names>
 class basic {
 public:
+#if __cplusplus >= 202002L
+    basic(channel_type_hint::value h =
+        channel_type_hint::access)
+      : m_static_channels(0xffffffff)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+#else
     basic<concurrency,names>(channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+#endif
 
+#if __cplusplus >= 202002L
+    basic(std::ostream * out)
+      : m_static_channels(0xffffffff)
+      , m_dynamic_channels(0)
+      , m_out(out) {}
+#else
     basic<concurrency,names>(std::ostream * out)
       : m_static_channels(0xffffffff)
       , m_dynamic_channels(0)
       , m_out(out) {}
+#endif
 
+#if __cplusplus >= 202002L
+    basic(level c, channel_type_hint::value h =
+        channel_type_hint::access)
+      : m_static_channels(c)
+      , m_dynamic_channels(0)
+      , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+#else
     basic<concurrency,names>(level c, channel_type_hint::value h =
         channel_type_hint::access)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(h == channel_type_hint::error ? &std::cerr : &std::cout) {}
+#endif
 
+#if __cplusplus >= 202002L
+    basic(level c, std::ostream * out)
+      : m_static_channels(c)
+      , m_dynamic_channels(0)
+      , m_out(out) {}
+#else
     basic<concurrency,names>(level c, std::ostream * out)
       : m_static_channels(c)
       , m_dynamic_channels(0)
       , m_out(out) {}
+#endif
 
     /// Destructor
+#if __cplusplus >= 202002L
+    ~basic() {}
+#else
     ~basic<concurrency,names>() {}
+#endif
 
     /// Copy constructor
+#if __cplusplus >= 202002L
+    basic(basic const & other)
+     : m_static_channels(other.m_static_channels)
+     , m_dynamic_channels(other.m_dynamic_channels)
+     , m_out(other.m_out)
+    {}
+#else
     basic<concurrency,names>(basic<concurrency,names> const & other)
      : m_static_channels(other.m_static_channels)
      , m_dynamic_channels(other.m_dynamic_channels)
      , m_out(other.m_out)
     {}
-    
+#endif
+
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy assignment operator because of const member variables
     basic<concurrency,names> & operator=(basic<concurrency,names> const &) = delete;
@@ -97,11 +139,19 @@ public:
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
     /// Move constructor
+#if __cplusplus >= 202002L
+    basic(basic && other)
+     : m_static_channels(other.m_static_channels)
+     , m_dynamic_channels(other.m_dynamic_channels)
+     , m_out(other.m_out)
+    {}
+#else
     basic<concurrency,names>(basic<concurrency,names> && other)
      : m_static_channels(other.m_static_channels)
      , m_dynamic_channels(other.m_dynamic_channels)
      , m_out(other.m_out)
     {}
+#endif
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no move assignment operator because of const member variables

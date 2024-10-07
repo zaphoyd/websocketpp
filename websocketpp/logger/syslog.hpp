@@ -46,24 +46,34 @@ template <typename concurrency, typename names>
 class syslog : public basic<concurrency, names> {
 public:
     typedef basic<concurrency, names> base;
-
     /// Construct the logger
     /**
      * @param hint A channel type specific hint for how to construct the logger
      */
+#if __cplusplus >= 202002L
+    syslog(channel_type_hint::value hint =
+        channel_type_hint::access)
+      : basic<concurrency,names>(hint), m_channel_type_hint(hint) {}
+#else
     syslog<concurrency,names>(channel_type_hint::value hint =
         channel_type_hint::access)
       : basic<concurrency,names>(hint), m_channel_type_hint(hint) {}
+#endif
 
     /// Construct the logger
     /**
      * @param channels A set of channels to statically enable
      * @param hint A channel type specific hint for how to construct the logger
      */
+#if __cplusplus >= 202002L
+    syslog(level channels, channel_type_hint::value hint =
+        channel_type_hint::access)
+      : basic<concurrency,names>(channels, hint), m_channel_type_hint(hint) {}
+#else
     syslog<concurrency,names>(level channels, channel_type_hint::value hint =
         channel_type_hint::access)
       : basic<concurrency,names>(channels, hint), m_channel_type_hint(hint) {}
-
+#endif
     /// Write a string message to the given channel
     /**
      * @param channel The channel to write to
