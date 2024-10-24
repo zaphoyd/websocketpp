@@ -2,7 +2,7 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 3.0.0)
+cmake_minimum_required (VERSION 3.5)
 project(websocketpp VERSION 0.9.0)
 ############ Paths
 
