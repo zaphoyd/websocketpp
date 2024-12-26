@@ -238,7 +238,8 @@ struct core {
      * @since 0.3.0
      */
     static const size_t max_message_size = 32000000;
-    
+    static const size_t max_message_buffer_size = 32000000*3;
+
     /// Default maximum http body size
     /**
      * Default value for the http parser's maximum body size. Maximum body size

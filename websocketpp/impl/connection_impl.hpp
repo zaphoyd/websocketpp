@@ -2205,7 +2205,6 @@ connection<config>::get_processor(int version) const {
     
     return p;
 }
-
 template <typename config>
 void connection<config>::write_push(typename config::message_type::ptr msg)
 {
@@ -2216,10 +2215,28 @@ void connection<config>::write_push(typename config::message_type::ptr msg)
     m_send_buffer_size += msg->get_payload().size();
     m_send_queue.push(msg);
 
+    if (max_buffer_size>0)
+    {
+        while (m_send_buffer_size>max_buffer_size)
+        {
+            auto legacy_msg = m_send_queue.front();
+            if (legacy_msg)
+            {
+                m_send_queue.pop();
+                m_send_buffer_size-=legacy_msg->get_payload().size();
+            }else
+            {
+                break;
+            }
+        }
+    }
+
+
     if (m_alog->static_test(log::alevel::devel)) {
         std::stringstream s;
         s << "write_push: message count: " << m_send_queue.size()
-          << " buffer size: " << m_send_buffer_size;
+          << " buffer size: " << m_send_buffer_size/1024.0/1024.0;
+        std::cout<<s.str()<<std::endl;
         m_alog->write(log::alevel::devel,s.str());
     }
 }
