@@ -5,9 +5,8 @@ package(default_visibility = ["//visibility:public"])
 #################
 cc_library(
     name = "websocketpp",
-    hdrs = glob(["**/*.hpp"]),
-    includes = ["websocketpp"],
-    include_prefix = "websocketpp/",
+    hdrs = glob(["websocketpp/**/*.hpp"]),
+    includes = ["."],
     deps = [
 	"@asio//:asio",
     ],
