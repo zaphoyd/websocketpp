@@ -105,27 +105,32 @@ inline lib::error_code parser::remove_header(std::string const & key)
     return lib::error_code();
 }
 
-inline lib::error_code parser::set_body(std::string const & value) {
+inline lib::error_code parser::set_body(std::string value) {
     lib::error_code ec;
     if (value.size() == 0) {
-        ec = remove_header("Content-Length");
+        ec = remove_header(Header_ContentLength);
         if (ec) { return ec; }
 
         m_body.clear();
         return lib::error_code();
     }
 
-    if (value.size() > m_body_bytes_max) {
+    if (m_body_bytes_max && value.size() > m_body_bytes_max) {
         return error::make_error_code(error::body_too_large);
     }
 
     std::stringstream len;
     len << value.size();
-    ec = replace_header("Content-Length", len.str());
+    ec = replace_header(Header_ContentLength, len.str());
     if (ec) { return ec; }
 
-    m_body = value;
+    m_body = std::move(value);
     return lib::error_code();
+}
+
+inline void parser::consume_body()
+{
+	m_body.clear();
 }
 
 inline bool parser::parse_parameter_list(std::string const & in,
@@ -141,30 +146,76 @@ inline bool parser::parse_parameter_list(std::string const & in,
 }
 
 inline bool parser::prepare_body(lib::error_code & ec) {
-    if (!get_header("Content-Length").empty()) {
-        std::string const & cl_header = get_header("Content-Length");
+	ec.clear();
+
+	parameter_list ce_list;
+	if (!get_header_as_plist(Header_ContentEncoding, ce_list)) {
+		for (const auto& param : ce_list) {
+			auto encoding = content_encoding::from_string(param.first);
+			if (encoding)
+			{
+				m_content_encoding.push_back(*encoding);
+			}
+			else {
+				ec = error::make_error_code(error::unknown_content_encoding);
+				return false;
+			}
+		}
+
+		if (m_content_encoding.size() > 3)
+		{
+			ec = error::make_error_code(error::unsupported_content_encoding);
+			return false;
+		}
+	}
+
+	parameter_list te_list;
+	if (!get_header_as_plist(Header_TransferEncoding, te_list) && !te_list.empty()) {
+		for (const auto& param : te_list) {
+			if (param.first == "gzip" || param.first == "x-gzip")
+				m_transfer_encoding.push_back(transfer_encoding::gzip);
+			else if (param.first == "compress")
+				m_transfer_encoding.push_back(transfer_encoding::compress);
+			else if (param.first == "deflate")
+				m_transfer_encoding.push_back(transfer_encoding::deflate);
+			else if (param.first == "chunked")
+				m_transfer_encoding.push_back(transfer_encoding::chunked);
+			else {
+				ec = error::make_error_code(error::unknown_transfer_encoding);
+				return false;
+			}
+		}
+
+		if (m_transfer_encoding.size() > 3)
+		{
+			ec = error::make_error_code(error::unsupported_transfer_encoding);
+			return false;
+		}
+
+		if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end())
+			return true; // no Content-Length for chunked encoding!
+	}
+
+	const std::string cl_header = get_header(Header_ContentLength);
+    if (!cl_header.empty()) {
         char * end;
-        
+
         // TODO: not 100% sure what the compatibility of this method is. Also,
         // I believe this will only work up to 32bit sizes. Is there a need for
         // > 4GiB HTTP payloads?
-        m_body_bytes_needed = std::strtoul(cl_header.c_str(),&end,10);
-        
-        if (m_body_bytes_needed > m_body_bytes_max) {
+        m_body_bytes_total = m_body_bytes_needed = std::strtoul(cl_header.c_str(),&end,10);
+		if (end != cl_header.cend().base()) {
+			ec = error::make_error_code(error::invalid_format);
+            return false;
+		}
+
+        if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
             ec = error::make_error_code(error::body_too_large);
             return false;
         }
-        
-        m_body_encoding = body_encoding::plain;
-        ec = lib::error_code();
-        return true;
-    } else if (get_header("Transfer-Encoding") == "chunked") {
-        // ec = error::make_error_code(error::unsupported_transfer_encoding);
-        // TODO: support for chunked transfers? Is that too much HTTP logic?
-        //m_body_encoding = body_encoding::chunked;
-        return false;
+
+        return m_body_bytes_needed;
     } else {
-        ec = lib::error_code();
         return false;
     }
 }
@@ -172,19 +223,53 @@ inline bool parser::prepare_body(lib::error_code & ec) {
 inline size_t parser::process_body(char const * buf, size_t len,
     lib::error_code & ec)
 {
-    if (m_body_encoding == body_encoding::plain) {
-        size_t processed = (std::min)(m_body_bytes_needed,len);
-        m_body.append(buf,processed);
-        m_body_bytes_needed -= processed;
-        ec = lib::error_code();
-        return processed;
-    } else if (m_body_encoding == body_encoding::chunked) {
-        ec = error::make_error_code(error::unsupported_transfer_encoding);
-        return 0;
-        // TODO: support for chunked transfers?
+	if (!len)
+		return 0;
+
+    if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end()) {
+        // for chunked encoding, read chunks of the body
+		if (m_body_bytes_needed) { // reading previously started chunk, same as plain encoding!
+			const size_t processed = std::min(m_body_bytes_needed, len);
+			m_body.append(buf, processed);
+			m_body_bytes_needed -= processed;
+			ec = lib::error_code();
+			return processed;
+		} else { // new chunk
+			// sizes of chunks which are given by the first byte of the response body
+			const char* newline = std::search(buf, buf + len, http_crlf, http_crlf + sizeof(http_crlf) - 1);
+			if (newline == buf + len)
+			{
+				ec = error::make_error_code(error::invalid_format);
+				return 0;
+			}
+
+			const std::string chunkSizeHex(buf, newline);
+			char * end;
+			m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
+			m_body_bytes_total += m_body_bytes_needed;
+			if (end != chunkSizeHex.cend().base()) {
+				ec = error::make_error_code(error::invalid_format);
+				return 0;
+			}
+
+			if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
+				ec = error::make_error_code(error::body_too_large);
+				return 0;
+			}
+
+			if (m_body_bytes_needed == 0) { // this is how the last chunk is marked
+				return len; // pretend we handled everything!
+			}
+
+			const size_t processed = (newline - buf) + sizeof(http_crlf) - 1;
+			return processed + process_body(buf + processed, len - processed, ec);
+		}
     } else {
-        ec = error::make_error_code(error::unknown_transfer_encoding);
-        return 0;
+		const size_t processed = std::min(m_body_bytes_needed, len);
+		m_body.append(buf, processed);
+		m_body_bytes_needed -= processed;
+		ec = lib::error_code();
+		return processed;
     }
 }
 

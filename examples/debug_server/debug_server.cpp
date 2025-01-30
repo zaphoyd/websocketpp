@@ -93,12 +93,12 @@ using websocketpp::lib::bind;
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
 
-bool validate(server *, websocketpp::connection_hdl) {
+session::validation::value validate(server *, websocketpp::connection_hdl_ref) {
     //sleep(6);
-    return true;
+    return session::validation::accept;
 }
 
-void on_http(server* s, websocketpp::connection_hdl hdl) {
+void on_http(server* s, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
     std::string res = con->get_request_body();
@@ -110,18 +110,18 @@ void on_http(server* s, websocketpp::connection_hdl hdl) {
     con->set_status(websocketpp::http::status_code::ok);
 }
 
-void on_fail(server* s, websocketpp::connection_hdl hdl) {
+void on_fail(server* s, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     
     std::cout << "Fail handler: " << con->get_ec() << " " << con->get_ec().message()  << std::endl;
 }
 
-void on_close(websocketpp::connection_hdl) {
+void on_close(websocketpp::connection_hdl_ref) {
     std::cout << "Close handler" << std::endl;
 }
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     std::cout << "on_message called with hdl: " << hdl.lock().get()
               << " and message: " << msg->get_payload()
               << std::endl;
@@ -162,7 +162,7 @@ int main() {
         // Start the server accept loop
         echo_server.start_accept();
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         echo_server.run();
     } catch (websocketpp::exception const & e) {
         std::cout << e.what() << std::endl;

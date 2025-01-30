@@ -48,11 +48,11 @@ struct channel_type_hint {
     typedef uint32_t value;
     
     /// No information
-    static value const none = 0;
+    static constexpr value none = 0;
     /// Access log
-    static value const access = 1;
+    static constexpr value access = 1;
     /// Error log
-    static value const error = 2;
+    static constexpr value error = 2;
 };
 
 /// Package of log levels for logging errors

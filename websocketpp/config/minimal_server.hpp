@@ -178,6 +178,8 @@ struct minimal_server {
     static const long timeout_open_handshake = 5000;
     /// Length of time before a closing handshake is aborted
     static const long timeout_close_handshake = 5000;
+	/// Length of time before after sending a request to wait before timing out
+	static const long timeout_read_http_response = 5000;
     /// Length of time to wait for a pong after a ping
     static const long timeout_pong = 5000;
 
@@ -199,7 +201,7 @@ struct minimal_server {
      *
      * Default is all except for development/debug level errors
      */
-    static const websocketpp::log::level elog_level =
+    static constexpr websocketpp::log::level elog_level =
         websocketpp::log::elevel::none;
 
     /// Default static access logging channels
@@ -212,7 +214,7 @@ struct minimal_server {
      *
      * Default is all except for development/debug level access messages
      */
-    static const websocketpp::log::level alog_level =
+    static constexpr websocketpp::log::level alog_level =
         websocketpp::log::alevel::none;
 
     ///

@@ -61,9 +61,9 @@ struct testee_config : public websocketpp::config::asio {
     typedef websocketpp::transport::asio::endpoint<transport_config>
         transport_type;
 
-    static const websocketpp::log::level elog_level =
+    static constexpr websocketpp::log::level elog_level =
         websocketpp::log::elevel::none;
-    static const websocketpp::log::level alog_level =
+    static constexpr websocketpp::log::level alog_level =
         websocketpp::log::alevel::none;
         
     /// permessage_compress extension
@@ -84,11 +84,11 @@ using websocketpp::lib::error_code;
 typedef server::message_ptr message_ptr;
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-void on_socket_init(websocketpp::connection_hdl, boost::asio::ip::tcp::socket & s) {
+void on_socket_init(websocketpp::connection_hdl_ref, boost::asio::ip::tcp::socket & s) {
     boost::asio::ip::tcp::no_delay option(true);
     s.set_option(option);
 }
@@ -131,7 +131,7 @@ int main(int argc, char * argv[]) {
         // Start the server accept loop
         testee_server.start_accept(&on_end_accept);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         if (num_threads == 1) {
             testee_server.run();
         } else {

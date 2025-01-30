@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <optional>
 
 #include <websocketpp/common/system_error.hpp>
 
@@ -55,8 +56,8 @@ typedef std::map<std::string,std::string> attribute_list;
  */
 typedef std::vector< std::pair<std::string,attribute_list> > parameter_list;
 
-/// Literal value of the HTTP header delimiter
-static char const header_delimiter[] = "\r\n";
+/// The sequency used for new lines
+static char const http_crlf[] = "\r\n";
 
 /// Literal value of the HTTP header separator
 static char const header_separator[] = ":";
@@ -178,6 +179,18 @@ enum value {
     not_extended = 510,
     network_authentication_required = 511
 };
+
+/// Given a status code value, return true if it is a redirect
+/**
+ * 
+ * @param[in] code The HTTP status code to check
+ * @return True if the status code is a redirect code
+ * @see websocketpp::http::status_code::value (list of valid codes)
+ */
+inline bool is_redirect(value code) {
+	// multiple_choices is not a valid redirect as we can't just go to the location specified in the Location header
+	return code > multiple_choices && code <= temporary_redirect;
+}
 
 /// Given a status code value, return the default status message
 /**
@@ -340,8 +353,14 @@ enum value {
     /// The transfer encoding is not supported
     unsupported_transfer_encoding,
 
-    /// The transfer encoding is unknown
-    unknown_transfer_encoding,
+	/// The content encoding is not supported
+	unsupported_content_encoding,
+
+	/// The transfer encoding is invalid
+	unknown_transfer_encoding,
+
+	/// The content encoding is invalid
+	unknown_content_encoding,
 
     /// A header line was missing a separator
     missing_header_separator,
@@ -376,8 +395,12 @@ inline status_code::value get_status_code(error::value value) {
             return status_code::request_entity_too_large;
         case error::unsupported_transfer_encoding:
             return status_code::internal_server_error;
-        case error::unknown_transfer_encoding:
-            return status_code::bad_request;
+		case error::unsupported_content_encoding:
+			return status_code::internal_server_error;
+		case error::unknown_transfer_encoding:
+			return status_code::bad_request;
+		case error::unknown_content_encoding:
+			return status_code::bad_request;
         case error::missing_header_separator:
             return status_code::bad_request;
         case error::request_header_fields_too_large:
@@ -446,6 +469,61 @@ inline lib::error_code make_error_code(error::value e) {
 }
 
 } // namespace error
+
+namespace content_encoding {
+enum value : uint8_t {
+	compress = 1,
+	deflate,
+	gzip,
+	brotli,
+	zstd
+};
+
+inline std::string to_string(value encoding) {
+	switch (encoding)
+	{
+		case compress: return "compress";
+		case deflate: return "deflate";
+		case gzip: return "gzip";
+		case brotli: return "br";
+		case zstd: return "zstd";
+		default: return {};
+	}
+}
+inline std::optional<value> from_string(const std::string& str) {
+	if (str == "compress") return compress;
+	else if (str == "deflate") return deflate;
+	else if (str == "gzip" || str == "x-gzip") return gzip;
+	else if (str == "br") return brotli;
+	else if (str == "zstd") return zstd;
+	else return {};
+}
+} // namespace content_encoding
+
+namespace transfer_encoding {
+enum value : uint8_t {
+	chunked,
+	compress,
+	deflate,
+	gzip
+};
+
+inline std::string to_string(value encoding) {
+	switch (encoding)
+	{
+		case chunked:
+			return "chunked";
+		default:
+			return content_encoding::to_string(static_cast<content_encoding::value>(encoding));
+	}
+}
+} // namespace transfer_encoding
+
+const std::string Header_ContentLength = "Content-Length";
+const std::string Header_ContentEncoding = "Content-Encoding";
+const std::string Header_TransferEncoding = "Transfer-Encoding";
+const std::string Header_AcceptEncoding = "Accept-Encoding";
+
 } // namespace http
 } // namespace websocketpp
 

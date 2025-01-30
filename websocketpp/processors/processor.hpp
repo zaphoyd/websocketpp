@@ -133,11 +133,18 @@ int get_websocket_version(request_type& r) {
  * @return A uri_pointer that encodes the value of the host header.
  */
 template <typename request_type>
-uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
+uri_ptr get_uri_from_host(request_type & request, uri::type scheme, bool secure) {
     std::string h = request.get_header("Host");
 
     size_t last_colon = h.rfind(":");
     size_t last_sbrace = h.rfind("]");
+    std::string port, hostname;
+    if (last_sbrace != std::string::npos)
+    {
+        hostname = h.substr(1, last_sbrace - 1);
+    } else {
+        hostname = h.substr(0, last_colon);
+    }
 
     // no : = hostname with no port
     // last : before ] = ipv6 literal with no port
@@ -146,10 +153,10 @@ uri_ptr get_uri_from_host(request_type & request, std::string scheme) {
     if (last_colon == std::string::npos ||
         (last_sbrace != std::string::npos && last_sbrace > last_colon))
     {
-        return lib::make_shared<uri>(scheme, h, request.get_uri());
+        return lib::make_shared<uri>(scheme, secure, hostname, request.get_uri());
     } else {
-        return lib::make_shared<uri>(scheme,
-                               h.substr(0,last_colon),
+        return lib::make_shared<uri>(scheme, secure,
+                               hostname,
                                h.substr(last_colon+1),
                                request.get_uri());
     }

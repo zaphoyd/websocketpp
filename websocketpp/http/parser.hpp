@@ -49,14 +49,6 @@ namespace state {
     };
 }
 
-namespace body_encoding {
-    enum value {
-        unknown,
-        plain,
-        chunked
-    };
-}
-
 typedef std::map<std::string, std::string, utility::ci_less > header_list;
 
 /// Read and return the next token in the stream
@@ -400,9 +392,12 @@ public:
     parser()
       : m_header_bytes(0)
       , m_body_bytes_needed(0)
+	  , m_body_bytes_total(0)
       , m_body_bytes_max(max_body_size)
-      , m_body_encoding(body_encoding::unknown) {}
-    
+	{}
+
+	virtual ~parser() {}
+
     /// Get the HTTP version string
     /**
      * @return The version string for this parser
@@ -437,7 +432,7 @@ public:
      *
      * @param [in] key The name/key of the HTTP header to use as input.
      * @param [out] out The parameter list to store extracted parameters in.
-     * @return Whether or not the input was a valid parameter list.
+     * @return Whether or not the input was a valid parameter list. (true means invalid, false means valid)
      */
     bool get_header_as_plist(std::string const & key, parameter_list & out)
         const;
@@ -459,13 +454,13 @@ public:
      * will be appended to the existing value.
      *
      * Note: per HTTP specs header values are compared case insensitively.
-     * 
+     *
      * @todo Should there be any restrictions on which keys are allowed?
      *
      * @see replace_header
      *
      * @since 0.9.0 (return value added, exceptions removed)
-     * 
+     *
      * @param [in] key The name/key of the header to append to.
      * @param [in] val The value to append.
      * @return A status code describing the outcome of the operation.
@@ -483,7 +478,7 @@ public:
      * @see append_header
      *
      * @since 0.9.0 (return value added)
-     * 
+     *
      * @param [in] key The name/key of the header to append to.
      * @param [in] val The value to append.
      * @return A status code describing the outcome of the operation.
@@ -498,7 +493,7 @@ public:
      * Note: per HTTP specs header values are compared case insensitively.
      *
      * @since 0.9.0 (return value added)
-     * 
+     *
      * @param [in] key The name/key of the header to remove.
      * @return A status code describing the outcome of the operation.
      */
@@ -516,6 +511,27 @@ public:
         return m_body;
     }
 
+	/// Get the progress of the HTTP body download relative to the expected body size.
+    /**
+     * Effectively calculated as (downloaded bytes) / get_total_body_size()
+     *
+     * @return The progress (0 to 1 range)
+     */
+	size_t get_transferred_body_size() const {
+		return m_body_bytes_total ? (m_body_bytes_total - m_body_bytes_needed) : m_body.size();
+	}
+
+	/// Get the expected HTTP body size
+    /**
+     * For plain encoding, this is the Content-Length
+	 * For chunked encoding, this is the total number of bytes transfered (changes as new chunks are processed).
+     *
+     * @return The total size of the HTTP body.
+     */
+	size_t get_total_body_size() const {
+		return m_body_bytes_total;
+	}
+
     /// Set body content
     /**
      * Set the body content of the HTTP response to the parameter string. Note
@@ -524,11 +540,19 @@ public:
      * via replace_header("Content-Length") after calling set_body()
      *
      * @since 0.9.0 (return value added)
-     * 
+     *
      * @param value String data to include as the body content.
      * @return A status code describing the outcome of the operation.
      */
-    lib::error_code set_body(std::string const & value);
+    lib::error_code set_body(std::string value);
+
+	/// Consume body content (keep string at current capacity )
+    /**
+     * Keeps the body string at current capacity, but resets its size
+     *
+     * @since 0.8.5
+     */
+    void consume_body();
 
     /// Get body size limit
     /**
@@ -542,6 +566,30 @@ public:
     size_t get_max_body_size() const {
         return m_body_bytes_max;
     }
+
+	/// Get transfer encoding
+	/**
+     * The list of transfer encodings of the body, the order in which they were applied.
+     *
+     * @since 0.9.0
+     *
+     * @return The list of transfer encodings of the body, the order in which they were applied.
+	 */
+	const std::vector<transfer_encoding::value>& get_transfer_encoding() const {
+		return m_transfer_encoding;
+	}
+
+	/// Get content encoding
+	/**
+     * The list of content encodings of the body, the order in which they were applied.
+     *
+     * @since 0.9.0
+     *
+     * @return The list of content encodings of the body, the order in which they were applied.
+	 */
+	const std::vector<content_encoding::value>& get_content_encoding() const {
+		return m_content_encoding;
+	}
 
     /// Set body size limit
     /**
@@ -560,7 +608,7 @@ public:
     /**
      * @param [in] in The input string.
      * @param [out] out The parameter list to store extracted parameters in.
-     * @return Whether or not the input was a valid parameter list.
+     * @return Whether or not the input was a valid parameter list (true means invalid, false means valid)
      */
     bool parse_parameter_list(std::string const & in, parameter_list & out)
         const;
@@ -568,7 +616,7 @@ protected:
     /// Process a header line
     /**
      * @since 0.9.0 (return value added, exceptions removed)
-     * 
+     *
      * @param [in] begin An iterator to the beginning of the sequence.
      * @param [in] end An iterator to the end of the sequence.
      * @return A status code describing the outcome of the operation.
@@ -605,7 +653,7 @@ protected:
      * @param [out] ec A status code describing the outcome of the operation.
      * @return The number of bytes processed
      */
-    size_t process_body(char const * buf, size_t len, lib::error_code & ec);
+    virtual size_t process_body(char const * buf, size_t len, lib::error_code & ec);
 
     /// Check if the parser is done parsing the body
     /**
@@ -630,13 +678,15 @@ protected:
 
     std::string m_version;
     header_list m_headers;
-    
-    size_t                  m_header_bytes;
-    
-    std::string             m_body;
-    size_t                  m_body_bytes_needed;
-    size_t                  m_body_bytes_max;
-    body_encoding::value    m_body_encoding;
+
+    size_t m_header_bytes;
+
+    std::string             				m_body;
+    size_t                  				m_body_bytes_needed;
+    size_t                  				m_body_bytes_total;
+    size_t                  				m_body_bytes_max;
+	std::vector<transfer_encoding::value>	m_transfer_encoding;
+	std::vector<content_encoding::value>	m_content_encoding;
 };
 
 } // namespace parser

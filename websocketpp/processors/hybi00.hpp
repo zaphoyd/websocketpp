@@ -177,9 +177,21 @@ public:
     }
 
     std::string get_raw(response_type const & res) const {
-        response_type temp = res;
-        temp.remove_header("Sec-WebSocket-Key3");
-        return temp.raw() + res.get_header("Sec-WebSocket-Key3");
+		// TODO: validation. Make sure all required fields have been set?
+		std::stringstream ret;
+
+		ret << get_version() << " " << res.get_status_code() << " " << res.get_status_msg() << "\r\n";
+		for (const auto& header : res.get_headers()) {
+			if (header.first != "Sec-WebSocket-Key3")
+				ret << header.first << ": " << header.second << "\r\n";
+		}
+		ret << "\r\n";
+
+		ret << res.get_body();
+
+		ret << res.get_header("Sec-WebSocket-Key3");
+
+		return ret.str();
     }
 
     std::string const & get_origin(request_type const & r) const {
@@ -228,9 +240,10 @@ public:
         if (last_colon == std::string::npos ||
             (last_sbrace != std::string::npos && last_sbrace > last_colon))
         {
-            return lib::make_shared<uri>(base::m_secure, h, request.get_uri());
+            return lib::make_shared<uri>(uri::websocket, base::m_secure,
+								   h, request.get_uri());
         } else {
-            return lib::make_shared<uri>(base::m_secure,
+            return lib::make_shared<uri>(uri::websocket, base::m_secure,
                                    h.substr(0,last_colon),
                                    h.substr(last_colon+1),
                                    request.get_uri());

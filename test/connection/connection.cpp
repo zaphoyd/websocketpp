@@ -127,8 +127,8 @@ struct debug_config_client : public websocketpp::config::core {
     typedef core::endpoint_base endpoint_base;
     typedef connection_extension connection_base;
     
-    static const websocketpp::log::level elog_level = websocketpp::log::elevel::none;
-    static const websocketpp::log::level alog_level = websocketpp::log::alevel::none;
+    static constexpr websocketpp::log::level elog_level = websocketpp::log::elevel::none;
+    static constexpr websocketpp::log::level alog_level = websocketpp::log::alevel::none;
 };
 
 struct connection_setup {
@@ -147,21 +147,21 @@ struct connection_setup {
 typedef websocketpp::client<debug_config_client> debug_client;
 typedef websocketpp::server<debug_config_client> debug_server;
 
-/*void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+/*void echo_func(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }*/
 
-void validate_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void validate_func(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-bool validate_set_ua(server* s, websocketpp::connection_hdl hdl) {
+session::validation::value validate_set_ua(server* s, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
     con->replace_header("Server","foo");
-    return true;
+    return session::validation::accept;
 }
 
-void http_func(server* s, websocketpp::connection_hdl hdl) {
+void http_func(server* s, websocketpp::connection_hdl_ref hdl) {
     using namespace websocketpp::http;
 
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -175,7 +175,7 @@ void http_func(server* s, websocketpp::connection_hdl hdl) {
     BOOST_CHECK_EQUAL(con->get_response_msg(), status_code::get_string(status_code::ok));
 }
 
-void http_func_with_move(server* s, websocketpp::connection_hdl hdl) {
+void http_func_with_move(server* s, websocketpp::connection_hdl_ref hdl) {
     using namespace websocketpp::http;
 
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -189,7 +189,7 @@ void http_func_with_move(server* s, websocketpp::connection_hdl hdl) {
     BOOST_CHECK_EQUAL(con->get_response_msg(), status_code::get_string(status_code::ok));
 }
 
-void defer_http_func(server* s, bool * deferred, websocketpp::connection_hdl hdl) {
+void defer_http_func(server* s, bool * deferred, websocketpp::connection_hdl_ref hdl) {
     *deferred = true;
     
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -199,7 +199,7 @@ void defer_http_func(server* s, bool * deferred, websocketpp::connection_hdl hdl
 }
 
 void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called, 
-    websocketpp::connection_hdl hdl)
+    websocketpp::connection_hdl_ref hdl)
 {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
@@ -207,17 +207,17 @@ void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called,
     called = true;
 }
 
-void on_open_print(server* s, websocketpp::connection_hdl hdl)
+void on_open_print(server* s, websocketpp::connection_hdl_ref hdl)
 {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
     std::cout << con->get_uri() << std::endl;
 }
 
-void fail_on_open(websocketpp::connection_hdl) {
+void fail_on_open(websocketpp::connection_hdl_ref) {
     BOOST_CHECK(false);
 }
-void fail_on_http(websocketpp::connection_hdl) {
+void fail_on_http(websocketpp::connection_hdl_ref) {
     BOOST_CHECK(false);
 }
 

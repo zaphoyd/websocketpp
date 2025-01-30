@@ -62,10 +62,10 @@ public:
     /// Type of a shared pointer to this connection socket component
     typedef lib::shared_ptr<type> ptr;
 
-    /// Type of a pointer to the Asio io_service being used
-    typedef lib::asio::io_service* io_service_ptr;
-    /// Type of a pointer to the Asio io_service strand being used
-    typedef lib::shared_ptr<lib::asio::io_service::strand> strand_ptr;
+    /// Type of a pointer to the Asio io_context being used
+    typedef lib::asio::io_context* io_context_ptr;
+    /// Type of a pointer to the Asio io_context strand being used
+    typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of the ASIO socket being used
     typedef lib::asio::ip::tcp::socket socket_type;
     /// Type of a shared pointer to the socket being used.
@@ -125,6 +125,10 @@ public:
         return *m_socket;
     }
 
+	const lib::asio::ip::tcp::socket & get_raw_socket() const {
+		return *m_socket;
+	}
+
     /// Get the remote endpoint address
     /**
      * The iostream transport has no information about the ultimate remote
@@ -156,14 +160,14 @@ protected:
     /// Perform one time initializations
     /**
      * init_asio is called once immediately after construction to initialize
-     * Asio components to the io_service. At this stage the connection is
+     * Asio components to the io_context. At this stage the connection is
      * speculative, the server may not have actually received a new connection.
      *
-     * @param service A pointer to the endpoint's io_service
+     * @param service A pointer to the endpoint's io_context
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, strand_ptr, bool)
+    lib::error_code init_asio (io_context_ptr service, strand_ptr, bool)
     {
         if (m_state != UNINITIALIZED) {
             return socket::make_error_code(socket::error::invalid_state);
@@ -232,7 +236,7 @@ protected:
      *
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_hdl = hdl;
     }
 

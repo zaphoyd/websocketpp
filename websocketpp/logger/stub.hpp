@@ -44,14 +44,14 @@ public:
     /**
      * @param hint A channel type specific hint for how to construct the logger
      */
-    explicit stub(channel_type_hint::value) {}
+    explicit stub(channel_type_hint) {}
 
     /// Construct the logger
     /**
      * @param default_channels A set of channels to statically enable
      * @param hint A channel type specific hint for how to construct the logger
      */
-    stub(level, channel_type_hint::value) {}
+    stub(level, channel_type_hint) {}
     _WEBSOCKETPP_CONSTEXPR_TOKEN_ stub() {}
 
     /// Dynamically enable the given list of channels

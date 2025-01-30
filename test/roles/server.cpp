@@ -87,12 +87,12 @@ std::string run_server_test(server& s, std::string input) {
 }
 
 /* handler library*/
-void echo_func(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+void echo_func(server* s, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     s->send(hdl, msg->get_payload(), msg->get_opcode());
 }
 
-bool validate_func_subprotocol(server* s, std::string* out, std::string accept,
-    websocketpp::connection_hdl hdl)
+session::validation::value validate_func_subprotocol(server* s, std::string* out, std::string accept,
+    websocketpp::connection_hdl_ref hdl)
 {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
@@ -111,10 +111,10 @@ bool validate_func_subprotocol(server* s, std::string* out, std::string accept,
         con->select_subprotocol(accept);
     }
 
-    return true;
+    return session::validation::accept;
 }
 
-void open_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl hdl) {
+void open_func_subprotocol(server* s, std::string* out, websocketpp::connection_hdl_ref hdl) {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
 
     *out = con->get_subprotocol();
@@ -289,13 +289,13 @@ struct test_config : public websocketpp::config::core {
     typedef test_transport::endpoint<websocketpp::config::core::transport_config> transport_type;
 };
 
-void handle_fail(websocketpp::server<test_config> * s, websocketpp::lib::error_code * rec, websocketpp::connection_hdl hdl) {
+void handle_fail(websocketpp::server<test_config> * s, websocketpp::lib::error_code * rec, websocketpp::connection_hdl_ref hdl) {
     websocketpp::server<test_config>::connection_ptr con = s->get_con_from_hdl(hdl);
 
     *rec = con->get_ec();
 }
 
-void handle_fail_count(websocketpp::server<test_config> * s, websocketpp::lib::error_code rec, int * count, websocketpp::connection_hdl hdl) {
+void handle_fail_count(websocketpp::server<test_config> * s, websocketpp::lib::error_code rec, int * count, websocketpp::connection_hdl_ref hdl) {
     websocketpp::server<test_config>::connection_ptr con = s->get_con_from_hdl(hdl);
 
     if (con->get_ec() == rec) {

@@ -613,7 +613,7 @@ inline size_t circshift_prepared_key(size_t prepared_key, size_t offset) {
     if (offset == 0) {
         return prepared_key;
     }
-    if (lib::net::is_little_endian()) {
+    if (::std::endian::native == ::std::endian::little) {
         size_t temp = prepared_key << (sizeof(size_t)-offset)*8;
         return (prepared_key >> offset*8) | temp;
     } else {

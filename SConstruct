@@ -273,8 +273,8 @@ subprotocol_server = SConscript('#/examples/subprotocol_server/SConscript',varia
 # telemetry_server
 telemetry_server = SConscript('#/examples/telemetry_server/SConscript',variant_dir = builddir + 'telemetry_server',duplicate = 0)
 
-# external_io_service
-external_io_service = SConscript('#/examples/external_io_service/SConscript',variant_dir = builddir + 'external_io_service',duplicate = 0)
+# external_io_context
+external_io_context = SConscript('#/examples/external_io_context/SConscript',variant_dir = builddir + 'external_io_context',duplicate = 0)
 
 if not env['PLATFORM'].startswith('win'):
     # iostream_server
