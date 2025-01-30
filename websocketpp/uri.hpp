@@ -262,7 +262,7 @@ inline bool ipv4_literal(std::string::const_iterator start, std::string::const_i
             }
         }
     }
-    
+
     // check final octet
     return (counter == 3 && dec_octet(cursor,end));
 }
@@ -301,7 +301,7 @@ inline bool ipv6_literal(std::string::const_iterator start, std::string::const_i
     if (end-start > 45 && end-start >= 2) {
         return false;
     }
-    
+
     // peal off and count hex4s until we run out of colons,
     // note the abbreviation marker if we see one.
     std::string::const_iterator cursor = start;
@@ -327,7 +327,7 @@ inline bool ipv6_literal(std::string::const_iterator start, std::string::const_i
         }
         it++;
     }
-    
+
     // final bit either needs to be a hex4 or an IPv4 literal
     if (cursor == end) {
         // fine
@@ -338,11 +338,11 @@ inline bool ipv6_literal(std::string::const_iterator start, std::string::const_i
     } else {
         return false;
     }
-    
+
     if ((abbr == 0 && count != 8) || (abbr == 1 && count > 7) || abbr > 1) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -408,10 +408,10 @@ public:
 	uri() = default;
 
     explicit uri(std::string const & uri_string) : m_ipv6_literal(false) {
-		
+
 		if (uri_string.empty())
 			return;
-		
+
 		const size_t schema_end = uri_string.find(uri_helper::schema_separtator);
 		if (schema_end != std::string::npos)
 		{
@@ -492,8 +492,8 @@ public:
             } else if (*it == '/' || *it == '?' || *it == '#') {
                 // todo: better path parsing
                 state = 2;
-                
-                // we don't increment the iterator here because we want the 
+
+                // we don't increment the iterator here because we want the
                 // delimiter to be read again as a part of the path
             } else if (*it == ':') {
                 state = 1;
@@ -532,7 +532,7 @@ public:
                         // end hostname and start parsing path
                         state = 2;
 
-                        // we don't increment the iterator here because we want the 
+                        // we don't increment the iterator here because we want the
                         // delimiter to be read again as a part of the path
                     } else {
                         // either @, [, or ]
@@ -545,7 +545,7 @@ public:
                     m_host += *it;
                     ++it;
                 }
-                
+
             }
         }
 
@@ -572,10 +572,10 @@ public:
                 }
                 state = 3;
 
-                // we don't increment the iterator here because we want the 
+                // we don't increment the iterator here because we want the
                 // delimiter to be read again as a part of the path
             }
-            
+
         }
 
         lib::error_code ec;
@@ -588,7 +588,7 @@ public:
 
         // step back one so the first char of the path delimiter doesn't get eaten
         m_resource.append(it,uri_string.end());
-        
+
         if (m_resource.empty()) {
             m_resource = "/";
         }
@@ -627,6 +627,25 @@ public:
 
         if (ec || !(m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end())))
 			m_type = invalid;
+    }
+
+    uri resource(const std::string& resource) const
+    {
+        uri ret = *this;
+        if (ret.get_resource().ends_with('/'))
+        {
+            if (resource.starts_with('/'))
+                ret.m_resource += resource.substr(1);
+            else
+                ret.m_resource += resource;
+        }else
+        {
+            if (resource.starts_with('/'))
+                ret.m_resource += resource;
+            else
+                ret.m_resource += "/" + resource;
+        }
+        return ret;
     }
 
     bool get_valid() const {
@@ -677,7 +696,7 @@ public:
             } else {
                 p << m_host << ":" << m_port;
             }
-            
+
             return p.str();
         }
     }
