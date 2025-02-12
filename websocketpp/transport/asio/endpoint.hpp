@@ -510,7 +510,7 @@ public:
      *
      * @param host A string identifying a location. May be a descriptive name or
      * a numeric address string.
-     * @param context A string identifying the requested service. This may be a
+     * @param service A string identifying the requested service. This may be a
      * descriptive name or a numeric string corresponding to a port number.
      * @param ec Set to indicate what error occurred, if any.
      */
@@ -628,7 +628,7 @@ public:
      *
      * @param host A string identifying a location. May be a descriptive name 
      * or a numeric address string.
-     * @param context A string identifying the requested service. This may be a
+     * @param service A string identifying the requested service. This may be a
      * descriptive name or a numeric string corresponding to a port number.
      * @param ec Set to indicate what error occurred, if any.
      */
