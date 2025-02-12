@@ -54,9 +54,9 @@ void run_dummy_server(int port) {
     using boost::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
-        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
-        tcp::socket socket(io_service);
+        boost::asio::io_context io_context;
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v6(), port));
+        tcp::socket socket(io_context);
 
         acceptor.accept(socket);
         for (;;) {
@@ -79,8 +79,8 @@ void run_dummy_server(int port) {
 
 // Wait for the specified time period then fail the test
 void run_test_timer(long value) {
-    boost::asio::io_service ios;
-    boost::asio::deadline_timer t(ios,boost::posix_time::milliseconds(value));
+    boost::asio::io_context ctx;
+    boost::asio::deadline_timer t(ctx,boost::posix_time::milliseconds(value));
     boost::system::error_code ec;
     t.wait(ec);
     BOOST_FAIL( "Test timed out" );

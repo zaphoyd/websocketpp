@@ -69,7 +69,7 @@ public:
         // Set the initial timer to start telemetry
         set_timer();
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         try {
             m_endpoint.run();
         } catch (websocketpp::exception const & e) {

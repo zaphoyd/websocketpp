@@ -66,10 +66,10 @@ void on_end_accept(error_code lib_ec, error_code trans_ec) {
 }
 
 int main() {
-    asio::io_service service;
+    asio::io_context context;
 
     // Add a TCP echo server on port 9003
-    tcp_echo_server custom_http_server(service, 9003);
+    tcp_echo_server custom_http_server(context, 9003);
 
     // Add a WebSocket echo server on port 9002
     ws_echo_server ws_server;
@@ -77,8 +77,8 @@ int main() {
     ws_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
     // The only difference in this code between an internal and external
-    // io_service is the different constructor to init_asio
-    ws_server.init_asio(&service);
+    // io_context is the different constructor to init_asio
+    ws_server.init_asio(&context);
 
     // Register our message handler
     ws_server.set_message_handler(bind(&on_message,&ws_server,::_1,::_2));
@@ -87,6 +87,6 @@ int main() {
 
     // TODO: add a timer?
 
-    // Start the Asio io_service run loop for all
-    service.run();
+    // Start the Asio io_context run loop for all
+    context.run();
 }

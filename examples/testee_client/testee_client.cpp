@@ -117,13 +117,13 @@ int main(int argc, char* argv[]) {
         client::connection_ptr con = c.get_connection(uri+"/getCaseCount", ec);
         c.connect(con);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         c.run();
 
         std::cout << "case count: " << case_count << std::endl;
 
         for (int i = 1; i <= case_count; i++) {
-            c.reset();
+            c.restart();
 
             std::stringstream url;
 

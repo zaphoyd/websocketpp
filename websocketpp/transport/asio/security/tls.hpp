@@ -71,10 +71,10 @@ public:
     typedef lib::asio::ssl::stream<lib::asio::ip::tcp::socket> socket_type;
     /// Type of a shared pointer to the ASIO socket being used
     typedef lib::shared_ptr<socket_type> socket_ptr;
-    /// Type of a pointer to the ASIO io_service being used
-    typedef lib::asio::io_service * io_service_ptr;
-    /// Type of a pointer to the ASIO io_service strand being used
-    typedef lib::shared_ptr<lib::asio::io_service::strand> strand_ptr;
+    /// Type of a pointer to the ASIO io_context being used
+    typedef lib::asio::io_context * io_context_ptr;
+    /// Type of a pointer to the ASIO io_context strand being used
+    typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<lib::asio::ssl::context> context_ptr;
 
@@ -176,13 +176,13 @@ protected:
     /// Perform one time initializations
     /**
      * init_asio is called once immediately after construction to initialize
-     * Asio components to the io_service
+     * Asio components to the io_context
      *
-     * @param service A pointer to the endpoint's io_service
+     * @param context A pointer to the endpoint's io_context
      * @param strand A pointer to the connection's strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+    lib::error_code init_asio (io_context_ptr context, strand_ptr strand,
         bool is_server)
     {
         if (!m_tls_init_handler) {
@@ -193,9 +193,9 @@ protected:
         if (!m_context) {
             return socket::make_error_code(socket::error::invalid_tls_context);
         }
-        m_socket.reset(new socket_type(*service, *m_context));
+        m_socket.reset(new socket_type(*context, *m_context));
 
-        m_io_service = service;
+        m_io_context = context;
         m_strand = strand;
         m_is_server = is_server;
 
@@ -391,7 +391,7 @@ private:
         }
     }
 
-    io_service_ptr      m_io_service;
+    io_context_ptr      m_io_context;
     strand_ptr          m_strand;
     context_ptr         m_context;
     socket_ptr          m_socket;
