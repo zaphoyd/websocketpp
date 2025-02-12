@@ -178,7 +178,7 @@ protected:
      * init_asio is called once immediately after construction to initialize
      * Asio components to the io_context
      *
-     * @param service A pointer to the endpoint's io_context
+     * @param context A pointer to the endpoint's io_context
      * @param strand A pointer to the connection's strand
      * @param is_server Whether or not the endpoint is a server or not.
      */

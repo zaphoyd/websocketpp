@@ -159,7 +159,7 @@ protected:
      * Asio components to the io_context. At this stage the connection is
      * speculative, the server may not have actually received a new connection.
      *
-     * @param service A pointer to the endpoint's io_context
+     * @param context A pointer to the endpoint's io_context
      * @param strand A shared pointer to the connection's asio strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
