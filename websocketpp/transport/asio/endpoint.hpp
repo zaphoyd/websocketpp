@@ -86,7 +86,7 @@ public:
     /// Type of timer handle
     typedef lib::shared_ptr<lib::asio::steady_timer> timer_ptr;
     /// Type of a shared pointer to an io_context work object
-    typedef lib::shared_ptr<lib::asio::executor_work_guard<lib::asio::io_context::executor_type>> work_ptr;
+    typedef lib::shared_ptr<lib::asio::executor_work_guard<lib::asio::io_context::executor_type>> work_guard_ptr;
 
     /// Type of socket pre-bind handler
     typedef lib::function<lib::error_code(acceptor_ptr)> tcp_pre_bind_handler;
@@ -108,7 +108,7 @@ public:
         // Explicitly destroy local objects
         m_acceptor.reset();
         m_resolver.reset();
-        m_work.reset();
+        m_work_guard.reset();
         if (m_state != UNINITIALIZED && !m_external_io_context) {
             delete m_io_context;
         }
@@ -495,8 +495,7 @@ public:
     /**
      * Bind the internal acceptor using the given host and service. More details
      * about what host and service can be are available in the Asio
-     * documentation for ip::basic_resolver_query::basic_resolver_query's
-     * constructors.
+     * documentation for the ip::basic_resolver::resolve function.
      *
      * The endpoint must have been initialized by calling init_asio before
      * listening.
@@ -519,14 +518,14 @@ public:
     {
         using lib::asio::ip::tcp;
         tcp::resolver r(*m_io_context);
-        tcp::resolver::results_type endpoints = r.resolve(host, service);
-        if (endpoints.empty()) {
+        tcp::resolver::results_type results = r.resolve(host, service);
+        if (results.empty()) {
             m_elog->write(log::elevel::library,
                 "asio::listen could not resolve the supplied host or service");
             ec = make_error_code(error::invalid_host_service);
             return;
         }
-        listen(*endpoints.begin(),ec);
+        listen(*(results.begin()),ec);
     }
 
     /// Stop listening (exception free)
@@ -613,8 +612,7 @@ public:
     /**
      * Bind the internal acceptor using the given host and service. More 
      * details about what host and service can be are available in the Asio
-     * documentation for ip::basic_resolver_query::basic_resolver_query's
-     * constructors.
+     * documentation for the ip::basic_resolver::resolve function.
      *
      * The endpoint must have been initialized by calling init_asio before
      * listening.
@@ -712,7 +710,7 @@ public:
      * @since 0.3.0
      */
     void start_perpetual() {
-        m_work.reset(new lib::asio::executor_work_guard<lib::asio::io_context::executor_type>(m_io_context->get_executor()));
+        m_work_guard.reset(new lib::asio::executor_work_guard<lib::asio::io_context::executor_type>(m_io_context->get_executor()));
     }
 
     /// Clears the endpoint's perpetual flag, allowing it to exit when empty
@@ -724,7 +722,7 @@ public:
      * @since 0.3.0
      */
     void stop_perpetual() {
-        m_work.reset();
+        m_work_guard.reset();
     }
 
     /// Call back a function after a period of time.
@@ -993,7 +991,7 @@ protected:
 
     void handle_resolve(transport_con_ptr tcon, timer_ptr dns_timer,
         connect_handler callback, lib::asio::error_code const & ec,
-        lib::asio::ip::tcp::resolver::results_type endpoints)
+        lib::asio::ip::tcp::resolver::results_type results)
     {
         if (ec == lib::asio::error::operation_aborted ||
             lib::asio::is_neg(dns_timer->expiry() - timer_ptr::element_type::clock_type::now()))
@@ -1015,7 +1013,7 @@ protected:
             s << "Async DNS resolve successful. Results: ";
 
             lib::asio::ip::tcp::resolver::results_type::iterator it;
-            for (it = endpoints.begin(); it != endpoints.end(); ++it) {
+            for (it = results.begin(); it != results.end(); ++it) {
                 s << (*it).endpoint() << " ";
             }
 
@@ -1041,7 +1039,7 @@ protected:
         if (config::enable_multithreading) {
             lib::asio::async_connect(
                 tcon->get_raw_socket(),
-                endpoints,
+                results,
                 tcon->get_strand()->wrap(lib::bind(
                     &type::handle_connect,
                     this,
@@ -1054,7 +1052,7 @@ protected:
         } else {
             lib::asio::async_connect(
                 tcon->get_raw_socket(),
-                endpoints,
+                results,
                 lib::bind(
                     &type::handle_connect,
                     this,
@@ -1189,7 +1187,7 @@ private:
     bool                m_external_io_context;
     acceptor_ptr        m_acceptor;
     resolver_ptr        m_resolver;
-    work_ptr            m_work;
+    work_guard_ptr      m_work_guard;
 
     // Network constants
     int                 m_listen_backlog;

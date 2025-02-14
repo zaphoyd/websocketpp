@@ -252,10 +252,10 @@ void run_dummy_client(std::string port) {
     try {
         websocketpp::lib::asio::io_context io_context;
         tcp::resolver resolver(io_context);
-        tcp::resolver::results_type endpoints = resolver.resolve("localhost", port);
+        tcp::resolver::results_type results = resolver.resolve("localhost", port);
         tcp::socket socket(io_context);
 
-        websocketpp::lib::asio::connect(socket, endpoints);
+        websocketpp::lib::asio::connect(socket, results);
         for (;;) {
             char data[512];
             websocketpp::lib::asio::error_code ec;

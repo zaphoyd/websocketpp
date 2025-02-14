@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio ) {
 
 BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
     websocketpp::server<websocketpp::config::asio> s;
-    websocketpp::lib::asio::io_context ios;
-    s.init_asio(&ios);
+    websocketpp::lib::asio::io_context ctx;
+    s.init_asio(&ctx);
 }
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
