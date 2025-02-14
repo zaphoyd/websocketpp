@@ -77,6 +77,7 @@ include (CMakeHelpers)
 option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
 option (BUILD_EXAMPLES "Build websocketpp examples." FALSE)
 option (BUILD_TESTS "Build websocketpp tests." FALSE)
+option (USE_ASIO_STANDALONE "Build websocketpp examples and tests using the standalone ASIO library." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
 
@@ -253,6 +254,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 endif()
 
 ############ Add projects
+
+if (USE_ASIO_STANDALONE)
+    add_definitions("-DASIO_STANDALONE -DASIO_HAS_BOOST_DATE_TIME")
+endif ()
 
 # Add main library
 add_subdirectory (websocketpp)

@@ -240,6 +240,7 @@ protected:
             
             // run the hostname through make_address to check if it is a valid IP literal
             lib::asio::ip::address addr = lib::asio::ip::make_address(host, ec_addr);
+            (void)addr;
             
             // If the parsing as an IP literal fails, proceed to register the hostname
             // with the TLS handshake via SNI.

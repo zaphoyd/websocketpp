@@ -106,9 +106,9 @@ struct config {
 };
 
 // Mock context that does no validation
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 context_ptr on_tls_init(websocketpp::connection_hdl) {
-    return context_ptr(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
+    return context_ptr(new websocketpp::lib::asio::ssl::context(websocketpp::lib::asio::ssl::context::sslv23));
 }
 
 // Mock connection

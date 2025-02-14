@@ -38,6 +38,8 @@
 #include <websocketpp/server.hpp>
 #include <websocketpp/client.hpp>
 
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 struct config : public websocketpp::config::asio_client {
     typedef config type;
     typedef websocketpp::config::asio base;
@@ -218,19 +220,19 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
 }
 
 void run_dummy_server(int port) {
-    using boost::asio::ip::tcp;
+    using websocketpp::lib::asio::ip::tcp;
 
     try {
-        boost::asio::io_context io_context;
+        websocketpp::lib::asio::io_context io_context;
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v6(), port));
         tcp::socket socket(io_context);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            websocketpp::lib::asio::error_code ec;
+            socket.read_some(websocketpp::lib::asio::buffer(data), ec);
+            if (ec == websocketpp::lib::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -239,26 +241,26 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (websocketpp::lib::asio::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 void run_dummy_client(std::string port) {
-    using boost::asio::ip::tcp;
+    using websocketpp::lib::asio::ip::tcp;
 
     try {
-        boost::asio::io_context io_context;
+        websocketpp::lib::asio::io_context io_context;
         tcp::resolver resolver(io_context);
         tcp::resolver::results_type endpoints = resolver.resolve("localhost", port);
         tcp::socket socket(io_context);
 
-        boost::asio::connect(socket, endpoints);
+        websocketpp::lib::asio::connect(socket, endpoints);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            websocketpp::lib::asio::error_code ec;
+            socket.read_some(websocketpp::lib::asio::buffer(data), ec);
+            if (ec == websocketpp::lib::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -267,7 +269,7 @@ void run_dummy_client(std::string port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (websocketpp::lib::asio::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
@@ -360,7 +362,7 @@ public:
     : m_timer(m_io_context, boost::posix_time::seconds(seconds))
     {
         m_timer.async_wait(bind(&test_deadline_timer::expired, this, ::_1));
-        std::size_t (boost::asio::io_context::*run)() = &boost::asio::io_context::run;
+        std::size_t (websocketpp::lib::asio::io_context::*run)() = &websocketpp::lib::asio::io_context::run;
         m_timer_thread = websocketpp::lib::thread(websocketpp::lib::bind(run, &m_io_context));
     }
     ~test_deadline_timer()
@@ -370,16 +372,16 @@ public:
     }
 
   private:
-    void expired(const boost::system::error_code & ec)
+    void expired(const websocketpp::lib::asio::error_code & ec)
     {
-        if (ec == boost::asio::error::operation_aborted)
+        if (ec == websocketpp::lib::asio::error::operation_aborted)
             return;
         BOOST_CHECK(!ec);
         BOOST_FAIL("Test timed out");
     }
 
-    boost::asio::io_context m_io_context;
-    boost::asio::deadline_timer m_timer;
+    websocketpp::lib::asio::io_context m_io_context;
+    websocketpp::lib::asio::deadline_timer m_timer;
     websocketpp::lib::thread m_timer_thread;
 };
 

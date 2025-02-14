@@ -380,7 +380,7 @@ public:
      * fail handler is called.
      *
      * Primarily used if you are using mismatched asio / system_error
-     * implementations such as `boost::asio` with `std::system_error`. In these
+     * implementations such as `lib::asio` with `std::system_error`. In these
      * cases the transport error type is different than the library error type
      * and some WebSocket++ functions that return transport errors via the 
      * library error code type will be coerced into a catch all `pass_through`
@@ -579,7 +579,7 @@ protected:
         lib::error_code const & ec)
     {
         if (ec == transport::error::operation_aborted ||
-            (post_timer && lib::asio::is_neg(post_timer->expiry() - std::chrono::steady_clock::now())))
+            (post_timer && lib::asio::is_neg(post_timer->expiry() - timer_ptr::element_type::clock_type::now())))
         {
             m_alog->write(log::alevel::devel,"post_init cancelled");
             return;
@@ -685,7 +685,7 @@ protected:
         // Whatever aborted it will be issuing the callback so we are safe to
         // return
         if (ec == lib::asio::error::operation_aborted ||
-            lib::asio::is_neg(m_proxy_data->timer->expiry() - std::chrono::steady_clock::now()))
+            lib::asio::is_neg(m_proxy_data->timer->expiry() - timer_ptr::element_type::clock_type::now()))
         {
             m_elog->write(log::elevel::devel,"write operation aborted");
             return;
@@ -756,7 +756,7 @@ protected:
         // Whatever aborted it will be issuing the callback so we are safe to
         // return
         if (ec == lib::asio::error::operation_aborted ||
-            lib::asio::is_neg(m_proxy_data->timer->expiry() - std::chrono::steady_clock::now()))
+            lib::asio::is_neg(m_proxy_data->timer->expiry() - timer_ptr::element_type::clock_type::now()))
         {
             m_elog->write(log::elevel::devel,"read operation aborted");
             return;
@@ -1030,18 +1030,18 @@ protected:
      */
     lib::error_code interrupt(interrupt_handler handler) {
         if (config::enable_multithreading) {
-            boost::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
+            lib::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
         } else {
-            boost::asio::post(m_io_context->get_executor(), handler);
+            lib::asio::post(m_io_context->get_executor(), handler);
         }
         return lib::error_code();
     }
 
     lib::error_code dispatch(dispatch_handler handler) {
         if (config::enable_multithreading) {
-            boost::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
+            lib::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
         } else {
-            boost::asio::post(m_io_context->get_executor(), handler);
+            lib::asio::post(m_io_context->get_executor(), handler);
         }
         return lib::error_code();
     }
@@ -1113,7 +1113,7 @@ protected:
         callback, lib::asio::error_code const & ec)
     {
         if (ec == lib::asio::error::operation_aborted ||
-            lib::asio::is_neg(shutdown_timer->expiry() - std::chrono::steady_clock::now()))
+            lib::asio::is_neg(shutdown_timer->expiry() - timer_ptr::element_type::clock_type::now()))
         {
             m_alog->write(log::alevel::devel,"async_shutdown cancelled");
             return;

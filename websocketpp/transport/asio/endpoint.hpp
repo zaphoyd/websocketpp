@@ -996,7 +996,7 @@ protected:
         lib::asio::ip::tcp::resolver::results_type endpoints)
     {
         if (ec == lib::asio::error::operation_aborted ||
-            lib::asio::is_neg(dns_timer->expiry() - std::chrono::steady_clock::now()))
+            lib::asio::is_neg(dns_timer->expiry() - timer_ptr::element_type::clock_type::now()))
         {
             m_alog->write(log::alevel::devel,"async_resolve cancelled");
             return;
@@ -1104,7 +1104,7 @@ protected:
         connect_handler callback, lib::asio::error_code const & ec)
     {
         if (ec == lib::asio::error::operation_aborted ||
-            lib::asio::is_neg(con_timer->expiry() - std::chrono::steady_clock::now()))
+            lib::asio::is_neg(con_timer->expiry() - timer_ptr::element_type::clock_type::now()))
         {
             m_alog->write(log::alevel::devel,"async_connect cancelled");
             return;
