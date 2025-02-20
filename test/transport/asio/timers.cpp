@@ -80,7 +80,8 @@ void run_dummy_server(int port) {
 // Wait for the specified time period then fail the test
 void run_test_timer(long value) {
     boost::asio::io_context ctx;
-    boost::asio::deadline_timer t(ctx,boost::posix_time::milliseconds(value));
+    boost::asio::system_timer t(ctx);
+    t.expires_after(std::chrono::milliseconds(value));
     boost::system::error_code ec;
     t.wait(ec);
     BOOST_FAIL( "Test timed out" );

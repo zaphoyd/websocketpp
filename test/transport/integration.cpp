@@ -355,17 +355,18 @@ void close(T * e, websocketpp::connection_hdl hdl) {
     e->get_con_from_hdl(hdl)->close(websocketpp::close::status::normal,"");
 }
 
-class test_deadline_timer
+class test_system_timer
 {
 public:
-    test_deadline_timer(int seconds)
-    : m_timer(m_io_context, boost::posix_time::seconds(seconds))
+    test_system_timer(int seconds)
+    : m_timer(m_io_context)
     {
-        m_timer.async_wait(bind(&test_deadline_timer::expired, this, ::_1));
+        m_timer.expires_after(std::chrono::seconds(seconds));
+        m_timer.async_wait(bind(&test_system_timer::expired, this, ::_1));
         std::size_t (websocketpp::lib::asio::io_context::*run)() = &websocketpp::lib::asio::io_context::run;
         m_timer_thread = websocketpp::lib::thread(websocketpp::lib::bind(run, &m_io_context));
     }
-    ~test_deadline_timer()
+    ~test_system_timer()
     {
         m_timer.cancel();
         m_timer_thread.join();
@@ -381,7 +382,7 @@ public:
     }
 
     websocketpp::lib::asio::io_context m_io_context;
-    websocketpp::lib::asio::deadline_timer m_timer;
+    websocketpp::lib::asio::system_timer m_timer;
     websocketpp::lib::thread m_timer_thread;
 };
 
@@ -427,7 +428,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     sleep(1); // give the server thread some time to start
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     run_client(c, "http://localhost:9005",false);
 
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
 
     sleep(1); // give the server thread some time to start
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     run_client(c, "http://localhost:9005");
 }
@@ -464,7 +465,7 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -489,7 +490,7 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -522,7 +523,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     c.set_open_handler(bind(&delay,::_1,1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -534,7 +535,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
 BOOST_AUTO_TEST_CASE( client_runs_out_of_work ) {
     client c;
 
-    test_deadline_timer deadline(3);
+    test_system_timer deadline(3);
 
     websocketpp::lib::error_code ec;
     c.init_asio(ec);
@@ -600,7 +601,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    test_deadline_timer deadline(5);
+    test_system_timer deadline(5);
 
     sleep(1); // give the server thread some time to start
 
