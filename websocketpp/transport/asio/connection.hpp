@@ -324,7 +324,7 @@ public:
         );
 
         if (config::enable_multithreading) {
-            new_timer->async_wait(m_strand->wrap(lib::bind(
+            new_timer->async_wait(lib::asio::bind_executor(*m_strand, lib::bind(
                 &type::handle_timer, get_shared(),
                 new_timer,
                 callback,
@@ -635,7 +635,7 @@ protected:
             lib::asio::async_write(
                 socket_con_type::get_next_layer(),
                 m_bufs,
-                m_strand->wrap(lib::bind(
+                lib::asio::bind_executor(*m_strand, lib::bind(
                     &type::handle_proxy_write, get_shared(),
                     callback,
                     lib::placeholders::_1
@@ -718,7 +718,7 @@ protected:
                 socket_con_type::get_next_layer(),
                 m_proxy_data->read_buf,
                 "\r\n\r\n",
-                m_strand->wrap(lib::bind(
+                lib::asio::bind_executor(*m_strand, lib::bind(
                     &type::handle_proxy_read, get_shared(),
                     callback,
                     lib::placeholders::_1, lib::placeholders::_2
@@ -856,7 +856,7 @@ protected:
                 socket_con_type::get_socket(),
                 lib::asio::buffer(buf,len),
                 lib::asio::transfer_at_least(num_bytes),
-                m_strand->wrap(make_custom_alloc_handler(
+                lib::asio::bind_executor(*m_strand, make_custom_alloc_handler(
                     m_read_handler_allocator,
                     lib::bind(
                         &type::handle_async_read, get_shared(),
@@ -925,7 +925,7 @@ protected:
             lib::asio::async_write(
                 socket_con_type::get_socket(),
                 m_bufs,
-                m_strand->wrap(make_custom_alloc_handler(
+                lib::asio::bind_executor(*m_strand, make_custom_alloc_handler(
                     m_write_handler_allocator,
                     lib::bind(
                         &type::handle_async_write, get_shared(),
@@ -965,7 +965,7 @@ protected:
             lib::asio::async_write(
                 socket_con_type::get_socket(),
                 m_bufs,
-                m_strand->wrap(make_custom_alloc_handler(
+                lib::asio::bind_executor(*m_strand, make_custom_alloc_handler(
                     m_write_handler_allocator,
                     lib::bind(
                         &type::handle_async_write, get_shared(),
@@ -1030,7 +1030,7 @@ protected:
      */
     lib::error_code interrupt(interrupt_handler handler) {
         if (config::enable_multithreading) {
-            lib::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
+            lib::asio::post(m_io_context->get_executor(), lib::asio::bind_executor(*m_strand, handler));
         } else {
             lib::asio::post(m_io_context->get_executor(), handler);
         }
@@ -1039,7 +1039,7 @@ protected:
 
     lib::error_code dispatch(dispatch_handler handler) {
         if (config::enable_multithreading) {
-            lib::asio::post(m_io_context->get_executor(), m_strand->wrap(handler));
+            lib::asio::post(m_io_context->get_executor(), lib::asio::bind_executor(*m_strand, handler));
         } else {
             lib::asio::post(m_io_context->get_executor(), handler);
         }
