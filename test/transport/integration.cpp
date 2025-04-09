@@ -38,6 +38,8 @@
 #include <websocketpp/server.hpp>
 #include <websocketpp/client.hpp>
 
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 struct config : public websocketpp::config::asio_client {
     typedef config type;
     typedef websocketpp::config::asio base;
@@ -218,19 +220,19 @@ void run_time_limited_client(client & c, std::string uri, long timeout,
 }
 
 void run_dummy_server(int port) {
-    using boost::asio::ip::tcp;
+    using websocketpp::lib::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
-        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
-        tcp::socket socket(io_service);
+        websocketpp::lib::asio::io_context io_context;
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v6(), port));
+        tcp::socket socket(io_context);
 
         acceptor.accept(socket);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            websocketpp::lib::asio::error_code ec;
+            socket.read_some(websocketpp::lib::asio::buffer(data), ec);
+            if (ec == websocketpp::lib::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -239,27 +241,26 @@ void run_dummy_server(int port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (websocketpp::lib::asio::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
 
 void run_dummy_client(std::string port) {
-    using boost::asio::ip::tcp;
+    using websocketpp::lib::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
-        tcp::resolver resolver(io_service);
-        tcp::resolver::query query("localhost", port);
-        tcp::resolver::iterator iterator = resolver.resolve(query);
-        tcp::socket socket(io_service);
+        websocketpp::lib::asio::io_context io_context;
+        tcp::resolver resolver(io_context);
+        tcp::resolver::results_type results = resolver.resolve("localhost", port);
+        tcp::socket socket(io_context);
 
-        boost::asio::connect(socket, iterator);
+        websocketpp::lib::asio::connect(socket, results);
         for (;;) {
             char data[512];
-            boost::system::error_code ec;
-            socket.read_some(boost::asio::buffer(data), ec);
-            if (ec == boost::asio::error::eof) {
+            websocketpp::lib::asio::error_code ec;
+            socket.read_some(websocketpp::lib::asio::buffer(data), ec);
+            if (ec == websocketpp::lib::asio::error::eof) {
                 break;
             } else if (ec) {
                 // other error
@@ -268,7 +269,7 @@ void run_dummy_client(std::string port) {
         }
     } catch (std::exception & e) {
         std::cout << e.what() << std::endl;
-    } catch (boost::system::error_code & ec) {
+    } catch (websocketpp::lib::asio::error_code & ec) {
         std::cout << ec.message() << std::endl;
     }
 }
@@ -354,33 +355,34 @@ void close(T * e, websocketpp::connection_hdl hdl) {
     e->get_con_from_hdl(hdl)->close(websocketpp::close::status::normal,"");
 }
 
-class test_deadline_timer
+class test_system_timer
 {
 public:
-    test_deadline_timer(int seconds)
-    : m_timer(m_io_service, boost::posix_time::seconds(seconds))
+    test_system_timer(int seconds)
+    : m_timer(m_io_context)
     {
-        m_timer.async_wait(bind(&test_deadline_timer::expired, this, ::_1));
-        std::size_t (boost::asio::io_service::*run)() = &boost::asio::io_service::run;
-        m_timer_thread = websocketpp::lib::thread(websocketpp::lib::bind(run, &m_io_service));
+        m_timer.expires_after(std::chrono::seconds(seconds));
+        m_timer.async_wait(bind(&test_system_timer::expired, this, ::_1));
+        std::size_t (websocketpp::lib::asio::io_context::*run)() = &websocketpp::lib::asio::io_context::run;
+        m_timer_thread = websocketpp::lib::thread(websocketpp::lib::bind(run, &m_io_context));
     }
-    ~test_deadline_timer()
+    ~test_system_timer()
     {
         m_timer.cancel();
         m_timer_thread.join();
     }
 
   private:
-    void expired(const boost::system::error_code & ec)
+    void expired(const websocketpp::lib::asio::error_code & ec)
     {
-        if (ec == boost::asio::error::operation_aborted)
+        if (ec == websocketpp::lib::asio::error::operation_aborted)
             return;
         BOOST_CHECK(!ec);
         BOOST_FAIL("Test timed out");
     }
 
-    boost::asio::io_service m_io_service;
-    boost::asio::deadline_timer m_timer;
+    websocketpp::lib::asio::io_context m_io_context;
+    websocketpp::lib::asio::system_timer m_timer;
     websocketpp::lib::thread m_timer_thread;
 };
 
@@ -426,7 +428,7 @@ BOOST_AUTO_TEST_CASE( pong_timeout ) {
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
     sleep(1); // give the server thread some time to start
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     run_client(c, "http://localhost:9005",false);
 
@@ -447,7 +449,7 @@ BOOST_AUTO_TEST_CASE( client_open_handshake_timeout ) {
 
     sleep(1); // give the server thread some time to start
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     run_client(c, "http://localhost:9005");
 }
@@ -463,7 +465,7 @@ BOOST_AUTO_TEST_CASE( server_open_handshake_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -488,7 +490,7 @@ BOOST_AUTO_TEST_CASE( client_self_initiated_close_handshake_timeout ) {
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
 
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -521,7 +523,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
     c.set_open_handler(bind(&delay,::_1,1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    test_deadline_timer deadline(10);
+    test_system_timer deadline(10);
 
     sleep(1); // give the server thread some time to start
 
@@ -533,7 +535,7 @@ BOOST_AUTO_TEST_CASE( server_self_initiated_close_handshake_timeout ) {
 BOOST_AUTO_TEST_CASE( client_runs_out_of_work ) {
     client c;
 
-    test_deadline_timer deadline(3);
+    test_system_timer deadline(3);
 
     websocketpp::lib::error_code ec;
     c.init_asio(ec);
@@ -541,7 +543,7 @@ BOOST_AUTO_TEST_CASE( client_runs_out_of_work ) {
 
     c.run();
 
-    // This test checks that an io_service with no work ends immediately.
+    // This test checks that an io_context with no work ends immediately.
     BOOST_CHECK(true);
 }
 
@@ -599,7 +601,7 @@ BOOST_AUTO_TEST_CASE( stop_listening ) {
     c.set_open_handler(bind(&close<client>,&c,::_1));
 
     websocketpp::lib::thread sthread(websocketpp::lib::bind(&run_server,&s,9005,false));
-    test_deadline_timer deadline(5);
+    test_system_timer deadline(5);
 
     sleep(1); // give the server thread some time to start
 

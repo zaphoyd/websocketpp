@@ -2,7 +2,7 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 2.8.8)
+cmake_minimum_required (VERSION 3.10)
 
 ############ Paths
 
@@ -77,6 +77,7 @@ include (CMakeHelpers)
 option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
 option (BUILD_EXAMPLES "Build websocketpp examples." FALSE)
 option (BUILD_TESTS "Build websocketpp tests." FALSE)
+option (USE_ASIO_STANDALONE "Build websocketpp examples and tests using the standalone ASIO library." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
 
@@ -221,9 +222,8 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     set (Boost_FIND_QUIETLY TRUE)
     set (Boost_DEBUG FALSE)
     set (Boost_USE_MULTITHREADED TRUE)
-    set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
 
-    find_package (Boost 1.39.0 COMPONENTS ${WEBSOCKETPP_BOOST_LIBS})
+    find_package (Boost 1.66.0 NO_MODULE COMPONENTS ${WEBSOCKETPP_BOOST_LIBS})
 
     if (Boost_FOUND)
         # Boost is a project wide global dependency.
@@ -253,6 +253,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 endif()
 
 ############ Add projects
+
+if (USE_ASIO_STANDALONE)
+    add_definitions("-DASIO_STANDALONE -DASIO_HAS_BOOST_DATE_TIME")
+endif ()
 
 # Add main library
 add_subdirectory (websocketpp)

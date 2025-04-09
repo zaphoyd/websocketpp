@@ -39,59 +39,57 @@ using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
-namespace asio = websocketpp::lib::asio;
-
 struct tcp_echo_session : websocketpp::lib::enable_shared_from_this<tcp_echo_session> {
     typedef websocketpp::lib::shared_ptr<tcp_echo_session> ptr;
     
-    tcp_echo_session(asio::io_service & service) : m_socket(service) {}
+    tcp_echo_session(websocketpp::lib::asio::io_context & context) : m_socket(context) {}
 
     void start() {
-        m_socket.async_read_some(asio::buffer(m_buffer, sizeof(m_buffer)),
+        m_socket.async_read_some(websocketpp::lib::asio::buffer(m_buffer, sizeof(m_buffer)),
             websocketpp::lib::bind(
                 &tcp_echo_session::handle_read, shared_from_this(), _1, _2));
     }
     
-    void handle_read(const asio::error_code & ec, size_t transferred) {
+    void handle_read(const websocketpp::lib::asio::error_code & ec, size_t transferred) {
         if (!ec) {
-            asio::async_write(m_socket,
-                asio::buffer(m_buffer, transferred),
+            websocketpp::lib::asio::async_write(m_socket,
+                websocketpp::lib::asio::buffer(m_buffer, transferred),
                     bind(&tcp_echo_session::handle_write, shared_from_this(), _1));
         }
     }
     
-    void handle_write(const asio::error_code & ec) {
+    void handle_write(const websocketpp::lib::asio::error_code & ec) {
         if (!ec) {
-            m_socket.async_read_some(asio::buffer(m_buffer, sizeof(m_buffer)),
+            m_socket.async_read_some(websocketpp::lib::asio::buffer(m_buffer, sizeof(m_buffer)),
                 bind(&tcp_echo_session::handle_read, shared_from_this(), _1, _2));
         }
     }
 
-    asio::ip::tcp::socket m_socket;
+    websocketpp::lib::asio::ip::tcp::socket m_socket;
     char m_buffer[1024];
 };
 
 struct tcp_echo_server {
-    tcp_echo_server(asio::io_service & service, short port)
-        : m_service(service)
-        , m_acceptor(service, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port))
+    tcp_echo_server(websocketpp::lib::asio::io_context & context, short port)
+        : m_context(context)
+        , m_acceptor(context, websocketpp::lib::asio::ip::tcp::endpoint(websocketpp::lib::asio::ip::tcp::v6(), port))
     {
         this->start_accept();
     }
     
     void start_accept() {
-        tcp_echo_session::ptr new_session(new tcp_echo_session(m_service));
+        tcp_echo_session::ptr new_session(new tcp_echo_session(m_context));
         m_acceptor.async_accept(new_session->m_socket,
             bind(&tcp_echo_server::handle_accept, this, new_session, _1));
     }
     
-    void handle_accept(tcp_echo_session::ptr new_session, const asio::error_code & ec) {
+    void handle_accept(tcp_echo_session::ptr new_session, const websocketpp::lib::asio::error_code & ec) {
         if (!ec) {
             new_session->start();
         }
         start_accept();
     }
 
-    asio::io_service & m_service;
-    asio::ip::tcp::acceptor m_acceptor;
+    websocketpp::lib::asio::io_context & m_context;
+    websocketpp::lib::asio::ip::tcp::acceptor m_acceptor;
 };

@@ -112,7 +112,7 @@ bool verify_common_name(char const * hostname, X509 * cert) {
  * and
  * https://github.com/iSECPartners/ssl-conservatory
  */
-bool verify_certificate(const char * hostname, bool preverified, boost::asio::ssl::verify_context& ctx) {
+bool verify_certificate(const char * hostname, bool preverified, websocketpp::lib::asio::ssl::verify_context& ctx) {
     // The verify callback can be used to check whether the certificate that is
     // being presented is valid for the peer. For example, RFC 2818 describes
     // the steps involved in doing this for HTTPS. Consult the OpenSSL
@@ -176,16 +176,16 @@ bool verify_certificate(const char * hostname, bool preverified, boost::asio::ss
  * (websocketpp.org, for example).
  */
 context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
-    context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::sslv23);
+    context_ptr ctx = websocketpp::lib::make_shared<websocketpp::lib::asio::ssl::context>(websocketpp::lib::asio::ssl::context::sslv23);
 
     try {
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                         boost::asio::ssl::context::no_sslv2 |
-                         boost::asio::ssl::context::no_sslv3 |
-                         boost::asio::ssl::context::single_dh_use);
+        ctx->set_options(websocketpp::lib::asio::ssl::context::default_workarounds |
+                         websocketpp::lib::asio::ssl::context::no_sslv2 |
+                         websocketpp::lib::asio::ssl::context::no_sslv3 |
+                         websocketpp::lib::asio::ssl::context::single_dh_use);
 
 
-        ctx->set_verify_mode(boost::asio::ssl::verify_peer);
+        ctx->set_verify_mode(websocketpp::lib::asio::ssl::verify_peer);
         ctx->set_verify_callback(bind(&verify_certificate, hostname, ::_1, ::_2));
 
         // Here we load the CA certificates of all CA's that this client trusts.
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
 
         c.get_alog().write(websocketpp::log::alevel::app, "Connecting to " + uri);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         // this will cause a single connection to be made to the server. c.run()
         // will exit when this connection is closed.
         c.run();
