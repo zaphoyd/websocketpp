@@ -1,0 +1,6 @@
+module(
+    name = "websocketpp",
+    repo_name = "andreazevedo_websocketpp",
+)
+
+bazel_dep(name = "asio", version = "1.32.0")

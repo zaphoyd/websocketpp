@@ -91,4 +91,10 @@ install
 Makefile
 bin
 
+# bazel
+MODULE.bazel.lock
+bazel-bin
+bazel-out
+bazel-*
+
 Testing/Temporary/CTestCostData.txt
