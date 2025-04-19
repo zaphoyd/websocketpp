@@ -1,0 +1,19 @@
+{
+    "name": "websocketpp",
+    "version": "1.0.0",
+    "description": "WebSocket++ is a header only C++ library that implements RFC6455 The WebSocket Protocol.",
+    "keywords": "networking, connectivity, web, websocket",
+    "examples": "example/*/*.cpp",
+    "build": {
+        "includeDir": ".",
+        "srcFilter":"-<*>"
+    },
+    "platforms": [
+        "native"
+    ],
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/zaphoyd/websocketpp"
+    }
+}
