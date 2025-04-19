@@ -79,6 +79,12 @@ endpoint<connection,config>::create_connection() {
     if (m_max_message_size != config::max_message_size) {
         con->set_max_message_size(m_max_message_size);
     }
+    if (max_buffer_size != config::max_message_buffer_size)
+    {
+        con->set_max_message_buffser_size(max_buffer_size);
+    }
+
+
     con->set_max_http_body_size(m_max_http_body_size);
 
     lib::error_code ec;
