@@ -109,7 +109,11 @@ public:
 
 
     /// Destructor
-    ~endpoint<connection,config>() {}
+    #if __cplusplus >= 202002L
+        ~endpoint() {}
+    #else
+        ~endpoint<connection,config>() {}
+    #endif
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable

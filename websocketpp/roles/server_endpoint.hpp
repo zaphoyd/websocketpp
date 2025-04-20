@@ -71,24 +71,44 @@ public:
         endpoint_type::m_alog->write(log::alevel::devel, "server constructor");
     }
 
-    /// Destructor
+/// Destructor
+#if __cplusplus >= 202002L
+    ~server() {}
+#else
     ~server<config>() {}
+#endif
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy constructor because endpoints are not copyable
+#if __cplusplus >= 202002L
+    server(server &) = delete;
+#else
     server<config>(server<config> &) = delete;
+#endif
 
     // no copy assignment operator because endpoints are not copyable
+#if __cplusplus >= 202002L
+    server & operator=(server const &) = delete;
+#else
     server<config> & operator=(server<config> const &) = delete;
+#endif
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
     /// Move constructor
+#if __cplusplus >= 202002L
+    server(server && o) : endpoint<connection<config>,config>(std::move(o)) {}
+#else
     server<config>(server<config> && o) : endpoint<connection<config>,config>(std::move(o)) {}
+#endif
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no move assignment operator because of const member variables
+#if __cplusplus >= 202002L
+    server & operator=(server &&) = delete;
+#else
     server<config> & operator=(server<config> &&) = delete;
+#endif
 #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
 
 #endif // _WEBSOCKETPP_MOVE_SEMANTICS_
