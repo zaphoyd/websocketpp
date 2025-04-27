@@ -1410,7 +1410,19 @@ void connection<config>::handle_write_http_response(lib::error_code const & ec) 
             if (m_ec) {
                 m_alog->write(log::alevel::devel,
                     "got to writing HTTP results with m_ec set: "+m_ec.message());
+            }else{
+                //add for http 1.1 keep-alive support
+                using utility::ci_find_substr;
+                const std::string& connection_header = get_request_header("Connection");
+                //for http 1.1
+                if (ci_find_substr(connection_header, "keep-alive",sizeof("keep-alive")-1)!=connection_header.end())
+                {
+                    m_internal_state = istate::READ_HTTP_REQUEST;
+                    this->read_handshake(1);
+                    return;
+                }
             }
+            
             m_ec = make_error_code(error::http_connection_ended);
         }        
         
