@@ -299,6 +299,68 @@ public:
             return "";
         }
     }
+    
+    /// Return the query portion in vector for each query parameter
+    std::vector<std::pair<std::string, std::string>> const get_queryParam() const {
+        	std::string query = get_query();
+        	std::string token;
+        	std::size_t pos = 0;
+        	std::vector<std::pair<std::string, std::string>> returnV;
+
+        	if (query.size() > 0 && query.find('&') == std::string::npos)
+        	{
+        		if (query.find('=') != std::string::npos) {
+        			token = query.substr(0,query.find('='));
+        			returnV.push_back(std::make_pair(token, query.substr(query.find('=')+1)));
+        		}
+        	}
+        	else {
+				while ((pos = query.find('&')) != std::string::npos)
+				{
+					token = query.substr(0,pos);
+
+					query.erase(0, pos + 1);
+				}
+        	}
+        	return returnV;
+
+     }
+     
+    /// Return the value of a particular query parameter
+    std::string const get_queryParam(std::string p1) const {
+		std::string query = get_query();
+		std::string token;
+		std::size_t pos = 0;
+
+		if (query.find(p1) == std::string::npos) {
+			return "";
+		}
+
+		if (query.size() > 0 && query.find('&') == std::string::npos)
+		{
+			if (query.find('=') != std::string::npos) {
+				token = query.substr(0,query.find('='));
+				return query.substr(query.find('=')+1);
+			}
+		}
+		else {
+			while ((pos = query.find('&')) != std::string::npos)
+			{
+				token = query.substr(0,pos);
+				query.erase(0, pos + 1);
+			}
+		}
+		return "";
+    }
+
+    /// Return the filename in the HTTP URI
+    std::string const get_filename() const {
+    	std::size_t found =  m_resource.find('?');
+    	if (found > 0)
+    	    return m_resource.substr(0, found);
+    	else
+    	    return m_resource;
+    }
 
     // get fragment
 
