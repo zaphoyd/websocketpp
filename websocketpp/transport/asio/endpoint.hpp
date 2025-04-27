@@ -558,7 +558,7 @@ public:
     {
         using lib::asio::ip::tcp;
         tcp::resolver r(*m_io_service);
-        tcp::resolver::query query(host, service);
+        tcp::resolver::query query(host, service, lib::asio::ip::resolver_query_base::flags());
         tcp::resolver::iterator endpoint_iterator = r.resolve(query);
         tcp::resolver::iterator end;
         if (endpoint_iterator == end) {
@@ -883,7 +883,7 @@ protected:
             port = pu->get_port_str();
         }
 
-        tcp::resolver::query query(host,port);
+        tcp::resolver::query query(host,port,lib::asio::ip::resolver_query_base::flags());
 
         if (m_alog->static_test(log::alevel::devel)) {
             m_alog->write(log::alevel::devel,
