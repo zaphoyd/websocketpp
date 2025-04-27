@@ -69,7 +69,7 @@ public:
 
     typedef std::pair<lib::error_code,std::string> err_str_pair;
 
-    explicit hybi13(bool secure, bool p_is_server, msg_manager_ptr manager, rng_type& rng)
+    explicit hybi13(bool secure, bool p_is_server, msg_manager_ptr manager, const lib::shared_ptr<rng_type>& rng)
       : processor<config>(secure, p_is_server)
       , m_msg_manager(manager)
       , m_rng(rng)
@@ -262,7 +262,7 @@ public:
         unsigned char raw_key[16];
 
         for (int i = 0; i < 4; i++) {
-            conv.i = m_rng();
+            conv.i = (*m_rng)();
             std::copy(conv.c,conv.c+4,&raw_key[i*4]);
         }
 
@@ -631,7 +631,7 @@ public:
 
         if (masked) {
             // Generate masking key.
-            key.i = m_rng();
+            key.i = (*m_rng)();
         } else {
             key.i = 0;
         }
@@ -999,7 +999,7 @@ protected:
 
         if (masked) {
             // Generate masking key.
-            key.i = m_rng();
+            key.i = (*m_rng)();
 
             frame::extended_header e(payload.size(),key.i);
             out->set_header(frame::prepare_header(h,e));
@@ -1063,7 +1063,7 @@ protected:
     // Extended header of current frame
     frame::extended_header m_extended_header;
 
-    rng_type & m_rng;
+    lib::shared_ptr<rng_type> m_rng;
 
     // Overall state of the processor
     state m_state;

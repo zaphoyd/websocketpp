@@ -295,7 +295,7 @@ private:
 public:
 
     explicit connection(bool p_is_server, std::string const & ua, const lib::shared_ptr<alog_type>& alog,
-                        const lib::shared_ptr<elog_type>& elog, rng_type & rng)
+                        const lib::shared_ptr<elog_type>& elog, const lib::shared_ptr<rng_type>& rng)
       : transport_con_type(p_is_server, alog, elog)
       , m_handle_read_frame(lib::bind(
             &type::handle_read_frame,
@@ -1606,7 +1606,7 @@ private:
     const lib::shared_ptr<alog_type> m_alog;
     const lib::shared_ptr<elog_type> m_elog;
 
-    rng_type & m_rng;
+    lib::shared_ptr<rng_type> m_rng;
 
     // Close state
     /// Close code that was sent on the wire by this endpoint

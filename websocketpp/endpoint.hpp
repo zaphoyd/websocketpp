@@ -97,6 +97,7 @@ public:
       , m_pong_timeout_dur(config::timeout_pong)
       , m_max_message_size(config::max_message_size)
       , m_max_http_body_size(config::max_http_body_size)
+      , m_rng(lib::make_shared<rng_type>())
       , m_is_server(p_is_server)
     {
         m_alog->set_channels(config::alog_level);
@@ -684,7 +685,7 @@ private:
     size_t                      m_max_message_size;
     size_t                      m_max_http_body_size;
 
-    rng_type m_rng;
+    lib::shared_ptr<rng_type> m_rng;
 
     // static settings
     bool const                  m_is_server;
