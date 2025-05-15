@@ -1,0 +1,41 @@
+This code snippet is part of a WebSocket client implementation using the WebSocket++ library. It demonstrates the setup and initialization 
+of a WebSocket client, including logging configuration, event handlers, and connection establishment.
+
+First, the logging options for the WebSocket client (`c`) are configured. The `set_access_channels` method enables all access-level logs,
+providing detailed information about the client's operations. However, the `clear_access_channels` method is used to disable frame payload logs,
+which can be verbose and unnecessary in many cases. Additionally, the `set_error_channels` method enables all error-level logs, 
+ensuring that any issues encountered by the client are logged for debugging purposes.
+
+Next, the `init_asio` method initializes the ASIO transport layer, which is required for WebSocket++ to handle network communication.
+This step is essential for enabling the client to send and receive WebSocket messages over the network.
+
+The code then sets up various event handlers to manage WebSocket events. The `set_message_handler` method assigns
+a handler function (`on_message`) to process incoming messages. The `set_tls_init_handler` method binds 
+the `on_tls_init` function to handle TLS initialization, passing the hostname and a placeholder argument (`::_1`).
+Similarly, the `set_open_handler`, `set_fail_handler`, and `set_close_handler` methods bind their 
+respective functions (`on_open`, `on_fail`, and `on_close`) to handle connection opening, failure, and closure events.
+
+An error code object (`websocketpp::lib::error_code ec`) is created to capture any errors that occur during the connection process.
+The `get_connection` method is then called to establish a connection to the specified server URI (`uri`). If an error occurs 
+during this process, it is logged using `ec.message()`, and the function returns early with a value of `0`.
+
+This code is a foundational part of a WebSocket client, setting up the necessary components and handlers to 
+manage WebSocket communication effectively. It ensures robust error handling and logging, making it easier 
+to debug and maintain the client.
+
+/ Import placeholders for binding functions
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+
+
+This code snippet imports placeholders `_1` and `_2` from the `websocketpp::lib::placeholders` namespace. These placeholders are used in conjunction 
+with the `bind` function to create callable objects that can defer the invocation of a function until later, while also allowing partial application 
+of arguments.
+
+In the context of the WebSocket++ library, these placeholders are commonly used to bind event handler functions to specific WebSocket events, 
+such as when a connection is opened, closed, or fails. The placeholders `_1` and `_2` act as stand-ins for arguments that will be provided at 
+runtime when the event occurs. For example, `_1` might represent the connection handle, while `_2` could represent additional event-specific data.
+
+By importing these placeholders, the code avoids the need to fully qualify them (e.g., `websocketpp::lib::placeholders::_1`) every time they are used, 
+improving readability and reducing verbosity. This is particularly useful in event-driven programming, where binding functions with placeholders 
+is a common pattern.
