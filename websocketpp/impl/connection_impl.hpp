@@ -1895,7 +1895,11 @@ void connection<config>::handle_write_frame(lib::error_code const & ec)
     bool terminal = m_current_msgs.back()->get_terminal();
 
     m_send_buffer.clear();
+    m_send_buffer.shrink_to_fit();
+
     m_current_msgs.clear();
+    m_current_msgs.shrink_to_fit();
+
     // TODO: recycle instead of deleting
 
     if (ec) {
