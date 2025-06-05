@@ -43,7 +43,7 @@ class endpoint : public config::transport_type, public config::endpoint_base {
 public:
     // Import appropriate types from our helper class
     // See endpoint_types for more details.
-    typedef endpoint<connection,config> type;
+    typedef endpoint type;
 
     /// Type of the transport component of this endpoint
     typedef typename config::transport_type transport_type;
@@ -109,7 +109,7 @@ public:
 
 
     /// Destructor
-    ~endpoint<connection,config>() {}
+    ~endpoint() {}
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable
