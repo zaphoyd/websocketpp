@@ -592,7 +592,7 @@ void connection<config>::set_status(http::status_code::value code,
     std::string const & msg)
 {
     lib::error_code ec;
-    this->set_status(code, msg);
+    this->set_status(code, msg, ec);
     if (ec) {
         throw exception("Call to set_status from invalid state", ec);
     }
