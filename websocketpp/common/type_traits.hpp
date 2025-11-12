@@ -28,6 +28,7 @@
 #ifndef WEBSOCKETPP_COMMON_TYPE_TRAITS_HPP
 #define WEBSOCKETPP_COMMON_TYPE_TRAITS_HPP
 
+#include <cstddef>
 #include <websocketpp/common/cpp11.hpp>
 
 // If we've determined that we're in full C++11 mode and the user hasn't
@@ -52,7 +53,16 @@ namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-    using std::aligned_storage;
+    template<std::size_t N>
+    struct aligned_storage {
+#if __cplusplus >= 202300L
+        struct type {
+            alignas(std::max_align_t) unsigned char data[N];
+        };
+#else
+        using type = typename std::aligned_storage<N>::type;
+#endif
+    };
     using std::is_same;
 #else
     using boost::aligned_storage;
