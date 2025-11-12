@@ -53,6 +53,8 @@ namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_TYPE_TRAITS_
+    // NOTE: this is may not be the best way to detect c++23 compilers, but it worked fine for all test I did
+    // std::aligned_storage has been depracated as of c++23 (see P1413R3 for more details)
     template<std::size_t N>
     struct aligned_storage {
 #if __cplusplus >= 202300L
