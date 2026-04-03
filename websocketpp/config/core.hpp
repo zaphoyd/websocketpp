@@ -259,6 +259,7 @@ struct core {
     /// permessage_compress extension
     struct permessage_deflate_config {
         typedef core::request_type request_type;
+        static const size_t max_message_size = 32000000;
 
         /// If the remote endpoint requests that we reset the compression
         /// context after each message should we honor the request?

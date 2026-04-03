@@ -202,6 +202,7 @@ public:
      */
     void set_max_message_size(size_t new_value) {
         m_max_message_size = new_value;
+        this->handle_max_message_size_changed(new_value);
     }
 
     /// Returns whether or not the permessage_compress extension is implemented
@@ -212,6 +213,11 @@ public:
     virtual bool has_permessage_compress() const {
         return false;
     }
+
+protected:
+    virtual void handle_max_message_size_changed(size_t) {}
+
+public:
 
     /// Initializes extensions based on the Sec-WebSocket-Extensions header
     /**

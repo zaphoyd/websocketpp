@@ -74,6 +74,7 @@ public:
       , m_msg_manager(manager)
       , m_rng(rng)
     {
+        m_permessage_deflate.set_max_message_size(base::m_max_message_size);
         reset_headers();
     }
 
@@ -529,6 +530,10 @@ public:
             lib::error_code ec;
             ec = m_permessage_deflate.decompress(trailer,4,out);
             if (ec) {
+                if (permessage_deflate_type::is_message_too_big(ec))
+                {
+                    return make_error_code(error::message_too_big);
+                }
                 return ec;
             }
         }
@@ -557,6 +562,10 @@ public:
             frame::MAX_EXTENDED_HEADER_LENGTH,
             static_cast<uint8_t>(0x00)
         );
+    }
+
+    void handle_max_message_size_changed(size_t new_value) {
+        m_permessage_deflate.set_max_message_size(new_value);
     }
 
     /// Test whether or not the processor has a message ready
@@ -815,6 +824,10 @@ protected:
             // Decompress current buffer into the message buffer
             ec = m_permessage_deflate.decompress(buf,len,out);
             if (ec) {
+                if (permessage_deflate_type::is_message_too_big(ec))
+                {
+                    ec = make_error_code(error::message_too_big);
+                }
                 return 0;
             }
         } else {
