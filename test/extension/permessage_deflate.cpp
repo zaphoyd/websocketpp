@@ -54,6 +54,18 @@ struct ext_vars {
 namespace pmde = websocketpp::extensions::permessage_deflate::error;
 namespace pmd_mode = websocketpp::extensions::permessage_deflate::mode;
 
+static std::string make_deterministic_message(size_t size) {
+    std::string message(size, '\0');
+    unsigned int state = 0x12345678u;
+
+    for (size_t i = 0; i < size; ++i) {
+        state = state * 1664525u + 1013904223u;
+        message[i] = static_cast<char>(state >> 24);
+    }
+
+    return message;
+}
+
 // Ensure the disabled extension behaves appropriately disabled
 
 BOOST_AUTO_TEST_CASE( disabled_is_disabled ) {
@@ -701,6 +713,57 @@ BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
     BOOST_CHECK_EQUAL( compress_in, decompress_out );
 
     BOOST_CHECK_EQUAL( compress_out1, compress_out2 );
+}
+
+BOOST_AUTO_TEST_CASE( compress_data_client_no_context_takeover_offer_without_response_param ) {
+    ext_vars v;
+    enabled_type second_message_server;
+
+    std::string offer = v.extc.generate_offer();
+    std::string compress_in = make_deterministic_message(4096);
+    std::string compress_out1;
+    std::string compress_out2;
+    std::string decompress_out1;
+    std::string decompress_out2;
+    websocketpp::http::attribute_list response_without_client_no_context_takeover;
+
+    BOOST_CHECK( offer.find("client_no_context_takeover") != std::string::npos );
+
+    v.ec = v.extc.validate_offer(response_without_client_no_context_takeover);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.extc.init(false);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.init(true);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = second_message_server.init(true);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.extc.compress(compress_in,compress_out1);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.extc.compress(compress_in,compress_out2);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out1.data()),
+        compress_out1.size(),
+        decompress_out1
+    );
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK( decompress_out1 == compress_in );
+
+    v.ec = second_message_server.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out2.data()),
+        compress_out2.size(),
+        decompress_out2
+    );
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    if (!v.ec) {
+        BOOST_CHECK( decompress_out2 == compress_in );
+    }
 }
 
 BOOST_AUTO_TEST_CASE( compress_empty ) {
