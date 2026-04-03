@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <websocketpp/processors/hybi13.hpp>
 
@@ -55,6 +56,7 @@ struct stub_config {
 
     struct permessage_deflate_config {
         typedef stub_config::request_type request_type;
+        static const size_t max_message_size = 16000000;
     };
 
     typedef websocketpp::extensions::permessage_deflate::disabled
@@ -77,6 +79,7 @@ struct stub_config_ext {
 
     struct permessage_deflate_config {
         typedef stub_config_ext::request_type request_type;
+        static const size_t max_message_size = 16000000;
     };
 
     typedef websocketpp::extensions::permessage_deflate::enabled
@@ -536,6 +539,48 @@ BOOST_AUTO_TEST_CASE( multiple_frame_message_too_large ) {
     // read second message frame that puts the size over the limit
     BOOST_CHECK_EQUAL( env.p.consume(frame1,9,env.ec), 6 );
     BOOST_CHECK_EQUAL( env.ec, websocketpp::processor::error::message_too_big );
+}
+
+BOOST_AUTO_TEST_CASE( compressed_frame_message_too_large ) {
+    processor_setup_ext client(false);
+    processor_setup_ext server(true);
+    size_t const limit = stub_config_ext::max_message_size;
+
+    std::pair<websocketpp::lib::error_code,std::string> neg_results;
+
+    server.req.replace_header(
+        "Sec-WebSocket-Extensions",
+        "permessage-deflate; client_max_window_bits"
+    );
+
+    neg_results = server.p.negotiate_extensions(server.req);
+    BOOST_REQUIRE( !neg_results.first );
+
+    client.res.replace_header("Sec-WebSocket-Extensions",neg_results.second);
+    neg_results = client.p.negotiate_extensions(client.res);
+    BOOST_REQUIRE( !neg_results.first );
+
+    message_ptr in = client.msg_manager->get_message();
+    message_ptr out = client.msg_manager->get_message();
+
+    BOOST_REQUIRE( in );
+    BOOST_REQUIRE( out );
+
+    in->set_opcode(websocketpp::frame::opcode::BINARY);
+    in->set_payload(std::string(limit + 1, '*'));
+    in->set_compressed(true);
+
+    client.ec = client.p.prepare_data_frame(in,out);
+    BOOST_REQUIRE_EQUAL( client.ec, websocketpp::lib::error_code() );
+
+    std::string frame = out->get_header();
+    frame += out->get_payload();
+    std::vector<uint8_t> frame_bytes(frame.begin(),frame.end());
+
+    BOOST_CHECK_GT( server.p.consume(&frame_bytes[0],frame_bytes.size(),server.ec), 0 );
+    BOOST_CHECK_EQUAL( server.ec, websocketpp::processor::error::message_too_big );
+    BOOST_CHECK_EQUAL( server.p.ready(), false );
+    BOOST_CHECK_EQUAL( server.p.get_message(), message_ptr() );
 }
 
 

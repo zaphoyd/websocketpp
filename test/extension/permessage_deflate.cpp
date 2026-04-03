@@ -39,7 +39,10 @@
 #include <websocketpp/utilities.hpp>
 #include <iostream>
 
-class config {};
+class config {
+public:
+    static const size_t max_message_size = 16u * 1024u * 1024u;
+};
 
 typedef websocketpp::extensions::permessage_deflate::enabled<config> enabled_type;
 typedef websocketpp::extensions::permessage_deflate::disabled<config> disabled_type;
@@ -749,4 +752,56 @@ BOOST_AUTO_TEST_CASE( decompress_data ) {
 
     BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
     BOOST_CHECK_EQUAL( out, reference );
+}
+
+BOOST_AUTO_TEST_CASE( decompress_data_at_size_limit ) {
+    ext_vars v;
+    size_t const limit = config::max_message_size;
+
+    std::string compress_in(limit, '*');
+    std::string compress_out;
+    std::string decompress_out;
+
+    v.ec = v.exts.init(true);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out.data()),
+        compress_out.size(),
+        decompress_out
+    );
+
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_EQUAL( decompress_out.size(), limit );
+    BOOST_CHECK_EQUAL( decompress_out, compress_in );
+}
+
+BOOST_AUTO_TEST_CASE( decompress_data_over_size_limit ) {
+    ext_vars v;
+    size_t const limit = config::max_message_size;
+
+    std::string compress_in(limit + 1, '*');
+    std::string compress_out;
+    std::string decompress_out;
+
+    v.ec = v.exts.init(true);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out.data()),
+        compress_out.size(),
+        decompress_out
+    );
+
+    BOOST_CHECK( v.ec );
+    BOOST_REQUIRE_EQUAL( decompress_out.size(), limit );
+    BOOST_CHECK_EQUAL( decompress_out[0], '*' );
+    BOOST_CHECK_EQUAL( decompress_out[limit - 1], '*' );
+    BOOST_CHECK_EQUAL( decompress_out.find_first_not_of('*'), std::string::npos );
 }
