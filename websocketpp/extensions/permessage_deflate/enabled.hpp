@@ -614,6 +614,19 @@ public:
 
     /// Decompress bytes
     /**
+     * Decompresses up to `len` bytes from `buf` and appends the result to
+     * `out`. Decompression aborts with `error::message_too_big` if the
+     * total size of `out` would exceed the configured per-message limit
+     * (see `set_max_message_size`); this bounds the worst-case memory
+     * cost of a hostile or malformed compressed payload.
+     *
+     * @note If this function returns `error::message_too_big`, the
+     * extension's internal inflate state is left mid-stream and is not
+     * safe to reuse. The caller must discard this instance or call
+     * `init()` again before invoking `decompress()` further. In normal
+     * use the connection is torn down on this error so reuse does not
+     * arise.
+     *
      * @param buf Byte buffer to decompress
      * @param len Length of buf
      * @param out String to append decompressed bytes to
