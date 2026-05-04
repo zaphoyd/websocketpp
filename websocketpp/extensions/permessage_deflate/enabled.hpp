@@ -234,6 +234,7 @@ public:
       : m_enabled(false)
       , m_server_no_context_takeover(false)
       , m_client_no_context_takeover(false)
+      , m_client_no_context_takeover_offered(false)
       , m_server_max_window_bits(15)
       , m_client_max_window_bits(15)
       , m_server_max_window_bits_mode(mode::accept)
@@ -322,7 +323,8 @@ public:
         m_compress_buffer.reset(new unsigned char[m_compress_buffer_size]);
         m_decompress_buffer.reset(new unsigned char[m_compress_buffer_size]);
         if ((m_server_no_context_takeover && is_server) ||
-            (m_client_no_context_takeover && !is_server))
+            ((m_client_no_context_takeover ||
+              m_client_no_context_takeover_offered) && !is_server))
         {
             m_flush = Z_FULL_FLUSH;
         } else {
@@ -496,6 +498,7 @@ public:
      * @return A WebSocket extension offer string for this extension
      */
     std::string generate_offer() const {
+        m_client_no_context_takeover_offered = true;
         // TODO: this should be dynamically generated based on user settings
         return "permessage-deflate; client_no_context_takeover; client_max_window_bits";
     }
@@ -870,6 +873,7 @@ private:
     bool m_enabled;
     bool m_server_no_context_takeover;
     bool m_client_no_context_takeover;
+    mutable bool m_client_no_context_takeover_offered;
     uint8_t m_server_max_window_bits;
     uint8_t m_client_max_window_bits;
     mode::value m_server_max_window_bits_mode;
