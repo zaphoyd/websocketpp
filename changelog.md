@@ -57,6 +57,11 @@ HEAD
   #530 #812
 - Bug: Fix null pointer deference in proxy error handling code. Thank you
   abitmore for reporting and stkaufer for a patch. #820 #825
+- Security: Resolve an issue where the permessage deflate extension could
+  expand beyond the configured per-message limit. The permessage-deflate config
+  now has a configurable limit. (both compile time via custom config and 
+  runtime via `set_max_message_size`) Thank you jhugard for reporting, patches,
+  and testing. #1192
 - Documentation: Added language to explicitly clarify that the library
   license is in fact the 3-Clause BSD license. #906
 - Travis/CI: Updated Travis config to use newer version of ubuntu, and use
