@@ -37,6 +37,7 @@
 #include <websocketpp/error.hpp>
 
 #include <websocketpp/extensions/extension.hpp>
+#include <websocketpp/extensions/permessage_deflate/detail.hpp>
 
 #include "zlib.h"
 
@@ -206,6 +207,13 @@ static uint8_t const min_client_max_window_bits = 8;
 /// Maximum value for client_max_window_bits as defined by RFC 7692
 static uint8_t const max_client_max_window_bits = 15;
 
+/// Default maximum decompressed message size enforced by the extension
+/**
+ * Used when the extension's configuration does not specify its own
+ * max_message_size value.
+ */
+static size_t const default_max_message_size = 32000000;
+
 namespace mode {
 enum value {
     /// Accept any value the remote endpoint offers
@@ -232,7 +240,8 @@ public:
       , m_client_max_window_bits_mode(mode::accept)
       , m_initialized(false)
       , m_compress_buffer_size(8192)
-      , m_max_message_size(config::max_message_size)
+      , m_max_message_size(detail::max_message_size_or_default<
+            config, default_max_message_size>::get())
     {
         m_dstate.zalloc = Z_NULL;
         m_dstate.zfree = Z_NULL;
