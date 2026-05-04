@@ -63,12 +63,7 @@ public:
      * @return Status code and value to return to remote endpoint
      */
     err_str_pair negotiate(http::attribute_list const &) {
-        return make_pair(
-            websocketpp::extensions::error::make_error_code(
-                websocketpp::extensions::error::disabled
-            ),
-            std::string()
-        );
+        return make_pair(make_error_code(error::disabled),std::string());
     }
 
     /// Initialize state
@@ -122,9 +117,7 @@ public:
      * @return Error or status code
      */
     lib::error_code compress(std::string const &, std::string &) {
-        return websocketpp::extensions::error::make_error_code(
-            websocketpp::extensions::error::disabled
-        );
+        return make_error_code(error::disabled);
     }
 
     /// Decompress bytes
@@ -135,9 +128,7 @@ public:
      * @return Error or status code
      */
     lib::error_code decompress(uint8_t const *, size_t, std::string &) {
-        return websocketpp::extensions::error::make_error_code(
-            websocketpp::extensions::error::disabled
-        );
+        return make_error_code(error::disabled);
     }
 
     static bool is_message_too_big(lib::error_code const &) {
