@@ -823,6 +823,9 @@ protected:
             // Decompress current buffer into the message buffer
             ec = m_permessage_deflate.decompress(buf,len,out);
             if (ec) {
+                // translate extension error type to general library error type
+                // in this case because there is a dedicated protocol level
+                // close code for message too big
                 if (permessage_deflate_type::is_message_too_big(ec)) {
                     ec = make_error_code(error::message_too_big);
                 }
