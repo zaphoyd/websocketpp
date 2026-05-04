@@ -530,8 +530,7 @@ public:
             lib::error_code ec;
             ec = m_permessage_deflate.decompress(trailer,4,out);
             if (ec) {
-                if (permessage_deflate_type::is_message_too_big(ec))
-                {
+                if (permessage_deflate_type::is_message_too_big(ec)) {
                     return make_error_code(error::message_too_big);
                 }
                 return ec;
@@ -824,8 +823,7 @@ protected:
             // Decompress current buffer into the message buffer
             ec = m_permessage_deflate.decompress(buf,len,out);
             if (ec) {
-                if (permessage_deflate_type::is_message_too_big(ec))
-                {
+                if (permessage_deflate_type::is_message_too_big(ec)) {
                     ec = make_error_code(error::message_too_big);
                 }
                 return 0;
