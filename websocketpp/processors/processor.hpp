@@ -215,6 +215,20 @@ public:
     }
 
 protected:
+    /// Hook invoked when the maximum message size changes
+    /**
+     * Called from `set_max_message_size` after `m_max_message_size` has
+     * been updated. Subclasses override this to propagate the new value
+     * to any sub-components that maintain their own copy of the limit
+     * (for example, an enabled permessage-deflate extension).
+     *
+     * The default implementation is a no-op for processors that do not
+     * own such sub-components.
+     *
+     * @since 0.8.3
+     *
+     * @param new_value The new maximum message size, in bytes
+     */
     virtual void handle_max_message_size_changed(size_t) {}
 
 public:

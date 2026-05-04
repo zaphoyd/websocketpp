@@ -563,6 +563,16 @@ public:
         );
     }
 
+    /// Propagate maximum message size changes to the permessage-deflate extension
+    /**
+     * Overrides the base hook so that calls to `set_max_message_size` on
+     * the processor reach the permessage-deflate extension, which uses
+     * the limit to bound decompressed message size.
+     *
+     * @since 0.8.3
+     *
+     * @param new_value The new maximum message size, in bytes
+     */
     void handle_max_message_size_changed(size_t new_value) {
         m_permessage_deflate.set_max_message_size(new_value);
     }

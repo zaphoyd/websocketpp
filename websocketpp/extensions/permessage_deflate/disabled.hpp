@@ -105,6 +105,14 @@ public:
         return "";
     }
 
+    /// Set maximum decompressed message size (no-op)
+    /**
+     * Provided for API parity with the enabled extension. The disabled
+     * extension never decompresses, so there is no limit to enforce and
+     * the value is silently ignored.
+     *
+     * @since 0.8.3
+     */
     void set_max_message_size(size_t) {}
 
     /// Compress bytes

@@ -500,6 +500,23 @@ public:
         return "permessage-deflate; client_no_context_takeover; client_max_window_bits";
     }
 
+    /// Set maximum decompressed message size
+    /**
+     * Sets the maximum size, in bytes, that a message may reach after
+     * decompression. If a compressed message would inflate beyond this
+     * limit, decompression is aborted and `error::message_too_big` is
+     * returned. This bounds the worst-case memory cost of a hostile or
+     * malformed compressed payload.
+     *
+     * The initial value is taken from `Config::max_message_size` if the
+     * extension's configuration defines it, otherwise from
+     * `default_max_message_size`. Changes made via this method override
+     * that initial value for the lifetime of the extension instance.
+     *
+     * @since 0.8.3
+     *
+     * @param value The new per-message decompression limit, in bytes
+     */
     void set_max_message_size(size_t value) {
         m_max_message_size = value;
     }
