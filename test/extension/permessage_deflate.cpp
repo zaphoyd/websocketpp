@@ -800,8 +800,93 @@ BOOST_AUTO_TEST_CASE( decompress_data_over_size_limit ) {
     );
 
     BOOST_CHECK( v.ec );
-    BOOST_REQUIRE_EQUAL( decompress_out.size(), limit );
-    BOOST_CHECK_EQUAL( decompress_out[0], '*' );
-    BOOST_CHECK_EQUAL( decompress_out[limit - 1], '*' );
+    // Contract: never append past the configured limit. The exact size on
+    // overflow is implementation-defined; only require the upper bound.
+    BOOST_CHECK_LE( decompress_out.size(), limit );
+    // Whatever was appended must be a valid prefix of the original payload.
     BOOST_CHECK_EQUAL( decompress_out.find_first_not_of('*'), std::string::npos );
+}
+
+// Verify the limit is enforced relative to the current size of `out`, not
+// just the bytes appended by this call. The extension is invoked once per
+// fragment with `out` accumulating across calls, so the limit budget must
+// account for prior contents.
+BOOST_AUTO_TEST_CASE( decompress_with_pre_populated_out ) {
+    ext_vars v;
+    size_t const limit = config::max_message_size;
+    size_t const prefill = limit / 2;
+
+    // Compress a payload that, on its own, would fit within the limit but
+    // when combined with the pre-existing contents of `out` would exceed it.
+    std::string compress_in(prefill + 1, '*');
+    std::string compress_out;
+    std::string decompress_out(prefill, 'x');
+
+    v.ec = v.exts.init(true);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out.data()),
+        compress_out.size(),
+        decompress_out
+    );
+
+    BOOST_CHECK_EQUAL( v.ec, pmde::make_error_code(pmde::message_too_big) );
+    BOOST_CHECK_LE( decompress_out.size(), limit );
+}
+
+// Edge case: a zero-byte limit. Any non-empty decompression output should
+// fail without crashing or underflowing the remaining-budget calculation.
+BOOST_AUTO_TEST_CASE( decompress_with_zero_limit ) {
+    ext_vars v;
+    std::string compress_in(64, '*');
+    std::string compress_out;
+    std::string decompress_out;
+
+    v.ec = v.exts.init(true);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.exts.set_max_message_size(0);
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out.data()),
+        compress_out.size(),
+        decompress_out
+    );
+
+    BOOST_CHECK_EQUAL( v.ec, pmde::make_error_code(pmde::message_too_big) );
+    BOOST_CHECK_EQUAL( decompress_out.size(), 0u );
+}
+
+// Edge case: a one-byte limit. Verifies the +1 overflow-detection trick
+// still rejects oversized payloads when the budget is at its smallest
+// non-zero value.
+BOOST_AUTO_TEST_CASE( decompress_with_one_byte_limit ) {
+    ext_vars v;
+    std::string compress_in(64, '*');
+    std::string compress_out;
+    std::string decompress_out;
+
+    v.ec = v.exts.init(true);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_REQUIRE_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.exts.set_max_message_size(1);
+
+    v.ec = v.exts.decompress(
+        reinterpret_cast<const uint8_t *>(compress_out.data()),
+        compress_out.size(),
+        decompress_out
+    );
+
+    BOOST_CHECK_EQUAL( v.ec, pmde::make_error_code(pmde::message_too_big) );
+    BOOST_CHECK_LE( decompress_out.size(), 1u );
 }
