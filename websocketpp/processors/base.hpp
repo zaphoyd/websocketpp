@@ -175,7 +175,7 @@ public:
             case error::protocol_violation:
                 return "Generic protocol violation";
             case error::message_too_big:
-                return "Message too big";
+                return "A message was too large";
             case error::invalid_payload:
                 return "A payload contained invalid data";
             case error::invalid_arguments:
