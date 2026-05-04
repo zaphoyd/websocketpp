@@ -2,7 +2,7 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required (VERSION 2.8.8)
+cmake_minimum_required (VERSION 3.10)
 
 ############ Paths
 
@@ -77,6 +77,7 @@ include (CMakeHelpers)
 option (ENABLE_CPP11 "Build websocketpp with CPP11 features enabled." TRUE)
 option (BUILD_EXAMPLES "Build websocketpp examples." FALSE)
 option (BUILD_TESTS "Build websocketpp tests." FALSE)
+option (USE_ASIO_STANDALONE "Build websocketpp examples and tests using the standalone ASIO library." FALSE)
 
 if (BUILD_TESTS OR BUILD_EXAMPLES)
 
@@ -114,7 +115,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 
     # Visual studio
     if (MSVC)
-        set (WEBSOCKETPP_BOOST_LIBS system thread)
+        set (WEBSOCKETPP_BOOST_LIBS thread)
         set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
         set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
         add_definitions (/W3 /wd4996 /wd4995 /wd4355)
@@ -135,7 +136,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         endif()
         endif()
         set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
-        set (WEBSOCKETPP_BOOST_LIBS system thread)
+        set (WEBSOCKETPP_BOOST_LIBS thread)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
         if (NOT APPLE)
             add_definitions (-DNDEBUG -Wall -Wcast-align) # todo: should we use CMAKE_C_FLAGS for these?
@@ -145,7 +146,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
         execute_process (COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion" OUTPUT_VARIABLE GCC_VERSION)
         if ("${GCC_VERSION}" STRGREATER "4.4.0")
             message("* C++11 support partially enabled due to GCC version ${GCC_VERSION}")
-            set (WEBSOCKETPP_BOOST_LIBS system thread)
+            set (WEBSOCKETPP_BOOST_LIBS thread)
         endif ()
     endif ()
 
@@ -159,7 +160,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
             set (WEBSOCKETPP_PLATFORM_LIBS pthread rt)
         endif()
         set (WEBSOCKETPP_PLATFORM_TLS_LIBS ssl crypto)
-        set (WEBSOCKETPP_BOOST_LIBS system thread)
+        set (WEBSOCKETPP_BOOST_LIBS thread)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
         if (NOT APPLE)
             add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
@@ -221,9 +222,8 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
     set (Boost_FIND_QUIETLY TRUE)
     set (Boost_DEBUG FALSE)
     set (Boost_USE_MULTITHREADED TRUE)
-    set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
 
-    find_package (Boost 1.39.0 COMPONENTS ${WEBSOCKETPP_BOOST_LIBS})
+    find_package (Boost 1.70.0 CONFIG COMPONENTS ${WEBSOCKETPP_BOOST_LIBS})
 
     if (Boost_FOUND)
         # Boost is a project wide global dependency.
@@ -253,6 +253,10 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 endif()
 
 ############ Add projects
+
+if (USE_ASIO_STANDALONE)
+    add_definitions("-DASIO_STANDALONE -DASIO_HAS_BOOST_DATE_TIME")
+endif ()
 
 # Add main library
 add_subdirectory (websocketpp)

@@ -56,7 +56,7 @@ m_endpoint.set_access_channels(websocketpp::log::alevel::all ^ websocketpp::log:
 
 Next, we initialize the transport system underlying the endpoint. This method is specific to the Asio transport not WebSocket++ core. It will not be necessary or present in endpoints that use a non-asio config.
 
-> **Note:** This example uses an internal Asio `io_service` that is managed by the endpoint itself. This is a simple arrangement suitable for programs where WebSocket++ is the only code using Asio. If you have an existing program that already manages an `io_service` object or want to build a new program where WebSocket++ handlers share an io_service with other handlers you can pass the `io_service` you want WebSocket++ to register its handlers on to the `init_asio()` method and it will use it instead of generating and managing its own. [TODO: FAQ link instead?]
+> **Note:** This example uses an internal Asio `io_context` that is managed by the endpoint itself. This is a simple arrangement suitable for programs where WebSocket++ is the only code using Asio. If you have an existing program that already manages an `io_context` object or want to build a new program where WebSocket++ handlers share an io_context with other handlers you can pass the `io_context` you want WebSocket++ to register its handlers on to the `init_asio()` method and it will use it instead of generating and managing its own. [TODO: FAQ link instead?]
 
 ~~~{.cpp}
 m_endpoint.init_asio();
@@ -64,7 +64,7 @@ m_endpoint.init_asio();
 
 #### `utility_server::run` method
 
-In addition to the constructor, we also add a run method that sets up the listening socket, begins accepting connections, starts the Asio io_service event loop.
+In addition to the constructor, we also add a run method that sets up the listening socket, begins accepting connections, starts the Asio io_context event loop.
 
 ~~~{.cpp}
 // Listen on port 9002
@@ -73,7 +73,7 @@ m_endpoint.listen(9002);
 // Queues a connection accept operation
 m_endpoint.start_accept();
 
-// Start the Asio io_service run loop
+// Start the Asio io_context run loop
 m_endpoint.run();
 ~~~
 
@@ -123,7 +123,7 @@ public:
         // Queues a connection accept operation
         m_endpoint.start_accept();
 
-        // Start the Asio io_service run loop
+        // Start the Asio io_context run loop
         m_endpoint.run();
     }
 private:

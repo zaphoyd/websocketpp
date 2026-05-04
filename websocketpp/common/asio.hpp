@@ -51,7 +51,7 @@
     
     #include <asio.hpp>
     #include <asio/steady_timer.hpp>
-    #include <websocketpp/common/chrono.hpp> 
+    #include <websocketpp/common/chrono.hpp>
 #else
     #include <boost/version.hpp>
     

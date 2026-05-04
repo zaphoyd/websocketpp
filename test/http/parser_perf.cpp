@@ -31,11 +31,11 @@
 
 class scoped_timer {
 public:
-    scoped_timer(std::string i) : m_id(i),m_start(std::chrono::steady_clock::now()) {
+    scoped_timer(std::string i) : m_id(i),m_start(timer_ptr::element_type::clock_type::now()) {
         std::cout << "Clock " << i << ": ";
     }
     ~scoped_timer() {
-        std::chrono::nanoseconds time_taken = std::chrono::steady_clock::now()-m_start;
+        std::chrono::nanoseconds time_taken = timer_ptr::element_type::clock_type::now()-m_start;
 
         //nanoseconds_per_test
 
