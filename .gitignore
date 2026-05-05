@@ -84,6 +84,8 @@ examples/wsperf/wsperf_client
 *.log
 *.opensdf
 *.sdf
+*.VC.db
+*.VC.VC.opendb
 *.vcxproj
 *.vcxproj.filters
 *.user
