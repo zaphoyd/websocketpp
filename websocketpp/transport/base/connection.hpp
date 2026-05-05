@@ -31,6 +31,7 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
 #include <websocketpp/common/functional.hpp>
+#include <websocketpp/common/symbol_export.hpp>
 #include <websocketpp/common/system_error.hpp>
 
 #include <string>
@@ -216,7 +217,7 @@ class category : public lib::error_category {
     }
 };
 
-inline lib::error_category const & get_category() {
+inline _WEBSOCKETPP_SYMBOL_EXPORT lib::error_category const & get_category() {
     static category instance;
     return instance;
 }

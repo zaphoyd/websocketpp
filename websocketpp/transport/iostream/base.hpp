@@ -32,6 +32,7 @@
 #include <websocketpp/common/cpp11.hpp>
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/connection_hdl.hpp>
+#include <websocketpp/common/symbol_export.hpp>
 
 #include <websocketpp/transport/base/connection.hpp>
 
@@ -109,7 +110,7 @@ class category : public lib::error_category {
 };
 
 /// Get a reference to a static copy of the iostream transport error category
-inline lib::error_category const & get_category() {
+inline _WEBSOCKETPP_SYMBOL_EXPORT lib::error_category const & get_category() {
     static category instance;
     return instance;
 }
