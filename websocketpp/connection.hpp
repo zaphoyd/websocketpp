@@ -655,6 +655,21 @@ public:
     lib::error_code send(std::string const & payload, frame::opcode::value op =
         frame::opcode::text);
 
+    /// Create a message and then add it to the outgoing send queue
+    /**
+     * Convenience method to send a message given a payload string and
+     * optionally an opcode. Default opcode is utf8 text.
+     *
+     * This method locks the m_write_lock mutex
+     *
+     * @param payload The payload string to generated the message with
+     *
+     * @param op The opcode to generated the message with. Default is
+     * frame::opcode::text
+     */
+    lib::error_code send(std::string_view payload, frame::opcode::value op =
+    frame::opcode::text);
+
     /// Send a message (raw array overload)
     /**
      * Convenience method to send a message given a raw array and optionally an
