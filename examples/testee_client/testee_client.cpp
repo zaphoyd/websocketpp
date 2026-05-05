@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
         client::connection_ptr con = c.get_connection(uri+"/getCaseCount", ec);
         c.connect(con);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         c.run();
 
         std::cout << "case count: " << case_count << std::endl;

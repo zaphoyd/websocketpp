@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
         sip_client.connect(con);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         sip_client.run();
 
         while(!received) {
