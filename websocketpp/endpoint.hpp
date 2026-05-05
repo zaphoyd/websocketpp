@@ -66,6 +66,9 @@ public:
     /// that this endpoint creates.
     typedef typename transport_con_type::ptr transport_con_ptr;
 
+    // wmj: idle handler
+    typedef typename connection_type::idle_handler idle_handler;
+
     /// Type of message_handler
     typedef typename connection_type::message_handler message_handler;
     /// Type of message pointers that this endpoint uses
@@ -140,6 +143,7 @@ public:
          , m_http_handler(std::move(o.m_http_handler))
          , m_validate_handler(std::move(o.m_validate_handler))
          , m_message_handler(std::move(o.m_message_handler))
+         , m_idle_handler(std::move(o.m_idle_handler))
 
          , m_open_handshake_timeout_dur(o.m_open_handshake_timeout_dur)
          , m_close_handshake_timeout_dur(o.m_close_handshake_timeout_dur)
@@ -325,6 +329,11 @@ public:
         m_alog->write(log::alevel::devel,"set_message_handler");
         scoped_lock_type guard(m_mutex);
         m_message_handler = h;
+    }
+    void set_idle_handler(idle_handler h) {
+        m_alog.write(log::alevel::devel,"set_idle_handler");
+        scoped_lock_type guard(m_mutex);
+        m_idle_handler = h;
     }
 
     //////////////////////////////////////////
@@ -680,6 +689,7 @@ private:
     http_handler                m_http_handler;
     validate_handler            m_validate_handler;
     message_handler             m_message_handler;
+    idle_handler                m_idle_handler; //wmj
 
     long                        m_open_handshake_timeout_dur;
     long                        m_close_handshake_timeout_dur;
