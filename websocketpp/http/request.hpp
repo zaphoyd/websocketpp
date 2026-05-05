@@ -124,6 +124,8 @@ public:
         return m_uri;
     }
 
+    void reset();
+
 private:
     /// Helper function for message::consume. Process request line
     /**
