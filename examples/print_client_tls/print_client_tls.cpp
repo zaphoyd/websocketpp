@@ -84,13 +84,13 @@ bool verify_common_name(char const * hostname, X509 * cert) {
     }
     
     // Extract the CN field
-    X509_NAME_ENTRY * common_name_entry = X509_NAME_get_entry(X509_get_subject_name(cert), common_name_loc);
+    const X509_NAME_ENTRY * common_name_entry = X509_NAME_get_entry(X509_get_subject_name(cert), common_name_loc);
     if (common_name_entry == NULL) {
         return false;
     }
     
     // Convert the CN field to a C string
-    ASN1_STRING * common_name_asn1 = X509_NAME_ENTRY_get_data(common_name_entry);
+    const ASN1_STRING * common_name_asn1 = X509_NAME_ENTRY_get_data(common_name_entry);
     if (common_name_asn1 == NULL) {
         return false;
     }
