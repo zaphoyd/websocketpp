@@ -192,8 +192,10 @@ inline bool parser::prepare_body(lib::error_code & ec) {
 			return false;
 		}
 
-		if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end())
+		if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end()) {
+			m_chunked = true;
 			return true; // no Content-Length for chunked encoding!
+		}
 	}
 
 	const std::string cl_header = get_header(Header_ContentLength);
@@ -226,50 +228,108 @@ inline size_t parser::process_body(char const * buf, size_t len,
 	if (!len)
 		return 0;
 
-    if (std::find(m_transfer_encoding.begin(), m_transfer_encoding.end(), transfer_encoding::chunked) != m_transfer_encoding.end()) {
-        // for chunked encoding, read chunks of the body
-		if (m_body_bytes_needed) { // reading previously started chunk, same as plain encoding!
-			const size_t processed = std::min(m_body_bytes_needed, len);
-			m_body.append(buf, processed);
-			m_body_bytes_needed -= processed;
-			ec = lib::error_code();
-			return processed;
-		} else { // new chunk
-			// sizes of chunks which are given by the first byte of the response body
-			const char* newline = std::search(buf, buf + len, http_crlf, http_crlf + sizeof(http_crlf) - 1);
-			if (newline == buf + len)
-			{
-				ec = error::make_error_code(error::invalid_format);
-				return 0;
-			}
+    if (m_chunked) {
+        // Chunked bodies are decoded incrementally. The whole input is buffered
+        // and consumed here so that framing tokens (chunk-size lines and CRLF
+        // separators) split across reads are retained until complete and the
+        // body can span any number of reads.
+        m_chunk_buf.append(buf, len);
+        decode_chunked(ec);
+        if (ec)
+            return 0;
+        return len;
+    }
 
-			const std::string chunkSizeHex(buf, newline);
-			char * end;
-			m_body_bytes_needed = std::strtoul(chunkSizeHex.c_str(),&end,16);
-			m_body_bytes_total += m_body_bytes_needed;
-			if (end != chunkSizeHex.cend().base()) {
-				ec = error::make_error_code(error::invalid_format);
-				return 0;
-			}
+	const size_t processed = std::min(m_body_bytes_needed, len);
+	m_body.append(buf, processed);
+	m_body_bytes_needed -= processed;
+	ec = lib::error_code();
+	return processed;
+}
 
-			if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
-				ec = error::make_error_code(error::body_too_large);
-				return 0;
-			}
+inline void parser::decode_chunked(lib::error_code & ec) {
+    ec = lib::error_code();
 
-			if (m_body_bytes_needed == 0) { // this is how the last chunk is marked
-				return len; // pretend we handled everything!
-			}
+    for (;;) {
+        switch (m_chunk_phase) {
+        case chunk_phase::size: {
+            const size_t crlf = m_chunk_buf.find("\r\n");
+            if (crlf == std::string::npos) {
+                // size line not fully received yet; guard against unbounded growth
+                if (m_chunk_buf.size() > max_header_size)
+                    ec = error::make_error_code(error::request_header_fields_too_large);
+                return;
+            }
 
-			const size_t processed = (newline - buf) + sizeof(http_crlf) - 1;
-			return processed + process_body(buf + processed, len - processed, ec);
-		}
-    } else {
-		const size_t processed = std::min(m_body_bytes_needed, len);
-		m_body.append(buf, processed);
-		m_body_bytes_needed -= processed;
-		ec = lib::error_code();
-		return processed;
+            // the size is hex and may be followed by ';' chunk-extensions
+            std::string size_line = m_chunk_buf.substr(0, crlf);
+            const size_t ext = size_line.find(';');
+            if (ext != std::string::npos)
+                size_line.erase(ext);
+
+            char * end = nullptr;
+            const size_t chunk_size = std::strtoul(size_line.c_str(), &end, 16);
+            if (end == size_line.c_str() || *end != '\0') {
+                ec = error::make_error_code(error::invalid_format);
+                return;
+            }
+
+            m_chunk_buf.erase(0, crlf + 2);
+
+            if (chunk_size == 0) {
+                m_chunk_phase = chunk_phase::trailer;
+            } else {
+                m_body_bytes_needed = chunk_size;
+                m_body_bytes_total += chunk_size;
+                if (m_body_bytes_max && m_body_bytes_total > m_body_bytes_max) {
+                    ec = error::make_error_code(error::body_too_large);
+                    return;
+                }
+                m_chunk_phase = chunk_phase::data;
+            }
+            break;
+        }
+        case chunk_phase::data: {
+            const size_t take = std::min(m_body_bytes_needed, m_chunk_buf.size());
+            if (take) {
+                m_body.append(m_chunk_buf, 0, take);
+                m_chunk_buf.erase(0, take);
+                m_body_bytes_needed -= take;
+            }
+            if (m_body_bytes_needed)
+                return; // need more data bytes for the current chunk
+            m_chunk_phase = chunk_phase::data_crlf;
+            break;
+        }
+        case chunk_phase::data_crlf: {
+            if (m_chunk_buf.size() < 2)
+                return; // wait for the CRLF that terminates the chunk data
+            if (m_chunk_buf[0] != '\r' || m_chunk_buf[1] != '\n') {
+                ec = error::make_error_code(error::invalid_format);
+                return;
+            }
+            m_chunk_buf.erase(0, 2);
+            m_chunk_phase = chunk_phase::size;
+            break;
+        }
+        case chunk_phase::trailer: {
+            // consume optional trailer header lines until the terminating blank line
+            const size_t crlf = m_chunk_buf.find("\r\n");
+            if (crlf == std::string::npos) {
+                if (m_chunk_buf.size() > max_header_size)
+                    ec = error::make_error_code(error::request_header_fields_too_large);
+                return;
+            }
+            const bool blank_line = (crlf == 0);
+            m_chunk_buf.erase(0, crlf + 2);
+            if (blank_line)
+                m_chunk_phase = chunk_phase::complete;
+            break;
+        }
+        case chunk_phase::complete:
+            m_chunked_complete = true;
+            return;
+        }
     }
 }
 

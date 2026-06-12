@@ -41,6 +41,9 @@ namespace http {
 namespace parser {
 
 inline void response::on_parsing_completed(lib::error_code & ec) {
+	if (m_state == state::DONE)
+		return;
+
 	m_state = state::DONE;
 
 	for (auto decode = m_content_encoding.rbegin(); !ec && decode != m_content_encoding.rend(); decode++) {
@@ -158,7 +161,7 @@ inline size_t response::consume(char const * buf, size_t len, lib::error_code & 
                 return 0;
             }
 
-			if (m_body_bytes_needed == 0) {
+			if (body_ready()) {
 				on_parsing_completed(ec);
 				if (ec) {
 					return 0;
@@ -333,7 +336,7 @@ inline size_t response::process_body(char const * buf, size_t len, lib::error_co
 		processed += processed_chunk;
 	} while (!ec && m_body_bytes_needed && len);
 
-    if (ec || m_body_bytes_needed == 0)
+    if (ec || body_ready())
 		on_parsing_completed(ec);
 
 	return processed;

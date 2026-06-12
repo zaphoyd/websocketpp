@@ -655,6 +655,18 @@ protected:
      */
     virtual size_t process_body(char const * buf, size_t len, lib::error_code & ec);
 
+    /// Incrementally decode buffered chunked transfer-encoding body data
+    /**
+     * Consumes complete chunks accumulated in `m_chunk_buf`, appending decoded
+     * bytes to the body. Framing tokens (chunk-size lines and CRLF separators)
+     * that are split across reads are retained until complete. Sets
+     * `m_chunked_complete` once the terminating zero-length chunk has been
+     * processed.
+     *
+     * @param [out] ec A status code describing the outcome of the operation.
+     */
+    void decode_chunked(lib::error_code & ec);
+
     /// Check if the parser is done parsing the body
     /**
      * Behavior before a call to `prepare_body` is undefined.
@@ -664,6 +676,8 @@ protected:
      * @return True if the message body has been completed loaded.
      */
     bool body_ready() const {
+        if (m_chunked)
+            return m_chunked_complete;
         return (m_body_bytes_needed == 0);
     }
 
@@ -681,12 +695,25 @@ protected:
 
     size_t m_header_bytes;
 
+    /// Sub-state for incremental chunked transfer-encoding decoding
+    enum class chunk_phase {
+        size,       // reading a chunk-size line
+        data,       // reading chunk data bytes
+        data_crlf,  // consuming the CRLF that terminates chunk data
+        trailer,    // consuming optional trailers after the terminal chunk
+        complete    // the full chunked body has been received
+    };
+
     std::string             				m_body;
     size_t                  				m_body_bytes_needed;
     size_t                  				m_body_bytes_total;
     size_t                  				m_body_bytes_max;
 	std::vector<transfer_encoding::value>	m_transfer_encoding;
 	std::vector<content_encoding::value>	m_content_encoding;
+	bool									m_chunked = false;
+	bool									m_chunked_complete = false;
+	chunk_phase								m_chunk_phase = chunk_phase::size;
+	std::string								m_chunk_buf;
 };
 
 } // namespace parser
