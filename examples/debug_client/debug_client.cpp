@@ -82,16 +82,16 @@ public:
 
         m_endpoint.connect(con);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         m_start = std::chrono::high_resolution_clock::now();
         m_endpoint.run();
     }
 
-    void on_socket_init(websocketpp::connection_hdl) {
+    void on_socket_init(websocketpp::connection_hdl_ref) {
         m_socket_init = std::chrono::high_resolution_clock::now();
     }
 
-    context_ptr on_tls_init(websocketpp::connection_hdl) {
+    context_ptr on_tls_init(websocketpp::connection_hdl_ref) {
         m_tls_init = std::chrono::high_resolution_clock::now();
         context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
 
@@ -106,7 +106,7 @@ public:
         return ctx;
     }
 
-    void on_fail(websocketpp::connection_hdl hdl) {
+    void on_fail(websocketpp::connection_hdl_ref hdl) {
         client::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
         
         std::cout << "Fail handler" << std::endl;
@@ -118,15 +118,15 @@ public:
         std::cout << con->get_ec() << " - " << con->get_ec().message() << std::endl;
     }
 
-    void on_open(websocketpp::connection_hdl hdl) {
+    void on_open(websocketpp::connection_hdl_ref hdl) {
         m_open = std::chrono::high_resolution_clock::now();
         m_endpoint.send(hdl, "", websocketpp::frame::opcode::text);
     }
-    void on_message(websocketpp::connection_hdl hdl, message_ptr) {
+    void on_message(websocketpp::connection_hdl_ref hdl, message_ptr) {
         m_message = std::chrono::high_resolution_clock::now();
         m_endpoint.close(hdl,websocketpp::close::status::going_away,"");
     }
-    void on_close(websocketpp::connection_hdl) {
+    void on_close(websocketpp::connection_hdl_ref) {
         m_close = std::chrono::high_resolution_clock::now();
 
         std::cout << "Socket Init: " << std::chrono::duration_cast<dur_type>(m_socket_init-m_start).count() << std::endl;

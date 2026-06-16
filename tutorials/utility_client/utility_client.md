@@ -380,7 +380,7 @@ class connection_metadata {
 public:
     typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
 
-    connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
+    connection_metadata(int id, websocketpp::connection_hdl_ref hdl, std::string uri)
       : m_id(id)
       , m_hdl(hdl)
       , m_status("Connecting")
@@ -388,14 +388,14 @@ public:
       , m_server("N/A")
     {}
 
-    void on_open(client * c, websocketpp::connection_hdl hdl) {
+    void on_open(client * c, websocketpp::connection_hdl_ref hdl) {
         m_status = "Open";
 
         client::connection_ptr con = c->get_con_from_hdl(hdl);
         m_server = con->get_response_header("Server");
     }
 
-    void on_fail(client * c, websocketpp::connection_hdl hdl) {
+    void on_fail(client * c, websocketpp::connection_hdl_ref hdl) {
         m_status = "Failed";
 
         client::connection_ptr con = c->get_con_from_hdl(hdl);
@@ -554,7 +554,7 @@ During the close handler call WebSocket++ connections offer the following method
 The `connection_metadata::on_close` method is added. This method retrieves the close code and reason from the closing handshake and stores it in the local error reason field.
 
 ~~~{.cpp}
-void on_close(client * c, websocketpp::connection_hdl hdl) {
+void on_close(client * c, websocketpp::connection_hdl_ref hdl) {
     m_status = "Closed";
     client::connection_ptr con = c->get_con_from_hdl(hdl);
     std::stringstream s;
@@ -678,13 +678,13 @@ This step adds a command to send a message on a given connection and updates the
 
 Messages are sent using `endpoint::send`. This is a thread safe method that may be called from anywhere to queue a message for sending on the specified connection. There are three send overloads for use with different scenarios. 
 
-Each method takes a `connection_hdl` to indicate which connection to send the message on as well as a `frame::opcode::value` to indicate which opcode to label the message as. All overloads are also available with an exception free varient that fills in a a status/error code instead of throwing.
+Each method takes a `connection_hdl_ref` to indicate which connection to send the message on as well as a `frame::opcode::value` to indicate which opcode to label the message as. All overloads are also available with an exception free varient that fills in a a status/error code instead of throwing.
 
-The first overload, `connection_hdl hdl, std::string const & payload, frame::opcode::value op`, takes a `std::string`. The string contents are copied into an internal buffer and can be safely modified after calling send.
+The first overload, `connection_hdl_ref hdl, std::string const & payload, frame::opcode::value op`, takes a `std::string`. The string contents are copied into an internal buffer and can be safely modified after calling send.
 
-The second overload, `connection_hdl hdl, void const * payload, size_t len, frame::opcode::value op`, takes a void * buffer and length. The buffer contents are copied and can be safely modified after calling send.
+The second overload, `connection_hdl_ref hdl, void const * payload, size_t len, frame::opcode::value op`, takes a void * buffer and length. The buffer contents are copied and can be safely modified after calling send.
 
-The third overload, `connection_hdl hdl, message_ptr msg`, takes a WebSocket++ `message_ptr`. This overload allows a message to be constructed in place before the call to send. It also may allow a single message buffer to be sent multiple times, including to multiple connections, without copying. Whether or not this actually happens depends on other factors such as whether compression is enabled. The contents of the message buffer may not be safely modified after being sent.
+The third overload, `connection_hdl_ref hdl, message_ptr msg`, takes a WebSocket++ `message_ptr`. This overload allows a message to be constructed in place before the call to send. It also may allow a single message buffer to be sent multiple times, including to multiple connections, without copying. Whether or not this actually happens depends on other factors such as whether compression is enabled. The contents of the message buffer may not be safely modified after being sent.
 
 > ###### Terminology: Outgoing WebSocket message queueing & flow control
 > In many configurations, such as when the Asio based transport is in use, WebSocket++ is an asynchronous system. As such the `endpoint::send` method may return before any bytes are actually written to the outgoing socket. In cases where send is called multiple times in quick succession messages may be coalesced and sent in the same operation or even the same TCP packet. When this happens the message boundaries are preserved (each call to send will produce a separate message).
@@ -759,14 +759,14 @@ for (it = data.m_messages.begin(); it != data.m_messages.end(); ++it) {
 
 #### Receiving Messages
 
-Messages are received by registering a message handler. This handler will be called once per message received and its signature is `void on_message(websocketpp::connection_hdl hdl, endpoint::message_ptr msg)`. The `connection_hdl`, like the similar parameter from the other handlers is a handle for the connection that the message was received on. The `message_ptr` is a pointer to an object that can be queried for the message payload, opcode, and other metadata. Note that the message_ptr type, as well as its underlying message type, is dependent on how your endpoint is configured and may be different for different configs.
+Messages are received by registering a message handler. This handler will be called once per message received and its signature is `void on_message(websocketpp::connection_hdl_ref hdl, endpoint::message_ptr msg)`. The `connection_hdl_ref`, like the similar parameter from the other handlers is a handle for the connection that the message was received on. The `message_ptr` is a pointer to an object that can be queried for the message payload, opcode, and other metadata. Note that the message_ptr type, as well as its underlying message type, is dependent on how your endpoint is configured and may be different for different configs.
 
 #### Add a message handler to method to `connection_metadata`
 
 The message receiving behave that we are implementing will be to collect all messages sent and received and to print them in order when the show connection command is run. The sent messages are already being added to that list. Now we add a message handler that pushes received messages to the list as well. Text messages are pushed as-is. Binary messages are first converted to printable hexadecimal format.
 
 ~~~{.cpp}
-void on_message(websocketpp::connection_hdl hdl, client::message_ptr msg) {
+void on_message(websocketpp::connection_hdl_ref hdl, client::message_ptr msg) {
     if (msg->get_opcode() == websocketpp::frame::opcode::text) {
         m_messages.push_back(msg->get_payload());
     } else {

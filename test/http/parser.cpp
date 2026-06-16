@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 159 );
-    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK( r.has_received(websocketpp::http::parser::response::state::HEADERS) == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
     BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
     BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
@@ -878,7 +878,7 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 159 );
-    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK( r.has_received(websocketpp::http::parser::response::state::HEADERS) == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
     BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
     BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE( wikipedia_example_response_trailing_large ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 159 );
-    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK( r.has_received(websocketpp::http::parser::response::state::HEADERS) == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
     BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
     BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE( response_with_non_standard_lws ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 158 );
-    BOOST_CHECK( r.headers_ready() );
+    BOOST_CHECK( r.has_received(websocketpp::http::parser::response::state::HEADERS) );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
     BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::switching_protocols );
     BOOST_CHECK_EQUAL( r.get_status_msg(), "Switching Protocols" );
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE( plain_http_response ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 405 );
-    BOOST_CHECK( r.headers_ready() == true );
+    BOOST_CHECK( r.has_received(websocketpp::http::parser::response::state::HEADERS) == true );
     BOOST_CHECK( r.ready() == true );
     BOOST_CHECK_EQUAL( r.get_version(), "HTTP/1.1" );
     BOOST_CHECK_EQUAL( r.get_status_code(), websocketpp::http::status_code::ok );
@@ -975,7 +975,7 @@ BOOST_AUTO_TEST_CASE( parse_istream ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( pos, 405 );
-    BOOST_CHECK_EQUAL( r.headers_ready(), true );
+    BOOST_CHECK_EQUAL( r.has_received(websocketpp::http::parser::response::state::HEADERS), true );
     BOOST_CHECK_EQUAL( r.ready(), true );
 }
 

@@ -75,7 +75,7 @@ namespace websocketpp {
  * write
  *
  * **set_handle**\n
- * `void set_handle(connection_hdl hdl)`\n
+ * `void set_handle(connection_hdl_ref hdl)`\n
  * Called by WebSocket++ to let this policy know the hdl to the connection. It
  * may be stored for later use or ignored/discarded. This handle should be used
  * if the policy adds any connection handlers. Connection handlers must be
@@ -173,6 +173,9 @@ enum value {
     /// Timer expired
     timeout,
 
+    /// Hostname resolution failed or timed out
+    resolve_failed,
+
     /// read or write after shutdown
     action_after_shutdown,
 
@@ -206,6 +209,8 @@ class category : public lib::error_category {
                 return "TLS Short Read";
             case timeout:
                 return "Timer Expired";
+            case resolve_failed:
+                return "Hostname resolution failed or timed out";
             case action_after_shutdown:
                 return "A transport action was requested after shutdown";
             case tls_error:

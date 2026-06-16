@@ -69,7 +69,7 @@ public:
         // Set the initial timer to start telemetry
         set_timer();
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         try {
             m_endpoint.run();
         } catch (websocketpp::exception const & e) {
@@ -109,7 +109,7 @@ public:
         set_timer();
     }
 
-    void on_http(connection_hdl hdl) {
+    void on_http(connection_hdl_ref hdl) {
         // Upgrade our connection handle to a full connection_ptr
         server::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
     
@@ -156,11 +156,11 @@ public:
         con->set_status(websocketpp::http::status_code::ok);
     }
 
-    void on_open(connection_hdl hdl) {
+    void on_open(connection_hdl_ref hdl) {
         m_connections.insert(hdl);
     }
 
-    void on_close(connection_hdl hdl) {
+    void on_close(connection_hdl_ref hdl) {
         m_connections.erase(hdl);
     }
 

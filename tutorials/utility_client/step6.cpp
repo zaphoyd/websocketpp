@@ -46,7 +46,7 @@ class connection_metadata {
 public:
     typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
 
-    connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
+    connection_metadata(int id, websocketpp::connection_hdl_ref hdl, std::string uri)
       : m_id(id)
       , m_hdl(hdl)
       , m_status("Connecting")
@@ -54,14 +54,14 @@ public:
       , m_server("N/A")
     {}
 
-    void on_open(client * c, websocketpp::connection_hdl hdl) {
+    void on_open(client * c, websocketpp::connection_hdl_ref hdl) {
         m_status = "Open";
 
         client::connection_ptr con = c->get_con_from_hdl(hdl);
         m_server = con->get_response_header("Server");
     }
 
-    void on_fail(client * c, websocketpp::connection_hdl hdl) {
+    void on_fail(client * c, websocketpp::connection_hdl_ref hdl) {
         m_status = "Failed";
 
         client::connection_ptr con = c->get_con_from_hdl(hdl);
@@ -69,7 +69,7 @@ public:
         m_error_reason = con->get_ec().message();
     }
     
-    void on_close(client * c, websocketpp::connection_hdl hdl) {
+    void on_close(client * c, websocketpp::connection_hdl_ref hdl) {
         m_status = "Closed";
         client::connection_ptr con = c->get_con_from_hdl(hdl);
         std::stringstream s;
@@ -79,7 +79,7 @@ public:
         m_error_reason = s.str();
     }
 
-    void on_message(websocketpp::connection_hdl, client::message_ptr msg) {
+    void on_message(websocketpp::connection_hdl_ref, client::message_ptr msg) {
         if (msg->get_opcode() == websocketpp::frame::opcode::text) {
             m_messages.push_back("<< " + msg->get_payload());
         } else {

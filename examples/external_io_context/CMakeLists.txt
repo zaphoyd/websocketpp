@@ -2,7 +2,7 @@
 file (GLOB SOURCE_FILES *.cpp)
 file (GLOB HEADER_FILES *.hpp)
 
-init_target (external_io_service)
+init_target (external_io_context)
 
 build_executable (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

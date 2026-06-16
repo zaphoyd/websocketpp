@@ -16,7 +16,7 @@ Complete & Tested:
 - open_handler
 - close_handler
 - echo_server & echo_server_tls
-- External io_service support
+- External io_context support
 - TLS support
 - exception/error handling
 - Timeouts

@@ -47,7 +47,6 @@ static uint16_t const uri_default_port = 80;
 static uint16_t const uri_default_secure_port = 443;
 
 
-
 /// A group of helper methods for parsing and validating URIs against RFC 3986
 namespace uri_helper {
 
@@ -263,7 +262,7 @@ inline bool ipv4_literal(std::string::const_iterator start, std::string::const_i
             }
         }
     }
-    
+
     // check final octet
     return (counter == 3 && dec_octet(cursor,end));
 }
@@ -298,10 +297,11 @@ inline bool hex4(std::string::const_iterator start, std::string::const_iterator 
  */
 inline bool ipv6_literal(std::string::const_iterator start, std::string::const_iterator end) {
     // initial range check
+    end = std::find(start, end, '%');
     if (end-start > 45 && end-start >= 2) {
         return false;
     }
-    
+
     // peal off and count hex4s until we run out of colons,
     // note the abbreviation marker if we see one.
     std::string::const_iterator cursor = start;
@@ -327,7 +327,7 @@ inline bool ipv6_literal(std::string::const_iterator start, std::string::const_i
         }
         it++;
     }
-    
+
     // final bit either needs to be a hex4 or an IPv4 literal
     if (cursor == end) {
         // fine
@@ -338,11 +338,11 @@ inline bool ipv6_literal(std::string::const_iterator start, std::string::const_i
     } else {
         return false;
     }
-    
+
     if ((abbr == 0 && count != 8) || (abbr == 1 && count > 7) || abbr > 1) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -389,6 +389,8 @@ inline bool reg_name(std::string::const_iterator start, std::string::const_itera
     return true;
 }
 
+const std::string schema_separtator { "://" };
+
 } // end namespace uri_helper
 
 
@@ -396,35 +398,60 @@ inline bool reg_name(std::string::const_iterator start, std::string::const_itera
 
 class uri {
 public:
-    explicit uri(std::string const & uri_string) : m_valid(false), m_ipv6_literal(false) {
-        std::string::const_iterator it;
+	enum type{
+		invalid,
+		http,
+		websocket,
+		relative
+	};
+
+	uri() = default;
+
+    explicit uri(std::string const & uri_string) : m_ipv6_literal(false) {
+
+		if (uri_string.empty())
+			return;
+
+		const size_t schema_end = uri_string.find(uri_helper::schema_separtator);
+		if (schema_end != std::string::npos)
+		{
+			const std::string schema(uri_string.substr(0, schema_end));
+			if (schema == "wss")
+			{
+				m_secure = true;
+				m_type = websocket;
+			}
+			else if (schema == "ws")
+			{
+				m_secure = false;
+           		m_type = websocket;
+			}
+			else if (schema == "https")
+			{
+				m_secure = true;
+            	m_type = http;
+			}
+			else if (schema == "http")
+			{
+				m_secure = false;
+            	m_type = http;
+			} else {
+				return;
+			}
+		} else if (uri_string.starts_with('/')) {
+			m_type = relative;
+			m_resource = uri_string;
+			return;
+		} else {
+			return; // invalid!
+		}
+
+		std::string::const_iterator it = uri_string.begin() + schema_end + uri_helper::schema_separtator.length();
         std::string::const_iterator temp;
 
         int state = 0;
 
-        it = uri_string.begin();
-        size_t uri_len = uri_string.length();
-
-        // extract scheme. We only consider Websocket and HTTP URI schemes as valid
-        if (uri_len >= 7 && std::equal(it,it+6,"wss://")) {
-            m_secure = true;
-            m_scheme = "wss";
-            it += 6;
-        } else if (uri_len >= 6 && std::equal(it,it+5,"ws://")) {
-            m_secure = false;
-            m_scheme = "ws";
-            it += 5;
-        } else if (uri_len >= 8 && std::equal(it,it+7,"http://")) {
-            m_secure = false;
-            m_scheme = "http";
-            it += 7;
-        } else if (uri_len >= 9 && std::equal(it,it+8,"https://")) {
-            m_secure = true;
-            m_scheme = "https";
-            it += 8;
-        } else {
-            return;
-        }
+		std::string schema;
 
         // extract host.
         // either a host string
@@ -447,10 +474,12 @@ public:
             }
 
             if (temp == uri_string.end()) {
+				m_type = invalid;
                 return;
             } else {
                 // validate IPv6 literal parts
                 if (!uri_helper::ipv6_literal(it,temp)) {
+					m_type = invalid;
                     return;
                 } else {
                     m_ipv6_literal = true;
@@ -463,8 +492,8 @@ public:
             } else if (*it == '/' || *it == '?' || *it == '#') {
                 // todo: better path parsing
                 state = 2;
-                
-                // we don't increment the iterator here because we want the 
+
+                // we don't increment the iterator here because we want the
                 // delimiter to be read again as a part of the path
             } else if (*it == ':') {
                 state = 1;
@@ -473,6 +502,7 @@ public:
                 ++it;
             } else {
                 // problem
+				m_type = invalid;
                 return;
             }
         } else {
@@ -502,19 +532,20 @@ public:
                         // end hostname and start parsing path
                         state = 2;
 
-                        // we don't increment the iterator here because we want the 
+                        // we don't increment the iterator here because we want the
                         // delimiter to be read again as a part of the path
                     } else {
                         // either @, [, or ]
                         // @ = userinfo fragment
                         // [ and ] = illegal, basically
+						m_type = invalid;
                         return;
                     }
                 } else {
                     m_host += *it;
                     ++it;
                 }
-                
+
             }
         }
 
@@ -525,6 +556,7 @@ public:
                 // if we stop parsing the port and there wasn't actually a port
                 // we have an invalid URI
                 if (port.empty()) {
+					m_type = invalid;
                     return;
                 }
                 state = 3;
@@ -535,62 +567,56 @@ public:
                 // if we stop parsing the port and there wasn't actually a port
                 // we have an invalid URI
                 if (port.empty()) {
+					m_type = invalid;
                     return;
                 }
                 state = 3;
 
-                // we don't increment the iterator here because we want the 
+                // we don't increment the iterator here because we want the
                 // delimiter to be read again as a part of the path
             }
-            
+
         }
 
         lib::error_code ec;
         m_port = get_port_from_string(port, ec);
 
         if (ec) {
+			m_type = invalid;
             return;
         }
 
         // step back one so the first char of the path delimiter doesn't get eaten
         m_resource.append(it,uri_string.end());
-        
+
         if (m_resource.empty()) {
             m_resource = "/";
         }
 
         // todo: validate path component
-
-
-        m_valid = true;
     }
 
-    uri(bool secure, std::string const & host, uint16_t port,
+    uri(type schema, bool secure, std::string const & host, uint16_t port,
         std::string const & resource)
-      : m_scheme(secure ? "wss" : "ws")
+      : m_type(schema)
       , m_host(host)
       , m_resource(resource.empty() ? "/" : resource)
       , m_port(port)
       , m_secure(secure)
       {
           m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
-          m_valid = m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end());
+          if (!m_ipv6_literal && !uri_helper::reg_name(host.begin(), host.end()))
+		  	m_type = invalid;
       }
 
-    uri(bool secure, std::string const & host, std::string const & resource)
-      : m_scheme(secure ? "wss" : "ws")
-      , m_host(host)
-      , m_resource(resource.empty() ? "/" : resource)
-      , m_port(secure ? uri_default_secure_port : uri_default_port)
-      , m_secure(secure)
+    uri(type schema, bool secure, std::string const & host, std::string const & resource) :
+		uri(schema, secure, host, secure ? uri_default_secure_port : uri_default_port, resource)
       {
-          m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
-          m_valid = m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end());
       }
 
-    uri(bool secure, std::string const & host, std::string const & port,
+    uri(type schema, bool secure, std::string const & host, std::string const & port,
         std::string const & resource)
-      : m_scheme(secure ? "wss" : "ws")
+      : m_type(schema)
       , m_host(host)
       , m_resource(resource.empty() ? "/" : resource)
       , m_secure(secure)
@@ -599,49 +625,44 @@ public:
         m_port = get_port_from_string(port,ec);
         m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
 
-        m_valid = !ec && (m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end()));
+        if (ec || !(m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end())))
+			m_type = invalid;
     }
 
-    uri(std::string const & scheme, std::string const & host, uint16_t port,
-        std::string const & resource)
-      : m_scheme(scheme)
-      , m_host(host)
-      , m_resource(resource.empty() ? "/" : resource)
-      , m_port(port)
-      , m_secure(scheme == "wss" || scheme == "https")
-      {
-          m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
-          m_valid = m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end());
-      }
-
-    uri(std::string scheme, std::string const & host, std::string const & resource)
-      : m_scheme(scheme)
-      , m_host(host)
-      , m_resource(resource.empty() ? "/" : resource)
-      , m_port((scheme == "wss" || scheme == "https") ? uri_default_secure_port : uri_default_port)
-      , m_secure(scheme == "wss" || scheme == "https")
-      {
-          m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
-          m_valid = m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end());
-      }
-
-    uri(std::string const & scheme, std::string const & host,
-        std::string const & port, std::string const & resource)
-      : m_scheme(scheme)
-      , m_host(host)
-      , m_resource(resource.empty() ? "/" : resource)
-      , m_secure(scheme == "wss" || scheme == "https")
+    uri resource(const std::string& resource) const
     {
-        lib::error_code ec;
-        m_port = get_port_from_string(port,ec);
-        m_ipv6_literal = uri_helper::ipv6_literal(host.begin(), host.end());
-
-        m_valid = !ec && (m_ipv6_literal || uri_helper::reg_name(host.begin(), host.end()));
+        uri ret = *this;
+        if (ret.get_resource().ends_with('/'))
+        {
+            if (resource.starts_with('/'))
+                ret.m_resource += resource.substr(1);
+            else
+                ret.m_resource += resource;
+        }else
+        {
+            if (resource.starts_with('/'))
+                ret.m_resource += resource;
+            else
+                ret.m_resource += "/" + resource;
+        }
+        return ret;
     }
 
     bool get_valid() const {
-        return m_valid;
+        return m_type != invalid;
     }
+
+	bool is_absolute() const {
+        return m_type == http || m_type == websocket;
+    }
+
+	bool is_relative() const {
+        return m_type == relative;
+    }
+
+	type get_type() const {
+		return m_type;
+	}
 
     // Check whether the host of this URI is an IPv6 literal address
     /**
@@ -656,8 +677,8 @@ public:
         return m_secure;
     }
 
-    std::string const & get_scheme() const {
-        return m_scheme;
+    std::string get_scheme() const {
+        return is_absolute() ? (m_type == http ? (m_secure ? "https" : "http") : (m_secure ? "wss" : "ws")) : std::string();
     }
 
     std::string const & get_host() const {
@@ -675,7 +696,7 @@ public:
             } else {
                 p << m_host << ":" << m_port;
             }
-            
+
             return p.str();
         }
     }
@@ -707,7 +728,7 @@ public:
     std::string str() const {
         std::stringstream s;
 
-        s << m_scheme << "://";
+        s << get_scheme() << "://";
         if (m_ipv6_literal) {
             s << "[" << m_host << "]";
         } else {
@@ -730,13 +751,15 @@ public:
      * @return query portion of the URI.
      */
     std::string get_query() const {
-        std::size_t found = m_resource.find('?');
+        const std::size_t found = m_resource.find('?');
         if (found != std::string::npos) {
             return m_resource.substr(found + 1);
         } else {
             return "";
         }
     }
+
+    bool operator==(const uri& rhs) const = default;
 
     // get fragment
 
@@ -778,12 +801,11 @@ private:
         return static_cast<uint16_t>(t_port);
     }
 
-    std::string m_scheme;
+    type        m_type = invalid;
     std::string m_host;
     std::string m_resource;
     uint16_t    m_port;
     bool        m_secure;
-    bool        m_valid;
     bool        m_ipv6_literal;
 };
 

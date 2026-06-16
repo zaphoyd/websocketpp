@@ -124,6 +124,16 @@ public:
         return m_uri;
     }
 
+	const std::optional<std::vector<content_encoding::value>>& get_accepted_encodings() const {
+		return m_accept_encoding;
+	}
+
+	bool accepts_encoding(content_encoding::value encoding) const {
+		return m_accept_encoding && std::find(m_accept_encoding->begin(), m_accept_encoding->end(), encoding) != m_accept_encoding->end();
+	}
+
+	void set_accepted_encodings(std::vector<content_encoding::value> encodings);
+
 private:
     /// Helper function for message::consume. Process request line
     /**
@@ -135,10 +145,11 @@ private:
      */
     lib::error_code process(std::string::iterator begin, std::string::iterator end);
 
-    lib::shared_ptr<std::string>    m_buf;
-    std::string                     m_method;
-    std::string                     m_uri;
-    bool                            m_ready;
+    lib::shared_ptr<std::string>    					m_buf;
+    std::string                     					m_method;
+    std::string                     					m_uri;
+    bool                            					m_ready;
+	std::optional<std::vector<content_encoding::value>>	m_accept_encoding;
 };
 
 } // namespace parser

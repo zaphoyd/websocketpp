@@ -52,7 +52,7 @@ namespace tls_socket {
 typedef lib::function<void(connection_hdl,lib::asio::ssl::stream<
     lib::asio::ip::tcp::socket>&)> socket_init_handler;
 /// The signature of the tls_init_handler for this socket policy
-typedef lib::function<lib::shared_ptr<lib::asio::ssl::context>(connection_hdl)>
+typedef lib::function<lib::shared_ptr<lib::asio::ssl::context>(connection_hdl_ref)>
     tls_init_handler;
 
 /// TLS enabled Asio connection socket component
@@ -71,10 +71,10 @@ public:
     typedef lib::asio::ssl::stream<lib::asio::ip::tcp::socket> socket_type;
     /// Type of a shared pointer to the ASIO socket being used
     typedef lib::shared_ptr<socket_type> socket_ptr;
-    /// Type of a pointer to the ASIO io_service being used
-    typedef lib::asio::io_service * io_service_ptr;
-    /// Type of a pointer to the ASIO io_service strand being used
-    typedef lib::shared_ptr<lib::asio::io_service::strand> strand_ptr;
+    /// Type of a pointer to the ASIO io_context being used
+    typedef lib::asio::io_context * io_context_ptr;
+    /// Type of a pointer to the ASIO io_context strand being used
+    typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
     typedef lib::shared_ptr<lib::asio::ssl::context> context_ptr;
 
@@ -103,6 +103,10 @@ public:
     socket_type::lowest_layer_type & get_raw_socket() {
         return m_socket->lowest_layer();
     }
+
+	const socket_type::lowest_layer_type & get_raw_socket() const {
+		return m_socket->lowest_layer();
+	}
 
     /// Retrieve a pointer to the layer below the ssl stream
     /**
@@ -176,13 +180,13 @@ protected:
     /// Perform one time initializations
     /**
      * init_asio is called once immediately after construction to initialize
-     * Asio components to the io_service
+     * Asio components to the io_context
      *
-     * @param service A pointer to the endpoint's io_service
+     * @param service A pointer to the endpoint's io_context
      * @param strand A pointer to the connection's strand
      * @param is_server Whether or not the endpoint is a server or not.
      */
-    lib::error_code init_asio (io_service_ptr service, strand_ptr strand,
+    lib::error_code init_asio (io_context_ptr service, strand_ptr strand,
         bool is_server)
     {
         if (!m_tls_init_handler) {
@@ -195,7 +199,7 @@ protected:
         }
         m_socket.reset(new socket_type(*service, *m_context));
 
-        m_io_service = service;
+        m_io_context = service;
         m_strand = strand;
         m_is_server = is_server;
 
@@ -238,8 +242,12 @@ protected:
             std::string const & host = m_uri->get_host();
             lib::asio::error_code ec_addr;
             
-            // run the hostname through make_address to check if it is a valid IP literal
-            lib::asio::ip::address addr = lib::asio::ip::make_address(host, ec_addr);
+        	// run the hostname through make_address to check if it is a valid IP literal
+#if (BOOST_VERSION/100000) == 1 && ((BOOST_VERSION/100)%1000) < 66
+            lib::asio::ip::address::from_string(host, ec_addr);
+#else
+            lib::asio::ip::make_address(host, ec_addr);
+#endif // BOOST_VERSION
             
             // If the parsing as an IP literal fails, proceed to register the hostname
             // with the TLS handshake via SNI.
@@ -250,6 +258,7 @@ protected:
                     get_socket().native_handle(), host.c_str());
                 if (!(1 == res)) {
                     callback(socket::make_error_code(socket::error::tls_failed_sni_hostname));
+					return;
                 }
             }
         }
@@ -301,7 +310,7 @@ protected:
      *
      * @param hdl The new handle
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_hdl = hdl;
     }
 
@@ -335,11 +344,34 @@ protected:
     }
 
     void async_shutdown(socket::shutdown_handler callback) {
+		callback = lib::bind(&connection::handle_async_shutdown, this, callback, lib::placeholders::_1);
         if (m_strand) {
             m_socket->async_shutdown(m_strand->wrap(callback));
         } else {
             m_socket->async_shutdown(callback);
         }
+    }
+
+	void handle_async_shutdown(socket::shutdown_handler callback, lib::asio::error_code const & ec)
+    {
+		lib::asio::error_code code { ec };
+        if (ec == lib::asio::error::operation_aborted)
+		{
+			const int shutdownState = SSL_get_shutdown(get_socket().native_handle());
+			if (shutdownState & SSL_RECEIVED_SHUTDOWN)
+			{
+				code = lib::asio::error_code(lib::asio::error::not_connected, ec.category());
+			}
+		}
+
+		if (ec == lib::asio::error::eof)
+        {
+            // Rationale:
+            // http://stackoverflow.com/questions/25587403/boost-asio-ssl-async-shutdown-always-finishes-with-an-error
+            code.clear();
+        }
+
+		callback(code);
     }
 
 public:
@@ -391,7 +423,7 @@ private:
         }
     }
 
-    io_service_ptr      m_io_service;
+    io_context_ptr      m_io_context;
     strand_ptr          m_strand;
     context_ptr         m_context;
     socket_ptr          m_socket;

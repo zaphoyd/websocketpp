@@ -46,6 +46,7 @@ namespace websocketpp {
  * that owns the handler.
  */
 typedef lib::weak_ptr<void> connection_hdl;
+typedef const connection_hdl& connection_hdl_ref;
 
 } // namespace websocketpp
 

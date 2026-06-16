@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio ) {
 
 BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
     websocketpp::server<websocketpp::config::asio> s;
-    boost::asio::io_service ios;
+    boost::asio::io_context ios;
     s.init_asio(&ios);
 }
 

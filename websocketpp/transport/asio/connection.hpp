@@ -85,10 +85,10 @@ public:
     typedef typename config::response_type response_type;
     typedef typename response_type::ptr response_ptr;
 
-    /// Type of a pointer to the Asio io_service being used
-    typedef lib::asio::io_service * io_service_ptr;
-    /// Type of a pointer to the Asio io_service::strand being used
-    typedef lib::shared_ptr<lib::asio::io_service::strand> strand_ptr;
+    /// Type of a pointer to the Asio io_context being used
+    typedef lib::asio::io_context * io_context_ptr;
+    /// Type of a pointer to the Asio io_context::strand being used
+    typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of a pointer to the Asio timer class
     typedef lib::shared_ptr<lib::asio::steady_timer> timer_ptr;
 
@@ -97,7 +97,7 @@ public:
     // to the public api.
     friend class endpoint<config>;
 
-    // generate and manage our own io_service
+    // generate and manage our own io_context
     explicit connection(bool is_server, const lib::shared_ptr<alog_type> & alog, const lib::shared_ptr<elog_type> & elog)
       : m_is_server(is_server)
       , m_alog(alog)
@@ -105,6 +105,8 @@ public:
     {
         m_alog->write(log::alevel::devel,"asio con transport constructor");
     }
+
+	virtual ~connection() {}
 
     /// Get a shared pointer to this component
     ptr get_shared() {
@@ -319,7 +321,7 @@ public:
     timer_ptr set_timer(long duration, timer_handler callback) {
         timer_ptr new_timer(
             new lib::asio::steady_timer(
-                *m_io_service,
+                *m_io_context,
                 lib::asio::milliseconds(duration))
         );
 
@@ -399,7 +401,7 @@ public:
     /// Initialize transport for reading
     /**
      * init_asio is called once immediately after construction to initialize
-     * Asio components to the io_service
+     * Asio components to the io_context
      *
      * The transport initialization sequence consists of the following steps:
      * - Pre-init: the underlying socket is initialized to the point where
@@ -457,21 +459,21 @@ protected:
     /// Finish constructing the transport
     /**
      * init_asio is called once immediately after construction to initialize
-     * Asio components to the io_service.
+     * Asio components to the io_context.
      *
-     * @param io_service A pointer to the io_service to register with this
+     * @param io_context A pointer to the io_context to register with this
      * connection
      *
      * @return Status code for the success or failure of the initialization
      */
-    lib::error_code init_asio (io_service_ptr io_service) {
-        m_io_service = io_service;
+    lib::error_code init_asio (io_context_ptr io_context) {
+        m_io_context = io_context;
 
         if (config::enable_multithreading) {
-            m_strand.reset(new lib::asio::io_service::strand(*io_service));
+            m_strand.reset(new lib::asio::io_context::strand(*io_context));
         }
 
-        lib::error_code ec = socket_con_type::init_asio(io_service, m_strand,
+        lib::error_code ec = socket_con_type::init_asio(io_context, m_strand,
             m_is_server);
 
         return ec;
@@ -791,7 +793,7 @@ protected:
                 return;
             }
 
-            if (!m_proxy_data->res.headers_ready()) {
+            if (!m_proxy_data->res.has_received(response_type::state::HEADERS)) {
                 // we read until the headers were done in theory but apparently
                 // they aren't. Internal endpoint error.
                 callback(make_error_code(error::general));
@@ -1019,7 +1021,7 @@ protected:
      * @param hdl A connection_hdl that the transport will use to refer
      * to itself
      */
-    void set_handle(connection_hdl hdl) {
+    void set_handle(connection_hdl_ref hdl) {
         m_connection_hdl = hdl;
         socket_con_type::set_handle(hdl);
     }
@@ -1030,18 +1032,18 @@ protected:
      */
     lib::error_code interrupt(interrupt_handler handler) {
         if (config::enable_multithreading) {
-            m_io_service->post(m_strand->wrap(handler));
+            m_io_context->post(m_strand->wrap(handler));
         } else {
-            m_io_service->post(handler);
+            m_io_context->post(handler);
         }
         return lib::error_code();
     }
 
     lib::error_code dispatch(dispatch_handler handler) {
         if (config::enable_multithreading) {
-            m_io_service->post(m_strand->wrap(handler));
+            m_io_context->post(m_strand->wrap(handler));
         } else {
-            m_io_service->post(handler);
+            m_io_context->post(handler);
         }
         return lib::error_code();
     }
@@ -1190,7 +1192,7 @@ private:
     lib::shared_ptr<proxy_data> m_proxy_data;
 
     // transport resources
-    io_service_ptr  m_io_service;
+    io_context_ptr  m_io_context;
     strand_ptr      m_strand;
     connection_hdl  m_connection_hdl;
 

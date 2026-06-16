@@ -40,10 +40,9 @@
 BOOST_AUTO_TEST_CASE( uri_valid ) {
     websocketpp::uri uri("ws://localhost:9000/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( !uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
-    BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
+    BOOST_CHECK_EQUAL( uri.get_host(), "localhost" );
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
     BOOST_CHECK_EQUAL( uri.get_query(), "" );
@@ -161,9 +160,8 @@ BOOST_AUTO_TEST_CASE( uri_invalid_ipv6 ) {
 BOOST_AUTO_TEST_CASE( uri_valid_no_slash ) {
     websocketpp::uri uri("ws://localhost");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( !uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 80 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
@@ -172,9 +170,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_slash ) {
 BOOST_AUTO_TEST_CASE( uri_valid_no_slash_with_fragment ) {
     websocketpp::uri uri("ws://localhost#foo");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( !uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 80 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "#foo" );
@@ -184,9 +181,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_slash_with_fragment ) {
 BOOST_AUTO_TEST_CASE( uri_valid_no_port_unsecure ) {
     websocketpp::uri uri("ws://localhost/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( !uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "ws");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 80 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -196,9 +192,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_port_unsecure ) {
 BOOST_AUTO_TEST_CASE( uri_valid_no_port_secure ) {
     websocketpp::uri uri("wss://localhost/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 443 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -208,9 +203,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_port_secure ) {
 BOOST_AUTO_TEST_CASE( uri_valid_no_resource ) {
     websocketpp::uri uri("wss://localhost:9000");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
@@ -220,9 +214,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_no_resource ) {
 BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal ) {
     websocketpp::uri uri("wss://[::1]:9000/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "::1");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -235,9 +228,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal ) {
 BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal_default_port ) {
     websocketpp::uri uri("wss://[::1]/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "::1");
     BOOST_CHECK_EQUAL( uri.get_port(), 443 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -250,9 +242,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_ipv6_literal_default_port ) {
 BOOST_AUTO_TEST_CASE( uri_valid_2 ) {
     websocketpp::uri uri("wss://thor-websocket.zaphoyd.net:88/");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "thor-websocket.zaphoyd.net");
     BOOST_CHECK_EQUAL( uri.get_port(), 88 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
@@ -277,9 +268,8 @@ BOOST_AUTO_TEST_CASE( uri_invalid_scheme ) {
 BOOST_AUTO_TEST_CASE( uri_http_scheme ) {
     websocketpp::uri uri("http://localhost:9000/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( !uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "http");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::http );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -289,9 +279,8 @@ BOOST_AUTO_TEST_CASE( uri_http_scheme ) {
 BOOST_AUTO_TEST_CASE( uri_valid_ipv4_literal ) {
     websocketpp::uri uri("wss://127.0.0.1:9000/chat");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "127.0.0.1");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat" );
@@ -301,9 +290,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_ipv4_literal ) {
 BOOST_AUTO_TEST_CASE( uri_valid_3 ) {
     websocketpp::uri uri("wss://localhost:9000/chat/foo/bar");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss");
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat/foo/bar" );
@@ -355,9 +343,8 @@ BOOST_AUTO_TEST_CASE( uri_invalid_free_delim ) {
 BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
     websocketpp::uri uri("wss://localhost:9000/chat/foo/bar?foo=bar");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss" );
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "localhost");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/chat/foo/bar?foo=bar" );
@@ -368,9 +355,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_4 ) {
 BOOST_AUTO_TEST_CASE( uri_valid_v4_mapped ) {
     websocketpp::uri uri("wss://[0000:0000:0000:0000:0000:0000:192.168.1.1]:9000/");
 
-    BOOST_CHECK( uri.get_valid() );
     BOOST_CHECK( uri.get_secure() );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss" );
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "0000:0000:0000:0000:0000:0000:192.168.1.1");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );
@@ -380,9 +366,8 @@ BOOST_AUTO_TEST_CASE( uri_valid_v4_mapped ) {
 BOOST_AUTO_TEST_CASE( uri_valid_v6_mixed_case ) {
     websocketpp::uri uri("wss://[::10aB]:9000/");
 
-    BOOST_CHECK( uri.get_valid() == true );
-    BOOST_CHECK( uri.get_secure() == true );
-    BOOST_CHECK_EQUAL( uri.get_scheme(), "wss" );
+    BOOST_CHECK( uri.get_secure() );
+    BOOST_CHECK_EQUAL( uri.get_type(), websocketpp::uri::websocket );
     BOOST_CHECK_EQUAL( uri.get_host(), "::10aB");
     BOOST_CHECK_EQUAL( uri.get_port(), 9000 );
     BOOST_CHECK_EQUAL( uri.get_resource(), "/" );

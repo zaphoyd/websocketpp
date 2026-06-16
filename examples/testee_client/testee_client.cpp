@@ -80,7 +80,7 @@ typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
 
 int case_count = 0;
 
-void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
+void on_message(client* c, websocketpp::connection_hdl_ref hdl, message_ptr msg) {
     client::connection_ptr con = c->get_con_from_hdl(hdl);
 
     if (con->get_resource() == "/getCaseCount") {
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
         client::connection_ptr con = c.get_connection(uri+"/getCaseCount", ec);
         c.connect(con);
 
-        // Start the ASIO io_service run loop
+        // Start the ASIO io_context run loop
         c.run();
 
         std::cout << "case count: " << case_count << std::endl;
