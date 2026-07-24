@@ -1730,6 +1730,24 @@ void connection<config>::handle_read_http_response(lib::error_code const & ec,
             return;
         }
 
+        // Store the subprotocol the server selected (if any) so that it is
+        // available to the end user via get_subprotocol(). Per RFC 6455
+        // section 4.1, if the server selects a subprotocol that the client
+        // did not offer, the client must fail the connection.
+        std::string neg_subprotocol =
+            m_response.get_header("Sec-WebSocket-Protocol");
+        if (!neg_subprotocol.empty() &&
+            std::find(m_requested_subprotocols.begin(),
+                      m_requested_subprotocols.end(),
+                      neg_subprotocol) == m_requested_subprotocols.end())
+        {
+            m_alog->write(log::alevel::devel,
+                "Server selected unrequested subprotocol: " + neg_subprotocol);
+            this->terminate(make_error_code(error::unrequested_subprotocol));
+            return;
+        }
+        m_subprotocol = neg_subprotocol;
+
         // Read extension parameters and set up values necessary for the end
         // user to complete extension negotiation.
         std::pair<lib::error_code,std::string> neg_results;

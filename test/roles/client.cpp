@@ -36,6 +36,8 @@
 #include <websocketpp/client.hpp>
 
 #include <websocketpp/http/request.hpp>
+#include <websocketpp/http/response.hpp>
+#include <websocketpp/processors/hybi13.hpp>
 
 struct stub_config : public websocketpp::config::core {
     typedef core::concurrency_type concurrency_type;
@@ -193,6 +195,107 @@ BOOST_AUTO_TEST_CASE( add_subprotocols ) {
 
     BOOST_CHECK( r.ready() );
     BOOST_CHECK_EQUAL( r.get_header("Sec-WebSocket-Protocol"), "foo, bar");
+}
+
+// Reproduces issue #570: a client that offers subprotocols and receives a
+// valid server handshake selecting one should expose the negotiated value
+// via get_subprotocol().
+BOOST_AUTO_TEST_CASE( negotiated_subprotocol ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    std::stringstream out;
+
+    c.register_ostream(&out);
+
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( con );
+
+    con->add_subprotocol("foo",ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    con->add_subprotocol("bar",ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    c.connect(con);
+
+    // Parse the opening handshake request the client wrote out so we can build
+    // a matching response.
+    std::string o = out.str();
+    websocketpp::http::parser::request r;
+    r.consume(o.data(),o.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( r.ready() );
+
+    // Build a valid server handshake response selecting "foo". Using the
+    // hybi13 processor ensures Sec-WebSocket-Accept matches the randomly
+    // generated client key, so the client accepts the response as valid.
+    stub_config::con_msg_manager_type::ptr mm(
+        websocketpp::lib::make_shared<stub_config::con_msg_manager_type>());
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> proc(false,true,mm,rng);
+
+    websocketpp::http::parser::response res;
+    res.set_version("HTTP/1.1");
+    res.set_status(websocketpp::http::status_code::switching_protocols);
+    ec = proc.process_handshake(r,"foo",res);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK_EQUAL( res.get_header("Sec-WebSocket-Protocol"), "foo" );
+
+    // Feed the server's response back into the client connection.
+    std::stringstream channel;
+    channel << res.raw();
+    channel >> *con;
+
+    // The negotiated subprotocol should now be reported by the client.
+    BOOST_CHECK_EQUAL( con->get_subprotocol(), "foo" );
+}
+
+// Per RFC 6455 section 4.1, if the server selects a subprotocol that the
+// client did not offer, the client must fail the connection.
+BOOST_AUTO_TEST_CASE( unrequested_subprotocol ) {
+    client c;
+    websocketpp::lib::error_code ec;
+    std::stringstream out;
+
+    c.register_ostream(&out);
+
+    connection_ptr con = c.get_connection("ws://localhost/", ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( con );
+
+    con->add_subprotocol("foo",ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    c.connect(con);
+
+    std::string o = out.str();
+    websocketpp::http::parser::request r;
+    r.consume(o.data(),o.size(),ec);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK( r.ready() );
+
+    // Build a valid handshake response, but have the server select a
+    // subprotocol ("baz") that the client never offered.
+    stub_config::con_msg_manager_type::ptr mm(
+        websocketpp::lib::make_shared<stub_config::con_msg_manager_type>());
+    stub_config::rng_type rng;
+    websocketpp::processor::hybi13<stub_config> proc(false,true,mm,rng);
+
+    websocketpp::http::parser::response res;
+    res.set_version("HTTP/1.1");
+    res.set_status(websocketpp::http::status_code::switching_protocols);
+    ec = proc.process_handshake(r,"baz",res);
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+
+    std::stringstream channel;
+    channel << res.raw();
+    channel >> *con;
+
+    // The connection must have been failed and no subprotocol stored.
+    BOOST_CHECK_EQUAL( con->get_subprotocol(), "" );
+    BOOST_CHECK_EQUAL( con->get_ec(),
+        websocketpp::error::make_error_code(
+            websocketpp::error::unrequested_subprotocol) );
 }
 
 
